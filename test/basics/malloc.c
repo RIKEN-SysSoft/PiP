@@ -7,6 +7,9 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+#include <pthread.h>
+#include <malloc.h>
+
 #include <test.h>
 
 #define NTIMES		(1000)
@@ -62,14 +65,23 @@ int malloc_loop( int pipid ) {
   return 0;
 }
 
+struct task_comm {
+  int			go;
+  pthread_barrier_t	barrier;
+};
+
 int main( int argc, char **argv ) {
+  struct task_comm 	tc;
   void *exp;
   int pipid, ntasks;
   int i;
   int err;
 
+  TESTINT( !mallopt( M_MMAP_THRESHOLD, 1 ) );
+
   ntasks = NTASKS;
-  exp    = NULL;
+  tc.go = 0;
+  exp    = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<NTASKS; i++ ) {
@@ -81,18 +93,32 @@ int main( int argc, char **argv ) {
       }
     }
     ntasks = i;
+    TESTINT( pthread_barrier_init( &tc.barrier, NULL, ntasks+1 ) );
 
     TESTINT( my_initstate( PIP_PIPID_ROOT ) );
+
+    tc.go = 1;
+    pthread_barrier_wait( &tc.barrier );
+
     TESTINT( malloc_loop( PIP_PIPID_ROOT ) );
 
     for( i=0; i<ntasks; i++ ) TESTINT( pip_wait( i, NULL ) );
     TESTINT( pip_fin() );
 
   } else {
+    struct task_comm 	*tcp = (struct task_comm*) exp;
+
     TESTINT( my_initstate( pipid ) );
+    while( 1 ) {
+      if( tcp->go ) break;
+      pause_and_yield( 10 );
+    }
+    pthread_barrier_wait( &tcp->barrier );
+
     TESTINT( malloc_loop( pipid ) );
-    fprintf( stderr, "<%d> Hello, I am fine (sz:%d--%d, %d times) !!\n",
-	     pipid, (int) min, (int) max, NTIMES );
+    fprintf( stderr,
+	     "<PIPID=%d,PID=%d> Hello, I am fine (sz:%d--%d, %d times) !!\n",
+	     pipid, getpid(), (int) min, (int) max, NTIMES );
   }
   return 0;
 }

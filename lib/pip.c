@@ -2,15 +2,16 @@
  * $RIKEN_copyright:$
  * $PIP_VERSION:$
  * $PIP_license:$
-*/
+ */
 /*
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
-*/
+ */
 
 #define _GNU_SOURCE
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <malloc.h>
 #include <dlfcn.h>
 #include <sched.h>
 #include <pthread.h>
@@ -49,11 +50,19 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
   if( pip_root != NULL ) RETURN( EBUSY ); /* already initialized */
 
+#ifndef PIP_NO_MALLOPT
+  (void) mallopt( M_MMAP_THRESHOLD, 1 ); /* not to call (s)brk() */
+#endif
+
   //pip_print_maps();
   if( ( env = getenv( PIP_ROOT_ENV ) ) == NULL ) {
     /* root process ? */
-    if( ntasksp  == NULL || *ntasksp <= 0 ) RETURN( EINVAL );
-    ntasks = *ntasksp;
+    if( *ntasksp <= 0 ) RETURN( EINVAL );
+    if( ntasksp  == NULL ) {
+      ntasks = PIP_NTASKS_MAX;
+    } else {
+      ntasks = *ntasksp;
+    }
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
     if( opts & PIP_MODEL_PTHREAD &&
@@ -103,7 +112,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
 	for( i=0; i<ntasks; i++ ) {
 	  pip_root->tasks[i].pipid  = PIP_PIPID_NONE;
-	    pip_root->tasks[i].thread = pip_root->thread;
+	  pip_root->tasks[i].thread = pip_root->thread;
 	}
       }
     }
@@ -316,6 +325,7 @@ static int pip_do_spawn( void *thargs )  {
   char **argv      = args->argv;
   char **envv      = args->envv;
   pip_task_t *self = &pip_root->tasks[pipid];
+  volatile int	flag_exit;
   int   argc;
 
   free( thargs );
@@ -323,10 +333,16 @@ static int pip_do_spawn( void *thargs )  {
   for( argc=0; argv[argc]!=NULL; argc++ );
   *self->envvp = envv;	/* setting environment vars */
 
-  DBGF( "[%d] >> main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
-  self->retval = self->mainf( argc, argv );
-  DBGF( "[%d] << main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
-
+  flag_exit = 0;
+  (void) getcontext( &self->ctx );
+  if( !flag_exit ) {
+    flag_exit = 1;
+    DBGF( "[%d] >> main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+    self->retval = self->mainf( argc, argv );
+    DBGF( "[%d] << main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+  } else {
+    DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+  }
   pip_finalize_task( self );
   RETURN( 0 );
 }
@@ -623,17 +639,33 @@ int pip_kill( int pipid, int signal ) {
   RETURN( err );
 }
 
+int pip_exit( int retval ) {
+  if( pip_root == NULL ) RETURN( EPERM );
+  if( pip_root_p() && 0 ) {
+    exit( retval );
+  } else {
+    pip_self->retval = retval;
+    //fprintf( stderr, "[PIPID=%d] pip_exit(%d)!!!\n",pip_self->pipid,retval);
+    (void) setcontext( &pip_self->ctx );
+    //fprintf( stderr, "[PIPID=%d] pip_exit() ????\n",pip_self->pipid);
+  }
+  /* never reach here */
+  return 0;
+}
+
 /*
  * The following functions must be called at root process
  */
 
-static void pip_finalize_thread( pip_task_t *task ) {
+static void pip_finalize_thread( pip_task_t *task, int *retvalp ) {
   DBGF( "pipid=%d", task->pipid );
 
   /* dlclose() must only be called from the root process since */
   /* corresponding dlopen() calls are made by the root process */
-  DBG;
+  DBGF( "retval=%d", task->retval );
   //pip_print_maps();
+
+  if( retvalp != NULL ) *retvalp = task->retval;
 
   if( task->loaded != NULL && dlclose( task->loaded ) != 0 ) {
     DBGF( "dlclose(): %s", dlerror() );
@@ -681,7 +713,7 @@ int pip_join( int pipid ) {
   if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
     if( !pip_if_pthread_() ) RETURN( ENOSYS );
     err = pthread_join( task->thread, NULL );
-    if( !err ) pip_finalize_thread( task );
+    if( !err ) pip_finalize_thread( task, NULL );
   }
   RETURN( err );
 }
@@ -693,7 +725,7 @@ int pip_tryjoin( int pipid ) {
   if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
     if( !pip_if_pthread_() ) RETURN( ENOSYS );
     err = pthread_tryjoin_np( task->thread, NULL );
-    if( !err ) pip_finalize_thread( task );
+    if( !err ) pip_finalize_thread( task, NULL );
   }
   RETURN( err );
 }
@@ -705,7 +737,7 @@ int pip_timedjoin( int pipid, struct timespec *time ) {
   if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
     if( !pip_if_pthread_() ) RETURN( ENOSYS );
     err = pthread_timedjoin_np( task->thread, NULL, time );
-    if( !err ) pip_finalize_thread( task );
+    if( !err ) pip_finalize_thread( task, NULL );
   }
   RETURN( err );
 }
@@ -734,8 +766,7 @@ int pip_wait( int pipid, int *retvalp ) {
     }
   }
   if( !err ) {
-    pip_finalize_thread( task );
-    if( retvalp != NULL ) *retvalp = task->retval;
+    pip_finalize_thread( task, retvalp );
   }
   RETURN( err );
 }
@@ -763,10 +794,13 @@ int pip_trywait( int pipid, int *retvalp ) {
     }
   }
   if( !err ) {
-    pip_finalize_thread( task );
-    if( retvalp != NULL ) *retvalp = task->retval;
+    pip_finalize_thread( task, retvalp );
   }
   RETURN( err );
+}
+
+pip_clone_t *pip_get_cloneinfo( void ) {
+  return pip_root->cloneinfo;
 }
 
 /*** some utility functions ***/

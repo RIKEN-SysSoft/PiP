@@ -14,6 +14,7 @@ typedef struct pip_clone {
   int		flag_wrap;
   int		flag_clone;
   int		pid_clone;
+  void		*stack;
 } pip_clone_t;
 
 #endif

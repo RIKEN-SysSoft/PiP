@@ -11,6 +11,7 @@
 #define _pip_internal_h_
 
 #include <pthread.h>
+#include <ucontext.h>
 #include <stdlib.h>
 
 #include <pip_machdep.h>
@@ -37,6 +38,7 @@ typedef struct {
   pthread_t		thread;
   void			*loaded;
   main_func_t		mainf;
+  ucontext_t 		ctx;
   char			**argv;
   char			**envv;
   char			***envvp;

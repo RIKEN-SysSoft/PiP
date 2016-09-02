@@ -67,6 +67,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       if( retval > 0 ) {	/* create PID is returned */
 	pip_clone_info.flag_clone = flags;
 	pip_clone_info.pid_clone  = retval;
+	pip_clone_info.stack      = child_stack;
       }
 
     } else {

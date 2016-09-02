@@ -35,6 +35,7 @@ extern "C" {
   int pip_import( int pipid, void **expp );
 
   /* inplementation-independent functions to manage PIP tasks */
+  int pip_exit(               int  retval );
   int pip_wait(    int pipid, int *retval );
   int pip_trywait( int pipid, int *retval );
   int pip_kill(    int pipid, int  signal );
@@ -45,6 +46,7 @@ extern "C" {
 
 #include <sys/types.h>
 #include <pthread.h>
+#include <stdio.h>
 
   int pip_get_thread( int pipid, pthread_t *threadp );
   int pip_if_pthread( int *flagp );
