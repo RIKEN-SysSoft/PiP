@@ -34,7 +34,7 @@ int main( int argc, char **argv ) {
       envv[j] = NULL;
 
       pipid = i;
-      err = pip_spawn( argv[0], argv, envv, i%4, &pipid );
+      err = pip_spawn( argv[0], argv, envv, i%4, &pipid, NULL, NULL );
 
       free( envv[0] );
       free( envv[1] );

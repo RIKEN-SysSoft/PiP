@@ -7,9 +7,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <pthread.h>
 #include <sched.h>
 #include <unistd.h>
@@ -106,7 +103,8 @@ int main( int argc, char **argv ) {
 	int err;
 
 	pipid = i;
-	if( ( err = pip_spawn( argv[0], argv, NULL, i%4, &pipid ) ) != 0 ) {
+	err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL );
+	if( err != 0 ) {
 	  break;
 	}
 	if( i != pipid ) {

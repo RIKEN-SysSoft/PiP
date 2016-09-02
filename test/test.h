@@ -7,6 +7,9 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <sched.h>
 #include <signal.h>
 #include <dirent.h>

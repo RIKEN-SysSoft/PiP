@@ -58,7 +58,8 @@ int main( int argc, char **argv ) {
     watch_anysignal();
 
     pipid = 0;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid ) );
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			NULL, NULL) );
 
     while( flag == 0 ) pause_and_yield( 0 );
 

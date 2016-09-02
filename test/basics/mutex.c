@@ -37,7 +37,8 @@ int main( int argc, char **argv ) {
     tc.counter = -1;
 
     pipid = 0;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid ) );
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			NULL, NULL) );
 
     for( i=0; i<NTIMES; i++ ) {
       TESTINT( pthread_mutex_lock(   &tc.mutex[0] ) );

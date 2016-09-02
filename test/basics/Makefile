@@ -17,12 +17,13 @@ SRCS  = initfin.c \
 	mutex.c \
 	barrier.c \
 	core.c \
-	numa.c
+	numa.c \
+	hook.c
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 PROGS  = initfin stack export environ malloc file wait signal exit \
-	mutex barrier core numa
+	mutex barrier core numa hook
 
 all: $(PROGS)
 
@@ -31,7 +32,7 @@ all: $(PROGS)
 	$(PATCHELF) $@
 
 clean:
-	rm -f $(PROGS) *.o *.E *~ .nfs*
+	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
 
 test-file:
 	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )

@@ -28,8 +28,16 @@
 #include <pip.h>
 #include <pip_internal.h>
 
+/*** note that the following static variables are   ***/
+/*** located at each PIP task and the root process. ***/
 static pip_root_t	*pip_root = NULL;
 static pip_task_t	*pip_self = NULL;
+
+int pip_page_alloc( size_t sz, void **allocp ) {
+  int pgsz = sysconf( _SC_PAGESIZE );
+  if( posix_memalign( allocp, (size_t) pgsz, sz ) != 0 ) RETURN( errno );
+  return 0;
+}
 
 static void pip_set_magic( pip_root_t *root ) {
   memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN );
@@ -88,7 +96,9 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
 
     sz = sizeof( pip_root_t ) + sizeof( pip_task_t ) * ntasks;
-    if( ( pip_root = (pip_root_t*) malloc( sz ) ) == NULL ) RETURN( ENOMEM );
+    if( ( err = pip_page_alloc( sz, (void**) &pip_root ) ) != 0 ) {
+      RETURN( err );
+    }
     (void) memset( pip_root, 0, sz );
 
     DBGF( "ROOTROOT (%p)", pip_root );
@@ -242,7 +252,7 @@ int pip_import( int pipid, void **exportp  ) {
   RETURN( 0 );
 }
 
-static char **pip_copy_vec( char *addition, char **vecsrc ) {
+char **pip_copy_vec( char *addition, char **vecsrc ) {
   char **vecdst;
   char *p;
   int vecln;
@@ -324,26 +334,44 @@ static int pip_do_spawn( void *thargs )  {
   int 	pipid      = args->pipid;
   char **argv      = args->argv;
   char **envv      = args->envv;
+  pip_spawnhook_t before = args->hook_before;
+  pip_spawnhook_t after  = args->hook_after;
   pip_task_t *self = &pip_root->tasks[pipid];
-  ucontext_t 	ctx;
-  volatile int	flag_exit;	/* must be volatile */
-  int   argc;
+  int err = 0;
 
   free( thargs );
-  self->argv = argv;
-  for( argc=0; argv[argc]!=NULL; argc++ );
-  *self->envvp = envv;	/* setting environment vars */
 
-  flag_exit = 0;
-  (void) getcontext( &ctx );
-  self->ctx = &ctx;
-  if( !flag_exit ) {
-    flag_exit = 1;
-    DBGF( "[%d] >> main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
-    self->retval = self->mainf( argc, argv );
-    DBGF( "[%d] << main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
-  } else {
-    DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+  /* calling hook, if any */
+  if( before == NULL || ( err = before( &argv, &envv ) ) == 0 ) {
+    /* argv and/or envv might be changed in the hook function */
+    volatile int	flag_exit;	/* must be volatile */
+    ucontext_t 		ctx;
+    int   		argc;
+
+    for( argc=0; argv[argc]!=NULL; argc++ );
+    self->argv   = argv;
+    *self->envvp = envv;	/* setting environment vars */
+
+    flag_exit = 0;
+    (void) getcontext( &ctx );
+    if( !flag_exit ) {
+      flag_exit = 1;
+      self->ctx = &ctx;
+
+      DBGF( "[%d] >> main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+      self->retval = self->mainf( argc, argv );
+      DBGF( "[%d] << main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+
+    } else {
+      DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+    }
+    if( after != NULL ) (void) after( &argv, &envv );
+  } else if( err != 0 ) {
+    fprintf( stderr,
+	     "PIP: try to spawn(%s), but the before hook returns %d\n",
+	     argv[0],
+	     err );
+    self->retval = err;
   }
   pip_finalize_task( self );
   RETURN( 0 );
@@ -471,8 +499,10 @@ static void pip_clone_wrap_begin( void ) {
 int pip_spawn( char *prog,
 	       char **argv,
 	       char **envv,
-	       int   coreno,
-	       int  *pipidp ) {
+	       int  coreno,
+	       int  *pipidp,
+	       pip_spawnhook_t before,
+	       pip_spawnhook_t after ) {
   extern char **environ;
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
@@ -526,8 +556,11 @@ int pip_spawn( char *prog,
       pipid      = i;
       pipid_curr = pipid + 1;
     }
-    args->pipid = pipid;
-    task	= &pip_root->tasks[pipid];
+    args->pipid       = pipid;
+    args->hook_before = before;
+    args->hook_after  = after;
+
+    task = &pip_root->tasks[pipid];
 
     if( ( err = pip_corebind( coreno, &cpuset ) ) == 0 ) {
       /* corebinding should take place before loading solibs,        */

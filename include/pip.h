@@ -22,13 +22,16 @@
 
 #define PIP_CPUCORE_ASIS	(-1)
 
+typedef int(*pip_spawnhook_t)(char***,char***);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
   int pip_init( int *pipidp, int *ntask_maxp, void **root_expp, int opts );
   int pip_fin( void );
-  int pip_spawn( char *prg, char **argv, char **envv, int coreno, int* pipidp);
+  int pip_spawn( char *prg, char **argv, char **envv, int coreno, int *pipidp,
+		 pip_spawnhook_t before, pip_spawnhook_t after );
   int pip_get_pipid( int *pipid );
   int pip_get_current_ntasks( int *ntasksp );
   int pip_export( void *exp );
@@ -60,6 +63,7 @@ extern "C" {
   int pip_get_pid( int pipid, pid_t *pidp );
 
   int pip_print_loaded_solibs( FILE *file );
+  char **pip_copy_vec( char *addition, char **vecsrc );
 
 #endif
 

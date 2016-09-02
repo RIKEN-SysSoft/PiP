@@ -25,7 +25,8 @@ int main( int argc, char **argv, char **envv ) {
     for( i=0; i<NTASKS; i++ ) {
       int err;
       pipid = i;
-      if( ( err = pip_spawn( argv[0], argv, NULL, i%4, &pipid ) ) != 0 ) break;
+      err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL );
+      if( err != 0 ) break;
       if( i != pipid ) {
 	fprintf( stderr, "pip_spawn(%d!=%d) !!!!!!\n", i, pipid );
       }

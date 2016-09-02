@@ -76,7 +76,7 @@ int main( int argc, char **argv ) {
 
       fprintf( stderr, "Spawning task[%d] on %s\n", i, corestr );
 
-      err = pip_spawn( nargv[0], nargv, NULL, core, &pipid );
+      err = pip_spawn( nargv[0], nargv, NULL, core, &pipid, NULL, NULL );
       if( err != 0 ) break;
       if( i != pipid ) {
 	fprintf( stderr, "pip_spawn(%d!=%d) !!!!!!\n", i, pipid );

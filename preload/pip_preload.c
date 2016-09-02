@@ -53,7 +53,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 
       pip_clone_info.flag_wrap = 0;
 
-      //flags &= ~CLONE_FS;	/* 0x00200 - do we need this ?*/
+      flags &= ~CLONE_FS;	/* 0x00200?*/
       flags &= ~CLONE_FILES;	/* 0x00400 */
       flags &= ~CLONE_SIGHAND;	/* 0x00800 */
       flags &= ~CLONE_THREAD;	/* 0x10000 */

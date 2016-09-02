@@ -34,7 +34,7 @@ int main( int argc, char **argv ) {
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<NTASKS; i++ ) {
       pipid = i;
-      err = pip_spawn( argv[0], argv, NULL, i%8, &pipid );
+      err = pip_spawn( argv[0], argv, NULL, i%8, &pipid, NULL, NULL );
       if( err != 0 ) break;
       if( i != pipid ) {
 	fprintf( stderr, "pip_spawn(%d!=%d) !!!!!!\n", i, pipid );
