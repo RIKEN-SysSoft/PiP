@@ -325,7 +325,8 @@ static int pip_do_spawn( void *thargs )  {
   char **argv      = args->argv;
   char **envv      = args->envv;
   pip_task_t *self = &pip_root->tasks[pipid];
-  volatile int	flag_exit;
+  ucontext_t 	ctx;
+  volatile int	flag_exit;	/* must be volatile */
   int   argc;
 
   free( thargs );
@@ -334,7 +335,8 @@ static int pip_do_spawn( void *thargs )  {
   *self->envvp = envv;	/* setting environment vars */
 
   flag_exit = 0;
-  (void) getcontext( &self->ctx );
+  (void) getcontext( &ctx );
+  self->ctx = &ctx;
   if( !flag_exit ) {
     flag_exit = 1;
     DBGF( "[%d] >> main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
@@ -645,9 +647,9 @@ int pip_exit( int retval ) {
     exit( retval );
   } else {
     pip_self->retval = retval;
-    //fprintf( stderr, "[PIPID=%d] pip_exit(%d)!!!\n",pip_self->pipid,retval);
-    (void) setcontext( &pip_self->ctx );
-    //fprintf( stderr, "[PIPID=%d] pip_exit() ????\n",pip_self->pipid);
+    DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_self->pipid, retval );
+    (void) setcontext( pip_self->ctx );
+    DBGF( "[PIPID=%d] pip_exit() ????", pip_self->pipid );
   }
   /* never reach here */
   return 0;
