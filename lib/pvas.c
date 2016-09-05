@@ -38,7 +38,8 @@ int pvas_spawn( int pvd,
 		pid_t *pid ) {
   int err;
 
-  err = pip_spawn( filename, argv, envp, PIP_CPUCORE_ASIS, pvid, NULL, NULL );
+  err = pip_spawn( filename, argv, envp, PIP_CPUCORE_ASIS, pvid,
+		   NULL, NULL, NULL );
   if( !err ) {
     err = pip_get_pid( *pvid, pid );
   }
@@ -54,7 +55,7 @@ int pvas_spawn_setaffinity( int pvd,
 			    int cpu ) {
   int err;
 
-  err = pip_spawn( filename, argv, envp, cpu, pvid, NULL, NULL );
+  err = pip_spawn( filename, argv, envp, cpu, pvid, NULL, NULL, NULL );
   if( !err ) {
     err = pip_get_pid( *pvid, pid );
   }

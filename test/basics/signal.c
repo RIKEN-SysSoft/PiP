@@ -59,7 +59,7 @@ int main( int argc, char **argv ) {
 
     pipid = 0;
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			NULL, NULL) );
+			NULL, NULL, NULL ) );
 
     while( flag == 0 ) pause_and_yield( 0 );
 

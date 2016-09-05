@@ -103,7 +103,7 @@ int main( int argc, char **argv ) {
 	int err;
 
 	pipid = i;
-	err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL );
+	err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL, NULL );
 	if( err != 0 ) {
 	  break;
 	}

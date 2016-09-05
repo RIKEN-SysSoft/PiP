@@ -64,6 +64,7 @@ typedef struct pip_spawn_args {
   int	 		coreno;
   pip_spawnhook_t	hook_before;
   pip_spawnhook_t	hook_after;
+  void			*hook_arg;
   char 			*prog;
   char 			**argv;
   char 			**envv;

@@ -336,13 +336,14 @@ static int pip_do_spawn( void *thargs )  {
   char **envv      = args->envv;
   pip_spawnhook_t before = args->hook_before;
   pip_spawnhook_t after  = args->hook_after;
+  void	*hook_arg  = args->hook_arg;
   pip_task_t *self = &pip_root->tasks[pipid];
   int err = 0;
 
   free( thargs );
 
   /* calling hook, if any */
-  if( before == NULL || ( err = before( &argv, &envv ) ) == 0 ) {
+  if( before == NULL || ( err = before( hook_arg ) ) == 0 ) {
     /* argv and/or envv might be changed in the hook function */
     volatile int	flag_exit;	/* must be volatile */
     ucontext_t 		ctx;
@@ -365,7 +366,7 @@ static int pip_do_spawn( void *thargs )  {
     } else {
       DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
     }
-    if( after != NULL ) (void) after( &argv, &envv );
+    if( after != NULL ) (void) after( hook_arg );
   } else if( err != 0 ) {
     fprintf( stderr,
 	     "PIP: try to spawn(%s), but the before hook returns %d\n",
@@ -502,7 +503,8 @@ int pip_spawn( char *prog,
 	       int  coreno,
 	       int  *pipidp,
 	       pip_spawnhook_t before,
-	       pip_spawnhook_t after ) {
+	       pip_spawnhook_t after,
+	       void *hookarg ) {
   extern char **environ;
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
@@ -559,6 +561,7 @@ int pip_spawn( char *prog,
     args->pipid       = pipid;
     args->hook_before = before;
     args->hook_after  = after;
+    args->hook_arg    = hookarg;
 
     task = &pip_root->tasks[pipid];
 

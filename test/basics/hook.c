@@ -16,38 +16,28 @@
 #define ENVNAM		"HOOK_FD"
 #define FDNUM		(100)
 
-int bhook( char ***argvp, char ***envvp ) {
-  char fdstr[32];
-  char **envv;
-  int fd;
-
-  if( ( fd = dup2( 1, FDNUM ) ) < 0 ) return errno;
-  sprintf( fdstr, "%s=%d", ENVNAM, fd );
-
-  fprintf( stderr, "before hook is called (%s)\n", fdstr );
-
-  envv = pip_copy_vec( fdstr, *envvp );
-  if( envv == NULL ) return ENOMEM;
-  *envvp = envv;
+int bhook( void *hook_arg ) {
+  fprintf( stderr, "before hook is called (hook_arg=%d)\n", *(int*) hook_arg );
   return 0;
 }
 
-int ahook( char ***argvp, char ***envvp ) {
-  fprintf( stderr, "after hook is called\n" );
-  free( *envvp );
+int ahook( void *hook_arg ) {
+  fprintf( stderr, "after hook is called (hook_arg=%d)\n", *(int*) hook_arg );
   return 0;
 }
 
 int main( int argc, char **argv ) {
   int pipid = 999;
   int ntasks;
+  int hook_arg;
 
   ntasks = 1;
   TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pipid = 0;
+    hook_arg = 12345;
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			bhook, ahook) );
+			bhook, ahook, (void*) &hook_arg ) );
     TESTINT( pip_wait( 0, NULL ) );
 
     char *mesg = "This message should not apper\n";
@@ -57,19 +47,7 @@ int main( int argc, char **argv ) {
     TESTINT( pip_fin() );
 
   } else {
-    char mesg[128];
-    char *env;
-    int fd;
-
-    if( ( env = getenv( ENVNAM ) ) != NULL ) {
-      fd = atoi( env );
-      sprintf( mesg, "[%d] Hello, I am fine with FD[%d] !!\n", pipid, fd );
-      if( write( fd, mesg, strlen( mesg ) ) < 0 ) {
-	fprintf( stderr, "write(%d) returns %d (env=%s)\n", fd, errno, env );
-      }
-    } else {
-      fprintf( stderr, "%s not found\n", ENVNAM );
-    }
+    fprintf( stderr, "[%d] Hello, I am fine !!\n", pipid );
   }
   return 0;
 }
