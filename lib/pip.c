@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-//#define DEBUG
+#define DEBUG
 
 #include <pip.h>
 #include <pip_internal.h>
@@ -65,9 +65,11 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   //pip_print_maps();
   if( ( env = getenv( PIP_ROOT_ENV ) ) == NULL ) {
     /* root process ? */
-    if( *ntasksp <= 0 ) RETURN( EINVAL );
+
     if( ntasksp  == NULL ) {
       ntasks = PIP_NTASKS_MAX;
+    } else if( *ntasksp <= 0 ) {
+      RETURN( EINVAL );
     } else {
       ntasks = *ntasksp;
     }
