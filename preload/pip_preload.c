@@ -16,7 +16,7 @@
 #include <signal.h>
 #include <errno.h>
 
-//#define DEBUG
+#define DEBUG
 #include <pip_clone.h>
 #include <pip_debug.h>
 
@@ -60,6 +60,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       flags &= ~0xff;
       flags |= SIGCHLD;
 
+      errno = 0;
       DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p", oldflags, flags, fn );
       retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
       DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );

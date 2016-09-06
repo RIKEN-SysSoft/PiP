@@ -24,16 +24,22 @@
 #include <sys/types.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <string.h>
 
-#define DBG_NL 	fprintf( stderr, "\n" )
-#define DBG_TAG 	\
-  fprintf( stderr, "[TID:%d] %s:%d %s(): ", (int)syscall(__NR_gettid), 	\
-	   __FILE__, __LINE__, __func__ )
-#define DBG	{ DBG_TAG; DBG_NL; }
+#define DBG_PRTBUF	char _dbuf[1024]={'\0'}
+#define DBG_PRNT(...)	sprintf(_dbuf+strlen(_dbuf),__VA_ARGS__)
+#define DBG_OUTPUT	fprintf(stderr,"%s\n",_dbuf)
+#define DBG_TAG		\
+  do { DBG_PRNT("[PID:%d] %s:%d %s(): ",(int)getpid(),			\
+		__FILE__, __LINE__, __func__ );	} while(0)
+
+#define DBG		\
+  do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
 #define DBGF(...)	\
-  do { DBG_TAG; fprintf( stderr, __VA_ARGS__ ); DBG_NL; } while(0)
+  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; }while(0)
 #define RETURN(X)	\
-  do {if(X){DBG_TAG;fprintf(stderr,"ERROR RETURN (%d)\n",X);}return (X);} while(0)
+  do { DBG_PRTBUF; if(X) { DBG_TAG; DBG_PRNT("ERROR RETURN (%d)\n",X);	\
+			   DBG_OUTPUT; } return (X); } while(0)
 
 #else
 

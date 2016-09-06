@@ -13,6 +13,7 @@
 #include <sys/wait.h>
 #include <malloc.h>
 #include <dlfcn.h>
+#include <dirent.h>
 #include <sched.h>
 #include <pthread.h>
 #include <signal.h>
@@ -180,15 +181,16 @@ int pip_if_pthread( int *flagp ) {
   RETURN( 0 );
 }
 
+static int pip_if_shared_fd_( void ) {
+  if( pip_root->cloneinfo == NULL ) return 1;
+  return pip_root->cloneinfo->flag_clone & CLONE_FILES;
+}
+
 int pip_if_shared_fd( int *flagp ) {
   /* this function is only valid on the root process */
   if( pip_root == NULL ) RETURN( EPERM  );
   if( flagp    == NULL ) RETURN( EINVAL );
-  if( pip_root->cloneinfo == NULL ) {
-    *flagp = 1;
-  } else {
-    *flagp = pip_root->cloneinfo->flag_clone & CLONE_FILES;
-  }
+  *flagp = pip_if_shared_fd_();
   RETURN( 0 );
 }
 
@@ -316,6 +318,26 @@ static char **pip_copy_env( char **envsrc ) {
   return envdst;
 }
 
+static void pip_close_on_exec( void ) {
+  DIR *dir;
+  struct dirent *direntp;
+  int fd;
+  int flags;
+
+#define PROCFD_PATH		"/proc/self/fd"
+  if( ( dir = opendir( PROCFD_PATH ) ) != NULL ) {
+    while( ( direntp = readdir( dir ) ) != NULL ) {
+      if( ( fd = atoi( direntp->d_name ) ) >= 0 &&
+	  ( flags = fcntl( fd, F_GETFD ) ) >= 0 &&
+	  flags & FD_CLOEXEC ) {
+	(void) close( fd );
+	DBGF( "fd[%d] is closed (CLOEXEC)", fd );
+      }
+    }
+    (void) closedir( dir );
+  }
+}
+
 static void pip_finalize_task( pip_task_t *task ) {
   DBGF( "pipid=%d", task->pipid );
   task->mainf  = NULL;
@@ -342,7 +364,10 @@ static int pip_do_spawn( void *thargs )  {
   pip_task_t *self = &pip_root->tasks[pipid];
   int err = 0;
 
+  DBG;
   free( thargs );
+
+  if( !pip_if_shared_fd_() ) pip_close_on_exec();
 
   /* calling hook, if any */
   if( before == NULL || ( err = before( hook_arg ) ) == 0 ) {
@@ -369,6 +394,7 @@ static int pip_do_spawn( void *thargs )  {
       DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
     }
     if( after != NULL ) (void) after( hook_arg );
+
   } else if( err != 0 ) {
     fprintf( stderr,
 	     "PIP: try to spawn(%s), but the before hook returns %d\n",
@@ -376,7 +402,9 @@ static int pip_do_spawn( void *thargs )  {
 	     err );
     self->retval = err;
   }
+  DBG;
   pip_finalize_task( self );
+  DBG;
   RETURN( 0 );
 }
 
