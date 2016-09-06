@@ -423,12 +423,14 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
   for( i=0; solibs[i]!=NULL; i++ ) {
     if( ( err = pip_load_so( &loaded, solibs[i] ) ) != 0 ) goto error;
   }
-  DBG;
+  DBGF( "prog=%s", prog );
   if( ( err = pip_load_so( &loaded, prog ) ) == 0 ) {
     DBG;
-    if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ||
+    if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
 	/* getting main function address to invoke */
-	( envvp     = (char***)     dlsym( loaded, "environ" ) ) == NULL ) {
+      DBG;
+      err = ENXIO;
+    } else if( ( envvp = (char***) dlsym( loaded, "environ" ) ) == NULL ) {
       /* getting address of environmanet variable to be set */
       DBG;
       err = ENXIO;
@@ -514,10 +516,12 @@ int pip_spawn( char *prog,
   int 			pipid;
   int 			err;
 
+  DBG;
+
   if( pip_root == NULL ) RETURN( EPERM );
   if( pipidp   == NULL ) RETURN( EINVAL );
   pipid = *pipidp;
-  if( pipid < PIP_PIPID_ROOT || pipid >= pip_root->ntasks ) {
+  if( pipid < PIP_PIPID_ANY || pipid >= pip_root->ntasks ) {
     DBGF( "pipid=%d", pipid );
     RETURN( EINVAL );
   }
@@ -540,6 +544,7 @@ int pip_spawn( char *prog,
     /*** begin lock region ***/
     if( pipid != PIP_PIPID_ANY ) {
       if( pip_root->tasks[pipid].pipid != PIP_PIPID_NONE ) {
+	DBG;
 	err = EAGAIN;
 	goto unlock;
       }
@@ -598,6 +603,7 @@ int pip_spawn( char *prog,
   pip_spin_unlock( &pip_root->spawn_lock );
 
   if( err != 0 ) {		/* undo */
+    DBGF( "err=%d", err );
     pip_finalize_task( &pip_root->tasks[pipid] );
     if( args != NULL ) free( args );
   }
