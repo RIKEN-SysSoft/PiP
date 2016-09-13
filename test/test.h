@@ -7,8 +7,14 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
+#include <ucontext.h>
 #include <fcntl.h>
 #include <sched.h>
 #include <signal.h>
@@ -150,7 +156,14 @@ inline static void set_signal_watcher( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_watcher;
-  sigact.sa_flags     = SA_SIGINFO;
+  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
+  TESTINT( sigaction( signal, &sigact, NULL ) );
+}
+
+inline static void ignore_signal( int signal ) {
+  struct sigaction sigact;
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_handler = SIG_IGN;
   TESTINT( sigaction( signal, &sigact, NULL ) );
 }
 
@@ -191,7 +204,7 @@ inline static void set_signal_echo( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_echo;
-  sigact.sa_flags     = SA_SIGINFO;
+  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
   TESTINT( sigaction( signal, &sigact, NULL ) );
 }
 
@@ -217,14 +230,6 @@ inline static void echo_anysignal( void ) {
   set_signal_echo( SIGTTOU );
 }
 
-inline static void ignore_signal( int signal ) {
-  struct sigaction sigact;
-  memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_handler = SIG_IGN;
-  sigact.sa_flags   = SA_SIGINFO;
-  TESTINT( sigaction( signal, &sigact, NULL ) );
-}
-
 inline static void ignore_anysignal( void ) {
   ignore_signal( SIGHUP  );
   ignore_signal( SIGINT  );
@@ -245,6 +250,35 @@ inline static void ignore_anysignal( void ) {
   ignore_signal( SIGTSTP );
   ignore_signal( SIGTTIN );
   ignore_signal( SIGTTOU );
+}
+
+inline static void set_sigsegv_watcher( void ) {
+  void sigsegv_watcher( int sig, siginfo_t *siginfo, void *context ) {
+    ucontext_t *ctx = (ucontext_t*) context;
+    intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
+    char *sigcode;
+    if( siginfo->si_code == SEGV_MAPERR ) {
+      sigcode = "SEGV_MAPERR";
+    } else if( siginfo->si_code == SEGV_ACCERR ) {
+      sigcode = "SEGV_ACCERR";
+    } else {
+      sigcode = "(unknown)";
+    }
+    fprintf( stderr,
+	     "!!!!!! SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n",
+	     (void*) pc,
+	     siginfo->si_pid,
+	     siginfo->si_addr,
+	     sigcode );
+    print_maps();
+  }
+
+  struct sigaction sigact;
+
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_sigaction = sigsegv_watcher;
+  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
+  TESTINT( sigaction( SIGSEGV, &sigact, NULL ) );
 }
 
 #define PROCFD		"/proc/self/fd"
@@ -288,4 +322,67 @@ inline static int print_fds( FILE *file ) {
     free( entry_list );
   }
   return err;
+}
+
+#define NOTWORKING
+#ifdef NOTWORKING
+#include <pip_internal.h>
+
+inline static void attachme( void ) {
+  char *env;
+
+  if( ( env = getenv( PIP_ROOT_ENV ) ) == NULL ) {
+    fprintf( stderr, "attachme: unable to attach\n" );
+  } else {
+    pid_t pid;
+    pid_t pid_target = getpid();
+    intptr_t	ptr = (intptr_t) strtoll( env, NULL, 16 );
+    pip_root_t *pip_root = (pip_root_t*) ptr;
+    int pipid;
+    int err;
+
+    if( ( err = pip_get_pipid( &pipid ) ) != 0 ) {
+    } else if( ( pid = fork() ) == 0 ) {
+      char *argv[10];
+      char gdbstr[256];
+      int i = 0;
+
+      sprintf( gdbstr,
+	       "gdb %s %d",
+	       pip_root->tasks[pipid].argv[0],
+	       pid_target );
+
+      argv[i++] = "sh";
+      argv[i++] = "-c";
+      argv[i++] = gdbstr;
+      argv[i++] = NULL;
+      execvp( argv[0], argv );
+    }
+    wait( NULL );
+  }
+}
+#else
+  inline static void attachme( void ) { return; }
+#endif
+
+
+inline static void set_sigint_watcher( void ) {
+  void sigint_watcher( int sig, siginfo_t *siginfo, void *context ) {
+    ucontext_t *ctx = (ucontext_t*) context;
+    intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
+    fprintf( stderr,
+	     "\n...... SIGINT@%p  pid=%d  segvaddr=%p !!!!!!\n",
+	     (void*) pc,
+	     siginfo->si_pid,
+	     siginfo->si_addr );
+    print_maps();
+    while( 1 );
+  }
+
+  struct sigaction sigact;
+
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_sigaction = sigint_watcher;
+  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
+  TESTINT( sigaction( SIGINT, &sigact, NULL ) );
 }

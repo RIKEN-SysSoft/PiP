@@ -7,11 +7,11 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <fcntl.h>
-
 //#define DEBUG
 #define PIP_INTERNAL_FUNCS
 #include <test.h>
+
+#include <fcntl.h>
 
 #define ENVNAM		"HOOK_FD"
 #define FDNUM		(100)

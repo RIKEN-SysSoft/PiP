@@ -18,12 +18,13 @@ SRCS  = initfin.c \
 	barrier.c \
 	core.c \
 	numa.c \
-	hook.c
+	hook.c \
+	spawn.c
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 PROGS  = initfin stack export environ malloc file wait signal exit \
-	mutex barrier core numa hook
+	mutex barrier core numa hook spawn
 
 all: $(PROGS)
 

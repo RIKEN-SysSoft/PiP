@@ -47,33 +47,32 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 
   if( ( err = get_funcaddr( "__clone", (void**) &clone_orig ) ) != 0 ) {
     errno = err;
-  } else {
-    if( pip_clone_info.flag_wrap ) {
-      int __attribute__ ((unused)) oldflags = flags;
+  } else if( pip_clone_info.flag_wrap ) {
+    pip_clone_info.flag_wrap = 0;
 
-      pip_clone_info.flag_wrap = 0;
+    int __attribute__ ((unused)) oldflags = flags;
+    flags &= ~CLONE_FS;	/* 0x00200 */
+    flags &= ~CLONE_FILES;	/* 0x00400 */
+    flags &= ~CLONE_SIGHAND;	/* 0x00800 */
+    flags &= ~CLONE_THREAD;	/* 0x10000 */
+    flags &= ~0xff;
+    flags |= SIGCHLD;
 
-      flags &= ~CLONE_FS;	/* 0x00200?*/
-      flags &= ~CLONE_FILES;	/* 0x00400 */
-      flags &= ~CLONE_SIGHAND;	/* 0x00800 */
-      flags &= ~CLONE_THREAD;	/* 0x10000 */
-      flags &= ~0xff;
-      flags |= SIGCHLD;
+    errno = 0;
+    DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  TLS=%p",
+	  oldflags, flags, fn, tls );
+    retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
+    DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );
 
-      errno = 0;
-      DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p", oldflags, flags, fn );
-      retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
-      DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );
-
-      if( retval > 0 ) {	/* create PID is returned */
-	pip_clone_info.flag_clone = flags;
-	pip_clone_info.pid_clone  = retval;
-	pip_clone_info.stack      = child_stack;
-      }
-
-    } else {
-      retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
+    if( retval > 0 ) {	/* create PID is returned */
+      pip_clone_info.flag_clone = flags;
+      pip_clone_info.pid_clone  = retval;
+      pip_clone_info.stack      = child_stack;
     }
+
+  } else {
+    DBGF( "!!! Original clone() is used" );
+    retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
   }
   va_end( ap );
   return retval;

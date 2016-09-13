@@ -10,9 +10,13 @@
 #ifndef _pip_h_
 #define _pip_h_
 
-#define PIP_MODEL_ANY		(0x0)
+#define PIP_OPTS_ANY		(0x0)
 #define PIP_MODEL_PTHREAD	(0x1)
 #define PIP_MODEL_PROCESS	(0x2)
+
+#define PIP_ENV_MODEL		"PIP_MODEL"
+#define PIP_ENV_MODEL_PTHREAD	"pthread"
+#define PIP_ENV_MODEL_PROCESS	"process"
 
 #define PIP_PIPID_ROOT		(-1)
 #define PIP_PIPID_ANY		(-2)

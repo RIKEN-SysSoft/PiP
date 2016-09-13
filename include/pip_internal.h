@@ -29,6 +29,18 @@
 
 #define PIP_LD_SOLIBS		{ NULL }
 
+#ifdef AHAHAHAH
+#define LIBCDIR			"/usr/lib64/"
+#endif
+#define LIBCDIR			"/home/ahori/work/PIP/GLIBC/install/lib/"
+
+#define PIP_STD_NSSLIBS		{					\
+      LIBCDIR "libnss_dns.so", LIBCDIR "libnss_files.so",		\
+      LIBCDIR "libnss_nis.so", LIBCDIR "libnss_nisplus.so",		\
+      LIBCDIR "libnss_db.so",  LIBCDIR "libnss_compat.so",		\
+      LIBCDIR "libnss_hesiod.so",					\
+      NULL }
+
 typedef   int(*main_func_t)(int,char**);
 
 typedef struct {

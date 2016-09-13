@@ -67,7 +67,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   if( ( env = getenv( PIP_ROOT_ENV ) ) == NULL ) {
     /* root process ? */
 
-    if( ntasksp  == NULL ) {
+    if( ntasksp == NULL ) {
       ntasks = PIP_NTASKS_MAX;
     } else if( *ntasksp <= 0 ) {
       RETURN( EINVAL );
@@ -79,10 +79,27 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( opts & PIP_MODEL_PTHREAD &&
 	opts & PIP_MODEL_PROCESS ) RETURN( EINVAL );
 
+    if( opts == 0 ) {
+      char *env = getenv( PIP_ENV_MODEL );
+      DBGF( "%s=%s", PIP_ENV_MODEL, env );
+      if( env == NULL ) {
+	DBG;
+	opts |= PIP_MODEL_PROCESS;
+      } else if( strcasecmp( env, PIP_ENV_MODEL_PTHREAD ) == 0 ) {
+	DBG;
+	opts |= PIP_MODEL_PTHREAD;
+      } else if( strcasecmp( env, PIP_ENV_MODEL_PROCESS ) == 0 ) {
+	DBG;
+	opts |= PIP_MODEL_PROCESS;
+      }
+    }
+    DBGF( "opts=0x%x", opts );;
+
     if( opts & PIP_MODEL_PROCESS ) {
       /* check if the __clone() systemcall wrapper exists or not */
       cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
-      if( cloneinfo == NULL ) {
+      DBGF( "cloneinfo-%p", cloneinfo );
+      if( cloneinfo == NULL && !( opts & PIP_MODEL_PTHREAD ) ) {
 	/* no wrapper found */
 	if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
 	  fprintf( stderr,
@@ -90,8 +107,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 		   "LD_PRELOAD environment variable is empty.\n" );
 	} else {
 	  fprintf( stderr,
-		   "PIP: process model is desired but LD_PRELOAD='%s' "
-		   "seems not to be effective.\n",
+		   "PIP: process model is desired but LD_PRELOAD='%s'\n",
 		   env );
 	}
 	RETURN( EPERM );
@@ -242,14 +258,34 @@ int pip_export( void *export ) {
   RETURN( 0 );
 }
 
+static int pip_check_pipid( int *pipidp ) {
+  int pipid = *pipidp;
+
+  if( pip_root == NULL          ) RETURN( EPERM  );
+  if( pipid >= pip_root->ntasks ) RETURN( ENOENT );
+  if( pipid != PIP_PIPID_MYSELF &&
+      pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
+  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
+  if( pipid == PIP_PIPID_MYSELF ) {
+    if( pip_root_p() ) {
+      *pipidp = PIP_PIPID_ROOT;
+    } else {
+      if( pip_root->tasks[*pipidp].pipid != *pipidp ) RETURN( ENOENT );
+      *pipidp = pip_self->pipid;
+    }
+  }
+  return 0;
+}
+
 int pip_import( int pipid, void **exportp  ) {
-  if( pip_root == NULL ) RETURN( EPERM  );
-  if( exportp  == NULL ) RETURN( EINVAL );
+  int err;
+
+  if( exportp == NULL ) RETURN( EINVAL );
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+
   if( pipid == PIP_PIPID_ROOT ) {
     *exportp = (void*) pip_root->export;
   } else {
-    if( pipid < 0 || pipid >= pip_root->ntasks ) RETURN( EINVAL );
-    if( pip_root->tasks[pipid].pipid != pipid  ) RETURN( ENOENT );
     *exportp = (void*) pip_root->tasks[pipid].export;
   }
   pip_memory_barrier();
@@ -353,6 +389,79 @@ static void pip_finalize_task( pip_task_t *task ) {
   task->export = NULL;
 }
 
+/*
+  To have separate GOTs
+  1) dlmopen()
+  --- CAUTION: the max number of link maps is currently 16
+  --- which is defined in GLIB/sysdeps/generic/ldsodefs.h (DL_NNS)
+  2) get link map by calling dlinfo(handle)
+*/
+
+static int pip_load_so( void **handlep, char *path ) {
+  Lmid_t	lmid;
+  int 		flags = RTLD_NOW | RTLD_LOCAL;
+  /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
+  void 		*loaded;
+
+  DBG;
+  if( *handlep == NULL ) {
+    lmid = LM_ID_NEWLM;
+  } else {
+  DBG;
+    if( dlinfo( *handlep, RTLD_DI_LMID, (void*) &lmid ) != 0 ) {
+      DBGF( "dlinfo(%p): %s", handlep, dlerror() );
+      RETURN( ENXIO );
+    }
+  }
+  DBG;
+  if( ( loaded = dlmopen( lmid, path, flags ) ) == NULL ) {
+    DBGF( "dlmopen(%s): %s", path, dlerror() );
+    RETURN( ENXIO );
+  } else {
+    DBGF( "%s", path );
+    *handlep = loaded;
+  }
+  DBG;
+  RETURN( 0 );
+}
+
+static int pip_load_prog( char *prog, pip_task_t *task ) {
+  void		*loaded = NULL;
+  char 		***envvp;
+  main_func_t 	main_func;
+  int 		err;
+
+  DBGF( "prog=%s", prog );
+  if( ( err = pip_load_so( &loaded, prog ) ) == 0 ) {
+    DBG;
+    if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
+	/* getting main function address to invoke */
+      DBG;
+      err = ENXIO;
+      goto error;
+    } else if( ( envvp = (char***) dlsym( loaded, "environ" ) ) == NULL ) {
+      /* getting address of environmanet variable to be set */
+      DBG;
+      err = ENXIO;
+      goto error;
+    }
+  }
+ error:
+  if( err == 0 ) {
+#ifdef DEBUG
+    void pip_check_addr( char *tag, void *addr );
+    pip_check_addr( "MAIN", main_func );
+    pip_check_addr( "ENVP", envvp );
+#endif
+    task->mainf  = main_func;
+    task->envvp  = envvp;
+    task->loaded = loaded;
+  } else if( loaded != NULL ) {
+    (void) dlclose( loaded );
+  }
+  RETURN( err );
+}
+
 static int pip_do_spawn( void *thargs )  {
   pip_spawn_args_t *args = (pip_spawn_args_t*) thargs;
   int 	pipid      = args->pipid;
@@ -372,9 +481,9 @@ static int pip_do_spawn( void *thargs )  {
   /* calling hook, if any */
   if( before == NULL || ( err = before( hook_arg ) ) == 0 ) {
     /* argv and/or envv might be changed in the hook function */
-    volatile int	flag_exit;	/* must be volatile */
-    ucontext_t 		ctx;
     int   		argc;
+    ucontext_t 		ctx;
+    volatile int	flag_exit;	/* must be volatile */
 
     for( argc=0; argv[argc]!=NULL; argc++ );
     self->argv   = argv;
@@ -386,9 +495,11 @@ static int pip_do_spawn( void *thargs )  {
       flag_exit = 1;
       self->ctx = &ctx;
 
-      DBGF( "[%d] >> main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+      DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
+	    pipid, self->mainf, argc, argv[0], argv[1] );
       self->retval = self->mainf( argc, argv );
-      DBGF( "[%d] << main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
+      DBGF( "[%d] << main@%p(%d,%s,%s,...)",
+	    pipid, self->mainf, argc, argv[0], argv[1] );
 
     } else {
       DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
@@ -397,8 +508,9 @@ static int pip_do_spawn( void *thargs )  {
 
   } else if( err != 0 ) {
     fprintf( stderr,
-	     "PIP: try to spawn(%s), but the before hook returns %d\n",
+	     "PIP: try to spawn(%s), but the before hook at %p returns %d\n",
 	     argv[0],
+	     before,
 	     err );
     self->retval = err;
   }
@@ -406,73 +518,6 @@ static int pip_do_spawn( void *thargs )  {
   pip_finalize_task( self );
   DBG;
   RETURN( 0 );
-}
-
-/*
-  To have separate GOTs
-  1) dlmopen()
-  --- CAUTION: the max number of link maps is currently 16
-  --- which is defined in GLIB/sysdeps/generic/ldsodefs.h (DL_NNS)
-  2) get link map by calling dlinfo(handle)
-*/
-
-static int pip_load_so( void **handlep, char *path ) {
-  Lmid_t	lmid;
-  int 		flags = RTLD_NOW | RTLD_LOCAL;
-  /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
-  void 		*loaded;
-
-  if( *handlep == NULL ) {
-    lmid = LM_ID_NEWLM;
-  } else {
-    if( dlinfo( *handlep, RTLD_DI_LMID, (void*) &lmid ) != 0 ) {
-      DBGF( "dlinfo(%p): %s", handlep, dlerror() );
-      RETURN( ENXIO );
-    }
-  }
-  if( ( loaded = dlmopen( lmid, path, flags ) ) == NULL ) {
-    DBGF( "dlmopen(%s): %s", path, dlerror() );
-    RETURN( ENXIO );
-  } else {
-    DBG;
-    *handlep = loaded;
-  }
-  RETURN( 0 );
-}
-
-static int pip_load_prog( char *prog, pip_task_t *task ) {
-  void		*loaded   = NULL;
-  char		*solibs[] = PIP_LD_SOLIBS;
-  char 		***envvp;
-  main_func_t 	main_func;
-  int 		i;
-  int 		err;
-
-  for( i=0; solibs[i]!=NULL; i++ ) {
-    if( ( err = pip_load_so( &loaded, solibs[i] ) ) != 0 ) goto error;
-  }
-  DBGF( "prog=%s", prog );
-  if( ( err = pip_load_so( &loaded, prog ) ) == 0 ) {
-    DBG;
-    if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
-	/* getting main function address to invoke */
-      DBG;
-      err = ENXIO;
-    } else if( ( envvp = (char***) dlsym( loaded, "environ" ) ) == NULL ) {
-      /* getting address of environmanet variable to be set */
-      DBG;
-      err = ENXIO;
-    }
-  }
- error:
-  if( err == 0 ) {
-    task->mainf  = main_func;
-    task->envvp  = envvp;
-    task->loaded = loaded;
-  } else if( loaded != NULL ) {
-    (void) dlclose( loaded );
-  }
-  RETURN( err );
 }
 
 static int pip_corebind( int coreno, cpu_set_t *oldsetp ) {
@@ -522,10 +567,11 @@ static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
 }
 
 static void pip_clone_wrap_begin( void ) {
-  if( pip_root->opts      &  PIP_MODEL_PROCESS &&
-      pip_root->cloneinfo != NULL) {
-    DBGF( "cloneinfo=%p", pip_root->cloneinfo );
-    pip_root->cloneinfo->flag_wrap = 1;
+  if( pip_root->cloneinfo != NULL) {
+    if( pip_root->opts & PIP_MODEL_PROCESS ) {
+      DBGF( "cloneinfo=%p", pip_root->cloneinfo );
+      pip_root->cloneinfo->flag_wrap = 1;
+    }
   }
 }
 
@@ -537,7 +583,7 @@ int pip_spawn( char *prog,
 	       pip_spawnhook_t before,
 	       pip_spawnhook_t after,
 	       void *hookarg ) {
-  extern char **environ;
+  extern char 		**environ;
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
   pip_task_t		*task;
@@ -547,6 +593,10 @@ int pip_spawn( char *prog,
   DBG;
 
   if( pip_root == NULL ) RETURN( EPERM );
+  if( prog == NULL ) {
+    if( argv == NULL )   RETURN( EINVAL );
+    prog = argv[0];
+  }
   if( pipidp   == NULL ) RETURN( EINVAL );
   pipid = *pipidp;
   if( pipid < PIP_PIPID_ANY || pipid >= pip_root->ntasks ) {
@@ -554,9 +604,11 @@ int pip_spawn( char *prog,
     RETURN( EINVAL );
   }
   if( pip_root->ntasks_accum >= PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
+#ifdef PIP_NO_TASKSPAWN
   if( !pthread_equal( pthread_self(), pip_root->thread ) ) {
     RETURN( EPERM );
   }
+#endif
   if( envv == NULL ) envv = environ;
 
   args = (pip_spawn_args_t*) malloc( sizeof(pip_spawn_args_t) );
@@ -667,10 +719,10 @@ int pip_fin( void ) {
 }
 
 int pip_get_pid( int pipid, pid_t *pidp ) {
-  if( pip_root == NULL ) RETURN( EPERM );
-  if( pidp     == NULL ) RETURN( EINVAL );
-  if( pipid    <  PIP_PIPID_ROOT ||
-      pipid    >= pip_root->ntasks ) RETURN( EINVAL );
+  int err;
+
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( pidp == NULL )      RETURN( EINVAL );
   if( pip_if_pthread_() ) RETURN( ENOSYS );
 
   if( pipid == PIP_PIPID_ROOT ) {
@@ -682,13 +734,10 @@ int pip_get_pid( int pipid, pid_t *pidp ) {
 }
 
 int pip_kill( int pipid, int signal ) {
-  pip_task_t *task;
   int err  = 0;
 
-  if( signal    < 0              ) RETURN( EINVAL );
-  if( pipid     < PIP_PIPID_ROOT ) RETURN( EINVAL );
-  if( pip_root == NULL           ) RETURN( EPERM  );
-  if( pipid >= pip_root->ntasks  ) RETURN( ENOENT );
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( signal < 0 ) RETURN( EINVAL );
 
   if( pipid == PIP_PIPID_ROOT ) {
     if( pip_if_pthread_() ) {
@@ -699,8 +748,8 @@ int pip_kill( int pipid, int signal ) {
       DBGF( "kill(ROOT(PID=%d),sig=%d)=%d", pip_root->pid, signal, err );
     }
   } else {
-    task = &pip_root->tasks[pipid];
-    if( task->pipid != pipid ) RETURN( ENOENT );
+    pip_task_t *task = &pip_root->tasks[pipid];
+
     if( pip_if_pthread_() ) {
       err = pthread_kill( task->thread, signal );
       DBGF( "pthread_kill()=%d", err );
@@ -714,8 +763,9 @@ int pip_kill( int pipid, int signal ) {
 }
 
 int pip_exit( int retval ) {
-  if( pip_root == NULL ) RETURN( EPERM );
-  if( pip_root_p() && 0 ) {
+  if( pip_root == NULL || pip_root_p() ) {
+    /* since we must replace exit() with pip_exit(), pip_exit() */
+    /* must be able to use even if it is NOT a PIP environment. */
     exit( retval );
   } else {
     pip_self->retval = retval;
@@ -751,21 +801,21 @@ static void pip_finalize_thread( pip_task_t *task, int *retvalp ) {
   task->thread = pip_root->thread;
   pip_root->ntasks_curr --;
 
+#ifdef DEBUG
   //pip_print_maps();
+#endif
 }
 
 static int pip_check_join_arg( int pipid, pip_task_t **taskp ) {
-  if( pipid     < 0                ) RETURN( EINVAL );
-  if( pip_root == NULL             ) RETURN( EPERM  );
-  if( pip_self != NULL             ) RETURN( EPERM  );
-  if( pipid    >= pip_root->ntasks ) RETURN( ENOENT );
-  if( !pthread_equal( pthread_self(), pip_root->thread ) ) {
-    RETURN( EPERM );
-  } else {
-    pip_task_t *task = &pip_root->tasks[pipid];
-    if( task->pipid != pipid ) RETURN( ENOENT );
-    *taskp = task;
-  }
+  int err;
+
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( pipid == PIP_PIPID_ROOT ) RETURN( EINVAL );
+  if( pip_self != NULL ) RETURN( EPERM );
+  if( !pthread_equal( pthread_self(), pip_root->thread ) ) RETURN( EPERM );
+  *taskp = &pip_root->tasks[pipid];
+  if( *taskp == pip_self ) RETURN( EPERM );
+
   RETURN( 0 );
 }
 
@@ -820,28 +870,29 @@ int pip_wait( int pipid, int *retvalp ) {
   pip_task_t *task;
   int err;
 
-  if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
-    if( pip_if_pthread_() ) { /* thread model */
-      err = pthread_join( task->thread, NULL );
-      DBGF( "pthread_join()=%d", err );
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
+  task = &pip_root->tasks[pipid];
+  if( task == pip_self ) RETURN (EINVAL );
 
-    } else { 	/* process model */
-      int status;
-      pid_t pid;
-      DBG;
-      while( 1 ) {
-	if( ( pid = waitpid( task->pid, &status, 0 ) ) >= 0 ) break;
-	if( errno != EINTR ) {
-	  err = errno;
-	  break;
-	}
+  if( pip_if_pthread_() ) { /* thread model */
+    err = pthread_join( task->thread, NULL );
+    DBGF( "pthread_join()=%d", err );
+
+  } else { 	/* process model */
+    int status;
+    pid_t pid;
+    DBG;
+    while( 1 ) {
+      if( ( pid = waitpid( task->pid, &status, 0 ) ) >= 0 ) break;
+      if( errno != EINTR ) {
+	err = errno;
+	break;
       }
-      DBGF( "wait(status=%d)=%d (errno=%d)", status, pid, err );
     }
+    DBGF( "wait(status=%d)=%d (errno=%d)", status, pid, err );
   }
-  if( !err ) {
-    pip_finalize_thread( task, retvalp );
-  }
+  if( !err ) pip_finalize_thread( task, retvalp );
   RETURN( err );
 }
 
@@ -849,27 +900,28 @@ int pip_trywait( int pipid, int *retvalp ) {
   pip_task_t *task;
   int err;
 
-  if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
-    if( pip_if_pthread_() ) { /* thread model */
-      err = pthread_tryjoin_np( task->thread, NULL );
-      DBGF( "pthread_tryjoin_np()=%d", err );
-    } else {			/* process model */
-      int status;
-      pid_t pid;
-      DBG;
-      while( 1 ) {
-	if( ( pid = waitpid( task->pid, &status, WNOHANG ) ) >= 0 ) break;
-	if( errno != EINTR ) {
-	  err = errno;
-	  break;
-	}
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
+  task = &pip_root->tasks[pipid];
+  if( task == pip_self ) RETURN (EINVAL );
+
+  if( pip_if_pthread_() ) { /* thread model */
+    err = pthread_tryjoin_np( task->thread, NULL );
+    DBGF( "pthread_tryjoin_np()=%d", err );
+  } else {			/* process model */
+    int status;
+    pid_t pid;
+    DBG;
+    while( 1 ) {
+      if( ( pid = waitpid( task->pid, &status, WNOHANG ) ) >= 0 ) break;
+      if( errno != EINTR ) {
+	err = errno;
+	break;
       }
-      DBGF( "wait(status=%d)=%d (errno=%d)", status, pid, err );
     }
+    DBGF( "wait(status=%d)=%d (errno=%d)", status, pid, err );
   }
-  if( !err ) {
-    pip_finalize_thread( task, retvalp );
-  }
+  if( !err ) pip_finalize_thread( task, retvalp );
   RETURN( err );
 }
 
@@ -911,4 +963,37 @@ int pip_print_loaded_solibs( FILE *file ) {
     }
   }
   return 0;
+}
+
+#define LINSZ	(1024)
+void pip_check_addr( char *tag, void *addr ) {
+  FILE *maps = fopen( "/proc/self/maps", "r" );
+  char *line = NULL;
+  size_t sz  = LINSZ;
+  int retval;
+
+  while( maps != NULL ) {
+    void *start, *end;
+
+    if( ( retval = getline( &line, &sz, maps ) ) < 0 ) {
+      fprintf( stderr, "getline()=%d\n", errno );
+      break;
+    } else if( retval == 0 ) {
+      continue;
+    }
+    if( sscanf( line, "%p-%p", &start, &end ) == 2 ) {
+      if( (intptr_t) addr >= (intptr_t) start &&
+	  (intptr_t) addr <  (intptr_t) end ) {
+	fprintf( stderr, ">>%s>> %p: %s", tag, addr, line );
+	goto found;
+      } else {
+	//fprintf( stderr, ">>%s>> %p: %p--%p\n", tag, addr, start, end );
+      }
+    }
+  }
+  fprintf( stderr, ">>%s>> (not found)\n", tag );
+ found:
+  fclose( maps );
+  if( line != NULL ) free( line );
+  return;
 }

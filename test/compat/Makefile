@@ -5,11 +5,11 @@ CPPFLAGS = -I../ -I$(PIPINCDIR)
 CCFLAGS += $(PIEFLAG)
 LDFLAGS += -rdynamic $(PIPLIB)
 
-SRCS  = gethostname.c gethostbyname.c
+SRCS  = gethostname.c gethostbyname.c initfini.c iftask.c gettimeofday.c
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
-PROGS  = gethostname gethostbyname
+PROGS  = gethostname gethostbyname dlopen initfini iftask gettimeofday
 
 all: $(PROGS)
 

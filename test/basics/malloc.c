@@ -7,10 +7,9 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+#include <test.h>
 #include <pthread.h>
 #include <malloc.h>
-
-#include <test.h>
 
 #define NTIMES		(1000)
 #define RSTATESZ	(256)

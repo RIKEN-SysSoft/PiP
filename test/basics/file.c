@@ -7,15 +7,15 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+//#define DEBUG
+#include <test.h>
+
 #include <pthread.h>
 #include <sched.h>
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
 #include <errno.h>
-
-//#define DEBUG
-#include <test.h>
 
 int pipid;
 

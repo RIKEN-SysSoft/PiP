@@ -1,5 +1,6 @@
 
 CC      = gcc
+FC	= gfortran
 LD      = gcc
 
 PICFLAG = -fPIC

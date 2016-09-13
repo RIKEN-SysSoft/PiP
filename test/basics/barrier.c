@@ -7,10 +7,10 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <pthread.h>
-
 //#define DEBUG
 #include <test.h>
+
+#include <pthread.h>
 
 #define NTIMES		(100)
 
