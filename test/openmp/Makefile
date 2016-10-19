@@ -1,15 +1,13 @@
 
 include ../../build/Make.common
+include ../Test.common
 
 OMPFLAG = -fopenmp
 
-CPPFLAGS = -I../ -I$(PIPINCDIR)
-CCFLAGS += $(OMPFLAG) $(PIEFLAG)
-LDFLAGS += -rdynamic $(CCFLAGS) $(PIPLIB) $(OMPFLAG)
+CCFLAGS += $(OMPFLAG)
+LDFLAGS += $(OMPFLAG)
 
 SRCS  = openmp.c
-
-DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 PROGS  = openmp
 

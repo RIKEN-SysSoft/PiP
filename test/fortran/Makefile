@@ -1,13 +1,8 @@
 
 include ../../build/Make.common
-
-CPPFLAGS = -I../ -I$(PIPINCDIR)
-CCFLAGS += $(PIEFLAG)
-LDFLAGS += -rdynamic $(PIPLIB)
+include ../Test.common
 
 SRCS    = a.c spawns.c spawnp.c
-
-DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 TASKS = a b c
 PROGS = $(TASKS) fort

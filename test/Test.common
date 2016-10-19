@@ -1,0 +1,10 @@
+
+CPPFLAGS = -I.. -I$(PIPINCDIR)
+CCFLAGS += $(PIEFLAG)
+LDFLAGS += -rdynamic $(PIPLIB)
+
+DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
+
+%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(PATCHELF) $@

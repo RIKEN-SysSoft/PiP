@@ -1,9 +1,6 @@
 
 include ../../build/Make.common
-
-CPPFLAGS = -I../ -I$(PIPINCDIR)
-CCFLAGS += $(PIEFLAG)
-LDFLAGS += -rdynamic $(PIPLIB)
+include ../Test.common
 
 SRCS  = initfin.c \
 	stack.c \
@@ -21,16 +18,10 @@ SRCS  = initfin.c \
 	hook.c \
 	spawn.c
 
-DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
-
 PROGS  = initfin stack export environ malloc file wait signal exit \
 	mutex barrier core numa hook spawn
 
 all: $(PROGS)
-
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
-	$(PATCHELF) $@
 
 clean:
 	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
