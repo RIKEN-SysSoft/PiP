@@ -16,10 +16,11 @@ SRCS  = initfin.c \
 	core.c \
 	numa.c \
 	hook.c \
-	spawn.c
+	spawn.c \
+	varvars.c
 
 PROGS  = initfin stack export environ malloc file wait signal exit \
-	mutex barrier core numa hook spawn
+	mutex barrier core numa hook spawn varvars
 
 all: $(PROGS)
 
