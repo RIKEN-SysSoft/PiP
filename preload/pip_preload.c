@@ -57,10 +57,11 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
     flags &= ~CLONE_THREAD;	/* 0x10000 */
     flags &= ~0xff;
     flags |= SIGCHLD;
+    flags |= CLONE_PTRACE;
 
     errno = 0;
-    DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  TLS=%p",
-	  oldflags, flags, fn, tls );
+    DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",
+	  oldflags, flags, fn, child_stack, tls );
     retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
     DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );
 

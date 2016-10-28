@@ -49,6 +49,7 @@ static int pip_is_magic_ok( pip_root_t *root ) {
 }
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
+  extern void __ctype_init (void);
   pip_clone_t*	cloneinfo = NULL;
   size_t	sz;
   char		*env = NULL;
@@ -119,6 +120,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       RETURN( err );
     }
     (void) memset( pip_root, 0, sz );
+    pip_root->size = sz;
 
     DBGF( "ROOTROOT (%p)", pip_root );
 
@@ -154,6 +156,11 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   } else {
     /* child task */
     intptr_t	ptr = (intptr_t) strtoll( env, NULL, 16 );
+
+    /* for some reason, I do not knwo why, CTYPE tables are broken
+       at the beginning of the main() function.
+       So we have to reset the CTYPE tables here. */
+    __ctype_init();
 
     pip_root = (pip_root_t*) ptr;
     if( !pip_is_magic_ok( pip_root ) ) RETURN( EPERM );
@@ -407,7 +414,6 @@ static int pip_load_so( void **handlep, char *path ) {
   if( *handlep == NULL ) {
     lmid = LM_ID_NEWLM;
   } else {
-  DBG;
     if( dlinfo( *handlep, RTLD_DI_LMID, (void*) &lmid ) != 0 ) {
       DBGF( "dlinfo(%p): %s", handlep, dlerror() );
       RETURN( ENXIO );
@@ -474,6 +480,7 @@ static int pip_do_spawn( void *thargs )  {
   int err = 0;
 
   DBG;
+  CHECK_CTYPE;
   free( thargs );
 
   if( !pip_if_shared_fd_() ) pip_close_on_exec();
@@ -495,11 +502,13 @@ static int pip_do_spawn( void *thargs )  {
       flag_exit = 1;
       self->ctx = &ctx;
 
+  CHECK_CTYPE;
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
       self->retval = self->mainf( argc, argv );
       DBGF( "[%d] << main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
+  CHECK_CTYPE;
 
     } else {
       DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
@@ -696,25 +705,25 @@ int pip_fin( void ) {
   int err = 0;
 
   DBG;
-  if( pip_root == NULL || !pip_root_p() ) RETURN( EPERM );
+  if( pip_root == NULL ) RETURN( EPERM );
   DBG;
 
-  ntasks = pip_root->ntasks;
-  for( i=0; i<ntasks; i++ ) {
-    if( pip_root->tasks[i].pipid != PIP_PIPID_NONE ) {
-      DBGF( "%d/%d [%d] -- BUSY", i, ntasks, pip_root->tasks[i].pipid );
-      err = EBUSY;
-      break;
+  if( pip_root_p() ) {
+    ntasks = pip_root->ntasks;
+    for( i=0; i<ntasks; i++ ) {
+      if( pip_root->tasks[i].pipid != PIP_PIPID_NONE ) {
+	DBGF( "%d/%d [%d] -- BUSY", i, ntasks, pip_root->tasks[i].pipid );
+	err = EBUSY;
+	break;
+      }
+    }
+    if( err == 0 ) {
+      memset( pip_root, 0, pip_root->size );
+      free( pip_root );
+      (void) unsetenv( PIP_ROOT_ENV );
     }
   }
-  if( err == 0 ) {
-    memset( pip_root,
-	    0,
-	    sizeof( pip_root_t ) + sizeof( pip_task_t ) * ntasks );
-    free( pip_root );
-    pip_root = NULL;
-    (void) unsetenv( PIP_ROOT_ENV );
-  }
+  pip_root = NULL;
   RETURN( err );
 }
 

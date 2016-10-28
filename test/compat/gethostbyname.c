@@ -15,6 +15,8 @@
 
 struct hostent *my_gethostbyname( char *name ) {
   DBG;
+  print_fs_segreg();
+  CHECK_CTYPE;
   return gethostbyname( name );
 }
 
@@ -23,17 +25,23 @@ int main( int argc, char **argv ) {
   int ntasks;
   struct hostent *he;
 
+  CHECK_CTYPE;
+  print_fs_segreg();
   ntasks = 1;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-#ifdef AH
     if( ( he = gethostbyname( "localhost" ) ) == NULL ) {
-      fprintf( stderr, "gethostbyname() fails\n" );
+      fprintf( stderr, "gethostbyname( localhost ) fails\n" );
     } else {
       fprintf( stderr, "hostname: %s\n", he->h_name );
     }
-#endif
+    if( ( he = gethostbyname( "127.0.0.1" ) ) == NULL ) {
+      fprintf( stderr, "gethostbyname( 127.0.0.1 ) fails\n" );
+    } else {
+      fprintf( stderr, "hostname: %s\n", he->h_name );
+    }
     print_maps();
+  CHECK_CTYPE;
 
     pipid = 0;
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
@@ -43,9 +51,23 @@ int main( int argc, char **argv ) {
 
   } else {
     //attachme();
-    if( ( he = my_gethostbyname( "localhost" ) ) == NULL ) {
-      fprintf( stderr, "gethostbyname() fails\n" );
+    //print_maps();
+  CHECK_CTYPE;
+
+    DBGF( "sleeping 10 sec" ); sleep( 10 );
+    if( ( he = gethostbyname( "127.0.0.1" ) ) == NULL ) {
+      DBG;
+      fprintf( stderr, "gethostbyname( 127.0.0.1 ) fails\n" );
     } else {
+      DBG;
+      fprintf( stderr, "hostname: %s\n", he->h_name );
+    }
+  CHECK_CTYPE;
+    if( ( he = my_gethostbyname( "localhost" ) ) == NULL ) {
+      DBG;
+      fprintf( stderr, "gethostbyname( localhost ) fails\n" );
+    } else {
+      DBG;
       fprintf( stderr, "hostname: %s\n", he->h_name );
     }
   }

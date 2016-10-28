@@ -76,4 +76,25 @@ inline static void pip_print_maps( void ) {
   close( fd );
 }
 
+#include <asm/prctl.h>
+#include <sys/prctl.h>
+#include <errno.h>
+
+inline static void print_fs_segreg( void ) {
+  int arch_prctl(int, unsigned long*);
+  unsigned long fsreg;
+  if( arch_prctl( ARCH_GET_FS, &fsreg ) == 0 ) {
+    fprintf( stderr, "FS REGISTER: 0x%lx\n", fsreg );
+  } else {
+    fprintf( stderr, "FS REGISTER: (unable to get:%d)\n", errno );
+  }
+}
+
+#include <ctype.h>
+
+#define CHECK_CTYPE					\
+  do{ DBGF( "__ctype_b_loc()=%p", __ctype_b_loc() );			\
+  DBGF( "__ctype_toupper_loc()=%p", __ctype_toupper_loc() );		\
+  DBGF( "__ctype_tolower_loc()=%p", __ctype_tolower_loc() ); } while( 0 )
+
 #endif

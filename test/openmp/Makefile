@@ -18,7 +18,3 @@ all: $(PROGS)
 
 ##	$(PATCHELF) $@ <<< if you want to do this, we need libgomp.so
 ##			   compiled and linked with our ld-linux.so
-
-
-clean:
-	rm -f $(PROGS) *.o *.E *~ .nfs*

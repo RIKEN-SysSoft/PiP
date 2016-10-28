@@ -59,6 +59,7 @@ typedef struct {
 
 typedef struct {
   char			magic[PIP_MAGIC_LEN];
+  size_t		size;
   pthread_t		thread;
   pip_spinlock_t	spawn_lock;
   volatile void		*export;
