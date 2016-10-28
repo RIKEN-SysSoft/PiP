@@ -155,14 +155,13 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
   } else {
     /* child task */
-    intptr_t	ptr = (intptr_t) strtoll( env, NULL, 16 );
 
     /* for some reason, I do not knwo why, CTYPE tables are broken
        at the beginning of the main() function.
        So we have to reset the CTYPE tables here. */
     __ctype_init();
 
-    pip_root = (pip_root_t*) ptr;
+    pip_root = (pip_root_t*) strtoll( env, NULL, 16 );
     if( !pip_is_magic_ok( pip_root ) ) RETURN( EPERM );
 
     ntasks = pip_root->ntasks;
