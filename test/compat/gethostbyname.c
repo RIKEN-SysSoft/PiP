@@ -54,7 +54,6 @@ int main( int argc, char **argv ) {
     //print_maps();
   CHECK_CTYPE;
 
-    DBGF( "sleeping 10 sec" ); sleep( 10 );
     if( ( he = gethostbyname( "127.0.0.1" ) ) == NULL ) {
       DBG;
       fprintf( stderr, "gethostbyname( 127.0.0.1 ) fails\n" );
