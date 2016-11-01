@@ -42,7 +42,7 @@
 #ifndef DEBUG
 
 #define TESTINT(F)		\
-  do{int __xyz=(F); if(__xyz!=0){PRINT_FL(#F,__xyz);exit(9);}} while(0)
+  do{int __xyz=(F); if(__xyz){PRINT_FL(#F,__xyz);exit(9);}} while(0)
 
 #else
 

@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include <pip.h>
 #include <pip_internal.h>
