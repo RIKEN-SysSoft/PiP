@@ -8,7 +8,10 @@
  */
 
 #define _GNU_SOURCE
+#include <sys/types.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,75 +30,168 @@
 #endif
 
 #define NTASKS_MAX	(16)
-#define MMAP_ITER	(1000*1000)
 #define MMAP_SIZE	((size_t)(1024*1024))
 
-#define EVAL_MMAP	eval_mmap()
-/*
-#define EVAL_MMAP	ac_eval_mmap()
-*/
+#ifndef TOUCH
 
-double time_start, time_end;
+#ifndef ACUM
+#define MMAP_ITER	(1000*1000)
+#else
+#define MMAP_ITER	(100*1000)
+#endif
+
+#else
+
+#ifndef ACUM
+#define MMAP_ITER	(10*1000)
+#else
+#define MMAP_ITER	(1*1000)
+#endif
+
+#endif
+
+#define MMAP_PROT	(PROT_READ|PROT_WRITE)
+//#define MMAP_OPTS	(MAP_PRIVATE|MAP_ANONYMOUS|MAP_POPULATE)
+#define MMAP_OPTS	(MAP_PRIVATE|MAP_ANONYMOUS)
+
+size_t	size;
+double	time_start, time_end;
+double	time_start2, time_end2;
 
 struct sync_st {
   volatile int	sync0;
   volatile int	sync1;
+  volatile int	sync2;
+  volatile int	sync3;
 };
 
 void init_syncs( int n, struct sync_st *syncs ) {
   syncs->sync0 = n;
   syncs->sync1 = n;
+  syncs->sync2 = n;
+  syncs->sync3 = n;
+}
+
+void wait_sync( volatile int *syncp ) {
+  __sync_fetch_and_sub( syncp, 1 );
+  while( *syncp > 0 ) {
+    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
+    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
+  }
 }
 
 void wait_sync0( struct sync_st *syncs ) {
-  __sync_fetch_and_sub( &syncs->sync0, 1 );
-  while( syncs->sync0 > 0 ) {
-    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
-    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
-  }
+  wait_sync( &syncs->sync0 );
 }
 
 void wait_sync1( struct sync_st *syncs ) {
-  __sync_fetch_and_sub( &syncs->sync1, 1 );
-  while( syncs->sync1 > 0 ) {
-    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
-    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
-  }
+  wait_sync( &syncs->sync1 );
 }
 
-void eval_mmap( void ) {
+void wait_sync2( struct sync_st *syncs ) {
+  wait_sync( &syncs->sync2 );
+}
+
+void wait_sync3( struct sync_st *syncs ) {
+  wait_sync( &syncs->sync3 );
+}
+
+#define BUFSZ	1024
+void print_maps( void ) {
+#ifdef ACUM
+  int fd = open( "/proc/self/maps", O_RDONLY );
+  char buf[BUFSZ];
+
+  while( 1 ) {
+    ssize_t rc, wc;
+    char *p;
+
+    if( ( rc = read( fd, buf, BUFSZ ) ) <= 0 ) break;
+    p = buf;
+    do {
+      if( ( wc = write( 1, p, rc ) ) < 0 ) break; /* STDOUT */
+      p  += wc;
+      rc -= wc;
+    } while( rc > 0 );
+  }
+  close( fd );
+#endif
+}
+
+void touch( void *p ) {
+#ifdef TOUCH
+  void *q = p + size;
+  for( ; p<q; p+=4096 ) {
+    int *ip = (int*) p;
+    *ip = 123456;
+  }
+#endif
+}
+
+void mmap_size( char *arg ) {
+  if( ( size = atoi( arg ) ) == 0 ) {
+    size = MMAP_SIZE;
+  } else {
+    size *= 1024;
+  }
+}
+#ifndef ACUM
+void par_eval_mmap( void ) {
   int i;
   for( i=0; i<MMAP_ITER; i++ ) {
     void *mmapp;
     mmapp = mmap( NULL,
-		  MMAP_SIZE,
-		  PROT_READ|PROT_WRITE,
-		  MAP_PRIVATE|MAP_ANONYMOUS,
+		  size,
+		  MMAP_PROT,
+		  MMAP_OPTS,
 		  -1,
 		  0 );
     TESTSC( ( mmapp == MAP_FAILED ) );
-    TESTSC( munmap( mmapp, MMAP_SIZE ) );
+    TESTSC( ( mmapp == NULL       ) );
+    touch( mmapp );
+    TESTSC( munmap( mmapp, size ) );
   }
 }
+#endif
 
-#define AC_MMAP_ITER	(100*1000)
-#define AC_MMAP_SIZE	((size_t)(4*1024))
+#ifdef ACUM
+void *mmap_array[MMAP_ITER];
 
 void ac_eval_mmap( void ) {
-  void *mmap_array[AC_MMAP_ITER];
   int i;
-  for( i=0; i<AC_MMAP_ITER; i++ ) {
+  for( i=0; i<MMAP_ITER; i++ ) {
     mmap_array[i] = mmap( NULL,
-			  AC_MMAP_SIZE,
-			  PROT_READ|PROT_WRITE,
-			  MAP_PRIVATE|MAP_ANONYMOUS,
+			  size,
+			  MMAP_PROT,
+			  MMAP_OPTS,
 			  -1,
 			  0 );
     TESTSC( ( mmap_array[i] == MAP_FAILED ) );
+    TESTSC( ( mmap_array[i] == NULL       ) );
+    touch( mmap_array[i] );
   }
-  for( i=0; i<AC_MMAP_ITER; i++ ) {
-    TESTSC( munmap( mmap_array[i], AC_MMAP_SIZE ) );
+}
+
+void ac_eval_munmap( void ) {
+  int i;
+  for( i=0; i<MMAP_ITER; i++ ) {
+    TESTSC( munmap( mmap_array[i], size ) );
   }
+}
+#endif
+
+void eval_mmap( void ) {
+#ifndef ACUM
+  par_eval_mmap();
+#else
+  ac_eval_mmap();
+#endif
+}
+
+void eval_munmap( void ) {
+#ifdef ACUM
+  ac_eval_munmap();
+#endif
 }
 
 #ifdef PIP
@@ -114,29 +210,52 @@ void spawn_tasks( char **argv, int ntasks ) {
     pipid = i;
     TESTINT( pip_spawn( argv[0], argv, NULL, i+1, &pipid, NULL, NULL, NULL ) );
   }
+
   wait_sync0( &syncs );
-  time_start = get_time();
+  time_start = gettime();
   /* ... */
   wait_sync1( &syncs );
-  time_end = get_time();
+  time_end = gettime();
+
+  //print_maps();
+
+  wait_sync2( &syncs );
+  time_start2 = gettime();
+  /* ... */
+  wait_sync3( &syncs );
+  time_end2 = gettime();
+
   for( i=0; i<ntasks; i++ ) {
     TESTINT( pip_wait( i, NULL ) );
   }
   TESTINT( pip_fin() );
 }
 
-void eval_pip( void ) {
+void eval_pip( char *argv[] ) {
   struct sync_st *syncp;
   void *root_exp;
   int pipid;
 
+  mmap_size( argv[2] );
   TESTINT( pip_init( &pipid, NULL, &root_exp, 0 ) );
   TESTINT( ( pipid == PIP_PIPID_ROOT ) );
   syncp = (struct sync_st*) root_exp;
 
   wait_sync0( syncp );
-  EVAL_MMAP;
+  eval_mmap();
   wait_sync1( syncp );
+
+  wait_sync2( syncp );
+  eval_munmap();
+  wait_sync3( syncp );
+#ifdef ACUM
+  if(0) {
+     int i;
+     for( i=0; i<MMAP_ITER; i++ ) {
+  printf( "%p   {%d} mmap[%d]\n", mmap_array[i], pipid, i );
+}
+}
+#endif
   TESTINT( pip_fin() );
 }
 #endif
@@ -146,8 +265,12 @@ struct sync_st syncs;
 
 void eval_thread( void ) {
   wait_sync0( &syncs );
-  EVAL_MMAP;
+  eval_mmap();
   wait_sync1( &syncs );
+
+  wait_sync2( &syncs );
+  eval_munmap();
+  wait_sync3( &syncs );
   sleep( 5 );
   pthread_exit( NULL );
 }
@@ -170,10 +293,19 @@ void create_threads( int ntasks ) {
 			     NULL ) );
   }
   wait_sync0( &syncs );
-  time_start = get_time();
+  time_start = gettime();
   /* ... */
   wait_sync1( &syncs );
-  time_end = get_time();
+  time_end = gettime();
+
+  //print_maps();
+
+  wait_sync2( &syncs );
+  time_start2 = gettime();
+  /* ... */
+  wait_sync3( &syncs );
+  time_end2 = gettime();
+
   for( i=0; i<ntasks; i++ ) {
     TESTINT( pthread_join( threads[i], NULL ) );
   }
@@ -206,16 +338,28 @@ void fork_only( int ntasks ) {
     TESTSC( sched_setaffinity( getpid(), sizeof(cpuset), &cpuset ) );
     if( ( pid = fork() ) == 0 ) {
       wait_sync0( syncs );
-      EVAL_MMAP;
+      eval_mmap();
       wait_sync1( syncs );
+
+      wait_sync2( syncs );
+      eval_munmap();
+      wait_sync3( syncs );
       exit( 0 );
     }
   }
   wait_sync0( syncs );
-  time_start = get_time();
+  time_start = gettime();
   /* ... */
   wait_sync1( syncs );
-  time_end = get_time();
+  time_end = gettime();
+
+  //print_maps();
+
+  wait_sync2( syncs );
+  time_start2 = gettime();
+  /* ... */
+  wait_sync3( syncs );
+  time_end2 = gettime();
   for( i=0; i<ntasks; i++ ) wait( NULL );
 }
 #endif
@@ -223,8 +367,8 @@ void fork_only( int ntasks ) {
 int main( int argc, char **argv ) {
   int ntasks;
 
-  if( argc < 2 ) {
-    fprintf( stderr, "Number of tasks must be specified.\n" );
+  if( argc < 3 ) {
+    fprintf( stderr, "mmap-XXX <ntasks> <mmap-size[KB]>\n" );
     exit( 1 );
   }
   ntasks = atoi( argv[1] );
@@ -233,6 +377,8 @@ int main( int argc, char **argv ) {
       fprintf( stderr, "Illegal number of tasks is specified.\n" );
       exit( 1 );
     }
+    mmap_size( argv[2] );
+
 #if defined( PIP )
     spawn_tasks( argv, ntasks );
 #elif defined( THREAD )
@@ -240,13 +386,15 @@ int main( int argc, char **argv ) {
 #elif defined( FORK_ONLY )
     fork_only( ntasks );
 #endif
-
     printf( "%g [sec], %d tasks, %d iteration, %d [KB] mmap size\n",
-	    time_end - time_start, ntasks, MMAP_ITER, ((int)MMAP_SIZE)/1024 );
+	    time_end - time_start, ntasks, MMAP_ITER, ((int)size)/1024 );
+#ifdef ACUM
+    printf( "%g [sec]--munmap\n", time_end2 - time_start2 );
+#endif
 
   } else {			/* child task/process/thread */
 #if defined(PIP)
-    eval_pip();
+    eval_pip( argv );
 #endif
   }
   return 0;

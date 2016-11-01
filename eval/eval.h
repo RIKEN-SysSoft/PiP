@@ -14,15 +14,15 @@
   fprintf(stderr,"%s:%d %s=%d\n",__FILE__,__LINE__,FSTR,V)
 
 #define TESTINT(F)		\
-  do{int __xyz=(F); if(__xyz!=0){PRINT_FL(#F,__xyz);exit(9);}} while(0)
+  do{int __xyz=(F); if(__xyz){PRINT_FL(#F,__xyz);exit(9);}} while(0)
 
 #define TESTSC(F)		\
-  do{int __xyz=(F); if(__xyz!=0){PRINT_FL(#F,errno);exit(9);}} while(0)
+  do{int __xyz=(F); if(__xyz){PRINT_FL(#F,errno);exit(9);}} while(0)
 
 #include <sys/time.h>
 
-static inline double get_time( void ) {
+static inline double gettime( void ) {
   struct timeval tv;
   TESTINT( gettimeofday( &tv, NULL ) );
-  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.e-6));
+  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
 }
