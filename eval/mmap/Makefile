@@ -2,6 +2,8 @@
 include ../../build/Make.common
 include ../Eval.common
 
+PIPLDFLAGS  += $(PIPLIB)
+
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 SRCS  = mmap.c
@@ -12,7 +14,7 @@ PROGS  = mmap-pip mmap-thread mmap-forkonly \
 all: $(PROGS)
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPIP $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DPIP $(CPPFLAGS) $(CCFLAGS) $(PIPLDFLAGS) $< -o $@
 	$(PATCHELF) $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
@@ -22,7 +24,7 @@ all: $(PROGS)
 	$(CC) -DFORK_ONLY $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
 
 %-pip-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPIP -DACUM $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DPIP -DACUM $(CPPFLAGS) $(CCFLAGS) $(PIPLDFLAGS) $< -o $@
 	$(PATCHELF) $@
 
 %-thread-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile

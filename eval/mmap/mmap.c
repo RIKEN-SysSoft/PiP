@@ -373,7 +373,7 @@ int main( int argc, char **argv ) {
   }
   ntasks = atoi( argv[1] );
   if( ntasks > 0 ) {		/* root process/thread */
-    if( ntasks > 16 ) {
+    if( ntasks > NTASKS_MAX ) {
       fprintf( stderr, "Illegal number of tasks is specified.\n" );
       exit( 1 );
     }
