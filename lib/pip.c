@@ -197,13 +197,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 __attribute__((constructor))
 void pip_call_ctype_init( void ) {
   char *env = getenv( PIP_ROOT_ENV );
-  pip_root_t *root;
 
   if( env != NULL ) {
-    root = (pip_root_t*) strtoll( env, NULL, 16 );
-    if( pip_is_magic_ok( root ) ) {
-      __ctype_init();
-    }
+    pip_root_t *root = (pip_root_t*) strtoll( env, NULL, 16 );
+    if( pip_is_magic_ok( root ) ) __ctype_init();
   }
   return;
 }
