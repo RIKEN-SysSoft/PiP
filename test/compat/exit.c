@@ -15,8 +15,9 @@ int main( int argc, char **argv ) {
   int ntasks;
 
   ntasks = 1;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
   if( pipid == PIP_PIPID_ROOT ) {
+    int status;
 
     watch_sigchld();
 
@@ -25,12 +26,12 @@ int main( int argc, char **argv ) {
 			NULL, NULL, NULL ) );
     sleep( 1 );
     printf( "ROOT: waiting...\n" );
-    TESTINT( pip_wait( 0, NULL ) );
-    printf( "ROOT: done\n" );
+    TESTINT( pip_wait( 0, &status ) );
+    printf( "ROOT: done (%d)\n", status );
 
   } else {
-    printf( "CHILD: I am going to call exit()\n" );
-    exit( 0 );
+    printf( "CHILD: I am going to call exit(123)\n" );
+    exit( 123 );
   }
   TESTINT( pip_fin() );
   return 0;
