@@ -29,6 +29,8 @@
 #include <pip.h>
 #include <pip_internal.h>
 
+extern void __ctype_init (void);
+
 /*** note that the following static variables are   ***/
 /*** located at each PIP task and the root process. ***/
 static pip_root_t	*pip_root = NULL;
@@ -49,7 +51,6 @@ static int pip_is_magic_ok( pip_root_t *root ) {
 }
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
-  extern void __ctype_init (void);
   pip_clone_t*	cloneinfo = NULL;
   size_t	sz;
   char		*env = NULL;
@@ -188,6 +189,25 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   }
   RETURN( err );
 }
+
+/* When the __ctype_init() function is put in the CTOR section, */
+/* we still have the problem of initializing the CTYPE tables.  */
+/* So, we cannot fix this problem, unless calling in pip_init() */
+#ifdef PIP_CTYPE_INIT_IN_CTOR__THIS_DEOS_NOT_WORK
+__attribute__((constructor))
+void pip_call_ctype_init( void ) {
+  char *env = getenv( PIP_ROOT_ENV );
+  pip_root_t *root;
+
+  if( env != NULL ) {
+    root = (pip_root_t*) strtoll( env, NULL, 16 );
+    if( pip_is_magic_ok( root ) ) {
+      __ctype_init();
+    }
+  }
+  return;
+}
+#endif
 
 static int pip_if_pthread_( void ) {
   if( pip_root->cloneinfo != NULL ) {
