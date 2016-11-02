@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-//#define DEBUG
+#define DEBUG
 
 #include <pip.h>
 #include <pip_internal.h>
@@ -418,12 +418,12 @@ static int pip_load_so( void **handlep, char *path ) {
       RETURN( ENXIO );
     }
   }
-  DBG;
+  DBGF( "calling dlmopen()" );;
   if( ( loaded = dlmopen( lmid, path, flags ) ) == NULL ) {
     DBGF( "dlmopen(%s): %s", path, dlerror() );
     RETURN( ENXIO );
   } else {
-    DBGF( "%s", path );
+    DBGF( "dlmopen(%s): SUCCEEDED", path );
     *handlep = loaded;
   }
   DBG;
