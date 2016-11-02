@@ -3,10 +3,10 @@ include ../../build/Make.common
 include ../Test.common
 
 SRCS  = gethostname.c gethostbyname.c initfini.c iftask.c gettimeofday.c \
-	ctype.c
+	ctype.c exit.c
 
 PROGS = gethostname gethostbyname dlopen initfini iftask gettimeofday \
-	ctype
+	ctype exit
 
 all: $(PROGS)
 
