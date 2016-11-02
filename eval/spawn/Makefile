@@ -9,7 +9,7 @@ DEPINCS = ../eval.h $(PIPINCDIR)/pip.h
 
 SRCS  = spawn.c
 
-PROGS  = foo spawn-pip spawn-forkexec spawn-thread
+PROGS  = foo spawn-pip spawn-forkexec spawn-vforkexec spawn-posix spawn-thread
 
 all: $(PROGS)
 
@@ -23,6 +23,12 @@ foo: foo.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 %-forkexec: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DFORK_EXEC $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
 
+%-vforkexec: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DVFORK_EXEC $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+
+%-posix: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DPOSIX_SPAWN $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DTHREAD $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
 
@@ -33,4 +39,6 @@ eval:
 	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; \
 	numactl -C 0 ./spawn-pip 50; \
 	numactl -C 0 ./spawn-forkexec 50; \
+	numactl -C 0 ./spawn-vforkexec 50; \
+	numactl -C 0 ./spawn-posix 50; \
 	numactl -C 0 ./spawn-thread 50 )

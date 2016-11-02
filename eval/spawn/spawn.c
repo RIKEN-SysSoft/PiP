@@ -23,8 +23,12 @@
 #include <pip.h>
 #endif
 
-#if defined(FORK_EXEC)
+#if defined(FORK_EXEC) || defined(VFORK_EXEC) || defined(POSIX_SPAWN)
 #include <sys/wait.h>
+#endif
+
+#ifdef POSIX_SPAWN
+#include <spawn.h>
 #endif
 
 #define NTASKS_MAX	(50)
@@ -81,6 +85,44 @@ void fork_exec( int ntasks ) {
 }
 #endif
 
+#ifdef VFORK_EXEC
+
+void vfork_exec( int ntasks ) {
+  extern char **environ;
+  char *argv[] = { "./foo", NULL };
+  pid_t pid;
+  int i;
+
+  time_start = gettime();
+  for( i=0; i<ntasks; i++ ) {
+    if( ( pid = vfork() ) == 0 ) {
+      TESTSC( execve( argv[0], argv, environ ) );
+    }
+  }
+  time_spawn = gettime();
+  for( i=0; i<ntasks; i++ ) wait( NULL );
+  time_end = gettime();
+}
+#endif
+
+#ifdef POSIX_SPAWN
+
+void posixspawn( int ntasks ) {
+  extern char **environ;
+  char *argv[] = { "./foo", NULL };
+  pid_t pid;
+  int i;
+
+  time_start = gettime();
+  for( i=0; i<ntasks; i++ ) {
+    TESTSC( posix_spawn( &pid, argv[0], NULL, NULL, argv, environ ) );
+  }
+  time_spawn = gettime();
+  for( i=0; i<ntasks; i++ ) wait( NULL );
+  time_end = gettime();
+}
+#endif
+
 #ifdef THREAD
 void foo( void ) {
   pthread_exit( NULL );
@@ -127,6 +169,12 @@ int main( int argc, char **argv ) {
 #elif defined( FORK_EXEC )
   fork_exec( ntasks );
   tag = "FORK_EXEC";
+#elif defined( VFORK_EXEC )
+  vfork_exec( ntasks );
+  tag = "VFORK_EXEC";
+#elif defined( POSIX_SPAWN )
+  posixspawn( ntasks );
+  tag = "POSIX_SPAWN";
 #elif defined( THREAD )
   create_threads( ntasks );
   tag = "PTHREADS";
