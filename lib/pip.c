@@ -157,9 +157,9 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   } else {
     /* child task */
 
-    /* for some reason, I do not knwo why, CTYPE tables are broken
-       at the beginning of the main() function.
-       So we have to reset the CTYPE tables here. */
+    /* for some reason, I do not knwo why, pointers to the CTYPE
+       tables are broken at the beginning of the main() function.
+       So we have to reset the CTYPE table pointers here. */
     __ctype_init();
 
     pip_root = (pip_root_t*) strtoll( env, NULL, 16 );
@@ -915,7 +915,10 @@ int pip_wait( int pipid, int *retvalp ) {
 	break;
       }
     }
-    DBGF( "wait(status=%d)=%d (errno=%d)", status, pid, err );
+    if( WIFEXITED( status ) ) {
+      task->retval = WEXITSTATUS( status );
+    }
+    DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
   if( !err ) pip_finalize_thread( task, retvalp );
   RETURN( err );
@@ -934,7 +937,7 @@ int pip_trywait( int pipid, int *retvalp ) {
     err = pthread_tryjoin_np( task->thread, NULL );
     DBGF( "pthread_tryjoin_np()=%d", err );
   } else {			/* process model */
-    int status;
+    int status = 0;
     pid_t pid;
     DBG;
     while( 1 ) {
@@ -944,7 +947,10 @@ int pip_trywait( int pipid, int *retvalp ) {
 	break;
       }
     }
-    DBGF( "wait(status=%d)=%d (errno=%d)", status, pid, err );
+    if( WIFEXITED( status ) ) {
+      task->retval = WEXITSTATUS( status );
+    }
+    DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
   if( !err ) pip_finalize_thread( task, retvalp );
   RETURN( err );
