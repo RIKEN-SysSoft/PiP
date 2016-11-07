@@ -459,6 +459,10 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
 	/* getting main function address to invoke */
       DBG;
+      fprintf( stderr,
+	       "PIP Error: %s seems not to be linked "
+	       "with '-rdynamic' option\n",
+	       prog );
       err = ENXIO;
       goto error;
     } else if( ( envvp = (char***) dlsym( loaded, "environ" ) ) == NULL ) {
