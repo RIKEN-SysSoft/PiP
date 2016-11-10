@@ -50,6 +50,12 @@ static int pip_is_magic_ok( pip_root_t *root ) {
   return strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN ) == 0;
 }
 
+static void pip_init_task_struct( pip_task_t *taskp ) {
+  memset( (void*) taskp, 0, sizeof(pip_task_t) );
+  taskp->pipid  = PIP_PIPID_NONE;
+  taskp->thread = pip_root->thread;
+}
+
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   pip_clone_t*	cloneinfo = NULL;
   size_t	sz;
@@ -143,8 +149,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	if( rt_expp != NULL ) pip_root->export = *rt_expp;
 
 	for( i=0; i<ntasks; i++ ) {
-	  pip_root->tasks[i].pipid  = PIP_PIPID_NONE;
-	  pip_root->tasks[i].thread = pip_root->thread;
+	  pip_init_task_struct( &pip_root->tasks[i] );
 	}
       }
     }
@@ -615,7 +620,7 @@ int pip_spawn( char *prog,
   extern char 		**environ;
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
-  pip_task_t		*task;
+  pip_task_t		*task = NULL;
   int 			pipid;
   int 			err;
 
@@ -649,8 +654,8 @@ int pip_spawn( char *prog,
   args->envv   = pip_copy_env( envv );
 
   pip_spin_lock( &pip_root->spawn_lock );
+  /*** begin lock region ***/
   do {
-    /*** begin lock region ***/
     if( pipid != PIP_PIPID_ANY ) {
       if( pip_root->tasks[pipid].pipid != PIP_PIPID_NONE ) {
 	DBG;
@@ -680,6 +685,7 @@ int pip_spawn( char *prog,
     args->hook_arg    = hookarg;
 
     task = &pip_root->tasks[pipid];
+    pip_init_task_struct ( task );
 
     if( ( err = pip_corebind( coreno, &cpuset ) ) == 0 ) {
       /* corebinding should take place before loading solibs,        */
@@ -701,19 +707,23 @@ int pip_spawn( char *prog,
 	  if( pip_root->cloneinfo != NULL ) {
 	    pip_root->cloneinfo->pid_clone  = 0;
 	  }
+	} else {
+	  DBG;
 	}
       }
       /* and of course, the corebinding must be undone */
       (void) pip_undo_corebind( coreno, &cpuset );
+    } else {
+      DBG;
     }
-    /*** end lock region ***/
   } while( 0 );
+  /*** end lock region ***/
  unlock:
   pip_spin_unlock( &pip_root->spawn_lock );
 
   if( err != 0 ) {		/* undo */
     DBGF( "err=%d", err );
-    pip_finalize_task( &pip_root->tasks[pipid] );
+    if( task != NULL ) pip_finalize_task( task );
     if( args != NULL ) free( args );
   }
   RETURN( err );
