@@ -41,7 +41,9 @@
       LIBCDIR "libnss_hesiod.so",					\
       NULL }
 
-typedef   int(*main_func_t)(int,char**);
+typedef	int(*main_func_t)(int,char**);
+
+typedef	void(*ctype_init_t)(void);
 
 typedef struct {
   int			pipid;
@@ -50,6 +52,7 @@ typedef struct {
   pthread_t		thread;
   void			*loaded;
   main_func_t		mainf;
+  ctype_init_t		ctype_initf;
   ucontext_t 		*ctx;
   char			**argv;
   char			**envv;
