@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <errno.h>
 
-#define DEBUG
+//#define DEBUG
 
 #include <pip.h>
 #include <pip_internal.h>
@@ -162,11 +162,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   } else {
     /* child task */
 
-    /* for some reason, I do not knwo why, pointers to the CTYPE
-       tables are broken at the beginning of the main() function.
-       So we have to reset the CTYPE table pointers here. */
-    __ctype_init();
-
     pip_root = (pip_root_t*) strtoll( env, NULL, 16 );
     if( !pip_is_magic_ok( pip_root ) ) RETURN( EPERM );
 
@@ -194,22 +189,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   }
   RETURN( err );
 }
-
-/* When the __ctype_init() function is put in the CTOR section, */
-/* we still have the problem of initializing the CTYPE tables.  */
-/* So, we cannot fix this problem, unless calling in pip_init() */
-#ifdef PIP_CTYPE_INIT_IN_CTOR__THIS_DEOS_NOT_WORK
-__attribute__((constructor))
-void pip_call_ctype_init( void ) {
-  char *env = getenv( PIP_ROOT_ENV );
-
-  if( env != NULL ) {
-    pip_root_t *root = (pip_root_t*) strtoll( env, NULL, 16 );
-    if( pip_is_magic_ok( root ) ) __ctype_init();
-  }
-  return;
-}
-#endif
 
 static int pip_if_pthread_( void ) {
   if( pip_root->cloneinfo != NULL ) {
@@ -404,17 +383,13 @@ static void pip_close_on_exec( void ) {
 
 static void pip_finalize_task( pip_task_t *task ) {
   DBGF( "pipid=%d", task->pipid );
-  task->mainf  = NULL;
   if( task->argv != NULL ) {
     free( task->argv );
-    task->argv = NULL;
   }
   if( task->envv != NULL ) {
     free( task->envv );
-    task->envv = NULL;
   }
-  task->envvp = NULL;
-  task->export = NULL;
+  pip_init_task_struct( task );
 }
 
 /*
@@ -442,7 +417,7 @@ static int pip_load_so( void **handlep, char *path ) {
   }
   DBGF( "calling dlmopen()" );;
   if( ( loaded = dlmopen( lmid, path, flags ) ) == NULL ) {
-    DBGF( "dlmopen(%s): %s", path, dlerror() );
+    fprintf( stderr, "dlmopen(%s): %s\n", path, dlerror() );
     RETURN( ENXIO );
   } else {
     DBGF( "dlmopen(%s): SUCCEEDED", path );
@@ -456,6 +431,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
   void		*loaded = NULL;
   char 		***envvp;
   main_func_t 	main_func;
+  ctype_init_t	ctype_init;
   int 		err;
 
   DBGF( "prog=%s", prog );
@@ -468,6 +444,12 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
 	       "PIP Error: %s seems not to be linked "
 	       "with '-rdynamic' option\n",
 	       prog );
+      err = ENXIO;
+      goto error;
+    } else if( ( ctype_init = (ctype_init_t) dlsym( loaded, "__ctype_init" ) )
+	       == NULL ) {
+      /* getting address of __ctype_init function to initialize ctype tables */
+      DBG;
       err = ENXIO;
       goto error;
     } else if( ( envvp = (char***) dlsym( loaded, "environ" ) ) == NULL ) {
@@ -484,9 +466,10 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     pip_check_addr( "MAIN", main_func );
     pip_check_addr( "ENVP", envvp );
 #endif
-    task->mainf  = main_func;
-    task->envvp  = envvp;
-    task->loaded = loaded;
+    task->mainf       = main_func;
+    task->ctype_initf = ctype_init;
+    task->envvp       = envvp;
+    task->loaded      = loaded;
   } else if( loaded != NULL ) {
     (void) dlclose( loaded );
   }
@@ -527,13 +510,21 @@ static int pip_do_spawn( void *thargs )  {
       flag_exit = 1;
       self->ctx = &ctx;
 
-  CHECK_CTYPE;
+      //pip_print_maps();
+      CHECK_CTYPE;
+
+      /* for some reason, I do not knwo why, pointers to the CTYPE
+	 tables are broken at the beginning of the main() function.
+	 So we have to reset the CTYPE table pointers here. */
+      DBGF( "[%d] >> __ctype_init@%p()", pipid, self->ctype_initf );
+      self->ctype_initf();
+      DBGF( "[%d] << __ctype_init@%p()", pipid, self->ctype_initf );
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
       self->retval = self->mainf( argc, argv );
       DBGF( "[%d] << main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
-  CHECK_CTYPE;
+      CHECK_CTYPE;
 
     } else {
       DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );

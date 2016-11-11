@@ -92,9 +92,13 @@ inline static void print_fs_segreg( void ) {
 
 #include <ctype.h>
 
+#ifdef DO_CHECK_CTYPE
 #define CHECK_CTYPE					\
   do{ DBGF( "__ctype_b_loc()=%p", __ctype_b_loc() );			\
   DBGF( "__ctype_toupper_loc()=%p", __ctype_toupper_loc() );		\
   DBGF( "__ctype_tolower_loc()=%p", __ctype_tolower_loc() ); } while( 0 )
+#else
+#define CHECK_CTYPE
+#endif
 
 #endif
