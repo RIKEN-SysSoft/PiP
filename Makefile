@@ -2,6 +2,7 @@
 .PHONY: all
 all:
 	( cd lib;          make )
+	( cd bin;          make )
 	( cd preload;      make )
 	( cd test/basics;  make )
 	( cd test/spawn;   make )
@@ -14,6 +15,7 @@ all:
 clean:
 	rm -f $(LIBRARY) *.o *~
 	( cd lib;          make clean )
+	( cd bin;          make clean )
 	( cd preload;      make clean )
 	( cd include;      make clean )
 	( cd test/basics;  make clean )
