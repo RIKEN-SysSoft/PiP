@@ -29,7 +29,7 @@
 #include <sched.h>
 #endif
 
-#define NTASKS_MAX	(16)
+#define NTASKS_MAX	(50)
 #define MMAP_SIZE	((size_t)(1024*1024))
 
 #ifndef TOUCH
