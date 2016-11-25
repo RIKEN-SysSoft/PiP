@@ -36,7 +36,7 @@ clean:
 	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
 
 eval:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; numactl -C 0 ./mmap-pip 15 1024; numactl -C 0 ./mmap-thread 15 1024; numactl -C 0 ./mmap-forkonly 15 1024 )
+	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; numactl -C 1 ./mmap-pip 15 1024; numactl -C 1 ./mmap-thread 15 1024; numactl -C 1 ./mmap-forkonly 15 1024 )
 
 eval-ac:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; numactl -C 0 ./mmap-pip-ac 15 1024; numactl -C 0 ./mmap-thread-ac 15 1024; numactl -C 0 ./mmap-forkonly-ac 15 1024 )
+	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; numactl -C 1 ./mmap-pip-ac 15 1024; numactl -C 1 ./mmap-thread-ac 15 1024; numactl -C 1 ./mmap-forkonly-ac 15 1024 )
