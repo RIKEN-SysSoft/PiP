@@ -2,9 +2,6 @@
 include ../../build/Make.common
 include ../Eval.common
 
-PIPLDFLAGS += $(PIPLIB) $(LDFLAGS)
-FOOLDFLAGS += -rdynamic $(LDFLAGS)
-
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h
 
 SRCS  = spawn.c
@@ -14,11 +11,10 @@ PROGS  = foo spawn-pip spawn-forkexec spawn-vforkexec spawn-posix spawn-thread
 all: $(PROGS)
 
 foo: foo.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(FOOLDFLAGS) -Bdynamic $< -o $@
+	$(CC) $(CPPFLAGS) $(CCFLAGS) $(PIPLDFLAGS) -Bdynamic $< -o $@
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DPIP $(CPPFLAGS) $(CCFLAGS) $(PIPLDFLAGS) $< -o $@
-	$(PATCHELF) $@
 
 %-forkexec: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DFORK_EXEC $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
@@ -30,7 +26,7 @@ foo: foo.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DPOSIX_SPAWN $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) -pthread $< -o $@
 
 clean:
 	rm -f $(PROGS) *.o *.E *~ *.log .nfs*

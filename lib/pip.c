@@ -56,6 +56,34 @@ static void pip_init_task_struct( pip_task_t *taskp ) {
   taskp->thread = pip_root->thread;
 }
 
+#include <elf.h>
+
+static int pip_check_pie( char *path ) {
+  Elf64_Ehdr elfh;
+  int fd;
+  int err = 0;
+
+  if( ( fd = open( path, O_RDONLY ) ) < 0 ) {
+    err = errno;
+  } else {
+    if( read( fd, &elfh, sizeof( elfh ) ) != sizeof( elfh ) ) {
+      fprintf( stderr, "Unable to read '%s'\n", path );
+      err = EUNATCH;
+    } else if( elfh.e_ident[EI_MAG0] != ELFMAG0 ||
+	       elfh.e_ident[EI_MAG1] != ELFMAG1 ||
+	       elfh.e_ident[EI_MAG2] != ELFMAG2 ||
+	       elfh.e_ident[EI_MAG3] != ELFMAG3 ) {
+      fprintf( stderr, "'%s' is not an ELF file\n", path );
+      err = EUNATCH;
+    } else if( elfh.e_type != ET_DYN ) {
+      fprintf( stderr, "'%s' is not DYNAMIC (PIE)\n", path );
+      err = ELIBEXEC;
+    }
+    (void) close( fd );
+  }
+  return err;
+}
+
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   pip_clone_t*	cloneinfo = NULL;
   size_t	sz;
@@ -385,9 +413,11 @@ static void pip_finalize_task( pip_task_t *task ) {
   DBGF( "pipid=%d", task->pipid );
   if( task->argv != NULL ) {
     free( task->argv );
+    task->argv = NULL;
   }
   if( task->envv != NULL ) {
     free( task->envv );
+    task->envv = NULL;
   }
   pip_init_task_struct( task );
 }
@@ -405,6 +435,7 @@ static int pip_load_so( void **handlep, char *path ) {
   int 		flags = RTLD_NOW | RTLD_LOCAL;
   /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
   void 		*loaded;
+  int		err;
 
   DBG;
   if( *handlep == NULL ) {
@@ -417,13 +448,16 @@ static int pip_load_so( void **handlep, char *path ) {
   }
   DBGF( "calling dlmopen()" );;
   if( ( loaded = dlmopen( lmid, path, flags ) ) == NULL ) {
-    fprintf( stderr, "dlmopen(%s): %s\n", path, dlerror() );
-    RETURN( ENXIO );
+    err = pip_check_pie( path );
+    if( !err ) {
+      fprintf( stderr, "dlmopen(%s): %s\n", path, dlerror() );
+      RETURN( ENXIO );
+    }
+    RETURN( err );
   } else {
     DBGF( "dlmopen(%s): SUCCEEDED", path );
     *handlep = loaded;
   }
-  DBG;
   RETURN( 0 );
 }
 
@@ -490,6 +524,7 @@ static int pip_do_spawn( void *thargs )  {
   DBG;
   CHECK_CTYPE;
   free( thargs );
+  DBG;
 
   if( !pip_if_shared_fd_() ) pip_close_on_exec();
 
@@ -688,6 +723,7 @@ int pip_spawn( char *prog,
 			      NULL,
 			      (void*(*)(void*)) pip_do_spawn,
 			      (void*) args );
+	DBG;
 	if( err == 0 ) {
 	  task->pipid = *pipidp = pipid;
 	  if( pip_root->cloneinfo != NULL ) {
@@ -698,8 +734,8 @@ int pip_spawn( char *prog,
 	  if( pip_root->cloneinfo != NULL ) {
 	    pip_root->cloneinfo->pid_clone  = 0;
 	  }
-	} else {
-	  DBG;
+	} else if( args != NULL ) {
+	  free( args );
 	}
       }
       /* and of course, the corebinding must be undone */
@@ -715,7 +751,6 @@ int pip_spawn( char *prog,
   if( err != 0 ) {		/* undo */
     DBGF( "err=%d", err );
     if( task != NULL ) pip_finalize_task( task );
-    if( args != NULL ) free( args );
   }
   RETURN( err );
 }

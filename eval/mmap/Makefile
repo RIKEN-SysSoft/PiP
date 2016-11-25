@@ -4,7 +4,6 @@ include ../Eval.common
 
 PIPINCFLAGS = -I..
 PIPCCFLAGS  = $(CCFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
-PIPLDFLAGS  = $(LDFLAGS) $(PIPLIB) -rdynamic
 
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
@@ -17,20 +16,18 @@ all: $(PROGS)
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DPIP $(CPPFLAGS) $(PIPCCFLAGS) $(PIPLDFLAGS) $< -o $@
-	$(PATCHELF) $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) -pthread $< -o $@
 
 %-forkonly: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DFORK_ONLY $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
 
 %-pip-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DPIP -DACUM $(CPPFLAGS) $(PIPCCFLAGS) $(PIPLDFLAGS) $< -o $@
-	$(PATCHELF) $@
 
 %-thread-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD -DACUM $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD -DACUM $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) -pthread $< -o $@
 
 %-forkonly-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DFORK_ONLY -DACUM $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@

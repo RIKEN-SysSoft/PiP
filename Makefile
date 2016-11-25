@@ -10,6 +10,7 @@ all:
 	( cd test/openmp;  make )
 	( cd test/fortran; make )
 	( cd eval;         make )
+	( cd sample;       make )
 
 .PHONY: clean
 clean:
@@ -24,3 +25,4 @@ clean:
 	( cd test/openmp;  make clean )
 	( cd test/fortran; make clean )
 	( cd eval;         make clean )
+	( cd sample;       make clean )
