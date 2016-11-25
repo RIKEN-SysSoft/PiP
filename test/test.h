@@ -254,8 +254,12 @@ inline static void ignore_anysignal( void ) {
 
 inline static void set_sigsegv_watcher( void ) {
   void sigsegv_watcher( int sig, siginfo_t *siginfo, void *context ) {
+#ifdef REG_RIP
     ucontext_t *ctx = (ucontext_t*) context;
     intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
+#else
+    intptr_t pc = 0;
+#endif
     char *sigcode;
     if( siginfo->si_code == SEGV_MAPERR ) {
       sigcode = "SEGV_MAPERR";
@@ -368,8 +372,12 @@ inline static void attachme( void ) {
 
 inline static void set_sigint_watcher( void ) {
   void sigint_watcher( int sig, siginfo_t *siginfo, void *context ) {
+#ifdef REG_RIP
     ucontext_t *ctx = (ucontext_t*) context;
     intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
+#else
+    intptr_t pc = 0;
+#endif
     fprintf( stderr,
 	     "\n...... SIGINT@%p  pid=%d  segvaddr=%p !!!!!!\n",
 	     (void*) pc,
