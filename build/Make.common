@@ -6,19 +6,21 @@ LD      = gcc
 PICFLAG = -fPIC
 PIEFLAG = -fPIE
 
-LDFLAGS = -pthread -ldl -pie
-
-CCFLAGS = -O2 -g -Wall
-
 GLIBCX  = /home/ahori/work/PIP/GLIBC/install/lib
 
 PIPDIR  = /home/ahori/work/PIP/PIP
+
+LDFLAGS =
+
+PIPLDFLAGS = -pthread -ldl -pie -rdynamic \
+	   -Wl,--dynamic-linker=$(GLIBCX)/ld-2.17.so \
+	   -L$(PIPDIR)/lib -lpip
+
+CCFLAGS = -O2 -g -Wall
 
 PIPINCDIR = $(PIPDIR)/include
 PIPLIBDIR = $(PIPDIR)/lib
 
 PIPLIB    = $(PIPLIBDIR)/libpip.so
-
-PATCHELF  = /home/ahori/work/PIP/install/bin/patchelf --set-interpreter $(GLIBCX)/ld-2.17.so
 
 .PHONY: all clean

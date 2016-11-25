@@ -6,5 +6,4 @@ LDFLAGS += -rdynamic $(PIPLIB)
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
-	$(PATCHELF) $@
+	$(CC) $(CPPFLAGS) $(CCFLAGS) $(PIPLDFLAGS) $< -o $@
