@@ -30,6 +30,15 @@
 
 #define NTASKS		PIP_NTASKS_MAX
 
+#define EXIT_PASS	0
+#define EXIT_FAIL	1
+#define EXIT_XPASS	2  /* passed, but it's unexpected. fixed recently?   */
+#define EXIT_XFAIL	3  /* failed, but it's expected. i.e. known bug      */
+#define EXIT_UNRESOLVED	4  /* cannot determine whether (X)?PASS or (X)?FAIL  */
+#define EXIT_UNTESTED	5  /* not tested, this test haven't written yet      */
+#define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
+#define EXIT_KILLED	7  /* killed by Control-C or something               */
+
 #ifndef DEBUG
 //#define DEBUG
 #endif
