@@ -26,6 +26,9 @@
 
 #define PIP_CPUCORE_ASIS	(-1)
 
+/* XXX TO-DO: fflush(stdout) is NOT done when main() returns */
+#define PIP_BUG_NO_FFLUSH_AT_MAIN_RETURN 1
+
 typedef int(*pip_spawnhook_t)(void*);
 
 #ifdef __cplusplus
