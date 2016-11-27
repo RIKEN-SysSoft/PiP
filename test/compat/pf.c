@@ -56,6 +56,9 @@ int main( int argc, char **argv ) {
     }
     pthread_barrier_wait( &import->barrier );
     printf( "<%d> done\n", pipid );
+#if defined(PIP_BUG_NO_FFLUSH_AT_MAIN_RETURN)
+    fflush( stdout );
+#endif
   }
   pip_fin();
   munmap( map, PGSZ * (NTASKS + 1 ) );
