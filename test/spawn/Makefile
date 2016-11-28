@@ -1,19 +1,28 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../../build/Make.common
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
 
-CPPFLAGS = -I../ -I$(PIPINCDIR)
+include $(top_srcdir)/build/var.mk
+
+CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
 CCFLAGS += $(PIEFLAG)
-LDFLAGS += -rdynamic $(PIPLIB)
+LDFLAGS += -rdynamic $(PIPLDLIB)
 
 SRCS    = a.c spawns.c spawnp.c
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
-TASKS = b.out c.out
-#PROGS = $(TASKS) spawns spawnp
-PROGS = $(TASKS) spawns
+TASKS = a.out b.out c.out
+#PROGRAMS = $(TASKS) spawns spawnp
+PROGRAMS = $(TASKS) spawns
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
+
+include $(top_srcdir)/build/rule.mk
 
 b.out: a.out
 	cp $< $@
@@ -22,10 +31,10 @@ c.out: a.out
 	cp $< $@
 
 a.out: a.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %: %.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-clean:
-	rm -f $(PROGS) *.o *.E *~ *.out .nfs*
+post-clean-hook:
+	$(RM) *.E *.log

@@ -1,21 +1,23 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../build/Make.common
+top_builddir = ..
+top_srcdir = $(top_builddir)
+srcdir = .
+
+include $(top_srcdir)/build/var.mk
 
 CPPFLAGS = -I$(PIPINCDIR)
-CCFLAGS += $(PICFLAG)
+CFLAGS += $(PICFLAG)
 LDFLAGS  = -shared
 
 LIBRARY  = pip_preload.so
-SRCS     = pip_preload.c
+SRCS     = $(srcdir)/pip_preload.c
 
 DEPINCS  = $(PIPINCDIR)/pip_debug.h
 
-.SUFFIXES: .c .o
-
-all: $(LIBRARY)
+include $(top_srcdir)/build/rule.mk
 
 $(LIBRARY): $(SRCS) $(DEPINCS) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $(SRCS) -o $(LIBRARY)
-
-clean:
-	rm -f $(LIBRARY) *.o *~
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -o $(LIBRARY)
