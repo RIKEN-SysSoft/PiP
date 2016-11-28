@@ -1,18 +1,27 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../../build/Make.common
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
 
-PIPCCFLAGS  = -I$(PIPINCDIR) $(CCFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
+include $(top_srcdir)/build/var.mk
+
+PIPCFLAGS  = -I$(PIPINCDIR) $(CFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
 
 DEPINCS = $(PIPINCDIR)/pip.h
 
 SRCS  = export.c
 
-PROGS  = export
+PROGRAMS  = export
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
+
+include $(top_srcdir)/build/rule.mk
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(PIPCCFLAGS) $(CCFLAGS) $(PIPLDFLAGS) $< -o $@
+	$(CC) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@
 
-clean:
-	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
+post-clean-hook:
+	$(RM) *.E *.log

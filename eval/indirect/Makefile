@@ -3,11 +3,11 @@ SRCS  = main.c indirect.c
 ASMS  = main.s indirect.s main-static.s indirect-static.s main-none.s indirect-none.s
 OBJS  = main.o indirect.o
 
-PROGS  = indirect indirect-static indirect-none
+PROGRAMS  = indirect indirect-static indirect-none
 
 CC = gcc
 
-all: $(PROGS) $(ASMS)
+all: $(PROGRAMS) $(ASMS)
 
 main.o: main.c $(SRCS) $(DEPINCS) Makefile
 	$(CC) -O2 -fpie -c $< -o $@
@@ -43,4 +43,4 @@ indirect-none: $(SRCS)
 	$(CC) -O2 -mcmodel=medium $(OBJS) -o $@
 
 clean:
-	rm -f $(PROGS) *.o *.s *.S *~ *.log .nfs*
+	rm -f $(PROGRAMS) *.o *.s *.S *~ *.log .nfs*

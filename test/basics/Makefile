@@ -1,6 +1,13 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../../build/Make.common
-include ../Test.common
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
+
+include $(top_srcdir)/build/var.mk
+include $(srcdir)/../Test.common
 
 SRCS  = initfin.c \
 	stack.c \
@@ -19,13 +26,15 @@ SRCS  = initfin.c \
 	spawn.c \
 	varvars.c
 
-PROGS  = initfin stack export environ malloc file wait signal exit \
+PROGRAMS  = initfin stack export environ malloc file wait signal exit \
 	mutex barrier core numa hook spawn varvars
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
 
-clean:
-	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
+include $(top_srcdir)/build/rule.mk
 
 test-file:
 	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )
+
+post-clean-hook:
+	$(RM) *.E *.log

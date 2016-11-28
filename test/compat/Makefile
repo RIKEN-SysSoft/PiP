@@ -1,14 +1,23 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../../build/Make.common
-include ../Test.common
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
+
+include $(top_srcdir)/build/var.mk
+include $(srcdir)/../Test.common
 
 SRCS  = gethostname.c gethostbyname.c initfini.c iftask.c gettimeofday.c \
 	ctype.c main.c exit.c brk.c pf.c
 
-PROGS = gethostname gethostbyname dlopen initfini iftask gettimeofday \
+PROGRAMS = gethostname gethostbyname dlopen initfini iftask gettimeofday \
 	ctype main exit brk pf
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
 
-clean:
-	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
+include $(top_srcdir)/build/rule.mk
+
+post-clean-hook:
+	$(RM) *.E *.log

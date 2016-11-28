@@ -1,11 +1,18 @@
-include ../../build/Make.common
-include ../Test.common
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
+
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
+
+include $(top_srcdir)/build/var.mk
+include $(srcdir)/../Test.common
 
 SRCS	= dlmopen_count.c
 
-PROGS	= dlmopen_count
+PROGRAMS = dlmopen_count
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
 
-clean:
-	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
+include $(top_srcdir)/build/rule.mk

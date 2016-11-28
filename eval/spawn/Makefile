@@ -1,38 +1,47 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../../build/Make.common
-include ../Eval.common
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
 
-DEPINCS = ../eval.h $(PIPINCDIR)/pip.h
+include $(top_srcdir)/build/var.mk
+include $(srcdir)/../Eval.common
+
+DEPINCS = $(srcdir)/../eval.h $(PIPINCDIR)/pip.h
 
 SRCS  = spawn.c
 
-PROGS  = foo spawn-pip spawn-forkexec spawn-vforkexec spawn-posix spawn-thread
+PROGRAMS  = foo spawn-pip spawn-forkexec spawn-vforkexec spawn-posix spawn-thread
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
+
+include $(top_srcdir)/build/rule.mk
 
 foo: foo.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(PIPLDFLAGS) -Bdynamic $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) -Bdynamic $< -o $@
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPIP $(CPPFLAGS) $(CCFLAGS) $(PIPLDFLAGS) $< -o $@
+	$(CC) -DPIP $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@
 
 %-forkexec: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DFORK_EXEC $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DFORK_EXEC $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %-vforkexec: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DVFORK_EXEC $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DVFORK_EXEC $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %-posix: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPOSIX_SPAWN $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DPOSIX_SPAWN $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) -pthread $< -o $@
+	$(CC) -DTHREAD $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -pthread $< -o $@
 
-clean:
-	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
+post-clean-hook:
+	$(RM) *.E *.log
 
 eval:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; \
+	( export LD_PRELOAD=$(build_topdir)/preload/pip_preload.so; \
 	numactl -C 0 ./spawn-pip 50; \
 	numactl -C 0 ./spawn-forkexec 50; \
 	numactl -C 0 ./spawn-vforkexec 50; \
