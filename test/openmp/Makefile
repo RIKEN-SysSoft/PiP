@@ -1,17 +1,26 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../../build/Make.common
-include ../Test.common
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
+
+include $(top_srcdir)/build/var.mk
+include $(srcdir)/../Test.common
 
 OMPFLAG = -fopenmp
 
-CCFLAGS += $(OMPFLAG)
+CFLAGS += $(OMPFLAG)
 LDFLAGS += $(OMPFLAG)
 
 SRCS  = openmp.c
 
-PROGS  = openmp
+PROGRAMS  = openmp
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
+
+include $(top_srcdir)/build/rule.mk
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@

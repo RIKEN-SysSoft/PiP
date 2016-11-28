@@ -1,9 +1,13 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-.PHONY: all
-all:
-	( cd hello;  make )
+top_builddir = ..
+top_srcdir = $(top_builddir)
+srcdir = .
 
-.PHONY: clean
-clean:
-	rm -f $(LIBRARY) *.o *~
-	( cd hello;  make clean )
+include $(top_srcdir)/build/var.mk
+
+SUBDIRS = hello
+
+include $(top_srcdir)/build/rule.mk

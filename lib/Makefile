@@ -1,9 +1,16 @@
+# $PVAS_VERSION:$
+# $PVAS_license:$
+# $RIKEN_copyright:$
 
-include ../build/Make.common
+top_builddir = ..
+top_srcdir = $(top_builddir)
+srcdir = .
+
+include $(top_srcdir)/build/var.mk
 
 CPPFLAGS = -I$(PIPINCDIR)
-CCFLAGS += $(PICFLAG)
-LDFLAGS  = -pthread -ldl -shared -L$(GLIBCX)
+CFLAGS += $(PICFLAG)
+LDFLAGS  = -pthread -shared -L$(glibc_libdir) -ldl
 
 LIBRARY  = libpip.so
 SRCS     = pip.c pvas.c xpmem.c
@@ -17,15 +24,9 @@ DEPINCS  = $(PIPINCDIR)/pip.h 			\
 	   $(PIPINCDIR)/pvas.h 			\
 	   $(PIPINCDIR)/pip_debug.h
 
-.SUFFIXES: .c .o
+include $(top_srcdir)/build/rule.mk
 
-all: $(LIBRARY)
-
-%.o: %.c $(SRCS) $(DEPINCS) Makefile
-	$(CC) $(CPPFLAGS) $(CCFLAGS) -c $< -o $@
+$(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
-	$(LD) $(LDFLAGS) $(OBJS) -o $@
-
-clean:
-	rm -f $(LIBRARY) *.o *~ .nfs*
+	$(CC) $(LDFLAGS) $(OBJS) -o $@
