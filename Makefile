@@ -1,6 +1,6 @@
-# $PVAS_VERSION:$
+# $PIP_VERSION:$
+# $PIP_license:$
 # $RIKEN_copyright:$
-# $PVAS_license:$
 
 top_builddir = .
 top_srcdir = .

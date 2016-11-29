@@ -1,3 +1,6 @@
+# $PIP_VERSION:$
+# $PIP_license:$
+# $RIKEN_copyright:$
 
 SRCS  = main.c indirect.c
 ASMS  = main.s indirect.s main-static.s indirect-static.s main-none.s indirect-none.s
