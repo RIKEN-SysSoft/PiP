@@ -27,6 +27,4 @@ compat/exit.sh
 compat/brk.sh
 compat/pf.sh
 openmp/openmp.sh
-fort/fort.sh
-
-
+fortran/fort.sh
