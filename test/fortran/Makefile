@@ -9,6 +9,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
+LDFLAGS += -pie
+
 SRCS    = a.c spawns.c spawnp.c
 
 TASKS = a b c
