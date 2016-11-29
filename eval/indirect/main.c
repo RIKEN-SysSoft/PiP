@@ -7,7 +7,7 @@
 extern double foo( int );
 extern double bar( double*, int );
 
-#define ARRAYSZ		(128*1024*1024)
+#define ARRAYSZ		(512*1024*1024)
 double a[ARRAYSZ];
 
 #define RDTSC(X)\
@@ -31,7 +31,7 @@ void foo_loop() {
   double x;
   int i, c, sz;
 
-  for( sz=128; sz<ARRAYSZ; sz*=2 ) {
+  for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
     x = 0.0;
     for( i=0; i<sz; i++ ) x += foo( i );
     x = 0.0;
@@ -39,6 +39,7 @@ void foo_loop() {
     delta = 0.0;
     ss = gettime();
     do {
+      x = 0.0;
       c++;
       start = rdtsc();
       for( i=0; i<sz; i++ ) x += foo( i );
@@ -46,7 +47,7 @@ void foo_loop() {
     } while( ( gettime() - ss ) < 0.5 );
     delta /= (double) c;
 
-    printf( "GOT\t %d\t %g\t %g\n", sz, delta, delta/(double)sz );
+    printf( "GOT\t %d\t %g\t %g\t (%g)\n", sz, delta, delta/(double)sz, x );
   }
 }
 
@@ -56,7 +57,7 @@ void bar_loop( void ) {
   double x;
   int i, c, sz;
 
-  for( sz=128; sz<ARRAYSZ; sz*=2 ) {
+  for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
     x = 0.0;
     for( i=0; i<sz; i++ ) x += bar( a, i );
     x = 0.0;
@@ -64,6 +65,7 @@ void bar_loop( void ) {
     delta = 0.0;
     ss = gettime();
     do {
+      x = 0.0;
       c++;
       start = rdtsc();
       for( i=0; i<sz; i++ ) x += bar( a, i );
@@ -71,14 +73,14 @@ void bar_loop( void ) {
     } while( ( gettime() - ss ) < 0.5 );
     delta /= (double) c;
 
-    printf( "PTR\t %d\t %g\t %g\n", sz, delta, delta/(double)sz );
+    printf( "PTR\t %d\t %g\t %g\t (%g)\n", sz, delta, delta/(double)sz, x );
   }
 }
 
 int main() {
+  int i;
 
-  foo_loop();
-  bar_loop();
+  for( i=0; i<ARRAYSZ; i++ ) a[i] = (double) 0;
 
   foo_loop();
   bar_loop();
