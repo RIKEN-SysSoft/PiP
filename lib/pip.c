@@ -466,6 +466,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
   char 		***envvp;
   main_func_t 	main_func;
   ctype_init_t	ctype_init;
+  fflush_t	libc_fflush;
   int 		err;
 
   DBGF( "prog=%s", prog );
@@ -486,6 +487,12 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
       DBG;
       err = ENXIO;
       goto error;
+    } else if( ( libc_fflush = (fflush_t) dlsym( loaded, "fflush" ) )
+	       == NULL ) {
+      /* getting address of fflush function to flush messages */
+      DBG;
+      err = ENXIO;
+      goto error;
     } else if( ( envvp = (char***) dlsym( loaded, "environ" ) ) == NULL ) {
       /* getting address of environmanet variable to be set */
       DBG;
@@ -502,6 +509,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
 #endif
     task->mainf       = main_func;
     task->ctype_initf = ctype_init;
+    task->libc_fflush = libc_fflush;
     task->envvp       = envvp;
     task->loaded      = loaded;
   } else if( loaded != NULL ) {
@@ -556,9 +564,14 @@ static int pip_do_spawn( void *thargs )  {
       DBGF( "[%d] << __ctype_init@%p()", pipid, self->ctype_initf );
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
+
       self->retval = self->mainf( argc, argv );
+
       DBGF( "[%d] << main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
+      DBGF( "[%d] >> fflush@%p()", pipid, self->libc_fflush );
+      self->libc_fflush( NULL );
+      DBGF( "[%d] << fflush@%p()", pipid, self->libc_fflush );
       CHECK_CTYPE;
 
     } else {

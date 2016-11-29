@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <ucontext.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <pip_machdep.h>
 #include <pip_clone.h>
@@ -44,6 +45,7 @@
 typedef	int(*main_func_t)(int,char**);
 
 typedef	void(*ctype_init_t)(void);
+typedef	void(*fflush_t)(FILE*);
 
 typedef struct {
   int			pipid;
@@ -53,6 +55,7 @@ typedef struct {
   void			*loaded;
   main_func_t		mainf;
   ctype_init_t		ctype_initf;
+  fflush_t		libc_fflush;
   ucontext_t 		*ctx;
   char			**argv;
   char			**envv;
