@@ -16,8 +16,6 @@ int main( int argc, char **argv ) {
   DBG;
   TESTINT( pip_init( &pipid, NULL, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    ignore_signal( SIGINT );
-
     pipid = 0;
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			NULL, NULL, NULL ) );
@@ -25,9 +23,6 @@ int main( int argc, char **argv ) {
 
   } else if( pipid < 10 ) {
     DBGF( "pipid=%d", pipid );
-    sleep( 2 );
-    set_sigsegv_watcher();
-    set_sigint_watcher();
 
     pipid++;
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,

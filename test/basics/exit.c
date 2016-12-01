@@ -31,7 +31,7 @@ int main( int argc, char **argv ) {
 	fprintf( stderr, "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
 	break;
       }
-      DBGF( "caling pip_wait(%d)", i );
+      DBGF( "calling pip_wait(%d)", i );
       TESTINT( pip_wait( i, &retval ) );
       if( retval != i ) {
 	fprintf( stderr, "[PIPID=%d] pip_wait() returns %d ???\n", i, retval );
@@ -43,8 +43,7 @@ int main( int argc, char **argv ) {
 
   } else {
     fprintf( stderr, "Hello, I am PIPID[%d] ...", pipid );
-    pip_exit( pipid );
-    fprintf( stderr, "PIPID[%d] pip_exit() returns !!!\n", pipid );
+    exit( pipid );
   }
   return 0;
 }

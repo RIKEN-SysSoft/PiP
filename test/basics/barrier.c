@@ -26,15 +26,20 @@ int main( int argc, char **argv ) {
   int ntasks;
   int i;
 
+  if( argc > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = NTASKS;
+  }
+
   TESTINT( pthread_mutex_init( &tc.mutex, NULL ) );
   TESTINT( pthread_mutex_lock( &tc.mutex ) );
 
-  ntasks = NTASKS;
   exp    = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
 
-    for( i=0; i<NTASKS; i++ ) {
+    for( i=0; i<ntasks; i++ ) {
       int err;
       pipid = i;
       err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL, NULL );
