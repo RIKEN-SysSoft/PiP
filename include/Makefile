@@ -2,7 +2,11 @@
 # $PIP_license:$
 # $RIKEN_copyright:$
 
-include ../build/Make.common
+top_builddir = ..
+top_srcdir = $(top_builddir)
+srcdir = .
 
-clean:
-	rm -f  *~
+HEADERS = pip.h
+
+include $(top_srcdir)/build/var.mk
+include $(top_srcdir)/build/rule.mk
