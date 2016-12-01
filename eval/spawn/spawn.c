@@ -31,7 +31,7 @@
 #include <spawn.h>
 #endif
 
-#define NTASKS_MAX	(50)
+#define NTASKS_MAX	(100)
 
 double	time_start, time_spawn, time_end;
 

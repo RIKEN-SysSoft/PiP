@@ -10,24 +10,34 @@ ASMS  = main.s indirect.s main-static.s indirect-static.s \
 	main-medium-static.s indirect-medium-static.s \
 	main-medium.s indirect-medium.s \
 	main-large-static.s indirect-large-static.s \
-	main-large.s indirect-large.s
+	main-large.s indirect-large.s \
+	main-icc.s indirect-icc.s
 
 OBJS  = main.o indirect.o
 OBJS_LTO  = main-lto.o indirect-lto.o
 OBJS_MED  = main-medium.o indirect-medium.o
 OBJS_LRG  = main-large.o indirect-large.o
-OBJS_32  = main-32.o indirect-32.o
+OBJS_32   = main-32.o indirect-32.o
+OBJS_ICC  = main-icc.o indirect-icc.o
 
 PROGRAMS  = indirect indirect-static indirect-none \
 	indirect-lto indirect-static-lto indirect \
 	indirect-medium-static indirect-medium \
-	indirect-large-static indirect-large
+	indirect-large-static indirect-large \
+	indirect-icc
 
 CC = gcc
+ICC = icc
 
 OPTS = -O3
 
 all: $(PROGRAMS) $(ASMS)
+
+main.o: main.c $(SRCS) $(DEPINCS) Makefile
+	$(CC) $(OPTS) -fpie -c $< -o $@
+
+indirect.o: indirect.c $(SRCS) $(DEPINCS) Makefile
+	$(CC) $(OPTS) -fpie -c $< -o $@
 
 main.o: main.c $(SRCS) $(DEPINCS) Makefile
 	$(CC) $(OPTS) -fpie -c $< -o $@
@@ -58,6 +68,12 @@ main-large.o: main.c $(SRCS) $(DEPINCS) Makefile
 
 indirect-large.o: indirect.c $(SRCS) $(DEPINCS) Makefile
 	$(CC) $(OPTS) -mcmodel=large -fpie -c $< -o $@
+
+main-icc.o: main.c $(SRCS) $(DEPINCS) Makefile
+	$(ICC) $(OPTS) -fpie -c $< -o $@
+
+indirect-icc.o: indirect.c $(SRCS) $(DEPINCS) Makefile
+	$(ICC) $(OPTS) -fpie -c $< -o $@
 
 
 main.s: main.c $(SRCS) $(DEPINCS) Makefile
@@ -126,6 +142,12 @@ main-large.s: main.c $(SRCS) $(DEPINCS) Makefile
 indirect-large.s: indirect.c $(SRCS) $(DEPINCS) Makefile
 	$(CC) $(OPTS) -fPIC -mcmodel=large -S $< -o $@
 
+main-icc.s: main.c $(SRCS) $(DEPINCS) Makefile
+	$(ICC) $(OPTS) -fpie -S $< -o $@
+
+indirect-icc.s: indirect.c $(SRCS) $(DEPINCS) Makefile
+	$(ICC) $(OPTS) -fpie -S $< -o $@
+
 
 indirect: $(OBJS)
 	$(CC) $(OPTS) -pie $(OBJS) -o $@
@@ -159,6 +181,9 @@ indirect-32-static: $(SRCS)
 
 indirect-32: $(OBJS_32)
 	$(CC) $(OPTS) -pie $(OBJS_32) -m32 -o $@
+
+indirect-icc: $(OBJS_ICC)
+	$(ICC) $(OPTS) -pie $(OBJS_ICC) -o $@
 
 clean:
 	rm -f $(PROGRAMS) *.o *.s *.S *~ *.log .nfs*

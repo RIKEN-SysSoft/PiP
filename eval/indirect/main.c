@@ -13,16 +13,20 @@ double a[ARRAYSZ];
 #define RDTSC(X)\
 asm volatile ("rdtsc; shlq $32,%%rdx; orq %%rdx,%%rax" : "=a" (X) :: "%rdx")
 
-inline double rdtsc() {
-  unsigned long long x;
-  RDTSC(x);
-  return (double)x;
-}
-
 inline double gettime( void ) {
   struct timeval tv;
   gettimeofday( &tv, NULL );
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
+}
+
+inline double rdtsc() {
+#ifdef AH
+  unsigned long long x;
+  RDTSC(x);
+  return (double)x;
+#else
+  return gettime();
+#endif
 }
 
 void foo_loop() {
@@ -34,7 +38,6 @@ void foo_loop() {
   for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
     x = 0.0;
     for( i=0; i<sz; i++ ) x += foo( i );
-    x = 0.0;
     c = 0;
     delta = 0.0;
     ss = gettime();
@@ -60,7 +63,6 @@ void bar_loop( void ) {
   for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
     x = 0.0;
     for( i=0; i<sz; i++ ) x += bar( a, i );
-    x = 0.0;
     c = 0;
     delta = 0.0;
     ss = gettime();

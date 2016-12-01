@@ -20,7 +20,7 @@ PROGRAMS_TO_INSTALL = # nothing
 include $(top_srcdir)/build/rule.mk
 
 foo: foo.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) -Bdynamic $< -o $@
+	$(CC) -O2 -fpie -pie -rdynamic $< -o $@
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DPIP $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@

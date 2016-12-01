@@ -31,7 +31,7 @@ c.out: a.out
 	cp $< $@
 
 a.out: a.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -fpie -pie $< -o $@
 
 %: %.c $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@

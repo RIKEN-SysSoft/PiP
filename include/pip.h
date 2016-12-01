@@ -22,7 +22,7 @@
 #define PIP_PIPID_ANY		(-2)
 #define PIP_PIPID_MYSELF	(-3)
 
-#define PIP_NTASKS_MAX		(128)
+#define PIP_NTASKS_MAX		(60)
 
 #define PIP_CPUCORE_ASIS	(-1)
 
