@@ -11,6 +11,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <malloc.h>
 #include <dlfcn.h>
 #include <dirent.h>
@@ -28,6 +29,29 @@
 
 #include <pip.h>
 #include <pip_internal.h>
+
+//#define EVAL
+
+#ifdef EVAL
+
+inline double pip_gettime( void ) {
+  struct timeval tv;
+  gettimeofday( &tv, NULL );
+  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
+}
+
+#define ES(V,F)		\
+  do { double __st=pip_gettime(); (F); (V) += pip_gettime()-__st; } while(0)
+double time_load_so;
+double time_load_prog;
+#define REPORT(V)	 printf( "%s: %g\n", #V, V );
+
+#else
+
+#define ES(V,F)		(F)
+#define REPORT(V)
+
+#endif
 
 extern void __ctype_init (void);
 
@@ -470,7 +494,8 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
   int 		err;
 
   DBGF( "prog=%s", prog );
-  if( ( err = pip_load_so( &loaded, prog ) ) == 0 ) {
+  ES( time_load_so, ( err = pip_load_so( &loaded, prog ) ) );
+  if( err == 0 ) {
     DBG;
     if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
 	/* getting main function address to invoke */
@@ -527,6 +552,7 @@ static int pip_do_spawn( void *thargs )  {
   pip_spawnhook_t after  = args->hook_after;
   void	*hook_arg  = args->hook_arg;
   pip_task_t *self = &pip_root->tasks[pipid];
+  void *loaded	   = self->loaded;
   int err = 0;
 
   DBG;
@@ -554,7 +580,19 @@ static int pip_do_spawn( void *thargs )  {
       self->ctx = &ctx;
 
       //pip_print_maps();
-      CHECK_CTYPE;
+      {
+	char ***argvp;
+	int *argcp;
+
+	if( ( argvp = (char***) dlsym( loaded, "__lbc_argv" ) ) != NULL ) {
+	  printf( "__libc_argv\n" );
+	  *argvp = argv;
+	}
+	if( ( argcp = (int*)    dlsym( loaded, "__lbc_argc" ) ) != NULL ) {
+	  printf( "__libc_argc\n" );
+	  *argcp = argc;
+	}
+      }
 
       /* for some reason, I do not knwo why, pointers to the CTYPE
 	 tables are broken at the beginning of the main() function.
@@ -569,6 +607,7 @@ static int pip_do_spawn( void *thargs )  {
 
       DBGF( "[%d] << main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
+      /* call fflush() in the target context to flush out messages */
       DBGF( "[%d] >> fflush@%p()", pipid, self->libc_fflush );
       self->libc_fflush( NULL );
       DBGF( "[%d] << fflush@%p()", pipid, self->libc_fflush );
@@ -730,7 +769,8 @@ int pip_spawn( char *prog,
       /* corebinding should take place before loading solibs,        */
       /* hoping anon maps would be mapped ontto the closer numa node */
 
-      if( ( err = pip_load_prog( prog, task ) ) == 0 ) {
+      ES( time_load_prog, ( err = pip_load_prog( prog, task ) ) );
+      if( err == 0 ) {
 	pip_clone_wrap_begin();	/* tell clone wrapper, if any*/
 	err = pthread_create( &task->thread,
 			      NULL,
@@ -793,6 +833,8 @@ int pip_fin( void ) {
     }
   }
   pip_root = NULL;
+  REPORT( time_load_so   );
+  REPORT( time_load_prog );
   RETURN( err );
 }
 
