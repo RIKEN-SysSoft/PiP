@@ -9,8 +9,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CCFLAGS += $(PIEFLAG)
-LDFLAGS += -rdynamic $(PIPLDLIB)
+CFLAGS += $(PIEFLAG)
+LDFLAGS += -pie -rdynamic $(PIPLDLIB)
 
 SRCS    = a.c spawns.c spawnp.c
 
