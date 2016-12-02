@@ -585,11 +585,11 @@ static int pip_do_spawn( void *thargs )  {
 	int *argcp;
 
 	if( ( argvp = (char***) dlsym( loaded, "__lbc_argv" ) ) != NULL ) {
-	  printf( "__libc_argv\n" );
+	  DBGF( "&__libc_argv=%p\n", argvp );
 	  *argvp = argv;
 	}
 	if( ( argcp = (int*)    dlsym( loaded, "__lbc_argc" ) ) != NULL ) {
-	  printf( "__libc_argc\n" );
+	  DBGF( "&__libc_argc=argcp\n" );
 	  *argcp = argc;
 	}
       }
