@@ -20,11 +20,13 @@ PROGRAMS  = ctxsw-pip ctxsw-thread ctxsw-forkonly
 
 PROGRAMS_TO_INSTALL = # nothing
 
+include $(top_srcdir)/build/rule.mk
+
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DPIP $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< -o $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD -pthread $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %-forkonly: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DFORK_ONLY $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
