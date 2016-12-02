@@ -1,31 +1,36 @@
+# $PIP_VERSION:$
+# $PIP_license:$
+# $RIKEN_copyright:$
 
-include ../../build/Make.common
-include ../Eval.common
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
 
-PIPINCFLAGS = -I..
-PIPCCFLAGS  = $(CCFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
-PIPLDFLAGS  = $(LDFLAGS) $(PIPLIB) -rdynamic
+include $(top_srcdir)/build/var.mk
+include $(srcdir)/../Eval.common
+
+PIPINCFLAGS = -I$(srcdir)/..
+PIPCFLAGS  = $(CFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
 
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 SRCS  = ctxsw.c
 
-PROGS  = ctxsw-pip ctxsw-thread ctxsw-forkonly
+PROGRAMS  = ctxsw-pip ctxsw-thread ctxsw-forkonly
 
-all: $(PROGS)
+PROGRAMS_TO_INSTALL = # nothing
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPIP $(CPPFLAGS) $(PIPCCFLAGS) $(PIPLDFLAGS) $< -o $@
-	$(PATCHELF) $@
+	$(CC) -DPIP $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< -o $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %-forkonly: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DFORK_ONLY $(CPPFLAGS) $(CCFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DFORK_ONLY $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-clean:
-	rm -f $(PROGS) *.o *.E *~ *.log .nfs*
+post-clean-hook:
+	$(RM) *.E *.log
 
 eval:
 	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; numactl -C 0 ./ctxsw-pip 15 1024; numactl -C 0 ./ctxsw-thread 15 1024; numactl -C 0 ./ctxsw-forkonly 15 1024 )
