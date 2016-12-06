@@ -44,9 +44,6 @@ int main( int argc, char **argv ) {
     //print_maps();
 
     printf( "CHILD: %s\n", to_upper( "xyz12345" ) );
-#if defined(PIP_BUG_NO_FFLUSH_AT_MAIN_RETURN)
-    fflush( stdout );
-#endif
   }
   return 0;
 }
