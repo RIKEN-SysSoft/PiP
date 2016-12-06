@@ -2,4 +2,4 @@
 
 . ../test.sh.inc
 
-./exit 2>&1 | test_msg_count 'pip_wait() returns 0 ???' $(expr $TEST_PIP_TASKS - 1)
+./exit 2>&1 | test_msg_count 'terminated. OK' $TEST_PIP_TASKS
