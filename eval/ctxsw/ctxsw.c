@@ -34,32 +34,32 @@
 
 #define NTASKS_MAX	(50)
 
-//#define CTXSW_ITER	(1000*1000)
-#define CTXSW_ITER	(1000)
+#define CTXSW_ITER	(100*1000)
 
 #define CACHEBLKSZ	(64)
 
-#define CORENO		(8)
+#define CORENO		(0)
 
-#define COUNT_CTXSW
+//#define COUNT_CTXSW
 
 #ifdef COUNT_CTXSW
 #if defined( PIP ) || defined( FORK_ONLY )
-pid_t	pid_prev;
+pid_t        pid_prev;
 #else
 pthread_t pthread_prev;
 #endif
 #endif
-__thread int	count_ctxsw;
 
-size_t	ncacheblk = 0;
-double	time_start, time_end;
-double	ave_nvcsw = 0.0;
+__thread int        count_ctxsw;
+
+size_t        ncacheblk = 0;
+double        time_start, time_end;
+double        ave_nvcsw = 0.0;
 
 struct sync_st {
-  int	count_ctxsw;
-  volatile int	sync0;
-  volatile int	sync1;
+  int        count_ctxsw;
+  volatile int        sync0;
+  volatile int        sync1;
 };
 
 void init_syncs( int n, struct sync_st *syncs ) {
@@ -67,12 +67,35 @@ void init_syncs( int n, struct sync_st *syncs ) {
   syncs->sync1 = n;
 }
 
+#define ctxsw	sched_yield
+
+#ifdef AHAHA
+void ctxsw( void ) {
+#if defined( PIP ) || defined( FORK_ONLY )
+#ifdef COUNT_CTXSW
+    pid_prev = getpid();
+#endif
+    sched_yield();
+#ifdef COUNT_CTXSW
+    if( pid_prev == getpid() ) (*count_ctxswp) ++;
+#endif
+
+#elif defined( THREAD )
+#ifdef COUNT_CTXSW
+    pthread_prev = pthread_self();
+#endif
+    pthread_yield();
+
+#ifdef COUNT_CTXSW
+    if( pthread_prev == pthread_self() ) (*count_ctxswp) ++;
+#endif
+#endif
+}
+#endif
+
 void wait_sync( volatile int *syncp ) {
   __sync_fetch_and_sub( syncp, 1 );
-  while( *syncp > 0 ) {
-    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
-    pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
-  }
+  while( *syncp > 0 ) ctxsw();
 }
 
 void wait_sync0( struct sync_st *syncs ) {
@@ -84,22 +107,27 @@ void wait_sync1( struct sync_st *syncs ) {
 }
 
 void touch( void *p ) {
-  int i;
-  for( i=0; i<ncacheblk; i++ ) {
-    int *ip = (int*) p;
-    *ip = i;
-    p += CACHEBLKSZ;
+  if( p != NULL ) {
+    int i;
+    for( i=0; i<ncacheblk; i++ ) {
+      *((int*) p) = i;
+      p += CACHEBLKSZ;
+    }
   }
 }
 
 void *alloc_mem( void ) {
   void *mem;
 
-  posix_memalign( &mem, 4096, ncacheblk * CACHEBLKSZ );
-  if( mem == NULL ) {
-    fprintf( stderr, "not enough memory\n" );
+  if( ncacheblk > 0 ) {
+    posix_memalign( &mem, 4096, ncacheblk * CACHEBLKSZ );
+    if( mem == NULL ) {
+      fprintf( stderr, "not enough memory\n" );
+    }
+    return mem;
+  } else {
+    return NULL;
   }
-  return mem;
 }
 
 void eval_ctxsw( void *mem, int *count_ctxswp ) {
@@ -107,32 +135,12 @@ void eval_ctxsw( void *mem, int *count_ctxswp ) {
 
   for( i=0; i<CTXSW_ITER; i++ ) {
     touch( mem );
-
-#if defined( PIP ) || defined( FORK_ONLY )
-
-#ifdef COUNT_CTXSW
-    pid_prev = getpid();
-#endif
-    sched_yield();
-#ifdef COUNT_CTXSW
-    if( pid_prev == getpid() ) (*count_ctxswp) ++;
-#endif
-
-#elif defined( THREAD )
-
-#ifdef COUNT_CTXSW
-    pthread_prev = pthread_self();
-#endif
-    pthread_yield();
-#ifdef COUNT_CTXSW
-    if( pthread_prev == pthread_self() ) (*count_ctxswp) ++;
-#endif
-
-#endif
+    ctxsw();
   }
 }
 
 #ifdef PIP
+
 struct sync_st syncs;
 
 void spawn_tasks( char **argv, int ntasks ) {
@@ -153,7 +161,6 @@ void spawn_tasks( char **argv, int ntasks ) {
     pipid = i;
     TESTINT( pip_spawn( argv[0], argv, NULL, CORENO, &pipid, NULL, NULL, NULL ) );
   }
-
   wait_sync0( &syncs );
   time_start = gettime();
   /* ... */
@@ -161,9 +168,7 @@ void spawn_tasks( char **argv, int ntasks ) {
   time_end = gettime();
 
   for( i=0; i<ntasks; i++ ) {
-    pid_t pid;
-    pid = wait3( NULL, 0, &ru );
-    fprintf( stderr, "PIP[%d] terminates\n", pid );
+    (void) wait3( NULL, 0, &ru );
     nctxsw += ru.ru_nvcsw;
   }
   ave_nvcsw = ((double) nctxsw) / ((double)ntasks);
@@ -180,7 +185,6 @@ void eval_pip( char *argv[] ) {
   TESTINT( pip_init( &pipid, NULL, &root_exp, 0 ) );
   TESTINT( ( pipid == PIP_PIPID_ROOT ) );
   syncp = (struct sync_st*) root_exp;
-
   wait_sync0( syncp );
   eval_ctxsw( mem, &syncp->count_ctxsw );
   wait_sync1( syncp );
@@ -188,12 +192,12 @@ void eval_pip( char *argv[] ) {
 #ifdef COUNT_CTXSW
   fprintf( stderr, "[%d] nctxsw - %d\n", getpid(), syncp->count_ctxsw );
 #endif
-
   free( mem );
 }
 #endif
 
 #ifdef THREAD
+
 struct sync_st syncs;
 
 void eval_thread( void ) {
@@ -209,9 +213,9 @@ void eval_thread( void ) {
 #ifdef COUNT_CTXSW
   fprintf( stderr, "[%d] nctxsw - %d\n", getpid(), count_ctxsw );
 #endif
-
   free( mem );
-  sleep( 5 );
+
+  sleep( 3 );
   pthread_exit( NULL );
 }
 
@@ -276,6 +280,7 @@ void fork_only( int ntasks ) {
       CPU_ZERO( &cpuset );
       CPU_SET( CORENO, &cpuset );
       TESTSC( sched_setaffinity( getpid(), sizeof(cpuset), &cpuset ) );
+      sched_yield();
 
       wait_sync0( syncs );
       eval_ctxsw( mem, &syncs->count_ctxsw );
@@ -285,7 +290,6 @@ void fork_only( int ntasks ) {
       fprintf( stderr, "[%d] nctxsw - %d\n", getpid(), syncs->count_ctxsw );
 #endif
 
-      free( mem );
       exit( 0 );
     }
   }
@@ -310,10 +314,11 @@ int main( int argc, char **argv ) {
     fprintf( stderr, "ctxsw-XXX <ntasks>\n" );
     exit( 1 );
   }
-  ntasks    = atoi( argv[1] );
+  ntasks = atoi( argv[1] );
   if( argc >= 3 ) {
     ncacheblk = atoi( argv[2] );
   }
+
   if( ntasks > 0 ) {		/* root process/thread */
     if( ntasks > NTASKS_MAX ) {
       fprintf( stderr, "Illegal number of tasks is specified.\n" );
@@ -330,9 +335,9 @@ int main( int argc, char **argv ) {
 #elif defined( FORK_ONLY )
     fork_only( ntasks );
 #endif
-    printf( "%g [sec], %d tasks, %d [Bytes], (%g) %d iteration\n",
+    printf( "%g [sec]  %d tasks  %d [Bytes] %d iter.\n",
 	    time_end - time_start, ntasks,
-	    ((int) ( ncacheblk * CACHEBLKSZ )), ave_nvcsw, CTXSW_ITER );
+	    ((int) ( ncacheblk * CACHEBLKSZ )), CTXSW_ITER );
 
   } else {			/* child task/process/thread */
 #if defined(PIP)

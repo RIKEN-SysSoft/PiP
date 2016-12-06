@@ -10,7 +10,7 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Eval.common
 
 PIPINCFLAGS = -I$(srcdir)/..
-PIPCFLAGS  = $(CFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
+PIPCFLAGS  = -O0 $(PIEFLAG) $(PIPINCFLAGS)
 
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
@@ -26,10 +26,10 @@ include $(top_srcdir)/build/rule.mk
 	$(CC) -DPIP $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< -o $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD -pthread $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD -pthread $(CPPFLAGS) -O0 $(LDFLAGS) $< -o $@
 
 %-forkonly: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DFORK_ONLY $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) -DFORK_ONLY $(CPPFLAGS) -O0 $(LDFLAGS) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
