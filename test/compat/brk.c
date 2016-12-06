@@ -12,9 +12,6 @@
 
 void print_brk( int id ) {
   printf( "<%d> brk: %p\n", id, sbrk( 0 ) );
-#if defined(PIP_BUG_NO_FFLUSH_AT_MAIN_RETURN)
-  fflush( stdout );
-#endif
 }
 
 int main( int argc, char **argv ) {
