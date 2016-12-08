@@ -629,6 +629,11 @@ static int pip_do_spawn( void *thargs )  {
   DBG;
   pip_finalize_task( self );
   DBG;
+  if( pip_if_pthread_() ) { /* thread model */
+    pthread_exit( NULL );
+  } else {			/* process model */
+    exit( self->retval );
+  }
   RETURN( 0 );
 }
 

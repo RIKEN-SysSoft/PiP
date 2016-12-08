@@ -10,10 +10,10 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
 SRCS  = gethostname.c gethostbyname.c initfini.c iftask.c gettimeofday.c \
-	ctype.c main.c exit.c brk.c pf.c
+	ctype.c main.c exit.c brk.c pf.c fork.c
 
 PROGRAMS = gethostname gethostbyname dlopen initfini iftask gettimeofday \
-	ctype main exit brk pf
+	ctype main exit brk pf fork
 
 PROGRAMS_TO_INSTALL = # nothing
 

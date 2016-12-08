@@ -10,6 +10,7 @@
 #define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/mman.h>
+#include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -35,7 +36,9 @@
 #ifndef TOUCH
 
 #ifndef ACUM
+//#define MMAP_ITER	(10*1000)
 #define MMAP_ITER	(1000*1000)
+//#define MMAP_ITER	(10*1000*1000)
 #else
 #define MMAP_ITER	(100*1000)
 #endif
@@ -50,7 +53,8 @@
 
 #endif
 
-#define MMAP_PROT	(PROT_READ|PROT_WRITE)
+//#define MMAP_PROT	(PROT_READ|PROT_WRITE)
+#define MMAP_PROT	(PROT_READ)
 //#define MMAP_OPTS	(MAP_PRIVATE|MAP_ANONYMOUS|MAP_POPULATE)
 #define MMAP_OPTS	(MAP_PRIVATE|MAP_ANONYMOUS)
 
@@ -225,9 +229,8 @@ void spawn_tasks( char **argv, int ntasks ) {
   wait_sync3( &syncs );
   time_end2 = gettime();
 
-  for( i=0; i<ntasks; i++ ) {
-    TESTINT( pip_wait( i, NULL ) );
-  }
+  for( i=0; i<ntasks; i++ ) wait( NULL );
+
   TESTINT( pip_fin() );
 }
 
@@ -252,9 +255,9 @@ void eval_pip( char *argv[] ) {
   if(0) {
      int i;
      for( i=0; i<MMAP_ITER; i++ ) {
-  printf( "%p   {%d} mmap[%d]\n", mmap_array[i], pipid, i );
-}
-}
+       printf( "%p   {%d} mmap[%d]\n", mmap_array[i], pipid, i );
+     }
+  }
 #endif
   TESTINT( pip_fin() );
 }
@@ -396,6 +399,7 @@ int main( int argc, char **argv ) {
 #if defined(PIP)
     eval_pip( argv );
 #endif
+    printf( "[%d] terminated\n", getpid() );
   }
   return 0;
 }

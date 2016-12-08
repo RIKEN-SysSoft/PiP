@@ -34,7 +34,8 @@
 
 #define NTASKS_MAX	(50)
 
-#define CTXSW_ITER	(100*1000)
+//#define CTXSW_ITER	(100*1000)
+#define CTXSW_ITER	(1000)
 
 #define CACHEBLKSZ	(64)
 
@@ -310,14 +311,12 @@ void fork_only( int ntasks ) {
 int main( int argc, char **argv ) {
   int ntasks;
 
-  if( argc < 2 ) {
-    fprintf( stderr, "ctxsw-XXX <ntasks>\n" );
+  if( argc < 3 ) {
+    fprintf( stderr, "ctxsw-XXX <ntasks> <ncacheblks>\n" );
     exit( 1 );
   }
   ntasks = atoi( argv[1] );
-  if( argc >= 3 ) {
-    ncacheblk = atoi( argv[2] );
-  }
+  ncacheblk = atoi( argv[2] );
 
   if( ntasks > 0 ) {		/* root process/thread */
     if( ntasks > NTASKS_MAX ) {

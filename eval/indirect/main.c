@@ -7,7 +7,7 @@
 extern double foo( int );
 extern double bar( double*, int );
 
-#define ARRAYSZ		(512*1024*1024)
+#define ARRAYSZ		(1024)
 double a[ARRAYSZ];
 
 #define RDTSC(X)\
@@ -35,7 +35,9 @@ void foo_loop() {
   double x;
   int i, c, sz;
 
-  for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
+  //  for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
+  {
+    sz = 1024;
     x = 0.0;
     for( i=0; i<sz; i++ ) x += foo( i );
     c = 0;
@@ -60,7 +62,9 @@ void bar_loop( void ) {
   double x;
   int i, c, sz;
 
-  for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
+  //  for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
+  {
+    sz = 1024;
     x = 0.0;
     for( i=0; i<sz; i++ ) x += bar( a, i );
     c = 0;
@@ -85,6 +89,8 @@ int main() {
   for( i=0; i<ARRAYSZ; i++ ) a[i] = (double) 0;
 
   foo_loop();
+  foo_loop();
+  bar_loop();
   bar_loop();
 
   return 0;
