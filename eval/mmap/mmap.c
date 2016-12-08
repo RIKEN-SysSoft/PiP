@@ -399,7 +399,7 @@ int main( int argc, char **argv ) {
 #if defined(PIP)
     eval_pip( argv );
 #endif
-    printf( "[%d] terminated\n", getpid() );
+    //printf( "[%d] terminated\n", getpid() );
   }
   return 0;
 }
