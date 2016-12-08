@@ -11,7 +11,7 @@ include $(srcdir)/../Test.common
 
 LDFLAGS += -pie
 
-SRCS    = a.c spawns.c spawnp.c
+SRCS    = a.f fort.c
 
 TASKS = a b c
 PROGRAMS = $(TASKS) fort
@@ -30,7 +30,7 @@ c: a
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %: %.f $(DEPINCS) $(PIPLIB) Makefile
-	$(FC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) -fpie $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
