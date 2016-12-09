@@ -10,26 +10,27 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Eval.common
 
 PIPINCFLAGS = -I$(srcdir)/..
-PIPCFLAGS  = -O0 $(PIEFLAG) $(PIPINCFLAGS)
+PIPCFLAGS  = $(PIEFLAG) $(PIPINCFLAGS)
 
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
-SRCS  = ctxsw.c
+SRCS  = ctxsw.c futex.c
 
-PROGRAMS  = ctxsw-pip ctxsw-thread ctxsw-forkonly
+PROGRAMS  = ctxsw-pip ctxsw-thread ctxsw-forkonly \
+	futex-pip futex-thread futex-forkonly
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPIP $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< -o $@
+	$(CC) -DPIP $(CPPFLAGS) $(PIPCFLAGS) -O0 -g $(PIPLDFLAGS) $< -o $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD -pthread $(CPPFLAGS) -O0 $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD -pthread $(CPPFLAGS) -O0 -g $(LDFLAGS) $< -o $@
 
 %-forkonly: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DFORK_ONLY $(CPPFLAGS) -O0 $(LDFLAGS) $< -o $@
+	$(CC) -DFORK_ONLY $(CPPFLAGS) -O0 -g $(LDFLAGS) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
