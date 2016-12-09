@@ -30,8 +30,7 @@
 #include <pip.h>
 #include <pip_internal.h>
 
-//#define EVAL
-
+#define EVAL
 #ifdef EVAL
 
 inline double pip_gettime( void ) {
@@ -42,6 +41,7 @@ inline double pip_gettime( void ) {
 
 #define ES(V,F)		\
   do { double __st=pip_gettime(); (F); (V) += pip_gettime()-__st; } while(0)
+double time_dlmopen;
 double time_load_so;
 double time_load_prog;
 #define REPORT(V)	 printf( "%s: %g\n", #V, V );
@@ -306,14 +306,14 @@ int pip_get_current_ntasks( int *ntasksp ) {
 }
 
 int pip_export( void *export ) {
-  if( pip_root         == NULL ) RETURN( EPERM  );
-  if( pip_root_p()             ) RETURN( EPERM  );
-  /* root export address is already set by pip_init() */
-  /* and you cannot reset it again                    */
   if( export           == NULL ) RETURN( EINVAL );
-  if( pip_self->export != NULL ) RETURN( EBUSY  );
-
-  pip_self->export = export;
+  if( pip_root_p() ) {
+    if( pip_root->export != NULL ) RETURN( EBUSY  );
+    pip_root->export = export;
+  } else {
+    if( pip_self->export != NULL ) RETURN( EBUSY  );
+    pip_self->export = export;
+  }
   RETURN( 0 );
 }
 
@@ -470,8 +470,9 @@ static int pip_load_so( void **handlep, char *path ) {
       RETURN( ENXIO );
     }
   }
-  DBGF( "calling dlmopen()" );;
-  if( ( loaded = dlmopen( lmid, path, flags ) ) == NULL ) {
+  DBGF( "calling dlmopen()" );
+  ES( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) );
+  if( loaded == NULL ) {
     err = pip_check_pie( path );
     if( !err ) {
       fprintf( stderr, "dlmopen(%s): %s\n", path, dlerror() );
@@ -840,6 +841,7 @@ int pip_fin( void ) {
   pip_root = NULL;
   REPORT( time_load_so   );
   REPORT( time_load_prog );
+  REPORT( time_dlmopen );
   RETURN( err );
 }
 
