@@ -26,6 +26,8 @@ int main( int argc, char **argv ) {
       pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL );
     }
     for( i=0; i<ntasks; i++ ) wait( NULL );
+    sid_new = getsid( getpid() );
+    printf( "ROOT[%d]: sid %d\n", getpid(), sid_new );
     printf( "all done\n" );
 
   } else {	/* PIP child task */
