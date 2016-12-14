@@ -65,6 +65,7 @@ typedef struct {
 
 typedef struct {
   char			magic[PIP_MAGIC_LEN];
+  int			version; /* for future us (backward compatibility) */
   size_t		size;
   pthread_t		thread;
   pip_spinlock_t	spawn_lock;

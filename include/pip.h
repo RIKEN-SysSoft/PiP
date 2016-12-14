@@ -24,7 +24,7 @@
 
 #define PIP_NTASKS_MAX		(60)
 
-#define PIP_CPUCORE_ASIS	(-1)
+#define PIP_CPUCORE_ASIS 	(-1)
 
 typedef int(*pip_spawnhook_t)(void*);
 
