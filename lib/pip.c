@@ -30,7 +30,7 @@
 #include <pip.h>
 #include <pip_internal.h>
 
-#define EVAL
+//#define EVAL
 #ifdef EVAL
 
 inline double pip_gettime( void ) {
@@ -419,6 +419,8 @@ static void pip_close_on_exec( void ) {
   int fd;
   int flags;
 
+  //pip_print_fds();
+
 #define PROCFD_PATH		"/proc/self/fd"
   if( ( dir = opendir( PROCFD_PATH ) ) != NULL ) {
     while( ( direntp = readdir( dir ) ) != NULL ) {
@@ -426,11 +428,12 @@ static void pip_close_on_exec( void ) {
 	  ( flags = fcntl( fd, F_GETFD ) ) >= 0 &&
 	  flags & FD_CLOEXEC ) {
 	(void) close( fd );
-	DBGF( "fd[%d] is closed (CLOEXEC)", fd );
+	DBGF( "<PID=%d> fd[%d] is closed (CLOEXEC)", getpid(), fd );
       }
     }
     (void) closedir( dir );
   }
+  //pip_print_fds();
 }
 
 static void pip_finalize_task( pip_task_t *task ) {
@@ -731,6 +734,8 @@ int pip_spawn( char *prog,
 
   args = (pip_spawn_args_t*) malloc( sizeof(pip_spawn_args_t) );
   if( args == NULL ) RETURN( ENOMEM );
+
+  //pip_print_fds();
 
   args->coreno = coreno;
   args->prog   = prog;
