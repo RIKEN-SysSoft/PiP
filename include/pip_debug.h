@@ -76,6 +76,14 @@ inline static void pip_print_maps( void ) {
   close( fd );
 }
 
+#include <stdlib.h>
+
+inline static void pip_print_fds( void ) {
+  char sysstr[128];
+  sprintf( sysstr, "echo Proc-%d; ls -al /proc/%d/fd", getpid(), getpid() );
+  system( sysstr );
+}
+
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #include <errno.h>
