@@ -7,10 +7,7 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-
-CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += $(PIEFLAG)
-LDFLAGS += -pie -rdynamic $(PIPLDLIB)
+include $(srcdir)/../Test.common
 
 SRCS    = a.c spawns.c spawnp.c
 
@@ -31,10 +28,7 @@ c.out: a.out
 	cp $< $@
 
 a.out: a.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -fpie -pie $< -o $@
-
-%: %.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS)  $(PIPLDFLAGS) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
