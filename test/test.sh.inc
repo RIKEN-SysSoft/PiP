@@ -1,7 +1,7 @@
 TEST_TMP=/tmp/piptest$$
 TEST_TRAP_SIGS='1 2 15'
 
-: ${TEST_PIP_TASKS:=$(../util/dlmopen_count)}
+: ${TEST_PIP_TASKS:=$(../util/dlmopen_count -p)}
 
 #
 # exit_code
