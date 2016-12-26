@@ -10,7 +10,7 @@ include $(top_srcdir)/build/var.mk
 
 CPPFLAGS = -I$(PIPINCDIR)
 CFLAGS += $(PICFLAG)
-LDFLAGS  = -shared
+LDFLAGS  = -shared -ldl
 
 LIBRARY  = pip_preload.so
 SRCS     = $(srcdir)/pip_preload.c
