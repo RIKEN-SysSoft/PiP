@@ -1,0 +1,43 @@
+#!/bin/sh
+
+glibc_libdir=@glibc_libdir@
+glibc_default_libdir=/lib64
+
+exit_status=0
+opt_silent=false
+program_name=`basename $0`
+
+for option
+do
+
+	case $option in
+	-s)	opt_silent=true;;
+	*)	echo >&2 "$program_name: error: invalid argument $1"
+		echo >&2 "Usage: $program_name [-s]"
+		exit 2;;
+	esac
+done
+
+if [ x"$glibc_libdir" = x"$glibc_default_libdir" ]; then
+	echo >&2 "$program_name: warning:" \
+		"nothing to do, because glibc_libdir = ${glibc_default_libdir}"
+	exit $exit_status
+fi
+
+ls ${glibc_default_libdir} | grep '^lib.*\.so\.[0-9]*$' |
+while read lib
+do
+	if [ -f ${glibc_libdir}/$lib ]; then
+		continue
+	fi
+	$opt_silent || echo \
+	   ln -s ${glibc_default_libdir}/${lib} ${glibc_libdir}/
+	if ln -s ${glibc_default_libdir}/${lib} ${glibc_libdir}/
+	then
+		:
+	else
+		exit_status=1
+	fi
+done
+
+exit $exit_status

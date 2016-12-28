@@ -47,5 +47,5 @@ fi
 
 # Checks for library functions.
 
-AC_CONFIG_FILES([build/config.mk])
+AC_CONFIG_FILES([build/config.mk util/piplnlibs])
 AC_OUTPUT
