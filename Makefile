@@ -8,7 +8,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include bin preload \
+SUBDIRS = lib include bin preload util \
 	test/util \
 	test/basics \
 	test/spawn \
