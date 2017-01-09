@@ -9,17 +9,22 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
+PROGRAMS = $(PROGRAM) pmap
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
 LDLIBS += $(PIPLDLIB) -ldl
 
-DEPINCS = $(PIPINCDIR)/pip.h
+DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_debug.h
 
 include $(top_srcdir)/build/rule.mk
 
-$(PROGRAM): piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< $(LDLIBS) -o $@
+piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
+	-Wl,--dynamic-linker=$(dynamic_linker) $< $(LDLIBS) -o $@
+
+pmap: pmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) $(CPPFLAGS) -O2 -fpie -pie -rdynamic $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
