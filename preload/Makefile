@@ -20,4 +20,4 @@ DEPINCS  = $(PIPINCDIR)/pip_debug.h
 include $(top_srcdir)/build/rule.mk
 
 $(LIBRARY): $(SRCS) $(DEPINCS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -o $(LIBRARY)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -shared -o $(LIBRARY)
