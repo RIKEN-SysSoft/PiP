@@ -28,33 +28,38 @@
 
 #define PIP_PIPID_NONE		(-999)
 
+#define PIP_ERRMSG_TAG		"#PIP Error (pid:%d)# "
+
 #define PIP_LD_SOLIBS		{ NULL }
-
-#ifdef AHAHAHAH
-#define LIBCDIR			"/usr/lib64/"
-#endif
-#define LIBCDIR			"/home/ahori/work/PIP/GLIBC/install/lib/"
-
-#define PIP_STD_NSSLIBS		{					\
-      LIBCDIR "libnss_dns.so", LIBCDIR "libnss_files.so",		\
-      LIBCDIR "libnss_nis.so", LIBCDIR "libnss_nisplus.so",		\
-      LIBCDIR "libnss_db.so",  LIBCDIR "libnss_compat.so",		\
-      LIBCDIR "libnss_hesiod.so",					\
-      NULL }
 
 typedef	int(*main_func_t)(int,char**);
 
+#ifndef HAVE_GLIBC_INIT
 typedef	void(*ctype_init_t)(void);
+typedef void(*init_misc_t)(int,char**,char**);
+typedef void(*getopt_clean_t)(char**);
+typedef void(*libc_ctors_t)(void);
+#else
+typedef void(*glibc_init_t)(int,char**,char**);
+#endif
 typedef	void(*fflush_t)(FILE*);
 
 typedef struct {
   int			pipid;
   int			pid;
+  int			coreno;
   int	 		retval;
   pthread_t		thread;
   void			*loaded;
   main_func_t		mainf;
-  ctype_init_t		ctype_initf;
+#ifndef HAVE_GLIBC_INIT
+  ctype_init_t		ctype_init;
+  init_misc_t		init_misc;
+  getopt_clean_t	getopt_clean;
+  libc_ctors_t		libc_ctors;
+#else
+  glibc_init_t		glibc_init;
+#endif
   fflush_t		libc_fflush;
   ucontext_t 		*ctx;
   char			**argv;
@@ -73,6 +78,7 @@ typedef struct {
   pip_clone_t	 	*cloneinfo;
   int			opts;
   int			pid;
+  int			pipid_curr;
   int			ntasks_curr;
   int			ntasks_accum;
   int			ntasks;
