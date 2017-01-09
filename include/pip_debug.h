@@ -28,7 +28,7 @@
 
 #define DBG_PRTBUF	char _dbuf[1024]={'\0'}
 #define DBG_PRNT(...)	sprintf(_dbuf+strlen(_dbuf),__VA_ARGS__)
-#define DBG_OUTPUT	fprintf(stderr,"%s\n",_dbuf)
+#define DBG_OUTPUT	do {_dbuf[strlen(_dbuf)]='\n';write(1,_dbuf,strlen(_dbuf));_dbuf[0]='\0';} while(0)
 #define DBG_TAG		\
   do { DBG_PRNT("[PID:%d] %s:%d %s(): ",(int)getpid(),			\
 		__FILE__, __LINE__, __func__ );	} while(0)
@@ -76,19 +76,45 @@ inline static void pip_print_maps( void ) {
   close( fd );
 }
 
+#include <sys/types.h>
+#include <dirent.h>
 #include <stdlib.h>
+#include <string.h>
 
 inline static void pip_print_fds( void ) {
-  char sysstr[128];
-  sprintf( sysstr, "echo Proc-%d; ls -al /proc/%d/fd", getpid(), getpid() );
-  system( sysstr );
+#ifdef DEBUG
+  DIR *dir = opendir( "/proc/self/fd" );
+  struct dirent *de;
+  char fdpath[512];
+  char fdname[256];
+  ssize_t sz;
+  DBG_PRTBUF;
+
+  if( dir != NULL ) {
+    int   fd = dirfd( dir );
+
+    while( ( de = readdir( dir ) ) != NULL ) {
+      sprintf( fdpath, "/proc/%d/fd/%s", getpid(), de->d_name );
+      if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+	fdname[sz] = '\0';
+	if( atoi( de->d_name ) != fd ) {
+	  DBG_PRNT( "%s -> %s", fdpath, fdname );
+	} else {
+	  DBG_PRNT( "%s -> %s  opendir(\"/proc/self/fd\")", fdpath, fdname );
+	}
+	DBG_OUTPUT;
+      }
+    }
+    closedir( dir );
+  }
+#endif
 }
 
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #include <errno.h>
 
-inline static void print_fs_segreg( void ) {
+inline static void pip_print_fs_segreg( void ) {
   int arch_prctl(int, unsigned long*);
   unsigned long fsreg;
   if( arch_prctl( ARCH_GET_FS, &fsreg ) == 0 ) {

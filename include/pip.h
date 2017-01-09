@@ -15,8 +15,11 @@
 #define PIP_MODEL_PROCESS	(0x2)
 
 #define PIP_ENV_MODEL		"PIP_MODEL"
+#define PIP_ENV_MODEL_THREAD	"thread"
 #define PIP_ENV_MODEL_PTHREAD	"pthread"
 #define PIP_ENV_MODEL_PROCESS	"process"
+
+#define PIP_ENV_STACKSZ		"PIP_STACKSZ"
 
 #define PIP_PIPID_ROOT		(-1)
 #define PIP_PIPID_ANY		(-2)
