@@ -16,7 +16,7 @@
 #include <signal.h>
 #include <errno.h>
 
-//#define DEBUG
+#define DEBUG
 #include <pip_clone.h>
 #include <pip_debug.h>
 
@@ -25,15 +25,14 @@ pip_clone_t pip_clone_info;
 typedef
 int(*clone_syscall_t)(int(*)(void*), void*, int, void*, pid_t*, void*, pid_t*);
 
-static int get_funcaddr( char *fname, void **faddrp ) {
-    void *faddr = dlsym( RTLD_NEXT, fname );
-    if( faddr == NULL ) {
-      DBGF( "dlym(): %s", dlerror() );
-      return ENOSYS;
-    }
-    *faddrp = faddr;
-    return 0;
+static clone_syscall_t pip_get_clone( void ) {
+  static clone_syscall_t pip_clone_orig = NULL;
+
+  if( pip_clone_orig == NULL ) {
+    pip_clone_orig = (clone_syscall_t) dlsym( RTLD_NEXT, "__clone" );
   }
+  return pip_clone_orig;
+}
 
 int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
   va_list ap;
@@ -43,21 +42,26 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
   pid_t *ctid = va_arg( ap, pid_t*);
   clone_syscall_t clone_orig;
   int retval = -1;
-  int err;
 
-  if( ( err = get_funcaddr( "__clone", (void**) &clone_orig ) ) != 0 ) {
-    errno = err;
+  if( ( clone_orig = pip_get_clone() ) == NULL ) {
+    errno = ENOSYS;
   } else if( pip_clone_info.flag_wrap ) {
     pip_clone_info.flag_wrap = 0;
 
-    int __attribute__ ((unused)) oldflags = flags;
-    flags &= ~CLONE_FS;	/* 0x00200 */
-    flags &= ~CLONE_FILES;	/* 0x00400 */
-    flags &= ~CLONE_SIGHAND;	/* 0x00800 */
-    flags &= ~CLONE_THREAD;	/* 0x10000 */
+#ifdef DEBUG
+    int oldflags = flags;
+#endif
+
+    flags &= ~(CLONE_FS);	/* 0x00200 */
+    flags &= ~(CLONE_FILES);	/* 0x00400 */
+    flags &= ~(CLONE_SIGHAND);	/* 0x00800 */
+    flags &= ~(CLONE_THREAD);	/* 0x10000 */
     flags &= ~0xff;
     flags |= SIGCHLD;
+    flags |= CLONE_VM;
     flags |= CLONE_PTRACE;
+
+    //    flags |= CLONE_SETTLS;
 
     errno = 0;
     DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",
