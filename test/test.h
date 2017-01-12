@@ -58,20 +58,20 @@
 #define PRTNL 			fprintf( stderr, "\n" )
 #define TPRT(...)		\
   do { 									\
-  int __node = 98765; pip_get_pipid( &__node );				\
-  if( __node == 98765 ) {						\
-    fprintf( stderr, "<N/A> %s:%d: ", __FILE__, __LINE__ );	\
-  } else if( __node == PIP_PIPID_ROOT ) {				\
+  int _pipid_ =  98765; pip_get_pipid( &_pipid_ );			\
+  if( _pipid_ == 98765 ) {						\
+    fprintf( stderr, "<N/A> %s:%d: ", __FILE__, __LINE__ );		\
+  } else if( _pipid_ == PIP_PIPID_ROOT ) {				\
     fprintf( stderr, "<ROOT> %s:%d: ", __FILE__, __LINE__ ); 		\
   } else {								\
-    fprintf( stderr, "<PIP:%d> %s:%d: ", __node, __FILE__, __LINE__ );	\
+    fprintf( stderr, "<PIP:%d> %s:%d: ", _pipid_, __FILE__, __LINE__ );	\
   } fprintf( stderr, __VA_ARGS__ ); PRTNL; } while(0)
 #define TESTINT(F)		\
   do{ 							\
     TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz != 0 ) exit( 9 );				\
+    int _xyz_ = (F);					\
+    TPRT( "<< %s=%d", #F, _xyz_ );			\
+    if( _xyz_ != 0 ) exit( 9 );				\
   } while(0)
 #endif
 

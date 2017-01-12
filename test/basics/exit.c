@@ -43,7 +43,7 @@ int main( int argc, char **argv ) {
 
   } else {
     fprintf( stderr, "Hello, I am PIPID[%d] ...", pipid );
-    exit( pipid );
+    pip_exit( pipid );
   }
   return 0;
 }
