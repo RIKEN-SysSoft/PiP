@@ -38,7 +38,7 @@
 #define DBGF(...)	\
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; }while(0)
 #define RETURN(X)	\
-  do { DBG_PRTBUF; if(X) { DBG_TAG; DBG_PRNT("ERROR RETURN (%d)\n",X);	\
+  do { DBG_PRTBUF; if(X) { DBG_TAG; DBG_PRNT("ERROR RETURN (%d)",X);	\
 			   DBG_OUTPUT; } return (X); } while(0)
 
 #else
@@ -81,6 +81,22 @@ inline static void pip_print_maps( void ) {
 #include <stdlib.h>
 #include <string.h>
 
+inline static void pip_print_fd( int fd ) {
+#ifdef DEBUG
+  char fdpath[512];
+  char fdname[256];
+  ssize_t sz;
+  DBG_PRTBUF;
+
+  sprintf( fdpath, "/proc/self/fd/%d", fd );
+  if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+    fdname[sz] = '\0';
+    DBG_PRNT( "%d -> %s", fd, fdname );
+    DBG_OUTPUT;
+  }
+#endif
+}
+
 inline static void pip_print_fds( void ) {
 #ifdef DEBUG
   DIR *dir = opendir( "/proc/self/fd" );
@@ -94,7 +110,7 @@ inline static void pip_print_fds( void ) {
     int   fd = dirfd( dir );
 
     while( ( de = readdir( dir ) ) != NULL ) {
-      sprintf( fdpath, "/proc/%d/fd/%s", getpid(), de->d_name );
+      sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
       if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( atoi( de->d_name ) != fd ) {

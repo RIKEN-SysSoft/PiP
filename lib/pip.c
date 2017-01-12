@@ -34,16 +34,18 @@
 #error "!defined(PIP_CLONE_AND_DLMOPEN) && !defined(PIP_DLMOPEN_AND_CLONE)"
 #endif
 
-#define PIP_EXPLICT_EXIT
 //#define HAVE_GLIBC_INIT
-
+//#define PIP_EXPLICT_EXIT
+//#define PIP_NO_MALLOPT
 
 //#define DEBUG
+//#define PRINT_MAPS
+//#define PRINT_FDS
 
 #include <pip.h>
 #include <pip_internal.h>
 
-//#define EVAL
+#define EVAL
 
 #ifdef EVAL
 
@@ -132,10 +134,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   int 		err = 0;
 
   if( pip_root != NULL ) RETURN( EBUSY ); /* already initialized */
-
-#ifndef PIP_NO_MALLOPT
-  (void) mallopt( M_MMAP_THRESHOLD, 1 ); /* not to call (s)brk() */
-#endif
 
   if( ( env = getenv( PIP_ROOT_ENV ) ) == NULL ) {
     /* root process ? */
@@ -439,27 +437,35 @@ static char **pip_copy_env( char **envsrc ) {
 }
 
 static void pip_close_on_exec( void ) {
-#ifdef AHAH
   DIR *dir;
   struct dirent *direntp;
   int fd;
   int flags;
 
-  //pip_print_fds();
+#ifdef PRINT_FDS
+  pip_print_fds();
+#endif
 
 #define PROCFD_PATH		"/proc/self/fd"
   if( ( dir = opendir( PROCFD_PATH ) ) != NULL ) {
+    int fd_dir = dirfd( dir );
     while( ( direntp = readdir( dir ) ) != NULL ) {
       if( ( fd = atoi( direntp->d_name ) ) >= 0 &&
+	  fd != fd_dir                          &&
 	  ( flags = fcntl( fd, F_GETFD ) ) >= 0 &&
 	  flags & FD_CLOEXEC ) {
+#ifdef DEBUG
+	pip_print_fd( fd );
+#endif
 	(void) close( fd );
 	DBGF( "<PID=%d> fd[%d] is closed (CLOEXEC)", getpid(), fd );
       }
     }
     (void) closedir( dir );
+    (void) close( fd_dir );
   }
-  //pip_print_fds();
+#ifdef PRINT_FDS
+  pip_print_fds();
 #endif
 }
 
@@ -519,11 +525,11 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
 
   DBGF( "prog=%s", prog );
 
-#ifdef DEBUG
+#ifdef PRINT_MAPS
   pip_print_maps();
 #endif
   ES( time_load_so, ( err = pip_load_so( &loaded, prog ) ) );
-#ifdef DEBUG
+#ifdef PRINT_MAPS
   pip_print_maps();
 #endif
 
@@ -654,11 +660,11 @@ static int pip_do_spawn( void *thargs )  {
   free( args );
 
 #ifdef DEBUG
-  {
+  if( pip_if_pthread_() ) {
     pthread_attr_t attr;
     size_t sz;
     int _err;
-    if( ( _err = pthread_getattr_np( pthread_self(), &attr    ) ) != 0 ) {
+    if( ( _err = pthread_getattr_np( self->thread, &attr    ) ) != 0 ) {
       DBGF( "pthread_getattr_np()=%d", _err );
     } else if( ( _err = pthread_attr_getstacksize( &attr, &sz ) ) != 0 ) {
       DBGF( "pthread_attr_getstacksize()=%d", _err );
@@ -697,7 +703,6 @@ static int pip_do_spawn( void *thargs )  {
       flag_exit = 1;
       self->ctx = &ctx;
 
-      //pip_print_maps();
       {
 	char ***argvp;
 	int *argcp;
@@ -711,6 +716,24 @@ static int pip_do_spawn( void *thargs )  {
 	  *argcp = argc;
 	}
       }
+#ifndef PIP_NO_MALLOPT
+      {
+	int(*mallopt_func)(int,int);
+	if( ( mallopt_func = dlsym( loaded, "mallopt" ) ) != NULL ) {
+	  DBGF( ">> mallopt()" );
+	  if(  mallopt_func( M_MMAP_THRESHOLD, 0 ) == 1 ) {
+	    DBGF( "<< mallopt(M_MMAP_THRESHOLD): succeeded" );
+	  } else {
+	    DBGF( "<< mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
+	  }
+	  if(  mallopt_func( M_TRIM_THRESHOLD, -1 ) == 1 ) {
+	    DBGF( "<< mallopt(M_TRIM_THRESHOLD): succeeded" );
+	  } else {
+	    DBGF( "<< mallopt(M_TRIM_THRESHOLD): failed !!!!!!" );
+	  }
+	}
+      }
+#endif
 
 #ifndef HAVE_GLIBC_INIT
       /* __ctype_init() must be called at the very beginning of */
@@ -754,7 +777,7 @@ static int pip_do_spawn( void *thargs )  {
   }
   pip_finalize_task( self );
 
-#ifdef PIP_EXPLICT_EXIT
+#ifdef PIP_EXPLICIT_EXIT
   if( pip_if_pthread_() ) {	/* thread model */
     pthread_exit( NULL );
   } else {			/* process model */
@@ -790,7 +813,6 @@ int pip_spawn( char *prog,
   int 			err = 0;
 
   DBGF( ">> pip_spawn()" );
-  //pip_print_fds();
 
   if( pip_root == NULL ) RETURN( EPERM );
   if( prog == NULL ) {
@@ -803,6 +825,9 @@ int pip_spawn( char *prog,
     DBGF( "pipid=%d", pipid );
     RETURN( EINVAL );
   }
+
+  DBGF( "pip_spawn(pipid=%d)", *pipidp );
+
   if( pip_root->ntasks_accum >= PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 #ifdef PIP_NO_TASKSPAWN
   if( !pthread_equal( pthread_self(), pip_root->thread ) ) {
@@ -892,7 +917,7 @@ int pip_spawn( char *prog,
  unlock:
   pip_spin_unlock( &pip_root->spawn_lock );
 
-  /* beyoond this point, we can 'goto' the 'error' label */
+  /**** beyoond this point, we can 'goto' the 'error' label ****/
 
   if( err != 0 ) goto error;
 
@@ -906,8 +931,8 @@ int pip_spawn( char *prog,
 
       /* and of course, the corebinding must be undone */
       (void) pip_undo_corebind( coreno, &cpuset );
-      if( err != 0 ) goto error;
     }
+    if( err != 0 ) goto error;
   }
 #endif
 
@@ -933,13 +958,13 @@ int pip_spawn( char *prog,
 
   error:			/* undo */
     DBGF( "err=%d", err );
-    if( task != NULL ) pip_finalize_task( task );
+    if( task != NULL ) pip_init_task_struct( task );
     free( args->prog );
     free( args->argv );
     free( args->envv );
     free( args );
   }
-  DBGF( "<< pip_spawn()" );
+  DBGF( "<< pip_spawn(pipid=%d)", *pipidp );
   RETURN( err );
 }
 
@@ -1042,7 +1067,6 @@ static void pip_finalize_thread( pip_task_t *task, int *retvalp ) {
   /* dlclose() must only be called from the root process since */
   /* corresponding dlopen() calls are made by the root process */
   DBGF( "retval=%d", task->retval );
-  //pip_print_maps();
 
   if( retvalp != NULL ) *retvalp = task->retval;
 
@@ -1055,10 +1079,6 @@ static void pip_finalize_thread( pip_task_t *task, int *retvalp ) {
   task->loaded = NULL;
   task->thread = pip_root->thread;
   pip_root->ntasks_curr --;
-
-#ifdef DEBUG
-  //pip_print_maps();
-#endif
 }
 
 static int pip_check_join_arg( int pipid, pip_task_t **taskp ) {

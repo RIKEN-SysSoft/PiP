@@ -16,7 +16,7 @@
 #include <signal.h>
 #include <errno.h>
 
-#define DEBUG
+//#define DEBUG
 #include <pip_clone.h>
 #include <pip_debug.h>
 
