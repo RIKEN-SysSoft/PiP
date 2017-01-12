@@ -1,5 +1,10 @@
 #!/bin/sh
 
+export LD_PRELOAD=`pwd`/../preload/pip_preload.so
+
+echo LD_PRELOAD=$LD_PRELOAD
+echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
 
@@ -78,7 +83,7 @@ while read line; do
 			else
 				exit $EXIT_UNTESTED
 			fi
-		) 
+		)
 		test_exit_status=$?
 	fi
 

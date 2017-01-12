@@ -132,6 +132,7 @@ void eval_main( void ) {
   const int nswitches = iterations * 4;
   printf("%i process context switches (wss:%4liK) in %12lluns (%.1f ns/ctxsw)\n",
 	 nswitches, ws_pages * 4, delta, (delta / (float) nswitches));
+  fflush( NULL );
   wait(futex);
 }
 
@@ -162,13 +163,17 @@ int main(int argc, char** argv) {
     TESTINT( pip_export( futex ) );
     pipid = 0;
     TESTINT( pip_spawn( argv[0], argv, NULL, 0, &pipid, NULL, NULL, NULL ) );
+    //printf( "[%d] >>eval_main\n", getpid() );
     eval_main();
+    //printf( "[%d] <<eval_main\n", getpid() );
   } else {
     TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &futex ) );
     ws_pages = strtol(argv[1], NULL, 10);
     iterations = get_iterations(ws_pages);
     ws = ((char *) futex) + 4096;
+    //printf( "[%d] >>eval_task\n", getpid() );
     eval_task();
+    //printf( "[%d] <<eval_task\n", getpid() );
   }
 
 #elif defined(THREAD)
@@ -184,6 +189,7 @@ int main(int argc, char** argv) {
 			   (void*(*)(void*))eval_task,
 			   NULL ) );
   eval_main();
+  pthread_join( thread, NULL );
 
 #elif defined(FORK_ONLY)
   pid_t pid;
@@ -193,10 +199,18 @@ int main(int argc, char** argv) {
 
   if( ( pid = fork() ) > 0 ) {
     eval_main();
+    wait( NULL );
   } else {
     eval_task();
   }
 #endif
 
+#ifdef AH
+  sleep( 1 );
+  printf( "[%d] >>FLUSH\n", getpid() );
+  fflush( NULL );
+  printf( "[%d] <<FLUSH\n", getpid() );
+  sleep( 1 );
+#endif
   return 0;
 }

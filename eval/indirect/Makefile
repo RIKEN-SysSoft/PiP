@@ -8,15 +8,16 @@ ASMS  = main.s indirect.s main-static.s indirect-static.s \
 	main-none.s indirect-none.s  main-icc.s indirect-icc.s
 
 OBJS  = main.o indirect.o
-OBJS_ICC  = main-icc.o indirect-icc.o
+#OBJS_ICC  = main-icc.o indirect-icc.o
 
-PROGRAMS  = indirect-pie indirect-static indirect-none \
-	indirect-icc-pie indirect-icc-static indirect-icc-none
+PROGRAMS  = indirect-pie indirect-static indirect-none
+#PROGRAMS  = indirect-pie indirect-static indirect-none \
+#	indirect-icc-pie indirect-icc-static indirect-icc-none
 
 CC = gcc
 ICC = icc
 
-OPTS = -O3
+OPTS = -O3 -g
 
 all: $(PROGRAMS) $(ASMS)
 
@@ -24,7 +25,7 @@ main.o: main.c $(SRCS) $(DEPINCS) Makefile
 	$(CC) $(OPTS) -fpie -c $< -o $@
 
 indirect.o: indirect.c $(SRCS) $(DEPINCS) Makefile
-	$(CC) $(OPTS) -fpie -c $< -o $@
+	$(CC) $(OPTS) -fpie -c -shared $< -o libind.so
 
 main-icc.o: main.c $(SRCS) $(DEPINCS) Makefile
 	$(ICC) $(OPTS) -fpie -c $< -o $@
@@ -59,7 +60,7 @@ indirect-icc.s: indirect.c $(SRCS) $(DEPINCS) Makefile
 
 
 indirect-pie: $(OBJS)
-	$(CC) $(OPTS) -pie $(OBJS) -o $@
+	$(CC) $(OPTS) main.o -pie -L. -lind -o $@
 
 indirect-static: $(SRCS)
 	$(CC) $(OPTS) -static $(SRCS) -o $@

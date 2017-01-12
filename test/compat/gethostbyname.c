@@ -15,7 +15,7 @@
 
 struct hostent *my_gethostbyname( char *name ) {
   DBG;
-  print_fs_segreg();
+  pip_print_fs_segreg();
   CHECK_CTYPE;
   return gethostbyname( name );
 }
@@ -26,7 +26,7 @@ int main( int argc, char **argv ) {
   struct hostent *he;
 
   CHECK_CTYPE;
-  print_fs_segreg();
+  pip_print_fs_segreg();
   ntasks = 1;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {

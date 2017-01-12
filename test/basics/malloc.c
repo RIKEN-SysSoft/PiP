@@ -76,9 +76,7 @@ int main( int argc, char **argv ) {
   int i;
   int err;
 
-  TESTINT( !mallopt( M_MMAP_THRESHOLD, 1 ) );
-
-  ntasks = NTASKS;
+  ntasks = 20;
   tc.go = 0;
   exp    = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );

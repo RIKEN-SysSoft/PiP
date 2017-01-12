@@ -41,9 +41,8 @@ post-clean-hook:
 	$(RM) *.E *.log
 
 eval:
-	( export LD_PRELOAD=$(build_topdir)/preload/pip_preload.so; \
-	numactl -C 0 ./spawn-pip 50; \
-	numactl -C 0 ./spawn-forkexec 50; \
-	numactl -C 0 ./spawn-vforkexec 50; \
-	numactl -C 0 ./spawn-posix 50; \
-	numactl -C 0 ./spawn-thread 50 )
+	numactl -C 0 ./spawn-pip 50
+	numactl -C 0 ./spawn-forkexec 50
+	numactl -C 0 ./spawn-vforkexec 50
+	numactl -C 0 ./spawn-posix 50
+	numactl -C 0 ./spawn-thread 50

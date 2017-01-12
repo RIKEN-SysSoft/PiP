@@ -17,7 +17,7 @@ int main( int argc, char **argv ) {
   ntasks = 1;
   TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    int status;
+    int status = 0;
 
     watch_sigchld();
 
@@ -31,7 +31,8 @@ int main( int argc, char **argv ) {
 
   } else {
     printf( "CHILD: I am going to call abort()\n" );
-    abort();
+    //abort();
+    raise( SIGABRT );
   }
   TESTINT( pip_fin() );
   return 0;

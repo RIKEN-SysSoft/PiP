@@ -91,6 +91,8 @@ int main( int argc, char **argv ) {
     comm.go = 0;
     pthread_barrier_wait( &comm.barrier );
 
+    fprintf( stderr, "Root: done\n" );
+
     for( i=0; i<ntasks; i++ ) TESTINT( pip_wait( i, NULL ) );
     TESTINT( pip_fin() );
 
