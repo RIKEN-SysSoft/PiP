@@ -38,6 +38,14 @@
 //#define PIP_EXPLICT_EXIT
 //#define PIP_NO_MALLOPT
 
+#define PIP_DONOT_FREE
+
+#ifndef PIP_DONOT_FREE
+#define PIP_FREE(P)	free(P)
+#else
+#define PIP_FREE(P)
+#endif
+
 //#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
@@ -472,11 +480,11 @@ static void pip_close_on_exec( void ) {
 static void pip_finalize_task( pip_task_t *task ) {
   DBGF( "pipid=%d  argv=%p  envv=%p", task->pipid, task->argv, task->envv );
   if( task->argv != NULL ) {
-    free( task->argv );
+    PIP_FREE( task->argv );
     task->argv = NULL;
   }
   if( task->envv != NULL ) {
-    free( task->envv );
+    PIP_FREE( task->envv );
     task->envv = NULL;
   }
   pip_init_task_struct( task );
@@ -657,7 +665,7 @@ static int pip_do_spawn( void *thargs )  {
   int err = 0;
 
   DBG;
-  free( args );
+  PIP_FREE( args );
 
 #ifdef DEBUG
   if( pip_if_pthread_() ) {
@@ -678,10 +686,10 @@ static int pip_do_spawn( void *thargs )  {
 
 #ifdef PIP_CLONE_AND_DLMOPEN
   ES( time_load_prog, ( err = pip_load_prog( prog, self ) ) );
-  free( prog );
+  PIP_FREE( prog );
   if( err != 0 ) {
-    free( argv );
-    free( envv );
+    PIP_FREE( argv );
+    PIP_FREE( envv );
     RETURN( err );
   }
 #endif
@@ -868,14 +876,14 @@ int pip_spawn( char *prog,
   args->hook_after  = after;
   args->hook_arg    = hookarg;
   if( ( args->argv = pip_copy_vec( NULL, argv ) ) == NULL ) {
-    free( args->prog );
-    free( args );
+    PIP_FREE( args->prog );
+    PIP_FREE( args );
     RETURN( ENOMEM );
   }
   if( ( args->envv = pip_copy_env( envv ) ) == NULL ) {
-    free( args->prog );
-    free( args->argv );
-    free( args );
+    PIP_FREE( args->prog );
+    PIP_FREE( args->argv );
+    PIP_FREE( args );
     RETURN( ENOMEM );
   }
 
@@ -959,10 +967,10 @@ int pip_spawn( char *prog,
   error:			/* undo */
     DBGF( "err=%d", err );
     if( task != NULL ) pip_init_task_struct( task );
-    free( args->prog );
-    free( args->argv );
-    free( args->envv );
-    free( args );
+    PIP_FREE( args->prog );
+    PIP_FREE( args->argv );
+    PIP_FREE( args->envv );
+    PIP_FREE( args );
   }
   DBGF( "<< pip_spawn(pipid=%d)", *pipidp );
   RETURN( err );
