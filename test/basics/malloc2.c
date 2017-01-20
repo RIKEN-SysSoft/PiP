@@ -66,7 +66,7 @@ void check_and_free( int pipid, void *p, size_t sz ) {
 int malloc2_loop( int pipid, struct task_comm *tcp ) {
   int i;
 
-  fprintf( stderr, "<%d> enterring malloc2_loop. this can take a while...\n",
+  fprintf( stderr, "<%d> entering malloc2_loop. this can take a while...\n",
 	   pipid );
   for( i=0; i<NTIMES; i++ ) {
     int32_t nd, sz;
@@ -78,28 +78,30 @@ int malloc2_loop( int pipid, struct task_comm *tcp ) {
       if( pip_spin_trylock( &tcp->each[nd].lock ) ) break;
       pip_pause();
     }
+    { /* begin of locked region */
 
-    if( tcp->each[nd].chunk != NULL ) {
-      check_and_free( tcp->each[nd].pipid,
-		      tcp->each[nd].chunk,
-		      tcp->each[nd].sz );
-    }
+      if( tcp->each[nd].chunk != NULL ) {
+	check_and_free( tcp->each[nd].pipid,
+			tcp->each[nd].chunk,
+			tcp->each[nd].sz );
+      }
+      my_random( &sz );
+      sz <<= 4;
+      sz &= 0x0FFFF00;
+      if( sz == 0 ) sz = 256;
 
-    my_random( &sz );
-    sz <<= 4;
-    sz &= 0x0FFFF00;
-    if( sz == 0 ) sz = 256;
-    p = malloc( sz );
-    tcp->each[nd].pipid = pipid;
-    tcp->each[nd].chunk = p;
-    tcp->each[nd].sz    = sz;
-    if( p != NULL ) memset( p, ( pipid & 0xff ), sz );
+      p = malloc( sz );
+      tcp->each[nd].pipid = pipid;
+      tcp->each[nd].chunk = p;
+      tcp->each[nd].sz    = sz;
+      if( p != NULL ) memset( p, ( pipid & 0xff ), sz );
 
-    DBGF( "malloc(%p)@%d", p, pipid );
+      DBGF( "malloc(%p)@%d", p, pipid );
 
-    min = ( sz < min ) ? sz : min;
-    max = ( sz > max ) ? sz : max;
+      min = ( sz < min ) ? sz : min;
+      max = ( sz > max ) ? sz : max;
 
+    } /* end of locked region */
     pip_spin_unlock( &tcp->each[nd].lock );
 
   }

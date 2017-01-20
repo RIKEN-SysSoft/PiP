@@ -115,6 +115,8 @@ inline static void dump_env( char *tag, char **envv, int nomore ) {
   }
 }
 
+#ifndef __cplusplus
+
 inline static char *signal_name( int sig ) {
   char *signam_tab[] = {
     "(signal0)",		/* 0 */
@@ -403,3 +405,5 @@ inline static void set_sigint_watcher( void ) {
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
   TESTINT( sigaction( SIGINT, &sigact, NULL ) );
 }
+
+#endif
