@@ -33,6 +33,7 @@ AC_SUBST(dynamic_linker)
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_INSTALL
 
 if test "$GCC" = yes; then

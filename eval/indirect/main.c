@@ -19,6 +19,7 @@ inline double gettime( void ) {
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
 }
 
+#define AH
 inline double rdtsc() {
 #ifdef AH
   unsigned long long x;
@@ -34,7 +35,9 @@ void foo_loop() {
   double ss;
   double x;
   int i, c, sz;
+  int ii;
 
+  x = 0.0;
   //  for( sz=128; sz<=ARRAYSZ; sz*=2 ) {
   {
     sz = 1024;
@@ -43,14 +46,13 @@ void foo_loop() {
     c = 0;
     delta = 0.0;
     ss = gettime();
-    do {
-      x = 0.0;
-      c++;
-      start = rdtsc();
+
+    start = rdtsc();
+    for( ii=0; ii<1000; ii++ ) {
       for( i=0; i<sz; i++ ) x += foo( i );
-      delta += rdtsc() - start;
-    } while( ( gettime() - ss ) < 0.5 );
-    delta /= (double) c;
+    }
+    delta += rdtsc() - start;
+    //delta /= (double) c;
 
     printf( "GOT\t %d\t %g\t %g\t (%g)\n", sz, delta, delta/(double)sz, x );
   }
@@ -76,7 +78,7 @@ void bar_loop( void ) {
       start = rdtsc();
       for( i=0; i<sz; i++ ) x += bar( a, i );
       delta += rdtsc() - start;
-    } while( ( gettime() - ss ) < 0.5 );
+    } while( ( gettime() - ss ) < 2.0 );
     delta /= (double) c;
 
     printf( "PTR\t %d\t %g\t %g\t (%g)\n", sz, delta, delta/(double)sz, x );
@@ -89,9 +91,9 @@ int main() {
   for( i=0; i<ARRAYSZ; i++ ) a[i] = (double) 0;
 
   foo_loop();
-  foo_loop();
-  bar_loop();
-  bar_loop();
+  //  foo_loop();
+  //  bar_loop();
+  //  bar_loop();
 
   return 0;
 }

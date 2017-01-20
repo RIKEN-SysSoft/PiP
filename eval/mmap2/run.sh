@@ -12,16 +12,17 @@ doeval() {
     else unset LD_PRELOAD
     fi
     echo $1 $2 $3 LD_PRELOAD=${LD_PRELOAD}
-    numactl -C 0 ./$1 $2 $3
+    ./$1 $2 $3
 }
 
-for NTASKS in 10 20 30 40 50 60
+for NTASKS in 10 20 30 40 50 60 70 80 90 100
 do
 for PROG in ${PROGS}
 do
-for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
+#for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
+for ITER in 1 2
 do
-doeval ${PROG} ${NTASKS} 32
+doeval ${PROG} ${NTASKS} 8
 done
 done
 done

@@ -53,7 +53,7 @@
 #include <pip.h>
 #include <pip_internal.h>
 
-#define EVAL
+//#define EVAL
 
 #ifdef EVAL
 

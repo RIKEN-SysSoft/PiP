@@ -31,7 +31,9 @@
 #endif
 
 #define NTASKS_MAX	(256)
-#define SIZE1MB		((size_t)(1024*1024))
+#define SIZE1MB		((size_t)(1*1024*1024))
+
+#define USE_HUGETLB
 
 void 	*mmapp;
 size_t	size;
@@ -75,6 +77,9 @@ void wait_sync2( struct sync_st *syncs ) {
 void print_page_table_size( void ) {
   sleep( 1 );			/* we need this, otherwise /proc/meminfo */
   system( "grep PageTables /proc/meminfo" );
+#ifdef USE_HUGETLB
+  system( "grep HugePages  /proc/meminfo" );
+#endif
 }
 
 void touch( struct sync_st *syncs ) {
@@ -96,6 +101,9 @@ void mmap_memory( char *arg, int ntasks ) {
   mmapp = mmap( NULL,
 		size,
 		PROT_READ|PROT_WRITE,
+#ifdef USE_HUGETLB
+		MAP_HUGETLB |
+#endif
 		MAP_SHARED|MAP_ANONYMOUS,
 		-1,
 		0 );
