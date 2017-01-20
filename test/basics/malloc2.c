@@ -7,7 +7,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#define DEBUG
+//#define DEBUG
 
 #include <test.h>
 #include <pip_internal.h>
@@ -20,7 +20,7 @@
 #ifdef NTASKS
 #undef NTASKS
 #endif
-#define NTASKS		(10)
+#define NTASKS		(20)
 
 static char rstate[RSTATESZ];
 //static struct random_data rbuf;
@@ -35,6 +35,16 @@ struct task_comm {
     void 		*chunk;
   } each[NTASKS];
 };
+
+extern void *pip_malloc( size_t );
+extern void pip_free( void* );
+
+#define PIP_MALLOC	pip_malloc
+#define PIP_FREE	pip_free
+/***
+#define PIP_MALLOC	malloc
+#define PIP_FREE	free
+***/
 
 int my_initstate( int pipid ) {
   if( pipid < 0 ) pipid = 123456;
@@ -61,7 +71,7 @@ void check_and_free( int pipid, void *p, size_t sz ) {
     }
   }
   DBGF( "free(%p)@%d", p, pipid );
-  //free( p );
+  PIP_FREE( p );
 }
 
 int malloc2_loop( int pipid, struct task_comm *tcp ) {
@@ -91,7 +101,7 @@ int malloc2_loop( int pipid, struct task_comm *tcp ) {
       sz &= 0x0FFFF00;
       if( sz == 0 ) sz = 256;
 
-      p = malloc( sz );
+      p = PIP_MALLOC( sz );
       tcp->each[nd].pipid = pipid;
       tcp->each[nd].chunk = p;
       tcp->each[nd].sz    = sz;
@@ -145,6 +155,7 @@ int main( int argc, char **argv ) {
     pthread_barrier_wait( &tc.barrier );
 
     TESTINT( malloc2_loop( PIP_PIPID_ROOT, tcp ) );
+    pthread_barrier_wait( &tc.barrier );
 
     for( i=0; i<ntasks; i++ ) TESTINT( pip_wait( i, NULL ) );
     TESTINT( pip_fin() );
@@ -160,6 +171,7 @@ int main( int argc, char **argv ) {
     pthread_barrier_wait( &tcp->barrier );
 
     TESTINT( malloc2_loop( pipid, tcp ) );
+    pthread_barrier_wait( &tcp->barrier );
     fprintf( stderr,
 	     "<PIPID=%d,PID=%d> Hello, I am fine (sz:%d--%d, %d times) !!\n",
 	     pipid, getpid(), (int) min, (int) max, NTIMES );

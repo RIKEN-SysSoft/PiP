@@ -231,6 +231,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	pip_root->cloneinfo = cloneinfo;
 	pip_root->opts      = opts;
 	pip_root->pid       = getpid();
+	pip_root->free      = (free_t) dlsym( RTLD_DEFAULT, "free");
 	if( rt_expp != NULL ) pip_root->export = *rt_expp;
 
 	for( i=0; i<ntasks; i++ ) {
@@ -529,8 +530,6 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
   glibc_init_t	glibc_init;
 #endif
   fflush_t	libc_fflush;
-  malloc_t	malloc_func;
-  free_t	free_func;
   int 		err;
 
   DBGF( "prog=%s", prog );
@@ -579,10 +578,6 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
       DBG;
       err = ENOEXEC;
       goto error;
-    } else if( ( malloc_func = (malloc_t) dlsym( loaded, "malloc" ) ) != NULL){
-      task->malloc = malloc_func;
-    } else if( ( free_func   = (free_t) dlsym( loaded, "free" ) ) != NULL ) {
-      task->free = free_func;
     }
   }
  error:
@@ -599,6 +594,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     task->glibc_init  = glibc_init;
 #endif
     task->libc_fflush = libc_fflush;
+    task->free        = (free_t) dlsym( loaded, "free"   );
     task->envvp       = envvp;
     task->loaded      = loaded;
   } else if( loaded != NULL ) {
@@ -1297,7 +1293,7 @@ void pip_check_addr( char *tag, void *addr ) {
 /*** We should hvae the other functions allocating memory doing the same ***/
 
 /* long long to align */
-#define PIP_ALIGN_TYPE	long long
+#define PIP_ALIGN_TYPE	long
 
 void *pip_malloc( size_t size ) {
   void *p = malloc( size + sizeof(PIP_ALIGN_TYPE) );
@@ -1314,8 +1310,18 @@ void *pip_malloc( size_t size ) {
 
 void pip_free( void *ptr ) {
   int pipid;
+  free_t free_func;
   ptr  -= sizeof(PIP_ALIGN_TYPE);
   pipid = *(int*) ptr;
   /* need of sanity check on pipid */
-  pip_root->tasks[pipid].free( ptr );
+  if( pipid == PIP_PIPID_ROOT ) {
+    free_func = pip_root->free;
+  } else {
+    free_func = pip_root->tasks[pipid].free;
+  }
+  if( free_func == NULL ) {
+    fprintf( stderr, "No free function (pipid=%d)\n", pipid );
+  } else {
+    free_func( ptr );
+  }
 }
