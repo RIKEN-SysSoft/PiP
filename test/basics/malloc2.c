@@ -10,6 +10,7 @@
 #define DEBUG
 
 #include <test.h>
+#include <pip_internal.h>
 #include <pthread.h>
 #include <malloc.h>
 

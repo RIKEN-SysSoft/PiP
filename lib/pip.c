@@ -529,6 +529,8 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
   glibc_init_t	glibc_init;
 #endif
   fflush_t	libc_fflush;
+  malloc_t	malloc_func;
+  free_t	free_func;
   int 		err;
 
   DBGF( "prog=%s", prog );
@@ -577,6 +579,10 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
       DBG;
       err = ENOEXEC;
       goto error;
+    } else if( ( malloc_func = (malloc_t) dlsym( loaded, "malloc" ) ) != NULL){
+      task->malloc = malloc_func;
+    } else if( ( free_func   = (free_t) dlsym( loaded, "free" ) ) != NULL ) {
+      task->free = free_func;
     }
   }
  error:
@@ -1285,4 +1291,31 @@ void pip_check_addr( char *tag, void *addr ) {
   fclose( maps );
   if( line != NULL ) free( line );
   return;
+}
+
+/*** The following malloc/free functions are just for functional test    ***/
+/*** We should hvae the other functions allocating memory doing the same ***/
+
+/* long long to align */
+#define PIP_ALIGN_TYPE	long long
+
+void *pip_malloc( size_t size ) {
+  void *p = malloc( size + sizeof(PIP_ALIGN_TYPE) );
+  int pipid;
+  if( pip_get_pipid( &pipid ) == 0 ) {
+    *(int*) p = pipid;
+    p += sizeof(PIP_ALIGN_TYPE);
+  } else {
+    free( p );
+    p = NULL;
+  }
+  return p;
+}
+
+void pip_free( void *ptr ) {
+  int pipid;
+  ptr  -= sizeof(PIP_ALIGN_TYPE);
+  pipid = *(int*) ptr;
+  /* need of sanity check on pipid */
+  pip_root->tasks[pipid].free( ptr );
 }
