@@ -30,7 +30,7 @@ c: a
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %: %.f $(DEPINCS) $(PIPLIB) Makefile
-	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) -fpie $< -o $@
+	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) -fpie -pie $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log

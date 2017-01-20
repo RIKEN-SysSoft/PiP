@@ -9,18 +9,13 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-OMPFLAG = -fopenmp
+CXXFLAGS += $(CFLAGS)
+LDFLAGS +=
 
-CFLAGS += $(OMPFLAG)
-LDFLAGS += $(OMPFLAG)
+SRCS  = cxx.cxx
 
-SRCS  = openmp.c
-
-PROGRAMS  = openmp
+PROGRAMS  = cxx
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
-
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -fpie -pie $< -o $@
