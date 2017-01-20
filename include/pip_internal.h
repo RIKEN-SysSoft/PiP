@@ -44,7 +44,6 @@ typedef void(*glibc_init_t)(int,char**,char**);
 #endif
 typedef	void(*fflush_t)(FILE*);
 
-typedef void*(*malloc_t)(size_t);
 typedef void(*free_t)(void*);
 
 typedef struct {
@@ -64,7 +63,6 @@ typedef struct {
   glibc_init_t		glibc_init;
 #endif
   fflush_t		libc_fflush;
-  malloc_t		malloc;
   free_t		free;
   ucontext_t 		*ctx;
   char			**argv;
@@ -81,6 +79,7 @@ typedef struct {
   pip_spinlock_t	spawn_lock;
   volatile void		*export;
   pip_clone_t	 	*cloneinfo;
+  free_t		free;
   int			opts;
   int			pid;
   int			pipid_curr;
