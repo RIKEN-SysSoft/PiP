@@ -44,6 +44,9 @@ typedef void(*glibc_init_t)(int,char**,char**);
 #endif
 typedef	void(*fflush_t)(FILE*);
 
+typedef void*(*malloc_t)(size_t);
+typedef void(*free_t)(void*);
+
 typedef struct {
   int			pipid;
   int			pid;
@@ -61,6 +64,8 @@ typedef struct {
   glibc_init_t		glibc_init;
 #endif
   fflush_t		libc_fflush;
+  malloc_t		malloc;
+  free_t		free;
   ucontext_t 		*ctx;
   char			**argv;
   char			**envv;
