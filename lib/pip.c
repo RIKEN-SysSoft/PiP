@@ -157,11 +157,22 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     if( opts & PIP_MODEL_PTHREAD &&
 	opts & PIP_MODEL_PROCESS ) RETURN( EINVAL );
+    if( opts & PIP_MODEL_PROCESS ) {
+      if( ( opts & PIP_MODEL_PROCESS_PRELOAD  ) == PIP_MODEL_PROCESS_PRELOAD ||
+	  ( opts & PIP_MODEL_PROCESS_PIPCLONE ) == PIP_MODEL_PROCESS_PIPCLONE){
+	RETURN (EINVAL );
+      }
+    }
 
     if( opts != 0 ) {
-      if( opts == PIP_MODEL_PROCESS && getenv( "LD_PRELOAD" ) == NULL ) {
-	fprintf( stderr, "LD_RELOAD must be specified\n" );
+      if( ( opts & PIP_MODEL_PROCESS_PRELOAD ) == PIP_MODEL_PROCESS_PRELOAD
+	  && getenv( "LD_PRELOAD" ) == NULL ) {
+	fprintf( stderr,
+		 "LD_PRELOAD environment variable must be specified\n" );
 	RETURN( EPERM );
+      }
+      if( ( opts & PIP_MODEL_PROCESS_PIPCLONE ) == PIP_MODEL_PROCESS_PIPCLONE){
+	opts = PIP_MODEL_PROCESS_PIPCLONE;
       }
     } else {
       char *env = getenv( PIP_ENV_MODEL );
@@ -175,17 +186,23 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 		 strcasecmp( env, PIP_ENV_MODEL_PTHREAD ) == 0 ) {
 	opts = PIP_MODEL_PTHREAD;
       } else if( strcasecmp( env, PIP_ENV_MODEL_PROCESS ) == 0 ) {
-	opts = PIP_MODEL_PROCESS;
+	if( getenv( "LD_PRELOAD" ) != NULL ) {
+	  opts = PIP_MODEL_PROCESS_PRELOAD;
+	} else {
+	  opts = PIP_MODEL_PROCESS_PIPCLONE;
+	}
+      } else if( strcasecmp( env, PIP_ENV_MODEL_PROCESS_PRELOAD  ) == 0 ) {
+	opts = PIP_MODEL_PROCESS_PRELOAD;
+      } else if( strcasecmp( env, PIP_ENV_MODEL_PROCESS_PIPCLONE ) == 0 ) {
+	opts = PIP_MODEL_PROCESS_PIPCLONE;
       }
     }
-#ifdef DEBUG
-    if( opts == PIP_MODEL_PROCESS ) {
-      DBGF( "(((( PROCESS MODEL )))) LD_PRELOAD=%s", getenv( "LD_PRELOAD" ) );
-    } else {
-      DBGF( "[[[[ PTHREAD MODEL ]]]] -------------------------" );
+#ifndef HAVE_PIPCLONE
+    if( ( opts & PIP_MODEL_PROCESS ) == PIP_MODEL_PROCESS ) {
+      opts = PIP_MODEL_PROCESS_PRELOAD;
     }
 #endif
-    if( opts & PIP_MODEL_PROCESS ) {
+    if( ( opts & PIP_MODEL_PROCESS_PRELOAD ) == PIP_MODEL_PROCESS_PRELOAD ) {
       /* check if the __clone() systemcall wrapper exists or not */
       cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
       DBGF( "cloneinfo-%p", cloneinfo );
@@ -206,6 +223,33 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	RETURN( EPERM );
       }
     }
+    if( ( opts & PIP_MODEL_PROCESS_PIPCLONE ) == PIP_MODEL_PROCESS_PIPCLONE ) {
+#ifdef HAVE_PIPCLONE
+      if( dlsym( "PIPCLONE_FUNCNAME" ) == NULL ) {
+	fprintf( stderr,
+		 PIP_ERRMSG_TAG
+		 "no PIPCLONE_FUNCNAME found\n",
+		 getpid() );
+	RETURN( EPERM );
+      }
+#else
+      fprintf( stderr,
+	       PIP_ERRMSG_TAG
+	       "no PIPCLONE_FUNCNAME found\n",
+	       getpid() );
+      RETURN( EPERM );
+#endif
+    }
+
+#ifdef DEBUG
+    if( ( opts & PIP_MODEL_PROCESS_PRELOAD ) == PIP_MODEL_PROCESS_PRELOAD ) {
+      DBGF( "(((( PROCESS MODEL )))) LD_PRELOAD=%s", getenv( "LD_PRELOAD" ) );
+    } else if((opts&PIP_MODEL_PROCESS_PIPCLONE)==PIP_MODEL_PROCESS_PIPCLONE ) {
+      DBGF( "(((( PROCESS MODEL : PIPCLONE ))))" );
+    } else {
+      DBGF( "[[[[ PTHREAD MODEL ]]]] -------------------------" );
+    }
+#endif
 
     sz = sizeof( pip_root_t ) + sizeof( pip_task_t ) * ntasks;
     if( ( err = pip_page_alloc( sz, (void**) &pip_root ) ) != 0 ) {
@@ -800,7 +844,7 @@ static int pip_do_spawn( void *thargs )  {
 
 static void pip_clone_wrap_begin( void ) {
   if( pip_root->cloneinfo != NULL &&
-      pip_root->opts & PIP_MODEL_PROCESS ) {
+      pip_root->opts & PIP_MODEL_PROCESS_PRELOAD ) {
     DBGF( "cloneinfo=%p", pip_root->cloneinfo );
     pip_root->cloneinfo->flag_wrap = 1;
   }
@@ -927,7 +971,7 @@ int pip_spawn( char *prog,
  unlock:
   pip_spin_unlock( &pip_root->spawn_lock );
 
-  /**** beyoond this point, we can 'goto' the 'error' label ****/
+  /**** beyond this point, we can 'goto' the 'error' label ****/
 
   if( err != 0 ) goto error;
 
@@ -948,17 +992,30 @@ int pip_spawn( char *prog,
 
   pip_clone_wrap_begin();   /* tell clone wrapper (preload), if any */
   /* FIXME: there is a race condition between the above and below */
-  err = pthread_create( &task->thread,
-			&attr,
-			(void*(*)(void*)) pip_do_spawn,
-			(void*) args );
+  if( ( pip_root->opts & PIP_MODEL_PROCESS_PIPCLONE ) ==
+      PIP_MODEL_PROCESS_PIPCLONE ) {
+#ifdef HAVE_PIPCLONE
+    /* CALL PIPCLONE FUNC */
+#endif
+  } else {
+    err = pthread_create( &task->thread,
+			  &attr,
+			  (void*(*)(void*)) pip_do_spawn,
+			  (void*) args );
+  }
 
   DBG;
   if( err == 0 ) {
     *pipidp = pipid;
-    if( pip_root->cloneinfo != NULL ) {
-      task->pid = pip_root->cloneinfo->pid_clone;
-    }
+#ifdef HAVE_PIPCLONE
+    if( ( pip_root->opts & PIP_MODEL_PROCESS_PIPCLONE ) ==
+	PIP_MODEL_PROCESS_PIPCLONE ) {
+      task->pid = XXXXX;
+    } else
+#endif
+      if( pip_root->cloneinfo != NULL ) {
+	task->pid = pip_root->cloneinfo->pid_clone;
+      }
     pip_root->ntasks_accum ++;
     pip_root->ntasks_curr  ++;
     if( pip_root->cloneinfo != NULL ) {
@@ -1170,7 +1227,7 @@ int pip_wait( int pipid, int *retvalp ) {
     DBG;
     while( 1 ) {
       if( ( pid = waitpid( task->pid, &status, 0 ) ) >= 0 ) break;
-      if( errno != EINTR ) {
+      if( errno != EINTR && errno != EDEADLK ) {
 	err = errno;
 	break;
       }
