@@ -158,7 +158,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( opts & PIP_MODEL_PTHREAD &&
 	opts & PIP_MODEL_PROCESS ) RETURN( EINVAL );
     if( opts & PIP_MODEL_PROCESS ) {
-      if( ( opts & PIP_MODEL_PROCESS_PRELOAD  ) == PIP_MODEL_PROCESS_PRELOAD ||
+      if( ( opts & PIP_MODEL_PROCESS_PRELOAD  ) == PIP_MODEL_PROCESS_PRELOAD &&
 	  ( opts & PIP_MODEL_PROCESS_PIPCLONE ) == PIP_MODEL_PROCESS_PIPCLONE){
 	RETURN (EINVAL );
       }
@@ -648,7 +648,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
 }
 
 #ifdef PIP_DLMOPEN_AND_CLONE
-static int pip_corebind( int coreno, cpu_set_t *oldsetp ) {
+static int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
   int err = 0;
 
   if( coreno != PIP_CPUCORE_ASIS ) {
@@ -695,6 +695,19 @@ static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
 }
 #endif
 
+static int pip_corebind( int coreno ) {
+  cpu_set_t cpuset;
+
+  if( coreno != PIP_CPUCORE_ASIS ) {
+    CPU_ZERO( &cpuset );
+    CPU_SET( coreno, &cpuset );
+    if( sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) {
+      RETURN( errno );
+    }
+  }
+  RETURN( 0 );
+}
+
 static int pip_do_spawn( void *thargs )  {
   pip_spawn_args_t *args = (pip_spawn_args_t*) thargs;
   int 	pipid      = args->pipid;
@@ -703,6 +716,7 @@ static int pip_do_spawn( void *thargs )  {
 #endif
   char **argv      = args->argv;
   char **envv      = args->envv;
+  int   coreno     = args->coreno;
   pip_spawnhook_t before = args->hook_before;
   pip_spawnhook_t after  = args->hook_after;
   void	*hook_arg  = args->hook_arg;
@@ -712,6 +726,8 @@ static int pip_do_spawn( void *thargs )  {
 
   DBG;
   PIP_FREE( args );
+
+  if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
 
 #ifdef DEBUG
   if( pip_if_pthread_() ) {
@@ -977,7 +993,7 @@ int pip_spawn( char *prog,
 
 #ifdef PIP_DLMOPEN_AND_CLONE
   {
-    if( ( err = pip_corebind( coreno, &cpuset ) ) == 0 ) {
+    if( ( err = pip_do_corebind( coreno, &cpuset ) ) == 0 ) {
       /* corebinding should take place before loading solibs,        */
       /* hoping anon maps would be mapped ontto the closer numa node */
 

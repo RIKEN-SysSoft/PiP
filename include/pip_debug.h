@@ -28,23 +28,22 @@
 
 #define DBG_PRTBUF	char _dbuf[1024]={'\0'}
 #define DBG_PRNT(...)	sprintf(_dbuf+strlen(_dbuf),__VA_ARGS__)
-#define DBG_OUTPUT	do {_dbuf[strlen(_dbuf)]='\n';write(1,_dbuf,strlen(_dbuf));_dbuf[0]='\0';} while(0)
-#define DBG_TAG		\
-  do { DBG_PRNT("[PID:%d] %s:%d %s(): ",(int)getpid(),			\
+#define DBG_OUTPUT	do { _dbuf[ strlen( _dbuf ) ] = '\n';	\
+    write( 1, _dbuf, strlen(_dbuf) ); _dbuf[0]='\0';} while(0)
+#define DBG_TAG							\
+  do { DBG_PRNT("[PID:%d] %s:%d %s(): ",(int)getpid(),		\
 		__FILE__, __LINE__, __func__ );	} while(0)
 
-#define DBG		\
+#define DBG						\
   do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
-#define DBGF(...)	\
+#define DBGF(...)							\
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; }while(0)
-#define RETURN(X)	\
+#define RETURN(X)							\
   do { DBG_PRTBUF; if(X) { DBG_TAG; DBG_PRNT("ERROR RETURN (%d)",X);	\
 			   DBG_OUTPUT; } return (X); } while(0)
 
 #else
 
-#define DBG_NL
-#define DBG_TAG
 #define DBG
 #define DBGF(...)
 #define RETURN(X)	return (X)
