@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include <malloc.h>
 
-#define NTIMES		(1000)
+#define NTIMES		(100)
 #define RSTATESZ	(256)
 
 static char rstate[RSTATESZ];
@@ -76,7 +76,7 @@ int main( int argc, char **argv ) {
   int i;
   int err;
 
-  ntasks = 20;
+  ntasks = NTASKS;
   tc.go = 0;
   exp    = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
