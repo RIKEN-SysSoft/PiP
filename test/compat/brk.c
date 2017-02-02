@@ -11,7 +11,7 @@
 #include <test.h>
 
 void print_brk( int id ) {
-  printf( "<%d> brk: %p\n", id, sbrk( 0 ) );
+  printf( "<%d> brk: %p\n", id, sbrk( 4096 ) );
 }
 
 int main( int argc, char **argv ) {
