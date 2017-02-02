@@ -26,11 +26,5 @@ b: a
 c: a
 	cp $< $@
 
-%: %.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
-
-%: %.f $(DEPINCS) $(PIPLIB) Makefile
-	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) -fpie -pie $< -o $@
-
 post-clean-hook:
 	$(RM) *.E *.log
