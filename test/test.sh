@@ -8,7 +8,7 @@ echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
 
-: ${TEST_PIP_TASKS:=$(./util/dlmopen_count)}
+: ${TEST_PIP_TASKS:=$(./util/dlmopen_count -p)}
 
 print_summary()
 {
