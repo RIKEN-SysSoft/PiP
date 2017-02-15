@@ -125,6 +125,8 @@ inline static void pip_print_fds( void ) {
 #endif
 }
 
+#if defined(__x86_64__)
+
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #include <errno.h>
@@ -138,6 +140,10 @@ inline static void pip_print_fs_segreg( void ) {
     fprintf( stderr, "FS REGISTER: (unable to get:%d)\n", errno );
   }
 }
+
+#else /* !defined(__x86_64__) */
+inline static void pip_print_fs_segreg( void ) {}
+#endif /* !defined(__x86_64__) */
 
 #include <ctype.h>
 
