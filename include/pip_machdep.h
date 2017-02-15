@@ -12,6 +12,8 @@
 
 #if defined(__x86_64__)
 #include <pip_machdep_x86_64.h>
+#elif defined(__aarch64__)
+#include <pip_machdep_aarch64.h>
 #else
 #error "Unsupported Machine Type"
 #endif
