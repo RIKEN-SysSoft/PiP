@@ -1,0 +1,28 @@
+
+Process-in-Process (PiP) Implementation
+
+* Execution model
+
+  There are three PiP implementations and environmant variable setting;
+
+  1) PiP using pthread_create only
+     "PIP_MODEL=thread"
+     In this model, a PiP task behaves more like a pthread, having no
+     PID. This implementation will be obsolete.
+
+  2) otherwise,
+     "PIP_MODEL=process"
+     In this model, a PiP task behaves more like a process, having PID.
+
+  2-1) PiP using pthread_create and cloone warpper
+     "PIP_MODEL=process:preload, LD_PRELOAD=<PIP_INSTALL_DIR>/lib"
+
+  2-2) PiP not using pthread_clone at all [experimantal, yet]
+     "PIP_MODEL=process:pipclone"
+
+* Synchronization between PiP tasks
+
+  Currently, ptherad_barrier and pthread_mutex works between PiP root
+  process and PiP tasks. However, this does NOT mean there pthread
+  synchronization are guaranteed to work as part of the PiP
+  specification.
