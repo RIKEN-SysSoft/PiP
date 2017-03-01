@@ -26,3 +26,7 @@ Process-in-Process (PiP) Implementation
   process and PiP tasks. However, this does NOT mean there pthread
   synchronization are guaranteed to work as part of the PiP
   specification.
+
+
+  Atsushi Hori <ahori@riken.jp>
+  2017 March 2
