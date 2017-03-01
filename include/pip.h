@@ -62,13 +62,14 @@ extern "C" {
    *  the variable holding the exporting address of the root PiP. If
    *  the PiP root is not ready to export or has nothing to export
    *  then this variable can be NULL. When called by a PiP task, it
-   *  returns the exporting address of the PiP root.
+   *  returns the exporting address of the PiP root, if any.
    * \param[in] opts This must be zero at this point of time.
    *
    * \return Return 0 on success. Return an error code on error.
    *
    * This function initialize the PiP library. The PiP root process
-   * must call this. It is optional for a PiP task to call this.
+   * must call this. A PiP task is not required to call this function
+   * unless the PiP task calls any PiP functions.
    *
    * Is is NOT guaranteed that users can spawn tasks up to the number
    * specified by the \a ntasks argument. There are some limitations
@@ -131,6 +132,9 @@ extern "C" {
    * \bug In the current implementation, the spawned PiP task cannot
    * be freed even if the spawned PiP task terminates. To fix this,
    * hack on GLIBC (ld-linud.so) is required.
+   * \bug In theory, there is no reason to restrict for a PiP task to
+   * spawn another PiP task. However, the current implementation fails
+   * to do so.
    */
   int pip_spawn( char *filename, char **argv, char **envv,
 		 int coreno, int *pipidp,
@@ -147,14 +151,14 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * The PiP root or a PiP task can call this function only once. If
-   * the PiP task calls the \c pip_init() with the non-null value of
-   * the \a expp parameter, then the function call by the root PiP
-   * will fail.
+   * The PiP root or a PiP task can export a memory region only
+   * once. If the PiP task calls the \c pip_init() with the non-null
+   * value of the \a expp parameter, then the function call by the
+   * root PiP will fail.
    *
-   * \bug In theory, there is no reason to restrict for a PiP task to
-   * spawn another PiP task. However, the current implementation fails
-   * to do so.
+   * \note There is no size parameter to specify the length of the
+   * exported region because there is no way to restrict the access
+   * outside of the exported region.
    *
    * \sa pip_import
    */
@@ -170,9 +174,11 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \note There is no size parameter to specify the length of the
-   * exported region because there is no way to restrict the access
-   * outside of the exported region.
+   * \note It is the users' responsiblity to synchronize. When the
+   * target exported region is not ready, then this function returns
+   * NULL. If the root exports its region by the \c pip_init function
+   * call, then it is guaranteed to be imported by PiP tasks at any
+   * time.
    *
    * \sa pip_export
    */
