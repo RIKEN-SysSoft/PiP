@@ -11,29 +11,29 @@ Process-in-Process (PiP) Installation
 * Patched GLIBC
   You can download the pacthed GLIBC from the following URL.
 
-  git clone XXXXXX
+	git clone git@www-local.sys.aics.riken.jp:software/PIP-glibc
 
   Here is the recommended configure options for the patched GLIBC
   based on CentOS 7.2,
 
-  configure --prefix=$2 CC=gcc CXX=g++ 'CFLAGS=-mtune=generic \
-  -fasynchronous-unwind-tables -DNDEBUG -g -O3 \
-  -fno-asynchronous-unwind-tables' \
-  --enable-add-ons=ports,nptl,rtkaio,c_stubs,libidn \
-  --with-headers=/usr/include --enable-kernel=2.6.32 --enable-bind-now \
-  --build=x86_64-redhat-linux --enable-multi-arch --enable-obsolete-rpc \
-  --disable-profile --enable-nss-crypt --disable-systemtap
+	configure --prefix=$2 CC=gcc CXX=g++ 'CFLAGS=-mtune=generic \
+	-fasynchronous-unwind-tables -DNDEBUG -g -O3 \
+	-fno-asynchronous-unwind-tables' \
+	--enable-add-ons=ports,nptl,rtkaio,c_stubs,libidn \
+	--with-headers=/usr/include --enable-kernel=2.6.32
+	--enable-bind-now --build=x86_64-redhat-linux
+	--enable-multi-arch --enable-obsolete-rpc \
+	--disable-profile --enable-nss-crypt --disable-systemtap
 
 * Building PiP
   At the PiP confiuration, you must specify the installed GLIBC.
 
-  git clone YYYYYY
-　configure --prefix=<PREFIXDIR> \
-  --with-glibc-libdir-<GLIBC_INSTALL_DIR>
+	git clone git@www-local.sys.aics.riken.jp:software/PIP
+　	configure --prefix=<PREFIXDIR> --with-glibc-libdir-<GLIBC_INSTALL_DIR>
 
   After the successful PiP installation, you must do the following,
 
-  <PIP_INSTALL_DIR>/bin/piplnlibs
+  	<PIP_INSTALL_DIR>/bin/piplnlibs
 
   This command creates a number of symbolic links to the SOLIBs which
   are not installed by the patched GLIBC installation.
@@ -45,8 +45,10 @@ Process-in-Process (PiP) Installation
   - PiP root process (spawning PiP tasks)
     must be linked with the PiP library and must specify the link
     option as follows,
+
     	   --dynamic-linker=<GLIBC-LDLINUX>
-    here, GLIBC-LDLINUX is the path of ld-linux.so of the patched
+
+    here, <GLIBC-LDLINUX> is the path of ld-linux.so of the patched
     GLIBC, looks like "ld-2.17.so". Once you specify this option,
     PiP root process uses the pathed GLIBC, no matter how
     LD_LIBRARY_PATH is specified. Remember that the other SOLIBs are
@@ -58,13 +60,31 @@ Process-in-Process (PiP) Installation
     must be compiled with "-pie", must be linked with "-fpie
     -rdynamic" options. PiP task programs are not required to be
     linked with the PiP libarary. Thus programs to be ran as PiP tasks
-    are not required to modify their cource code.
+    are not required to modify their cource code. Since PiP root and
+    PiP task(s) share the same (virtual0 address space and ld-linux.so
+    is already loaded by PiP root, PiP tasks use the patched GLIBC.
 
   - Run PiP root program
     The LD_LIBRARY_PATH environment must includes the PiP library.
     Consult IMPLEMENTATION file located at the same directory of this
     file for details.
 
+  - How to check if PiP programs run under PiP environment
+    check if they are shared the same address space by the following
+    command,
+
+	cat /proc/<PID>/maps
+
+    Here, <PID> is the pid of the root process or one of the PiP
+    tasks.
+
 * MPI with PiP
   Currently, we are working with ANL to develop MPICH using PiP. This
-  repository, located at ANL, is not yet open to public.
+  repository, located at ANL, is not yet open to public at the time of
+  writing.
+
+
+  Enjoy !
+
+  Atsushi Hori <ahori@riken.jp>
+  2017 March 2
