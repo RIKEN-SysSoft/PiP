@@ -10,6 +10,8 @@
 #ifndef _XPMEM_H
 #define _XPMEM_H
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #include <linux/types.h>
 #include <sys/types.h>
 
@@ -41,6 +43,8 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

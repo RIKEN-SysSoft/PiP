@@ -10,6 +10,8 @@
 #ifndef _PIP_CMA_H
 #define _PIP_CMA_H
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #include <sys/types.h>
 #include <sys/uio.h>
 
@@ -35,6 +37,8 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif
