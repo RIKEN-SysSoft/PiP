@@ -10,12 +10,16 @@
 #ifndef _pip_machdep_h_
 #define _pip_machdep_h_
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #if defined(__x86_64__)
 #include <pip_machdep_x86_64.h>
 #elif defined(__aarch64__)
 #include <pip_machdep_aarch64.h>
 #else
 #error "Unsupported Machine Type"
+#endif
+
 #endif
 
 #endif

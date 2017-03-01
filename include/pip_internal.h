@@ -10,6 +10,8 @@
 #ifndef _pip_internal_h_
 #define _pip_internal_h_
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #include <pthread.h>
 #include <ucontext.h>
 #include <stdlib.h>
@@ -101,5 +103,7 @@ typedef struct pip_spawn_args {
 } pip_spawn_args_t;
 
 extern pip_task_t 	*pip_task;
+
+#endif
 
 #endif

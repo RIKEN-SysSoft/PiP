@@ -10,6 +10,8 @@
 #ifndef PVAS_H
 #define PVAS_H
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 #include <sys/types.h>
 #include <pip.h>
 
@@ -40,6 +42,8 @@ extern "C" {
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif /* PVAS_H */
