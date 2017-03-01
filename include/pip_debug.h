@@ -10,6 +10,8 @@
 #ifndef _pip_debug_h_
 #define _pip_debug_h_
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 /**** debug macros ****/
 
 #ifndef DEBUG
@@ -154,6 +156,8 @@ inline static void pip_print_fs_segreg( void ) {}
   DBGF( "__ctype_tolower_loc()=%p", __ctype_tolower_loc() ); } while( 0 )
 #else
 #define CHECK_CTYPE
+#endif
+
 #endif
 
 #endif

@@ -10,6 +10,8 @@
 #ifndef _pip_machdep_x86_64_h
 #define _pip_machdep_x86_64_h
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 /**** Spin Lock ****/
 
 #include <stdint.h>
@@ -67,5 +69,7 @@ inline static void pip_write_barrier(void) {
 inline static void pip_memory_barrier(void) {
   asm volatile("mfence":::"memory");
 }
+
+#endif
 
 #endif

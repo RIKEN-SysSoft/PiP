@@ -373,7 +373,7 @@ int pip_get_pipid( int *pipidp ) {
   RETURN( 0 );
 }
 
-int pip_get_current_ntasks( int *ntasksp ) {
+int pip_get_ntasks( int *ntasksp ) {
   if( ntasksp  == NULL ) RETURN( EINVAL );
   if( pip_root == NULL ) return( EPERM  ); /* intentionally using return */
 
@@ -382,7 +382,7 @@ int pip_get_current_ntasks( int *ntasksp ) {
 }
 
 int pip_export( void *export ) {
-  if( export           == NULL ) RETURN( EINVAL );
+  if( export             == NULL ) RETURN( EINVAL );
   if( pip_root_p() ) {
     if( pip_root->export != NULL ) RETURN( EBUSY  );
     pip_root->export = export;
