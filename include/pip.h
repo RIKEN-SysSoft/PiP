@@ -146,7 +146,7 @@ extern "C" {
    *  the PiP root is not ready to export or has nothing to export
    *  then this variable can be NULL. When called by a PiP task, it
    *  returns the exporting address of the PiP root, if any.
-   * \param[in] opts This must be zero at this point of time.
+   * \param[in] opts This must be zero at the point of this writing.
    *
    * \return Return 0 on success. Return an error code on error.
    *
