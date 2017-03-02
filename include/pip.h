@@ -52,11 +52,11 @@
  * In the pthread model, although each PiP task has its own variables
  * unlike thread, PiP task behaves more like Pthread, having no PID,
  * having the same file descriptor space, having the same signal
- * delivery semantics as what Pthread does, and so on.
+ * delivery semantics as Pthread does, and so on.
  *
  * In the process model, PiP task beahve more like a process, having
- * PID, having different file descriptor space, the same signal
- * delivery semantics as what Linux process does, and so on.
+ * a PID, having an independent file descriptor space, having the same
+ * signal delivery semantics as Linux process does, and so on.
  *
  * When the \c PIP_MODEL environment variable set to \"thread\" then
  * the PiP library runs based on the pthread model, and it is set to
