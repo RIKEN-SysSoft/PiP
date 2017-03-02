@@ -73,17 +73,17 @@
  * \section compile-and-link Compile and Link User programs
  *
  * The PiP root ust be linked with the PiP library and libpthread. The
- * programs able to run as a PiP task must be compiled with \"-fpie\"
- * compile option and \"-pie -rdynamic\" link options.
+ * programs able to run as a PiP task must be compiled with the
+ * \"-fpie\" compile option and the \"-pie -rdynamic\" link options.
  *
  * \section glibc-issues GLIBC issues
  *
  * The PiP library is implemented at the user-level, i.e. no need of
- * kernel patches nor kernel modules. Due to the novel combination of
- * \c dlmopn() GLIBC function and \c clone() systemcall, there are
- * some issues found in the GLIBC. To avoid GLIBC issues, PiP users
- * must have the pacthed GLIBC provided by the PiP development
- * team. Otherwise the PiP library will not run properly.
+ * kernel patches nor kernel modules. Due to the novel usage
+ * combiningf \c dlmopn() GLIBC function and \c clone() systemcall,
+ * there are some issues found in the GLIBC. To avoid GLIBC issues,
+ * PiP users must have the pacthed GLIBC provided by the PiP
+ * development team. Otherwise the PiP library will not run properly.
  *
  * \section gdb-issue GDB issue
  *
@@ -159,7 +159,7 @@ extern "C" {
    * specified by the \a ntasks argument. There are some limitations
    * come from outside of the PiP library.
    *
-   * \sa pip_export, pip_fin
+   * \sa pip_export(3), pip_fin(3)
    */
   int pip_init( int *pipidp, int *ntasks, void **root_expp, int opts );
   /** @}*/
@@ -171,7 +171,7 @@ extern "C" {
    *
    * This function finalize the PiP library.
    *
-   * \sa pip_init
+   * \sa pip_init(3)
    */
   int pip_fin( void );
   /** @}*/
@@ -245,7 +245,7 @@ extern "C" {
    * exported region because there is no way to restrict the access
    * outside of the exported region.
    *
-   * \sa pip_import
+   * \sa pip_import(3)
    */
   int pip_export( void *exp );
   /** @}*/
@@ -265,7 +265,7 @@ extern "C" {
    * call, then it is guaranteed to be imported by PiP tasks at any
    * time.
    *
-   * \sa pip_export
+   * \sa pip_export(3)
    */
   int pip_import( int pipid, void **expp );
   /** @}*/
