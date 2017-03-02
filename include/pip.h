@@ -10,6 +10,90 @@
 #ifndef _pip_h_
 #define _pip_h_
 
+/** \page pip Overview of Process-in-Process (PiP)
+ *
+ * \section overview Overview
+ *
+ * PiP is a user-level library which allows a parent process to
+ * create sub-processes in the same virtual address space where the
+ * parent process runs. The parent process and sub-processes share the
+ * same address space, however, each process has its own
+ * variables. So, each process runs independently from the other
+ * process. If some or all processes agreed, then data own by a
+ * process can be accessed by the other processes.
+ *
+ * Those processes share the same address space, just like pthreads,
+ * and each process has its own variables like a process. The parent
+ * process is called \e PiP \e process and sub-processes are called
+ * \e PiP \e task since it has the best of the both worlds of
+ * processes and pthreads.
+ *
+ * PiP root spawns PiP tasks and the PiP root and PiP tasks shared the
+ * same address space. To load multiple instances of a program in the
+ * same address space, the executiable of the PiP task must be
+ * compoiled and linked as PIE (Postion Independent Executable).
+ *
+ * When a PiP root or PiP task wants to be accessed the its own data
+ * by the other(s), firstly a memory region where the data to be
+ * accessed are located must be \e exported. Then the exported memory
+ * region can be \e imported so that the importing PiP root or PiP
+ * task can access the exported data owned by the others. The PiP
+ * library supports the functions to export and import the memory
+ * region.
+ *
+ * \section execution-model Execution model
+ *
+ * There are several PiP implementations which can be selected at the
+ * runtime. These implementations can be categorized into two
+ * according to the behaviour of PiP tasks,
+ *
+ * - \c Pthread, and
+ * - \c Process.
+ *
+ * In the pthread model, although each PiP task has its own variables
+ * unlike thread, PiP task behaves more like Pthread, having no PID,
+ * having the same file descriptor space, having the same signal
+ * delivery semantics as what Pthread does, and so on.
+ *
+ * In the process model, PiP task beahve more like a process, having
+ * PID, having different file descriptor space, the same signal
+ * delivery semantics as what Linux process does, and so on.
+ *
+ * When the \c PIP_MODEL environment variable set to \"thread\" then
+ * the PiP library runs based on the pthread model, and it is set to
+ * \"process\" then it runs with the process model.
+ *
+ * \section limitation Limitation
+ *
+ * PiP allows PiP root and PiP tasks to share the data, so the
+ * function pointer can be passed to the others. However, jumping into
+ * the code owned by the other will not work properly for some
+ * reasons.
+ *
+ * \section compile-and-link Compile and Link User programs
+ *
+ * The PiP root ust be linked with the PiP library and libpthread. The
+ * programs able to run as a PiP task must be compiled with \"-fpie\"
+ * compile option and \"-pie -rdynamic\" link options.
+ *
+ * \section glibc-issues GLIBC issues
+ *
+ * The PiP library is implemented at the user-level, i.e. no need of
+ * kernel patches nor kernel modules. Due to the novel combination of
+ * \c dlmopn() GLIBC function and \c clone() systemcall, there are
+ * some issues found in the GLIBC. To avoid GLIBC issues, PiP users
+ * must have the pacthed GLIBC provided by the PiP development
+ * team. Otherwise the PiP library will not run properly.
+ *
+ * \section gdb-issue GDB issue
+ *
+ * Currently gdb debugger only works with the PiP root. PiP-aware GDB
+ * is already scheduled to develop.
+ *
+ * \section author Author
+ *  Atsushi Hori (RIKEN, Japan) ahori@riken.jp
+ */
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #define PIP_OPTS_ANY			(0x0)
@@ -129,10 +213,11 @@ extern "C" {
    * PiP task cannot be accessible from the \a before and \a after
    * functions.
    *
-   * \bug In the current implementation, the spawned PiP task cannot
+   * \note In the current implementation, the spawned PiP task cannot
    * be freed even if the spawned PiP task terminates. To fix this,
    * hack on GLIBC (ld-linud.so) is required.
-   * \bug In theory, there is no reason to restrict for a PiP task to
+   *
+   * \note In theory, there is no reason to restrict for a PiP task to
    * spawn another PiP task. However, the current implementation fails
    * to do so.
    */
