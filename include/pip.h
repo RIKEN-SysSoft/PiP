@@ -14,8 +14,8 @@
  *
  * \section overview Overview
  *
- * PiP is a user-level library which allows a parent process to
- * create sub-processes in the same virtual address space where the
+ * PiP is a user-level library which allows a process to
+ * create sub-processes into the same virtual address space where the
  * parent process runs. The parent process and sub-processes share the
  * same address space, however, each process has its own
  * variables. So, each process runs independently from the other
@@ -31,15 +31,14 @@
  * PiP root spawns PiP tasks and the PiP root and PiP tasks shared the
  * same address space. To load multiple instances of a program in the
  * same address space, the executiable of the PiP task must be
- * compoiled and linked as PIE (Postion Independent Executable).
+ * compiled and linked as PIE (Postion Independent Executable).
  *
  * When a PiP root or PiP task wants to be accessed the its own data
  * by the other(s), firstly a memory region where the data to be
  * accessed are located must be \e exported. Then the exported memory
- * region can be \e imported so that the importing PiP root or PiP
- * task can access the exported data owned by the others. The PiP
- * library supports the functions to export and import the memory
- * region.
+ * region is \e imported so that the exported and imported data can be
+ * accessed. The PiP library supports the functions to export and
+ * import the memory region to be accessible.
  *
  * \section execution-model Execution model
  *
