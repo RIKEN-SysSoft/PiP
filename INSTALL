@@ -11,24 +11,25 @@ Process-in-Process (PiP) Installation
 * Patched GLIBC
   You can download the pacthed GLIBC from the following URL.
 
-	git clone git@www-local.sys.aics.riken.jp:software/PIP-glibc
+	git clone -b pip-centos7 \
+	     	git@git.sys.aics.riken.jp:software/PIP-glibc
 
   Here is the recommended configure options for the patched GLIBC
   based on CentOS 7.2,
 
 	configure --prefix=$2 CC=gcc CXX=g++ 'CFLAGS=-mtune=generic \
-	-fasynchronous-unwind-tables -DNDEBUG -g -O3 \
-	-fno-asynchronous-unwind-tables' \
-	--enable-add-ons=ports,nptl,rtkaio,c_stubs,libidn \
-	--with-headers=/usr/include --enable-kernel=2.6.32
-	--enable-bind-now --build=x86_64-redhat-linux
-	--enable-multi-arch --enable-obsolete-rpc \
-	--disable-profile --enable-nss-crypt --disable-systemtap
+		-fasynchronous-unwind-tables -DNDEBUG -g -O3 \
+		-fno-asynchronous-unwind-tables' \
+		--enable-add-ons=ports,nptl,rtkaio,c_stubs,libidn \
+		--with-headers=/usr/include --enable-kernel=2.6.32
+		--enable-bind-now --build=x86_64-redhat-linux
+		--enable-multi-arch --enable-obsolete-rpc \
+		--disable-profile --enable-nss-crypt --disable-systemtap
 
 * Building PiP
   At the PiP confiuration, you must specify the installed GLIBC.
 
-	git clone git@www-local.sys.aics.riken.jp:software/PIP
+	git clone git@git.sys.aics.riken.jp:software/PIP
 　	configure --prefix=<PREFIXDIR> --with-glibc-libdir-<GLIBC_INSTALL_DIR>
 
   After the successful PiP installation, you must do the following,
