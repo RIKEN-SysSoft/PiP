@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <pip.h>
 
@@ -18,11 +19,15 @@ int main( int argc, char **argv ) {
   void *export = (void*) &maps;
   void *map;
   int  i, ntasks, pipid;
+  long ncpu = sysconf( _SC_NPROCESSORS_ONLN );
 
   ntasks = NTASKS;
+  if ( ntasks > ncpu )
+    ntasks = ncpu;
+
   pthread_barrier_init( &maps.barrier, NULL, ntasks + 1 );
   map = mmap( NULL,
-	      PGSZ * ( NTASKS + 1 ),
+	      PGSZ * ( ntasks + 1 ),
 	      PROT_READ|PROT_WRITE,
 	      MAP_PRIVATE|MAP_ANONYMOUS,
 	      0,
@@ -30,7 +35,7 @@ int main( int argc, char **argv ) {
   if( map == MAP_FAILED ) {
     fprintf( stderr, "mmap()=%d\n", errno );
   }
-  maps.maps[NTASKS] = map;
+  maps.maps[ntasks] = map;
 
   pip_init( &pipid, &ntasks, (void*) &export, 0 );
   if( pipid == PIP_PIPID_ROOT ) {
@@ -39,8 +44,8 @@ int main( int argc, char **argv ) {
       pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL );
     }
     pthread_barrier_wait( &maps.barrier );
-    for( i=0; i<NTASKS+1; i++ ) {
-      *((int*)(maps.maps[i]+(PGSZ*NTASKS))) = 0;
+    for( i=0; i<ntasks+1; i++ ) {
+      *((int*)(maps.maps[i]+(PGSZ*ntasks))) = 0;
     }
     pthread_barrier_wait( &maps.barrier );
     for( i=0; i<ntasks; i++ ) wait( NULL );
@@ -51,13 +56,13 @@ int main( int argc, char **argv ) {
 
     import->maps[pipid] = map;
     pthread_barrier_wait( &import->barrier );
-    for( i=0; i<NTASKS+1; i++ ) {
+    for( i=0; i<ntasks+1; i++ ) {
       *((int*)(import->maps[i]+(PGSZ*pipid))) = 0;
     }
     pthread_barrier_wait( &import->barrier );
     printf( "<%d> done\n", pipid );
   }
   pip_fin();
-  munmap( map, PGSZ * (NTASKS + 1 ) );
+  munmap( map, PGSZ * (ntasks + 1 ) );
   return 0;
 }
