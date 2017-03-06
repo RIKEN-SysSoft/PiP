@@ -17,20 +17,28 @@ Process-in-Process (PiP) Installation
   Here is the recommended configure options for the patched GLIBC
   based on CentOS 7.2,
 
-	configure --prefix=$2 CC=gcc CXX=g++ 'CFLAGS=-mtune=generic \
-		-fasynchronous-unwind-tables -DNDEBUG -g -O3 \
-		-fno-asynchronous-unwind-tables' \
+	mkdir PIP-glibc.build
+	cd PIP-glibc.build
+	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
+		"CFLAGS=-mtune=generic -fasynchronous-unwind-tables \
+		-DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
 		--enable-add-ons=ports,nptl,rtkaio,c_stubs,libidn \
 		--with-headers=/usr/include --enable-kernel=2.6.32 \
 		--enable-bind-now --build=x86_64-redhat-linux \
 		--enable-multi-arch --enable-obsolete-rpc \
 		--disable-profile --enable-nss-crypt --disable-systemtap
 
+  Then build and install it as follows,
+
+	make -j3 && make install
+
 * Building PiP
-  At the PiP confiuration, you must specify the installed GLIBC.
+  At the PiP configuration, you must specify the installed GLIBC.
 
 	git clone git@git.sys.aics.riken.jp:software/PIP
-　	configure --prefix=<PREFIXDIR> --with-glibc-libdir-<GLIBC_INSTALL_DIR>
+	configure --prefix=<PIP_INSTALL_DIR> \
+		--with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
+	make install
 
   After the successful PiP installation, you must do the following,
 
@@ -40,29 +48,27 @@ Process-in-Process (PiP) Installation
   are not installed by the patched GLIBC installation.
 
 * Test programs
-  A number of test programs can be found in thePIP/test directory.
+  A number of test programs can be found in the PIP/test directory.
 
 * To compile, link, and run your PiP programs
   - PiP root process (spawning PiP tasks)
     must be linked with the PiP library and must specify the link
     option as follows,
 
-    	   --dynamic-linker=<GLIBC-LDLINUX>
+	--dynamic-linker=<GLIBC_INSTALL_DIR>/lib/ld-2.17.so
 
-    here, <GLIBC-LDLINUX> is the path of ld-linux.so of the patched
-    GLIBC, looks like "ld-2.17.so". Once you specify this option,
-    PiP root process uses the pathed GLIBC, no matter how
-    LD_LIBRARY_PATH is specified. Remember that the other SOLIBs are
-    already copied (indeed, symbolic links) into that directory by the
-    "piplnlibs" command (see above).
+    Once you specify this option, PiP root process uses the pathed GLIBC,
+    no matter how LD_LIBRARY_PATH is specified. Remember that
+    the other SOLIBs are already copied (indeed, symbolic links) into
+    that directory by the "piplnlibs" command (see above).
     The PiP root process is not required to be PIE.
 
   - PiP task (spawned by PiP root process)
     must be compiled with "-pie", must be linked with "-fpie
     -rdynamic" options. PiP task programs are not required to be
     linked with the PiP libarary. Thus programs to be ran as PiP tasks
-    are not required to modify their cource code. Since PiP root and
-    PiP task(s) share the same (virtual0 address space and ld-linux.so
+    are not required to modify their source code. Since PiP root and
+    PiP task(s) share the same (virtual) address space and ld-linux.so
     is already loaded by PiP root, PiP tasks use the patched GLIBC.
 
   - Run PiP root program
