@@ -22,12 +22,12 @@ inline static void pip_pause( void ) {
 #define PIP_PAUSE
 
 inline static void pip_write_barrier(void) {
-  asm volatile("dsb st" :::"memory");
+  asm volatile("dmb ishst" :::"memory");
 }
 #define PIP_WRITE_BARRIER
 
 inline static void pip_memory_barrier(void) {
-  asm volatile("dsb sy" :::"memory");
+  asm volatile("dmb ish" :::"memory");
 }
 #define PIP_MEMORY_BARRIER
 
