@@ -185,7 +185,7 @@ extern "C" {
    *  PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
    * \param[in,out] pipidp Specify PIPID of the spanwed PiP task. If
-   *  PIP_PIPID_ANY is specified, then the PIPID of the spawned PiP
+   *  \c PIP_PIPID_ANY is specified, then the PIPID of the spawned PiP
    *  task is up to the PiP library and the assigned PIPID will be
    *  returned.
    * \param[in] before Just before the executing of the spanwed PiP
@@ -274,6 +274,9 @@ extern "C" {
    *  @{
    * \param[out] pipidp This parameter points to the variable which
    *  will be set to the PIPID of the calling process.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
    */
   int pip_get_pipid( int *pipid );
   /** @}*/
@@ -283,16 +286,74 @@ extern "C" {
    *  @{
    * \param[out] ntaskp This parameter points to the variable which
    *  will be set to the maxmum number of the PiP tasks.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
    */
   int pip_get_ntasks( int *ntasksp );
   /** @}*/
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+  /** \defgroup pip_exit PIP_EXIT pip_exit
+   * terminate PiP task
+   *  @{
+   * \param[in] retval Terminate PiP task with the exit number
+   * specified with this parameter.
+   *
+   * \note This function can be used regardless to the PiP execution
+   * mode.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   */
+  int pip_exit( int retval );
+  /** @}*/
 
-  int pip_exit( int  retval );
+  /** \defgroup pip_wait PIP_WAIT pip_wait
+   * wait for the termination of a PiP task
+   *  @{
+   * \param[in] pipid PIPID to wait for.
+   * \param[out] retval Exit value of the terminated PiP task
+   *
+   * \note This function can be used regardless to the PiP execution
+   * mode.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   */
   int pip_wait( int pipid, int *retval );
+  /** @}*/
+
+  /** \defgroup pip_trywait PIP_trywait pip_trywait
+   * wait for the termination of a PiP task in a non-blocking way
+   *  @{
+   * \param[out] ntaskp This parameter points to the variable which
+   *  will be set to the maxmum number of the PiP tasks.
+   *
+   * \note This function can be used regardless to the PiP execution
+   * mode.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   */
   int pip_trywait( int pipid, int *retval );
+  /** @}*/
+
+  /** \defgroup pip_kill PIP_KILL pip_kill
+   * deliver a signal to a PiP task
+   *  @{
+   * \param[out] pipid PIPID of a target PiP task
+   * \param[out] signal signal number to be delivered
+   *
+   * \note This function can be used regardless to the PiP execution
+   * mode.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   */
   int pip_kill( int pipid, int signal );
+  /** @}*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifdef PIP_INTERNAL_FUNCS
 
