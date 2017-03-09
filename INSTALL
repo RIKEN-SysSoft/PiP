@@ -14,9 +14,17 @@ Process-in-Process (PiP) Installation
 	git clone -b pip-centos7 \
 	     	git@git.sys.aics.riken.jp:software/PIP-glibc
 
-  Here is the recommended configure options for the patched GLIBC
-  based on CentOS 7.2,
+  With the GLIB which Linux distribution provides, the number of PiP
+  tasks (see below) is limited to 15 or so. This limitation comes from
+  the fact that the number of name spaces is hard-coded as 16. In
+  addition to this, the current PiP library cannot run with some GLIBC
+  libraries. To avoid these issues, we recommend you to have our
+  patched GLIBC.
 
+  Here is the recommended configure and other options for the patched
+  GLIBC based on CentOS 7.2,
+
+  +++ on x86_64
 	mkdir PIP-glibc.build
 	cd PIP-glibc.build
 	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
@@ -27,16 +35,29 @@ Process-in-Process (PiP) Installation
 		--enable-bind-now --build=x86_64-redhat-linux \
 		--enable-multi-arch --enable-obsolete-rpc \
 		--disable-profile --enable-nss-crypt --disable-systemtap
-
-  Then build and install it as follows,
-
 	make -j3 && make install
+
+  +++ on Aarch64 (ARM64)
+	mkdir PIP-glibc.build
+	cd PIP-glibc.build
+	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
+		CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
+		--enable-add-ons=ports,nptl,c_stubs,libidn \
+		--with-headers=/usr/include --enable-kernel=2.6.32 --enable-bind-now \
+		--build=aarch64-redhat-linux \
+		--enable-obsolete-rpc \
+		--enable-systemtap \
+		--disable-profile --enable-nss-crypt
+	make -j3 -r CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3" \
+		PARALLELMFLAGS=
+	make -j1 install PARALLELMFLAGS=
 
 * Building PiP
   At the PiP configuration, you must specify the installed GLIBC.
 
 	git clone git@git.sys.aics.riken.jp:software/PIP
-	configure --prefix=<PIP_INSTALL_DIR> \
+	cd PIP
+	./configure --prefix=<PIP_INSTALL_DIR> \
 		--with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
 	make install
 
@@ -57,11 +78,12 @@ Process-in-Process (PiP) Installation
 
 	--dynamic-linker=<GLIBC_INSTALL_DIR>/lib/ld-2.17.so
 
-    Once you specify this option, PiP root process uses the pathed GLIBC,
-    no matter how LD_LIBRARY_PATH is specified. Remember that
-    the other SOLIBs are already copied (indeed, symbolic links) into
-    that directory by the "piplnlibs" command (see above).
-    The PiP root process is not required to be PIE.
+    Once you specify this option, PiP root process uses the pathed
+    GLIBC libraries, no matter how LD_LIBRARY_PATH is
+    specified. Remember that the other SOLIBs are already copied
+    (indeed, symbolic links) into that directory by the "piplnlibs"
+    command (see above). The PiP root process is not required to be
+    PIE.
 
   - PiP task (spawned by PiP root process)
     must be compiled with "-pie", must be linked with "-fpie
