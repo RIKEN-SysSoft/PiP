@@ -16,6 +16,16 @@
 #include <sys/types.h>
 
 #include <pip.h>
+/*
+ * flags for segment permissions
+ */
+#define XPMEM_RDONLY	0x1
+#define XPMEM_RDWR	0x2
+
+/*
+ * Valid permit_type values for xpmem_make().
+ */
+#define XPMEM_PERMIT_MODE	0x1
 
 typedef __s64 xpmem_segid_t;	/* segid returned from xpmem_make() */
 typedef __s64 xpmem_apid_t;	/* apid returned from xpmem_get() */
@@ -25,25 +35,46 @@ struct xpmem_addr {
   off_t 	offset;		/* offset into apid's memory */
 };
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-  int xpmem_pip_init( void );	/* not an XPMEM function */
-
-  int xpmem_version(void);
-  xpmem_segid_t xpmem_make(void *vaddr, size_t size, int permit_type,
-			   void *permit_value);
-  int xpmem_remove(xpmem_segid_t segid);
-  xpmem_apid_t xpmem_get(xpmem_segid_t segid, int flags, int permit_type,
-		       void *permit_value);
-  int xpmem_release(xpmem_apid_t apid);
-  void *xpmem_attach(struct xpmem_addr addr, size_t size, void *vaddr);
-  int xpmem_detach(void *vaddr);
-
-#ifdef __cplusplus
+static inline int xpmem_version(void) {
+#define XPMEM_CURRENT_VERSION		(0x00026003)
+  return XPMEM_CURRENT_VERSION;
 }
-#endif
+
+static inline
+xpmem_segid_t xpmem_make( void *vaddr,
+			  size_t size,
+			  int permit_type,
+			  void *permit_value ) {
+  return (xpmem_segid_t) vaddr;
+}
+
+static inline
+int xpmem_remove( xpmem_segid_t segid ) {
+  return 0;
+}
+
+static inline
+xpmem_apid_t xpmem_get( xpmem_segid_t segid,
+			int flags,
+			int permit_type,
+			void *permit_value ) {
+  return segid;
+}
+
+static inline
+int xpmem_release( xpmem_apid_t apid ) {
+  return 0;
+}
+
+static inline
+void *xpmem_attach( struct xpmem_addr addr, size_t size, void *vaddr ) {
+  return (void*) ( addr.apid + addr.offset );
+}
+
+static inline
+int xpmem_detach( void *vaddr ) {
+  return 0;
+}
 
 #endif
 
