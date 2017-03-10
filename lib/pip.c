@@ -34,6 +34,7 @@
 #error "!defined(PIP_CLONE_AND_DLMOPEN) && !defined(PIP_DLMOPEN_AND_CLONE)"
 #endif
 
+//#define SHOULD_HAVE_CTYPE_INIT
 //#define HAVE_GLIBC_INIT
 //#define PIP_EXPLICT_EXIT
 //#define PIP_NO_MALLOPT
@@ -597,20 +598,6 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
 	       getpid(), prog );
       err = ENOEXEC;
       goto error;
-#ifndef HAVE_GLIBC_INIT
-    } else if( ( ctype_init = (ctype_init_t) dlsym( loaded, "__ctype_init" ) )
-	       == NULL ) {
-      /* getting address of __ctype_init function to initialize ctype tables */
-      DBG;
-      err = ENOEXEC;
-      goto error;
-#else
-    } else if( ( glibc_init = (glibc_init_t)
-		 dlsym( loaded, "glibc_init" ) ) == NULL ) {
-      DBG;
-      err = ENOEXEC;
-      goto error;
-#endif
     } else if( ( libc_fflush = (fflush_t) dlsym( loaded, "fflush" ) )
 	       == NULL ) {
       /* getting address of fflush function to flush messages */
@@ -623,6 +610,25 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
       err = ENOEXEC;
       goto error;
     }
+#ifndef HAVE_GLIBC_INIT
+    if( ( ctype_init = (ctype_init_t) dlsym( loaded, "__ctype_init" ) )
+	       == NULL ) {
+#ifdef SHOULD_HAVE_CTYPE_INIT
+      /* getting address of __ctype_init function to initialize ctype tables */
+      DBG;
+      err = ENOEXEC;
+      goto error;
+#else
+      ctype_init = NULL;
+    }
+#endif
+#else
+    if( ( glibc_init = (glibc_init_t) dlsym( loaded, "glibc_init" ) ) == NULL ) {
+      DBG;
+      err = ENOEXEC;
+      goto error;
+    }
+#endif
   }
  error:
   if( err == 0 ) {
@@ -809,9 +815,14 @@ static int pip_do_spawn( void *thargs )  {
       /* __ctype_init() must be called at the very beginning of */
       /* process or theread. Since __libc_start_main is not     */
       /* called here, we have to call it explicitly             */
-      DBGF( "[%d] >> __ctype_init@%p()", pipid, self->ctype_init );
-      self->ctype_init();
-      DBGF( "[%d] << __ctype_init@%p()", pipid, self->ctype_init );
+#ifdef SHOULD_HAVE_CTYPE_INIT
+      if( self->ctype_init != NULL )
+#endif
+	{
+	  DBGF( "[%d] >> __ctype_init@%p()", pipid, self->ctype_init );
+	  self->ctype_init();
+	  DBGF( "[%d] << __ctype_init@%p()", pipid, self->ctype_init );
+	}
 #else
       DBGF( "[%d] >> glibc_init@%p()", pipid, self->glibc_init );
       self->glibc_init( argc, argv, envv );
