@@ -17,7 +17,9 @@
 #elif defined(__aarch64__)
 #include <pip_machdep_aarch64.h>
 #else
+#ifdef AHA
 #error "Unsupported Machine Type"
+#endif
 #endif
 
 #ifndef PIP_PAUSE
