@@ -13,9 +13,9 @@ CFLAGS += $(PICFLAG)
 LDFLAGS  = -pthread -shared -L$(glibc_libdir) -ldl
 
 LIBRARY  = libpip.so
-SRCS     = pip.c pvas.c xpmem.c
+SRCS     = pip.c pvas.c
 
-OBJS	 = pip.o pvas.o xpmem.o
+OBJS	 = pip.o pvas.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h 			\
 	   $(PIPINCDIR)/pip_internal.h 		\
