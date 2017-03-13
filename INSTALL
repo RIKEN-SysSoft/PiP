@@ -41,12 +41,12 @@ Process-in-Process (PiP) Installation
 	mkdir PIP-glibc.build
 	cd PIP-glibc.build
 	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
-		CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
+		CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3 \
+		-fno-asynchronous-unwind-tables" \
 		--enable-add-ons=ports,nptl,c_stubs,libidn \
-		--with-headers=/usr/include --enable-kernel=2.6.32 --enable-bind-now \
-		--build=aarch64-redhat-linux \
-		--enable-obsolete-rpc \
-		--enable-systemtap \
+		--with-headers=/usr/include --enable-kernel=2.6.32 \
+		--enable-bind-now --build=aarch64-redhat-linux \
+		--enable-obsolete-rpc --enable-systemtap \
 		--disable-profile --enable-nss-crypt
 	make -j3 -r CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3" \
 		PARALLELMFLAGS=
