@@ -30,6 +30,7 @@ static inline double gettime( void ) {
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
 }
 
+#ifdef x86_64
 static inline uint64_t rdtsc() {
   uint64_t x;
   __asm__ volatile ("rdtsc" : "=A" (x));
@@ -44,3 +45,8 @@ static inline uint64_t rdtscp() {
   RDTSCP( x );
   return x;
 }
+#else
+static inline uint64_t rdtscp() {
+  return 0;
+}
+#endif
