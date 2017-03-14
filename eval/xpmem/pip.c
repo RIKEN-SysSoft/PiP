@@ -27,7 +27,7 @@ int main( int argc, char **argv ) {
 
   pipid  = 0;
   ntasks = 10;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
 
   TESTINT( create_region( &vaddr ) );
   tm = rdtscp();
@@ -43,7 +43,7 @@ int main( int argc, char **argv ) {
 
   pipid = 0;
   TESTINT( pip_spawn( nargv[0], nargv, NULL, 1, &pipid, NULL, NULL, NULL ) );
-  wait( NULL );
+  pip_wait( 0, NULL );
 
   TESTINT( pip_fin() );
   return 0;
