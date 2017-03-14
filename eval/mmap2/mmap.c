@@ -33,7 +33,7 @@
 #define NTASKS_MAX	(256)
 #define SIZE1MB		((size_t)(1*1024*1024))
 
-#define USE_HUGETLB
+//#define USE_HUGETLB
 
 void 	*mmapp;
 size_t	size;
@@ -97,7 +97,7 @@ void mmap_memory( char *arg, int ntasks ) {
   } else {
     size *= SIZE1MB;
   }
-  size *= ntasks;
+  //size *= ntasks;
   mmapp = mmap( NULL,
 		size,
 		PROT_READ|PROT_WRITE,

@@ -7,6 +7,8 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
+#include <unistd.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <errno.h>
@@ -24,12 +26,21 @@
 
 static inline double gettime( void ) {
   struct timeval tv;
-  TESTINT( gettimeofday( &tv, NULL ) );
+  gettimeofday( &tv, NULL );
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
 }
 
 static inline uint64_t rdtsc() {
   uint64_t x;
   __asm__ volatile ("rdtsc" : "=A" (x));
+  return x;
+}
+
+#define RDTSCP(X)	\
+  asm volatile ("rdtscp; shlq $32,%%rdx; orq %%rdx,%%rax;" : "=a" (X) :: "%rcx", "%rdx")
+
+static inline uint64_t rdtscp() {
+  uint64_t x;
+  RDTSCP( x );
   return x;
 }
