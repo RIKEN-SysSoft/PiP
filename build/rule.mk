@@ -1,6 +1,6 @@
 # default target is "all"
 
-all: subdir-all header-all lib-all prog-all post-all-hook
+all: subdir-all header-all lib-all prog-all doxygen-all post-all-hook
 .PHONY: all
 
 install: all \
@@ -32,8 +32,8 @@ misc-clean:
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
 		echo \
-		$(RM) Makefile; \
-		$(RM) Makefile; \
+		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3; \
+		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3; \
 	fi
 .PHONY: distclean-here
 
@@ -172,6 +172,22 @@ prog-veryclean:
 
 prog-distclean:
 .PHONY: prog-distclean
+
+### doxygen rules
+
+doxygen-all:
+	-@$(RM) .doxygen_html;
+	-@case "$(MAN1_SRCS)" in \
+	'')	;; \
+	*)	for i in $(MAN1_SRCS); do echo $$i; done > .doxygen_man1; \
+		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_html;; \
+	esac
+	-@case "$(MAN3_SRCS)" in \
+	'')	;; \
+	*)	for i in $(MAN3_SRCS); do echo $$i; done > .doxygen_man3; \
+		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_html;; \
+	esac
+.PHONY: doxygen-all
 
 ### common rules
 

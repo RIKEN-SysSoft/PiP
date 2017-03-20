@@ -10,6 +10,7 @@ include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
 PROGRAMS = $(PROGRAM) pmap
+MAN1_SRCS = piprun.c pmap.c
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"

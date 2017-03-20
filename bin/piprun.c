@@ -7,6 +7,23 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+/** \addtogroup piprun piprun
+ *
+ * \brief command to run programs using PiP
+ *
+ * \section synopsis SYNOPSIS
+ *
+ *	\c \b piprun &lt;program&gt; ...
+ *
+ *
+ * \section description DESCRIPTION
+ * \b Run a program under PiP.
+ *
+ * \section environment ENVIRONMENT
+ *
+ * \subsection PIP_MODEL PIP_MODEL
+ */
+
 #include <sys/wait.h>
 #include <stdio.h>
 #include <errno.h>

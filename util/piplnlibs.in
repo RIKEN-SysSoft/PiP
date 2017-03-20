@@ -1,5 +1,17 @@
 #!/bin/sh
 
+### \addtogroup piplnlibs piplnlibs
+###
+### \brief command to create symbolic links to the SOLIBs in the patched GLIBC.
+###
+### \section synopsis SYNOPSIS
+###
+###	\c \b piplnlibs [<b>-s</b>]
+###
+### \section description DESCRIPTION
+### This command creates a number of symbolic links to the SOLIBs which
+### are not installed by the patched GLIBC installation.
+
 glibc_libdir=@glibc_libdir@
 glibc_default_libdir=/lib64
 
