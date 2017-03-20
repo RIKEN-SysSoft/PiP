@@ -10,7 +10,7 @@
 #ifndef _pip_h_
 #define _pip_h_
 
-/** \page pip Overview of Process-in-Process (PiP)
+/** \mainpage pip Overview of Process-in-Process (PiP)
  *
  * \section overview Overview
  *
@@ -129,10 +129,19 @@ typedef int(*pip_spawnhook_t)(void*);
 extern "C" {
 #endif
 
-#endif
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
-  /** \defgroup pip_init PIP_INIT pip_init
-   * Initialize the PiP library.
+/**
+ * @addtogroup libpip libpip
+ * \brief the PiP library
+ * @{
+ * @file
+ * @{
+ */
+
+  /**
+   *
+   * \brief Initialize the PiP library.
    *  @{
    * \param[out] pipidp When this is called by the PiP root
    *  process, then this returns PIP_PIPID_ROOT, otherwise it returns
@@ -163,8 +172,8 @@ extern "C" {
   int pip_init( int *pipidp, int *ntasks, void **root_expp, int opts );
   /** @}*/
 
-  /** \defgroup pip_fin PIP_FIN pip_fin
-   * finalize the PiP library.
+  /**
+   * \brief finalize the PiP library.
    *  @{
    * \return Return 0 on success. Return an error code on error.
    *
@@ -175,8 +184,8 @@ extern "C" {
   int pip_fin( void );
   /** @}*/
 
-  /** \defgroup pip_spawn PIP_SPAWN pip_spawn
-   * spawn a PiP task
+  /**
+   * \brief spawn a PiP task
    *  @{
    * \param[in] filename The executable to run as a PiP task
    * \param[in] argv Argument(s) for the spawned PiP task
@@ -225,8 +234,8 @@ extern "C" {
 		 pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
   /** @}*/
 
-  /** \defgroup pip_export PIP_EXPORT pip_export
-   * export a memory region of the calling PiP root or a PiP task to
+  /**
+   * \brief export a memory region of the calling PiP root or a PiP task to
    * the others.
    *  @{
    * \param[in] exp Starting address of a memory region of the calling
@@ -249,8 +258,8 @@ extern "C" {
   int pip_export( void *exp );
   /** @}*/
 
-  /** \defgroup pip_import PIP_IMPORT pip_import
-   * import the exposed memory region of the other.
+  /**
+   * \brief import the exposed memory region of the other.
    *  @{
    * \param[in] pipid The PIPID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
@@ -269,8 +278,8 @@ extern "C" {
   int pip_import( int pipid, void **expp );
   /** @}*/
 
-  /** \defgroup pip_get_pipid PIP_GET_PIPID pip_get_pipid
-   * get PIPID
+  /**
+   * \brief get PIPID
    *  @{
    * \param[out] pipidp This parameter points to the variable which
    *  will be set to the PIPID of the calling process.
@@ -278,13 +287,13 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    *
    */
-  int pip_get_pipid( int *pipid );
+  int pip_get_pipid( int *pipidp );
   /** @}*/
 
-  /** \defgroup pip_get_ntasks PIP_GET_NTASKS pip_get_ntasks
-   * get the maxmum number of the PiP tasks
+  /**
+   * \brief get the maxmum number of the PiP tasks
    *  @{
-   * \param[out] ntaskp This parameter points to the variable which
+   * \param[out] ntasksp This parameter points to the variable which
    *  will be set to the maxmum number of the PiP tasks.
    *
    * \return Return 0 on success. Return an error code on error.
@@ -293,8 +302,8 @@ extern "C" {
   int pip_get_ntasks( int *ntasksp );
   /** @}*/
 
-  /** \defgroup pip_exit PIP_EXIT pip_exit
-   * terminate PiP task
+  /**
+   * \brief terminate PiP task
    *  @{
    * \param[in] retval Terminate PiP task with the exit number
    * specified with this parameter.
@@ -308,8 +317,8 @@ extern "C" {
   int pip_exit( int retval );
   /** @}*/
 
-  /** \defgroup pip_wait PIP_WAIT pip_wait
-   * wait for the termination of a PiP task
+  /**
+   * \brief wait for the termination of a PiP task
    *  @{
    * \param[in] pipid PIPID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
@@ -323,11 +332,11 @@ extern "C" {
   int pip_wait( int pipid, int *retval );
   /** @}*/
 
-  /** \defgroup pip_trywait PIP_trywait pip_trywait
-   * wait for the termination of a PiP task in a non-blocking way
+  /**
+   * \brief wait for the termination of a PiP task in a non-blocking way
    *  @{
-   * \param[out] ntaskp This parameter points to the variable which
-   *  will be set to the maxmum number of the PiP tasks.
+   * \param[in] pipid PIPID to wait for.
+   * \param[out] retval Exit value of the terminated PiP task
    *
    * \note This function can be used regardless to the PiP execution
    * mode.
@@ -338,8 +347,8 @@ extern "C" {
   int pip_trywait( int pipid, int *retval );
   /** @}*/
 
-  /** \defgroup pip_kill PIP_KILL pip_kill
-   * deliver a signal to a PiP task
+  /**
+   * \brief deliver a signal to a PiP task
    *  @{
    * \param[out] pipid PIPID of a target PiP task
    * \param[out] signal signal number to be delivered
@@ -373,12 +382,17 @@ extern "C" {
   int pip_print_loaded_solibs( FILE *file );
   char **pip_copy_vec( char *addition, char **vecsrc );
 
-#endif
+#endif /* PIP_INTERNAL_FUNCS */
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+/**
+ * @}
+ * @}
+ */
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif
 
 #endif
