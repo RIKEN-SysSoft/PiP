@@ -66,7 +66,7 @@ doxygen-install:
 
 post-distclean-hook:
 	$(RM) -r man html
-.PHONY: post-distclean-hoo
+.PHONY: post-distclean-hook
 
 ###
 
