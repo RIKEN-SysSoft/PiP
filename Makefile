@@ -22,52 +22,39 @@ include $(top_srcdir)/build/rule.mk
 install: doxygen doxygen-install
 .PHONY: install
 
+### doxygen
+
 doxygen:
 	-@$(RM) -r man html
-	@doxy_dirs=`find . -name .doxygen_html | \
-		sed 's|/\.doxygen_html$$||' | tr '\012' ' '`; \
-	echo ==== man1 =====; \
+	@doxy_dirs=$$(find . -name .doxygen_html | while read file; do \
+		dir=$$(dirname $$file); \
+		while read src; do \
+			[ -f $$dir/$$src ] && echo $$dir || \
+			echo $$srcdir/$$dir; \
+		done <$$file; done | sort -u | tr '\012' ' ' ); \
 	( \
-	cat $(top_srcdir)/build/common.doxy; \
-	echo "STRIP_FROM_PATH = $$doxy_dirs"; \
-	echo "GENERATE_HTML = NO"; \
-	echo "GENERATE_MAN = YES"; \
-	echo "MAN_EXTENSION = 1"; \
-	printf "INPUT = "; \
-	find . -name .doxygen_man1 -print | while read file; do \
-		dir=`dirname $$file`; \
-		sed "s|^|$$dir/|" $$file; \
-	done | tr '\012' ' '; \
-	echo ""; \
-	) | doxygen -; \
-	echo ==== man3 =====; \
-	( \
-	cat $(top_srcdir)/build/common.doxy; \
-	echo "STRIP_FROM_PATH = $$doxy_dirs"; \
-	echo "GENERATE_HTML = NO"; \
-	echo "GENERATE_MAN = YES"; \
-	echo "MAN_EXTENSION = 3"; \
-	printf "INPUT = "; \
-	find . -name .doxygen_man3 -print | while read file; do \
-		dir=`dirname $$file`; \
-		sed "s|^|$$dir/|" $$file; \
-	done | tr '\012' ' '; \
-	echo ""; \
-	) | doxygen -; \
-	echo ==== html =====; \
-	( \
-	cat $(top_srcdir)/build/common.doxy; \
-	echo "GENERATE_HTML = YES"; \
-	echo "GENERATE_MAN = NO"; \
-	echo "MAN_EXTENSION = 3"; \
-	echo "STRIP_FROM_PATH = $$doxy_dirs"; \
-	printf "INPUT = "; \
-	find . -name .doxygen_html -print | while read file; do \
-		dir=`dirname $$file`; \
-		sed "s|^|$$dir/|" $$file; \
-	done | tr '\012' ' '; \
-	echo ""; \
-	) | doxygen -
+	echo "man1 NO YES 1"; \
+	echo "man3 NO YES 3"; \
+	echo "html YES NO 3"; \
+	) | while read type html man man_ext; do \
+		echo ==== $$type =====; \
+		( \
+		cat $(top_srcdir)/build/common.doxy; \
+		echo "STRIP_FROM_PATH = $$doxy_dirs"; \
+		echo "GENERATE_HTML = $$html"; \
+		echo "GENERATE_MAN = $$man"; \
+		echo "MAN_EXTENSION = $$man_ext"; \
+		printf "INPUT = "; \
+		find . -name .doxygen_$$type -print | while read file; do \
+			dir=`dirname $$file`; \
+			while read src; do \
+				[ -f $$dir/$$src ] && echo $$dir/$$src || \
+				echo $$srcdir/$$dir/$$src; \
+			done <$$file; \
+		done | tr '\012' ' '; \
+		echo ""; \
+		) | doxygen -; \
+	done
 .PHONY: doxygen
 
 doxygen-install:
@@ -77,9 +64,11 @@ doxygen-install:
 	@(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
 .PHONY: doxygen-install
 
-doxygen-distclean:
+post-distclean-hook:
 	$(RM) -r man html
-.PHONY: doxygen-distclean
+.PHONY: post-distclean-hoo
+
+###
 
 check:
 	( cd test && ./test.sh )
