@@ -20,7 +20,7 @@ veryclean: clean \
 
 distclean: veryclean \
 	subdir-distclean header-veryclean lib-distclean prog-distclean \
-	distclean-here post-distclean-hook
+	doxygen-distclean distclean-here post-distclean-hook
 .PHONY: distclean
 
 misc-clean:
@@ -188,6 +188,10 @@ doxygen-all:
 		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_html;; \
 	esac
 .PHONY: doxygen-all
+
+doxygen-distclean:
+	-$(RM) .doxygen_html .doxygen_man1 .doxygen_man3
+.PHONY: doxygen-distclean
 
 ### common rules
 

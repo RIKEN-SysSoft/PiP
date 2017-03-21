@@ -77,6 +77,10 @@ doxygen-install:
 	@(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
 .PHONY: doxygen-install
 
+doxygen-distclean:
+	$(RM) -r man html
+.PHONY: doxygen-distclean
+
 check:
 	( cd test && ./test.sh )
 .PHONY: check
