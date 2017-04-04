@@ -18,27 +18,46 @@
 
 #include <xpmem_eval.h>
 
+//#define HUGETLB
+
 #define SHMNAM		"shmem.dat"
 
 static inline int create_shmem( void **vaddrp ) {
   void *vaddr;
   int fd, i, *data;
+  uint64_t tm;
 
+  tm = rdtscp();
   fd = shm_open( SHMNAM,
 		 O_CREAT|O_TRUNC|O_RDWR,
 		 S_IRUSR | S_IWUSR);
+  tm = rdtscp() - tm;
+  printf( "create: shm_open(): %lu\n", tm );
+  tm = rdtscp();
   ftruncate( fd, MMAP_SIZE );
+  tm = rdtscp() - tm;
+  printf( "create: ftruncate(): %lu\n", tm );
+  tm = rdtscp() - tm;
   vaddr = mmap( NULL,
 		MMAP_SIZE,
 		PROT_READ|PROT_WRITE,
+#ifdef HUGETLB
+		MAP_HUGETLB |
+#endif
 		MAP_SHARED,
 		fd,
 		0 );
-  close( fd );
   if( vaddr == MAP_FAILED ) {
     printf( "create_shmem(): map failed\n" );
     return -1;
   }
+  madvise( vaddr, MMAP_SIZE, MADV_HUGEPAGE );
+  tm = rdtscp() - tm;
+  printf( "create: mmap(): %lu\n", tm );
+  tm = rdtscp() - tm;
+  close( fd );
+  tm = rdtscp() - tm;
+  printf( "create: close(): %lu\n", tm );
   *vaddrp = vaddr;
   data    = (int*) vaddr;
 
@@ -46,6 +65,7 @@ static inline int create_shmem( void **vaddrp ) {
     data[i] = i;
   }
   printf( "create_shmem(): fd=%d\n", fd );
+  system( "grep -i huge /proc/meminfo" );
   return fd;
 }
 
@@ -70,18 +90,33 @@ int main( int argc, char **argv ) {
       shm_unlink( SHMNAM );
     }
   } else {
+    uint64_t tm;
+
+    tm = rdtscp() - tm;
     fd = shm_open( argv[1], O_RDWR, 0 );
-    printf( "main(): fd=%d\n", fd );
+    tm = rdtscp() - tm;
+    printf( "client: shm_open(): %lu\n", tm );
+    //printf( "main(): fd=%d\n", fd );
+    tm = rdtscp() - tm;
     vaddr = mmap( NULL,
 		  MMAP_SIZE,
 		  PROT_READ|PROT_WRITE,
+#ifdef HUGETLB
+		  MAP_HUGETLB |
+#endif
 		  MAP_SHARED,
 		  fd,
 		  0 );
-    close( fd );
     if( vaddr == MAP_FAILED ) {
       printf( "main()=%d: map failed\n", errno );
     }
+    madvise( vaddr, MMAP_SIZE, MADV_HUGEPAGE );
+    tm = rdtscp() - tm;
+    printf( "client: mmap(): %lu\n", tm );
+    tm = rdtscp() - tm;
+    close( fd );
+    tm = rdtscp() - tm;
+    printf( "client: close(): %lu\n", tm );
     sum = touch( vaddr );
     print_time();
     printf( "sum=%d\n", sum );

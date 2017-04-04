@@ -21,9 +21,16 @@
 int main( int argc, char **argv ) {
   int pipid, ntasks;
   xpmem_segid_t segid;
-  char *nargv[3], segidstr[32];
+  char *nargv[4], segidstr[32];
   void *vaddr;
   uint64_t tm;
+
+#ifdef OVERALL
+  if( argc < 2 ) {
+    printf( "no iterration\n" );
+    exit( 1 );
+  }
+#endif
 
   pipid  = 0;
   ntasks = 10;
@@ -32,14 +39,17 @@ int main( int argc, char **argv ) {
   TESTINT( create_region( &vaddr ) );
   tm = rdtscp();
   segid = xpmem_make( vaddr, MMAP_SIZE, XPMEM_PERMIT_MODE, (void*)0666 );
+#ifndef OVERALL
   tm = rdtscp() - tm;
   printf( "xpmem_make(): %lu\n", tm );
+#endif
   if( segid == -1 ) printf( "xpmem_make(): %d\n", errno );
   sprintf( segidstr, "%lx", vaddr );
 
   nargv[0] = "./eval-pip";
   nargv[1] = segidstr;
-  nargv[2] = NULL;
+  nargv[2] = argv[1];
+  nargv[3] = NULL;
 
   pipid = 0;
   TESTINT( pip_spawn( nargv[0], nargv, NULL, 1, &pipid, NULL, NULL, NULL ) );
