@@ -10,7 +10,7 @@ include $(top_srcdir)/build/var.mk
 
 CPPFLAGS = -I$(PIPINCDIR)
 CFLAGS += $(PICFLAG)
-LDFLAGS  = -pthread -shared -L$(glibc_libdir) -ldl
+LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
 LIBRARY  = libpip.so
 SRCS     = pip.c pvas.c
