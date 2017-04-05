@@ -95,12 +95,14 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#define PIP_OPTS_ANY			(0x0)
+#define PIP_OPTS_NONE			(0x0)
+#define PIP_OPTS_ANY			PIP_OPTS_NONE
 #define PIP_MODE_PTHREAD		(0x100)
 #define PIP_MODE_PROCESS		(0x200)
 /* the following two modes are a submode of PIP_MODE_PROCESS */
 #define PIP_MODE_PROCESS_PRELOAD	(0x210)
 #define PIP_MODE_PROCESS_PIPCLONE	(0x220)
+#define PIP_MODE_MASK			(0xFF0)
 
 #define PIP_ENV_MODE			"PIP_MODE"
 #define PIP_ENV_MODE_THREAD		"thread"
@@ -309,6 +311,18 @@ extern "C" {
    *
    */
   int pip_get_ntasks( int *ntasksp );
+  /** @}*/
+
+  /**
+   * \brief get the PiP execution mode
+   *  @{
+   * \param[out] modep This parameter points to the variable which
+   *  will be set to the PiP execution mode
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   */
+  int pip_get_mode( int *modep );
   /** @}*/
 
   /**

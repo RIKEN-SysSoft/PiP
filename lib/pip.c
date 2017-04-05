@@ -342,7 +342,7 @@ int pip_if_shared_sighand( int *flagp ) {
 }
 
 static int pip_root_p_( void ) {
-  return pip_self == NULL;
+  return pip_self == NULL && pip_root != NULL;
 }
 
 static int pip_task_p_( void ) {
@@ -1070,6 +1070,13 @@ int pip_fin( void ) {
   RETURN( err );
 }
 
+int pip_get_mode( int *mode ) {
+  if( pip_root == NULL ) RETURN( EINVAL );
+  if( mode     == NULL ) RETURN( EINVAL );
+  *mode = ( pip_root->opts & PIP_MODE_MASK );
+  RETURN( 0 );
+}
+
 int pip_get_pid( int pipid, pid_t *pidp ) {
   int err;
 
@@ -1286,7 +1293,7 @@ int pip_trywait( int pipid, int *retvalp ) {
   RETURN( err );
 }
 
-pip_clone_t *pip_get_cloneinfo( void ) {
+pip_clone_t *pip_get_cloneinfo_( void ) {
   return pip_root->cloneinfo;
 }
 
