@@ -42,7 +42,7 @@ int pipcma_root_init( void ) {	/* not a CMA function */
   cache->nentry[1] = 0;
   for( i=0; i<(PIPCMA_CACHESZ*2); i++) pip_xpmem->segid_tab[i] = 0;
 
-  err = pip_init( NULL, NULL,(void**)  &cache, PIP_MODEL_PROCESS );
+  err = pip_init( NULL, NULL,(void**)  &cache, 0 );
   if( err ) {
     free( pip_xpmem );
     pip_xpmem = NULL;

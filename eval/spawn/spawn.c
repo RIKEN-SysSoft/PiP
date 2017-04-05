@@ -40,7 +40,7 @@ void spawn_tasks( int ntasks ) {
   char *argv[] = { "./foo", NULL };
   int pipid, i;
 
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PTHREAD ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   TESTINT( ( pipid != PIP_PIPID_ROOT ) );
 
   time_start = gettime();

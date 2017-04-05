@@ -15,7 +15,7 @@ int main( int argc, char **argv ) {
   int ntasks;
 
   ntasks = 1;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     int status;
 
@@ -31,7 +31,7 @@ int main( int argc, char **argv ) {
 
   } else {
     printf( "CHILD: I am going to call exit(123)\n" );
-    exit( 123 );
+    pip_exit( 123 );
   }
   TESTINT( pip_fin() );
   return 0;

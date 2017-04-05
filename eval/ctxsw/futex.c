@@ -31,15 +31,17 @@
 
 #ifdef PIP
 #include <pip.h>
+#else
+#define pip_exit(X)	exit(X)
 #endif
 
-#ifdef PTHREAD
+#ifdef THREAD
 #include <pthread.h>
 #endif
 
 static inline long long unsigned time_ns(struct timespec* const ts) {
   if (clock_gettime(CLOCK_REALTIME, ts)) {
-    exit(1);
+    pip_exit(1);
   }
   return ((long long unsigned) ts->tv_sec) * 1000000000LLU
     + (long long unsigned) ts->tv_nsec;
@@ -65,12 +67,12 @@ void eval_memset( int argc, char **argv ) {
 
   if (argc != 2) {
     fprintf(stderr, "usage: %s <size of working set in 4K pages>\n", *argv);
-    exit( 1 );
+    pip_exit( 1 );
   }
   ws_pages = strtol(argv[1], NULL, 10);
   if (ws_pages < 0) {
     fprintf(stderr, "Invalid usage: working set size must be positive\n");
-    exit( 1 );
+    pip_exit( 1 );
   }
   iterations = get_iterations(ws_pages);
 
@@ -156,7 +158,7 @@ int main(int argc, char** argv) {
   int pipid, ntasks;
 
   ntasks = 10;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     eval_memset( argc, argv );
     alloc_futex();

@@ -155,7 +155,7 @@ void spawn_tasks( char **argv, int ntasks ) {
   syncs.count_ctxsw = 0;
 #endif
   root_exp = (void*) &syncs;
-  TESTINT( pip_init( &pipid, &ntasks, &root_exp, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, &root_exp, 0 ) );
   TESTINT( ( pipid != PIP_PIPID_ROOT ) );
   argv[1] = "0";
   for( i=0; i<ntasks; i++ ) {

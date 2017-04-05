@@ -22,13 +22,13 @@ int main( int argc, char **argv ) {
     pipid = 0;
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			NULL, NULL, NULL ) );
-    TESTINT( pip_print_loaded_solibs( stderr ) );
+    pip_print_loaded_solibs( stderr );
     TESTINT( pip_wait( 0, NULL ) );
     TESTINT( pip_fin() );
 
   } else {
     fprintf( stderr, "<%d> Hello, I am just fine !!\n", pipid );
-    TESTINT( pip_print_loaded_solibs( stderr ) );
+    pip_print_loaded_solibs( stderr ) ;
   }
   return 0;
 }

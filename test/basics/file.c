@@ -88,7 +88,7 @@ int main( int argc, char **argv ) {
 
   ntasks = NTASKS;
   exp    = (void*) &fdgo;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS ) );
 
   if( ( fd = open_file() ) < 0 ) {
     fprintf( stderr, "Unable to open a file\n" );
