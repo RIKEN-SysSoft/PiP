@@ -48,6 +48,17 @@ typedef	void(*fflush_t)(FILE*);
 
 typedef void(*free_t)(void*);
 
+typedef struct pip_spawn_args {
+  int 			pipid;
+  int	 		coreno;
+  pip_spawnhook_t	hook_before;
+  pip_spawnhook_t	hook_after;
+  void			*hook_arg;
+  char 			*prog;
+  char 			**argv;
+  char 			**envv;
+} pip_spawn_args_t;
+
 typedef struct {
   int			pipid;
   int			pid;
@@ -55,6 +66,7 @@ typedef struct {
   int	 		retval;
   pthread_t		thread;
   void			*loaded;
+  pip_spawn_args_t	*args;
   main_func_t		mainf;
 #ifndef HAVE_GLIBC_INIT
   ctype_init_t		ctype_init;
@@ -67,8 +79,6 @@ typedef struct {
   fflush_t		libc_fflush;
   free_t		free;
   ucontext_t 		*ctx;
-  char			**argv;
-  char			**envv;
   char			***envvp;
   volatile void		*export;
 } pip_task_t;
@@ -81,6 +91,7 @@ typedef struct {
   pip_spinlock_t	spawn_lock;
   volatile void		*export;
   pip_clone_t	 	*cloneinfo;
+  char			*pip_root_env;
   free_t		free;
   int			opts;
   int			pid;
@@ -90,17 +101,6 @@ typedef struct {
   int			ntasks;
   pip_task_t		tasks[];
 } pip_root_t;
-
-typedef struct pip_spawn_args {
-  int 			pipid;
-  int	 		coreno;
-  pip_spawnhook_t	hook_before;
-  pip_spawnhook_t	hook_after;
-  void			*hook_arg;
-  char 			*prog;
-  char 			**argv;
-  char 			**envv;
-} pip_spawn_args_t;
 
 extern pip_task_t 	*pip_task;
 
