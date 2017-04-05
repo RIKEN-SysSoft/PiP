@@ -16,8 +16,10 @@ htmldir = $(default_htmldir)
 sysconfdir = $(default_sysconfdir)
 localedir = $(default_localedir)
 
+PTHREADFLAG = -pthread
+
 CC = $(DEFAULT_CC)
-CFLAGS = $(DEFAULT_CFLAGS)
+CFLAGS = $(DEFAULT_CFLAGS) $(PTHREADFLAG)
 LDFLAGS = $(DEFAULT_LDFLAGS)
 LIBS = $(DEFAULT_LIBS)
 INCLUDE_BUILDDIR = $(top_builddir)/include
