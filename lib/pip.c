@@ -39,30 +39,18 @@
 //#define PIP_EXPLICT_EXIT
 //#define PIP_NO_MALLOPT
 
-#define PIP_DONOT_FREE
-
-#ifndef PIP_DONOT_FREE
 #define PIP_FREE(P)	free(P)
-#else
-#define PIP_FREE(P)
-#endif
 
 //#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
+//#define EVAL
+
 #include <pip.h>
 #include <pip_internal.h>
 
-//#define EVAL
-
 #ifdef EVAL
-
-inline double pip_gettime( void ) {
-  struct timeval tv;
-  gettimeofday( &tv, NULL );
-  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
-}
 
 #define ES(V,F)		\
   do { double __st=pip_gettime(); (F); (V) += pip_gettime()-__st; } while(0)
@@ -156,75 +144,75 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
-    if( opts & PIP_MODEL_PTHREAD &&
-	opts & PIP_MODEL_PROCESS ) RETURN( EINVAL );
-    if( opts & PIP_MODEL_PROCESS ) {
-      if( ( opts & PIP_MODEL_PROCESS_PRELOAD  ) == PIP_MODEL_PROCESS_PRELOAD &&
-	  ( opts & PIP_MODEL_PROCESS_PIPCLONE ) == PIP_MODEL_PROCESS_PIPCLONE){
+    if( opts & PIP_MODE_PTHREAD &&
+	opts & PIP_MODE_PROCESS ) RETURN( EINVAL );
+    if( opts & PIP_MODE_PROCESS ) {
+      if( ( opts & PIP_MODE_PROCESS_PRELOAD  ) == PIP_MODE_PROCESS_PRELOAD &&
+	  ( opts & PIP_MODE_PROCESS_PIPCLONE ) == PIP_MODE_PROCESS_PIPCLONE){
 	RETURN (EINVAL );
       }
     }
 
     if( opts != 0 ) {
-      if( ( opts & PIP_MODEL_PROCESS_PRELOAD ) == PIP_MODEL_PROCESS_PRELOAD
+      if( ( opts & PIP_MODE_PROCESS_PRELOAD ) == PIP_MODE_PROCESS_PRELOAD
 	  && getenv( "LD_PRELOAD" ) == NULL ) {
 	fprintf( stderr,
 		 "LD_PRELOAD environment variable must be specified\n" );
 	RETURN( EPERM );
       }
-      if( ( opts & PIP_MODEL_PROCESS_PIPCLONE ) == PIP_MODEL_PROCESS_PIPCLONE){
-	opts = PIP_MODEL_PROCESS_PIPCLONE;
+      if( ( opts & PIP_MODE_PROCESS_PIPCLONE ) == PIP_MODE_PROCESS_PIPCLONE){
+	opts = PIP_MODE_PROCESS_PIPCLONE;
       }
     } else {
-      char *env = getenv( PIP_ENV_MODEL );
+      char *env = getenv( PIP_ENV_MODE );
       if( env == NULL ) {
 	if( getenv( "LD_PRELOAD" ) == NULL ) {
-	  opts = PIP_MODEL_PTHREAD;
+	  opts = PIP_MODE_PTHREAD;
 	} else {
-	  opts = PIP_MODEL_PROCESS;
+	  opts = PIP_MODE_PROCESS;
 	}
-      } else if( strcasecmp( env, PIP_ENV_MODEL_THREAD  ) == 0 ||
-		 strcasecmp( env, PIP_ENV_MODEL_PTHREAD ) == 0 ) {
-	opts = PIP_MODEL_PTHREAD;
-      } else if( strcasecmp( env, PIP_ENV_MODEL_PROCESS ) == 0 ) {
+      } else if( strcasecmp( env, PIP_ENV_MODE_THREAD  ) == 0 ||
+		 strcasecmp( env, PIP_ENV_MODE_PTHREAD ) == 0 ) {
+	opts = PIP_MODE_PTHREAD;
+      } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
 	if( getenv( "LD_PRELOAD" ) != NULL ) {
-	  opts = PIP_MODEL_PROCESS_PRELOAD;
+	  opts = PIP_MODE_PROCESS_PRELOAD;
 	} else {
-	  opts = PIP_MODEL_PROCESS_PIPCLONE;
+	  opts = PIP_MODE_PROCESS_PIPCLONE;
 	}
-      } else if( strcasecmp( env, PIP_ENV_MODEL_PROCESS_PRELOAD  ) == 0 ) {
-	opts = PIP_MODEL_PROCESS_PRELOAD;
-      } else if( strcasecmp( env, PIP_ENV_MODEL_PROCESS_PIPCLONE ) == 0 ) {
-	opts = PIP_MODEL_PROCESS_PIPCLONE;
+      } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
+	opts = PIP_MODE_PROCESS_PRELOAD;
+      } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
+	opts = PIP_MODE_PROCESS_PIPCLONE;
       }
     }
 #ifndef HAVE_PIPCLONE
-    if( ( opts & PIP_MODEL_PROCESS ) == PIP_MODEL_PROCESS ) {
-      opts = PIP_MODEL_PROCESS_PRELOAD;
+    if( ( opts & PIP_MODE_PROCESS ) == PIP_MODE_PROCESS ) {
+      opts = PIP_MODE_PROCESS_PRELOAD;
     }
 #endif
-    if( ( opts & PIP_MODEL_PROCESS_PRELOAD ) == PIP_MODEL_PROCESS_PRELOAD ) {
+    if( ( opts & PIP_MODE_PROCESS_PRELOAD ) == PIP_MODE_PROCESS_PRELOAD ) {
       /* check if the __clone() systemcall wrapper exists or not */
       cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
       DBGF( "cloneinfo-%p", cloneinfo );
-      if( cloneinfo == NULL && !( opts & PIP_MODEL_PTHREAD ) ) {
+      if( cloneinfo == NULL && !( opts & PIP_MODE_PTHREAD ) ) {
 	/* no wrapper found */
 	if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
 	  fprintf( stderr,
-		   PIP_ERRMSG_TAG "process model is desired but "
+		   PIP_ERRMSG_TAG "process mode is equested but "
 		   "LD_PRELOAD environment variable is empty.\n",
 		   getpid() );
 	} else {
 	  fprintf( stderr,
 		   PIP_ERRMSG_TAG
-		   "process model is desired but LD_PRELOAD='%s'\n",
+		   "process mode is requested but LD_PRELOAD='%s'\n",
 		   getpid(),
 		   env );
 	}
 	RETURN( EPERM );
       }
     }
-    if( ( opts & PIP_MODEL_PROCESS_PIPCLONE ) == PIP_MODEL_PROCESS_PIPCLONE ) {
+    if( ( opts & PIP_MODE_PROCESS_PIPCLONE ) == PIP_MODE_PROCESS_PIPCLONE ) {
 #ifdef HAVE_PIPCLONE
       if( dlsym( "PIPCLONE_FUNCNAME" ) == NULL ) {
 	fprintf( stderr,
@@ -243,12 +231,12 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
 
 #ifdef DEBUG
-    if( ( opts & PIP_MODEL_PROCESS_PRELOAD ) == PIP_MODEL_PROCESS_PRELOAD ) {
-      DBGF( "(((( PROCESS MODEL )))) LD_PRELOAD=%s", getenv( "LD_PRELOAD" ) );
-    } else if((opts&PIP_MODEL_PROCESS_PIPCLONE)==PIP_MODEL_PROCESS_PIPCLONE ) {
-      DBGF( "(((( PROCESS MODEL : PIPCLONE ))))" );
+    if( ( opts & PIP_MODE_PROCESS_PRELOAD ) == PIP_MODE_PROCESS_PRELOAD ) {
+      DBGF( "(((( PROCESS MODE )))) LD_PRELOAD=%s", getenv( "LD_PRELOAD" ) );
+    } else if((opts&PIP_MODE_PROCESS_PIPCLONE)==PIP_MODE_PROCESS_PIPCLONE ) {
+      DBGF( "(((( PROCESS MODE : PIPCLONE ))))" );
     } else {
-      DBGF( "[[[[ PTHREAD MODEL ]]]] -------------------------" );
+      DBGF( "[[[[ PTHREAD MODE ]]]] -------------------------" );
     }
 #endif
 
@@ -271,12 +259,13 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       } else {
 	pipid = PIP_PIPID_ROOT;
 	pip_set_magic( pip_root );
-	pip_root->ntasks    = ntasks;
-	pip_root->thread    = pthread_self();
-	pip_root->cloneinfo = cloneinfo;
-	pip_root->opts      = opts;
-	pip_root->pid       = getpid();
-	pip_root->free      = (free_t) dlsym( RTLD_DEFAULT, "free");
+	pip_root->ntasks       = ntasks;
+	pip_root->thread       = pthread_self();
+	pip_root->cloneinfo    = cloneinfo;
+	pip_root->pip_root_env = env;
+	pip_root->opts         = opts;
+	pip_root->pid          = getpid();
+	pip_root->free         = (free_t) dlsym( RTLD_DEFAULT, "free");
 	if( rt_expp != NULL ) pip_root->export = *rt_expp;
 
 	for( i=0; i<ntasks; i++ ) {
@@ -287,7 +276,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_self = NULL;
     if( err ) {		/* undo */
       (void) unsetenv( PIP_ROOT_ENV );
-      if( pip_root != NULL ) free( pip_root );
+      if( pip_root != NULL ) PIP_FREE( pip_root );
       pip_root = NULL;
     }
   } else {
@@ -358,19 +347,34 @@ int pip_if_shared_sighand( int *flagp ) {
   RETURN( 0 );
 }
 
-static int pip_root_p( void ) {
-  return pip_self == NULL;
+static int pip_root_p_( void ) {
+  return pip_self = NULL;
+}
+
+static int pip_task_p_( void ) {
+  return pip_self != NULL;
+}
+
+static void *pip_get_dso_( void ) {
+  if( pip_self != NULL ) return pip_self->loaded;
+  return NULL;
+}
+
+int pip_get_pipid_( void ) {
+  int pipid;
+  if( pip_root == NULL ) {
+    pipid = PIP_PIPID_ANY;
+  } else if( pip_root_p_() ) {
+    pipid = PIP_PIPID_ROOT;
+  } else {
+    pipid = pip_self->pipid;
+  }
+  return pipid;
 }
 
 int pip_get_pipid( int *pipidp ) {
-  if( pipidp   == NULL ) RETURN( EINVAL );
-  if( pip_root == NULL ) return( EPERM  ); /* intentionally using return */
-
-  if( pip_root_p() ) {
-    *pipidp = PIP_PIPID_ROOT;
-  } else {
-    *pipidp = pip_self->pipid;
-  }
+  if( pipidp == NULL ) RETURN( EINVAL );
+  *pipidp = pip_get_pipid_();
   RETURN( 0 );
 }
 
@@ -384,7 +388,7 @@ int pip_get_ntasks( int *ntasksp ) {
 
 int pip_export( void *export ) {
   if( export             == NULL ) RETURN( EINVAL );
-  if( pip_root_p() ) {
+  if( pip_root_p_() ) {
     if( pip_root->export != NULL ) RETURN( EBUSY  );
     pip_root->export = export;
   } else {
@@ -403,7 +407,7 @@ static int pip_check_pipid( int *pipidp ) {
       pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
   if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
   if( pipid == PIP_PIPID_MYSELF ) {
-    if( pip_root_p() ) {
+    if( pip_root_p_() ) {
       *pipidp = PIP_PIPID_ROOT;
     } else {
       if( pip_root->tasks[*pipidp].pipid != *pipidp ) RETURN( ENOENT );
@@ -486,7 +490,7 @@ static char **pip_copy_env( char **envsrc ) {
   cc = asprintf( &rootenv, "%s=%p", PIP_ROOT_ENV, pip_root );
   if( cc == 0 ) return NULL;
   envdst = pip_copy_vec( rootenv, envsrc );
-  free( rootenv );
+  PIP_FREE( rootenv );
   return envdst;
 }
 
@@ -521,19 +525,6 @@ static void pip_close_on_exec( void ) {
 #ifdef PRINT_FDS
   pip_print_fds();
 #endif
-}
-
-static void pip_finalize_task( pip_task_t *task ) {
-  DBGF( "pipid=%d  argv=%p  envv=%p", task->pipid, task->argv, task->envv );
-  if( task->argv != NULL ) {
-    PIP_FREE( task->argv );
-    task->argv = NULL;
-  }
-  if( task->envv != NULL ) {
-    PIP_FREE( task->envv );
-    task->envv = NULL;
-  }
-  pip_init_task_struct( task );
 }
 
 static int pip_load_so( void **handlep, char *path ) {
@@ -633,7 +624,6 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
  error:
   if( err == 0 ) {
 #ifdef DEBUG
-    void pip_check_addr( char *tag, void *addr );
     pip_check_addr( "MAIN", main_func );
     pip_check_addr( "ENVP", envvp );
 #endif
@@ -731,7 +721,6 @@ static int pip_do_spawn( void *thargs )  {
   int err = 0;
 
   DBG;
-  PIP_FREE( args );
 
   if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
 
@@ -754,12 +743,7 @@ static int pip_do_spawn( void *thargs )  {
 
 #ifdef PIP_CLONE_AND_DLMOPEN
   ES( time_load_prog, ( err = pip_load_prog( prog, self ) ) );
-  PIP_FREE( prog );
-  if( err != 0 ) {
-    PIP_FREE( argv );
-    PIP_FREE( envv );
-    RETURN( err );
-  }
+  if( err != 0 ) RETURN( err );
 #endif
 
   /* calling hook, if any */
@@ -770,7 +754,6 @@ static int pip_do_spawn( void *thargs )  {
     volatile int	flag_exit;	/* must be volatile */
 
     for( argc=0; argv[argc]!=NULL; argc++ );
-    self->argv   = argv;
     *self->envvp = envv;	/* setting environment vars */
 
     flag_exit = 0;
@@ -856,12 +839,11 @@ static int pip_do_spawn( void *thargs )  {
 	     err );
     self->retval = err;
   }
-  pip_finalize_task( self );
 
 #ifdef PIP_EXPLICIT_EXIT
-  if( pip_if_pthread_() ) {	/* thread model */
+  if( pip_if_pthread_() ) {	/* thread mode */
     pthread_exit( NULL );
-  } else {			/* process model */
+  } else {			/* process mode */
     exit( self->retval );
   }
 #endif
@@ -871,7 +853,7 @@ static int pip_do_spawn( void *thargs )  {
 
 static void pip_clone_wrap_begin( void ) {
   if( pip_root->cloneinfo != NULL &&
-      pip_root->opts & PIP_MODEL_PROCESS_PRELOAD ) {
+      pip_root->opts & PIP_MODE_PROCESS_PRELOAD ) {
     DBGF( "cloneinfo=%p", pip_root->cloneinfo );
     pip_root->cloneinfo->flag_wrap = 1;
   }
@@ -1019,12 +1001,13 @@ int pip_spawn( char *prog,
 
   pip_clone_wrap_begin();   /* tell clone wrapper (preload), if any */
   /* FIXME: there is a race condition between the above and below */
-  if( ( pip_root->opts & PIP_MODEL_PROCESS_PIPCLONE ) ==
-      PIP_MODEL_PROCESS_PIPCLONE ) {
+  if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
+      PIP_MODE_PROCESS_PIPCLONE ) {
 #ifdef HAVE_PIPCLONE
     /* CALL PIPCLONE FUNC */
 #endif
   } else {
+    task->args = args;
     err = pthread_create( &task->thread,
 			  &attr,
 			  (void*(*)(void*)) pip_do_spawn,
@@ -1035,8 +1018,8 @@ int pip_spawn( char *prog,
   if( err == 0 ) {
     *pipidp = pipid;
 #ifdef HAVE_PIPCLONE
-    if( ( pip_root->opts & PIP_MODEL_PROCESS_PIPCLONE ) ==
-	PIP_MODEL_PROCESS_PIPCLONE ) {
+    if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
+	PIP_MODE_PROCESS_PIPCLONE ) {
       task->pid = XXXXX;
     } else
 #endif
@@ -1049,14 +1032,13 @@ int pip_spawn( char *prog,
       pip_root->cloneinfo->pid_clone  = 0;
     }
   } else {
-
   error:			/* undo */
     DBGF( "err=%d", err );
-    if( task != NULL ) pip_init_task_struct( task );
     PIP_FREE( args->prog );
     PIP_FREE( args->argv );
     PIP_FREE( args->envv );
     PIP_FREE( args );
+    if( task != NULL ) pip_init_task_struct( task );
   }
   DBGF( "<< pip_spawn(pipid=%d)", *pipidp );
   RETURN( err );
@@ -1068,7 +1050,7 @@ int pip_fin( void ) {
   int err = 0;
 
   fflush( NULL );
-  if( pip_root_p() ) {
+  if( pip_root_p_() ) {
     ntasks = pip_root->ntasks;
     for( i=0; i<ntasks; i++ ) {
       if( pip_root->tasks[i].pipid != PIP_PIPID_NONE ) {
@@ -1078,9 +1060,12 @@ int pip_fin( void ) {
       }
     }
     if( err == 0 ) {
+      (void) unsetenv( PIP_ROOT_ENV );
+      if( pip_root->pip_root_env != NULL ) {
+	free( pip_root->pip_root_env );
+      }
       memset( pip_root, 0, pip_root->size );
       free( pip_root );
-      (void) unsetenv( PIP_ROOT_ENV );
     }
   }
   pip_root = NULL;
@@ -1137,16 +1122,16 @@ int pip_kill( int pipid, int signal ) {
 }
 
 int pip_exit( int retval ) {
-  if( pip_root == NULL || pip_root_p() ) {
+  if( !pip_root_p_() && !pip_task_p_() ) {
     /* since we must replace exit() with pip_exit(), pip_exit() */
     /* must be able to use even if it is NOT a PIP environment. */
     exit( retval );
-  } else if( pip_if_pthread_() ) {	/* thread model */
+  } else if( pip_if_pthread_() ) {	/* thread mode */
     pip_self->retval = retval;
     DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_self->pipid, retval );
     (void) setcontext( pip_self->ctx );
     DBGF( "[PIPID=%d] pip_exit() ????", pip_self->pipid );
-  } else {				/* process model */
+  } else {				/* process mode */
     exit( retval );
   }
   /* never reach here */
@@ -1157,7 +1142,7 @@ int pip_exit( int retval ) {
  * The following functions must be called at root process
  */
 
-static void pip_finalize_thread( pip_task_t *task, int *retvalp ) {
+static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
   DBGF( "pipid=%d", task->pipid );
 
   /* dlclose() must only be called from the root process since */
@@ -1169,14 +1154,18 @@ static void pip_finalize_thread( pip_task_t *task, int *retvalp ) {
   if( task->loaded != NULL && dlclose( task->loaded ) != 0 ) {
     DBGF( "dlclose(): %s", dlerror() );
   }
-  task->pipid  = PIP_PIPID_NONE;
-  task->pid    = 0;
-  task->retval = 0;
-  task->loaded = NULL;
-  task->thread = pip_root->thread;
+
+  if( task->args != NULL ) {
+    if( task->args->prog != NULL ) PIP_FREE( task->args->prog );
+    if( task->args->argv != NULL ) PIP_FREE( task->args->argv );
+    if( task->args->envv != NULL ) PIP_FREE( task->args->envv );
+    PIP_FREE( task->args );
+  }
+  pip_init_task_struct( task );
   pip_root->ntasks_curr --;
 }
 
+#ifdef PIP_PTHREAD
 static int pip_check_join_arg( int pipid, pip_task_t **taskp ) {
   int err;
 
@@ -1208,7 +1197,7 @@ int pip_join( int pipid ) {
   if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
     if( !pip_if_pthread_() ) RETURN( ENOSYS );
     err = pthread_join( task->thread, NULL );
-    if( !err ) pip_finalize_thread( task, NULL );
+    if( !err ) pip_finalize_task( task, NULL );
   }
   RETURN( err );
 }
@@ -1220,7 +1209,7 @@ int pip_tryjoin( int pipid ) {
   if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
     if( !pip_if_pthread_() ) RETURN( ENOSYS );
     err = pthread_tryjoin_np( task->thread, NULL );
-    if( !err ) pip_finalize_thread( task, NULL );
+    if( !err ) pip_finalize_task( task, NULL );
   }
   RETURN( err );
 }
@@ -1232,10 +1221,11 @@ int pip_timedjoin( int pipid, struct timespec *time ) {
   if( ( err = pip_check_join_arg( pipid, &task ) ) == 0 ) {
     if( !pip_if_pthread_() ) RETURN( ENOSYS );
     err = pthread_timedjoin_np( task->thread, NULL, time );
-    if( !err ) pip_finalize_thread( task, NULL );
+    if( !err ) pip_finalize_task( task, NULL );
   }
   RETURN( err );
 }
+#endif
 
 int pip_wait( int pipid, int *retvalp ) {
   pip_task_t *task;
@@ -1244,13 +1234,13 @@ int pip_wait( int pipid, int *retvalp ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
   task = &pip_root->tasks[pipid];
-  if( task == pip_self ) RETURN (EINVAL );
+  if( task == pip_self ) RETURN( EINVAL );
 
-  if( pip_if_pthread_() ) { /* thread model */
+  if( pip_if_pthread_() ) { /* thread mode */
     err = pthread_join( task->thread, NULL );
     DBGF( "pthread_join()=%d", err );
 
-  } else { 	/* process model */
+  } else { 	/* process mode */
     int status;
     pid_t pid;
     DBG;
@@ -1266,11 +1256,12 @@ int pip_wait( int pipid, int *retvalp ) {
     }
     DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
-  if( !err ) pip_finalize_thread( task, retvalp );
+  if( !err ) pip_finalize_task( task, retvalp );
   RETURN( err );
 }
 
 int pip_trywait( int pipid, int *retvalp ) {
+
   pip_task_t *task;
   int err;
 
@@ -1279,10 +1270,10 @@ int pip_trywait( int pipid, int *retvalp ) {
   task = &pip_root->tasks[pipid];
   if( task == pip_self ) RETURN (EINVAL );
 
-  if( pip_if_pthread_() ) { /* thread model */
+  if( pip_if_pthread_() ) { /* thread mode */
     err = pthread_tryjoin_np( task->thread, NULL );
     DBGF( "pthread_tryjoin_np()=%d", err );
-  } else {			/* process model */
+  } else {			/* process mode */
     int status = 0;
     pid_t pid;
     DBG;
@@ -1298,81 +1289,12 @@ int pip_trywait( int pipid, int *retvalp ) {
     }
     DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
-  if( !err ) pip_finalize_thread( task, retvalp );
+  if( !err ) pip_finalize_task( task, retvalp );
   RETURN( err );
 }
 
 pip_clone_t *pip_get_cloneinfo( void ) {
   return pip_root->cloneinfo;
-}
-
-/*** some utility functions ***/
-
-#include <link.h>
-
-int pip_print_loaded_solibs( FILE *file ) {
-  struct link_map *map;
-  void *handle = NULL;
-  char idstr[64];
-  char *fname;
-
-  /* pip_init() must be called in advance */
-  if( pip_root == NULL ) RETURN( EPERM );
-
-  if( pip_root_p() ) {
-    handle = dlopen( NULL, RTLD_NOW );
-    strcpy( idstr, "ROOT" );
-  } else if( pip_self != NULL ) {
-    handle = pip_self->loaded;
-    sprintf( idstr, "%d", pip_self->pipid );
-  }
-  if( handle == NULL ) {
-    fprintf( file, "[%s] (no solibs loaded)\n", idstr );
-  } else {
-    map = (struct link_map*) handle;
-    for( ; map!=NULL; map=map->l_next ) {
-      if( *map->l_name == '\0' ) {
-	fname = "(noname)";
-      } else {
-	fname = map->l_name;
-      }
-      fprintf( file, "[PIP:%s] %s at %p\n", idstr, fname, (void*)map->l_addr );
-    }
-  }
-  return 0;
-}
-
-#define LINSZ	(1024)
-void pip_check_addr( char *tag, void *addr ) {
-  FILE *maps = fopen( "/proc/self/maps", "r" );
-  char *line = NULL;
-  size_t sz  = LINSZ;
-  int retval;
-
-  while( maps != NULL ) {
-    void *start, *end;
-
-    if( ( retval = getline( &line, &sz, maps ) ) < 0 ) {
-      fprintf( stderr, "getline()=%d\n", errno );
-      break;
-    } else if( retval == 0 ) {
-      continue;
-    }
-    if( sscanf( line, "%p-%p", &start, &end ) == 2 ) {
-      if( (intptr_t) addr >= (intptr_t) start &&
-	  (intptr_t) addr <  (intptr_t) end ) {
-	fprintf( stderr, ">>%s>> %p: %s", tag, addr, line );
-	goto found;
-      } else {
-	//fprintf( stderr, ">>%s>> %p: %p--%p\n", tag, addr, start, end );
-      }
-    }
-  }
-  fprintf( stderr, ">>%s>> (not found)\n", tag );
- found:
-  fclose( maps );
-  if( line != NULL ) free( line );
-  return;
 }
 
 /*** The following malloc/free functions are just for functional test    ***/
@@ -1409,5 +1331,39 @@ void pip_free( void *ptr ) {
     fprintf( stderr, "No free function (pipid=%d)\n", pipid );
   } else {
     free_func( ptr );
+  }
+}
+
+void pip_print_loaded_solibs( FILE *file ) {
+  static void *root_handle = NULL;
+  struct link_map *map;
+  void *handle = NULL;
+  char idstr[64];
+  char *fname;
+
+  /* pip_init() must be called in advance */
+  if( pip_root != NULL ) {
+    if( pip_root_p_() ) {
+      if( root_handle == NULL ) root_handle = dlopen( NULL, RTLD_NOW );
+      handle = root_handle;
+      strcpy( idstr, "ROOT" );
+    } else {
+      handle = pip_get_dso_();
+      sprintf( idstr, "%d", pip_self->pipid );
+    }
+  }
+  if( handle == NULL ) {
+    fprintf( file, "[%s] (no solibs loaded)\n", idstr );
+  } else {
+    if( file == NULL ) file = stderr;
+    map = (struct link_map*) handle;
+    for( ; map!=NULL; map=map->l_next ) {
+      if( *map->l_name == '\0' ) {
+	fname = "(noname)";
+      } else {
+	fname = map->l_name;
+      }
+      fprintf( file, "[PIP:%s] %s at %p\n", idstr, fname, (void*)map->l_addr );
+    }
   }
 }

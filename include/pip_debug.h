@@ -14,10 +14,6 @@
 
 /**** debug macros ****/
 
-#ifndef DEBUG
-//#define DEBUG
-#endif
-
 #ifdef DEBUG
 
 #ifndef _GNU_SOURCE
@@ -52,104 +48,8 @@
 
 #endif
 
-#include <fcntl.h>
-#include <unistd.h>
-
-#define PIP_DEBUG_BUFSZ		(4096)
-
-inline static void pip_print_maps( void ) __attribute__ ((unused));
-inline static void pip_print_maps( void ) {
-  int fd = open( "/proc/self/maps", O_RDONLY );
-  char buf[PIP_DEBUG_BUFSZ];
-
-  while( 1 ) {
-    ssize_t rc, wc;
-    char *p;
-
-    if( ( rc = read( fd, buf, PIP_DEBUG_BUFSZ ) ) <= 0 ) break;
-    p = buf;
-    do {
-      if( ( wc = write( 1, p, rc ) ) < 0 ) break; /* STDOUT */
-      p  += wc;
-      rc -= wc;
-    } while( rc > 0 );
-  }
-  close( fd );
-}
-
-#include <sys/types.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <string.h>
-
-inline static void pip_print_fd( int fd ) {
-#ifdef DEBUG
-  char fdpath[512];
-  char fdname[256];
-  ssize_t sz;
-  DBG_PRTBUF;
-
-  sprintf( fdpath, "/proc/self/fd/%d", fd );
-  if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
-    fdname[sz] = '\0';
-    DBG_PRNT( "%d -> %s", fd, fdname );
-    DBG_OUTPUT;
-  }
-#endif
-}
-
-inline static void pip_print_fds( void ) {
-#ifdef DEBUG
-  DIR *dir = opendir( "/proc/self/fd" );
-  struct dirent *de;
-  char fdpath[512];
-  char fdname[256];
-  ssize_t sz;
-  DBG_PRTBUF;
-
-  if( dir != NULL ) {
-    int   fd = dirfd( dir );
-
-    while( ( de = readdir( dir ) ) != NULL ) {
-      sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
-      if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
-	fdname[sz] = '\0';
-	if( atoi( de->d_name ) != fd ) {
-	  DBG_PRNT( "%s -> %s", fdpath, fdname );
-	} else {
-	  DBG_PRNT( "%s -> %s  opendir(\"/proc/self/fd\")", fdpath, fdname );
-	}
-	DBG_OUTPUT;
-      }
-    }
-    closedir( dir );
-  }
-#endif
-}
-
-#if defined(__x86_64__)
-
-#include <asm/prctl.h>
-#include <sys/prctl.h>
-#include <errno.h>
-
-inline static void pip_print_fs_segreg( void ) {
-  int arch_prctl(int, unsigned long*);
-  unsigned long fsreg;
-  if( arch_prctl( ARCH_GET_FS, &fsreg ) == 0 ) {
-    fprintf( stderr, "FS REGISTER: 0x%lx\n", fsreg );
-  } else {
-    fprintf( stderr, "FS REGISTER: (unable to get:%d)\n", errno );
-  }
-}
-
-#else /* !defined(__x86_64__) */
-inline static void pip_print_fs_segreg( void ) {}
-#endif /* !defined(__x86_64__) */
-
-#include <ctype.h>
-
 #ifdef DO_CHECK_CTYPE
+#include <ctype.h>
 #define CHECK_CTYPE					\
   do{ DBGF( "__ctype_b_loc()=%p", __ctype_b_loc() );			\
   DBGF( "__ctype_toupper_loc()=%p", __ctype_toupper_loc() );		\
