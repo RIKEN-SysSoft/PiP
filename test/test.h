@@ -339,48 +339,6 @@ inline static int print_fds( FILE *file ) {
   return err;
 }
 
-#define NOTWORKING
-#ifdef NOTWORKING
-#include <pip_internal.h>
-
-inline static void attachme( void ) {
-  char *env;
-
-  if( ( env = getenv( PIP_ROOT_ENV ) ) == NULL ) {
-    fprintf( stderr, "attachme: unable to attach\n" );
-  } else {
-    pid_t pid;
-    pid_t pid_target = getpid();
-    intptr_t	ptr = (intptr_t) strtoll( env, NULL, 16 );
-    pip_root_t *pip_root = (pip_root_t*) ptr;
-    int pipid;
-    int err;
-
-    if( ( err = pip_get_pipid( &pipid ) ) != 0 ) {
-    } else if( ( pid = fork() ) == 0 ) {
-      char *argv[10];
-      char gdbstr[256];
-      int i = 0;
-
-      sprintf( gdbstr,
-	       "gdb %s %d",
-	       pip_root->tasks[pipid].argv[0],
-	       pid_target );
-
-      argv[i++] = "sh";
-      argv[i++] = "-c";
-      argv[i++] = gdbstr;
-      argv[i++] = NULL;
-      execvp( argv[0], argv );
-    }
-    wait( NULL );
-  }
-}
-#else
-  inline static void attachme( void ) { return; }
-#endif
-
-
 inline static void set_sigint_watcher( void ) {
   void sigint_watcher( int sig, siginfo_t *siginfo, void *context ) {
 #ifdef REG_RIP

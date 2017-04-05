@@ -77,6 +77,10 @@ inline static void pip_memory_barrier(void) {
 }
 #endif
 
+#ifndef PIP_PRINT_FSREG
+inline static void pip_print_fs_segreg( void ) {}
+#endif
+
 #endif
 
 #endif

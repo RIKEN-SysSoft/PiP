@@ -28,7 +28,7 @@
 #include <sys/wait.h>
 #include <stdio.h>
 
-#include <pip_debug.h>
+#include <pip.h>
 
 int main() {
   pip_print_maps();

@@ -40,7 +40,7 @@
  * accessed. The PiP library supports the functions to export and
  * import the memory region to be accessible.
  *
- * \section execution-model Execution model
+ * \section execution-mode Execution mode
  *
  * There are several PiP implementations which can be selected at the
  * runtime. These implementations can be categorized into two
@@ -49,18 +49,18 @@
  * - \c Pthread, and
  * - \c Process.
  *
- * In the pthread model, although each PiP task has its own variables
+ * In the pthread mode, although each PiP task has its own variables
  * unlike thread, PiP task behaves more like Pthread, having no PID,
  * having the same file descriptor space, having the same signal
  * delivery semantics as Pthread does, and so on.
  *
- * In the process model, PiP task beahve more like a process, having
+ * In the process mode, PiP task beahve more like a process, having
  * a PID, having an independent file descriptor space, having the same
  * signal delivery semantics as Linux process does, and so on.
  *
- * When the \c PIP_MODEL environment variable set to \"thread\" then
- * the PiP library runs based on the pthread model, and it is set to
- * \"process\" then it runs with the process model.
+ * When the \c PIP_MODE environment variable set to \"thread\" then
+ * the PiP library runs based on the pthread mode, and it is set to
+ * \"process\" then it runs with the process mode.
  *
  * \section limitation Limitation
  *
@@ -96,18 +96,18 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #define PIP_OPTS_ANY			(0x0)
-#define PIP_MODEL_PTHREAD		(0x100)
-#define PIP_MODEL_PROCESS		(0x200)
-/* the following two modes are a submode of PIP_MODEL_PROCESS */
-#define PIP_MODEL_PROCESS_PRELOAD	(0x210)
-#define PIP_MODEL_PROCESS_PIPCLONE	(0x220)
+#define PIP_MODE_PTHREAD		(0x100)
+#define PIP_MODE_PROCESS		(0x200)
+/* the following two modes are a submode of PIP_MODE_PROCESS */
+#define PIP_MODE_PROCESS_PRELOAD	(0x210)
+#define PIP_MODE_PROCESS_PIPCLONE	(0x220)
 
-#define PIP_ENV_MODEL			"PIP_MODEL"
-#define PIP_ENV_MODEL_THREAD		"thread"
-#define PIP_ENV_MODEL_PTHREAD		"pthread"
-#define PIP_ENV_MODEL_PROCESS		"process"
-#define PIP_ENV_MODEL_PROCESS_PRELOAD	"process:preload"
-#define PIP_ENV_MODEL_PROCESS_PIPCLONE	"process:pipclone"
+#define PIP_ENV_MODE			"PIP_MODE"
+#define PIP_ENV_MODE_THREAD		"thread"
+#define PIP_ENV_MODE_PTHREAD		"pthread"
+#define PIP_ENV_MODE_PROCESS		"process"
+#define PIP_ENV_MODE_PROCESS_PRELOAD	"process:preload"
+#define PIP_ENV_MODE_PROCESS_PIPCLONE	"process:pipclone"
 
 #define PIP_ENV_STACKSZ		"PIP_STACKSZ"
 
@@ -122,8 +122,16 @@
 typedef int(*pip_spawnhook_t)(void*);
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <pthread.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <string.h>
+#include <link.h>
+#include <errno.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -200,7 +208,7 @@ extern "C" {
    * \param[in] before Just before the executing of the spanwed PiP
    *  task, this function is called so that file descriptors inherited
    *  from the PiP root, for example, can deal with. This is only
-   *  effective with the PiP process model. This function is called
+   *  effective with the PiP process mode. This function is called
    *  with the argument \a hookarg described below.
    * \param[in] after This function is called when the PiP task
    *  terminates for the cleanup puropose. This function is called
@@ -373,13 +381,8 @@ extern "C" {
   int pip_if_shared_fd( int *flagp );
   int pip_if_shared_sighand( int *flagp );
 
-  int pip_join( int pipid );
-  int pip_tryjoin( int pipid );
-  int pip_timedjoin( int pipid, struct timespec *time );
-
   int pip_get_pid( int pipid, pid_t *pidp );
 
-  int pip_print_loaded_solibs( FILE *file );
   char **pip_copy_vec( char *addition, char **vecsrc );
 
 #endif /* PIP_INTERNAL_FUNCS */
@@ -395,4 +398,117 @@ extern "C" {
 }
 #endif
 
-#endif
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+/********************************************************/
+/* The llowing functions are just for utility for debug */
+/********************************************************/
+
+#define PIP_DEBUG_BUFSZ		(4096)
+
+inline static void pip_print_maps( void ) __attribute__ ((unused));
+inline static void pip_print_maps( void ) {
+  int fd = open( "/proc/self/maps", O_RDONLY );
+  char buf[PIP_DEBUG_BUFSZ];
+
+  while( 1 ) {
+    ssize_t rc, wc;
+    char *p;
+
+    if( ( rc = read( fd, buf, PIP_DEBUG_BUFSZ ) ) <= 0 ) break;
+    p = buf;
+    do {
+      if( ( wc = write( 1, p, rc ) ) < 0 ) break; /* STDOUT */
+      p  += wc;
+      rc -= wc;
+    } while( rc > 0 );
+  }
+  close( fd );
+}
+
+#define PIP_MTAG	"PiP:"
+
+inline static void pip_print_fd( int ) __attribute__ ((unused));
+inline static void pip_print_fd( int fd ) {
+  char fdpath[512];
+  char fdname[256];
+  ssize_t sz;
+
+  sprintf( fdpath, "/proc/self/fd/%d", fd );
+  if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+    fdname[sz] = '\0';
+    fprintf( stderr, "%s %d -> %s", PIP_MTAG, fd, fdname );
+  }
+}
+
+inline static void pip_print_fds( void ) __attribute__ ((unused));
+inline static void pip_print_fds( void ) {
+  DIR *dir = opendir( "/proc/self/fd" );
+  struct dirent *de;
+  char fdpath[512];
+  char fdname[256];
+  ssize_t sz;
+
+  if( dir != NULL ) {
+    int   fd = dirfd( dir );
+
+    while( ( de = readdir( dir ) ) != NULL ) {
+      sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
+      if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+	fdname[sz] = '\0';
+	if( atoi( de->d_name ) != fd ) {
+	  fprintf( stderr, "%s %s -> %s", PIP_MTAG, fdpath, fdname );
+	} else {
+	  fprintf( stderr, "%s %s -> %s  opendir(\"/proc/self/fd\")",
+		   PIP_MTAG, fdpath, fdname );
+	}
+      }
+    }
+    closedir( dir );
+  }
+}
+
+#define LINSZ	(1024)
+inline static void pip_check_addr( char*, void* ) __attribute__ ((unused));
+inline static void pip_check_addr( char *tag, void *addr ) {
+  FILE *maps = fopen( "/proc/self/maps", "r" );
+  char *line = NULL;
+  size_t sz  = LINSZ;
+  int retval;
+
+  if( tag == NULL ) tag = PIP_MTAG;
+  while( maps != NULL ) {
+    void *start, *end;
+
+    if( ( retval = getline( &line, &sz, maps ) ) < 0 ) {
+      fprintf( stderr, "getline()=%d\n", errno );
+      break;
+    } else if( retval == 0 ) {
+      continue;
+    }
+    if( sscanf( line, "%p-%p", &start, &end ) == 2 ) {
+      if( (intptr_t) addr >= (intptr_t) start &&
+	  (intptr_t) addr <  (intptr_t) end ) {
+	fprintf( stderr, ">>%s>> %p: %s", tag, addr, line );
+	goto found;
+      } else {
+	//fprintf( stderr, ">>%s>> %p: %p--%p\n", tag, addr, start, end );
+      }
+    }
+  }
+  fprintf( stderr, ">>%s>> (not found)\n", tag );
+ found:
+  fclose( maps );
+  if( line != NULL ) free( line );
+  return;
+}
+
+inline static double pip_gettime( void ) __attribute__ ((unused));
+inline static double pip_gettime( void ) {
+  struct timeval tv;
+  gettimeofday( &tv, NULL );
+  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
+}
+
+#endif	/* DOXYGEN_SHOULD_SKIP_THIS */
+#endif	/* _pip_h_ */

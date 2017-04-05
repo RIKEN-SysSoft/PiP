@@ -60,6 +60,21 @@ inline static void pip_memory_barrier(void) {
 }
 #define PIP_MEMORY_BARRIER
 
+#include <asm/prctl.h>
+#include <sys/prctl.h>
+#include <errno.h>
+
+inline static void pip_print_fs_segreg( void ) {
+  int arch_prctl(int, unsigned long*);
+  unsigned long fsreg;
+  if( arch_prctl( ARCH_GET_FS, &fsreg ) == 0 ) {
+    fprintf( stderr, "FS REGISTER: 0x%lx\n", fsreg );
+  } else {
+    fprintf( stderr, "FS REGISTER: (unable to get:%d)\n", errno );
+  }
+}
+#define PIP_PRINT_FSREG
+
 #endif
 
 #endif
