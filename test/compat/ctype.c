@@ -9,9 +9,10 @@
 
 #define PIP_INTERNAL_FUNCS
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 #include <string.h>
+#include <ctype.h>
 
 char *to_upper( char *lower ) {
   char *upper = strdup( lower );

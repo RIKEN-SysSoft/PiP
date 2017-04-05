@@ -11,7 +11,6 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/time.h>
 #include <malloc.h>
 #include <dlfcn.h>
 #include <dirent.h>
@@ -254,28 +253,23 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( asprintf( &env, "%s=%p", PIP_ROOT_ENV, pip_root ) == 0 ) {
       err = ENOMEM;
     } else {
-      if( putenv( env ) != 0 ) {
-	err = errno;
-      } else {
-	pipid = PIP_PIPID_ROOT;
-	pip_set_magic( pip_root );
-	pip_root->ntasks       = ntasks;
-	pip_root->thread       = pthread_self();
-	pip_root->cloneinfo    = cloneinfo;
-	pip_root->pip_root_env = env;
-	pip_root->opts         = opts;
-	pip_root->pid          = getpid();
-	pip_root->free         = (free_t) dlsym( RTLD_DEFAULT, "free");
-	if( rt_expp != NULL ) pip_root->export = *rt_expp;
+      pipid = PIP_PIPID_ROOT;
+      pip_set_magic( pip_root );
+      pip_root->ntasks       = ntasks;
+      pip_root->thread       = pthread_self();
+      pip_root->cloneinfo    = cloneinfo;
+      pip_root->pip_root_env = env;
+      pip_root->opts         = opts;
+      pip_root->pid          = getpid();
+      pip_root->free         = (free_t) dlsym( RTLD_DEFAULT, "free");
+      if( rt_expp != NULL ) pip_root->export = *rt_expp;
 
-	for( i=0; i<ntasks; i++ ) {
-	  pip_init_task_struct( &pip_root->tasks[i] );
-	}
+      for( i=0; i<ntasks; i++ ) {
+	pip_init_task_struct( &pip_root->tasks[i] );
       }
     }
     pip_self = NULL;
     if( err ) {		/* undo */
-      (void) unsetenv( PIP_ROOT_ENV );
       if( pip_root != NULL ) PIP_FREE( pip_root );
       pip_root = NULL;
     }
@@ -348,7 +342,7 @@ int pip_if_shared_sighand( int *flagp ) {
 }
 
 static int pip_root_p_( void ) {
-  return pip_self = NULL;
+  return pip_self == NULL;
 }
 
 static int pip_task_p_( void ) {
@@ -1060,7 +1054,6 @@ int pip_fin( void ) {
       }
     }
     if( err == 0 ) {
-      (void) unsetenv( PIP_ROOT_ENV );
       if( pip_root->pip_root_env != NULL ) {
 	free( pip_root->pip_root_env );
       }

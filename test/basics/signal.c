@@ -52,7 +52,7 @@ int main( int argc, char **argv ) {
 
   ntasks = 1;
   exp = (void*) &flag;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
 
     watch_anysignal();

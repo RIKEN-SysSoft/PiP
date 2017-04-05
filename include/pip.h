@@ -124,13 +124,14 @@ typedef int(*pip_spawnhook_t)(void*);
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <link.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <link.h>
+#include <sys/time.h>
 #include <errno.h>
 
 #ifdef __cplusplus
@@ -502,6 +503,8 @@ inline static void pip_check_addr( char *tag, void *addr ) {
   if( line != NULL ) free( line );
   return;
 }
+
+void pip_print_loaded_solibs( FILE *file );
 
 inline static double pip_gettime( void ) __attribute__ ((unused));
 inline static double pip_gettime( void ) {

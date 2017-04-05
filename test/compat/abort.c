@@ -15,7 +15,7 @@ int main( int argc, char **argv ) {
   int ntasks;
 
   ntasks = 1;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     int status = 0;
 

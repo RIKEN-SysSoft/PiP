@@ -83,14 +83,14 @@ int main( int argc, char **argv ) {
     }
     ntasks = i;
 
-    TESTINT( pip_print_loaded_solibs( stderr ) );
+    pip_print_loaded_solibs( stderr );
     for( i=0; i<ntasks; i++ ) {
       TESTINT( pip_wait( i, NULL ) );
     }
 
   } else {
     fprintf( stderr, "<%d> Hello, I am just fine !!\n", pipid );
-    TESTINT( pip_print_loaded_solibs( stderr ) );
+    pip_print_loaded_solibs( stderr );
   }
   TESTINT( pip_fin() );
   return 0;

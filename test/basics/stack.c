@@ -30,7 +30,7 @@ int main( int argc, char **argv ) {
   int err;
 
   ntasks = NTASKS;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODEL_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<NTASKS; i++ ) {
       pipid = i;
