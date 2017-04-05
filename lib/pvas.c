@@ -19,7 +19,7 @@ int pvas_create( pvas_common_info_t info[], int n, int *pvd ) {
   int err;
 
   if( info != NULL ) return EINVAL;
-  err = pip_init( NULL, &ntasks, NULL, PIP_MODEL_PROCESS );
+  err = pip_init( NULL, &ntasks, NULL, 0 );
   if( !err ) {
     *pvd = 0;
   }
@@ -66,7 +66,7 @@ int pvas_get_pvid( int *pvid ) {
   int ntasks = PIP_NTASKS_MAX;
   int err;
 
-  err = pip_init( NULL, &ntasks, NULL, PIP_MODEL_PROCESS );
+  err = pip_init( NULL, &ntasks, NULL, 0 );
   if( !err || err == EBUSY ) {
     return pip_get_pipid( pvid );
   }
