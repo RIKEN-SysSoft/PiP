@@ -13,14 +13,24 @@
 #include <test.h>
 #include <pip_internal.h>
 
-pip_clone_t *pip_get_cloneinfo( void );
+pip_clone_t *pip_get_cloneinfo_( void );
 
 void print_stack( int pipid ) {
-  int stack;
-  pip_clone_t *info = pip_get_cloneinfo();
-  fprintf( stderr, "[%d] clone-stack=%p  stack=%p  %d\n",
-	   pipid, info->stack, &stack,
-	   (int) (((intptr_t) info->stack) - ((intptr_t)&stack)) );
+  pip_clone_t *info = pip_get_cloneinfo_();
+  if( info != NULL ) {
+    int stack;
+    fprintf( stderr, "[%d] clone-stack=%p  stack=%p  %d\n",
+	     pipid, info->stack, &stack,
+	     (int) (((intptr_t) info->stack) - ((intptr_t)&stack)) );
+  } else {
+    int mode;
+    TESTINT( pip_get_mode( &mode ) );
+    if( mode & PIP_MODE_PTHREAD ) {
+      fprintf( stderr, "[%d] PTHREAD execution mode\n", pipid );
+    } else {
+      fprintf( stderr, "[%d] Unable to get stack address\n", pipid );
+    }
+  }
 }
 
 int main( int argc, char **argv ) {
