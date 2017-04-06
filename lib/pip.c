@@ -63,6 +63,15 @@ double time_load_prog = 0.0;
 static pip_root_t	*pip_root = NULL;
 static pip_task_t	*pip_self = NULL;
 
+static int (*pip_clone_mostly_pthread_ptr) (
+	pthread_t *newthread,
+	int clone_flags,
+	int core_no,
+	size_t stack_size,
+	void *(*start_routine) (void *),
+	void *arg,
+	pid_t *pidp) = NULL;
+
 static int pip_page_alloc( size_t sz, void **allocp ) {
   int pgsz = sysconf( _SC_PAGESIZE );
   if( posix_memalign( allocp, (size_t) pgsz, sz ) != 0 ) RETURN( errno );
@@ -182,11 +191,15 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	opts = PIP_MODE_PROCESS_PIPCLONE;
       }
     }
-#ifndef HAVE_PIPCLONE
-    if( ( opts & PIP_MODE_PROCESS ) == PIP_MODE_PROCESS ) {
-      opts = PIP_MODE_PROCESS_PRELOAD;
+    if( ( opts & PIP_MODE_PROCESS ) == PIP_MODE_PROCESS &&
+	( opts & PIP_MODE_PROCESS_PRELOAD  ) != PIP_MODE_PROCESS_PRELOAD &&
+	( opts & PIP_MODE_PROCESS_PIPCLONE ) != PIP_MODE_PROCESS_PIPCLONE) {
+      if( getenv( "LD_PRELOAD" ) != NULL ) {
+	opts = PIP_MODE_PROCESS_PRELOAD;
+      } else {
+	opts = PIP_MODE_PROCESS_PIPCLONE;
+      }
     }
-#endif
     if( ( opts & PIP_MODE_PROCESS_PRELOAD ) == PIP_MODE_PROCESS_PRELOAD ) {
       /* check if the __clone() systemcall wrapper exists or not */
       cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
@@ -209,21 +222,21 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       }
     }
     if( ( opts & PIP_MODE_PROCESS_PIPCLONE ) == PIP_MODE_PROCESS_PIPCLONE ) {
-#ifdef HAVE_PIPCLONE
-      if( dlsym( "PIPCLONE_FUNCNAME" ) == NULL ) {
-	fprintf( stderr,
-		 PIP_ERRMSG_TAG
-		 "no PIPCLONE_FUNCNAME found\n",
-		 getpid() );
-	RETURN( EPERM );
+      if ( pip_clone_mostly_pthread_ptr != NULL ) {
+	/* already resolved */
+      } else {
+	if ( pip_clone_mostly_pthread_ptr == NULL )
+	  pip_clone_mostly_pthread_ptr =
+	    dlsym( RTLD_DEFAULT, "pip_clone_mostly_pthread" );
+	if ( pip_clone_mostly_pthread_ptr == NULL ) {
+	  fprintf( stderr,
+		   PIP_ERRMSG_TAG
+		   "process:pipclone model is desired "
+		   "but pip_clone_mostly_pthread() is not found\n",
+		   getpid() );
+	  RETURN( EPERM );
+	}
       }
-#else
-      fprintf( stderr,
-	       PIP_ERRMSG_TAG
-	       "no PIPCLONE_FUNCNAME found\n",
-	       getpid() );
-      RETURN( EPERM );
-#endif
     }
 
 #ifdef DEBUG
@@ -309,7 +322,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 }
 
 static int pip_if_pthread_( void ) {
-  if( pip_root->cloneinfo == NULL ) return 1;
+  if( pip_root->cloneinfo == NULL )
+    return (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_THREAD : 0;
   return pip_root->cloneinfo->flag_clone & CLONE_THREAD;
 }
 
@@ -321,7 +335,8 @@ int pip_if_pthread( int *flagp ) {
 }
 
 static int pip_if_shared_fd_( void ) {
-  if( pip_root->cloneinfo == NULL ) return 1;
+  if( pip_root->cloneinfo == NULL )
+    return (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_FILES : 0;
   return pip_root->cloneinfo->flag_clone & CLONE_FILES;
 }
 
@@ -338,7 +353,7 @@ int pip_if_shared_sighand( int *flagp ) {
   if( pip_root == NULL ) RETURN( EPERM  );
   if( flagp    == NULL ) RETURN( EINVAL );
   if( pip_root->cloneinfo == NULL ) {
-    *flagp = 1;
+    *flagp = (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_SIGHAND : 0;
   } else {
     *flagp = pip_root->cloneinfo->flag_clone & CLONE_SIGHAND;
   }
@@ -868,9 +883,11 @@ int pip_spawn( char *prog,
   extern char 		**environ;
   pthread_attr_t 	attr;
   cpu_set_t 		cpuset;
+  size_t		stack_size = 0;
   pip_spawn_args_t	*args = NULL;
   pip_task_t		*task = NULL;
   int 			pipid;
+  pid_t			pid = 0;
   int 			err = 0;
 
   DBGF( ">> pip_spawn()" );
@@ -914,6 +931,7 @@ int pip_spawn( char *prog,
 
     if( ( env = getenv( PIP_ENV_STACKSZ ) ) != NULL &&
 	( sz = (size_t) strtol( env, NULL, 10 ) ) >  0 ) {
+      stack_size = sz; /* for pip_clone() */
       err = pthread_attr_setstacksize( &attr, sz );
       DBGF( "pthread_attr_setstacksize( %ld )= %d", sz, err );
     }
@@ -1001,29 +1019,34 @@ int pip_spawn( char *prog,
   /* FIXME: there is a race condition between the above and below */
   if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
-#ifdef HAVE_PIPCLONE
-    /* CALL PIPCLONE FUNC */
-#endif
+    err = pip_clone_mostly_pthread_ptr(
+		&task->thread,
+		CLONE_VM |
+		/* CLONE_FS | CLONE_FILES | */ /* for pip */
+		/* CLONE_SIGHAND | CLONE_THREAD | */ /* for pip */
+		CLONE_SETTLS |
+		CLONE_PARENT_SETTID |
+		CLONE_CHILD_CLEARTID |
+		CLONE_SYSVSEM |
+		CLONE_PTRACE | /* for pip */
+		SIGCHLD /* for pip */,
+		coreno, stack_size,
+		(void*(*)(void*)) pip_do_spawn, args, &pid );
   } else {
     task->args = args;
     err = pthread_create( &task->thread,
 			  &attr,
 			  (void*(*)(void*)) pip_do_spawn,
 			  (void*) args );
+    if( pip_root->cloneinfo != NULL ) {
+      pid = pip_root->cloneinfo->pid_clone;
+    }
   }
 
   DBG;
   if( err == 0 ) {
     *pipidp = pipid;
-#ifdef HAVE_PIPCLONE
-    if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
-	PIP_MODE_PROCESS_PIPCLONE ) {
-      task->pid = XXXXX;
-    } else
-#endif
-      if( pip_root->cloneinfo != NULL ) {
-	task->pid = pip_root->cloneinfo->pid_clone;
-      }
+    task->pid = pid;
     pip_root->ntasks_accum ++;
     pip_root->ntasks_curr  ++;
     if( pip_root->cloneinfo != NULL ) {
