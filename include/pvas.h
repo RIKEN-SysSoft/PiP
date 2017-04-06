@@ -30,9 +30,9 @@ extern "C" {
   int pvas_create(pvas_common_info_t info[], int n, int *pvd);
   int pvas_destroy(int pvd);
   int pvas_spawn(int pvd, int *pvid, char *filename,
-		 char **argv, char **envp, pid_t *pid);
+		 char **argv, char **envp, intptr_t *pid);
   int pvas_spawn_setaffinity(int pvd, int *pvid, char *filename,
-			     char **argv, char **envp, pid_t *pid, int cpu);
+			     char **argv, char **envp, intptr_t *pid, int cpu);
   int pvas_get_pvid(int *pvid);
   int pvas_ealloc(size_t esize);
   int pvas_get_export_info(int pvid, void **addr, size_t *size);

@@ -97,6 +97,7 @@
 
 #define PIP_OPTS_NONE			(0x0)
 #define PIP_OPTS_ANY			PIP_OPTS_NONE
+
 #define PIP_MODE_PTHREAD		(0x100)
 #define PIP_MODE_PROCESS		(0x200)
 /* the following two modes are a submode of PIP_MODE_PROCESS */
@@ -386,6 +387,34 @@ extern "C" {
   int pip_kill( int pipid, int signal );
   /** @}*/
 
+  /**
+   * \brief deliver a process or thread ID
+   *  @{
+   * \param[out] pipid PIPID of a target PiP task
+   * \param[out] idp a pointer to store the ID value
+   *
+   * \note This function can be used regardless to the PiP execution
+   * mode.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   */
+  int pip_get_id( int pipid, intptr_t *idp );
+  /** @}*/
+
+  /**
+   * \brief get a string of the current execution mode
+   *  @{
+   *
+   * \note This function can be used regardless to the PiP execution
+   * mode.
+   *
+   * \return Return the name string of the current execution mode
+   *
+   */
+  const char *pip_get_mode_str( void );
+  /** @}*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifdef PIP_INTERNAL_FUNCS
@@ -396,8 +425,6 @@ extern "C" {
   int pip_if_pthread( int *flagp );
   int pip_if_shared_fd( int *flagp );
   int pip_if_shared_sighand( int *flagp );
-
-  int pip_get_pid( int pipid, intptr_t *pidp );
 
   char **pip_copy_vec( char *addition, char **vecsrc );
 

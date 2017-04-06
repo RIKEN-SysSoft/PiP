@@ -1119,17 +1119,17 @@ int pip_fin( void ) {
 }
 
 int pip_get_mode( int *mode ) {
-  if( pip_root == NULL ) RETURN( EINVAL );
+  if( pip_root == NULL ) RETURN( EPERM  );
   if( mode     == NULL ) RETURN( EINVAL );
   *mode = ( pip_root->opts & PIP_MODE_MASK );
   RETURN( 0 );
 }
 
-int pip_get_pid( int pipid, intptr_t *pidp ) {
+int pip_get_id( int pipid, intptr_t *pidp ) {
   int err;
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
-  if( pidp == NULL )      RETURN( EINVAL );
+  if( pidp == NULL ) RETURN( EINVAL );
   if( pip_if_pthread_() ) {
     if( pipid == PIP_PIPID_ROOT ) {
       *pidp = (intptr_t) pip_root->thread;
@@ -1285,12 +1285,15 @@ int pip_wait( int pipid, int *retvalp ) {
   pip_task_t *task;
   int err;
 
+  DBG;
+
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
   task = &pip_root->tasks[pipid];
   if( task == pip_self ) RETURN( EINVAL );
 
   if( pip_if_pthread_() ) { /* thread mode */
+  DBG;
     err = pthread_join( task->thread, NULL );
     DBGF( "pthread_join()=%d", err );
 
@@ -1299,8 +1302,9 @@ int pip_wait( int pipid, int *retvalp ) {
     pid_t pid;
     DBG;
     while( 1 ) {
+      printf( "waitpid(%d)\n", task->pid );
       if( ( pid = waitpid( task->pid, &status, 0 ) ) >= 0 ) break;
-      if( errno != EINTR && errno != EDEADLK ) {
+      if( errno != EINTR ) {
 	err = errno;
 	break;
       }
@@ -1322,7 +1326,7 @@ int pip_trywait( int pipid, int *retvalp ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
   task = &pip_root->tasks[pipid];
-  if( task == pip_self ) RETURN (EINVAL );
+  if( task == pip_self ) RETURN( EPERM );
 
   if( pip_if_pthread_() ) { /* thread mode */
     err = pthread_tryjoin_np( task->thread, NULL );
@@ -1349,6 +1353,29 @@ int pip_trywait( int pipid, int *retvalp ) {
 
 pip_clone_t *pip_get_cloneinfo_( void ) {
   return pip_root->cloneinfo;
+}
+
+const char *pip_get_mode_str( void ) {
+  char *mode;
+
+  if( pip_root == NULL ) return NULL;
+  switch( pip_root->opts & PIP_MODE_MASK ) {
+  case PIP_MODE_PTHREAD:
+    mode = PIP_ENV_MODE_PTHREAD;
+    break;
+  case PIP_MODE_PROCESS:
+    mode = PIP_ENV_MODE_PROCESS;
+    break;
+  case PIP_MODE_PROCESS_PRELOAD:
+    mode = PIP_ENV_MODE_PROCESS_PRELOAD;
+    break;
+  case PIP_MODE_PROCESS_PIPCLONE:
+    mode = PIP_ENV_MODE_PROCESS_PIPCLONE;
+    break;
+  default:
+    mode = "(unknown)";
+  }
+  return mode;
 }
 
 /*** The following malloc/free functions are just for functional test    ***/
