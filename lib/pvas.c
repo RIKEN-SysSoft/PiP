@@ -35,13 +35,13 @@ int pvas_spawn( int pvd,
 		char *filename,
 		char **argv,
 		char **envp,
-		pid_t *pid ) {
+		intptr_t *pid ) {
   int err;
 
   err = pip_spawn( filename, argv, envp, PIP_CPUCORE_ASIS, pvid,
 		   NULL, NULL, NULL );
   if( !err ) {
-    err = pip_get_pid( *pvid, pid );
+    err = pip_get_id( *pvid, pid );
   }
   return err;
 }
@@ -51,13 +51,13 @@ int pvas_spawn_setaffinity( int pvd,
 			    char *filename,
 			    char **argv,
 			    char **envp,
-			    pid_t *pid,
+			    intptr_t *pid,
 			    int cpu ) {
   int err;
 
   err = pip_spawn( filename, argv, envp, cpu, pvid, NULL, NULL, NULL );
   if( !err ) {
-    err = pip_get_pid( *pvid, pid );
+    err = pip_get_id( *pvid, pid );
   }
   return err;
 }
