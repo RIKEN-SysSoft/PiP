@@ -15,11 +15,19 @@
 #include <pthread.h>
 #include <ucontext.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 
 #include <pip_machdep.h>
 #include <pip_clone.h>
 #include <pip_debug.h>
+
+#define PIP_BASE_VERSION	(0x0100U)
+#ifndef HAVE_GLIBC_INIT
+#define PIP_VERSION		PIP_BASE_VERSION
+#else
+#define PIP_VERSION		(PIP_BASE_VERSION|0x8)
+#endif
 
 #define PIP_ROOT_ENV		"PIP_ROOT"
 
@@ -61,7 +69,7 @@ typedef struct pip_spawn_args {
 
 typedef struct {
   int			pipid;
-  int			pid;
+  pid_t			pid;
   int			coreno;
   int	 		retval;
   pthread_t		thread;
@@ -85,7 +93,7 @@ typedef struct {
 
 typedef struct {
   char			magic[PIP_MAGIC_LEN];
-  int			version; /* for future us (backward compatibility) */
+  unsigned int		version; /* for future us (backward compatibility) */
   size_t		size;
   pthread_t		thread;
   pip_spinlock_t	spawn_lock;
