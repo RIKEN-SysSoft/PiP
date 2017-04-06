@@ -46,7 +46,7 @@ int malloc_loop( int pipid ) {
 
     TESTINT( my_random( &sz ) );
     sz <<= 4;
-    sz &= 0x0FFFF00;
+    sz &= 0x0FFFF0;
     if( sz == 0 ) sz = 256;
     if( ( p = malloc( sz ) ) == NULL ) return ENOMEM;
     memset( p, ( pipid & 0xff ), sz );
