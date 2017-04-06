@@ -125,15 +125,16 @@ typedef int(*pip_spawnhook_t)(void*);
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <pthread.h>
 #include <link.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
 #include <errno.h>
 
 #ifdef __cplusplus
@@ -396,7 +397,7 @@ extern "C" {
   int pip_if_shared_fd( int *flagp );
   int pip_if_shared_sighand( int *flagp );
 
-  int pip_get_pid( int pipid, pid_t *pidp );
+  int pip_get_pid( int pipid, intptr_t *pidp );
 
   char **pip_copy_vec( char *addition, char **vecsrc );
 
