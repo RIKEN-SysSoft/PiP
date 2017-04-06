@@ -234,8 +234,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	RETURN( EPERM );
       }
       opts = PIP_MODE_PROCESS_PRELOAD;
-    }
-    if( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) {
+    } else if( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) {
       if ( pip_clone_mostly_pthread_ptr == NULL )
 	pip_clone_mostly_pthread_ptr =
 	  dlsym( RTLD_DEFAULT, "pip_clone_mostly_pthread" );
@@ -249,9 +248,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	RETURN( EPERM );
       }
       opts = PIP_MODE_PROCESS_PIPCLONE;
-    }
-
-    if( desired & PIP_MODE_PTHREAD_BIT ) {
+    } else if( desired & PIP_MODE_PTHREAD_BIT ) {
       opts = PIP_MODE_PTHREAD;
     } else {
       fprintf( stderr,
