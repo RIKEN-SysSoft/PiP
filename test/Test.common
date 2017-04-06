@@ -1,6 +1,6 @@
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += $(PIEFLAG)
-LDFLAGS += -rdynamic $(PIPLDLIB)
+CFLAGS += $(PIEFLAG) -pthread
+PIPLDFLAGS += -rdynamic $(PIPLDLIB) -pthread
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
@@ -12,4 +12,3 @@ DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 %: %.f $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(PIPLDFLAGS) -fPIE $< -o $@
-
