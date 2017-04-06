@@ -205,7 +205,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       } else if( strcasecmp( env, PIP_ENV_MODE_THREAD  ) == 0 ||
 		 strcasecmp( env, PIP_ENV_MODE_PTHREAD ) == 0 ||
 		 strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
-	/* just ignore it */
+	/* ignore PIP_MODE=thread in this case */
+	desired =
+	  PIP_MODE_PROCESS_PRELOAD_BIT|
+	  PIP_MODE_PROCESS_PIPCLONE_BIT;
       } else {
 	fprintf( stderr,
 		 PIP_ERRMSG_TAG "unknown setting PIP_MODE='%s'\n",
