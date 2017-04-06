@@ -84,6 +84,10 @@ static int pip_is_magic_ok( pip_root_t *root ) {
   return strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN ) == 0;
 }
 
+static int pip_is_version_ok( pip_root_t *root ) {
+  return root->version == PIP_VERSION;
+}
+
 static void pip_init_task_struct( pip_task_t *taskp ) {
   memset( (void*) taskp, 0, sizeof(pip_task_t) );
   taskp->pipid  = PIP_PIPID_NONE;
@@ -255,6 +259,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     } else {
       pipid = PIP_PIPID_ROOT;
       pip_set_magic( pip_root );
+      pip_root->version      = PIP_VERSION;
       pip_root->ntasks       = ntasks;
       pip_root->thread       = pthread_self();
       pip_root->cloneinfo    = cloneinfo;
@@ -277,7 +282,13 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     /* child task */
 
     pip_root = (pip_root_t*) strtoll( env, NULL, 16 );
-    if( !pip_is_magic_ok( pip_root ) ) RETURN( EPERM );
+    if( !pip_is_magic_ok(   pip_root ) ) RETURN( EPERM );
+    if( !pip_is_version_ok( pip_root ) ) {
+      fprintf( stderr,
+	       PIP_ERRMSG_TAG "Version miss-match between root and child\n",
+	       getpid() );
+      RETURN( EPERM );
+    }
 
     ntasks = pip_root->ntasks;
     pipid  = PIP_PIPID_NONE;
@@ -1077,17 +1088,23 @@ int pip_get_mode( int *mode ) {
   RETURN( 0 );
 }
 
-int pip_get_pid( int pipid, pid_t *pidp ) {
+int pip_get_pid( int pipid, intptr_t *pidp ) {
   int err;
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pidp == NULL )      RETURN( EINVAL );
-  if( pip_if_pthread_() ) RETURN( ENOSYS );
-
-  if( pipid == PIP_PIPID_ROOT ) {
-    *pidp = (pid_t) pip_root->pid;
+  if( pip_if_pthread_() ) {
+    if( pipid == PIP_PIPID_ROOT ) {
+      *pidp = (intptr_t) pip_root->thread;
+    } else {
+      *pidp = (intptr_t) pip_root->tasks[pipid].pid;
+    }
   } else {
-    *pidp = (pid_t) pip_root->tasks[pipid].pid;
+    if( pipid == PIP_PIPID_ROOT ) {
+      *pidp = (pid_t) pip_root->pid;
+    } else {
+      *pidp = (pid_t) pip_root->tasks[pipid].pid;
+    }
   }
   RETURN( 0 );
 }

@@ -15,7 +15,7 @@ int main( int argc, char **argv ) {
 
   sid_old = getsid( getpid() );
 
-  pip_init( &pipid, &ntasks, NULL, 0 );
+  pip_init( &pipid, &ntasks, NULL, PIP_MODE_PROCESS );
   if( pipid == PIP_PIPID_ROOT ) {
     if( ( sid_new = setsid() ) < 0 ) {
       printf( "ROOT: setsid(): %d\n", errno );
