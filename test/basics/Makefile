@@ -25,10 +25,13 @@ SRCS  = initfin.c \
 	numa.c \
 	hook.c \
 	spawn.c \
+	null.c \
+	recursive.c \
 	varvars.c
 
-PROGRAMS  = initfin stack export environ malloc malloc2 file wait signal exit \
-	mutex barrier core numa hook spawn varvars
+PROGRAMS  = initfin stack export environ malloc malloc2 file \
+	 wait signal exit mutex barrier core numa hook spawn \
+	null recursive varvars
 
 PROGRAMS_TO_INSTALL = # nothing
 
