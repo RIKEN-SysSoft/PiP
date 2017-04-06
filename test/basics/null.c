@@ -11,6 +11,6 @@
 #include <stdio.h>
 
 int main() {
-  printf( "Hello PID=%d\n", getpid() );
+  printf( "Hello, I am file !!\n" );
   return 0;
 }
