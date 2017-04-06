@@ -9,20 +9,13 @@
 
 #define _GNU_SOURCE
 
-#include <sys/types.h>
 #include <sys/wait.h>
-#include <malloc.h>
 #include <dlfcn.h>
 #include <dirent.h>
 #include <sched.h>
 #include <pthread.h>
+#include <malloc.h>
 #include <signal.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <errno.h>
 
 //#define PIP_CLONE_AND_DLMOPEN
 #define PIP_DLMOPEN_AND_CLONE
@@ -1101,9 +1094,9 @@ int pip_get_pid( int pipid, intptr_t *pidp ) {
     }
   } else {
     if( pipid == PIP_PIPID_ROOT ) {
-      *pidp = (pid_t) pip_root->pid;
+      *pidp = (intptr_t) pip_root->pid;
     } else {
-      *pidp = (pid_t) pip_root->tasks[pipid].pid;
+      *pidp = (intptr_t) pip_root->tasks[pipid].pid;
     }
   }
   RETURN( 0 );
