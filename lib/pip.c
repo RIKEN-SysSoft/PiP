@@ -163,7 +163,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       }
     }
 
-    switch( opts ) {
+    switch( opts & PIP_MODE_MASK ) {
     case 0:
       env = getenv( PIP_ENV_MODE );
       if ( env == NULL ) {
@@ -182,6 +182,11 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	desired = PIP_MODE_PROCESS_PRELOAD_BIT;
       } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
 	desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
+      } else {
+	fprintf( stderr,
+		 PIP_ERRMSG_TAG "unknown setting PIP_MODE='%s'\n",
+		 getpid(), env );
+	RETURN( EPERM );
       }
       break;
     case PIP_MODE_PTHREAD:
@@ -197,10 +202,15 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	desired = PIP_MODE_PROCESS_PRELOAD_BIT;
       } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
 	desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
+      } else if( strcasecmp( env, PIP_ENV_MODE_THREAD  ) == 0 ||
+		 strcasecmp( env, PIP_ENV_MODE_PTHREAD ) == 0 ||
+		 strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
+	/* just ignore it */
       } else {
-	desired =
-	  PIP_MODE_PROCESS_PRELOAD_BIT|
-	  PIP_MODE_PROCESS_PIPCLONE_BIT;
+	fprintf( stderr,
+		 PIP_ERRMSG_TAG "unknown setting PIP_MODE='%s'\n",
+		 getpid(), env );
+	RETURN( EPERM );
       }
       break;
     case PIP_MODE_PROCESS_PRELOAD:
@@ -209,54 +219,74 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     case PIP_MODE_PROCESS_PIPCLONE:
 	desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
 	break;
+    default:
+	fprintf( stderr,
+		 PIP_ERRMSG_TAG "pip_init() invalid argument opts=0x%x\n",
+		 getpid(), opts );
+	RETURN( EINVAL );
     }
+
+    opts = 0;
 
     if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
       /* check if the __clone() systemcall wrapper exists or not */
       cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
       DBGF( "cloneinfo-%p", cloneinfo );
-      if( cloneinfo == NULL &&
-	  !( desired & (PIP_MODE_PTHREAD_BIT|PIP_MODE_PROCESS_PIPCLONE_BIT) )
-	  ) {
+      if( cloneinfo != NULL ) {
+	opts = PIP_MODE_PROCESS_PRELOAD;
+      } else if( !( desired & (PIP_MODE_PTHREAD_BIT|
+			       PIP_MODE_PROCESS_PIPCLONE_BIT) ) ) {
 	/* no wrapper found */
 	if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
 	  fprintf( stderr,
-		   PIP_ERRMSG_TAG "process mode is requested but "
+		   PIP_ERRMSG_TAG "process:preload mode is requested but "
 		   "LD_PRELOAD environment variable is empty.\n",
 		   getpid() );
 	} else {
 	  fprintf( stderr,
 		   PIP_ERRMSG_TAG
-		   "process mode is requested but LD_PRELOAD='%s'\n",
+		   "process:preload mode is requested but LD_PRELOAD='%s'\n",
 		   getpid(),
 		   env );
 	}
 	RETURN( EPERM );
       }
-      opts = PIP_MODE_PROCESS_PRELOAD;
-    } else if( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) {
+    }
+
+    if( opts == 0 && ( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) ) {
       if ( pip_clone_mostly_pthread_ptr == NULL )
 	pip_clone_mostly_pthread_ptr =
 	  dlsym( RTLD_DEFAULT, "pip_clone_mostly_pthread" );
-      if ( pip_clone_mostly_pthread_ptr == NULL &&
-	   !( desired & PIP_MODE_PTHREAD_BIT) ) {
-	fprintf( stderr,
-		 PIP_ERRMSG_TAG
-		 "process model is desired "
-		 "but pip_clone_mostly_pthread() is not found\n",
-		 getpid() );
+      if ( pip_clone_mostly_pthread_ptr != NULL ) {
+	opts = PIP_MODE_PROCESS_PIPCLONE;
+      } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
+	if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
+	  fprintf( stderr,
+		   PIP_ERRMSG_TAG
+		   "process mode is requested but "
+		   "pip_clone_info symbol is not found in $LD_PRELOAD and "
+		   "pip_clone_mostly_pthread() symbol is not found in glibc\n",
+		   getpid() );
+	} else {
+	  fprintf( stderr,
+		   PIP_ERRMSG_TAG
+		   "process:pipclone mode is requested "
+		   "but pip_clone_mostly_pthread() is not found in glibc\n",
+		   getpid() );
+	}
 	RETURN( EPERM );
       }
-      opts = PIP_MODE_PROCESS_PIPCLONE;
-    } else if( desired & PIP_MODE_PTHREAD_BIT ) {
+    }
+
+    if( opts == 0 && ( desired & PIP_MODE_PTHREAD_BIT ) ) {
       opts = PIP_MODE_PTHREAD;
-    } else {
+    }
+
+    if( opts == 0 ) {
       fprintf( stderr,
 	       PIP_ERRMSG_TAG
-	       "process model is desired "
-	       "but both pip_clone_info and _pip_clone_mostly_pthread() "
-	       "are not found\n",
-	       getpid() );
+	       "pip_init() implemenation error. desired = 0x%x\n",
+	       getpid(), desired );
       RETURN( EPERM );
     }
 
