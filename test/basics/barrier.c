@@ -32,8 +32,10 @@ int main( int argc, char **argv ) {
     ntasks = NTASKS;
   }
 
-  TESTINT( pthread_mutex_init( &tc.mutex, NULL ) );
-  TESTINT( pthread_mutex_lock( &tc.mutex ) );
+  if( !pip_isa_piptask() ) {
+    TESTINT( pthread_mutex_init( &tc.mutex, NULL ) );
+    TESTINT( pthread_mutex_lock( &tc.mutex ) );
+  }
 
   exp    = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );

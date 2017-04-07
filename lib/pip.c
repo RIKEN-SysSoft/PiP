@@ -385,6 +385,10 @@ static int pip_root_p_( void ) {
   return pip_self == NULL && pip_root != NULL;
 }
 
+int pip_isa_piptask( void ) {
+  return getenv( PIP_ROOT_ENV ) != NULL;
+}
+
 static int pip_task_p_( void ) {
   return pip_self != NULL;
 }
@@ -755,7 +759,6 @@ static int pip_do_spawn( void *thargs )  {
   int err = 0;
 
   DBG;
-
   if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
 
 #ifdef DEBUG
@@ -1302,7 +1305,7 @@ int pip_wait( int pipid, int *retvalp ) {
     pid_t pid;
     DBG;
     while( 1 ) {
-      printf( "waitpid(%d)\n", task->pid );
+      //printf( "waitpid(%d)\n", task->pid );
       if( ( pid = waitpid( task->pid, &status, 0 ) ) >= 0 ) break;
       if( errno != EINTR ) {
 	err = errno;

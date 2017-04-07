@@ -22,6 +22,8 @@
 #include <pip_clone.h>
 #include <pip_debug.h>
 
+//#define HAVE_GLIBC_INIT
+
 #define PIP_BASE_VERSION	(0x0100U)
 #ifndef HAVE_GLIBC_INIT
 #define PIP_VERSION		PIP_BASE_VERSION
@@ -93,7 +95,7 @@ typedef struct {
 
 typedef struct {
   char			magic[PIP_MAGIC_LEN];
-  unsigned int		version; /* for future us (backward compatibility) */
+  unsigned int		version;
   size_t		size;
   pthread_t		thread;
   pip_spinlock_t	spawn_lock;
