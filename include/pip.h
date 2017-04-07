@@ -316,6 +316,18 @@ extern "C" {
   /** @}*/
 
   /**
+   * \brief check if the calling task is a PiP task or not
+   *  @{
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * \note Unlike most of the other PiP functions, this can be called
+   * BEFORE calling the \c pip_init() function.
+   */
+  int pip_isa_piptask( void );
+  /** @}*/
+
+  /**
    * \brief get the PiP execution mode
    *  @{
    * \param[out] modep This parameter points to the variable which
