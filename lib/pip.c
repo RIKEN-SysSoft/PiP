@@ -917,14 +917,6 @@ static int pip_do_spawn( void *thargs )  {
   RETURN( 0 );
 }
 
-static void pip_clone_wrap_begin( void ) {
-  if( pip_root->cloneinfo != NULL &&
-      pip_root->opts & PIP_MODE_PROCESS_PRELOAD ) {
-    DBGF( "cloneinfo=%p", pip_root->cloneinfo );
-    pip_root->cloneinfo->flag_wrap = 1;
-  }
-}
-
 int pip_spawn( char *prog,
 	       char **argv,
 	       char **envv,
@@ -1067,8 +1059,6 @@ int pip_spawn( char *prog,
 
   if( err != 0 ) goto error;
 
-  pip_clone_wrap_begin();   /* tell clone wrapper (preload), if any */
-  /* FIXME: there is a race condition between the above and below */
   if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
     err = pip_clone_mostly_pthread_ptr(
@@ -1086,10 +1076,18 @@ int pip_spawn( char *prog,
 		(void*(*)(void*)) pip_do_spawn, args, &pid );
   } else {
     task->args = args;
-    err = pthread_create( &task->thread,
-			  &attr,
-			  (void*(*)(void*)) pip_do_spawn,
-			  (void*) args );
+    if( pip_root->cloneinfo != NULL ) {
+      pip_spin_lock_wv( &pip_root->cloneinfo->lock, PIP_LOCK_PRELOADED );
+    }
+    {
+      err = pthread_create( &task->thread,
+			    &attr,
+			    (void*(*)(void*)) pip_do_spawn,
+			    (void*) args );
+    }
+    if( pip_root->cloneinfo != NULL ) {
+      pip_spin_unlock( &pip_root->cloneinfo->lock );
+    }
     if( pip_root->cloneinfo != NULL ) {
       pid = pip_root->cloneinfo->pid_clone;
     }
