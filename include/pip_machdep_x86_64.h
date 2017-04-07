@@ -17,6 +17,7 @@
 #include <stdint.h>
 
 typedef volatile uint32_t	pip_spinlock_t;
+#define PIP_LOCK_TYPE
 
 inline static void pip_pause( void ) {
 #if !defined( __KNC__ ) && !defined( __MIC__ )
@@ -28,27 +29,6 @@ inline static void pip_pause( void ) {
 #endif
 }
 #define PIP_PAUSE
-
-/* come from spin_lock() on glibc 2.3.3 (Fedora Core 1) */
-
-inline static int pip_spin_trylock (pip_spinlock_t *lock) {
-  int oldval;
-
-  asm volatile
-    ("xchgl %0,%1"
-     : "=r" (oldval), "=m" (*lock)
-     : "0" (0));
-  return oldval > 0; /* Change return value to kernel function by Kameyama */
-}
-#define PIP_SPIN_TRYLOCK
-
-inline static int pip_spin_unlock (pip_spinlock_t *lock) {
-  asm volatile
-    ("movl $1,%0"
-     : "=m" (*lock));
-  return 0;
-}
-#define PIP_SPIN_UNLOCK
 
 inline static void pip_write_barrier(void) {
   asm volatile("sfence":::"memory");

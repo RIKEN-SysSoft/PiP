@@ -45,6 +45,8 @@
 #define PIP_LD_SOLIBS		{ NULL }
 
 typedef	int(*main_func_t)(int,char**);
+typedef int(*mallopt_t)(int,int);
+typedef void(*free_t)(void*);
 
 #ifndef HAVE_GLIBC_INIT
 typedef	void(*ctype_init_t)(void);
@@ -53,8 +55,6 @@ typedef void(*glibc_init_t)(int,char**,char**);
 #endif
 typedef	void(*fflush_t)(FILE*);
 
-typedef int(*mallopt_t)(int,int);
-typedef void(*free_t)(void*);
 
 typedef struct pip_spawn_args {
   int 			pipid;

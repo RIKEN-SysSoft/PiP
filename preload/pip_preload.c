@@ -16,14 +16,17 @@
 #include <signal.h>
 #include <errno.h>
 
-//#define DEBUG
 #include <pip_clone.h>
-#include <pip_debug.h>
 
-pip_clone_t pip_clone_info;
+//#define DEBUG
+#include <pip_debug.h>
 
 typedef
 int(*clone_syscall_t)(int(*)(void*), void*, int, void*, pid_t*, void*, pid_t*);
+
+pip_clone_t pip_clone_info = { 0 }; /* this is refered by piplib */
+
+static clone_syscall_t pip_clone_orig = NULL;
 
 static clone_syscall_t pip_get_clone( void ) {
   static clone_syscall_t pip_clone_orig = NULL;
@@ -35,50 +38,74 @@ static clone_syscall_t pip_get_clone( void ) {
 }
 
 int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
-  va_list ap;
-  va_start( ap, args );
-  pid_t *ptid = va_arg( ap, pid_t*);
-  void  *tls  = va_arg( ap, void*);
-  pid_t *ctid = va_arg( ap, pid_t*);
-  clone_syscall_t clone_orig;
-  int retval = -1;
+  pip_spinlock_t oldval;
+  int retval;
 
-  if( ( clone_orig = pip_get_clone() ) == NULL ) {
-    errno = ENOSYS;
-  } else if( pip_clone_info.flag_wrap ) {
-    pip_clone_info.flag_wrap = 0;
+  while( 1 ) {
+    oldval = pip_spin_trylock_wv( &pip_clone_info.lock, PIP_LOCK_OTHERWISE );
+    switch( oldval ) {
+    case PIP_LOCK_UNLOCKED:
+      /* lock succeeded */
+    case PIP_LOCK_PRELOADED:
+      /* lock is done by piplib */
+      goto go;
+    case PIP_LOCK_OTHERWISE:
+      /* somebody other than piplib locked already */
+      /* then wait until it is unlocked */
+    default:
+      break;
+    }
+  }
+ go:
+  {
+    va_list ap;
+    va_start( ap, args );
+    pid_t *ptid = va_arg( ap, pid_t*);
+    void  *tls  = va_arg( ap, void*);
+    pid_t *ctid = va_arg( ap, pid_t*);
 
+    if( pip_clone_orig == NULL ) {
+      if( ( pip_clone_orig = pip_get_clone() ) == NULL ) {
+	errno = ENOSYS;
+	retval = -1;
+	goto error;
+      }
+    }
+    if( oldval == PIP_LOCK_UNLOCKED ) {
+      DBGF( "!!! Original clone() is used" );
+      retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
+
+    } else if( oldval == PIP_LOCK_PRELOADED ) {
 #ifdef DEBUG
-    int oldflags = flags;
+      int oldflags = flags;
 #endif
 
-    flags &= ~(CLONE_FS);	/* 0x00200 */
-    flags &= ~(CLONE_FILES);	/* 0x00400 */
-    flags &= ~(CLONE_SIGHAND);	/* 0x00800 */
-    flags &= ~(CLONE_THREAD);	/* 0x10000 */
-    flags &= ~0xff;
-    flags |= SIGCHLD;
-    flags |= CLONE_VM;
-    flags |= CLONE_PTRACE;
+      flags &= ~(CLONE_FS);	/* 0x00200 */
+      flags &= ~(CLONE_FILES);	/* 0x00400 */
+      flags &= ~(CLONE_SIGHAND);	/* 0x00800 */
+      flags &= ~(CLONE_THREAD);	/* 0x10000 */
+      flags &= ~0xff;
+      flags |= SIGCHLD;
+      flags |= CLONE_VM;
+      flags |= CLONE_PTRACE;
 
-    //    flags |= CLONE_SETTLS;
+      //    flags |= CLONE_SETTLS;
 
-    errno = 0;
-    DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",
-	  oldflags, flags, fn, child_stack, tls );
-    retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
-    DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );
+      errno = 0;
+      DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",
+	    oldflags, flags, fn, child_stack, tls );
+      retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
+      DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );
 
-    if( retval > 0 ) {	/* create PID is returned */
-      pip_clone_info.flag_clone = flags;
-      pip_clone_info.pid_clone  = retval;
-      pip_clone_info.stack      = child_stack;
+      if( retval > 0 ) {	/* create PID is returned */
+	pip_clone_info.flag_clone = flags;
+	pip_clone_info.pid_clone  = retval;
+	pip_clone_info.stack      = child_stack;
+      }
     }
-
-  } else {
-    DBGF( "!!! Original clone() is used" );
-    retval = clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
+    va_end( ap );
   }
-  va_end( ap );
+ error:
+  pip_spin_unlock( &pip_clone_info.lock );
   return retval;
 }
