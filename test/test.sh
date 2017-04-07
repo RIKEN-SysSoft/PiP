@@ -4,6 +4,9 @@ export LD_PRELOAD=`pwd`/../preload/pip_preload.so
 
 echo LD_PRELOAD=$LD_PRELOAD
 echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+echo PIP_MODE=$PIP_MODE
+echo pip_mode: `util/pip_mode`
+echo
 
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL

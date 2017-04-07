@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 typedef volatile uint32_t	pip_spinlock_t;
+#define PIP_LOCK_TYPE
 
 inline static void pip_pause( void ) {
   asm volatile("wfe" :::"memory");

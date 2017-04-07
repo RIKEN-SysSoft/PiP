@@ -22,32 +22,52 @@
 #endif
 #endif
 
+#ifndef PIP_LOCK_TYPE
+#include <stdint.h>
+typedef volatile uint32_t	pip_spinlock_t;
+#endif
+
 #ifndef PIP_PAUSE
 inline static void pip_pause( void ) {
   /* nop */
 }
 #endif
 
-#ifndef PIP_SPIN_TRYLOCK
-inline static int pip_spin_trylock (pip_spinlock_t *lock) {
+#ifndef PIP_SPIN_TRYLOCK_WV
+inline static pip_spinlock_t
+pip_spin_trylock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
   int oldval;
 
-  oldval = __sync_lock_test_and_set(lock, 1);
-  return oldval == 0;
+  if( *lock != 0 ) return *lock;
+  oldval = __sync_val_compare_and_swap( lock, 0, lv );
+  return oldval;
 }
 #endif
 
-#ifndef PIP_SPIN_LOCK
-inline static int pip_spin_lock (pip_spinlock_t *lock) {
-  while( !pip_spin_trylock( lock ) ) pip_pause();
-  return 0;
+inline static pip_spinlock_t
+pip_spin_trylock( pip_spinlock_t *lock ) {
+  int oldval;
+
+  if( *lock != 0 ) return *lock;
+  oldval = __sync_val_compare_and_swap( lock, 0, 1 );
+  return oldval;
+}
+
+#ifndef PIP_SPIN_LOCK_WV
+inline static void
+pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
+  while( !pip_spin_trylock_wv( lock, lv ) ) pip_pause();
 }
 #endif
+
+inline static void
+pip_spin_lock( pip_spinlock_t *lock ) {
+  while( !pip_spin_trylock( lock ) ) pip_pause();
+}
 
 #ifndef PIP_SPIN_UNLOCK
-inline static int pip_spin_unlock (pip_spinlock_t *lock) {
+inline static void pip_spin_unlock (pip_spinlock_t *lock) {
   __sync_lock_release(lock);
-  return 0;
 }
 #endif
 
