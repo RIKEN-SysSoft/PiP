@@ -47,16 +47,16 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
     case PIP_LOCK_UNLOCKED:
       /* lock succeeded */
     case PIP_LOCK_PRELOADED:
-      /* lock is done by piplib */
-      goto go;
+      /* locked by piplib */
+      goto lock_ok;
     case PIP_LOCK_OTHERWISE:
-      /* somebody other than piplib locked already */
-      /* then wait until it is unlocked */
     default:
+      /* somebody other than piplib locked already */
+      /* and wait until it is unlocked */
       break;
     }
   }
- go:
+ lock_ok:
   {
     va_list ap;
     va_start( ap, args );
