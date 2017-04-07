@@ -30,6 +30,11 @@ void spawn_tasks( int ntasks ) {
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   TESTINT( ( pipid != PIP_PIPID_ROOT ) );
 
+#ifdef AH
+  pip_print_maps();
+  printf( "root pid: %d\n", getpid() );
+#endif
+
   time_start = pip_gettime();
   for( i=0; i<ntasks; i++ ) {
     pipid = i;
