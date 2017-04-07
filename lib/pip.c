@@ -650,6 +650,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
 #endif
 
   if( err == 0 ) {
+    /* dlsym() SHOULD be called only in the main thread */
     DBG;
     if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
 	/* getting main function address to invoke */
@@ -685,12 +686,13 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     }
 #endif
 #else
-    if( ( glibc_init = (glibc_init_t) dlsym( loaded, "glibc_init" ) ) == NULL ) {
+    if( ( glibc_init = (glibc_init_t) dlsym( loaded, "glibc_init" ) ) == NULL){
       DBG;
       err = ENOEXEC;
       goto error;
     }
 #endif
+
   }
  error:
   if( err == 0 ) {
@@ -708,6 +710,9 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     task->free        = (free_t) dlsym( loaded, "free"   );
     task->envvp       = envvp;
     task->loaded      = loaded;
+    task->mallopt     = dlsym( loaded, "mallopt" );
+    task->libc_argvp  = (char***) dlsym( loaded, "__libc_argv" );
+    task->libc_argcp  = (int*)    dlsym( loaded, "__libc_argc" );
   } else if( loaded != NULL ) {
     (void) dlclose( loaded );
   }
@@ -788,7 +793,6 @@ static int pip_do_spawn( void *thargs )  {
   pip_spawnhook_t after  = args->hook_after;
   void	*hook_arg  = args->hook_arg;
   pip_task_t *self = &pip_root->tasks[pipid];
-  void *loaded	   = self->loaded;
   int err = 0;
 
   DBG;
@@ -832,34 +836,26 @@ static int pip_do_spawn( void *thargs )  {
       flag_exit = 1;
       self->ctx = &ctx;
 
-      {
-	char ***argvp;
-	int *argcp;
-
-	if( ( argvp = (char***) dlsym( loaded, "__libc_argv" ) ) != NULL ) {
-	  DBGF( "&__libc_argv=%p\n", argvp );
-	  *argvp = argv;
-	}
-	if( ( argcp = (int*)    dlsym( loaded, "__libc_argc" ) ) != NULL ) {
-	  DBGF( "&__libc_argc=argcp\n" );
-	  *argcp = argc;
-	}
+      if( self->libc_argvp != NULL ) {
+	DBGF( "&__libc_argv=%p\n", argvp );
+	*self->libc_argvp = argv;
+      }
+      if( self->libc_argcp != NULL ) {
+	DBGF( "&__libc_argc=argcp\n" );
+	*self->libc_argcp = argc;
       }
 #ifndef PIP_NO_MALLOPT
-      {
-	int(*mallopt_func)(int,int);
-	if( ( mallopt_func = dlsym( loaded, "mallopt" ) ) != NULL ) {
-	  DBGF( ">> mallopt()" );
-	  if(  mallopt_func( M_MMAP_THRESHOLD, 0 ) == 1 ) {
-	    DBGF( "<< mallopt(M_MMAP_THRESHOLD): succeeded" );
-	  } else {
-	    DBGF( "<< mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
-	  }
-	  if(  mallopt_func( M_TRIM_THRESHOLD, -1 ) == 1 ) {
-	    DBGF( "<< mallopt(M_TRIM_THRESHOLD): succeeded" );
-	  } else {
-	    DBGF( "<< mallopt(M_TRIM_THRESHOLD): failed !!!!!!" );
-	  }
+      if( self->mallopt != NULL ) {
+	DBGF( ">> mallopt()" );
+	if( self->mallopt( M_MMAP_THRESHOLD, 0 ) == 1 ) {
+	  DBGF( "<< mallopt(M_MMAP_THRESHOLD): succeeded" );
+	} else {
+	  DBGF( "<< mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
+	}
+	if( self->mallopt( M_TRIM_THRESHOLD, -1 ) == 1 ) {
+	  DBGF( "<< mallopt(M_TRIM_THRESHOLD): succeeded" );
+	} else {
+	  DBGF( "<< mallopt(M_TRIM_THRESHOLD): failed !!!!!!" );
 	}
       }
 #endif
@@ -1049,16 +1045,9 @@ int pip_spawn( char *prog,
     task->pipid = pipid;	/* mark it as occupied */
     args->pipid = pipid;
   } while( 0 );
-  /*** end lock region ***/
- unlock:
-  pip_spin_unlock( &pip_root->spawn_lock );
-
-  /**** beyond this point, we can 'goto' the 'error' label ****/
-
-  if( err != 0 ) goto error;
 
 #ifdef PIP_DLMOPEN_AND_CLONE
-  {
+  if( err == 0 ) {
     if( ( err = pip_do_corebind( coreno, &cpuset ) ) == 0 ) {
       /* corebinding should take place before loading solibs,        */
       /* hoping anon maps would be mapped ontto the closer numa node */
@@ -1068,9 +1057,15 @@ int pip_spawn( char *prog,
       /* and of course, the corebinding must be undone */
       (void) pip_undo_corebind( coreno, &cpuset );
     }
-    if( err != 0 ) goto error;
   }
 #endif
+  /*** end lock region ***/
+ unlock:
+  pip_spin_unlock( &pip_root->spawn_lock );
+
+  /**** beyond this point, we can 'goto' the 'error' label ****/
+
+  if( err != 0 ) goto error;
 
   pip_clone_wrap_begin();   /* tell clone wrapper (preload), if any */
   /* FIXME: there is a race condition between the above and below */
@@ -1241,8 +1236,17 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
 
   if( retvalp != NULL ) *retvalp = task->retval;
 
-  if( task->loaded != NULL && dlclose( task->loaded ) != 0 ) {
-    DBGF( "dlclose(): %s", dlerror() );
+  if( task->loaded != NULL ) {
+    int err;
+
+    pip_spin_lock( &pip_root->spawn_lock );
+    /*** begin lock region ***/
+    {
+      err = dlclose( task->loaded );
+    }
+    /*** end lock region ***/
+    pip_spin_unlock( &pip_root->spawn_lock );
+    if( err != 0 ) DBGF( "dlclose(): %s", dlerror() );
   }
 
   if( task->args != NULL ) {
