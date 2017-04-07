@@ -48,14 +48,12 @@ typedef	int(*main_func_t)(int,char**);
 
 #ifndef HAVE_GLIBC_INIT
 typedef	void(*ctype_init_t)(void);
-typedef void(*init_misc_t)(int,char**,char**);
-typedef void(*getopt_clean_t)(char**);
-typedef void(*libc_ctors_t)(void);
 #else
 typedef void(*glibc_init_t)(int,char**,char**);
 #endif
 typedef	void(*fflush_t)(FILE*);
 
+typedef int(*mallopt_t)(int,int);
 typedef void(*free_t)(void*);
 
 typedef struct pip_spawn_args {
@@ -70,27 +68,32 @@ typedef struct pip_spawn_args {
 } pip_spawn_args_t;
 
 typedef struct {
-  int			pipid;
-  pid_t			pid;
-  int			coreno;
-  int	 		retval;
-  pthread_t		thread;
-  void			*loaded;
-  pip_spawn_args_t	*args;
-  main_func_t		mainf;
+  int			pipid;	/* PiP ID */
+  pid_t			pid;	/* PID in process mode */
+  int			coreno;	/* CPU core binding */
+  int	 		retval;	/* return value of exit() */
+  pthread_t		thread;	/* thread */
+  void			*loaded; /* loaded DSOs */
+  pip_spawn_args_t	*args;	 /* arguments for thread */
+
+  /* symbol addresses to call or setup before jumping into the main */
+  main_func_t		mainf;	/* main function address */
 #ifndef HAVE_GLIBC_INIT
-  ctype_init_t		ctype_init;
-  init_misc_t		init_misc;
-  getopt_clean_t	getopt_clean;
-  libc_ctors_t		libc_ctors;
+  ctype_init_t		ctype_init; /* to call __ctype_init() */
 #else
-  glibc_init_t		glibc_init;
+  glibc_init_t		glibc_init; /* for patched Glibc */
 #endif
-  fflush_t		libc_fflush;
-  free_t		free;
+  fflush_t		libc_fflush; /* to call fflush() at the end */
+  free_t		free;	     /* to override free() :EXPERIMENTAL*/
+  mallopt_t		mallopt;     /* to call mapllopt() */
+  char 			***libc_argvp; /* to set __libc_argv */
+  int			*libc_argcp;   /* to set __libc_argc */
+
+  /* to implement pip_exit(), the context to be used by setcontext() */
   ucontext_t 		*ctx;
-  char			***envvp;
-  volatile void		*export;
+
+  char			***envvp; /* environment vars */
+  volatile void		*export;  /* PiP export region */
 } pip_task_t;
 
 typedef struct {
