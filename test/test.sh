@@ -4,9 +4,6 @@ export LD_PRELOAD=`pwd`/../preload/pip_preload.so
 
 echo LD_PRELOAD=$LD_PRELOAD
 echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-echo PIP_MODE=$PIP_MODE
-echo pip_mode: `util/pip_mode`
-echo
 
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
@@ -49,6 +46,61 @@ TEST_LOG_FILE=test.log
 
 mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak 2>/dev/null
 
+pip_mode_list_all='L C T'
+pip_mode_name_L=process:preload
+pip_mode_name_C=process:pipclone
+pip_mode_name_T=pthread
+
+# parse command line option
+cmd=$0
+case $# in
+0)	pip_mode_list=$pip_mode_list_all;;
+*)	run_test_L=''
+	run_test_C=''
+	run_test_T=''
+	while	case $1 in
+		-*) true;;
+		*) false;;
+		esac
+	do
+		case $1 in
+		-[^LCT])
+			echo >&2 "Usage: `basename $cmd` [-CLT]"
+			exit 2;;
+		esac
+		case $1 in *L*)	run_test_L=L;; esac
+		case $1 in *C*)	run_test_C=C;; esac
+		case $1 in *T*)	run_test_T=T;; esac
+		shift
+	done
+	pip_mode_list="$run_test_L $run_test_C $run_test_T"
+	;;
+esac
+case $# in
+0)	;;
+*)	echo >&2 "`basename $cmd`: unknown argument '$*'"
+	exit 2;;
+esac
+
+# check whether each $PIP_MODE is testable or not
+run_test_L=''
+run_test_C=''
+run_test_T=''
+for pip_mode in $pip_mode_list
+do
+	eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
+	case `PIP_MODE=$pip_mode_name ./util/pip_mode 2>/dev/null` in
+	$pip_mode_name)
+		eval "run_test_${pip_mode}=${pip_mode}"
+		echo "testing ${pip_mode} - ${pip_mode_name}"
+		;;
+	*)	echo >&2 "WARNING: $pip_mode_name is not testable";;
+	esac
+done
+pip_mode_list="$run_test_L $run_test_C $run_test_T"
+
+echo
+
 n_PASS=0
 n_FAIL=0
 n_XPASS=0
@@ -69,52 +121,59 @@ while read line; do
 
 	test=$1
 
-	printf "%-60.60s ..." $test
-	(
-	  echo "$LOG_BEG"
-	  echo "--- $test"
-	  echo "$LOG_SEP"
-	  date +'@@_ start at %s - %Y-%m-%d %H:%M:%S'
-	) >>$TEST_LOG_FILE
+	for pip_mode in $pip_mode_list
+	do
+		eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
 
-	if [ ! -x $test ]; then
-		test_exit_status=$EXIT_UNTESTED
-	else
+		printf "%-60.60s ${pip_mode} ..." $test
 		(
-			if cd $(dirname $test)
-			then
-				./$(basename $test) \
-					</dev/null >>$TEST_LOG_FILE 2>&1
-			else
-				exit $EXIT_UNTESTED
-			fi
-		)
-		test_exit_status=$?
-	fi
+		  echo "$LOG_BEG"
+		  echo "--- $test PIP_MODE=${pip_mode_name}"
+		  echo "$LOG_SEP"
+		  date +'@@_ start at %s - %Y-%m-%d %H:%M:%S'
+		) >>$TEST_LOG_FILE
 
-	msg=
-	case $test_exit_status in
-	$EXIT_PASS)		status=PASS;;
-	$EXIT_FAIL)		status=FAIL;;
-	$EXIT_XPASS)		status=XPASS;;
-	$EXIT_XFAIL)		status=XFAIL;;
-	$EXIT_UNRESOLVED)	status=UNRESOLVED;;
-	$EXIT_UNTESTED)		status=UNTESTED;;
-	$EXIT_UNSUPPORTED)	status=UNSUPPORTED;;
-	$EXIT_KILLED)		status=KILLED;;
-	*)			status=UNRESOLVED
-				msg="exit status $test_exit_status";;
-	esac
-	: ${msg:=$status}
-	eval "((n_$status=n_$status + 1))"
+		if [ ! -x $test ]; then
+			test_exit_status=$EXIT_UNTESTED
+		else
+			(
+				if cd $(dirname $test)
+				then
+					PIP_MODE=$pip_mode_name \
+						./$(basename $test) \
+						</dev/null >>$TEST_LOG_FILE 2>&1
+				else
+					exit $EXIT_UNTESTED
+				fi
+			)
+			test_exit_status=$?
+		fi
 
-	(
-	  date +'@@~  end  at %s - %Y-%m-%d %H:%M:%S'
-	  echo "$LOG_SEP"
-	  printf "@:= %-60.60s %s\n" $test "$msg"
-	) >>$TEST_LOG_FILE
+		msg=
+		case $test_exit_status in
+		$EXIT_PASS)		status=PASS;;
+		$EXIT_FAIL)		status=FAIL;;
+		$EXIT_XPASS)		status=XPASS;;
+		$EXIT_XFAIL)		status=XFAIL;;
+		$EXIT_UNRESOLVED)	status=UNRESOLVED;;
+		$EXIT_UNTESTED)		status=UNTESTED;;
+		$EXIT_UNSUPPORTED)	status=UNSUPPORTED;;
+		$EXIT_KILLED)		status=KILLED;;
+		*)			status=UNRESOLVED
+					msg="exit status $test_exit_status";;
+		esac
+		: ${msg:=$status}
+		eval "((n_$status=n_$status + 1))"
 
-	echo " $msg"
+		(
+		  date +'@@~  end  at %s - %Y-%m-%d %H:%M:%S'
+		  echo "$LOG_SEP"
+		  printf "@:= %-60.60s %s\n" $test "$msg"
+		) >>$TEST_LOG_FILE
+
+		echo " $msg"
+
+	done
 
 done < test.list
 
