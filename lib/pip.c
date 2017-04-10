@@ -37,6 +37,7 @@
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
+/* the EVAL env. is to measure the time for calling dlmopen() */
 //#define EVAL
 
 #include <pip.h>

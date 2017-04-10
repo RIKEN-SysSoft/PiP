@@ -29,11 +29,7 @@ void omp_loop( void ) {
     nth = omp_get_num_threads();
     tid = omp_get_thread_num();
 
-#ifdef DEBUG
-    DBGF( "[%s] Hello World from thread = %d/%d", tag, tid, nth );
-#else
     printf( "[%s] Hello World from thread = %d/%d\n", tag, tid, nth );
-#endif
   }
 }
 
@@ -48,7 +44,7 @@ int main( int argc, char **argv ) {
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			NULL, NULL, NULL ) );
 
-    omp_loop();
+    //omp_loop();
 
     TESTINT( pip_wait( pipid, NULL ) );
     TESTINT( pip_fin() );
