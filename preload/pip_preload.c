@@ -39,7 +39,7 @@ static clone_syscall_t pip_get_clone( void ) {
 
 int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
   pip_spinlock_t oldval;
-  int retval;
+  int retval = -1;
 
   while( 1 ) {
     oldval = pip_spin_trylock_wv( &pip_clone_info.lock, PIP_LOCK_OTHERWISE );
@@ -66,8 +66,8 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 
     if( pip_clone_orig == NULL ) {
       if( ( pip_clone_orig = pip_get_clone() ) == NULL ) {
+	DBGF( "!!! Original clone() NOT FOUND" );
 	errno = ENOSYS;
-	retval = -1;
 	goto error;
       }
     }
@@ -76,6 +76,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
 
     } else if( oldval == PIP_LOCK_PRELOADED ) {
+      DBGF( "!!! clone() wrapper" );
 #ifdef DEBUG
       int oldflags = flags;
 #endif
@@ -102,6 +103,8 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 	pip_clone_info.pid_clone  = retval;
 	pip_clone_info.stack      = child_stack;
       }
+    } else {
+      DBGF( "!!! wrpper clone() ??????" );
     }
     va_end( ap );
   }
