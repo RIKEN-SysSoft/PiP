@@ -13,6 +13,8 @@ unset LANG LC_ALL
 
 : ${TEST_PIP_TASKS:=$(./util/dlmopen_count -p)}
 
+echo NTASKS: ${TEST_PIP_TASKS}
+
 print_summary()
 {
 	echo ""

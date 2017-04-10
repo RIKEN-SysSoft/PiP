@@ -12,7 +12,7 @@ include $(srcdir)/../Test.common
 OMPFLAG = -fopenmp
 
 CFLAGS += $(OMPFLAG)
-LDFLAGS += $(OMPFLAG)
+LDFLAGS += $(OMPFLAG) -openmp
 
 SRCS  = openmp.c
 
