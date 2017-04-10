@@ -23,7 +23,7 @@ test_msg_count()
 	local expected_count
 
 	case $# in
-	0)	echo >&2 "$0: Usage: test.msg_count <msg> [<expected_count>]"
+	0)	echo >&2 "$0: Usage: test_msg_count <msg> [<expected_count>]"
 		return $EXIT_UNRESOLVED;;
 	1)	msg=$1; expected_count=$TEST_PIP_TASKS;;
 	2)	msg=$1; expected_count=$2;;

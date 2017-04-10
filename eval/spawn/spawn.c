@@ -43,6 +43,8 @@ void spawn_tasks( int ntasks ) {
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   TESTINT( ( pipid != PIP_PIPID_ROOT ) );
 
+  printf( "Mode: %s\n", pip_get_mode_str() );
+
   time_start = gettime();
   for( i=0; i<ntasks; i++ ) {
     pipid = i;
