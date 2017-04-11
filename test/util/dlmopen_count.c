@@ -41,13 +41,13 @@ main(int argc, char **argv)
 		if (++n >= MAX)
 			break;
 	}
-	if (option_pip_mode && n > PIP_NTASKS_MAX)
-		n = PIP_NTASKS_MAX;
-	printf("%d\n", n);
-
 	if( option_verbose ) {
 	  fprintf( stderr, "DL_NNS=%d  PIP_NATSKS_MAX=%d\n",
 		   n, PIP_NTASKS_MAX );
 	}
+	if (option_pip_mode && n > PIP_NTASKS_MAX)
+		n = PIP_NTASKS_MAX;
+	printf("%d\n", n);
+
 	return 0;
 }
