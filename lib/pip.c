@@ -28,8 +28,9 @@
 
 //#define SHOULD_HAVE_CTYPE_INIT
 //#define HAVE_GLIBC_INIT
-//#define PIP_EXPLICT_EXIT
 //#define PIP_NO_MALLOPT
+
+#define PIP_EXPLICIT_EXIT
 
 #define PIP_FREE(P)	free(P)
 
@@ -838,11 +839,11 @@ static int pip_do_spawn( void *thargs )  {
       self->ctx = &ctx;
 
       if( self->libc_argvp != NULL ) {
-	DBGF( "&__libc_argv=%p\n", argvp );
+	DBGF( "&__libc_argv=%p\n", self->libc_argvp );
 	*self->libc_argvp = argv;
       }
       if( self->libc_argcp != NULL ) {
-	DBGF( "&__libc_argc=argcp\n" );
+	DBGF( "&__libc_argc=%p\n", self->libc_argcp );
 	*self->libc_argcp = argc;
       }
 #ifndef PIP_NO_MALLOPT
@@ -878,6 +879,8 @@ static int pip_do_spawn( void *thargs )  {
       self->glibc_init( argc, argv, envv );
       DBGF( "[%d] << glibc_init@%p()", pipid, self->glibc_init );
 #endif
+      CHECK_CTYPE;
+
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
 	    pipid, self->mainf, argc, argv[0], argv[1] );
 
@@ -889,12 +892,12 @@ static int pip_do_spawn( void *thargs )  {
       DBGF( "[%d] >> fflush@%p()", pipid, self->libc_fflush );
       self->libc_fflush( NULL );
       DBGF( "[%d] << fflush@%p()", pipid, self->libc_fflush );
-      CHECK_CTYPE;
 
     } else {
       DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
     }
     if( after != NULL ) (void) after( hook_arg );
+    DBG;
 
   } else if( err != 0 ) {
     fprintf( stderr,
@@ -906,7 +909,7 @@ static int pip_do_spawn( void *thargs )  {
 	     err );
     self->retval = err;
   }
-
+  DBG;
 #ifdef PIP_EXPLICIT_EXIT
   if( pip_if_pthread_() ) {	/* thread mode */
     pthread_exit( NULL );
@@ -914,7 +917,7 @@ static int pip_do_spawn( void *thargs )  {
     exit( self->retval );
   }
 #endif
-
+  DBG;
   RETURN( 0 );
 }
 
@@ -1206,6 +1209,7 @@ int pip_kill( int pipid, int signal ) {
 }
 
 int pip_exit( int retval ) {
+  fflush( NULL );
   if( !pip_root_p_() && !pip_task_p_() ) {
     /* since we must replace exit() with pip_exit(), pip_exit() */
     /* must be able to use even if it is NOT a PIP environment. */
@@ -1213,7 +1217,6 @@ int pip_exit( int retval ) {
   } else if( pip_if_pthread_() ) {	/* thread mode */
     pip_self->retval = retval;
     DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_self->pipid, retval );
-    fflush( NULL );
     (void) setcontext( pip_self->ctx );
     DBGF( "[PIPID=%d] pip_exit() ????", pip_self->pipid );
   } else {				/* process mode */
@@ -1343,7 +1346,7 @@ int pip_wait( int pipid, int *retvalp ) {
     DBG;
     while( 1 ) {
       //printf( "waitpid(%d)\n", task->pid );
-      if( ( pid = waitpid( task->pid, &status, 0 ) ) >= 0 ) break;
+      if( ( pid = waitpid( task->pid, &status, __WALL ) ) >= 0 ) break;
       if( errno != EINTR ) {
 	err = errno;
 	break;

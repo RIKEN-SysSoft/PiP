@@ -27,7 +27,7 @@
 #define DBG_PRTBUF	char _dbuf[1024]={'\0'}
 #define DBG_PRNT(...)	sprintf(_dbuf+strlen(_dbuf),__VA_ARGS__)
 #define DBG_OUTPUT	do { _dbuf[ strlen( _dbuf ) ] = '\n';	\
-    write( 1, _dbuf, strlen(_dbuf) ); _dbuf[0]='\0';} while(0)
+    write( 2, _dbuf, strlen(_dbuf) ); _dbuf[0]='\0';} while(0)
 #define DBG_TAG							\
   do { DBG_PRNT("[PID:%d] %s:%d %s(): ",(int)getpid(),		\
 		__FILE__, __LINE__, __func__ );	} while(0)

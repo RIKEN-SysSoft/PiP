@@ -41,6 +41,7 @@ main(int argc, char **argv)
 		if (++n >= MAX)
 			break;
 	}
+	n --;		    /* the PiP root comsumes one slot */
 	if (option_pip_mode && n > PIP_NTASKS_MAX)
 		n = PIP_NTASKS_MAX;
 	printf("%d\n", n);
