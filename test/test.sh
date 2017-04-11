@@ -2,15 +2,10 @@
 
 export LD_PRELOAD=`pwd`/../preload/pip_preload.so
 
-echo LD_PRELOAD=$LD_PRELOAD
-echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
 
 : ${TEST_PIP_TASKS:=$(./util/dlmopen_count -p)}
-
-echo NTASKS: ${TEST_PIP_TASKS}
 
 print_summary()
 {
@@ -47,14 +42,29 @@ TEST_LOG_FILE=test.log
 mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak 2>/dev/null
 
 pip_mode_list_all='L C T'
-pip_mode_name_L=process:preload
-pip_mode_name_C=process:pipclone
+pip_mode_name_P=process
+pip_mode_name_L=$pip_mode_name_P:preload
+pip_mode_name_C=$pip_mode_name_P:pipclone
 pip_mode_name_T=pthread
+
+function print_mode_list() {
+    echo "List of PiP execution modes:"
+    echo "  " $pip_mode_name_T "(T)";
+    echo "  " $pip_mode_name_P "(P)";
+    echo "  " $pip_mode_name_L "(L)";
+    echo "  " $pip_mode_name_C "(C)";
+    exit 1;
+}
+
+function print_usage() {
+    echo >&2 "Usage: `basename $cmd` [-APCLT] [-thread] [-process[:preload|:pipclone]]";
+    exit 2;
+}
 
 # parse command line option
 cmd=$0
 case $# in
-0)	pip_mode_list=$pip_mode_list_all;;
+0)	print_usage;;
 *)	run_test_L=''
 	run_test_C=''
 	run_test_T=''
@@ -63,14 +73,16 @@ case $# in
 		*) false;;
 		esac
 	do
-		case $1 in
-		-[^LCT])
-			echo >&2 "Usage: `basename $cmd` [-CLT]"
-			exit 2;;
-		esac
-		case $1 in *L*)	run_test_L=L;; esac
+		case $1 in *A*)	run_test_L=L; run_test_C=C; run_test_T=T;; esac
+		case $1 in *P*)	run_test_L=L; run_test_C=C;; esac
 		case $1 in *C*)	run_test_C=C;; esac
+		case $1 in *L*)	run_test_L=L;; esac
 		case $1 in *T*)	run_test_T=T;; esac
+		case $1 in *list*) print_mode_list;; esac
+		case $1 in *thread)    run_test_T=T;; esac
+		case $1 in *process)   run_test_L=L; run_test_C=C;; esac
+		case $1 in *$pip_mode_name_L) run_test_L=L;; esac
+		case $1 in *$pip_mode_name_C) run_test_C=C;; esac
 		shift
 	done
 	pip_mode_list="$run_test_L $run_test_C $run_test_T"
@@ -81,6 +93,15 @@ case $# in
 *)	echo >&2 "`basename $cmd`: unknown argument '$*'"
 	exit 2;;
 esac
+
+if [ -z $pip_mode_list ]; then
+    print_usage;
+fi
+
+
+echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+echo LD_PRELOAD=$LD_PRELOAD
+echo NTASKS: ${TEST_PIP_TASKS}
 
 # check whether each $PIP_MODE is testable or not
 run_test_L=''
