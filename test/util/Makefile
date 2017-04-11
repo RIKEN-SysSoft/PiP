@@ -9,9 +9,12 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS	= dlmopen_count.c pip_mode
+CFLAGS  += -fopenmp
+LDFLAGS += -openmp
 
-PROGRAMS = dlmopen_count pip_mode
+SRCS	= dlmopen_count.c pip_mode ompnumthread
+
+PROGRAMS = dlmopen_count pip_mode ompnumthread
 
 PROGRAMS_TO_INSTALL = # nothing
 
