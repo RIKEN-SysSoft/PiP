@@ -48,7 +48,7 @@ int main( int argc, char **argv ) {
       *((int*)(maps.maps[i]+(PGSZ*ntasks))) = 0;
     }
     pthread_barrier_wait( &maps.barrier );
-    for( i=0; i<ntasks; i++ ) wait( NULL );
+    for( i=0; i<ntasks; i++ ) pip_wait( i, NULL );
     printf( "all done\n" );
 
   } else {	/* PIP child task */
