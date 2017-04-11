@@ -16,7 +16,6 @@ int root_exp = 0;
 
 int main( int argc, char **argv ) {
   char *newav[3];
-  char pipid_str[64];
   void *exp = (void*) &root_exp;
   int pipid, ntasks;
   int i, j;
@@ -27,10 +26,8 @@ int main( int argc, char **argv ) {
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0, j=0; i<NTASKS; i++ ) {
       if( tasks[j] == NULL ) j = 0;
-      sprintf( pipid_str, "%d", i );
       newav[0] = tasks[j++];
-      newav[1] = pipid_str;
-      newav[2] = NULL;
+      newav[1] = NULL;
       pipid = i;
       err = pip_spawn( newav[0], newav, NULL, i%4, &pipid, NULL, NULL, NULL );
       if( err != 0 ) break;
