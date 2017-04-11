@@ -97,7 +97,7 @@ case $# in
 	exit 2;;
 esac
 
-if [ -z $pip_mode_list ]; then
+if [ -z "$pip_mode_list" ]; then
     print_usage;
 fi
 
