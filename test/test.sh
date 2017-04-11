@@ -197,6 +197,8 @@ while read line; do
 
 		echo " $msg"
 
+		# stopped by Control-C or something like that
+		[ $test_exit_status -eq $EXIT_KILLED ] && break 2
 	done
 
 done < $TEST_LIST
