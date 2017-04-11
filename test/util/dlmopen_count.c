@@ -13,15 +13,19 @@ main(int argc, char **argv)
 {
 	void *so;
 	int option_pip_mode = 1;
+	int option_verbose  = 0;
 	int c, n = 0;
 
-	while ((c = getopt(argc, argv, "p")) != -1) {
+	while ((c = getopt(argc, argv, "pv")) != -1) {
 		switch (c) {
 		case 'p':
 			option_pip_mode = 1;
 			break;
+		case 'v':
+			option_verbose = 1;
+			break;
 		default:
-			fprintf(stderr, "Usage: dlmopen_count [-p]\n");
+			fprintf(stderr, "Usage: dlmopen_count [-p] [-v]\n");
 			exit(2);
 		}
 	}
@@ -36,5 +40,10 @@ main(int argc, char **argv)
 	if (option_pip_mode && n > PIP_NTASKS_MAX)
 		n = PIP_NTASKS_MAX;
 	printf("%d\n", n);
-	return 0;	
+
+	if( option_verbose ) {
+	  fprintf( stderr, "DL_NNS-%d  PIP_NATSKS_MAX=%d\n",
+		   n, PIP_NTASKS_MAX );
+	}
+	return 0;
 }
