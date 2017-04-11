@@ -71,7 +71,7 @@ post-distclean-hook:
 ###
 
 check:
-	( cd test && ./test.sh )
+	( cd test && ./test.sh -A )
 .PHONY: check
 
 prog-distclean:
