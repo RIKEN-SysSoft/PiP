@@ -81,16 +81,14 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       int oldflags = flags;
 #endif
 
-      flags &= ~(CLONE_FS);	/* 0x00200 */
-      flags &= ~(CLONE_FILES);	/* 0x00400 */
-      flags &= ~(CLONE_SIGHAND);	/* 0x00800 */
-      flags &= ~(CLONE_THREAD);	/* 0x10000 */
+      flags &= ~(CLONE_FS);	 /* 0x00200 */
+      flags &= ~(CLONE_FILES);	 /* 0x00400 */
+      flags &= ~(CLONE_SIGHAND); /* 0x00800 */
+      flags &= ~(CLONE_THREAD);	 /* 0x10000 */
       flags &= ~0xff;
       flags |= SIGCHLD;
       flags |= CLONE_VM;
-      flags |= CLONE_PTRACE;
-
-      //    flags |= CLONE_SETTLS;
+      //flags |= CLONE_PTRACE;
 
       errno = 0;
       DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",
