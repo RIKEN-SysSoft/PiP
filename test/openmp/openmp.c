@@ -31,8 +31,10 @@ void omp_loop( void ) {
 
     printf( "[%s] Hello World from thread = %d/%d\n", tag, tid, nth );
   }
-  //printf( "Done!!\n" );
+#ifdef AH
+  printf( "Done!!\n" );
   pip_exit( 0 );	   /* this is needed for proper termination */
+#endif
 }
 
 int main( int argc, char **argv ) {

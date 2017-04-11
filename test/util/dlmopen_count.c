@@ -32,8 +32,12 @@ main(int argc, char **argv)
 
 	for (;;) {
 		so = dlmopen(LM_ID_NEWLM, argv[0], RTLD_NOW | RTLD_LOCAL);
-		if (so == NULL)
-			break;
+		if (so == NULL) {
+		  if( option_verbose ) {
+		    fprintf( stderr, "dlmopen(): %s\n", dlerror() );
+		  }
+		  break;
+		}
 		if (++n >= MAX)
 			break;
 	}

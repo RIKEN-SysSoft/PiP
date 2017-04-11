@@ -7,7 +7,7 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 
 char *tasks[] = { "./a", "./b", "./c", NULL };
@@ -33,7 +33,7 @@ int main( int argc, char **argv ) {
       newav[2] = NULL;
       pipid = i;
       err = pip_spawn( newav[0], newav, NULL, i%4, &pipid, NULL, NULL, NULL );
-      if( err ) break;
+      if( err != 0 ) break;
 
       if( i != pipid ) {
 	fprintf( stderr, "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
@@ -42,6 +42,7 @@ int main( int argc, char **argv ) {
     }
     ntasks = i;
 
+    //printf( "%d\n", ntasks );
     for( i=0; i<ntasks; i++ ) {
       DBGF( "caling pip_wait(%d)", i );
       TESTINT( pip_wait( i, NULL ) );
