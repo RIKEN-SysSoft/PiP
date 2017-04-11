@@ -42,7 +42,7 @@ main(int argc, char **argv)
 	printf("%d\n", n);
 
 	if( option_verbose ) {
-	  fprintf( stderr, "DL_NNS-%d  PIP_NATSKS_MAX=%d\n",
+	  fprintf( stderr, "DL_NNS=%d  PIP_NATSKS_MAX=%d\n",
 		   n, PIP_NTASKS_MAX );
 	}
 	return 0;
