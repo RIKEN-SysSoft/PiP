@@ -30,7 +30,7 @@
 //#define HAVE_GLIBC_INIT
 //#define PIP_NO_MALLOPT
 
-#define PIP_EXPLICIT_EXIT
+//#define PIP_EXPLICIT_EXIT
 
 #define PIP_FREE(P)	free(P)
 
@@ -1164,6 +1164,9 @@ int pip_get_id( int pipid, intptr_t *pidp ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pidp == NULL ) RETURN( EINVAL );
   if( pip_if_pthread_() ) {
+    /* Do not use gettid(). This is a very Linux-specific function */
+    /* The reason of supporintg the thread PiP execution mode is   */
+    /* some OSes other than Linux does not support clone()         */
     if( pipid == PIP_PIPID_ROOT ) {
       *pidp = (intptr_t) pip_root->thread;
     } else {
