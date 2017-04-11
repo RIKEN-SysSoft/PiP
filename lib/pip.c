@@ -1213,6 +1213,7 @@ int pip_exit( int retval ) {
   } else if( pip_if_pthread_() ) {	/* thread mode */
     pip_self->retval = retval;
     DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_self->pipid, retval );
+    fflush( NULL );
     (void) setcontext( pip_self->ctx );
     DBGF( "[PIPID=%d] pip_exit() ????", pip_self->pipid );
   } else {				/* process mode */
