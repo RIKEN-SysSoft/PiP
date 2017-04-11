@@ -37,6 +37,7 @@ print_summary()
 
 . ./test.sh.inc
 
+TEST_LIST=test.list
 TEST_LOG_FILE=test.log
 
 mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak 2>/dev/null
@@ -57,7 +58,7 @@ function print_mode_list() {
 }
 
 function print_usage() {
-    echo >&2 "Usage: `basename $cmd` [-APCLT] [-thread] [-process[:preload|:pipclone]]";
+    echo >&2 "Usage: `basename $cmd` [-APCLT] [-thread] [-process[:preload|:pipclone]] [<test_list_file>]";
     exit 2;
 }
 
@@ -90,7 +91,9 @@ case $# in
 esac
 case $# in
 0)	;;
+1)	TEST_LIST=$1;;
 *)	echo >&2 "`basename $cmd`: unknown argument '$*'"
+	print_usage
 	exit 2;;
 esac
 
@@ -196,7 +199,7 @@ while read line; do
 
 	done
 
-done < test.list
+done < $TEST_LIST
 
 (
 	echo $LOG_BEG
