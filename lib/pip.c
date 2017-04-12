@@ -1382,7 +1382,7 @@ int pip_trywait( int pipid, int *retvalp ) {
     pid_t pid;
     DBG;
     while( 1 ) {
-      if( ( pid = waitpid( task->pid, &status, WNOHANG ) ) >= 0 ) break;
+      if( ( pid = waitpid( task->pid, &status, __WALL|WNOHANG ) ) >= 0 ) break;
       if( errno != EINTR ) {
 	err = errno;
 	break;
@@ -1460,6 +1460,8 @@ void pip_free( void *ptr ) {
     free_func( ptr );
   }
 }
+
+/* the following function(s) are for debugging */
 
 void pip_print_loaded_solibs( FILE *file ) {
   static void *root_handle = NULL;
