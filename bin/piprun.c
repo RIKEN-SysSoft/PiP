@@ -21,7 +21,7 @@
  *
  * \section environment ENVIRONMENT
  *
- * \subsection PIP_MODEL PIP_MODEL
+ * \subsection PIP_MODE PIP_MODE
  */
 
 #include <sys/wait.h>
