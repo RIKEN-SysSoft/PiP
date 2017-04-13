@@ -41,6 +41,7 @@
 #define PIP_PIPID_NONE		(-999)
 
 #define PIP_ERRMSG_TAG		"#PIP Error (pid:%d)# "
+#define PIP_INFMSG_TAG		"#PIP Error (pid:%d)# "
 
 #define PIP_LD_SOLIBS		{ NULL }
 
@@ -99,6 +100,7 @@ typedef struct {
 typedef struct {
   char			magic[PIP_MAGIC_LEN];
   unsigned int		version;
+  size_t		root_size;
   size_t		size;
   pthread_t		thread;
   pip_spinlock_t	spawn_lock;
