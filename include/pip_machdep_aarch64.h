@@ -32,6 +32,13 @@ inline static void pip_memory_barrier(void) {
 }
 #define PIP_MEMORY_BARRIER
 
+inline static void pip_print_fs_segreg( void ) {
+  register unsigned long result asm ("x0");
+  asm ("mrs %0, tpidr_el0; " : "=r" (result));
+  fprintf( stderr, "TPIDR_EL0 REGISTER: 0x%lx\n", result );
+}
+#define PIP_PRINT_FSREG
+
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif
