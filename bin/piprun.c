@@ -29,33 +29,59 @@
 #include <errno.h>
 #include <pip.h>
 
+static void print_usage( void ) {
+  fprintf( stderr, "%s [-e] [-n N] [-c C] <prog> ...\n", PROGRAM );
+  exit( 1 );
+}
+
 int main( int argc, char **argv ) {
   int pipid  = 0;
   int ntasks = 1;
+  int opts   = 0;
+  int coreno = PIP_CPUCORE_ASIS;
+  int i, k;
   int err    = 0;
 
-  if( argc < 2 || argv[1] == NULL ) {
-    fprintf( stderr, "%s <prog> ...\n", PROGRAM );
-  } else if( ( err = pip_init( &pipid, &ntasks, NULL, 0 ) ) != 0 ) {
+  if( argc < 2 || argv[1] == NULL ) print_usage();
+
+  for( i=1; *argv[i]=='-'; i++ ) {
+    if( strcmp( argv[i], "-n" ) == 0 ) {
+      ntasks = atoi( argv[++i] );
+      if( ntasks == 0 ) print_usage();
+    } else if( strcmp( argv[i], "-e" ) == 0 ) {
+      opts |= PIP_OPT_FORCEEXIT;
+    } else if( strcmp( argv[i], "-c" ) == 0 ) {
+      coreno = atoi( argv[++i] );
+    }
+  }
+  k = i;
+  if( ( err = pip_init( &pipid, &ntasks, NULL, opts ) ) != 0 ) {
     fprintf( stderr, "pip_init()=%d\n", err );
   } else {
-    pipid = PIP_PIPID_ANY;
-    err = pip_spawn( argv[1],
-		     &argv[1],
-		     NULL,
-		     PIP_CPUCORE_ASIS,
-		     &pipid,
-		     NULL,
-		     NULL,
-		     NULL );
-    if( err ) {
-      fprintf( stderr, "pip_spawn(%s)=%d\n", argv[1], err );
-    } else {
+    for( i=0; i<ntasks; i++ ) {
+      pipid = i;
+      err = pip_spawn( argv[k],
+		       &argv[k],
+		       NULL,
+		       coreno,
+		       &pipid,
+		       NULL,
+		       NULL,
+		       NULL );
+      if( err ) {
+	int j;
+	fprintf( stderr, "pip_spawn(%s)=%d\n", argv[1], err );
+	for( j=0; j<i; j++ ) pip_wait( i, NULL );
+	goto error;
+      }
+    }
+    for( i=0; i<ntasks; i++ ) {
       int status;
-      while( wait( &status ) < 0 ) {
+      while( pip_wait( i, &status ) < 0 ) {
 	if( errno == ECHILD ) break;
       }
     }
   }
+ error:
   return err;
 }
