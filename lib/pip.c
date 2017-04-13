@@ -16,6 +16,7 @@
 #include <pthread.h>
 #include <malloc.h>
 #include <signal.h>
+#include <stdarg.h>
 
 //#define PIP_CLONE_AND_DLMOPEN
 #define PIP_DLMOPEN_AND_CLONE
@@ -73,6 +74,48 @@ static int (*pip_clone_mostly_pthread_ptr) (
 	void *arg,
 	pid_t *pidp) = NULL;
 
+static void pip_message( char *hdr, char *format, va_list ap ) {
+#define MESGLEN		(512)
+#define PIPIDLEN	(32)
+  char mesg[MESGLEN];
+  char idstr[PIPIDLEN];
+  int len;
+
+  if( pip_root != NULL && pip_self == NULL ) {
+    snprintf( mesg, MESGLEN, hdr, "<PIP_ROOT> " );
+  } else if( pip_self != NULL ) {
+    snprintf( idstr, PIPIDLEN, "<PIPID:%d(%d)> ", pip_self->pipid, getpid() );
+    snprintf( mesg, MESGLEN, hdr, idstr );
+  } else {
+    snprintf( idstr, PIPIDLEN, "(PID:%d) ", getpid() );
+    snprintf( mesg, MESGLEN, hdr, idstr );
+  }
+  len = strlen( mesg );
+  vsnprintf( &mesg[len], MESGLEN-len, format, ap );
+  fprintf( stderr, "%s", mesg );
+}
+
+inline static void pip_info_mesg( char *format, ... ) __attribute__ ((unused));
+static void pip_info_mesg( char *format, ... ) {
+  va_list ap;
+  va_start( ap, format );
+  pip_message( "PIP-INFO%s: ", format, ap );
+}
+
+inline static void pip_warn_mesg( char *format, ... ) __attribute__ ((unused));
+static void pip_warn_mesg( char *format, ... ) {
+  va_list ap;
+  va_start( ap, format );
+  pip_message( "PIP-WARN%s: ", format, ap );
+}
+
+inline static void pip_err_mesg( char *format, ... ) __attribute__ ((unused));
+static void  pip_err_mesg( char *format, ... ) {
+  va_list ap;
+  va_start( ap, format );
+  pip_message( "PIP-ERROR<%s>: ", format, ap );
+}
+
 static int pip_page_alloc( size_t sz, void **allocp ) {
   int pgsz = sysconf( _SC_PAGESIZE );
   if( posix_memalign( allocp, (size_t) pgsz, sz ) != 0 ) RETURN( errno );
@@ -88,7 +131,9 @@ static int pip_is_magic_ok( pip_root_t *root ) {
 }
 
 static int pip_is_version_ok( pip_root_t *root ) {
-  return root->version == PIP_VERSION;
+  if( root->version   == PIP_VERSION &&
+      root->root_size == sizeof( pip_root_t ) ) return 1;
+  return 0;
 }
 
 static void pip_init_task_struct( pip_task_t *taskp ) {
@@ -108,18 +153,16 @@ static int pip_check_pie( char *path ) {
     err = errno;
   } else {
     if( read( fd, &elfh, sizeof( elfh ) ) != sizeof( elfh ) ) {
-      fprintf( stderr, PIP_ERRMSG_TAG "Unable to read '%s'\n",
-	       getpid(), path );
+      pip_warn_mesg( "Unable to read '%s'\n", path );
       err = EUNATCH;
     } else if( elfh.e_ident[EI_MAG0] != ELFMAG0 ||
 	       elfh.e_ident[EI_MAG1] != ELFMAG1 ||
 	       elfh.e_ident[EI_MAG2] != ELFMAG2 ||
 	       elfh.e_ident[EI_MAG3] != ELFMAG3 ) {
-      fprintf( stderr, "'%s' is not an ELF file\n", path );
+      pip_warn_mesg( "'%s' is not an ELF file\n", path );
       err = EUNATCH;
     } else if( elfh.e_type != ET_DYN ) {
-      fprintf( stderr, PIP_ERRMSG_TAG "'%s' is not DYNAMIC (PIE)\n",
-	       getpid(), path );
+      pip_warn_mesg( "'%s' is not DYNAMIC (PIE)\n", path );
       err = ELIBEXEC;
     }
     (void) close( fd );
@@ -195,9 +238,7 @@ static int pip_check_opt_and_env( int *optsp ) {
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
-      fprintf( stderr,
-	       PIP_ERRMSG_TAG "unknown setting PIP_MODE='%s'\n",
-	       getpid(), env );
+      pip_warn_mesg( "unknown environment setting PIP_MODE='%s'\n", env );
       RETURN( EPERM );
     }
     break;
@@ -221,9 +262,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 	PIP_MODE_PROCESS_PRELOAD_BIT|
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
-      fprintf( stderr,
-	       PIP_ERRMSG_TAG "unknown setting PIP_MODE='%s'\n",
-	       getpid(), env );
+      pip_warn_mesg( "unknown environment setting PIP_MODE='%s'\n", env );
       RETURN( EPERM );
     }
     break;
@@ -234,9 +273,7 @@ static int pip_check_opt_and_env( int *optsp ) {
     desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     break;
   default:
-    fprintf( stderr,
-	     PIP_ERRMSG_TAG "pip_init() invalid argument opts=0x%x\n",
-	     getpid(), opts );
+    pip_warn_mesg( "pip_init() invalid argument opts=0x%x\n", opts );
     RETURN( EINVAL );
   }
 
@@ -252,16 +289,12 @@ static int pip_check_opt_and_env( int *optsp ) {
 			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
       /* no wrapper found */
       if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
-	fprintf( stderr,
-		 PIP_ERRMSG_TAG "process:preload mode is requested but "
-		 "LD_PRELOAD environment variable is empty.\n",
-		 getpid() );
+	pip_warn_mesg( "process:preload mode is requested but "
+		       "LD_PRELOAD environment variable is empty.\n" );
       } else {
-	fprintf( stderr,
-		 PIP_ERRMSG_TAG
-		 "process:preload mode is requested but LD_PRELOAD='%s'\n",
-		 getpid(),
-		 env );
+	pip_warn_mesg( "process:preload mode is requested but "
+		       "LD_PRELOAD='%s'\n",
+		       env );
       }
       RETURN( EPERM );
     }
@@ -273,18 +306,13 @@ static int pip_check_opt_and_env( int *optsp ) {
       newmod = PIP_MODE_PROCESS_PIPCLONE;
     } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
       if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
-	fprintf( stderr,
-		 PIP_ERRMSG_TAG
-		 "process mode is requested but "
-		 "pip_clone_info symbol is not found in $LD_PRELOAD and "
-		 "pip_clone_mostly_pthread() symbol is not found in glibc\n",
-		 getpid() );
+	pip_warn_mesg("process mode is requested but pip_clone_info symbol "
+		      "is not found in $LD_PRELOAD and "
+		      "pip_clone_mostly_pthread() symbol is not found in "
+		      "glibc\n" );
       } else {
-	fprintf( stderr,
-		 PIP_ERRMSG_TAG
-		 "process:pipclone mode is requested "
-		 "but pip_clone_mostly_pthread() is not found in glibc\n",
-		 getpid() );
+	pip_warn_mesg( "process:pipclone mode is requested but "
+		       "pip_clone_mostly_pthread() is not found in glibc\n" );
       }
       RETURN( EPERM );
     }
@@ -292,10 +320,8 @@ static int pip_check_opt_and_env( int *optsp ) {
     newmod = PIP_MODE_PTHREAD;
   }
   if( newmod == 0 ) {
-    fprintf( stderr,
-	     PIP_ERRMSG_TAG
-	     "pip_init() implemenation error. desired = 0x%x\n",
-	     getpid(), desired );
+    pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x\n",
+		   desired );
     RETURN( EPERM );
   }
 
@@ -304,10 +330,7 @@ static int pip_check_opt_and_env( int *optsp ) {
       if( strcasecmp( env, PIP_ENV_OPTS_FORCEEXIT ) == 0 ) {
 	opts |= PIP_OPT_FORCEEXIT;
       } else {
-	fprintf( stderr,
-		 PIP_ERRMSG_TAG
-		 "Unknown option %s=%s\n",
-		 getpid(), PIP_ENV_OPTS, env );
+	pip_warn_mesg( "Unknown option %s=%s\n", PIP_ENV_OPTS, env );
 	RETURN( EPERM );
       }
     }
@@ -346,7 +369,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       RETURN( err );
     }
     (void) memset( pip_root, 0, sz );
-    pip_root->size = sz;
+    pip_root->root_size = sizeof( pip_root_t );
+    pip_root->size      = sz;
 
     DBGF( "ROOTROOT (%p)", pip_root );
 
@@ -384,9 +408,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root = (pip_root_t*) strtoll( env, NULL, 16 );
     if( !pip_is_magic_ok(   pip_root ) ) RETURN( EPERM );
     if( !pip_is_version_ok( pip_root ) ) {
-      fprintf( stderr,
-	       PIP_ERRMSG_TAG "Version miss-match between root and child\n",
-	       getpid() );
+      pip_warn_mesg( "Version miss-match between root and child\n" );
       RETURN( EPERM );
     }
 
@@ -657,8 +679,7 @@ static int pip_load_so( void **handlep, char *path ) {
   ES( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) );
   if( loaded == NULL ) {
     if( ( err = pip_check_pie( path ) ) != 0 ) RETURN( err );
-    fprintf( stderr, PIP_ERRMSG_TAG "dlmopen(%s): %s\n",
-	     getpid(), path, dlerror() );
+    pip_warn_mesg( "dlmopen(%s): %s\n", path, dlerror() );
     RETURN( ENOEXEC );
   } else {
     DBGF( "dlmopen(%s): SUCCEEDED", path );
@@ -695,10 +716,8 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
 	/* getting main function address to invoke */
       DBG;
-      fprintf( stderr,
-	       PIP_ERRMSG_TAG "%s seems not to be linked "
-	       "with '-rdynamic' option\n",
-	       getpid(), prog );
+      pip_warn_mesg( "%s seems not to be linked with '-rdynamic' option\n",
+		     prog );
       err = ENOEXEC;
       goto error;
     } else if( ( libc_fflush = (fflush_t) dlsym( loaded, "fflush" ) )
@@ -938,13 +957,8 @@ static int pip_do_spawn( void *thargs )  {
     DBG;
 
   } else if( err != 0 ) {
-    fprintf( stderr,
-	     PIP_ERRMSG_TAG
-	     "try to spawn(%s), but the before hook at %p returns %d\n",
-	     getpid(),
-	     argv[0],
-	     before,
-	     err );
+    pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d\n",
+		   argv[0], before, err );
     self->retval = err;
   }
   DBG;
@@ -1369,24 +1383,20 @@ int pip_wait( int pipid, int *retvalp ) {
   pip_task_t *task;
   int err;
 
-  DBG;
-
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
   task = &pip_root->tasks[pipid];
-  if( task == pip_self ) RETURN( EINVAL );
+  if( task == pip_self ) RETURN( EPERM );
 
   if( pip_if_pthread_() ) { /* thread mode */
-  DBG;
     err = pthread_join( task->thread, NULL );
     DBGF( "pthread_join()=%d", err );
 
-  } else { 	/* process mode */
+  } else {			/* process mode */
     int status;
     pid_t pid;
     DBG;
     while( 1 ) {
-      //printf( "waitpid(%d)\n", task->pid );
       if( ( pid = waitpid( task->pid, &status, __WALL ) ) >= 0 ) break;
       if( errno != EINTR ) {
 	err = errno;
@@ -1395,6 +1405,8 @@ int pip_wait( int pipid, int *retvalp ) {
     }
     if( WIFEXITED( status ) ) {
       task->retval = WEXITSTATUS( status );
+    } else if( WIFSIGNALED( status ) ) {
+      pip_warn_mesg( "Signaled %s\n", strsignal( WTERMSIG( status ) ) );
     }
     DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
@@ -1403,7 +1415,6 @@ int pip_wait( int pipid, int *retvalp ) {
 }
 
 int pip_trywait( int pipid, int *retvalp ) {
-
   pip_task_t *task;
   int err;
 
@@ -1428,6 +1439,8 @@ int pip_trywait( int pipid, int *retvalp ) {
     }
     if( WIFEXITED( status ) ) {
       task->retval = WEXITSTATUS( status );
+    } else if( WIFSIGNALED( status ) ) {
+      pip_warn_mesg( "Signaled %s\n", strsignal( WTERMSIG( status ) ) );
     }
     DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
@@ -1470,7 +1483,7 @@ void pip_free( void *ptr ) {
     free_func = pip_root->tasks[pipid].free;
   }
   if( free_func == NULL ) {
-    fprintf( stderr, "No free function (pipid=%d)\n", pipid );
+    pip_warn_mesg( "No free function\n" );
   } else {
     free_func( ptr );
   }
