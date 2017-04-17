@@ -4,7 +4,7 @@
  * $PIP_license:$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
  */
 
 #define _GNU_SOURCE
@@ -74,23 +74,28 @@ static int (*pip_clone_mostly_pthread_ptr) (
 	void *arg,
 	pid_t *pidp) = NULL;
 
-static void pip_message( char *hdr, char *format, va_list ap ) {
+int pip_idstr( char *buf, size_t sz ) {
+  int n;
+  if( pip_root != NULL && pip_self == NULL ) {
+    n = snprintf( buf, sz, "<PIP_ROOT>" );
+  } else if( pip_self != NULL ) {
+    n = snprintf( buf, sz, "<PIPID:%d(%d)>", pip_self->pipid, getpid() );
+  } else {
+    n = snprintf( buf, sz, "(PID:%d)", getpid() );
+  }
+  return n;
+}
+
+static void pip_message( char *tag, char *format, va_list ap ) {
 #define MESGLEN		(512)
-#define PIPIDLEN	(32)
+#define PIPIDLEN	(64)
   char mesg[MESGLEN];
   char idstr[PIPIDLEN];
   int len;
 
-  if( pip_root != NULL && pip_self == NULL ) {
-    snprintf( mesg, MESGLEN, hdr, "<PIP_ROOT> " );
-  } else if( pip_self != NULL ) {
-    snprintf( idstr, PIPIDLEN, "<PIPID:%d(%d)> ", pip_self->pipid, getpid() );
-    snprintf( mesg, MESGLEN, hdr, idstr );
-  } else {
-    snprintf( idstr, PIPIDLEN, "(PID:%d) ", getpid() );
-    snprintf( mesg, MESGLEN, hdr, idstr );
-  }
-  len = strlen( mesg );
+  len = pip_idstr( idstr, PIPIDLEN );
+  len = snprintf( &mesg[0], MESGLEN-len, tag, idstr );
+  mesg[len++] = ' ';
   vsnprintf( &mesg[len], MESGLEN-len, format, ap );
   fprintf( stderr, "%s", mesg );
 }
@@ -113,7 +118,7 @@ inline static void pip_err_mesg( char *format, ... ) __attribute__ ((unused));
 static void  pip_err_mesg( char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( "PIP-ERROR<%s>: ", format, ap );
+  pip_message( "PIP-ERROR%s: ", format, ap );
 }
 
 static int pip_page_alloc( size_t sz, void **allocp ) {

@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
 */
 
 #define _GNU_SOURCE
@@ -19,7 +19,16 @@
 #include <pip_clone.h>
 
 //#define DEBUG
+#include <pip.h>
 #include <pip_debug.h>
+
+//#define CHECK_TLS
+#ifdef CHECK_TLS
+#include <asm/prctl.h>
+#include <asm/ldt.h>
+#include <sys/prctl.h>
+#include <pthread.h>
+#endif
 
 typedef
 int(*clone_syscall_t)(int(*)(void*), void*, int, void*, pid_t*, void*, pid_t*);
@@ -49,6 +58,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
     case PIP_LOCK_PRELOADED:
       /* locked by piplib */
       goto lock_ok;
+      break;
     case PIP_LOCK_OTHERWISE:
     default:
       /* somebody other than piplib locked already */
@@ -75,6 +85,22 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       DBGF( "!!! Original clone() is used" );
       retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
 
+#ifdef CHECK_TLS
+#ifdef __x86_64__
+      if( flags & CLONE_SETTLS ) {
+	unsigned long fsaddr;
+	arch_prctl( ARCH_GET_FS, &fsaddr );
+	pip_print_maps();
+	fprintf( stderr,
+		 "TLS=%p  tls.base_addr=%u  FS=%p  PThread=%p  STACK=%p\n",
+		 (void*) tls, ((struct user_desc *) tls)->base_addr,
+		 (void*) fsaddr, (void*) pthread_self(), child_stack );
+      } else {
+	fprintf( stderr, "CLONE_SETTLS is not set\n" );
+      }
+#endif
+#endif
+
     } else if( oldval == PIP_LOCK_PRELOADED ) {
       DBGF( "!!! clone() wrapper" );
 #ifdef DEBUG
@@ -88,6 +114,8 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       flags &= ~0xff;
       flags |= SIGCHLD;
       flags |= CLONE_VM;
+      /* do not reset the CLONE_SETTLS flag */
+      flags |= CLONE_SETTLS;
       //flags |= CLONE_PTRACE;
 
       errno = 0;
@@ -96,7 +124,23 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
       DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );
 
-      if( retval > 0 ) {	/* create PID is returned */
+#ifdef CHECK_TLS
+#ifdef __x86_64__
+      if( flags & CLONE_SETTLS ) {
+	unsigned long fsaddr;
+	arch_prctl( ARCH_GET_FS, &fsaddr );
+	pip_print_maps();
+	fprintf( stderr,
+		 "TLS=%p  tls.base_addr=%u  FS=%p  PThread=%p  STACK=%p\n",
+		 (void*) tls, ((struct user_desc *) tls)->base_addr,
+		 (void*) fsaddr, (void*) pthread_self(), child_stack );
+      } else {
+	fprintf( stderr, "CLONE_SETTLS is not set\n" );
+      }
+#endif
+#endif
+
+      if( retval > 0 ) {	/* created PID is returned */
 	pip_clone_info.flag_clone = flags;
 	pip_clone_info.pid_clone  = retval;
 	pip_clone_info.stack      = child_stack;

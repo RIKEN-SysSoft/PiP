@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
 */
 
 #ifndef _pip_h_
@@ -438,9 +438,11 @@ extern "C" {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+  int pip_idstr( char *buf, size_t sz );
+
 #ifdef PIP_INTERNAL_FUNCS
 
-  /* the following functions depends its implementation deeply */
+  /* the following functions depends PiP execution modedeeply */
 
   int pip_get_thread( int pipid, pthread_t *threadp );
   int pip_if_pthread( int *flagp );
@@ -465,7 +467,7 @@ extern "C" {
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 /********************************************************/
-/* The llowing functions are just for utility for debug */
+/* The llowing functions are just utility for debugging */
 /********************************************************/
 
 #define PIP_DEBUG_BUFSZ		(4096)
@@ -482,26 +484,30 @@ inline static void pip_print_maps( void ) {
     if( ( rc = read( fd, buf, PIP_DEBUG_BUFSZ ) ) <= 0 ) break;
     p = buf;
     do {
-      if( ( wc = write( 1, p, rc ) ) < 0 ) break; /* STDOUT */
+      if( ( wc = write( 1, p, rc ) ) < 0 ) { /* STDOUT */
+	fprintf( stderr, "write error\n" );
+	goto error;
+      }
       p  += wc;
       rc -= wc;
     } while( rc > 0 );
   }
+ error:
   close( fd );
 }
 
-#define PIP_MTAG	"PiP:"
-
 inline static void pip_print_fd( int ) __attribute__ ((unused));
 inline static void pip_print_fd( int fd ) {
+  char idstr[64];
   char fdpath[512];
   char fdname[256];
   ssize_t sz;
 
+  pip_idstr( idstr, 64 );
   sprintf( fdpath, "/proc/self/fd/%d", fd );
   if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
     fdname[sz] = '\0';
-    fprintf( stderr, "%s %d -> %s", PIP_MTAG, fd, fdname );
+    fprintf( stderr, "%s %d -> %s", idstr, fd, fdname );
   }
 }
 
@@ -509,10 +515,12 @@ inline static void pip_print_fds( void ) __attribute__ ((unused));
 inline static void pip_print_fds( void ) {
   DIR *dir = opendir( "/proc/self/fd" );
   struct dirent *de;
+  char idstr[64];
   char fdpath[512];
   char fdname[256];
   ssize_t sz;
 
+  pip_idstr( idstr, 64 );
   if( dir != NULL ) {
     int   fd = dirfd( dir );
 
@@ -521,10 +529,10 @@ inline static void pip_print_fds( void ) {
       if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( atoi( de->d_name ) != fd ) {
-	  fprintf( stderr, "%s %s -> %s", PIP_MTAG, fdpath, fdname );
+	  fprintf( stderr, "%s %s -> %s", idstr, fdpath, fdname );
 	} else {
 	  fprintf( stderr, "%s %s -> %s  opendir(\"/proc/self/fd\")",
-		   PIP_MTAG, fdpath, fdname );
+		   idstr, fdpath, fdname );
 	}
       }
     }
@@ -532,15 +540,18 @@ inline static void pip_print_fds( void ) {
   }
 }
 
-#define LINSZ	(1024)
 inline static void pip_check_addr( char*, void* ) __attribute__ ((unused));
 inline static void pip_check_addr( char *tag, void *addr ) {
   FILE *maps = fopen( "/proc/self/maps", "r" );
+  char idstr[64];
   char *line = NULL;
-  size_t sz  = LINSZ;
+  size_t sz  = 0;
   int retval;
 
-  if( tag == NULL ) tag = PIP_MTAG;
+  if( tag == NULL ) {
+    pip_idstr( idstr, 64 );
+    tag = &idstr[0];
+  }
   while( maps != NULL ) {
     void *start, *end;
 
@@ -550,17 +561,16 @@ inline static void pip_check_addr( char *tag, void *addr ) {
     } else if( retval == 0 ) {
       continue;
     }
+    line[retval] = '\0';
     if( sscanf( line, "%p-%p", &start, &end ) == 2 ) {
       if( (intptr_t) addr >= (intptr_t) start &&
 	  (intptr_t) addr <  (intptr_t) end ) {
-	fprintf( stderr, ">>%s>> %p: %s", tag, addr, line );
+	fprintf( stderr, "%s %p: %s", tag, addr, line );
 	goto found;
-      } else {
-	//fprintf( stderr, ">>%s>> %p: %p--%p\n", tag, addr, start, end );
       }
     }
   }
-  fprintf( stderr, ">>%s>> (not found)\n", tag );
+  fprintf( stderr, "%s %p (not found)\n", tag, addr );
  found:
   fclose( maps );
   if( line != NULL ) free( line );

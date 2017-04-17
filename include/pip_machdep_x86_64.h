@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2017
 */
 
 #ifndef _pip_machdep_x86_64_h
@@ -44,8 +44,9 @@ inline static void pip_memory_barrier(void) {
 #include <sys/prctl.h>
 #include <errno.h>
 
+int arch_prctl( int, unsigned long* );
+
 inline static void pip_print_fs_segreg( void ) {
-  int arch_prctl(int, unsigned long*);
   unsigned long fsreg;
   if( arch_prctl( ARCH_GET_FS, &fsreg ) == 0 ) {
     fprintf( stderr, "FS REGISTER: 0x%lx\n", fsreg );
