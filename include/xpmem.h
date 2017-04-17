@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2017
 */
 
 #ifndef _XPMEM_H
@@ -12,10 +12,8 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <linux/types.h>
 #include <sys/types.h>
 
-#include <pip.h>
 /*
  * flags for segment permissions
  */
@@ -27,8 +25,8 @@
  */
 #define XPMEM_PERMIT_MODE	0x1
 
-typedef __s64 xpmem_segid_t;	/* segid returned from xpmem_make() */
-typedef __s64 xpmem_apid_t;	/* apid returned from xpmem_get() */
+typedef void* xpmem_segid_t;	/* segid returned from xpmem_make() */
+typedef void* xpmem_apid_t;	/* apid returned from xpmem_get() */
 
 struct xpmem_addr {
   xpmem_apid_t	apid;		/* apid that represents memory */

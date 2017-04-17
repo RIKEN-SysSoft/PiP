@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2017
 */
 
 #ifndef _pip_internal_h_
@@ -90,8 +90,7 @@ typedef struct {
   char 			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
 
-  /* to implement pip_exit(), the context to be used by setcontext() */
-  ucontext_t 		*ctx;
+  ucontext_t 		*ctx;	/* to implement pip_exit() */
 
   char			***envvp; /* environment vars */
   volatile void		*export;  /* PiP export region */

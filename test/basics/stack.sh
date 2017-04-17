@@ -13,7 +13,7 @@ fi
 case `../util/pip_mode` in
 process:pipclone|pthread)
 	case $test_exit_status in
-	$EXIT_PASS)	test_exit_status=$EXIT_XPASS;;
+	$EXIT_PASS)	test_exit_status=$EXIT_PASS;;
 	$EXIT_FAIL)	test_exit_status=$EXIT_UNSUPPORTED;;
 	esac
 esac
