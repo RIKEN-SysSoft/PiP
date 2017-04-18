@@ -28,21 +28,19 @@ Process-in-Process (PiP) Installation
 	mkdir PIP-glibc.build
 	cd PIP-glibc.build
 	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
-		"CFLAGS=-mtune=generic -fasynchronous-unwind-tables \
-		-DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
+		"CFLAGS=-mtune=generic -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
 		--enable-add-ons=ports,nptl,rtkaio,c_stubs,libidn \
 		--with-headers=/usr/include --enable-kernel=2.6.32 \
 		--enable-bind-now --build=x86_64-redhat-linux \
 		--enable-multi-arch --enable-obsolete-rpc \
-		--disable-profile --enable-nss-crypt --disable-systemtap
+		--disable-profile --enable-nss-crypt --enable-systemtap
 	make -j3 && make install
 
   +++ on Aarch64 (ARM64)
 	mkdir PIP-glibc.build
 	cd PIP-glibc.build
 	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
-		CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3 \
-		-fno-asynchronous-unwind-tables" \
+		CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
 		--enable-add-ons=ports,nptl,c_stubs,libidn \
 		--with-headers=/usr/include --enable-kernel=2.6.32 \
 		--enable-bind-now --build=aarch64-redhat-linux \

@@ -24,7 +24,7 @@
 
 //#define HAVE_GLIBC_INIT
 
-#define PIP_BASE_VERSION	(0x0100U)
+#define PIP_BASE_VERSION	(0x1000U)
 #ifndef HAVE_GLIBC_INIT
 #define PIP_VERSION		PIP_BASE_VERSION
 #else
