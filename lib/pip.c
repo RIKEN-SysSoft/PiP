@@ -671,7 +671,7 @@ static int pip_load_so( void **handlep, char *path ) {
   void 		*loaded;
   int		err;
 
-  DBGF( "hanlde=%p", *handlep );
+  DBGF( "handle=%p", *handlep );
   if( *handlep == NULL ) {
     lmid = LM_ID_NEWLM;
   } else if( dlinfo( *handlep, RTLD_DI_LMID, (void*) &lmid ) != 0 ) {
@@ -681,6 +681,7 @@ static int pip_load_so( void **handlep, char *path ) {
 
   DBGF( "calling dlmopen(%s)", path );
   ES( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) );
+  DBG;
   if( loaded == NULL ) {
     if( ( err = pip_check_pie( path ) ) != 0 ) RETURN( err );
     pip_warn_mesg( "dlmopen(%s): %s\n", path, dlerror() );
