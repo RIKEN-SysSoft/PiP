@@ -340,7 +340,6 @@ static int pip_check_opt_and_env( int *optsp ) {
       }
     }
   }
-
   *optsp = ( opts & ~PIP_MODE_MASK ) | newmod;
   RETURN( 0 );
 }
@@ -518,7 +517,7 @@ int pip_get_pipid( int *pipidp ) {
 
 int pip_get_ntasks( int *ntasksp ) {
   if( ntasksp  == NULL ) RETURN( EINVAL );
-  if( pip_root == NULL ) return( EPERM  ); /* intentionally using return */
+  if( pip_root == NULL ) RETURN( EPERM  ); /* intentionally using return */
 
   *ntasksp = pip_root->ntasks_curr;
   RETURN( 0 );
@@ -552,7 +551,7 @@ static int pip_check_pipid( int *pipidp ) {
       *pipidp = pip_self->pipid;
     }
   }
-  return 0;
+  RETURN( 0 );
 }
 
 int pip_import( int pipid, void **exportp  ) {
@@ -1455,6 +1454,20 @@ int pip_trywait( int pipid, int *retvalp ) {
 
 pip_clone_t *pip_get_cloneinfo_( void ) {
   return pip_root->cloneinfo;
+}
+
+int pip_get_pid( int pipid, pid_t *pidp ) {
+  int err = 0;
+
+  if( pidp == NULL ) RETURN( EINVAL );
+  if( ( err = pip_check_pipid( &pipid ) ) == 0 ) {
+    if( pipid == PIP_PIPID_ROOT ) {
+      err = EPERM;
+    } else {
+      *pidp = pip_root->tasks[pipid].pid;
+    }
+  }
+  RETURN( err );
 }
 
 /*** The following malloc/free functions are just for functional test    ***/
