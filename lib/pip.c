@@ -1460,12 +1460,17 @@ int pip_get_pid( int pipid, pid_t *pidp ) {
   int err = 0;
 
   if( pidp == NULL ) RETURN( EINVAL );
-  if( ( err = pip_check_pipid( &pipid ) ) == 0 ) {
-    if( pipid == PIP_PIPID_ROOT ) {
-      err = EPERM;
-    } else {
-      *pidp = pip_root->tasks[pipid].pid;
+  if( pip_root->opts && PIP_MODE_PROCESS ) {
+    /* only valid with the "process" execution mode */
+    if( ( err = pip_check_pipid( &pipid ) ) == 0 ) {
+      if( pipid == PIP_PIPID_ROOT ) {
+	err = EPERM;
+      } else {
+	*pidp = pip_root->tasks[pipid].pid;
+      }
     }
+  } else {
+    err = EPERM;
   }
   RETURN( err );
 }
