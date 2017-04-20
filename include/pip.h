@@ -100,7 +100,7 @@
 
 #define PIP_MODE_PTHREAD		(0x100)
 #define PIP_MODE_PROCESS		(0x200)
-/* the following two modes are a submode of PIP_MODE_PROCESS */
+/* the following two modes are submodes of PIP_MODE_PROCESS */
 #define PIP_MODE_PROCESS_PRELOAD	(0x210)
 #define PIP_MODE_PROCESS_PIPCLONE	(0x220)
 #define PIP_MODE_MASK			(0xFF0)
