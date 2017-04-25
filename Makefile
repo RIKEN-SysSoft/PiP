@@ -77,4 +77,3 @@ check:
 prog-distclean:
 	$(RM) config.log config.status include/config.h build/config.mk
 .PHONY: prog-distclean
-

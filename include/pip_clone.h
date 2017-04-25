@@ -15,8 +15,7 @@
 #include <pip_machdep.h>
 
 #define PIP_LOCK_UNLOCKED	(0)
-#define PIP_LOCK_PRELOADED	(1)
-#define PIP_LOCK_OTHERWISE	(2)
+#define PIP_LOCK_OTHERWISE	(0xFFFFFFFF)
 
 typedef struct pip_clone {
   pip_spinlock_t lock;	     /* lock */

@@ -1,6 +1,6 @@
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
 CFLAGS += $(PIEFLAG) -pthread
-PIPLDFLAGS += -rdynamic $(PIPLDLIB) -pthread
+PIPLDFLAGS += $(PIPLDLIB) -pthread
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
