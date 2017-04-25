@@ -148,7 +148,7 @@ typedef int(*pip_spawnhook_t)(void*);
 #include <errno.h>
 
 typedef struct pip_ulp {
-  char dummy [1072];
+  char dummy [@PIPULPSZ@];
 } pip_ulp_t;
 
 #ifdef __cplusplus
@@ -445,6 +445,7 @@ extern "C" {
   int pip_idstr( char *buf, size_t sz );
 
 #ifdef PIP_INTERNAL_FUNCS
+  #include <pip_internal.h>
 
   /* the following functions depends PiP execution modedeeply */
 
