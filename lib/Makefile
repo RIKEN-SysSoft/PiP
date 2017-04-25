@@ -25,15 +25,16 @@ DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pvas.h 			\
 	   $(PIPINCDIR)/pip_debug.h
 
-pipulpsz: pipulpsz.c $(PIPINCDIR)/pip_internal.h
-	$(CC) $< -I$(PIPINCDIR) -o $@
-
-$(PIPINCDIR)/pip.h: ./pipulpsz $(PIPINCDIR)/pip.h.in
-	sed "s/@PIPULPSZ@/`./pipulpsz`/" $(PIPINCDIR)/pip.h.in > $(PIPINCDIR)/pip.h
-
 include $(top_srcdir)/build/rule.mk
 
 $(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
+
+
+pipulpsz: pipulpsz.c $(PIPINCDIR)/pip_internal.h
+	$(CC) $< -I$(PIPINCDIR) -o $@
+
+$(PIPINCDIR)/pip.h: ./pipulpsz $(PIPINCDIR)/pip.h.in
+	sed "s/@PIPULPSZ@/`./pipulpsz`/" $(PIPINCDIR)/pip.h.in > $(PIPINCDIR)/pip.h

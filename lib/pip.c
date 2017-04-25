@@ -417,7 +417,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       pip_root->opts         = opts;
       pip_root->pid          = getpid();
       pip_root->free         = (free_t) pip_dlsym( RTLD_DEFAULT, "free");
-      pip_root->page_szie    = sysconf( _SC_PAGESIZE );
+      pip_root->page_size    = sysconf( _SC_PAGESIZE );
       if( rt_expp != NULL ) pip_root->export = *rt_expp;
 
       DBGF( "PIP_MODE=%s", pip_get_mode_str() );
