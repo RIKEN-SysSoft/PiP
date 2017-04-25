@@ -37,6 +37,12 @@ pip_clone_t pip_clone_info = { 0 }; /* this is refered by piplib */
 
 static clone_syscall_t pip_clone_orig = NULL;
 
+
+#include <sys/syscall.h>
+static pid_t pip_gettid( void ) {
+  return syscall( SYS_gettid );
+}
+
 static clone_syscall_t pip_get_clone( void ) {
   static clone_syscall_t pip_clone_orig = NULL;
 
@@ -47,22 +53,21 @@ static clone_syscall_t pip_get_clone( void ) {
 }
 
 int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
+  pid_t		 tid = pip_gettid();
   pip_spinlock_t oldval;
-  int retval = -1;
+  int 		 retval = -1;
 
   while( 1 ) {
     oldval = pip_spin_trylock_wv( &pip_clone_info.lock, PIP_LOCK_OTHERWISE );
     switch( oldval ) {
     case PIP_LOCK_UNLOCKED:
       /* lock succeeded */
-    case PIP_LOCK_PRELOADED:
-      /* locked by piplib */
       goto lock_ok;
-      break;
     case PIP_LOCK_OTHERWISE:
+      /* busy-waiting */
+      continue;
     default:
-      /* somebody other than piplib locked already */
-      /* and wait until it is unlocked */
+      if( oldval == tid ) goto lock_ok; /* locked by myself */
       break;
     }
   }
@@ -101,7 +106,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 #endif
 #endif
 
-    } else if( oldval == PIP_LOCK_PRELOADED ) {
+    } else if( oldval == tid ) {
       DBGF( "!!! clone() wrapper" );
 #ifdef DEBUG
       int oldflags = flags;
@@ -116,7 +121,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       flags |= CLONE_VM;
       /* do not reset the CLONE_SETTLS flag */
       flags |= CLONE_SETTLS;
-      //flags |= CLONE_PTRACE;
+      flags |= CLONE_PTRACE;
 
       errno = 0;
       DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",

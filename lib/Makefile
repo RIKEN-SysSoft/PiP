@@ -17,13 +17,19 @@ SRCS     = pip.c pvas.c
 
 OBJS	 = pip.o pvas.o
 
-DEPINCS  = $(PIPINCDIR)/pip.h 			\
+DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_internal.h 		\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
 	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
 	   $(PIPINCDIR)/pvas.h 			\
 	   $(PIPINCDIR)/pip_debug.h
+
+pipulpsz: pipulpsz.c $(PIPINCDIR)/pip_internal.h
+	$(CC) $< -I$(PIPINCDIR) -o $@
+
+$(PIPINCDIR)/pip.h: ./pipulpsz $(PIPINCDIR)/pip.h.in
+	sed "s/@PIPULPSZ@/`./pipulpsz`/" $(PIPINCDIR)/pip.h.in > $(PIPINCDIR)/pip.h
 
 include $(top_srcdir)/build/rule.mk
 
