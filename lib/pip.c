@@ -9,11 +9,14 @@
 
 #define _GNU_SOURCE
 
+#include <sys/mman.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <dlfcn.h>
 #include <dirent.h>
 #include <sched.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <signal.h>
 #include <stdarg.h>
@@ -27,8 +30,6 @@
 #error "!defined(PIP_CLONE_AND_DLMOPEN) && !defined(PIP_DLMOPEN_AND_CLONE)"
 #endif
 
-//#define SHOULD_HAVE_CTYPE_INIT
-//#define HAVE_GLIBC_INIT
 //#define PIP_NO_MALLOPT
 
 #define PIP_FREE(P)	free(P)
@@ -48,7 +49,7 @@
 #define ES(V,F)		\
   do { double __st=pip_gettime(); (F); (V) += pip_gettime()-__st; } while(0)
 double time_dlmopen   = 0.0;
-double time_load_so   = 0.0;
+double time_load_dso  = 0.0;
 double time_load_prog = 0.0;
 #define REPORT(V)	 printf( "%s: %g\n", #V, V );
 
@@ -62,7 +63,7 @@ double time_load_prog = 0.0;
 /*** note that the following static variables are   ***/
 /*** located at each PIP task and the root process. ***/
 static pip_root_t	*pip_root = NULL;
-static pip_task_t	*pip_self = NULL;
+static pip_task_t	*pip_task = NULL;
 
 static pip_clone_t*	pip_cloneinfo = NULL;
 static int (*pip_clone_mostly_pthread_ptr) (
@@ -76,10 +77,10 @@ static int (*pip_clone_mostly_pthread_ptr) (
 
 int pip_idstr( char *buf, size_t sz ) {
   int n;
-  if( pip_root != NULL && pip_self == NULL ) {
+  if( pip_root != NULL && pip_task == NULL ) {
     n = snprintf( buf, sz, "<PIP_ROOT>" );
-  } else if( pip_self != NULL ) {
-    n = snprintf( buf, sz, "<PIPID:%d(%d)>", pip_self->pipid, getpid() );
+  } else if( pip_task != NULL ) {
+    n = snprintf( buf, sz, "<PIPID:%d(%d)>", pip_task->pipid, getpid() );
   } else {
     n = snprintf( buf, sz, "(PID:%d)", getpid() );
   }
@@ -97,7 +98,7 @@ static void pip_message( char *tag, char *format, va_list ap ) {
   len = snprintf( &mesg[0], MESGLEN-len, tag, idstr );
   mesg[len++] = ' ';
   vsnprintf( &mesg[len], MESGLEN-len, format, ap );
-  fprintf( stderr, "%s", mesg );
+  fprintf( stderr, "%s\n", mesg );
 }
 
 inline static void pip_info_mesg( char *format, ... ) __attribute__ ((unused));
@@ -122,9 +123,14 @@ static void  pip_err_mesg( char *format, ... ) {
 }
 
 static int pip_page_alloc( size_t sz, void **allocp ) {
-  int pgsz = sysconf( _SC_PAGESIZE );
-  if( posix_memalign( allocp, (size_t) pgsz, sz ) != 0 ) RETURN( errno );
-  return 0;
+  size_t pgsz;
+  if( pip_root == NULL ) {	/* in pip_init(), no pip_root yet */
+    pgsz = sysconf( _SC_PAGESIZE );
+  } else {
+    pgsz = pip_root->page_size;
+  }
+  sz = ( ( sz + pgsz - 1 ) / pgsz ) * pgsz;
+  RETURN( posix_memalign( allocp, pgsz, sz ) );
 }
 
 static void pip_set_magic( pip_root_t *root ) {
@@ -143,8 +149,8 @@ static int pip_is_version_ok( pip_root_t *root ) {
 
 static void pip_init_task_struct( pip_task_t *taskp ) {
   memset( (void*) taskp, 0, sizeof(pip_task_t) );
-  taskp->pipid  = PIP_PIPID_NONE;
-  taskp->thread = pip_root->thread;
+  taskp->pipid     = PIP_PIPID_NONE;
+  taskp->thread    = pip_root->thread;
 }
 
 #include <elf.h>
@@ -158,16 +164,16 @@ static int pip_check_pie( char *path ) {
     err = errno;
   } else {
     if( read( fd, &elfh, sizeof( elfh ) ) != sizeof( elfh ) ) {
-      pip_warn_mesg( "Unable to read '%s'\n", path );
+      pip_warn_mesg( "Unable to read '%s'", path );
       err = EUNATCH;
     } else if( elfh.e_ident[EI_MAG0] != ELFMAG0 ||
 	       elfh.e_ident[EI_MAG1] != ELFMAG1 ||
 	       elfh.e_ident[EI_MAG2] != ELFMAG2 ||
 	       elfh.e_ident[EI_MAG3] != ELFMAG3 ) {
-      pip_warn_mesg( "'%s' is not an ELF file\n", path );
+      pip_warn_mesg( "'%s' is not an ELF file", path );
       err = EUNATCH;
     } else if( elfh.e_type != ET_DYN ) {
-      pip_warn_mesg( "'%s' is not DYNAMIC (PIE)\n", path );
+      pip_warn_mesg( "'%s' is not DYNAMIC (PIE)", path );
       err = ELIBEXEC;
     }
     (void) close( fd );
@@ -196,6 +202,20 @@ const char *pip_get_mode_str( void ) {
     mode = "(unknown)";
   }
   return mode;
+}
+
+static void *pip_dlsym( void *handle, const char *name ) {
+  void *addr;
+  pip_spin_lock( &pip_root->lock_ldlinux );
+  addr = dlsym( handle, name );
+  pip_spin_unlock( &pip_root->lock_ldlinux );
+  return( addr );
+}
+
+static void pip_dlclose( void *handle ) {
+  pip_spin_lock( &pip_root->lock_ldlinux );
+  dlclose( handle );
+  pip_spin_unlock( &pip_root->lock_ldlinux );
 }
 
 static int pip_check_opt_and_env( int *optsp ) {
@@ -243,7 +263,7 @@ static int pip_check_opt_and_env( int *optsp ) {
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
-      pip_warn_mesg( "unknown environment setting PIP_MODE='%s'\n", env );
+      pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
       RETURN( EPERM );
     }
     break;
@@ -267,7 +287,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 	PIP_MODE_PROCESS_PRELOAD_BIT|
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
-      pip_warn_mesg( "unknown environment setting PIP_MODE='%s'\n", env );
+      pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
       RETURN( EPERM );
     }
     break;
@@ -278,14 +298,15 @@ static int pip_check_opt_and_env( int *optsp ) {
     desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     break;
   default:
-    pip_warn_mesg( "pip_init() invalid argument opts=0x%x\n", opts );
+    pip_warn_mesg( "pip_init() invalid argument opts=0x%x", opts );
     RETURN( EINVAL );
   }
 
   if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
     /* check if the __clone() systemcall wrapper exists or not */
     if( pip_cloneinfo == NULL ) {
-      pip_cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
+      pip_cloneinfo = (pip_clone_t*)
+	dlsym( RTLD_DEFAULT, "pip_clone_info");
     }
     DBGF( "cloneinfo-%p", pip_cloneinfo );
     if( pip_cloneinfo != NULL ) {
@@ -295,10 +316,10 @@ static int pip_check_opt_and_env( int *optsp ) {
       /* no wrapper found */
       if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
 	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD environment variable is empty.\n" );
+		       "LD_PRELOAD environment variable is empty." );
       } else {
 	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD='%s'\n",
+		       "LD_PRELOAD='%s'",
 		       env );
       }
       RETURN( EPERM );
@@ -314,10 +335,10 @@ static int pip_check_opt_and_env( int *optsp ) {
 	pip_warn_mesg("process mode is requested but pip_clone_info symbol "
 		      "is not found in $LD_PRELOAD and "
 		      "pip_clone_mostly_pthread() symbol is not found in "
-		      "glibc\n" );
+		      "glibc" );
       } else {
 	pip_warn_mesg( "process:pipclone mode is requested but "
-		       "pip_clone_mostly_pthread() is not found in glibc\n" );
+		       "pip_clone_mostly_pthread() is not found in glibc" );
       }
       RETURN( EPERM );
     }
@@ -325,7 +346,7 @@ static int pip_check_opt_and_env( int *optsp ) {
     newmod = PIP_MODE_PTHREAD;
   }
   if( newmod == 0 ) {
-    pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x\n",
+    pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x",
 		   desired );
     RETURN( EPERM );
   }
@@ -335,7 +356,7 @@ static int pip_check_opt_and_env( int *optsp ) {
       if( strcasecmp( env, PIP_ENV_OPTS_FORCEEXIT ) == 0 ) {
 	opts |= PIP_OPT_FORCEEXIT;
       } else {
-	pip_warn_mesg( "Unknown option %s=%s\n", PIP_ENV_OPTS, env );
+	pip_warn_mesg( "Unknown option %s=%s", PIP_ENV_OPTS, env );
 	RETURN( EPERM );
       }
     }
@@ -379,7 +400,9 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     DBGF( "ROOTROOT (%p)", pip_root );
 
-    pip_spin_init( &pip_root->spawn_lock );
+    pip_spin_init( &pip_root->lock_ldlinux );
+    /* beyond this point, we can call the       */
+    /* pip_dlsymc() and pip_dlclose() functions */
 
     if( asprintf( &env, "%s=%p", PIP_ROOT_ENV, pip_root ) == 0 ) {
       err = ENOMEM;
@@ -393,7 +416,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       pip_root->pip_root_env = env;
       pip_root->opts         = opts;
       pip_root->pid          = getpid();
-      pip_root->free         = (free_t) dlsym( RTLD_DEFAULT, "free");
+      pip_root->free         = (free_t) pip_dlsym( RTLD_DEFAULT, "free");
+      pip_root->page_szie    = sysconf( _SC_PAGESIZE );
       if( rt_expp != NULL ) pip_root->export = *rt_expp;
 
       DBGF( "PIP_MODE=%s", pip_get_mode_str() );
@@ -402,7 +426,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 	pip_init_task_struct( &pip_root->tasks[i] );
       }
     }
-    pip_self = NULL;
+    pip_task = NULL;
     if( err ) {		/* undo */
       if( pip_root != NULL ) PIP_FREE( pip_root );
       pip_root = NULL;
@@ -413,7 +437,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root = (pip_root_t*) strtoll( env, NULL, 16 );
     if( !pip_is_magic_ok(   pip_root ) ) RETURN( EPERM );
     if( !pip_is_version_ok( pip_root ) ) {
-      pip_warn_mesg( "Version miss-match between root and child\n" );
+      pip_warn_mesg( "Version miss-match between root and child" );
       RETURN( EPERM );
     }
 
@@ -422,7 +446,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     for( i=0; i<ntasks; i++ ) {
       if( pthread_equal( pip_root->tasks[i].thread, pthread_self() ) ) {
 	pipid = i;
-	pip_self = &pip_root->tasks[pipid];
+	pip_task = &pip_root->tasks[pipid];
 	break;
       }
     }
@@ -437,15 +461,13 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   /* root and child */
   if( !err ) {
     if( pipidp != NULL ) *pipidp = pipid;
-    DBGF( "pip_self=%p  pip_root=%p", pip_self, pip_root );
+    DBGF( "pip_task=%p  pip_root=%p", pip_task, pip_root );
   }
   RETURN( err );
 }
 
 static int pip_if_pthread_( void ) {
-  if( pip_root->cloneinfo == NULL )
-    return (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_THREAD : 0;
-  return pip_root->cloneinfo->flag_clone & CLONE_THREAD;
+  return (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_THREAD : 0;
 }
 
 int pip_if_pthread( int *flagp ) {
@@ -482,7 +504,7 @@ int pip_if_shared_sighand( int *flagp ) {
 }
 
 static int pip_root_p_( void ) {
-  return pip_self == NULL && pip_root != NULL;
+  return pip_task == NULL && pip_root != NULL;
 }
 
 int pip_isa_piptask( void ) {
@@ -490,11 +512,11 @@ int pip_isa_piptask( void ) {
 }
 
 static int pip_task_p_( void ) {
-  return pip_self != NULL;
+  return pip_task != NULL;
 }
 
 static void *pip_get_dso_( void ) {
-  if( pip_self != NULL ) return pip_self->loaded;
+  if( pip_task != NULL ) return pip_task->loaded;
   return NULL;
 }
 
@@ -505,7 +527,7 @@ int pip_get_pipid_( void ) {
   } else if( pip_root_p_() ) {
     pipid = PIP_PIPID_ROOT;
   } else {
-    pipid = pip_self->pipid;
+    pipid = pip_task->pipid;
   }
   return pipid;
 }
@@ -530,8 +552,8 @@ int pip_export( void *export ) {
     if( pip_root->export != NULL ) RETURN( EBUSY  );
     pip_root->export = export;
   } else {
-    if( pip_self->export != NULL ) RETURN( EBUSY  );
-    pip_self->export = export;
+    if( pip_task->export != NULL ) RETURN( EBUSY  );
+    pip_task->export = export;
   }
   RETURN( 0 );
 }
@@ -549,7 +571,7 @@ static int pip_check_pipid( int *pipidp ) {
       *pipidp = PIP_PIPID_ROOT;
     } else {
       if( pip_root->tasks[*pipidp].pipid != *pipidp ) RETURN( ENOENT );
-      *pipidp = pip_self->pipid;
+      *pipidp = pip_task->pipid;
     }
   }
   return 0;
@@ -632,6 +654,49 @@ static char **pip_copy_env( char **envsrc ) {
   return envdst;
 }
 
+static size_t pip_stack_size( void ) {
+  char 		*env, *endptr;
+  size_t 	sz, scale;
+  int 		i;
+
+  if( ( env = getenv( PIP_ENV_STACKSZ ) ) == NULL &&
+      ( env = getenv( "KMP_STACKSIZE" ) ) == NULL &&
+      ( env = getenv( "OMP_STACKSIZE" ) ) == NULL ) {
+    sz = PIP_ULP_STACK_SIZE;	/* default */
+  } else {
+    if( ( sz = (size_t) strtol( env, &endptr, 10 ) ) <= 0 ) {
+      pip_warn_mesg( "'%s' is illegal and default size is set", env );
+    } else {
+      scale = 1;
+      switch( *endptr ) {
+
+      case 'G':
+      case 'g':
+	scale *= 1024;
+      case 'M':
+      case 'm':
+	scale *= 1024 * 1024;
+	sz *= scale;
+	break;
+
+      default:
+	pip_warn_mesg( "'%s' is illegal and 'K' is assumed", env );
+      case 'K':
+      case 'k':
+      case '\0':
+	scale *= 1024;
+      case 'B':
+      case 'b':
+	sz *= scale;
+	for( i=PIP_ULP_MIN_STACK_SIZE; i<sz; i*=2 );
+	sz = i;
+	break;
+      }
+    }
+  }
+  return sz;
+}
+
 static void pip_close_on_exec( void ) {
   DIR *dir;
   struct dirent *direntp;
@@ -665,7 +730,7 @@ static void pip_close_on_exec( void ) {
 #endif
 }
 
-static int pip_load_so( void **handlep, char *path ) {
+static int pip_load_dso( void **handlep, char *path ) {
   Lmid_t	lmid;
   int 		flags = RTLD_NOW | RTLD_LOCAL;
   /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
@@ -684,7 +749,7 @@ static int pip_load_so( void **handlep, char *path ) {
   ES( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) );
   if( loaded == NULL ) {
     if( ( err = pip_check_pie( path ) ) != 0 ) RETURN( err );
-    pip_warn_mesg( "dlmopen(%s): %s\n", path, dlerror() );
+    pip_warn_mesg( "dlmopen(%s): %s", path, dlerror() );
     RETURN( ENOEXEC );
   } else {
     DBGF( "dlmopen(%s): SUCCEEDED", path );
@@ -693,16 +758,31 @@ static int pip_load_so( void **handlep, char *path ) {
   RETURN( 0 );
 }
 
+static int pip_find_symbols( void *handle, pip_symbols_t *symp ) {
+  int err = 0;
+
+  /* functions */
+  symp->main        = pip_dlsym( handle, "main"         );
+  symp->ctype_init  = pip_dlsym( handle, "__ctype_init" );
+  symp->glibc_init  = pip_dlsym( handle, "glibc_init"   );
+  symp->libc_fflush = pip_dlsym( handle, "fflush"       );
+  symp->mallopt     = pip_dlsym( handle, "mallopt"      );
+  symp->free        = pip_dlsym( handle, "free"         );
+  /* variables */
+  symp->libc_argvp  = pip_dlsym( handle, "__libc_argv"  );
+  symp->libc_argcp  = pip_dlsym( handle, "__libc_argc"  );
+  symp->environ     = pip_dlsym( handle, "environ"      );
+
+  /* check mandatory symbols */
+  if( symp->main    == NULL ||
+      symp->environ == NULL ) {
+    err = ENOEXEC;
+  }
+  RETURN( err );
+}
+
 static int pip_load_prog( char *prog, pip_task_t *task ) {
   void		*loaded = NULL;
-  char 		***envvp;
-  main_func_t 	main_func;
-#ifndef HAVE_GLIBC_INIT
-  ctype_init_t	ctype_init;
-#else
-  glibc_init_t	glibc_init;
-#endif
-  fflush_t	libc_fflush;
   int 		err;
 
   DBGF( "prog=%s", prog );
@@ -710,75 +790,22 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
 #ifdef PRINT_MAPS
   pip_print_maps();
 #endif
-  ES( time_load_so, ( err = pip_load_so( &loaded, prog ) ) );
+  ES( time_load_dso, ( err = pip_load_dso( &loaded, prog ) ) );
 #ifdef PRINT_MAPS
   pip_print_maps();
 #endif
 
   if( err == 0 ) {
-    /* dlsym() SHOULD be called only in the main thread */
-    DBG;
-    if( ( main_func = (main_func_t) dlsym( loaded, MAIN_FUNC ) ) == NULL ) {
-	/* getting main function address to invoke */
-      DBG;
-      pip_warn_mesg( "%s seems not to be linked with '-rdynamic' option\n",
-		     prog );
-      err = ENOEXEC;
-      goto error;
-    } else if( ( libc_fflush = (fflush_t) dlsym( loaded, "fflush" ) )
-	       == NULL ) {
-      /* getting address of fflush function to flush messages */
-      DBG;
-      err = ENOEXEC;
-      goto error;
-    } else if( ( envvp = (char***) dlsym( loaded, "environ" ) ) == NULL ) {
-      /* getting address of environmanet variable to be set */
-      DBG;
-      err = ENOEXEC;
-      goto error;
-    }
-#ifndef HAVE_GLIBC_INIT
-    if( ( ctype_init = (ctype_init_t) dlsym( loaded, "__ctype_init" ) )
-	       == NULL ) {
-#ifdef SHOULD_HAVE_CTYPE_INIT
-      /* getting address of __ctype_init function to initialize ctype tables */
-      DBG;
-      err = ENOEXEC;
-      goto error;
-#else
-      ctype_init = NULL;
-    }
-#endif
-#else
-    if( ( glibc_init = (glibc_init_t) dlsym( loaded, "glibc_init" ) ) == NULL){
-      DBG;
-      err = ENOEXEC;
-      goto error;
-    }
-#endif
-
-  }
- error:
-  if( err == 0 ) {
+    if( ( err = pip_find_symbols( loaded, &task->symbols ) ) == 0 ) {
 #ifdef DEBUG
-    pip_check_addr( "MAIN", main_func );
-    pip_check_addr( "ENVP", envvp );
+      pip_check_addr( "MAIN", task->symbols.main );
+      pip_check_addr( "ENVP", task->symbols.environ   );
 #endif
-    task->mainf       = main_func;
-#ifndef HAVE_GLIBC_INIT
-    task->ctype_init  = ctype_init;
-#else
-    task->glibc_init  = glibc_init;
-#endif
-    task->libc_fflush = libc_fflush;
-    task->free        = (free_t) dlsym( loaded, "free"   );
-    task->envvp       = envvp;
-    task->loaded      = loaded;
-    task->mallopt     = dlsym( loaded, "mallopt" );
-    task->libc_argvp  = (char***) dlsym( loaded, "__libc_argv" );
-    task->libc_argcp  = (int*)    dlsym( loaded, "__libc_argc" );
-  } else if( loaded != NULL ) {
-    (void) dlclose( loaded );
+      task->loaded      = loaded;
+    }
+  }
+  if( err != 0 && loaded != NULL ) {
+    (void) pip_dlclose( loaded );
   }
   RETURN( err );
 }
@@ -867,7 +894,7 @@ static int pip_do_spawn( void *thargs )  {
     pthread_attr_t attr;
     size_t sz;
     int _err;
-    if( ( _err = pthread_getattr_np( self->thread, &attr    ) ) != 0 ) {
+    if( ( _err = pthread_getattr_np( self->thread, &attr      ) ) != 0 ) {
       DBGF( "pthread_getattr_np()=%d", _err );
     } else if( ( _err = pthread_attr_getstacksize( &attr, &sz ) ) != 0 ) {
       DBGF( "pthread_attr_getstacksize()=%d", _err );
@@ -892,68 +919,63 @@ static int pip_do_spawn( void *thargs )  {
     volatile int	flag_exit;	/* must be volatile */
 
     for( argc=0; argv[argc]!=NULL; argc++ );
-    *self->envvp = envv;	/* setting environment vars */
+    *self->symbols.environ = envv;	/* setting environment vars */
 
     flag_exit = 0;
     (void) getcontext( &ctx );
     if( !flag_exit ) {
       flag_exit = 1;
-      self->ctx = &ctx;
+      self->ctx_exit = &ctx;
 
-      if( self->libc_argvp != NULL ) {
-	DBGF( "&__libc_argv=%p\n", self->libc_argvp );
-	*self->libc_argvp = argv;
+      if( self->symbols.libc_argvp != NULL ) {
+	DBGF( "&__libc_argv=%p\n", self->symbols.libc_argvp );
+	*self->symbols.libc_argvp = argv;
       }
-      if( self->libc_argcp != NULL ) {
-	DBGF( "&__libc_argc=%p\n", self->libc_argcp );
-	*self->libc_argcp = argc;
+      if( self->symbols.libc_argcp != NULL ) {
+	DBGF( "&__libc_argc=%p\n", self->symbols.libc_argcp );
+	*self->symbols.libc_argcp = argc;
       }
 #ifndef PIP_NO_MALLOPT
-      if( self->mallopt != NULL ) {
+      if( self->symbols.mallopt != NULL ) {
 	DBGF( ">> mallopt()" );
-	if( self->mallopt( M_MMAP_THRESHOLD, 0 ) == 1 ) {
+	if( self->symbols.mallopt( M_MMAP_THRESHOLD, 0 ) == 1 ) {
 	  DBGF( "<< mallopt(M_MMAP_THRESHOLD): succeeded" );
 	} else {
 	  DBGF( "<< mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
 	}
-	if( self->mallopt( M_TRIM_THRESHOLD, -1 ) == 1 ) {
+	if( self->symbols.mallopt( M_TRIM_THRESHOLD, -1 ) == 1 ) {
 	  DBGF( "<< mallopt(M_TRIM_THRESHOLD): succeeded" );
 	} else {
 	  DBGF( "<< mallopt(M_TRIM_THRESHOLD): failed !!!!!!" );
 	}
       }
 #endif
-
-#ifndef HAVE_GLIBC_INIT
-      /* __ctype_init() must be called at the very beginning of */
-      /* process or theread. Since __libc_start_main is not     */
-      /* called here, we have to call it explicitly             */
-#ifdef SHOULD_HAVE_CTYPE_INIT
-      if( self->ctype_init != NULL )
-#endif
-	{
-	  DBGF( "[%d] >> __ctype_init@%p()", pipid, self->ctype_init );
-	  self->ctype_init();
-	  DBGF( "[%d] << __ctype_init@%p()", pipid, self->ctype_init );
-	}
-#else
-      DBGF( "[%d] >> glibc_init@%p()", pipid, self->glibc_init );
-      self->glibc_init( argc, argv, envv );
-      DBGF( "[%d] << glibc_init@%p()", pipid, self->glibc_init );
-#endif
+      if( self->symbols.glibc_init != NULL ) {
+	DBGF( "[%d] >> glibc_init@%p()", pipid, self->symbols.glibc_init );
+	self->symbols.glibc_init( argc, argv, envv );
+	DBGF( "[%d] << glibc_init@%p()", pipid, self->symbols.glibc_init );
+      } else if( self->symbols.ctype_init != NULL ) {
+	DBGF( "[%d] >> __ctype_init@%p()", pipid, self->symbols.ctype_init );
+	self->symbols.ctype_init();
+	DBGF( "[%d] << __ctype_init@%p()", pipid, self->symbols.ctype_init );
+      }
+#ifdef DEBUG
       CHECK_CTYPE;
+      pip_print_maps();
+#endif
 
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
-	    pipid, self->mainf, argc, argv[0], argv[1] );
+	    pipid, self->symbols.main, argc, argv[0], argv[1] );
 
-      self->retval = self->mainf( argc, argv );
+      self->retval = self->symbols.main( argc, argv );
 
       DBGF( "[%d] << main@%p(%d,%s,%s,...)",
-	    pipid, self->mainf, argc, argv[0], argv[1] );
+	    pipid, self->symbols.main, argc, argv[0], argv[1] );
+
       /* call fflush() in the target context to flush out messages */
-      DBGF( "[%d] >> fflush@%p()", pipid, self->libc_fflush );
-      self->libc_fflush( NULL );
-      DBGF( "[%d] << fflush@%p()", pipid, self->libc_fflush );
+      DBGF( "[%d] >> fflush@%p()", pipid, self->symbols.libc_fflush );
+      self->symbols.libc_fflush( NULL );
+      DBGF( "[%d] << fflush@%p()", pipid, self->symbols.libc_fflush );
 
     } else {
       DBGF( "[%d] !! main(%d,%s,%s,...)", pipid, argc, argv[0], argv[1] );
@@ -962,7 +984,7 @@ static int pip_do_spawn( void *thargs )  {
     DBG;
 
   } else if( err != 0 ) {
-    pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d\n",
+    pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d",
 		   argv[0], before, err );
     self->retval = err;
   }
@@ -978,6 +1000,11 @@ static int pip_do_spawn( void *thargs )  {
   RETURN( 0 );
 }
 
+#include <sys/syscall.h>
+static pid_t pip_gettid( void ) {
+  return syscall( SYS_gettid );
+}
+
 int pip_spawn( char *prog,
 	       char **argv,
 	       char **envv,
@@ -989,7 +1016,7 @@ int pip_spawn( char *prog,
   extern char 		**environ;
   pthread_attr_t 	attr;
   cpu_set_t 		cpuset;
-  size_t		stack_size = 0;
+  size_t		stack_size = pip_stack_size();
   pip_spawn_args_t	*args = NULL;
   pip_task_t		*task = NULL;
   int 			pipid;
@@ -1013,13 +1040,6 @@ int pip_spawn( char *prog,
   DBGF( "pip_spawn(pipid=%d)", *pipidp );
 
   if( pip_root->ntasks_accum >= PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
-#ifdef PIP_NO_TASKSPAWN
-  if( !pthread_equal( pthread_self(), pip_root->thread ) ) {
-    RETURN( EPERM );
-  }
-#endif
-  if( envv == NULL ) envv = environ;
-
   if( ( err = pthread_attr_init( &attr ) ) != 0 ) RETURN( err );
 
 #ifdef PIP_CLONE_AND_DLMOPEN
@@ -1031,23 +1051,14 @@ int pip_spawn( char *prog,
   }
 #endif
 
-  {
-    char *env;
-    size_t sz;
-
-    if( ( env = getenv( PIP_ENV_STACKSZ ) ) != NULL &&
-	( sz = (size_t) strtol( env, NULL, 10 ) ) >  0 ) {
-      stack_size = sz; /* for pip_clone() */
-      err = pthread_attr_setstacksize( &attr, sz );
-      DBGF( "pthread_attr_setstacksize( %ld )= %d", sz, err );
-    }
-  }
+  err = pthread_attr_setstacksize( &attr, stack_size );
+  DBGF( "pthread_attr_setstacksize( %ld )= %d", stack_size, err );
+  if( err ) RETURN( err );
 
   args = (pip_spawn_args_t*) malloc( sizeof(pip_spawn_args_t) );
   if( args == NULL ) RETURN( ENOMEM );
 
-  args->prog        = strdup( prog );
-  if( args->prog == NULL ) RETURN( ENOMEM );
+  if( ( args->prog = strdup( prog ) ) == NULL ) RETURN( ENOMEM );
   args->coreno      = coreno;
   args->hook_before = before;
   args->hook_after  = after;
@@ -1057,6 +1068,7 @@ int pip_spawn( char *prog,
     PIP_FREE( args );
     RETURN( ENOMEM );
   }
+  if( envv == NULL ) envv = environ;
   if( ( args->envv = pip_copy_env( envv ) ) == NULL ) {
     PIP_FREE( args->prog );
     PIP_FREE( args->argv );
@@ -1064,7 +1076,7 @@ int pip_spawn( char *prog,
     RETURN( ENOMEM );
   }
 
-  pip_spin_lock( &pip_root->spawn_lock );
+  pip_spin_lock( &pip_root->lock_ldlinux );
   /*** begin lock region ***/
   do {
     if( pipid != PIP_PIPID_ANY ) {
@@ -1097,24 +1109,24 @@ int pip_spawn( char *prog,
     pip_init_task_struct( task );
     task->pipid = pipid;	/* mark it as occupied */
     args->pipid = pipid;
-  } while( 0 );
 
 #ifdef PIP_DLMOPEN_AND_CLONE
-  if( err == 0 ) {
-    if( ( err = pip_do_corebind( coreno, &cpuset ) ) == 0 ) {
-      /* corebinding should take place before loading solibs,        */
-      /* hoping anon maps would be mapped ontto the closer numa node */
+    if( err == 0 ) {
+      if( ( err = pip_do_corebind( coreno, &cpuset ) ) == 0 ) {
+	/* corebinding should take place before loading solibs,        */
+	/* hoping anon maps would be mapped ontto the closer numa node */
 
-      ES( time_load_prog, ( err = pip_load_prog( prog, task ) ) );
+	ES( time_load_prog, ( err = pip_load_prog( prog, task ) ) );
 
-      /* and of course, the corebinding must be undone */
-      (void) pip_undo_corebind( coreno, &cpuset );
+	/* and of course, the corebinding must be undone */
+	(void) pip_undo_corebind( coreno, &cpuset );
+      }
     }
-  }
 #endif
+  } while( 0 );
   /*** end lock region ***/
  unlock:
-  pip_spin_unlock( &pip_root->spawn_lock );
+  pip_spin_unlock( &pip_root->lock_ldlinux );
 
   /**** beyond this point, we can 'goto' the 'error' label ****/
 
@@ -1122,23 +1134,31 @@ int pip_spawn( char *prog,
 
   if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
-    err = pip_clone_mostly_pthread_ptr(
-		&task->thread,
-		CLONE_VM |
-		/* CLONE_FS | CLONE_FILES | */ /* for pip */
-		/* CLONE_SIGHAND | CLONE_THREAD | */ /* for pip */
-		CLONE_SETTLS |
-		CLONE_PARENT_SETTID |
-		CLONE_CHILD_CLEARTID |
-		CLONE_SYSVSEM |
-		CLONE_PTRACE | /* for pip */
-		SIGCHLD /* for pip */,
-		coreno, stack_size,
-		(void*(*)(void*)) pip_do_spawn, args, &pid );
+    int flags =
+      CLONE_VM |
+      /* CLONE_FS | CLONE_FILES | */
+      /* CLONE_SIGHAND | CLONE_THREAD | */
+      CLONE_SETTLS |
+      CLONE_PARENT_SETTID |
+      CLONE_CHILD_CLEARTID |
+      CLONE_SYSVSEM |
+      CLONE_PTRACE |
+      SIGCHLD;
+
+    err = pip_clone_mostly_pthread_ptr( &task->thread,
+					flags,
+					coreno,
+					stack_size,
+					(void*(*)(void*)) pip_do_spawn,
+					args,
+					&pid );
   } else {
+    pid_t tid = pip_gettid();
     task->args = args;
     if( pip_root->cloneinfo != NULL ) {
-      pip_spin_lock_wv( &pip_root->cloneinfo->lock, PIP_LOCK_PRELOADED );
+      /* lock is needed, because the preloaded clone()
+       might also be called from outside of PiP lib. */
+      pip_spin_lock_wv( &pip_root->cloneinfo->lock, tid );
     }
     {
       err = pthread_create( &task->thread,
@@ -1156,13 +1176,14 @@ int pip_spawn( char *prog,
 
   DBG;
   if( err == 0 ) {
-    *pipidp = pipid;
     task->pid = pid;
     pip_root->ntasks_accum ++;
     pip_root->ntasks_curr  ++;
     if( pip_root->cloneinfo != NULL ) {
       pip_root->cloneinfo->pid_clone  = 0;
     }
+    *pipidp = pipid;
+
   } else {
   error:			/* undo */
     DBGF( "err=%d", err );
@@ -1201,7 +1222,7 @@ int pip_fin( void ) {
   }
   pip_root = NULL;
 
-  REPORT( time_load_so   );
+  REPORT( time_load_dso   );
   REPORT( time_load_prog );
   REPORT( time_dlmopen   );
 
@@ -1275,10 +1296,10 @@ int pip_exit( int retval ) {
     /* must be able to use even if it is NOT a PIP environment. */
     exit( retval );
   } else if( pip_if_pthread_() ) {	/* thread mode */
-    pip_self->retval = retval;
-    DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_self->pipid, retval );
-    (void) setcontext( pip_self->ctx );
-    DBGF( "[PIPID=%d] pip_exit() ????", pip_self->pipid );
+    pip_task->retval = retval;
+    DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_task->pipid, retval );
+    (void) setcontext( pip_task->ctx_exit );
+    DBGF( "[PIPID=%d] pip_exit() ????", pip_task->pipid );
   } else {				/* process mode */
     exit( retval );
   }
@@ -1297,20 +1318,8 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
   /* corresponding dlopen() calls are made by the root process */
   DBGF( "retval=%d", task->retval );
 
-  if( retvalp != NULL ) *retvalp = task->retval;
-
-  if( task->loaded != NULL ) {
-    int err;
-
-    pip_spin_lock( &pip_root->spawn_lock );
-    /*** begin lock region ***/
-    {
-      err = dlclose( task->loaded );
-    }
-    /*** end lock region ***/
-    pip_spin_unlock( &pip_root->spawn_lock );
-    if( err != 0 ) DBGF( "dlclose(): %s", dlerror() );
-  }
+  if( retvalp      != NULL ) *retvalp = task->retval;
+  if( task->loaded != NULL ) pip_dlclose( task->loaded );
 
   if( task->args != NULL ) {
     if( task->args->prog != NULL ) PIP_FREE( task->args->prog );
@@ -1328,10 +1337,10 @@ static int pip_check_join_arg( int pipid, pip_task_t **taskp ) {
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT ) RETURN( EINVAL );
-  if( pip_self != NULL ) RETURN( EPERM );
+  if( pip_task != NULL ) RETURN( EPERM );
   if( !pthread_equal( pthread_self(), pip_root->thread ) ) RETURN( EPERM );
   *taskp = &pip_root->tasks[pipid];
-  if( *taskp == pip_self ) RETURN( EPERM );
+  if( *taskp == pip_task ) RETURN( EPERM );
 
   RETURN( 0 );
 }
@@ -1391,7 +1400,7 @@ int pip_wait( int pipid, int *retvalp ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
   task = &pip_root->tasks[pipid];
-  if( task == pip_self ) RETURN( EPERM );
+  if( task == pip_task ) RETURN( EPERM );
 
   if( pip_if_pthread_() ) { /* thread mode */
     err = pthread_join( task->thread, NULL );
@@ -1411,7 +1420,7 @@ int pip_wait( int pipid, int *retvalp ) {
     if( WIFEXITED( status ) ) {
       task->retval = WEXITSTATUS( status );
     } else if( WIFSIGNALED( status ) ) {
-      pip_warn_mesg( "Signaled %s\n", strsignal( WTERMSIG( status ) ) );
+      pip_warn_mesg( "Signaled %s", strsignal( WTERMSIG( status ) ) );
     }
     DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
@@ -1426,7 +1435,7 @@ int pip_trywait( int pipid, int *retvalp ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT  ) RETURN( EINVAL );
   task = &pip_root->tasks[pipid];
-  if( task == pip_self ) RETURN( EPERM );
+  if( task == pip_task ) RETURN( EPERM );
 
   if( pip_if_pthread_() ) { /* thread mode */
     err = pthread_tryjoin_np( task->thread, NULL );
@@ -1445,7 +1454,7 @@ int pip_trywait( int pipid, int *retvalp ) {
     if( WIFEXITED( status ) ) {
       task->retval = WEXITSTATUS( status );
     } else if( WIFSIGNALED( status ) ) {
-      pip_warn_mesg( "Signaled %s\n", strsignal( WTERMSIG( status ) ) );
+      pip_warn_mesg( "Signaled %s", strsignal( WTERMSIG( status ) ) );
     }
     DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
@@ -1457,11 +1466,30 @@ pip_clone_t *pip_get_cloneinfo_( void ) {
   return pip_root->cloneinfo;
 }
 
+int pip_get_pid( int pipid, pid_t *pidp ) {
+  int err = 0;
+
+  if( pidp == NULL ) RETURN( EINVAL );
+  if( pip_root->opts && PIP_MODE_PROCESS ) {
+    /* only valid with the "process" execution mode */
+    if( ( err = pip_check_pipid( &pipid ) ) == 0 ) {
+      if( pipid == PIP_PIPID_ROOT ) {
+	err = EPERM;
+      } else {
+	*pidp = pip_root->tasks[pipid].pid;
+      }
+    }
+  } else {
+    err = EPERM;
+  }
+  RETURN( err );
+}
+
 /*** The following malloc/free functions are just for functional test    ***/
 /*** We should hvae the other functions allocating memory doing the same ***/
 
 /* long long to align */
-#define PIP_ALIGN_TYPE	long
+#define PIP_ALIGN_TYPE	long long
 
 void *pip_malloc( size_t size ) {
   void *p = malloc( size + sizeof(PIP_ALIGN_TYPE) );
@@ -1479,16 +1507,17 @@ void *pip_malloc( size_t size ) {
 void pip_free( void *ptr ) {
   int pipid;
   free_t free_func;
+
   ptr  -= sizeof(PIP_ALIGN_TYPE);
   pipid = *(int*) ptr;
   /* need of sanity check on pipid */
   if( pipid == PIP_PIPID_ROOT ) {
     free_func = pip_root->free;
   } else {
-    free_func = pip_root->tasks[pipid].free;
+    free_func = pip_root->tasks[pipid].symbols.free;
   }
   if( free_func == NULL ) {
-    pip_warn_mesg( "No free function\n" );
+    pip_warn_mesg( "No free function" );
   } else {
     free_func( ptr );
   }
@@ -1511,7 +1540,7 @@ void pip_print_loaded_solibs( FILE *file ) {
       strcpy( idstr, "ROOT" );
     } else {
       handle = pip_get_dso_();
-      sprintf( idstr, "%d", pip_self->pipid );
+      sprintf( idstr, "%d", pip_task->pipid );
     }
   }
   if( handle == NULL ) {
@@ -1528,4 +1557,176 @@ void pip_print_loaded_solibs( FILE *file ) {
       fprintf( file, "[PIP:%s] %s at %p\n", idstr, fname, (void*)map->l_addr );
     }
   }
+}
+
+/*-----------------------------------------------------*/
+/* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
+/*-----------------------------------------------------*/
+
+static void pip_ulp_recycle_stack( pip_task_t *task, void *stack ) {
+  /* the first page is protected as stack guard */
+  *((void**)(stack+pip_root->page_size)) = pip_task->ulp_stack_list;
+  pip_task->ulp_stack_list = stack;
+}
+
+static void *pip_ulp_reuse_stack( pip_task_t *task ) {
+  void *stack = NULL;
+  if( pip_task->ulp_stack_list != NULL ) {
+    stack = pip_task->ulp_stack_list;
+    pip_task->ulp_stack_list = *((void**)(stack+pip_root->page_size));
+  }
+  return stack;
+}
+
+static int pip_ulp_alloc_stack( pip_task_t *task, PIP_ULP_t *ulp ) {
+  size_t	stksz = pip_stack_size();
+  size_t	pgsz  = pip_root->page_size;
+  void 		*region;
+  int		err;
+
+  if( ( region = pip_ulp_reuse_stack( task ) ) == NULL ) {
+    /* guard pages, top and bottom, to be idependent from stack direction */
+    if( ( err = pip_page_alloc( stksz + pgsz + pgsz, &region ) ) != 0 ) {
+      RETURN( err );
+    }
+    if( mprotect( region,            pgsz, PROT_NONE ) != 0 ||
+	mprotect( region+pgsz+stksz, pgsz, PROT_NONE ) != 0 ) {
+      RETURN( errno );
+    }
+  }
+  ulp->stack_sz     = stksz + pgsz + pgsz;
+  ulp->stack_region = region;
+  ulp->ctx_ulp.uc_stack.ss_sp   = region + pgsz;
+  ulp->ctx_ulp.uc_stack.ss_size = stksz;
+
+  RETURN( 0 );
+}
+
+static void pip_ulp_main_( int high, int low ) {
+  PIP_ULP_t	*ulp;
+  int 		argc;
+
+  ulp = (PIP_ULP_t*) ( ( ((intptr_t)high) << 32 ) | ((intptr_t)low) );
+  DBGF( "ulp=%p", ulp );
+
+  for( argc=0; ulp->argv[argc]!=NULL; argc++ );
+  *ulp->symbols.environ = ulp->envv;	/* setting environment vars */
+
+  DBGF( "[ULP] >> main@%p(%d,%s,%s,...)",
+	ulp->symbols.main, argc, ulp->argv[0], ulp->argv[1] );
+  ulp->symbols.main( argc, ulp->argv );
+  DBGF( "[ULP] << main@%p(%d,%s,%s,...)",
+	ulp->symbols.main, argc, ulp->argv[0], ulp->argv[1] );
+
+  if( ulp->termcb != NULL ) ulp->termcb( (void*) ulp );
+}
+
+static int pip_ulp_swapcontext( PIP_ULP_t *new ) {
+  PIP_ULP_t	*curr = pip_task->ulp_curr;
+  int 		err = 0;
+
+  pip_task->ulp_curr = new;
+  if( ( err = swapcontext( &curr->ctx_ulp, &new->ctx_ulp ) != 0 ) ) {
+    err = -err;
+  }
+  RETURN( err );
+}
+
+int pip_ulp_makecontext( PIP_ULP_t *ulp ) {
+  volatile int flag = 0;
+  PIP_ULP_t *old = pip_task->ulp_curr;
+  int	high, low;
+  int	err;
+
+  high = ( ((intptr_t)ulp) >> 32 ) & PIP_MASK32;
+  low  =   ((intptr_t)ulp)         & PIP_MASK32;
+
+  makecontext( &ulp->ctx_ulp, (void(*)(void)) pip_ulp_main_, 2, high, low );
+  if( flag ) RETURN( 0 );
+  flag = 1;
+  pip_task->ulp_curr = ulp;
+  if( ( err = pip_ulp_swapcontext( ulp ) ) == 0 ) {
+    DBGF( "<< pip_ulp_spawn()=%d", err );
+    RETURN( 0 );
+  }
+  pip_task->ulp_curr = old;
+  RETURN( err );
+}
+
+int pip_ulp_spawn( pip_ulp_t *ulpp,
+		   char *prog,
+		   char **argv,
+		   char **envv,
+		   pipulp_terminated_t termcb ) {
+  extern char 	**environ;
+  PIP_ULP_t	*ulp;
+  void 		*loaded;
+  int 		err = 0;
+
+  DBGF( ">> pip_ulp_spawn()" );
+
+  if( pip_root_p_() ) RETURN( EPERM );
+  if( prog == NULL ) {
+    if( argv == NULL ) RETURN( EINVAL );
+    prog = argv[0];
+  }
+  if( ulpp == NULL ) RETURN( EINVAL );
+  memset( ulpp, 0, sizeof(PIP_ULP_t) );
+  ulp = (PIP_ULP_t*)((void*)ulpp);
+
+  if( ( envv  = pip_copy_env( envv       ) ) == NULL ) RETURN( ENOMEM );
+  if( ( argv  = pip_copy_vec( NULL, argv ) ) == NULL ) {
+    free( envv );
+    RETURN( ENOMEM );
+  }
+  if( ( err = pip_ulp_alloc_stack( pip_task, ulp ) ) != 0 ) {
+    free( envv );
+    free( argv );
+    RETURN( err );
+  }
+
+  ES( time_load_dso, ( err = pip_load_dso( &loaded, prog ) ) );
+  if( err != 0 ) goto error;
+
+  if( ( err = pip_find_symbols( loaded, &ulp->symbols ) ) == 0 ) {
+    ulp->ulp_root = pip_task;
+    ulp->loaded   = loaded;
+    ulp->prog     = strdup( prog );
+    ulp->argv     = argv;
+    ulp->envv     = envv;
+    ulp->termcb   = termcb;
+
+    err = pip_ulp_makecontext( ulp );
+    DBGF( "ulp=%p", ulp );
+  }
+ error:
+  dlclose( ulp->loaded );
+  free( ulp->stack_region );
+  free( ulp->prog );
+  free( argv );
+  free( envv );
+
+  DBGF( "<< pip_ulp_spawn()=%d", err );
+  RETURN( err );
+}
+
+int pip_ulp_yield_to( PIP_ULP_t *new ) {
+  int err;
+
+  if( new->ulp_root != pip_task ) {
+    err = EPERM;
+  } else {
+    err = pip_ulp_swapcontext( new );
+  }
+  RETURN( err );
+}
+
+int pip_ulp_terminate( PIP_ULP_t *new ) {
+  pip_ulp_recycle_stack( pip_task, pip_task->ulp_curr );
+  RETURN( pip_ulp_swapcontext( new ) );
+}
+
+int pip_ulp_migrate( PIP_ULP_t *ulp, int pipid ) {
+  int err = 0;
+  return err;
 }

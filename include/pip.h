@@ -96,14 +96,13 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #define PIP_OPTS_NONE			(0x0)
-#define PIP_OPTS_ANY			PIP_OPTS_NONE
 
-#define PIP_MODE_PTHREAD		(0x100)
-#define PIP_MODE_PROCESS		(0x200)
+#define PIP_MODE_PTHREAD		(0x1000)
+#define PIP_MODE_PROCESS		(0x2000)
 /* the following two modes are a submode of PIP_MODE_PROCESS */
-#define PIP_MODE_PROCESS_PRELOAD	(0x210)
-#define PIP_MODE_PROCESS_PIPCLONE	(0x220)
-#define PIP_MODE_MASK			(0xFF0)
+#define PIP_MODE_PROCESS_PRELOAD	(0x2100)
+#define PIP_MODE_PROCESS_PIPCLONE	(0x2200)
+#define PIP_MODE_MASK			(0xFF00)
 
 #define PIP_ENV_MODE			"PIP_MODE"
 #define PIP_ENV_MODE_THREAD		"thread"
@@ -112,7 +111,8 @@
 #define PIP_ENV_MODE_PROCESS_PRELOAD	"process:preload"
 #define PIP_ENV_MODE_PROCESS_PIPCLONE	"process:pipclone"
 
-#define PIP_OPT_FORCEEXIT		(0x1)
+#define PIP_OPT_FORCEEXIT		(0x01)
+#define PIP_OPT_MASK			(0XFF)
 
 #define PIP_ENV_OPTS			"PIP_OPTS"
 #define PIP_ENV_OPTS_FORCEEXIT		"forceexit"
@@ -146,6 +146,10 @@ typedef int(*pip_spawnhook_t)(void*);
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+typedef struct pip_ulp {
+  char dummy [1072];
+} pip_ulp_t;
 
 #ifdef __cplusplus
 extern "C" {
