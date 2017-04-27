@@ -6,27 +6,54 @@
 ###
 ### \section synopsis SYNOPSIS
 ###
-###	\c \b piplnlibs [<b>-s</b>]
+###	\c \b piplnlibs [<b>-rs</b>]
 ###
 ### \section description DESCRIPTION
 ### This command creates a number of symbolic links to the SOLIBs which
 ### are not installed by the patched GLIBC installation.
+###
+### \section options OPTIONS
+###
+### \subsection remove -r
+### Remove symbolic links to SOLIBs in @glibc_libdir@ before creating.
+###
+### \subsection silent -s
+### Silent mode.
+###
+### \section environment ENVIRONMENT
+###
+### \subsection PIP_LIBRARY_PATH PIP_LIBRARY_PATH
+### Symbolic links to SOLIBs in the directories specified by PIP_LIBRARY_PATH 
+### will be also created.
+###
+### \subsection LD_LIBRARY_PATH LD_LIBRARY_PATH
+### If PIP_LIBRARY_PATH is not set, LD_LIBRARY_PATH is used instead.
 
 glibc_libdir=@glibc_libdir@
 glibc_default_libdir=/lib64
 
 exit_status=0
 opt_silent=false
+opt_remove=false
 program_name=`basename $0`
+
+usage()
+{
+	echo >&2 "Usage: $program_name [-rs]"
+	exit 2
+}
 
 for option
 do
-
 	case $option in
-	-s)	opt_silent=true;;
-	*)	echo >&2 "$program_name: error: invalid argument $1"
-		echo >&2 "Usage: $program_name [-s]"
-		exit 2;;
+	-*)	case $option in -*r*) opt_remove=true;; esac
+		case $option in -*s*) opt_silent=true;; esac
+		case $option in -*[!rs]*)
+			echo >&2 "$program_name: error: invalid option $option"
+			usage
+		esac;;
+	*)	echo >&2 "$program_name: error: invalid argument $option"
+		usage
 	esac
 done
 
@@ -36,20 +63,47 @@ if [ x"$glibc_libdir" = x"$glibc_default_libdir" ]; then
 	exit $exit_status
 fi
 
-ls ${glibc_default_libdir} | grep '^lib.*\.so\.[0-9]*$' |
-while read lib
+if $opt_remove; then
+	find ${glibc_libdir} -maxdepth 1 -type l -name 'lib*.so*' |
+	while read lib
+	do
+		if readlink $lib | grep '^/' >/dev/null; then
+			$opt_silent || echo \
+			   rm ${lib}
+			if rm ${lib}
+			then
+				:
+			else
+				exit_status=1
+			fi
+		fi
+	done
+fi
+
+if [ -n "${PIP_LIBRARY_PATH:-$LD_LIBRARY_PATH}" ]; then
+	extra_libdirs=`echo "${PIP_LIBRARY_PATH:-$LD_LIBRARY_PATH}" |
+		tr ':' '\012' | grep '^/'`
+else
+	extra_libdirs=
+fi
+
+for libdir in ${extra_libdirs} ${glibc_default_libdir}
 do
-	if [ -f ${glibc_libdir}/$lib ]; then
-		continue
-	fi
-	$opt_silent || echo \
-	   ln -s ${glibc_default_libdir}/${lib} ${glibc_libdir}/
-	if ln -s ${glibc_default_libdir}/${lib} ${glibc_libdir}/
-	then
-		:
-	else
-		exit_status=1
-	fi
+	ls ${libdir} | grep '^lib.*\.so\.[0-9]*$' |
+	while read lib
+	do
+		if [ -f ${glibc_libdir}/$lib ]; then
+			continue
+		fi
+		$opt_silent || echo \
+		   ln -s ${libdir}/${lib} ${glibc_libdir}/
+		if ln -s ${libdir}/${lib} ${glibc_libdir}/
+		then
+			:
+		else
+			exit_status=1
+		fi
+	done
 done
 
 exit $exit_status
