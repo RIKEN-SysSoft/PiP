@@ -50,10 +50,10 @@ do
 		case $option in -*s*) opt_silent=true;; esac
 		case $option in -*[!rs]*)
 			echo >&2 "$program_name: error: invalid option $option"
-			usage
+			usage;;
 		esac;;
 	*)	echo >&2 "$program_name: error: invalid argument $option"
-		usage
+		usage;;
 	esac
 done
 
