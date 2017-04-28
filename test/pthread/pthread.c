@@ -9,7 +9,7 @@
 
 #define NTHREADS	(100)
 
-//#define DEBUG
+#define DEBUG
 
 #define PIP_INTERNAL_FUNCS
 #include <test.h>
@@ -17,7 +17,10 @@
 pthread_barrier_t	barrier;
 
 void *thread( void *argp ) {
-  //pthread_exit( NULL );  /* pthread_exit() does SOMETHING WRONG !!!! */
+  // TESTINT( pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, NULL ) );
+  // the PTHREAD_CANCEL_DISABLE helps nothing
+  // pthread_exit( NULL );  /* pthread_exit() does SOMETHING WRONG !!!! */
+  // pthread_exit() cancels myself, indeed
   return NULL;
 }
 
