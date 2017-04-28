@@ -116,7 +116,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       flags |= CLONE_VM;
       /* do not reset the CLONE_SETTLS flag */
       flags |= CLONE_SETTLS;
-      //flags |= CLONE_PTRACE;
+      flags |= CLONE_PTRACE;
 
       errno = 0;
       DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",
