@@ -74,16 +74,43 @@ static int (*pip_clone_mostly_pthread_ptr) (
 	void *arg,
 	pid_t *pidp) = NULL;
 
+static void pip_set_magic( pip_root_t *root ) {
+  memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN );
+}
+
+static int pip_is_magic_ok( pip_root_t *root ) {
+  return root != NULL &&
+    strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN ) == 0;
+}
+
+static int pip_is_version_ok( pip_root_t *root ) {
+  if( root            != NULL        &&
+      root->version   == PIP_VERSION &&
+      root->root_size == sizeof( pip_root_t ) ) return 1;
+  return 0;
+}
+
+static int pip_is_root_ok( pip_root_t *root ) {
+  return pip_is_magic_ok( root ) && pip_is_version_ok( root );
+}
+
 int pip_idstr( char *buf, size_t sz ) {
   int n;
-  if( pip_root != NULL && pip_self == NULL ) {
-    n = snprintf( buf, sz, "<PIP_ROOT>" );
-  } else if( pip_self != NULL ) {
-    n = snprintf( buf, sz, "<PIPID:%d(%d)>", pip_self->pipid, getpid() );
+  if( pip_is_root_ok( pip_root ) ) {
+    if( pip_root != NULL && pip_self == NULL ) {
+      n = snprintf( buf, sz, "[PIP_ROOT<%d>]", getpid() );
+    } else if( pip_self != NULL ) {
+      n = snprintf( buf, sz, "[PIPID:%d<%d>]", pip_self->pipid, getpid() );
+    } else {
+      goto unknown;
+    }
   } else {
-    n = snprintf( buf, sz, "(PID:%d)", getpid() );
+    goto unknown;
   }
   return n;
+
+ unknown:
+  return snprintf( buf, sz, "<PID:%d>", getpid() );
 }
 
 static void pip_message( char *tag, char *format, va_list ap ) {
@@ -124,20 +151,6 @@ static void  pip_err_mesg( char *format, ... ) {
 static int pip_page_alloc( size_t sz, void **allocp ) {
   int pgsz = sysconf( _SC_PAGESIZE );
   if( posix_memalign( allocp, (size_t) pgsz, sz ) != 0 ) RETURN( errno );
-  return 0;
-}
-
-static void pip_set_magic( pip_root_t *root ) {
-  memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN );
-}
-
-static int pip_is_magic_ok( pip_root_t *root ) {
-  return strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN ) == 0;
-}
-
-static int pip_is_version_ok( pip_root_t *root ) {
-  if( root->version   == PIP_VERSION &&
-      root->root_size == sizeof( pip_root_t ) ) return 1;
   return 0;
 }
 

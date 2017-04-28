@@ -29,8 +29,9 @@
 #define DBG_OUTPUT	do { _dbuf[ strlen( _dbuf ) ] = '\n';	\
     write( 2, _dbuf, strlen(_dbuf) ); _dbuf[0]='\0';} while(0)
 #define DBG_TAG							\
-  do { DBG_PRNT("[PID:%d] %s:%d %s(): ",(int)getpid(),		\
-		__FILE__, __LINE__, __func__ );	} while(0)
+  do { char __tag[64]; pip_idstr(__tag,64);			\
+    DBG_PRNT("%s %s:%d %s(): ",__tag,				\
+	     __FILE__, __LINE__, __func__ );	} while(0)
 
 #define DBG						\
   do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)

@@ -55,23 +55,17 @@
 
 #else
 
-#define PRTNL 			fprintf( stderr, "\n" )
 #define TPRT(...)		\
-  do { 									\
-  int _pipid_ =  98765; pip_get_pipid( &_pipid_ );			\
-  if( _pipid_ == 98765 ) {						\
-    fprintf( stderr, "<N/A> %s:%d: ", __FILE__, __LINE__ );		\
-  } else if( _pipid_ == PIP_PIPID_ROOT ) {				\
-    fprintf( stderr, "<ROOT> %s:%d: ", __FILE__, __LINE__ ); 		\
-  } else {								\
-    fprintf( stderr, "<PIP:%d> %s:%d: ", _pipid_, __FILE__, __LINE__ );	\
-  } fprintf( stderr, __VA_ARGS__ ); PRTNL; } while(0)
+  do { char __msgbuf[256]; int n, m = pip_idstr( __msgbuf, 256 );	\
+  n = sprintf( &__msgbuf[m], " %s:%d: ", __FILE__, __LINE__ );		\
+  sprintf( &__msgbuf[n+m], __VA_ARGS__ );				\
+  fprintf( stderr, "%s\n", __msgbuf ); } while(0)
 #define TESTINT(F)		\
   do{ 							\
     TPRT( ">> %s", #F );				\
-    int _xyz_ = (F);					\
-    TPRT( "<< %s=%d", #F, _xyz_ );			\
-    if( _xyz_ != 0 ) exit( 9 );				\
+    int __xyz = (F);					\
+    TPRT( "<< %s=%d", #F, __xyz );			\
+    if( __xyz != 0 ) exit( 9 );				\
   } while(0)
 #endif
 
