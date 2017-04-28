@@ -21,10 +21,7 @@
 #include <pip_machdep.h>
 #include <pip_clone.h>
 #include <pip_debug.h>
-
-#ifndef PIP_ULP_PRINT_SIZE
-#include <pip.h>
-#endif
+#include <pip_types.h>
 
 /** ULP supported version **/
 #define PIP_BASE_VERSION	(0x2000U)
@@ -51,15 +48,13 @@
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
-typedef	int(*main_func_t)(int,char**);
+typedef	int(*main_func_t)(int,char**,char**);
 typedef int(*mallopt_t)(int,int);
 typedef void(*free_t)(void*);
 
 typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
 typedef	void(*fflush_t)(FILE*);
-
-typedef	void(*pipulp_terminated_t)(void*);
 
 #define PIP_ULP_NEXT(L)		(((pip_dlist_t*)(L))->next)
 #define PIP_ULP_PREV(L)		(((pip_dlist_t*)(L))->prev)
@@ -111,22 +106,38 @@ typedef struct {
   char			***environ;  /* pointer to the environ variable */
 } pip_symbols_t;
 
-struct pip_task;
+struct pip_ulp_body;
 
-typedef struct pip_ulp_ {
-  struct pip_task	*ulp_root;
-  ucontext_t		ctx_ulp;
-  size_t		stack_sz;
-  void			*stack_region;
+typedef struct PIP_ULP {
+  ucontext_t		*ctx_ulp;
+  struct pip_ulp_body_t	*ulp;
+} PIP_ULP_t;
+
+#ifndef PIP_ULP_PRINT_SIZE
+
+#define PIP_TYPE_TASK	(0)
+#define PIP_TYPE_ULP	(1)
+
+typedef struct pip_task_body {
+  int			pipid;	 /* PiP ID */
+  int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
+  ucontext_t		*ctx_exit;
   void			*loaded;
   pip_symbols_t		symbols;
   char			*prog;
   char			**argv;
   char			**envv;
-  pipulp_terminated_t	termcb;
-} PIP_ULP_t;
+  pip_ulp_exithook_t	exit_hook;
+  int			retval;
+  void			*aux;
+} pip_task_body_t;
 
-#ifndef PIP_ULP_PRINT_SIZE
+typedef struct pip_ulp_body {
+  pip_task_body_t	body;
+  size_t		stack_sz;
+  void			*stack_region;
+} pip_ulp_body_t;
+
 typedef struct {
   int 			pipid;
   int	 		coreno;
@@ -139,21 +150,10 @@ typedef struct {
 } pip_spawn_args_t;
 
 typedef struct pip_task {
-  int			pipid;	 /* PiP ID */
-  pid_t			pid;	 /* Pid in process mode */
+  pip_task_body_t	body;
+  pid_t			pid;	 /* PID in process mode */
   pthread_t		thread;	 /* thread */
-  //int			coreno;	 /* CPU core binding */
-  int	 		retval;	 /* return value of exit() */
-  void			*loaded; /* loaded DSOs */
-  pip_symbols_t		symbols;
-  pip_spawn_args_t	*args;	 /* arguments for PiP task */
-  ucontext_t 		*ctx_exit; /* to implement pip_exit() */
-
-  pip_dlist_t		ulp_root;
-  PIP_ULP_t		*ulp_curr;
-  void			*ulp_stack_list;
-
-  volatile void		*export;  /* PiP export region */
+  pip_spawn_args_t	*args;	 /* arguments for a PiP task */
 } pip_task_t;
 
 typedef struct {
@@ -161,23 +161,24 @@ typedef struct {
   unsigned int		version;
   size_t		root_size;
   size_t		size;
-  pthread_t		thread;
-  pip_spinlock_t	lock_ldlinux;
-  volatile void		*export;
-  pip_clone_t	 	*cloneinfo;
-  char			*pip_root_env;
-  free_t		free;	/* free() function address */
   size_t		page_size;
-  int			opts;
-  int			pid;
-  int			pipid_curr;
+  pip_spinlock_t	lock_ldlinux;
+  pip_clone_t	 	*cloneinfo;
   int			ntasks_curr;
   int			ntasks_accum;
   int			ntasks;
+  int			pipid_curr;
+  unsigned int		opts;
+
+  pip_spinlock_t	lock_ulpstacks;
+  void			*ulp_stack_list;
+
+  pip_task_t		*task_root;
   pip_task_t		tasks[];
 } pip_root_t;
-#endif
 
-#endif
+#endif /* PIP_ULP_PRINT_SIZE */
 
-#endif
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+#endif /* _pip_internal_h_ */
