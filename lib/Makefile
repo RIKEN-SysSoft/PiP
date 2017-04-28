@@ -34,7 +34,7 @@ $(LIBRARY): $(OBJS) Makefile
 
 
 pipulpsz: pipulpsz.c $(PIPINCDIR)/pip_internal.h
-	$(CC) $< -I$(PIPINCDIR) -o $@
+	$(CC) -I$(PIPINCDIR) $< -o $@
 
 $(PIPINCDIR)/pip.h: ./pipulpsz $(PIPINCDIR)/pip.h.in
 	sed "s/@PIPULPSZ@/`./pipulpsz`/" $(PIPINCDIR)/pip.h.in > $(PIPINCDIR)/pip.h

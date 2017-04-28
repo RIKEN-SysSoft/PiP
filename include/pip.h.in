@@ -131,8 +131,6 @@
 
 #define PIP_CPUCORE_ASIS 	(-1)
 
-typedef int(*pip_spawnhook_t)(void*);
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -147,9 +145,7 @@ typedef int(*pip_spawnhook_t)(void*);
 #include <string.h>
 #include <errno.h>
 
-typedef struct pip_ulp {
-  char dummy [@PIPULPSZ@];
-} pip_ulp_t;
+#include <pip_types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -373,6 +369,7 @@ extern "C" {
    * \param[in] pipid PIPID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
    *
+   * \note This function never returns.
    * \note This function can be used regardless to the PiP execution
    * mode.
    *
@@ -469,7 +466,44 @@ extern "C" {
 }
 #endif
 
+/*-----------------------------------------------------*/
+/* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#define PIP_ULP_EXITED		(-1)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+/**
+ * @addtogroup libpip libpip
+ * \brief the PiP-ULP library
+ * @{
+ * @file
+ * @{
+ */
+
+/**
+ * @}
+ * @}
+ */
+
+#ifdef __cplusplus
+}
+#endif
+
+/* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
+/*-----------------------------------------------------*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+typedef struct pip_ulp {
+  char dummy [@PIPULPSZ@];
+} pip_ulp_t;
 
 /********************************************************/
 /* The llowing functions are just utility for debugging */
@@ -589,6 +623,25 @@ inline static double pip_gettime( void ) {
   struct timeval tv;
   gettimeofday( &tv, NULL );
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
+}
+
+inline static int pip_print_dsos_cb( struct dl_phdr_info *info,
+				     size_t size,
+				     void *data ) {
+  int i;
+
+  printf( "name=%s (%d segments)\n", info->dlpi_name, info->dlpi_phnum);
+
+  for ( i=0; i<info->dlpi_phnum; i++ ) {
+    printf( "\t\t header %2d: address=%10p\n", i,
+	    (void *) (info->dlpi_addr + info->dlpi_phdr[j].p_vaddr ) );
+  }
+  return 0;
+}
+
+inline static void pip_print_dsos( void ) __attribute__ ((unused));
+inline static void pip_print_dsos( void ) {
+  dl_iterate_phdr( pip_print_dsos_cb, NULL );
 }
 
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */
