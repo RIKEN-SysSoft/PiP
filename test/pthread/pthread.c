@@ -9,7 +9,7 @@
 
 #define NTHREADS	(100)
 
-#define DEBUG
+//#define DEBUG
 
 #define PIP_INTERNAL_FUNCS
 #include <test.h>
@@ -71,6 +71,7 @@ int main( int argc, char **argv ) {
 #endif
       //while( pthread_tryjoin_np( threads[i], NULL ) != 0 );
       TESTINT( pthread_join( threads[i], NULL ) );
+      printf( "pthread_join\n" );
     }
   }
   TESTINT( pip_fin() );
