@@ -15,6 +15,7 @@ SUBDIRS = lib include bin preload util \
 	test/compat \
 	test/openmp \
 	test/fortran \
+	test/pthread \
 	eval sample
 
 include $(top_srcdir)/build/rule.mk
@@ -77,4 +78,3 @@ check:
 prog-distclean:
 	$(RM) config.log config.status include/config.h build/config.mk
 .PHONY: prog-distclean
-
