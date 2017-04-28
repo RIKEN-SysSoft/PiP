@@ -678,7 +678,6 @@ static int pip_load_so( void **handlep, char *path ) {
     DBGF( "dlinfo(%p): %s", handlep, dlerror() );
     RETURN( ENXIO );
   }
-
   DBGF( "calling dlmopen(%s)", path );
   ES( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) );
   DBG;
@@ -1270,18 +1269,23 @@ int pip_kill( int pipid, int signal ) {
 
 int pip_exit( int retval ) {
   fflush( NULL );
+  DBG;
   if( !pip_root_p_() && !pip_task_p_() ) {
+    DBG;
     /* since we must replace exit() with pip_exit(), pip_exit() */
     /* must be able to use even if it is NOT a PIP environment. */
     exit( retval );
   } else if( pip_if_pthread_() ) {	/* thread mode */
+    DBG;
     pip_self->retval = retval;
     DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_self->pipid, retval );
     (void) setcontext( pip_self->ctx );
     DBGF( "[PIPID=%d] pip_exit() ????", pip_self->pipid );
   } else {				/* process mode */
+    DBG;
     exit( retval );
   }
+  DBG;
   /* never reach here */
   return 0;
 }
