@@ -23,7 +23,7 @@
 ### \section environment ENVIRONMENT
 ###
 ### \subsection PIP_LIBRARY_PATH PIP_LIBRARY_PATH
-### Symbolic links to SOLIBs in the directories specified by PIP_LIBRARY_PATH 
+### Symbolic links to SOLIBs in the directories specified by PIP_LIBRARY_PATH
 ### will be also created.
 ###
 ### \subsection LD_LIBRARY_PATH LD_LIBRARY_PATH
@@ -35,11 +35,13 @@ glibc_default_libdir=/lib64
 exit_status=0
 opt_silent=false
 opt_remove=false
+opt_add=false
+add_libdir=
 program_name=`basename $0`
 
 usage()
 {
-	echo >&2 "Usage: $program_name [-rs]"
+	echo >&2 "Usage: $program_name [-rs] [-a DIR]"
 	exit 2
 }
 
@@ -48,6 +50,11 @@ do
 	case $option in
 	-*)	case $option in -*r*) opt_remove=true;; esac
 		case $option in -*s*) opt_silent=true;; esac
+		case $option in -a)
+			opt_add=true
+			shift
+			add_dir=$option
+		esac
 		case $option in -*[!rs]*)
 			echo >&2 "$program_name: error: invalid option $option"
 			usage;;
@@ -76,6 +83,24 @@ if $opt_remove; then
 			else
 				exit_status=1
 			fi
+		fi
+	done
+fi
+
+if $opt_add; then
+	ls ${add_libdir} | grep '^lib.*\.so\.[0-9]*$' |
+	while read lib
+	do
+		if [ -f ${glibc_libdir}/$lib ]; then
+			continue
+		fi
+		$opt_silent || echo \
+		   ln -s ${libdir}/${lib} ${glibc_libdir}/
+		if ln -s ${libdir}/${lib} ${glibc_libdir}/
+		then
+			:
+		else
+			exit_status=1
 		fi
 	done
 fi
