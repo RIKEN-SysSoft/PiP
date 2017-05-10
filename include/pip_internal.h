@@ -13,7 +13,6 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <pthread.h>
-#include <ucontext.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -32,6 +31,7 @@
 #define PIP_VERSION		PIP_BASE_VERSION
 
 #define PIP_ROOT_ENV		"PIP_ROOT"
+#define PIP_TASK_ENV		"PIP_TASK"
 
 #define PIP_MAGIC_WORD		"PrcInPrc"
 #define PIP_MAGIC_LEN		(8)
@@ -98,12 +98,12 @@ typedef struct {
   ctype_init_t		ctype_init;  /* to call __ctype_init() */
   glibc_init_t		glibc_init;  /* only in patched Glibc */
   fflush_t		libc_fflush; /* to call fflush() at the end */
-  mallopt_t		mallopt;     /* to call mapllopt() */
-  free_t		free;	     /* to override free() :EXPERIMENTAL*/
+  mallopt_t		mallopt;     /* to call mallopt() */
+  free_t		free;	     /* to override free() - EXPERIMENTAL*/
   /* variables */
   char 			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
-  char			***environ;  /* pointer to the environ variable */
+  char			***environ;    /* pointer to the environ variable */
 } pip_symbols_t;
 
 struct pip_ulp_body;
@@ -115,9 +115,7 @@ typedef struct PIP_ULP {
 
 #ifndef PIP_ULP_PRINT_SIZE
 
-#define PIP_TYPE_TASK	(0)
-#define PIP_TYPE_ULP	(1)
-
+#ifdef AH
 typedef struct pip_task_body {
   int			pipid;	 /* PiP ID */
   int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
@@ -129,7 +127,6 @@ typedef struct pip_task_body {
   char			**envv;
   pip_ulp_exithook_t	exit_hook;
   int			retval;
-  void			*aux;
 } pip_task_body_t;
 
 typedef struct pip_ulp_body {
@@ -137,23 +134,58 @@ typedef struct pip_ulp_body {
   size_t		stack_sz;
   void			*stack_region;
 } pip_ulp_body_t;
+#endif
+
+typedef struct pip_ulp_stack {
+  void 			*region;
+  void			*stack;
+  size_t		region_size;
+  size_t		stack_size;
+  int			pipid_alloc;
+} pip_ulp_stack_t;
 
 typedef struct {
   int 			pipid;
   int	 		coreno;
-  pip_spawnhook_t	hook_before;
-  pip_spawnhook_t	hook_after;
-  void			*hook_arg;
   char 			*prog;
   char 			**argv;
   char 			**envv;
+  pip_spawnhook_t	hook_before;
+  pip_spawnhook_t	hook_after;
+  void			*hook_arg;
 } pip_spawn_args_t;
 
+#define PIP_TYPE_NONE	(0)
+#define PIP_TYPE_ROOT	(1)
+#define PIP_TYPE_TASK	(2)
+#define PIP_TYPE_ULP	(3)
+
 typedef struct pip_task {
-  pip_task_body_t	body;
-  pid_t			pid;	 /* PID in process mode */
-  pthread_t		thread;	 /* thread */
-  pip_spawn_args_t	*args;	 /* arguments for a PiP task */
+  int			pipid;	 /* PiP ID */
+  void			*export;
+  ucontext_t		*ctx_exit;
+  void			*loaded;
+  pip_symbols_t		symbols;
+  char			*prog;
+  char			**argv;
+  char			**envv;
+  int			retval;
+  pip_spawn_args_t	args;	/* arguments for a PiP task */
+
+  int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
+  int			boundary[0];
+  union {
+    struct {			/* for PiP tasks */
+      pid_t		pid;	/* PID in process mode */
+      pthread_t		thread;	/* thread */
+    };
+    struct {			/* for PiP ULPs */
+      struct pip_task	*task_parent;
+      void		*stack;
+      pip_ulp_exithook_t exit_hook;
+      void		*exit_hook_arg;
+    };
+  };
 } pip_task_t;
 
 typedef struct {
@@ -161,19 +193,23 @@ typedef struct {
   unsigned int		version;
   size_t		root_size;
   size_t		size;
+
+  pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
   size_t		page_size;
-  pip_spinlock_t	lock_ldlinux;
-  pip_clone_t	 	*cloneinfo;
+  unsigned int		opts;
+  unsigned int		actual_mode;
+  int			ntasks;
   int			ntasks_curr;
   int			ntasks_accum;
-  int			ntasks;
   int			pipid_curr;
-  unsigned int		opts;
+  pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
+  pip_clone_t	 	*cloneinfo;   /* only valid with PIP_MODE_PIPCLONE */
 
-  pip_spinlock_t	lock_ulpstacks;
-  void			*ulp_stack_list;
+  void 			*stack_flist;	  /* ULP: stack free list */
+  size_t		stack_size;
 
-  pip_task_t		*task_root;
+  pip_task_t		*task_root; /* points to tasks[ntasks] */
+  pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   pip_task_t		tasks[];
 } pip_root_t;
 

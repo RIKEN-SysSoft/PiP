@@ -9,7 +9,7 @@
 
 #define NTHREADS	(100)
 
-#define DEBUG
+//#define DEBUG
 
 #define PIP_INTERNAL_FUNCS
 #include <test.h>

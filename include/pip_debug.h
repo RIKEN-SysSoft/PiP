@@ -37,15 +37,20 @@
   do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
 #define DBGF(...)							\
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; }while(0)
-#define RETURN(X)							\
-  do { DBG_PRTBUF; if(X) { DBG_TAG; DBG_PRNT("ERROR RETURN (%d)",X);	\
-			   DBG_OUTPUT; } return (X); } while(0)
+#define RETURN(X)						\
+  do { DBG_PRTBUF; int __xxx=(X); if(__xxx) {				\
+      DBG_TAG; DBG_PRNT("ERROR RETURN (%d)",__xxx); DBG_OUTPUT; }	\
+    return (__xxx); } while(0)
+
+#define ASSERT(X)	\
+  do { if( !(X) ) DBGF( "%s failed !!!", #X ); } while(0)
 
 #else
 
 #define DBG
 #define DBGF(...)
 #define RETURN(X)	return (X)
+#define ASSERT(X)
 
 #endif
 

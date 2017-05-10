@@ -13,11 +13,5 @@ MAN3_SRCS = pip.h
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk
 
-../lib/pipulpsz: ../lib/pipulpsz.c pip_internal.h
-	$(CC) -I. $<-o $@
-
-pip.h: ../lib/pipulpsz pip.h.in
-	sed "s/@PIPULPSZ@/`../lib/pipulpsz`/" pip.h.in > pip.h
-
 clean:
 	rm -f pip.h
