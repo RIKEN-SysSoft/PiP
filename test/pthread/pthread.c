@@ -14,18 +14,14 @@
 #define PIP_INTERNAL_FUNCS
 #include <test.h>
 
-pthread_barrier_t	barrier;
-
 void *thread( void *argp ) {
   // TESTINT( pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, NULL ) );
   // the PTHREAD_CANCEL_DISABLE helps nothing
   // pthread_exit( NULL );  /* pthread_exit() does SOMETHING WRONG !!!! */
-  // pthread_exit() cancels myself, indeed
   return NULL;
 }
 
 int main( int argc, char **argv ) {
-  pthread_barrier_t *barrp;
   int pipid    = 999;
   int ntasks   = NTASKS;
   int nthreads = NTHREADS;
@@ -34,9 +30,7 @@ int main( int argc, char **argv ) {
 
   DBG;
   if( !pip_isa_piptask() ) {
-    //TESTINT( pthread_barrier_init( &barrier, NULL, ntasks+1 ) );
-    barrp = &barrier;
-    if( argc      > 1 ) ntasks = atoi( argv[1] );
+    if( argc     >  1 ) ntasks = atoi( argv[1] );
     if( ntasks   <= 0 ||
 	ntasks   >  NTASKS ) ntasks = NTASKS;
   } else {
@@ -45,7 +39,7 @@ int main( int argc, char **argv ) {
 	nthreads >  NTHREADS ) nthreads = NTHREADS;
   }
 
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
@@ -54,7 +48,7 @@ int main( int argc, char **argv ) {
       if( i != pipid ) {
 	fprintf( stderr, "pip_spawn(%d!=%d) !!!!!!\n", i, pipid );
       }
-#define SERIAL
+//#define SERIAL
 #ifndef SERIAL
     }
     ntasks = i;
