@@ -56,42 +56,6 @@ typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
 typedef	void(*fflush_t)(FILE*);
 
-#define PIP_ULP_NEXT(L)		(((pip_dlist_t*)(L))->next)
-#define PIP_ULP_PREV(L)		(((pip_dlist_t*)(L))->prev)
-#define PIP_ULP_PREV_NEXT(L)	(((pip_dlist_t*)(L))->prev->next)
-#define PIP_ULP_NEXT_PREV(L)	(((pip_dlist_t*)(L))->next->prev)
-
-#define PIP_ULP_LIST_INIT(L)			\
-  do { PIP_ULP_NEXT(L) = (pip_dlist_t*)(L);		\
-    PIP_ULP_PREV(L)    = (pip_dlist_t*)(L); } while(0)
-
-#define PIP_ULP_ENQ(L,R)						\
-  do { PIP_ULP_NEXT(L)   = PIP_ULP_NEXT(R);				\
-    PIP_ULP_PREV(L)      = (pip_dlist_t*)(R);				\
-    PIP_ULP_NEXT(R)      = (pip_dlist_t*)(L);				\
-    PIP_ULP_NEXT_PREV(R) = (pip_dlist_t*)(L); } while(0)
-
-#define PIP_ULP_DEQ(L)					\
-  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);			\
-    PIP_ULP_PREV_NEXT(L)    = PIP_ULP_NEXT(L); } while(0)
-
-#define PIP_ULP_NULLQ(R)	( PIP_ULP_NEXT(R) == PIP_ULP_PREV(R) )
-
-#define PIP_ULP_ENQ_LOCK(L,R,lock)		\
-  do { pip_spin_lock(lock);			\
-    PIP_ULP_ENQ((L),(R));			\
-    pip_spin_unlock(lock); } while(0)
-
-#define PIP_ULP_DEQ_LOCK(L,lock)		\
-  do { pip_spin_lock(lock);			\
-    PIP_ULP_DEQ((L));				\
-    pip_spin_unlock(lock); } while(0)
-
-typedef struct pip_dlist {
-  struct pip_dlist	*next;
-  struct pip_dlist	*prev;
-} pip_dlist_t;
-
 typedef struct {
   /* functions */
   main_func_t		main;	     /* main function address */
@@ -105,36 +69,6 @@ typedef struct {
   int			*libc_argcp;   /* to set __libc_argc */
   char			***environ;    /* pointer to the environ variable */
 } pip_symbols_t;
-
-struct pip_ulp_body;
-
-typedef struct PIP_ULP {
-  ucontext_t		*ctx_ulp;
-  struct pip_ulp_body_t	*ulp;
-} PIP_ULP_t;
-
-#ifndef PIP_ULP_PRINT_SIZE
-
-#ifdef AH
-typedef struct pip_task_body {
-  int			pipid;	 /* PiP ID */
-  int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
-  ucontext_t		*ctx_exit;
-  void			*loaded;
-  pip_symbols_t		symbols;
-  char			*prog;
-  char			**argv;
-  char			**envv;
-  pip_ulp_exithook_t	exit_hook;
-  int			retval;
-} pip_task_body_t;
-
-typedef struct pip_ulp_body {
-  pip_task_body_t	body;
-  size_t		stack_sz;
-  void			*stack_region;
-} pip_ulp_body_t;
-#endif
 
 typedef struct pip_ulp_stack {
   void 			*region;
@@ -212,8 +146,6 @@ typedef struct {
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   pip_task_t		tasks[];
 } pip_root_t;
-
-#endif /* PIP_ULP_PRINT_SIZE */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
