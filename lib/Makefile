@@ -17,7 +17,7 @@ SRCS     = pip.c pvas.c
 
 OBJS	 = pip.o pvas.o
 
-DEPINCS  = $(PIPINCDIR)/pip.h 			\
+DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_internal.h 		\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
@@ -31,3 +31,10 @@ $(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
+
+
+pipulpsz: pipulpsz.c $(PIPINCDIR)/pip_internal.h
+	$(CC) -I$(PIPINCDIR) $< -o $@
+
+$(PIPINCDIR)/pip.h: ./pipulpsz $(PIPINCDIR)/pip.h.in
+	sed "s/@PIPULPSZ@/`./pipulpsz`/" $(PIPINCDIR)/pip.h.in > $(PIPINCDIR)/pip.h
