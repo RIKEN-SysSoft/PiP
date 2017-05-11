@@ -12,7 +12,7 @@
 
 #include <ucontext.h>
 
-typedef ucontext_t*	pip_ulp_ctx_t;
+typedef ucontext_t	pip_ulp_ctx_t;
 
 typedef int(*pip_spawnhook_t)(void*);
 typedef	void(*pip_ulp_exithook_t)(void*);

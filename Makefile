@@ -16,6 +16,7 @@ SUBDIRS = lib include bin preload util \
 	test/openmp \
 	test/fortran \
 	test/pthread \
+	test/ulp \
 	eval sample
 
 include $(top_srcdir)/build/rule.mk

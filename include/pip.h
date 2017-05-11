@@ -497,10 +497,15 @@ extern "C" {
 }
 #endif
 
+/*-----------------------------------------------------*/
 /* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
 /*-----------------------------------------------------*/
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int pip_ulp_spawn( char *prog,
 		   char **argv,
@@ -510,9 +515,13 @@ int pip_ulp_spawn( char *prog,
 		   pip_ulp_exithook_t exit_hook,
 		   void *hookarg );
 
-int pip_ulp_yield_to( pip_ulp_ctx_t *old, pip_ulp_ctx_t new );
+int pip_ulp_yield_to( pip_ulp_ctx_t **oldctx, pip_ulp_ctx_t *newctx );
 
 int pip_ulp_exit( int retval );
+
+#ifdef __cplusplus
+}
+#endif
 
 /********************************************************/
 /* The llowing functions are just utility for debugging */
