@@ -38,20 +38,11 @@ inline static pip_spinlock_t
 pip_spin_trylock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
   int oldval;
 
-  if( *lock != 0 ) return *lock;
+  if( *lock != 0 ) return 0;
   oldval = __sync_val_compare_and_swap( lock, 0, lv );
-  return oldval;
+  return oldval == 0;
 }
 #endif
-
-inline static pip_spinlock_t
-pip_spin_trylock( pip_spinlock_t *lock ) {
-  int oldval;
-
-  if( *lock != 0 ) return *lock;
-  oldval = __sync_val_compare_and_swap( lock, 0, 1 );
-  return oldval;
-}
 
 #ifndef PIP_SPIN_LOCK_WV
 inline static void
@@ -60,10 +51,23 @@ pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
 }
 #endif
 
+#ifndef PIP_SPIN_TRYLOCK
+inline static pip_spinlock_t
+pip_spin_trylock( pip_spinlock_t *lock ) {
+  int oldval;
+
+  if( *lock != 0 ) return 0;
+  oldval = __sync_val_compare_and_swap( lock, 0, 1 );
+  return oldval == 0;
+}
+#endif
+
+#ifndef PIP_SPIN_LOCK
 inline static void
 pip_spin_lock( pip_spinlock_t *lock ) {
   while( !pip_spin_trylock( lock ) ) pip_pause();
 }
+#endif
 
 #ifndef PIP_SPIN_UNLOCK
 inline static void pip_spin_unlock (pip_spinlock_t *lock) {

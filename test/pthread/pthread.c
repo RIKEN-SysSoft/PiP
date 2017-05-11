@@ -68,7 +68,7 @@ int main( int argc, char **argv ) {
 #endif
       //while( pthread_tryjoin_np( threads[i], NULL ) != 0 );
       TESTINT( pthread_join( threads[i], NULL ) );
-      printf( "pthread_join\n" );
+      printf( "SUCCESS\n" );
     }
   }
   TESTINT( pip_fin() );
