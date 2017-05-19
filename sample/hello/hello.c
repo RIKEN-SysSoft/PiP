@@ -18,7 +18,7 @@ int main( int argc, char **argv ) {
     printf( "<R> &pipid: %p\n", &pipid );
     pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 	       NULL, NULL, NULL );
-    wait( NULL );
+    pip_wait( pipid, NULL );
 
   } else {			// PIP child task
 #ifdef PRINT_MAPS
