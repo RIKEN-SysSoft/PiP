@@ -12,6 +12,3 @@ MAN3_SRCS = pip.h
 
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk
-
-clean:
-	rm -f pip.h
