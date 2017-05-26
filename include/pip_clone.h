@@ -12,6 +12,10 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <pip_machdep.h>
 
 #define PIP_LOCK_UNLOCKED	(0)

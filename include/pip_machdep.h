@@ -33,21 +33,30 @@ inline static void pip_pause( void ) {
 }
 #endif
 
+#ifndef PIP_WRITE_BARRIER
+inline static void pip_write_barrier(void) {
+  __sync_synchronize ();
+}
+#endif
+
+#ifndef PIP_MEMORY_BARRIER
+inline static void pip_memory_barrier(void) {
+  __sync_synchronize ();
+}
+#endif
+
 #ifndef PIP_SPIN_TRYLOCK_WV
 inline static pip_spinlock_t
 pip_spin_trylock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
-  int oldval;
-
-  if( *lock != 0 ) return 0;
-  oldval = __sync_val_compare_and_swap( lock, 0, lv );
-  return oldval == 0;
+  pip_memory_barrier();
+  return __sync_val_compare_and_swap( lock, 0, lv );
 }
 #endif
 
 #ifndef PIP_SPIN_LOCK_WV
 inline static void
 pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
-  while( !pip_spin_trylock_wv( lock, lv ) ) pip_pause();
+  while( pip_spin_trylock_wv( lock, lv ) != 0 ) pip_pause();
 }
 #endif
 
@@ -86,18 +95,6 @@ inline static int pip_spin_init (pip_spinlock_t *lock) {
 inline static int pip_spin_destroy (pip_spinlock_t *lock) {
   /* Nothing to do.  */
   return 0;
-}
-#endif
-
-#ifndef PIP_WRITE_BARRIER
-inline static void pip_write_barrier(void) {
-  __sync_synchronize ();
-}
-#endif
-
-#ifndef PIP_MEMORY_BARRIER
-inline static void pip_memory_barrier(void) {
-  __sync_synchronize ();
 }
 #endif
 
