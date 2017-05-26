@@ -18,6 +18,8 @@ SRCS     = pip.c pvas.c
 OBJS	 = pip.o pvas.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
+	   $(PIPINCDIR)/pip_types.h 		\
+	   $(PIPINCDIR)/pip_ulp.h 		\
 	   $(PIPINCDIR)/pip_internal.h 		\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
