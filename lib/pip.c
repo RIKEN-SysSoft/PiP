@@ -128,11 +128,6 @@ static void pip_err_mesg( char *format, ... ) {
   pip_message( "PIP-ERROR%s: ", format, ap );
 }
 
-#include <sys/syscall.h>
-static pid_t pip_gettid( void ) {
-  return syscall( SYS_gettid );
-}
-
 static void pip_set_magic( pip_root_t *root ) {
   memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN );
 }
@@ -1125,6 +1120,11 @@ static int pip_find_a_free_task( int *pipidp ) {
   RETURN( err );
 }
 
+#include <sys/syscall.h>
+static pid_t pip_gettid( void ) {
+  return (pid_t) syscall( (long int) SYS_gettid );
+}
+
 int pip_spawn( char *prog,
 	       char **argv,
 	       char **envv,
@@ -1227,6 +1227,7 @@ int pip_spawn( char *prog,
       }
     }
     if( err == 0 ) {
+      DBGF( "tid=%d  cloneinfo@%p", tid, pip_root->cloneinfo );
       if( pip_root->cloneinfo != NULL ) {
 	/* lock is needed, because the preloaded clone()
 	   might also be called from outside of PiP lib. */
