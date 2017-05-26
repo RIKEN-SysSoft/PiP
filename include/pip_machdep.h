@@ -65,6 +65,7 @@ inline static pip_spinlock_t
 pip_spin_trylock( pip_spinlock_t *lock ) {
   int oldval;
 
+  pip_memory_barrier();
   if( *lock != 0 ) return 0;
   oldval = __sync_val_compare_and_swap( lock, 0, 1 );
   return oldval == 0;
