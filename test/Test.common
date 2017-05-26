@@ -3,7 +3,8 @@ CFLAGS += $(PIEFLAG) -pthread
 PIPLDFLAGS += $(PIPLDLIB) -pthread
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_types.h \
-	$(PIPINCDIR)/pip_ulp.h $(PIPINCDIR)/pip_machdep.h
+	$(PIPINCDIR)/pip_ulp.h $(PIPINCDIR)/pip_internal.h \
+	$(PIPINCDIR)/pip_machdep.h $(PIPINCDIR)/pip_debug.h
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@
