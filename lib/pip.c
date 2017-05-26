@@ -28,7 +28,7 @@
 
 //#define PIP_NO_MALLOPT
 
-#define DEBUG
+//#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
