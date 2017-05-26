@@ -445,7 +445,7 @@ extern "C" {
 #ifdef PIP_INTERNAL_FUNCS
   #include <pip_internal.h>
 
-  /* the following functions depends PiP execution modedeeply */
+  /* the following functions deeply depends on PiP execution mode */
 
   int pip_get_thread( int pipid, pthread_t *threadp );
   int pip_is_pthread( int *flagp );
@@ -467,65 +467,11 @@ extern "C" {
 }
 #endif
 
-/*-----------------------------------------------------*/
-/* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
+/************************************************************/
+/* The following functions are just utilities for debugging */
+/************************************************************/
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-#define PIP_ULP_EXITED		(-1)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
-
-/**
- * @addtogroup libpip libpip
- * \brief the PiP-ULP library
- * @{
- * @file
- * @{
- */
-
-/**
- * @}
- * @}
- */
-
-#ifdef __cplusplus
-}
-#endif
-
-/*-----------------------------------------------------*/
-/* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
-/*-----------------------------------------------------*/
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int pip_ulp_spawn( char *prog,
-		   char **argv,
-		   char **envv,
-		   int  *pipidp,
-		   pip_ulp_ctx_t **ctxp,
-		   pip_ulp_exithook_t exit_hook,
-		   void *hookarg );
-
-int pip_ulp_yield_to( pip_ulp_ctx_t **oldctx, pip_ulp_ctx_t *newctx );
-
-int pip_ulp_exit( int retval );
-
-#ifdef __cplusplus
-}
-#endif
-
-/********************************************************/
-/* The llowing functions are just utility for debugging */
-/********************************************************/
 
 #define PIP_DEBUG_BUFSZ		(4096)
 

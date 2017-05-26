@@ -70,23 +70,12 @@ typedef struct {
   char			***environ;    /* pointer to the environ variable */
 } pip_symbols_t;
 
-typedef struct pip_ulp_stack {
-  void 			*region;
-  void			*stack;
-  size_t		region_size;
-  size_t		stack_size;
-  int			pipid_alloc;
-} pip_ulp_stack_t;
-
 typedef struct {
   int 			pipid;
   int	 		coreno;
   char 			*prog;
   char 			**argv;
   char 			**envv;
-  pip_spawnhook_t	hook_before;
-  pip_spawnhook_t	hook_after;
-  void			*hook_arg;
 } pip_spawn_args_t;
 
 #define PIP_TYPE_NONE	(0)
@@ -96,28 +85,32 @@ typedef struct {
 
 typedef struct pip_task {
   int			pipid;	 /* PiP ID */
+  int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
+
   void			*export;
   ucontext_t		*ctx_exit;
   void			*loaded;
   pip_symbols_t		symbols;
-  char			*prog;
-  char			**argv;
-  char			**envv;
-  int			retval;
   pip_spawn_args_t	args;	/* arguments for a PiP task */
+  int			retval;
 
-  int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
+  pip_ulp_sched_t	*ulp_sched;
+
   int			boundary[0];
   union {
     struct {			/* for PiP tasks */
       pid_t		pid;	/* PID in process mode */
       pthread_t		thread;	/* thread */
+      pip_spawnhook_t	hook_before;
+      pip_spawnhook_t	hook_after;
+      void		*hook_arg;
     };
     struct {			/* for PiP ULPs */
       struct pip_task	*task_parent;
       void		*stack;
       pip_ulp_exithook_t exit_hook;
       void		*exit_hook_arg;
+      void		*aux;
     };
   };
 } pip_task_t;
@@ -146,6 +139,8 @@ typedef struct {
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   pip_task_t		tasks[];
 } pip_root_t;
+
+#include <pip_ulp.h>
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
