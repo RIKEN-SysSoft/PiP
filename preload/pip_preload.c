@@ -72,7 +72,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       continue;
     default:
       if( oldval == tid ) {
-      DBG;
+	DBG;
 	goto lock_ok; /* locked by myself */
       }
       DBG;
@@ -96,7 +96,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
     }
     if( oldval == PIP_LOCK_UNLOCKED ) {
       DBGF( "!!! Original clone() is used" );
-      retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
+      retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid);
 
 #ifdef CHECK_TLS
 #ifdef __x86_64__
