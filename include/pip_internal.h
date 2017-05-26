@@ -108,9 +108,7 @@ typedef struct pip_task {
     struct {			/* for PiP ULPs */
       struct pip_task	*task_parent;
       void		*stack;
-      pip_ulp_exithook_t exit_hook;
-      void		*exit_hook_arg;
-      void		*aux;
+      pip_ulp_t		*ulp;
     };
   };
 } pip_task_t;
