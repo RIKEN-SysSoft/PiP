@@ -14,16 +14,15 @@
 
 typedef ucontext_t	pip_ulp_ctx_t;
 
-struct pip_task;
-
 typedef struct {
   pip_ulp_ctx_t		*ctx;
-  struct pip_task	*ulp;
+  void			*aux;
+  int			pipid;
 } pip_ulp_t;
 
-typedef pip_ulp_t* (*pip_ulp_create_t)   ( void* );
-typedef       void (*pip_ulp_yield_t)    ( void* );
-typedef       void (*pip_ulp_destroy_t)  ( void* );
+typedef void (*pip_ulp_create_t)  ( pip_ulp_t* );
+typedef void (*pip_ulp_yield_t)   ( pip_ulp_t* );
+typedef void (*pip_ulp_destroy_t) ( pip_ulp_t* );
 
 typedef struct pip_ulp_sched {
   pip_ulp_create_t	create;
@@ -32,6 +31,5 @@ typedef struct pip_ulp_sched {
 } pip_ulp_sched_t;
 
 typedef int(*pip_spawnhook_t)(void*);
-typedef	void(*pip_ulp_exithook_t)(void*);
 
 #endif /* _pip_types_h_ */
