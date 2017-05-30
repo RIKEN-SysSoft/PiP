@@ -28,7 +28,7 @@
 
 //#define PIP_NO_MALLOPT
 
-//#define DEBUG
+#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
@@ -111,21 +111,21 @@ static void pip_info_mesg( char *format, ... ) __attribute__ ((unused));
 static void pip_info_mesg( char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( "PIP-INFO%s: ", format, ap );
+  pip_message( "PIP-INFO%s:", format, ap );
 }
 
 static void pip_warn_mesg( char *format, ... ) __attribute__ ((unused));
 static void pip_warn_mesg( char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( "PIP-WARN%s: ", format, ap );
+  pip_message( "PIP-WARN%s:", format, ap );
 }
 
 static void pip_err_mesg( char *format, ... ) __attribute__ ((unused));
 static void pip_err_mesg( char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( "PIP-ERROR%s: ", format, ap );
+  pip_message( "PIP-ERROR%s:", format, ap );
 }
 
 static void pip_set_magic( pip_root_t *root ) {
@@ -824,6 +824,9 @@ static int pip_find_symbols( void *handle, pip_symbols_t *symp ) {
 
   /* check mandatory symbols */
   if( symp->main == NULL || symp->environ == NULL ) {
+    pip_warn_mesg( "Unable to find main (not linked with '-rdynamic' option?)" );
+    err = ENOEXEC;
+  } else if( symp->environ == NULL ) {
     err = ENOEXEC;
   } else {
 #ifdef DEBUG
