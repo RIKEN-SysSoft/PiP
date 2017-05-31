@@ -18,15 +18,11 @@
  *
  * \section description DESCRIPTION
  *
- * \b This command prints memory map of PiP.
+ * \b This command prints memory map of current task
  *
  * \section environment ENVIRONMENT
  *
- * \subsection PIP_MODE PIP_MODE
  */
-
-#include <sys/wait.h>
-#include <stdio.h>
 
 #include <pip.h>
 

@@ -473,120 +473,21 @@ extern "C" {
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#define PIP_DEBUG_BUFSZ		(4096)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-inline static void pip_print_maps( void ) __attribute__ ((unused));
-inline static void pip_print_maps( void ) {
-  int fd = open( "/proc/self/maps", O_RDONLY );
-  char buf[PIP_DEBUG_BUFSZ];
+  void pip_print_maps( void );
+  void pip_print_fd( int fd );
+  void pip_print_fds( void );
+  void pip_check_addr( char *tag, void *addr );
+  double pip_gettime( void );
+  void pip_print_loaded_solibs( FILE *file );
+  void pip_print_dsos( void );
 
-  while( 1 ) {
-    ssize_t rc, wc;
-    char *p;
-
-    if( ( rc = read( fd, buf, PIP_DEBUG_BUFSZ ) ) <= 0 ) break;
-    p = buf;
-    do {
-      if( ( wc = write( 1, p, rc ) ) < 0 ) { /* STDOUT */
-	fprintf( stderr, "write error\n" );
-	goto error;
-      }
-      p  += wc;
-      rc -= wc;
-    } while( rc > 0 );
-  }
- error:
-  close( fd );
+#ifdef __cplusplus
 }
-
-inline static void pip_print_fd( int ) __attribute__ ((unused));
-inline static void pip_print_fd( int fd ) {
-  char idstr[64];
-  char fdpath[512];
-  char fdname[256];
-  ssize_t sz;
-
-  pip_idstr( idstr, 64 );
-  sprintf( fdpath, "/proc/self/fd/%d", fd );
-  if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
-    fdname[sz] = '\0';
-    fprintf( stderr, "%s %d -> %s", idstr, fd, fdname );
-  }
-}
-
-inline static void pip_print_fds( void ) __attribute__ ((unused));
-inline static void pip_print_fds( void ) {
-  DIR *dir = opendir( "/proc/self/fd" );
-  struct dirent *de;
-  char idstr[64];
-  char fdpath[512];
-  char fdname[256];
-  ssize_t sz;
-
-  pip_idstr( idstr, 64 );
-  if( dir != NULL ) {
-    int   fd = dirfd( dir );
-
-    while( ( de = readdir( dir ) ) != NULL ) {
-      sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
-      if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
-	fdname[sz] = '\0';
-	if( atoi( de->d_name ) != fd ) {
-	  fprintf( stderr, "%s %s -> %s", idstr, fdpath, fdname );
-	} else {
-	  fprintf( stderr, "%s %s -> %s  opendir(\"/proc/self/fd\")",
-		   idstr, fdpath, fdname );
-	}
-      }
-    }
-    closedir( dir );
-  }
-}
-
-inline static void pip_check_addr( char*, void* ) __attribute__ ((unused));
-inline static void pip_check_addr( char *tag, void *addr ) {
-  FILE *maps = fopen( "/proc/self/maps", "r" );
-  char idstr[64];
-  char *line = NULL;
-  size_t sz  = 0;
-  int retval;
-
-  if( tag == NULL ) {
-    pip_idstr( idstr, 64 );
-    tag = &idstr[0];
-  }
-  while( maps != NULL ) {
-    void *start, *end;
-
-    if( ( retval = getline( &line, &sz, maps ) ) < 0 ) {
-      fprintf( stderr, "getline()=%d\n", errno );
-      break;
-    } else if( retval == 0 ) {
-      continue;
-    }
-    line[retval] = '\0';
-    if( sscanf( line, "%p-%p", &start, &end ) == 2 ) {
-      if( (intptr_t) addr >= (intptr_t) start &&
-	  (intptr_t) addr <  (intptr_t) end ) {
-	fprintf( stderr, "%s %p: %s", tag, addr, line );
-	goto found;
-      }
-    }
-  }
-  fprintf( stderr, "%s %p (not found)\n", tag, addr );
- found:
-  if( line != NULL ) free( line );
-  fclose( maps );
-}
-
-void pip_print_loaded_solibs( FILE *file );
-
-inline static double pip_gettime( void ) __attribute__ ((unused));
-inline static double pip_gettime( void ) {
-  struct timeval tv;
-  gettimeofday( &tv, NULL );
-  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
-}
+#endif
 
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 #endif	/* _pip_h_ */
