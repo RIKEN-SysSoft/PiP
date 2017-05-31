@@ -28,7 +28,7 @@
 
 //#define PIP_NO_MALLOPT
 
-#define DEBUG
+//#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
@@ -954,7 +954,7 @@ pip_glibc_init( pip_symbols_t *symbols, char **argv, char **envv, int flag ) {
 #ifndef PIP_NO_MALLOPT
   if( symbols->mallopt != NULL ) {
     DBGF( ">> mallopt()" );
-    if( symbols->mallopt( M_MMAP_THRESHOLD, 0 ) == 1 ) {
+    if( symbols->mallopt( M_MMAP_THRESHOLD, 1 ) == 1 ) {
       DBGF( "<< mallopt(M_MMAP_THRESHOLD): succeeded" );
     } else {
       DBGF( "<< mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
@@ -1011,7 +1011,7 @@ static int pip_do_spawn( void *thargs )  {
   int argc, err = 0;
 
   DBG;
-  //if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
+  if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
   DBG;
 
 #ifdef DEBUG
@@ -1040,7 +1040,7 @@ static int pip_do_spawn( void *thargs )  {
   if( err != 0 ) RETURN( err );
 #endif
   DBG;
-  //if( !pip_is_shared_fd_() ) pip_close_on_exec();
+  if( !pip_is_shared_fd_() ) pip_close_on_exec();
   DBG;
 
   /* calling hook, if any */
