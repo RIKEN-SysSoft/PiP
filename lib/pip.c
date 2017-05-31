@@ -914,11 +914,20 @@ static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
 static int pip_corebind( int coreno ) {
   cpu_set_t cpuset;
 
-  if( coreno != PIP_CPUCORE_ASIS ) {
+  if( coreno != PIP_CPUCORE_ASIS &&
+      coreno >= 0                &&
+      coreno <  sizeof(cpuset) * 8 ) {
+    DBG;
     CPU_ZERO( &cpuset );
+    DBG;
     CPU_SET( coreno, &cpuset );
+    DBG;
     if( sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) RETURN( errno );
+    DBG;
+  } else {
+    DBGF( "coreno=%d", coreno );
   }
+  DBG;
   RETURN( 0 );
 }
 
@@ -928,15 +937,19 @@ pip_glibc_init( pip_symbols_t *symbols, char **argv, char **envv, int flag ) {
 
   DBG;
   for( argc=0; argv[argc]!=NULL; argc++ );
+  DBG;
   if( symbols->libc_argcp != NULL ) {
     DBGF( "&__libc_argc=%p\n", symbols->libc_argcp );
     *symbols->libc_argcp = argc;
   }
+  DBG;
   if( symbols->libc_argvp != NULL ) {
     DBGF( "&__libc_argv=%p\n", symbols->libc_argvp );
     *symbols->libc_argvp = argv;
   }
+  DBG;
   *symbols->environ = envv;	/* setting environment vars */
+  DBG;
 
 #ifndef PIP_NO_MALLOPT
   if( symbols->mallopt != NULL ) {
@@ -955,6 +968,7 @@ pip_glibc_init( pip_symbols_t *symbols, char **argv, char **envv, int flag ) {
 #endif
 
   if( flag ) {
+    DBG;
     if( symbols->glibc_init != NULL ) {
       DBGF( ">> glibc_init@%p()", symbols->glibc_init );
       symbols->glibc_init( argc, argv, envv );
@@ -997,7 +1011,8 @@ static int pip_do_spawn( void *thargs )  {
   int argc, err = 0;
 
   DBG;
-  if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
+  //if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
+  DBG;
 
 #ifdef DEBUG
   if( pip_is_pthread_() ) {
@@ -1013,6 +1028,7 @@ static int pip_do_spawn( void *thargs )  {
     }
   }
 #endif
+  DBG;
 #ifdef PIP_CLONE_AND_DLMOPEN
   pip_spin_lock( &pip_root->lock_ldlinux );
   /*** begin lock region ***/
@@ -1024,7 +1040,8 @@ static int pip_do_spawn( void *thargs )  {
   if( err != 0 ) RETURN( err );
 #endif
   DBG;
-  if( !pip_is_shared_fd_() ) pip_close_on_exec();
+  //if( !pip_is_shared_fd_() ) pip_close_on_exec();
+  DBG;
 
   /* calling hook, if any */
   if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
@@ -1036,7 +1053,9 @@ static int pip_do_spawn( void *thargs )  {
     ucontext_t 		ctx;
     volatile int	flag_exit;	/* must be volatile */
 
+    DBG;
     argc = pip_glibc_init( &self->symbols, argv, envv, 1 );
+    DBG;
     flag_exit = 0;
     (void) getcontext( &ctx );
     if( !flag_exit ) {
@@ -1218,16 +1237,21 @@ int pip_spawn( char *prog,
 
     if( ( err = pthread_attr_init( &attr ) ) == 0 ) {
 #ifdef PIP_CLONE_AND_DLMOPEN
-      if( coreno != PIP_CPUCORE_ASIS ) {
+      if( coreno != PIP_CPUCORE_ASIS &&
+	  coreno >= 0                &&
+	  coreno <  sizeof(cpuset) * 8 ) {
 	CPU_ZERO( &cpuset );
 	CPU_SET( coreno, &cpuset );
 	err = pthread_attr_setaffinity_np( &attr, sizeof(cpuset), &cpuset );
+	DBGF( "pthread_attr_setaffinity_np( %d )= %d", coreno, err );
       }
 #endif
+#ifdef AH
       if( err == 0 ) {
 	err = pthread_attr_setstacksize( &attr, stack_size );
 	DBGF( "pthread_attr_setstacksize( %ld )= %d", stack_size, err );
       }
+#endif
     }
     if( err == 0 ) {
       DBGF( "tid=%d  cloneinfo@%p", tid, pip_root->cloneinfo );
@@ -1236,15 +1260,18 @@ int pip_spawn( char *prog,
 	   might also be called from outside of PiP lib. */
 	pip_spin_lock_wv( &pip_root->cloneinfo->lock, tid );
       }
+      DBG;
       do {
 	err = pthread_create( &task->thread,
 			      &attr,
 			      (void*(*)(void*)) pip_do_spawn,
 			      (void*) args );
       } while( 0 );
+      /* unlock is done in the wrapper function */
+      DBG;
       if( pip_root->cloneinfo != NULL ) {
-	pip_spin_unlock( &pip_root->cloneinfo->lock );
 	pid = pip_root->cloneinfo->pid_clone;
+	pip_root->cloneinfo->pid_clone = 0;
       }
     }
   }
@@ -1253,7 +1280,6 @@ int pip_spawn( char *prog,
     task->pid = pid;
     pip_root->ntasks_accum ++;
     pip_root->ntasks_curr  ++;
-    if( pip_root->cloneinfo != NULL ) pip_root->cloneinfo->pid_clone = 0;
     *pipidp = pipid;
 
   } else {
@@ -1509,55 +1535,6 @@ void pip_free( void *ptr ) {
   }
 }
 
-/* the following function(s) are for debugging */
-
-void pip_print_loaded_solibs( FILE *file ) {
-  void *handle = NULL;
-  char idstr[PIPIDLEN];
-
-  /* pip_init() must be called in advance */
-  (void) pip_idstr( idstr, PIPIDLEN );
-  if( file == NULL ) file = stderr;
-
-  if( !pip_root_p_() ) {
-    handle = pip_get_dso_();
-  } else {
-    handle = dlopen( NULL, RTLD_NOW );
-  }
-  if( handle == NULL ) {
-    fprintf( file, "%s (no solibs loaded)\n", idstr );
-  } else {
-    struct link_map *map = (struct link_map*) handle;
-    for( ; map!=NULL; map=map->l_next ) {
-      char *fname;
-      if( *map->l_name == '\0' ) {
-	fname = "(noname)";
-      } else {
-	fname = map->l_name;
-      }
-      fprintf( file, "%s %s at %p\n", idstr, fname, (void*)map->l_addr );
-    }
-  }
-  if( pip_root_p_() && handle != NULL ) dlclose( handle );
-}
-
-int pip_print_dsos_cb_( struct dl_phdr_info *info, size_t size, void *data ) {
-  int i;
-
-  printf( "name=%s (%d segments)\n", info->dlpi_name, info->dlpi_phnum);
-
-  for ( i=0; i<info->dlpi_phnum; i++ ) {
-    printf( "\t\t header %2d: address=%10p\n", i,
-	    (void *) (info->dlpi_addr + info->dlpi_phdr[i].p_vaddr ) );
-  }
-  return 0;
-}
-
-void pip_print_dsos( void ) __attribute__ ((unused));
-void pip_print_dsos( void ) {
-  dl_iterate_phdr( pip_print_dsos_cb_, NULL );
-}
-
 /*-----------------------------------------------------*/
 /* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
 /*-----------------------------------------------------*/
@@ -1805,4 +1782,161 @@ int pip_ulp_do_finalize( int pipid, int *retvalp ) {
   pip_ulp_recycle_stack( ulp->stack );
   pip_finalize_task( ulp, retvalp );
   RETURN( err );
+}
+
+/* the following function(s) are for debugging */
+
+#define PIP_DEBUG_BUFSZ		(4096)
+
+void pip_print_maps( void ) {
+  int fd = open( "/proc/self/maps", O_RDONLY );
+  char buf[PIP_DEBUG_BUFSZ];
+
+  while( 1 ) {
+    ssize_t rc, wc;
+    char *p;
+
+    if( ( rc = read( fd, buf, PIP_DEBUG_BUFSZ ) ) <= 0 ) break;
+    p = buf;
+    do {
+      if( ( wc = write( 1, p, rc ) ) < 0 ) { /* STDOUT */
+	fprintf( stderr, "write error\n" );
+	goto error;
+      }
+      p  += wc;
+      rc -= wc;
+    } while( rc > 0 );
+  }
+ error:
+  close( fd );
+}
+
+void pip_print_fd( int fd ) {
+  char idstr[64];
+  char fdpath[512];
+  char fdname[256];
+  ssize_t sz;
+
+  pip_idstr( idstr, 64 );
+  sprintf( fdpath, "/proc/self/fd/%d", fd );
+  if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+    fdname[sz] = '\0';
+    fprintf( stderr, "%s %d -> %s", idstr, fd, fdname );
+  }
+}
+
+void pip_print_fds( void ) {
+  DIR *dir = opendir( "/proc/self/fd" );
+  struct dirent *de;
+  char idstr[64];
+  char fdpath[512];
+  char fdname[256];
+  ssize_t sz;
+
+  pip_idstr( idstr, 64 );
+  if( dir != NULL ) {
+    int   fd = dirfd( dir );
+
+    while( ( de = readdir( dir ) ) != NULL ) {
+      sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
+      if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+	fdname[sz] = '\0';
+	if( atoi( de->d_name ) != fd ) {
+	  fprintf( stderr, "%s %s -> %s", idstr, fdpath, fdname );
+	} else {
+	  fprintf( stderr, "%s %s -> %s  opendir(\"/proc/self/fd\")",
+		   idstr, fdpath, fdname );
+	}
+      }
+    }
+    closedir( dir );
+  }
+}
+
+void pip_check_addr( char *tag, void *addr ) {
+  FILE *maps = fopen( "/proc/self/maps", "r" );
+  char idstr[64];
+  char *line = NULL;
+  size_t sz  = 0;
+  int retval;
+
+  if( tag == NULL ) {
+    pip_idstr( idstr, 64 );
+    tag = &idstr[0];
+  }
+  while( maps != NULL ) {
+    void *start, *end;
+
+    if( ( retval = getline( &line, &sz, maps ) ) < 0 ) {
+      fprintf( stderr, "getline()=%d\n", errno );
+      break;
+    } else if( retval == 0 ) {
+      continue;
+    }
+    line[retval] = '\0';
+    if( sscanf( line, "%p-%p", &start, &end ) == 2 ) {
+      if( (intptr_t) addr >= (intptr_t) start &&
+	  (intptr_t) addr <  (intptr_t) end ) {
+	fprintf( stderr, "%s %p: %s", tag, addr, line );
+	goto found;
+      }
+    }
+  }
+  fprintf( stderr, "%s %p (not found)\n", tag, addr );
+ found:
+  if( line != NULL ) free( line );
+  fclose( maps );
+}
+
+double pip_gettime( void ) {
+  struct timeval tv;
+  gettimeofday( &tv, NULL );
+  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
+}
+
+void pip_print_loaded_solibs( FILE *file ) {
+  void *handle = NULL;
+  char idstr[PIPIDLEN];
+
+  /* pip_init() must be called in advance */
+  (void) pip_idstr( idstr, PIPIDLEN );
+  if( file == NULL ) file = stderr;
+
+  if( !pip_root_p_() ) {
+    handle = pip_get_dso_();
+  } else {
+    handle = dlopen( NULL, RTLD_NOW );
+  }
+  if( handle == NULL ) {
+    fprintf( file, "%s (no solibs loaded)\n", idstr );
+  } else {
+    struct link_map *map = (struct link_map*) handle;
+    for( ; map!=NULL; map=map->l_next ) {
+      char *fname;
+      if( *map->l_name == '\0' ) {
+	fname = "(noname)";
+      } else {
+	fname = map->l_name;
+      }
+      fprintf( file, "%s %s at %p\n", idstr, fname, (void*)map->l_addr );
+    }
+  }
+  if( pip_root_p_() && handle != NULL ) dlclose( handle );
+}
+
+static int
+pip_print_dsos_cb_( struct dl_phdr_info *info, size_t size, void *data ) {
+  int i;
+
+  printf( "name=%s (%d segments)\n", info->dlpi_name, info->dlpi_phnum);
+
+  for ( i=0; i<info->dlpi_phnum; i++ ) {
+    printf( "\t\t header %2d: address=%10p\n", i,
+	    (void *) (info->dlpi_addr + info->dlpi_phdr[i].p_vaddr ) );
+  }
+  return 0;
+}
+
+void pip_print_dsos( void ) {
+  dl_iterate_phdr( pip_print_dsos_cb_, NULL );
 }

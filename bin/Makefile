@@ -25,7 +25,7 @@ piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	-Wl,--dynamic-linker=$(dynamic_linker) $< $(LDLIBS) -o $@
 
 pmap: pmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) -O2 -fpie -pie -rdynamic $< -o $@
+	$(CC) -I$(PIPINCDIR) $(LDFLAGS) $(LDLIBS) -O2 -fpie -pie -rdynamic $< -o $@ -pthread
 
 post-clean-hook:
 	$(RM) *.E *.log
