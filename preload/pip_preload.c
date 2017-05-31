@@ -8,6 +8,7 @@
 */
 
 #define _GNU_SOURCE
+#include <sys/syscall.h>
 #include <sys/types.h>
 #include <dlfcn.h>
 #include <sched.h>
@@ -29,30 +30,24 @@
 #include <pthread.h>
 #endif
 
+pip_clone_t pip_clone_info = { 0 }; /* refered by piplib */
+
 typedef
 int(*clone_syscall_t)(int(*)(void*), void*, int, void*, pid_t*, void*, pid_t*);
 
-pip_clone_t pip_clone_info = { 0 }; /* this is refered by piplib */
-
 static clone_syscall_t pip_clone_orig = NULL;
 
-
-#include <sys/syscall.h>
-static pid_t pip_gettid( void ) {
-  return (pid_t) syscall( (long int) SYS_gettid );
-}
-
-
-static clone_syscall_t pip_get_clone( void ) {
-  static clone_syscall_t pip_clone_orig = NULL;
-
-  if( pip_clone_orig == NULL ) {
-    pip_clone_orig = (clone_syscall_t) dlsym( RTLD_NEXT, "__clone" );
-  }
-  return pip_clone_orig;
-}
-
 int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
+  pid_t pip_gettid( void ) {
+    return (pid_t) syscall( (long int) SYS_gettid );
+  }
+  clone_syscall_t pip_get_clone( void ) {
+    if( pip_clone_orig == NULL ) {
+      pip_clone_orig = (clone_syscall_t) dlsym( RTLD_NEXT, "__clone" );
+    }
+    return pip_clone_orig;
+  }
+
   pid_t		 tid = pip_gettid();
   pip_spinlock_t oldval;
   int 		 retval = -1;
