@@ -10,59 +10,48 @@
 #define PIP_INTERNAL_FUNCS
 
 #define NULPS	(10)
-//#define NULPS	(2)
 
 #define DEBUG
 #include <test.h>
 
-int a;
-
-static struct root{
-  pip_ulp_t 	root;
-  int 		pipid;
-  int		n;
-  pip_ulp_t	ulp[NULPS];
-} root;
-
-void term_cb( void *aux ) {
-  struct root *rp = (struct root*) aux;
-  fprintf( stderr, "PIPID:%d - terminated (%p)\n", rp->pipid, rp );
-  rp->n++;
-  if( rp->n < NULPS ) {
-    pip_ulp_yield_to( NULL, &rp->ulp[rp->n] );
-  } else {
-    pip_ulp_yield_to( NULL, &rp->root );
-  }
-}
+pip_ulp_t ulp_old;
 
 int main( int argc, char **argv ) {
-  int i, ntasks, pipid;
+  int pipid = 999;
+  int ntasks;
+  void *expp;
+  pip_ulp_t ulp_new, *ulp_bakp;
 
   fprintf( stderr, "PID %d\n", getpid() );
 
   ntasks = 20;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    root.pipid = pipid;
-    root.n     = 0;
-    TESTINT( pip_make_ulp( pipid,
-			   term_cb,
-			   &root,
-			   &root.root ) );
-    for( i=0; i<NULPS; i++ ) {
-      pipid = i;
-      TESTINT( pip_ulp_spawn( argv[0],
-			      argv,
-			      NULL,
-			      &pipid,
-			      term_cb,
-			      &root,
-			      &root.ulp[i] ) );
-    }
-    TESTINT( pip_ulp_yield_to( &root.root, &root.ulp[0] ) );
+    pipid = 0;
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			NULL, NULL, NULL ) );
+    TESTINT( pip_wait( 0, NULL ) );
+    TESTINT( pip_fin() );
+  } else if( pipid == 0 ) {
+    fprintf( stderr, "<%d> Hello, I am a parent task !!\n", pipid );
+    TESTINT( pip_export( &ulp_old ) );
+    pipid ++;
+    TESTINT( pip_ulp_create( argv[0], argv, NULL, &pipid, NULL, NULL, &ulp_new ));
+    TESTINT( pip_make_ulp( PIP_PIPID_MYSELF, NULL, NULL, &ulp_old ) );
+    TESTINT( pip_ulp_yield_to( &ulp_old, &ulp_new ) );
+  } else if( pipid < NULPS ) {
+    fprintf( stderr, "<%d> Hello, I am a ULP task !!\n", pipid );
+    TESTINT( pip_export( &ulp_old ) );
+    TESTINT( pip_import( pipid - 1, &expp ) );
+    pipid ++;
+    TESTINT( pip_ulp_create( argv[0], argv, NULL, &pipid, NULL, NULL, &ulp_new ));
+    TESTINT( pip_make_ulp( PIP_PIPID_MYSELF, NULL, NULL, &ulp_old ) );
+    TESTINT( pip_ulp_yield_to( &ulp_old, &ulp_new ) );
+    ulp_bakp = (pip_ulp_t*) expp;
+    TESTINT( pip_ulp_yield_to( NULL, ulp_bakp ) );
   } else {
-    fprintf( stderr, "<%d> Hello, ULP (stackvar@%p staticvar@%p)\n",
-	     pipid, &pipid, &root );
+    fprintf( stderr, "<%d> Hello, I am the last ULP task !!\n", pipid );
+    TESTINT( pip_ulp_yield_to( NULL, &ulp_new ) );
   }
   TESTINT( pip_fin() );
   return 0;
