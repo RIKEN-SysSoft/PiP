@@ -550,16 +550,43 @@ static int pip_task_p_( void ) {
   return pip_task != NULL;
 }
 
-static pip_task_t *pip_get_task( int pipid ) {
-  if( pipid == PIP_PIPID_ROOT ) {
-    return pip_root->task_root;
-  } else {
-    return &pip_root->tasks[pipid];
+static int pip_check_pipid( int *pipidp ) {
+  int pipid = *pipidp;
+
+  if( pip_root == NULL          ) RETURN( EPERM  );
+  if( pipid >= pip_root->ntasks ) RETURN( ENOENT );
+  if( pipid != PIP_PIPID_MYSELF &&
+      pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
+  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
+  if( pipid == PIP_PIPID_MYSELF ) {
+    if( pip_root_p_() ) {
+      *pipidp = PIP_PIPID_ROOT;
+    } else {
+      if( pip_root->tasks[*pipidp].pipid != *pipidp ) RETURN( ENOENT );
+      *pipidp = pip_task->pipid;
+    }
   }
+  RETURN( 0 );
+}
+
+static pip_task_t *pip_get_task_( int pipid ) {
+  pip_task_t 	*task = NULL;
+
+  switch( pipid ) {
+  case PIP_PIPID_ROOT:
+    task = pip_root->task_root;
+    break;
+  default:
+    if( pipid >= 0 && pipid < pip_root->ntasks ) {
+      task = &pip_root->tasks[pipid];
+    }
+    break;
+  }
+  return task;
 }
 
 void *pip_get_dso_( void ) {
-  if( pip_ulp  != NULL ) return pip_get_task( pip_ulp->pipid )->loaded;
+  if( pip_ulp  != NULL ) return pip_get_task_( pip_ulp->pipid )->loaded;
   if( pip_task != NULL ) return pip_task->loaded;
   return NULL;
 }
@@ -611,25 +638,6 @@ int pip_export( void *export ) {
   RETURN( 0 );
 }
 
-static int pip_check_pipid( int *pipidp ) {
-  int pipid = *pipidp;
-
-  if( pip_root == NULL          ) RETURN( EPERM  );
-  if( pipid >= pip_root->ntasks ) RETURN( ENOENT );
-  if( pipid != PIP_PIPID_MYSELF &&
-      pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
-  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
-  if( pipid == PIP_PIPID_MYSELF ) {
-    if( pip_root_p_() ) {
-      *pipidp = PIP_PIPID_ROOT;
-    } else {
-      if( pip_root->tasks[*pipidp].pipid != *pipidp ) RETURN( ENOENT );
-      *pipidp = pip_task->pipid;
-    }
-  }
-  RETURN( 0 );
-}
-
 int pip_import( int pipid, void **exportp  ) {
   pip_task_t *task;
   int err;
@@ -637,7 +645,7 @@ int pip_import( int pipid, void **exportp  ) {
   if( exportp == NULL ) RETURN( EINVAL );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
 
-  task = pip_get_task( pipid );
+  task = pip_get_task_( pipid );
   *exportp = (void*) task->export;
   pip_memory_barrier();
   RETURN( 0 );
@@ -1361,7 +1369,7 @@ int pip_get_id( int pipid, intptr_t *pidp ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pidp == NULL ) RETURN( EINVAL );
 
-  task = pip_get_task( pipid );
+  task = pip_get_task_( pipid );
   if( pip_is_pthread_() ) {
     /* Do not use gettid(). This is a very Linux-specific function */
     /* The reason of supporintg the thread PiP execution mode is   */
@@ -1382,7 +1390,7 @@ int pip_kill( int pipid, int signal ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( signal < 0 ) RETURN( EINVAL );
 
-  task = pip_get_task( pipid );
+  task = pip_get_task_( pipid );
   if( pip_is_pthread_() ) {
     err = pthread_kill( task->thread, signal );
     DBGF( "pthread_kill(sig=%d)=%d", signal, err );
@@ -1600,13 +1608,13 @@ static void *pip_ulp_alloc_stack( void ) {
 
 #define MASK32		(0xFFFFFFFF)
 
-int pip_ulp_spawn( char *prog,
-		   char **argv,
-		   char **envv,
-		   int  *pipidp,
-		   pip_ulp_termcb_t termcb,
-		   void *aux,
-		   pip_ulp_t *ulp ) {
+int pip_ulp_create( char *prog,
+		    char **argv,
+		    char **envv,
+		    int  *pipidp,
+		    pip_ulp_termcb_t termcb,
+		    void *aux,
+		    pip_ulp_t *ulp ) {
   pip_spawn_args_t	*args = NULL;
   pip_task_t		*ulpt = NULL;
   int			pipid;
@@ -1618,7 +1626,7 @@ int pip_ulp_spawn( char *prog,
   if( prog == NULL ) prog = argv[0];
   if( envv == NULL ) envv = environ;
 
-  DBGF( ">> pip_ulp_spawn()" );
+  DBGF( ">> pip_ulp_create()" );
 
   pipid = *pipidp;
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) goto error;
@@ -1674,7 +1682,7 @@ int pip_ulp_spawn( char *prog,
     pip_init_task_struct( ulpt );
   }
  done:
-  DBGF( "<< pip_ulp_spawn()=%d", err );
+  DBGF( "<< pip_ulp_create()=%d", err );
   RETURN( err );
 }
 
@@ -1682,10 +1690,12 @@ int pip_make_ulp( int pipid,
 		  pip_ulp_termcb_t termcb,
 		  void *aux,
 		  pip_ulp_t *ulp ) {
-  pip_task_t *task;
+  pip_task_t 	*task;
+  int		err;
 
   if( ulp == NULL ) RETURN( EINVAL );
-  task = pip_get_task( pipid );
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  task = pip_get_task_( pipid );
   if( task->type == PIP_TYPE_ULP  ) RETURN( EPERM  );
 
   ulp->ctx    = NULL;
@@ -1712,7 +1722,7 @@ static void pip_ulp_main_( int pipid, int root_H, int root_L ) {
     ( ( ((intptr_t)root_H) << 32 ) | ( ((intptr_t)root_L) & MASK32 ) );
   DBGF( "pip_root=%p (0x%x 0x%x)", pip_root, root_H, root_L );
 
-  ulpt = pip_get_task( pipid );
+  ulpt = pip_get_task_( pipid );
   pip_ulp = ulp = ulpt->ulp;
   termcb  = ulp->termcb;
   aux     = ulp->aux;
@@ -1812,7 +1822,7 @@ int pip_ulp_do_finalize( int pipid, int *retvalp ) {
   int 		err = 0;
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
-  ulp = pip_get_task( pipid );
+  ulp = pip_get_task_( pipid );
   if( ulp->type != PIP_TYPE_ULP ) RETURN( EPERM );
   pip_ulp_recycle_stack( ulp->stack );
   pip_finalize_task( ulp, retvalp );

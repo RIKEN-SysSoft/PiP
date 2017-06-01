@@ -77,13 +77,13 @@ extern "C" {
  * @{
  */
 
-  int pip_ulp_spawn( char *prog,
-		     char **argv,
-		     char **envv,
-		     int  *pipidp,
-		     pip_ulp_termcb_t termcb,
-		     void *aux,
-		     pip_ulp_t *ulpp );
+  int pip_ulp_create( char *prog,
+		      char **argv,
+		      char **envv,
+		      int  *pipidp,
+		      pip_ulp_termcb_t termcb,
+		      void *aux,
+		      pip_ulp_t *ulpp );
   int pip_make_ulp( int pipid,
 		    pip_ulp_termcb_t termcb,
 		    void *aux,
