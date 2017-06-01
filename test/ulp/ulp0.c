@@ -10,50 +10,60 @@
 #define PIP_INTERNAL_FUNCS
 
 #define NULPS	(10)
-
-#ifdef AHAH
-#define AH
+//#define NULPS	(2)
 
 #define DEBUG
 #include <test.h>
 
+int a;
+
+static struct root{
+  pip_ulp_t 	root;
+  int 		pipid;
+  int		n;
+  pip_ulp_t	ulp[NULPS];
+} root;
+
+void term_cb( void *aux ) {
+  struct root *rp = (struct root*) aux;
+  fprintf( stderr, "PIPID:%d - terminated (%p)\n", rp->pipid, rp );
+  rp->n++;
+  if( rp->n < NULPS ) {
+    pip_ulp_yield_to( NULL, &rp->ulp[rp->n] );
+  } else {
+    pip_ulp_yield_to( NULL, &rp->root );
+  }
+}
+
 int main( int argc, char **argv ) {
-  int pipid = 999;
-  int ntasks;
-  pip_ulp_t ulp;
+  int i, ntasks, pipid;
 
   fprintf( stderr, "PID %d\n", getpid() );
 
   ntasks = 20;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    pipid = 0;
-#ifdef AH
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			NULL, NULL, NULL ) );
-    TESTINT( pip_wait( 0, NULL ) );
-    TESTINT( pip_fin() );
-  } else if( pipid == 0 ) {
-
-    fprintf( stderr, "<%d> Hello, I am a parent task !!\n", pipid );
-    pipid ++;
-    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, &ulp ) );
-#else
-    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, &ulp ) );
-#endif
-  } else if( pipid < NULPS ) {
-    fprintf( stderr, "<%d> Hello, I am a ULP task !!\n", pipid );
-    pipid ++;
-    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, &ulp ) );
+    root.pipid = pipid;
+    root.n     = 0;
+    TESTINT( pip_make_ulp( pipid,
+			   term_cb,
+			   &root,
+			   &root.root ) );
+    for( i=0; i<NULPS; i++ ) {
+      pipid = i;
+      TESTINT( pip_ulp_create( argv[0],
+			       argv,
+			       NULL,
+			       &pipid,
+			       term_cb,
+			       &root,
+			       &root.ulp[i] ) );
+    }
+    TESTINT( pip_ulp_yield_to( &root.root, &root.ulp[0] ) );
   } else {
-    fprintf( stderr, "<%d> Hello, I am the last ULP task !!\n", pipid );
+    fprintf( stderr, "<%d> Hello, ULP (stackvar@%p staticvar@%p)\n",
+	     pipid, &pipid, &root );
   }
   TESTINT( pip_fin() );
   return 0;
 }
-
-#else
-
-int main() { return 0; }
-
-#endif
