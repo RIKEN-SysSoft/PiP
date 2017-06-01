@@ -24,7 +24,7 @@
  *
  */
 
-#include <pip.h>
+#include <pip_util.h>
 
 int main() {
   pip_print_maps();

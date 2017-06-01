@@ -12,7 +12,18 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <pip_types.h>
+typedef void (*pip_ulp_termcb_t) ( void* );
+
+#include <ucontext.h>
+
+typedef ucontext_t	pip_ulp_ctx_t;
+
+typedef struct pip_ulp {
+  pip_ulp_ctx_t		*ctx;
+  pip_ulp_termcb_t	termcb;
+  void			*aux;
+  int			pipid;
+} pip_ulp_t;
 
 #define PIP_ULP_NEXT(L)		(((pip_dlist_t*)(L))->next)
 #define PIP_ULP_PREV(L)		(((pip_dlist_t*)(L))->prev)
@@ -66,14 +77,18 @@ extern "C" {
  * @{
  */
 
-  int pip_ulp_set_sched( pip_ulp_sched_t *sched );
   int pip_ulp_spawn( char *prog,
 		     char **argv,
 		     char **envv,
 		     int  *pipidp,
+		     pip_ulp_termcb_t termcb,
 		     void *aux,
 		     pip_ulp_t *ulpp );
-  int pip_ulp_yield_to( pip_ulp_t *ulp );
+  int pip_make_ulp( int pipid,
+		    pip_ulp_termcb_t termcb,
+		    void *aux,
+		    pip_ulp_t *ulp );
+  int pip_ulp_yield_to( pip_ulp_t *oldulp, pip_ulp_t *newulp );
   int pip_ulp_exit( int retval );
 
 /**

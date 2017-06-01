@@ -26,6 +26,7 @@
 #include <errno.h>
 
 #include <pip.h>
+#include <pip_util.h>
 #include <pip_machdep.h>
 
 #define NTASKS		PIP_NTASKS_MAX
