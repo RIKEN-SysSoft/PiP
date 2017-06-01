@@ -11,14 +11,16 @@
 
 #define NULPS	(10)
 
-//#define AH
+#ifdef AHAH
+#define AH
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
 int main( int argc, char **argv ) {
   int pipid = 999;
   int ntasks;
+  pip_ulp_t ulp;
 
   fprintf( stderr, "PID %d\n", getpid() );
 
@@ -32,19 +34,26 @@ int main( int argc, char **argv ) {
     TESTINT( pip_wait( 0, NULL ) );
     TESTINT( pip_fin() );
   } else if( pipid == 0 ) {
+
     fprintf( stderr, "<%d> Hello, I am a parent task !!\n", pipid );
     pipid ++;
-    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, NULL, NULL ) );
+    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, &ulp ) );
 #else
-    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, NULL, NULL ) );
+    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, &ulp ) );
 #endif
   } else if( pipid < NULPS ) {
     fprintf( stderr, "<%d> Hello, I am a ULP task !!\n", pipid );
     pipid ++;
-    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, NULL, NULL ) );
+    TESTINT( pip_ulp_spawn( argv[0], argv, NULL, &pipid, NULL, &ulp ) );
   } else {
     fprintf( stderr, "<%d> Hello, I am the last ULP task !!\n", pipid );
   }
   TESTINT( pip_fin() );
   return 0;
 }
+
+#else
+
+int main() { return 0; }
+
+#endif

@@ -12,6 +12,9 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#ifdef PIP_INTERNAL_FUNCS
+
+#include <ucontext.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -20,7 +23,6 @@
 #include <pip_machdep.h>
 #include <pip_clone.h>
 #include <pip_debug.h>
-#include <pip_types.h>
 
 /** ULP supported version **/
 #define PIP_BASE_VERSION	(0x2000U)
@@ -94,8 +96,6 @@ typedef struct pip_task {
   pip_spawn_args_t	args;	/* arguments for a PiP task */
   int			retval;
 
-  pip_ulp_sched_t	*ulp_sched;
-
   int			boundary[0];
   union {
     struct {			/* for PiP tasks */
@@ -108,7 +108,7 @@ typedef struct pip_task {
     struct {			/* for PiP ULPs */
       struct pip_task	*task_parent;
       void		*stack;
-      pip_ulp_t		*ulp;
+      struct pip_ulp	*ulp;
     };
   };
 } pip_task_t;
@@ -127,19 +127,32 @@ typedef struct {
   int			ntasks_curr;
   int			ntasks_accum;
   int			pipid_curr;
-  pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
   pip_clone_t	 	*cloneinfo;   /* only valid with PIP_MODE_PIPCLONE */
 
-  void 			*stack_flist;	  /* ULP: stack free list */
   size_t		stack_size;
+
+  pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
+  void 			*stack_flist;	  /* ULP: stack free list */
 
   pip_task_t		*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   pip_task_t		tasks[];
 } pip_root_t;
 
-#include <pip_ulp.h>
+  /* the following functions deeply depends on PiP execution mode */
+
+  int    pip_get_thread( int pipid, pthread_t *threadp );
+  int    pip_is_pthread( int *flagp );
+  int    pip_is_shared_fd( int *flagp );
+  int    pip_is_shared_sighand( int *flagp );
+  char **pip_copy_vec( char *add0, char *add1, char *add2, char **vecsrc );
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+#endif /* PIP_INTERNAL_FUNCS */
 
 #endif /* _pip_internal_h_ */

@@ -8,7 +8,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAMS = piplnlibs
+PROGRAMS =
 MAN1_SRCS = piplnlibs
 
 include $(top_srcdir)/build/rule.mk
