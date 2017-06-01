@@ -10,6 +10,8 @@
 #ifndef _pip_h_
 #define _pip_h_
 
+typedef int  (*pip_spawnhook_t)      ( void* );
+
 /** \mainpage pip Overview of Process-in-Process (PiP)
  *
  * \section overview Overview
@@ -145,8 +147,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-
-#include <pip_types.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -442,18 +442,12 @@ extern "C" {
 
   int pip_idstr( char *buf, size_t sz );
 
+#ifdef __cplusplus
+}
+#endif
+
 #ifdef PIP_INTERNAL_FUNCS
-  #include <pip_internal.h>
-
-  /* the following functions deeply depends on PiP execution mode */
-
-  int pip_get_thread( int pipid, pthread_t *threadp );
-  int pip_is_pthread( int *flagp );
-  int pip_is_shared_fd( int *flagp );
-  int pip_is_shared_sighand( int *flagp );
-
-  char **pip_copy_vec( char *addition, char **vecsrc );
-
+#include <pip_internal.h>
 #endif /* PIP_INTERNAL_FUNCS */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
@@ -463,31 +457,4 @@ extern "C" {
  * @}
  */
 
-#ifdef __cplusplus
-}
-#endif
-
-/************************************************************/
-/* The following functions are just utilities for debugging */
-/************************************************************/
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-  void pip_print_maps( void );
-  void pip_print_fd( int fd );
-  void pip_print_fds( void );
-  void pip_check_addr( char *tag, void *addr );
-  double pip_gettime( void );
-  void pip_print_loaded_solibs( FILE *file );
-  void pip_print_dsos( void );
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 #endif	/* _pip_h_ */

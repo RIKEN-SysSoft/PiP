@@ -47,4 +47,4 @@ PIPLIB = $(top_builddir)/lib/libpip.so
 PIPLDLIB = -L$(top_builddir)/lib -Wl,-rpath=$(libdir) -lpip
 
 PIPLDFLAGS = -pthread -pie -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
-	$(PIPLDLIB) -ldl
+	$(PIPLDLIB) -ldl $(PIEFLAG)
