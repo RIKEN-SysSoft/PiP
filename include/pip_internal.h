@@ -69,6 +69,8 @@ typedef struct {
   /* variables */
   char 			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
+  char			**progname;
+  char			**progname_full;
   char			***environ;    /* pointer to the environ variable */
 } pip_symbols_t;
 
