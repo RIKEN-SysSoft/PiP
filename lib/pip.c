@@ -28,7 +28,7 @@
 
 //#define PIP_NO_MALLOPT
 
-#define DEBUG
+//#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
@@ -834,16 +834,18 @@ static int pip_find_symbols( void *handle, pip_symbols_t *symp ) {
   //if( pip_root_p() ) pip_print_dsos();
 
   /* functions */
-  symp->main        = dlsym( handle, "main"         );
-  symp->ctype_init  = dlsym( handle, "__ctype_init" );
-  symp->glibc_init  = dlsym( handle, "glibc_init"   );
-  symp->mallopt     = dlsym( handle, "mallopt"      );
-  symp->libc_fflush = dlsym( handle, "fflush"       );
-  symp->free        = dlsym( handle, "free"         );
+  symp->main          = dlsym( handle, "main"         );
+  symp->ctype_init    = dlsym( handle, "__ctype_init" );
+  symp->glibc_init    = dlsym( handle, "glibc_init"   );
+  symp->mallopt       = dlsym( handle, "mallopt"      );
+  symp->libc_fflush   = dlsym( handle, "fflush"       );
+  symp->free          = dlsym( handle, "free"         );
   /* variables */
-  symp->environ     = dlsym( handle, "environ"      );
-  symp->libc_argvp  = dlsym( handle, "__libc_argv"  );
-  symp->libc_argcp  = dlsym( handle, "__libc_argc"  );
+  symp->environ       = dlsym( handle, "environ"         );
+  symp->libc_argvp    = dlsym( handle, "__libc_argv"     );
+  symp->libc_argcp    = dlsym( handle, "__libc_argc"     );
+  symp->progname      = dlsym( handle, "__progname"      );
+  symp->progname_full = dlsym( handle, "__progname_full" );
 
   /* check mandatory symbols */
   if( symp->main == NULL || symp->environ == NULL ) {
@@ -955,24 +957,31 @@ static int pip_corebind( int coreno ) {
 }
 
 static int
-pip_glibc_init( pip_symbols_t *symbols, char **argv, char **envv, int flag ) {
+pip_init_glibc( pip_symbols_t *symbols, char **argv, char **envv, int flag ) {
   int argc;
 
-  DBG;
   for( argc=0; argv[argc]!=NULL; argc++ );
-  DBG;
+
+  if( symbols->progname != NULL ) {
+    char *p;
+    if( ( p = strrchr( argv[0], '/' ) ) == NULL) {
+      *symbols->progname = argv[0];
+    } else {
+      *symbols->progname = p + 1;
+    }
+  }
+  if( symbols->progname_full != NULL ) {
+    *symbols->progname_full = argv[0];
+  }
   if( symbols->libc_argcp != NULL ) {
     DBGF( "&__libc_argc=%p", symbols->libc_argcp );
     *symbols->libc_argcp = argc;
   }
-  DBG;
   if( symbols->libc_argvp != NULL ) {
     DBGF( "&__libc_argv=%p", symbols->libc_argvp );
     *symbols->libc_argvp = argv;
   }
-  DBG;
   *symbols->environ = envv;	/* setting environment vars */
-  DBG;
 
 #ifndef PIP_NO_MALLOPT
   if( symbols->mallopt != NULL ) {
@@ -1077,7 +1086,7 @@ static int pip_do_spawn( void *thargs )  {
     volatile int	flag_exit;	/* must be volatile */
 
     DBG;
-    argc = pip_glibc_init( &self->symbols, argv, envv, 1 );
+    argc = pip_init_glibc( &self->symbols, argv, envv, 1 );
     DBG;
     flag_exit = 0;
     (void) getcontext( &ctx );
@@ -1727,7 +1736,7 @@ static void pip_ulp_main_( int pipid, int root_H, int root_L ) {
   termcb  = ulp->termcb;
   aux     = ulp->aux;
   pip_task = ulpt->task_parent;
-  argc = pip_glibc_init( &ulpt->symbols,
+  argc = pip_init_glibc( &ulpt->symbols,
 			 ulpt->args.argv,
 			 ulpt->args.envv,
 			 0 );
