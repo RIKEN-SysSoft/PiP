@@ -251,7 +251,10 @@ static void *pip_dlsym( void *handle, const char *name ) {
   void *addr;
   pip_spin_lock( &pip_root->lock_ldlinux );
   do {
-    addr = dlsym( handle, name );
+    (void) dlerror();		/* reset error status */
+    if( ( addr = dlsym( handle, name ) ) == NULL ) {
+      DBGF( "dlsym(%p,%s): %s", handlep, name, dlerror() );
+    }
   } while( 0 );
   pip_spin_unlock( &pip_root->lock_ldlinux );
   return( addr );
@@ -649,6 +652,22 @@ int pip_import( int pipid, void **exportp  ) {
   *exportp = (void*) task->export;
   pip_memory_barrier();
   RETURN( 0 );
+}
+
+int pip_get_addr( int pipid, const char *name, void **addrp ) {
+  void *handle;
+  int err;
+
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( name == NULL || addrp == NULL            ) RETURN( EINVAL );
+  if( ( handle = pip_root->tasks[pipid].loaded ) != NULL ) {
+    *addrp = pip_dlsym( handle, name );
+    /* FIXME: pip_dlsym() has a lock but this does not prevent for user */
+    /*        programs to directly call dl*() functions without lock    */
+  } else {
+    err = ESRCH;		/* tentative */
+  }
+  RETURN( err );
 }
 
 char **pip_copy_vec( char *addition0,
