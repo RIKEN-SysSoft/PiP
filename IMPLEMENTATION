@@ -3,7 +3,7 @@ Process-in-Process (PiP) Implementation
 
 * Execution mode
 
-  There are three PiP implementations and environmant variable setting;
+  There are three PiP implementations and environment variable setting;
 
   1) PiP using pthread_create only
      "PIP_MODE=thread"
@@ -14,16 +14,16 @@ Process-in-Process (PiP) Implementation
      "PIP_MODE=process"
      In this mode, a PiP task behaves more like a process, having PID.
 
-  2-1) PiP using pthread_create and cloone warpper
+  2-1) PiP using pthread_create and clone wrapper
      "PIP_MODE=process:preload, LD_PRELOAD=<PIP_INSTALL_DIR>/lib"
 
-  2-2) PiP not using pthread_clone at all [experimantal, yet]
+  2-2) PiP not using pthread_clone at all [experimental, yet]
      "PIP_MODE=process:pipclone"
 
 * Synchronization between PiP tasks
 
-  Currently, ptherad_barrier and pthread_mutex works between PiP root
-  process and PiP tasks. However, this does NOT mean there pthread
+  Currently, pthread_barrier and pthread_mutex works between PiP root
+  process and PiP tasks. However, this does NOT mean pthread
   synchronization are guaranteed to work as part of the PiP
   specification.
 
