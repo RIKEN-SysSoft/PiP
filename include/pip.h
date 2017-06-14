@@ -311,6 +311,14 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
+   * \note pip_get_addr() function is unable to get proper addresses
+   * for TLS variables.
+   *
+   * \note Although the pip_get_addr() fucntion can be used to get a
+   * function address, calling the function of the other PiP task by
+   * its address is very tricky and it may result in an unexpected
+   * bahavior.
+   *
    * \note By definition of the dlsym() Glibc function, this may
    * return NULL even if the variable having the specified name exists.
    */
