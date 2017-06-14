@@ -1,9 +1,9 @@
 
-Process-in-Process (PiP) Implementation
+Process-in-Process (PiP) Execution Mode
 
 * Execution mode
 
-  There are three PiP implementations and environment variable setting;
+  There are three PiP execution modes and environment variable settings;
 
   1) PiP using pthread_create only
      "PIP_MODE=thread"
