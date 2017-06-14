@@ -302,6 +302,22 @@ extern "C" {
   /** @}*/
 
   /**
+   * \brief import the exposed memory region of the other.
+   *  @{
+   * \param[in] pipid The PIPID to import the exposed address
+   * \param[in] symnam The name of a symbol existing in the specified PiP task
+   * \param[out] addrp The address of the variable of
+   *  the PiP task specified by the \a pipid.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * \note By definition of the dlsym() Glibc function, this may
+   * return NULL even if the variable having the specified name exists.
+   */
+  int pip_get_addr( int pipid, const char *symnam, void **addrp );
+  /** @}*/
+
+  /**
    * \brief get PIPID
    *  @{
    * \param[out] pipidp This parameter points to the variable which
