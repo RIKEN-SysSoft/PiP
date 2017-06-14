@@ -312,7 +312,7 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    *
    * \note pip_get_addr() function is unable to get proper addresses
-   * for TLS variables.
+   * for local (static) or TLS variables.
    *
    * \note Although the pip_get_addr() fucntion can be used to get a
    * function address, calling the function of the other PiP task by
