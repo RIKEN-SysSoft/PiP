@@ -24,7 +24,7 @@ int main( int argc, char **argv ) {
   void 	*exp;
   int pipid = 999;
   int ntasks;
-  int i;
+  int i, err;
 
   if( argc > 1 ) {
     ntasks = atoi( argv[1] );
@@ -37,12 +37,11 @@ int main( int argc, char **argv ) {
     TESTINT( pthread_mutex_lock( &tc.mutex ) );
   }
 
-  exp    = (void*) &tc;
+  exp = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
 
     for( i=0; i<ntasks; i++ ) {
-      int err;
       pipid = i;
       err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL, NULL );
       if( err != 0 ) break;
