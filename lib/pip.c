@@ -1572,8 +1572,12 @@ void pip_free( void *ptr ) {
 
   ptr  -= sizeof(PIP_ALIGN_TYPE);
   pipid = *(int*) ptr;
-  if( pipid >= 0 ) {
-    task = &pip_root->tasks[pipid];
+  if( pipid >= 0 || pipid == PIP_PIPID_ROOT ) {
+    if( pipid == PIP_PIPID_ROOT ) {
+      task = pip_root->task_root;
+    } else {
+      task = &pip_root->tasks[pipid];
+    }
     /* need of sanity check on pipid */
     if( ( free_func = task->symbols.free ) != NULL ) {
       free_func( ptr );
