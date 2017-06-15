@@ -114,7 +114,7 @@ run_test_T=''
 for pip_mode in $pip_mode_list
 do
 	eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
-	case `PIP_MODE=$pip_mode_name ./util/pip_mode 2>/dev/null` in
+	case `PIP_MODE=$pip_mode_name ./util/pip_mode 2>/dev/null | grep -e process -e thread` in
 	$pip_mode_name)
 		eval "run_test_${pip_mode}=${pip_mode}"
 		echo "testing ${pip_mode} - ${pip_mode_name}"
