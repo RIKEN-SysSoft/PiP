@@ -77,24 +77,33 @@ void check_vars( int pipid ) {
   fflush( NULL );
 }
 
-pthread_barrier_t	barrier;
+struct task_comm {
+  pthread_mutex_t	mutex;
+  pthread_barrier_t	barrier;
+};
 
 int main( int argc, char **argv ) {
-  pthread_barrier_t *barrp;
-  int pipid = 999;
-  int ntasks;
-  int i, err;
+  struct task_comm 	tc;
+  pthread_barrier_t 	*barrp;
+  void 			*exp;
+  int 	pipid = 999;
+  int 	ntasks;
+  int 	i, err;
+
+  if( argc > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = NTASKS;
+  }
 
   if( !pip_isa_piptask() ) {
-    if( argc < 2 ) {
-      ntasks = NTASKS;
-    } else {
-      ntasks = atoi( argv[1] );
-    }
-    TESTINT( pthread_barrier_init( &barrier, NULL, ntasks+1 ) );
-    barrp = &barrier;
+    TESTINT( pthread_mutex_init( &tc.mutex, NULL ) );
+    TESTINT( pthread_mutex_lock( &tc.mutex ) );
   }
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
+
+  exp  = (void*) &tc;
+  barrp = &tc.barrier;
+  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   pip_idstr( tag, 64 );
 
   if( pipid == PIP_PIPID_ROOT ) {
@@ -112,6 +121,9 @@ int main( int argc, char **argv ) {
     }
     ntasks = i;
 
+    TESTINT( pthread_barrier_init( &tc.barrier, NULL, ntasks+1 ) );
+    TESTINT( pthread_mutex_unlock( &tc.mutex ) );
+
     if( argc > 1 ) {
       for( i=0; i<ntasks; i++ ) pthread_barrier_wait( barrp );
     } else {
@@ -124,6 +136,12 @@ int main( int argc, char **argv ) {
     }
 
   } else {
+    struct task_comm 	*tcp;
+
+    tcp   = (struct task_comm*) exp;
+    barrp = (pthread_barrier_t*) &tcp->barrier;
+    TESTINT( pthread_mutex_lock( &tcp->mutex ) );
+    TESTINT( pthread_mutex_unlock( &tcp->mutex ) );
 
     if( argc > 1 ) {
       for( i=0; i<pipid; i++ ) pthread_barrier_wait( barrp );
