@@ -17,11 +17,6 @@
 #define NTIMES		(100)
 #define RSTATESZ	(256)
 
-#ifdef NTASKS
-#undef NTASKS
-#endif
-#define NTASKS		(20)
-
 static char rstate[RSTATESZ];
 //static struct random_data rbuf;
 
@@ -61,6 +56,7 @@ int my_random( int32_t *rnump ) {
 
 size_t  min = 999999999;
 size_t	max = 0;
+int   	ntasks;
 
 void check_and_free( int pipid, void *p, size_t sz ) {
   int i;
@@ -85,7 +81,7 @@ int malloc2_loop( int pipid, struct task_comm *tcp ) {
 
     while( 1 ) {
       my_random( &nd );
-      nd %= NTASKS;
+      nd %= ntasks;
       if( pip_spin_trylock( &tcp->each[nd].lock ) ) break;
       pip_pause();
     }
@@ -98,7 +94,7 @@ int malloc2_loop( int pipid, struct task_comm *tcp ) {
       }
       my_random( &sz );
       sz <<= 4;
-      sz &= 0x0FFFF00;
+      sz &= 0xFFFFF0;
       if( sz == 0 ) sz = 256;
 
       p = PIP_MALLOC( sz );
@@ -123,7 +119,7 @@ int main( int argc, char **argv ) {
   struct task_comm 	tc;
   struct task_comm 	*tcp;
   void *exp;
-  int pipid, ntasks;
+  int pipid;
   int i;
   int err;
 

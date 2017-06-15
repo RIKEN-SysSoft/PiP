@@ -3,6 +3,7 @@ basics/stack.sh
 basics/export.sh
 basics/environ.sh
 basics/malloc.sh
+basics/malloc2.sh
 basics/file.sh
 basics/wait.sh
 basics/signal.sh
@@ -14,6 +15,7 @@ basics/numa.sh
 basics/hook.sh
 basics/spawn.sh
 basics/varvars.sh
+basics/getaddr.sh
 spawn/spawns.sh
 compat/gethostname.sh
 compat/gethostbyname.sh
