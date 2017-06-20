@@ -11,7 +11,6 @@
 
 #include <sys/mman.h>
 #include <sys/wait.h>
-#include <dlfcn.h>
 #include <sched.h>
 #include <malloc.h>
 #include <signal.h>
@@ -35,12 +34,8 @@
 /* the EVAL env. is to measure the time for calling dlmopen() */
 //#define EVAL
 
-#include <pip.h>
-#ifndef PIP_INTERNAL_FUNCS
 #define PIP_INTERNAL_FUNCS
-#include <pip_internal.h>
-#undef  PIP_INTERNAL_FUNCS
-#endif
+#include <pip.h>
 #include <pip_util.h>
 
 #ifdef EVAL
@@ -855,6 +850,7 @@ static int pip_find_symbols( void *handle, pip_symbols_t *symp ) {
   /* functions */
   symp->main          = dlsym( handle, "main"         );
   symp->ctype_init    = dlsym( handle, "__ctype_init" );
+  symp->dldebug_init  = dlsym( handle, "_dl_debug_initialize" );
   symp->glibc_init    = dlsym( handle, "glibc_init"   );
   symp->mallopt       = dlsym( handle, "mallopt"      );
   symp->libc_fflush   = dlsym( handle, "fflush"       );
@@ -975,8 +971,11 @@ static int pip_corebind( int coreno ) {
   RETURN( 0 );
 }
 
-static int
-pip_init_glibc( pip_symbols_t *symbols, char **argv, char **envv, int flag ) {
+static int pip_init_glibc( pip_symbols_t *symbols,
+			   char **argv,
+			   char **envv,
+			   void *loaded,
+			   int flag ) {
   int argc;
 
   for( argc=0; argv[argc]!=NULL; argc++ );
@@ -1018,7 +1017,17 @@ pip_init_glibc( pip_symbols_t *symbols, char **argv, char **envv, int flag ) {
   }
 #endif
 
-  if( flag ) {
+  {
+    Lmid_t	lmid;
+    printf( "xxxxxxxxxxxxxxx  dldebug_init@%p\n", symbols->dldebug_init );
+    if( loaded != NULL &&
+	symbols->dldebug_init != NULL &&
+	dlinfo( loaded, RTLD_DI_LMID, (void*) &lmid ) == 0 ) {
+      printf( "xxxxxxxxxxxxx lmid=%d\n", (int) lmid );
+      (void) symbols->dldebug_init( 0, lmid );
+    }
+  }
+  if( flag ) {			/* if not ULP */
     DBG;
     if( symbols->glibc_init != NULL ) {
       DBGF( ">> glibc_init@%p()", symbols->glibc_init );
@@ -1105,7 +1114,7 @@ static int pip_do_spawn( void *thargs )  {
     volatile int	flag_exit;	/* must be volatile */
 
     DBG;
-    argc = pip_init_glibc( &self->symbols, argv, envv, 1 );
+    argc = pip_init_glibc( &self->symbols, argv, envv, self->loaded, 1 );
     DBG;
     flag_exit = 0;
     (void) getcontext( &ctx );
@@ -1762,6 +1771,7 @@ static void pip_ulp_main_( int pipid, int root_H, int root_L ) {
   argc = pip_init_glibc( &ulpt->symbols,
 			 ulpt->args.argv,
 			 ulpt->args.envv,
+			 NULL,
 			 0 );
 
 #ifdef PRINT_MAPS

@@ -12,7 +12,6 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <sys/types.h>
 #include <pip.h>
 
 /* not being used, just for compatibility */
