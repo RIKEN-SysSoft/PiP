@@ -11,7 +11,6 @@
 #include <string.h>
 #include <errno.h>
 
-#define PIP_INTERNAL_FUNCS
 #include <pvas.h>
 
 int pvas_create( pvas_common_info_t info[], int n, int *pvd ) {

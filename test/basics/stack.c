@@ -9,11 +9,8 @@
 
 //#define DEBUG
 
-#include <pthread.h>
-
 #define PIP_INTERNAL_FUNCS
 #include <test.h>
-#include <pip_internal.h>
 
 pip_clone_t *pip_get_cloneinfo_( void );
 

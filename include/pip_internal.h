@@ -53,6 +53,7 @@
 typedef	int(*main_func_t)(int,char**,char**);
 typedef int(*mallopt_t)(int,int);
 typedef void(*free_t)(void*);
+typedef struct r_debug*(*dldebug_init_t)(ElfW(Addr),Lmid_t);
 
 typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
@@ -62,6 +63,7 @@ typedef struct {
   /* functions */
   main_func_t		main;	     /* main function address */
   ctype_init_t		ctype_init;  /* to call __ctype_init() */
+  dldebug_init_t	dldebug_init;
   glibc_init_t		glibc_init;  /* only in patched Glibc */
   fflush_t		libc_fflush; /* to call fflush() at the end */
   mallopt_t		mallopt;     /* to call mallopt() */
