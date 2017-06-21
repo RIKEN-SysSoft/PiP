@@ -20,7 +20,6 @@ static char rstate[RSTATESZ];
 int my_initstate( int pipid ) {
   if( pipid < 0 ) pipid = 123456;
   errno = 0;
-  //(void) initstate_r( (unsigned) pipid, rstate, RSTATESZ, &rbuf );
   (void) initstate( (unsigned) pipid, rstate, RSTATESZ );
   return errno;
 }

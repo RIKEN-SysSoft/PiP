@@ -42,7 +42,7 @@ extern void pip_free( void* );
 ***/
 
 int my_initstate( int pipid ) {
-  if( pipid < 0 ) pipid = 123456;
+  if( pipid < 0 ) pipid = 654321;
   errno = 0;
   (void) initstate( (unsigned) pipid, rstate, RSTATESZ );
   return errno;
@@ -94,7 +94,7 @@ int malloc2_loop( int pipid, struct task_comm *tcp ) {
       }
       my_random( &sz );
       sz <<= 4;
-      sz &= 0xFFFFF0;
+      sz &= 0x0FFFF0;
       if( sz == 0 ) sz = 256;
 
       p = PIP_MALLOC( sz );
