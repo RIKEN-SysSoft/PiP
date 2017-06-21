@@ -850,7 +850,6 @@ static int pip_find_symbols( void *handle, pip_symbols_t *symp ) {
   /* functions */
   symp->main          = dlsym( handle, "main"         );
   symp->ctype_init    = dlsym( handle, "__ctype_init" );
-  symp->dldebug_init  = dlsym( handle, "_dl_debug_initialize" );
   symp->glibc_init    = dlsym( handle, "glibc_init"   );
   symp->mallopt       = dlsym( handle, "mallopt"      );
   symp->libc_fflush   = dlsym( handle, "fflush"       );
