@@ -1017,16 +1017,6 @@ static int pip_init_glibc( pip_symbols_t *symbols,
   }
 #endif
 
-  {
-    Lmid_t	lmid;
-    printf( "xxxxxxxxxxxxxxx  dldebug_init@%p\n", symbols->dldebug_init );
-    if( loaded != NULL &&
-	symbols->dldebug_init != NULL &&
-	dlinfo( loaded, RTLD_DI_LMID, (void*) &lmid ) == 0 ) {
-      printf( "xxxxxxxxxxxxx lmid=%d\n", (int) lmid );
-      (void) symbols->dldebug_init( 0, lmid );
-    }
-  }
   if( flag ) {			/* if not ULP */
     DBG;
     if( symbols->glibc_init != NULL ) {
