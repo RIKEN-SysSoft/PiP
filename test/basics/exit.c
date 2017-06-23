@@ -33,7 +33,7 @@ int main( int argc, char **argv ) {
       }
       DBGF( "calling pip_wait(%d)", i );
       TESTINT( pip_wait( i, &retval ) );
-      if( retval != i ) {
+      if( retval != ( i & 0xFF ) ) {
 	fprintf( stderr, "[PIPID=%d] pip_wait() returns %d ???\n", i, retval );
       } else {
 	fprintf( stderr, " terminated. OK\n" );

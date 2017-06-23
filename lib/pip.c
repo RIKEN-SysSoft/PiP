@@ -248,7 +248,7 @@ static void *pip_dlsym( void *handle, const char *name ) {
   do {
     (void) dlerror();		/* reset error status */
     if( ( addr = dlsym( handle, name ) ) == NULL ) {
-      DBGF( "dlsym(%p,%s): %s", handlep, name, dlerror() );
+      DBGF( "dlsym(%p,%s): %s", handle, name, dlerror() );
     }
   } while( 0 );
   pip_spin_unlock( &pip_root->lock_ldlinux );
@@ -1057,7 +1057,7 @@ static int pip_do_spawn( void *thargs )  {
   pip_spawnhook_t before = self->hook_before;
   pip_spawnhook_t after  = self->hook_after;
   void *hook_arg         = self->hook_arg;
-  int argc, err = 0;
+  int err = 0;
 
   DBG;
   if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
@@ -1103,17 +1103,19 @@ static int pip_do_spawn( void *thargs )  {
     volatile int	flag_exit;	/* must be volatile */
 
     DBG;
-    argc = pip_init_glibc( &self->symbols, argv, envv, self->loaded, 1 );
-    DBG;
     flag_exit = 0;
     (void) getcontext( &ctx );
     if( !flag_exit ) {
+      int argc;
+
       flag_exit = 1;
       self->ctx_exit = &ctx;
 #ifdef PRINT_MAPS
       pip_print_maps();
 #endif
 
+      DBG;
+      argc = pip_init_glibc( &self->symbols, argv, envv, self->loaded, 1 );
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
 	    pipid, self->symbols.main, argc, argv[0], argv[1] );
       self->retval = self->symbols.main( argc, argv, envv );
@@ -1121,7 +1123,7 @@ static int pip_do_spawn( void *thargs )  {
 	    pipid, self->symbols.main, argc, argv[0], argv[1] );
 
     } else {
-      DBGF( "!! main(%d,%s,%s,...)", argc, argv[0], argv[1] );
+      DBGF( "!! main(%s,%s,...)", argv[0], argv[1] );
     }
     if( after != NULL ) (void) after( hook_arg );
     self->hook_before = NULL;
@@ -1461,11 +1463,11 @@ int pip_exit( int retval ) {
 static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
   DBGF( "pipid=%d", task->pipid );
 
-  if( retvalp != NULL ) *retvalp = task->retval;
+  if( retvalp != NULL ) *retvalp = ( task->retval & 0xFF );
   DBGF( "retval=%d", task->retval );
 
-  /* dlclose() must be called only from the root process         */
-  /* since corresponding dlmopen() is called by the root process */
+  /* dlclose() and free() must be called only from the root process since */
+  /* corresponding dlmopen() and malloc() is called by the root process   */
   if( task->loaded    != NULL ) dlclose( task->loaded );
   if( task->args.prog != NULL ) free( task->args.prog );
   if( task->args.argv != NULL ) free( task->args.argv );
@@ -1485,6 +1487,7 @@ static int pip_do_wait( int pipid, int flag_try, int *retvalp ) {
   if( task->type == PIP_TYPE_ULP   ) RETURN( EPERM ); /* unable to wait ULP    */
 
   if( pip_is_pthread_() ) { /* thread mode */
+    DBG;
     if( flag_try ) {
       err = pthread_tryjoin_np( task->thread, NULL );
       DBGF( "pthread_tryjoin_np()=%d", err );
@@ -1505,6 +1508,7 @@ static int pip_do_wait( int pipid, int flag_try, int *retvalp ) {
       err = errno;
       break;
     }
+    DBG;
     if( WIFEXITED( status ) ) {
       task->retval = WEXITSTATUS( status );
     } else if( WIFSIGNALED( status ) ) {
@@ -1753,10 +1757,11 @@ static void pip_ulp_main_( int pipid, int root_H, int root_L ) {
   DBGF( "pip_root=%p (0x%x 0x%x)", pip_root, root_H, root_L );
 
   ulpt = pip_get_task_( pipid );
-  pip_ulp = ulp = ulpt->ulp;
-  termcb  = ulp->termcb;
-  aux     = ulp->aux;
+  pip_ulp  = ulp = ulpt->ulp;
+  termcb   = ulp->termcb;
+  aux      = ulp->aux;
   pip_task = ulpt->task_parent;
+
   argc = pip_init_glibc( &ulpt->symbols,
 			 ulpt->args.argv,
 			 ulpt->args.envv,
@@ -1783,6 +1788,7 @@ static void pip_ulp_main_( int pipid, int root_H, int root_L ) {
   }
 
   pip_glibc_fin( &ulpt->symbols );
+
   pip_ulp_recycle_stack( ulpt->stack );
   ulpt->stack       = NULL;
   ulpt->task_parent = NULL;
