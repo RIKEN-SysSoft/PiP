@@ -10,8 +10,6 @@
 #ifndef _pip_h_
 #define _pip_h_
 
-typedef int  (*pip_spawnhook_t)      ( void* );
-
 /** \mainpage pip Overview of Process-in-Process (PiP)
  *
  * \section overview Overview
@@ -129,7 +127,7 @@ typedef int  (*pip_spawnhook_t)      ( void* );
 #define PIP_PIPID_ANY		(-2)
 #define PIP_PIPID_MYSELF	(-3)
 
-#define PIP_NTASKS_MAX		(100)
+#define PIP_NTASKS_MAX		(260)
 
 #define PIP_CPUCORE_ASIS 	(-1)
 
@@ -147,6 +145,8 @@ typedef int  (*pip_spawnhook_t)      ( void* );
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+typedef int  (*pip_spawnhook_t)      ( void* );
 
 #ifdef __cplusplus
 extern "C" {

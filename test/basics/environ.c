@@ -34,7 +34,8 @@ int main( int argc, char **argv ) {
       envv[j] = NULL;
 
       pipid = i;
-      err = pip_spawn( argv[0], argv, envv, i%4, &pipid, NULL, NULL, NULL );
+      //err = pip_spawn( argv[0], argv, envv, i%4, &pipid, NULL, NULL, NULL );
+err = pip_spawn( argv[0], argv, envv, i%16, &pipid, NULL, NULL, NULL );
 
       free( envv[0] );
       free( envv[1] );
@@ -95,7 +96,7 @@ int main( int argc, char **argv ) {
 	//fprintf( stderr, "<%d> getenv(%s)=%d\n", pipid, key, val );
       }
       if( !err ) {
-	fprintf( stderr, "<%d> Hello, I am very fine !!\n", pipid );
+	fprintf( stderr, "<%d:%d> Hello, I am very fine !!\n", pipid, getpid() );
       } else {
 	fprintf( stderr, "<%d> Hey, I feel very BAD '&$#'&$\n", pipid );
       }

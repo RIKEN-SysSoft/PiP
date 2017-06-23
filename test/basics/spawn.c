@@ -19,7 +19,7 @@
 #include <pip.h>
 #include <test.h>
 
-#define NTASKS_MAX	(100)
+#define NTASKS_MAX	PIP_NTASKS_MAX
 
 double	time_start, time_spawn, time_end;
 
