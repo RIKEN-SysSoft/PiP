@@ -28,10 +28,11 @@
  * \e PiP \e task since it has the best of the both worlds of
  * processes and pthreads.
  *
- * PiP root spawns PiP tasks and the PiP root and PiP tasks shared the
- * same address space. To load multiple instances of a program in the
- * same address space, the executiable of the PiP task must be
- * compiled and linked as PIE (Postion Independent Executable).
+ * PiP root can spawn one or more number of PiP tasks. The PiP root
+ * and PiP tasks shared the
+ * same address space. The executiable of the PiP task must be
+ * compiled (with the "-fpie" compile option) and linked (with the
+ * "-pie" linker option) as PIE (Postion Independent Executable).
  *
  * When a PiP root or PiP task wants to be accessed the its own data
  * by the other(s), firstly a memory region where the data to be
@@ -42,8 +43,8 @@
  *
  * \section execution-mode Execution mode
  *
- * There are several PiP implementations which can be selected at the
- * runtime. These implementations can be categorized into two
+ * There are several PiP implementation modes which can be selected at
+ * the runtime. These implementations can be categorized into two
  * according to the behaviour of PiP tasks,
  *
  * - \c Pthread, and
@@ -54,40 +55,49 @@
  * having the same file descriptor space, having the same signal
  * delivery semantics as Pthread does, and so on.
  *
- * In the process mode, PiP task beahve more like a process, having
+ * In the process mode, PiP task beahves more like a process, having
  * a PID, having an independent file descriptor space, having the same
  * signal delivery semantics as Linux process does, and so on.
  *
  * When the \c PIP_MODE environment variable set to \"thread\" then
  * the PiP library runs based on the pthread mode, and it is set to
- * \"process\" then it runs with the process mode.
+ * \"process\" then it runs with the process mode. There are also two
+ * implementations in the \b process mode; \"process:preload\" and
+ * \"process:pipclone\." The former one must be with the \b LD_PRELOAD
+ * environment variable setting so that the \t clone() system call
+ * wrapper can work with. The latter one can only be specified with
+ * the PIP-patched glibc library (see below: \b GLIBC issues).
+ *
+ * There several function provided by the PiP library to abosrb the
+ * difference due to the execution mode
  *
  * \section limitation Limitation
  *
  * PiP allows PiP root and PiP tasks to share the data, so the
  * function pointer can be passed to the others. However, jumping into
- * the code owned by the other will not work properly for some
+ * the code owned by the other may not work properly for some
  * reasons.
  *
  * \section compile-and-link Compile and Link User programs
  *
  * The PiP root ust be linked with the PiP library and libpthread. The
  * programs able to run as a PiP task must be compiled with the
- * \"-fpie\" compile option and the \"-pie -rdynamic\" link options.
+ * \"-fpie\" compile option and the \"-pie -rdynamic\" linker
+ * options.
  *
  * \section glibc-issues GLIBC issues
  *
  * The PiP library is implemented at the user-level, i.e. no need of
- * kernel patches nor kernel modules. Due to the novel usage
- * combiningf \c dlmopn() GLIBC function and \c clone() systemcall,
- * there are some issues found in the GLIBC. To avoid GLIBC issues,
- * PiP users must have the pacthed GLIBC provided by the PiP
- * development team. Otherwise the PiP library will not run properly.
+ * kernel patches nor kernel modules. Due to the novel usage of
+ * combining \c dlmopn() GLIBC function and \c clone() systemcall,
+ * there are some issues found in the GLIBC. To avoid this issues,
+ * PiP users may have the pacthed GLIBC provided by the PiP
+ * development team.
  *
  * \section gdb-issue GDB issue
  *
  * Currently gdb debugger only works with the PiP root. PiP-aware GDB
- * is already scheduled to develop.
+ * will be provided soon.
  *
  * \section author Author
  *  Atsushi Hori (RIKEN, Japan) ahori@riken.jp
@@ -182,13 +192,13 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * This function initialize the PiP library. The PiP root process
+   * This function initializes the PiP library. The PiP root process
    * must call this. A PiP task is not required to call this function
    * unless the PiP task calls any PiP functions.
    *
    * Is is NOT guaranteed that users can spawn tasks up to the number
    * specified by the \a ntasks argument. There are some limitations
-   * come from outside of the PiP library.
+   * come from outside of the PiP library (GLIBC).
    *
    * \sa pip_export(3), pip_fin(3)
    */
@@ -233,20 +243,16 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * This function behave like the Linux \c execve() function to spanw
+   * This function is to spanw
    * a PiP task. These functions are introduced to follow the
    * programming style of conventional \c fork and \c
    * exec. \a before function does the prologue found between the
    * \c fork and \c exec. \a after function is to free the argument if
    * it is \c malloc()ed. Note that the \a before and \a after
    * functions are called in the different \e context from the spawned
-   * PiP task. More specifically, the variables defined in the spawned
+   * PiP task. More specifically, any variables defined in the spawned
    * PiP task cannot be accessible from the \a before and \a after
    * functions.
-   *
-   * \note In the current implementation, the spawned PiP task cannot
-   * be freed even if the spawned PiP task terminates. To fix this,
-   * hack on GLIBC (ld-linud.so) is required.
    *
    * \note In theory, there is no reason to restrict for a PiP task to
    * spawn another PiP task. However, the current implementation fails
@@ -268,9 +274,7 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    *
    * The PiP root or a PiP task can export a memory region only
-   * once. If the PiP task calls the \c pip_init() with the non-null
-   * value of the \a expp parameter, then the function call by the
-   * root PiP will fail.
+   * once.
    *
    * \note There is no size parameter to specify the length of the
    * exported region because there is no way to restrict the access
@@ -291,7 +295,7 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    *
    * \note It is the users' responsiblity to synchronize. When the
-   * target exported region is not ready, then this function returns
+   * target region is not exported yet , then this function returns
    * NULL. If the root exports its region by the \c pip_init function
    * call, then it is guaranteed to be imported by PiP tasks at any
    * time.
@@ -394,9 +398,11 @@ extern "C" {
    * \param[in] pipid PIPID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
    *
-   * \note This function never returns.
+   * \note This function never returns when it succeeds.
    * \note This function can be used regardless to the PiP execution
-   * mode.
+   * mode. However, only the least significant 2 bytes are
+   * effective. This is because of the compatibility with the
+   * \c exit glibc function.
    *
    * \return Return 0 on success. Return an error code on error.
    *
