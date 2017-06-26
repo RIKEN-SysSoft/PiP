@@ -30,9 +30,9 @@
  *
  * PiP root can spawn one or more number of PiP tasks. The PiP root
  * and PiP tasks shared the
- * same address space. The executiable of the PiP task must be
+ * same address space. The executable of the PiP task must be
  * compiled (with the "-fpie" compile option) and linked (with the
- * "-pie" linker option) as PIE (Postion Independent Executable).
+ * "-pie" linker option) as PIE (Position Independent Executable).
  *
  * When a PiP root or PiP task wants to be accessed the its own data
  * by the other(s), firstly a memory region where the data to be
@@ -45,7 +45,7 @@
  *
  * There are several PiP implementation modes which can be selected at
  * the runtime. These implementations can be categorized into two
- * according to the behaviour of PiP tasks,
+ * according to the behavior of PiP tasks,
  *
  * - \c Pthread, and
  * - \c Process.
@@ -55,7 +55,7 @@
  * having the same file descriptor space, having the same signal
  * delivery semantics as Pthread does, and so on.
  *
- * In the process mode, PiP task beahves more like a process, having
+ * In the process mode, PiP task behaves more like a process, having
  * a PID, having an independent file descriptor space, having the same
  * signal delivery semantics as Linux process does, and so on.
  *
@@ -68,7 +68,7 @@
  * wrapper can work with. The latter one can only be specified with
  * the PIP-patched glibc library (see below: \b GLIBC issues).
  *
- * There several function provided by the PiP library to abosrb the
+ * There several function provided by the PiP library to absorb the
  * difference due to the execution mode
  *
  * \section limitation Limitation
@@ -91,7 +91,7 @@
  * kernel patches nor kernel modules. Due to the novel usage of
  * combining \c dlmopn() GLIBC function and \c clone() systemcall,
  * there are some issues found in the GLIBC. To avoid this issues,
- * PiP users may have the pacthed GLIBC provided by the PiP
+ * PiP users may have the patched GLIBC provided by the PiP
  * development team.
  *
  * \section gdb-issue GDB issue
@@ -180,7 +180,7 @@ extern "C" {
    *  process, then this returns PIP_PIPID_ROOT, otherwise it returns
    *  the PIPID of the calling PiP task.
    * \param[in,out] ntasks When called by the PiP root, it specifies
-   *  the maxmum number of PiP tasks. When called by a PiP task, then
+   *  the maximum number of PiP tasks. When called by a PiP task, then
    *  it returns the number specified by the PiP root.
    * \param[in,out] root_expp If the root PiP is ready to export a
    *  memory region to any PiP task(s), then this parameter points to
@@ -224,26 +224,26 @@ extern "C" {
    * \param[in] argv Argument(s) for the spawned PiP task
    * \param[in] envv Environment variables for the spawned PiP task
    * \param[in] coreno Core number for the PiP task to be bound to. If
-   *  PIP_CPUCORE_ASIS is specified, then the core binding will not
+   *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
-   * \param[in,out] pipidp Specify PIPID of the spanwed PiP task. If
+   * \param[in,out] pipidp Specify PIPID of the spawned PiP task. If
    *  \c PIP_PIPID_ANY is specified, then the PIPID of the spawned PiP
    *  task is up to the PiP library and the assigned PIPID will be
    *  returned.
-   * \param[in] before Just before the executing of the spanwed PiP
+   * \param[in] before Just before the executing of the spawned PiP
    *  task, this function is called so that file descriptors inherited
    *  from the PiP root, for example, can deal with. This is only
    *  effective with the PiP process mode. This function is called
    *  with the argument \a hookarg described below.
    * \param[in] after This function is called when the PiP task
-   *  terminates for the cleanup puropose. This function is called
+   *  terminates for the cleanup purpose. This function is called
    *  with the argument \a hookarg described below.
    * \param[in] hookarg The argument for the \a before and \a after
    *  function call.
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * This function is to spanw
+   * This function is to spawn
    * a PiP task. These functions are introduced to follow the
    * programming style of conventional \c fork and \c
    * exec. \a before function does the prologue found between the
@@ -294,7 +294,7 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \note It is the users' responsiblity to synchronize. When the
+   * \note It is the users' responsibility to synchronize. When the
    * target region is not exported yet , then this function returns
    * NULL. If the root exports its region by the \c pip_init function
    * call, then it is guaranteed to be imported by PiP tasks at any
@@ -342,10 +342,10 @@ extern "C" {
   /** @}*/
 
   /**
-   * \brief get the maxmum number of the PiP tasks
+   * \brief get the maximum number of the PiP tasks
    *  @{
    * \param[out] ntasksp This parameter points to the variable which
-   *  will be set to the maxmum number of the PiP tasks.
+   *  will be set to the maximum number of the PiP tasks.
    *
    * \return Return 0 on success. Return an error code on error.
    *
