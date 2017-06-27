@@ -54,31 +54,40 @@ void check_vars( int pipid ) {
   }
 }
 
-pthread_barrier_t	barrier;
+struct task_comm {
+  pthread_mutex_t	mutex;
+  pthread_barrier_t	barrier;
+};
 
 int main( int argc, char **argv ) {
-  pthread_barrier_t *barrp;
+  struct task_comm 	tc;
+  pthread_barrier_t 	*barrp;
+  void 			*exp;
   int pipid = 999;
   int ntasks;
   int i, err;
 
-  if( !pip_isa_piptask() ) {
-    if( argc < 2 ) {
-      ntasks = NTASKS;
-    } else {
-      ntasks = atoi( argv[1] );
-    }
-    TESTINT( pthread_barrier_init( &barrier, NULL, ntasks+1 ) );
-    barrp = &barrier;
+  if( argc < 2 ) {
+    ntasks = NTASKS;
+  } else {
+    ntasks = atoi( argv[1] );
   }
+
+  if( !pip_isa_piptask() ) {
+    TESTINT( pthread_mutex_init( &tc.mutex, NULL ) );
+    TESTINT( pthread_mutex_lock( &tc.mutex ) );
+  }
+  exp  = (void*) &tc;
+  barrp = &tc.barrier;
+
   set_addrs();
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
+  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   pip_idstr( tag, 64 );
 
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<NTASKS; i++ ) {
       pipid = i;
-      err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL, NULL );
+      err = pip_spawn( argv[0], argv, NULL, i%8, &pipid, NULL, NULL, NULL );
       if( err ) break;
       if( i != pipid ) {
 	printf( "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
@@ -86,6 +95,9 @@ int main( int argc, char **argv ) {
       }
     }
     ntasks = i;
+
+    TESTINT( pthread_barrier_init( &tc.barrier, NULL, ntasks+1 ) );
+    TESTINT( pthread_mutex_unlock( &tc.mutex ) );
 
     if( argc > 1 ) {
       for( i=0; i<ntasks; i++ ) pthread_barrier_wait( barrp );
@@ -98,6 +110,12 @@ int main( int argc, char **argv ) {
     }
 
   } else {
+    struct task_comm 	*tcp;
+
+    tcp   = (struct task_comm*) exp;
+    barrp = (pthread_barrier_t*) &tcp->barrier;
+    TESTINT( pthread_mutex_lock( &tcp->mutex ) );
+    TESTINT( pthread_mutex_unlock( &tcp->mutex ) );
 
     if( argc > 1 ) {
       for( i=0; i<pipid; i++ ) pthread_barrier_wait( barrp );
