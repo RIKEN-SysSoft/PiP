@@ -63,8 +63,8 @@
  * the PiP library runs based on the pthread mode, and it is set to
  * \"process\" then it runs with the process mode. There are also two
  * implementations in the \b process mode; \"process:preload\" and
- * \"process:pipclone\." The former one must be with the \b LD_PRELOAD
- * environment variable setting so that the \t clone() system call
+ * \"process:pipclone\" The former one must be with the \b LD_PRELOAD
+ * environment variable setting so that the \b clone() system call
  * wrapper can work with. The latter one can only be specified with
  * the PIP-patched glibc library (see below: \b GLIBC issues).
  *
