@@ -50,6 +50,10 @@
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
+/* for GDB */
+#define PIP_GDBINFO_ENV		"PIP_GDBINFO"
+/* for GDB */
+
 typedef	int(*main_func_t)(int,char**,char**);
 typedef int(*mallopt_t)(int,int);
 typedef void(*free_t)(void*);
@@ -147,7 +151,6 @@ typedef struct {
   int    pip_is_pthread( int *flagp );
   int    pip_is_shared_fd( int *flagp );
   int    pip_is_shared_sighand( int *flagp );
-  char **pip_copy_vec( char *add0, char *add1, char *add2, char **vecsrc );
 
 #ifdef __cplusplus
 }

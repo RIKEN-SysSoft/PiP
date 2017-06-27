@@ -417,11 +417,11 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   size_t	sz;
   char		*envroot = NULL;
   char		*envtask = NULL;
+  char		*taskinfo = PIP_GDBINFO_ENV "=0x0";
   int		ntasks;
   int 		pipid;
   int 		i, err = 0;
 
-  fprintf( stderr, "%s: pip_root@%p\n", __func__, &pip_root );
   if( pip_root != NULL ) RETURN( EBUSY ); /* already initialized */
 
   if( ( envroot = getenv( PIP_ROOT_ENV ) ) == NULL ) {
@@ -475,6 +475,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       pip_root->task_root->export     = *rt_expp;
     }
     unsetenv( PIP_ROOT_ENV );
+    putenv( taskinfo );		/* for GDB */
+
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
@@ -665,10 +667,10 @@ int pip_get_addr( int pipid, const char *name, void **addrp ) {
   RETURN( err );
 }
 
-char **pip_copy_vec( char *addition0,
-		     char *addition1,
-		     char *addition2,
-		     char **vecsrc ) {
+static char **pip_copy_vec3( char *addition0,
+			     char *addition1,
+			     char *addition2,
+			     char **vecsrc ) {
   char 		**vecdst, *p;
   size_t	vecln, veccc, sz;
   int 		i, j;
@@ -726,14 +728,20 @@ char **pip_copy_vec( char *addition0,
   return( vecdst );
 }
 
+static char **pip_copy_vec( char **vecsrc ) {
+  return pip_copy_vec3( NULL, NULL, NULL, vecsrc );
+}
+
 static char **pip_copy_env( char **envsrc, int pipid ) {
   char rootenv[128];
   char taskenv[128];
   char *preload_env = getenv( "LD_PRELOAD" );
 
-  if( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 ) return NULL;
-  if( sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 ) return NULL;
-  return pip_copy_vec( rootenv, taskenv, preload_env, envsrc );
+  if( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 ||
+      sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 ) {
+    RETURN( NULL );
+  }
+  return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
 }
 
 static size_t pip_stack_size( void ) {
@@ -1057,7 +1065,9 @@ static int pip_do_spawn( void *thargs )  {
   pip_spawnhook_t before = self->hook_before;
   pip_spawnhook_t after  = self->hook_after;
   void *hook_arg         = self->hook_arg;
-  int err = 0;
+  char	**new_envv;
+  char 	gdbinfo[128];
+  int 	err = 0;
 
   DBG;
   if( ( err = pip_corebind( coreno ) ) != 0 ) RETURN( err );
@@ -1097,6 +1107,9 @@ static int pip_do_spawn( void *thargs )  {
     pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d",
 		   argv[0], before, err );
     self->retval = err;
+  } else if( sprintf(gdbinfo, "%s=%p", PIP_GDBINFO_ENV, self->loaded) <= 0 ||
+	     ( new_envv = pip_copy_vec3( gdbinfo, NULL, NULL, envv )) == NULL){
+    self->retval = ENOMEM;
   } else {
     /* argv and/or envv might be changed in the hook function */
     ucontext_t 		ctx;
@@ -1115,16 +1128,16 @@ static int pip_do_spawn( void *thargs )  {
 #endif
 
       DBG;
-      argc = pip_init_glibc( &self->symbols, argv, envv, self->loaded, 1 );
+      argc = pip_init_glibc( &self->symbols, argv, new_envv, self->loaded, 1 );
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
 	    pipid, self->symbols.main, argc, argv[0], argv[1] );
-      self->retval = self->symbols.main( argc, argv, envv );
+      self->retval = self->symbols.main( argc, argv, new_envv );
       DBGF( "[%d] << main@%p(%d,%s,%s,...)",
 	    pipid, self->symbols.main, argc, argv[0], argv[1] );
-
     } else {
       DBGF( "!! main(%s,%s,...)", argv[0], argv[1] );
     }
+    free( new_envv );
     if( after != NULL ) (void) after( hook_arg );
     self->hook_before = NULL;
     self->hook_after  = NULL;
@@ -1232,9 +1245,9 @@ int pip_spawn( char *prog,
   args = &task->args;
   args->pipid       = pipid;
   args->coreno      = coreno;
-  if( ( args->prog = strdup( prog )                         ) == NULL ||
-      ( args->argv = pip_copy_vec( NULL, NULL, NULL, argv ) ) == NULL ||
-      ( args->envv = pip_copy_env( envv, pipid )            ) == NULL ) {
+  if( ( args->prog = strdup( prog )              ) == NULL ||
+      ( args->argv = pip_copy_vec( argv )        ) == NULL ||
+      ( args->envv = pip_copy_env( envv, pipid ) ) == NULL ) {
     err = ENOMEM;
     goto error;
   }
@@ -1671,9 +1684,9 @@ int pip_ulp_create( char *prog,
 
   args = &ulpt->args;
   args->pipid = pipid;
-  if( ( args->prog = strdup( prog )                         ) == NULL ||
-      ( args->argv = pip_copy_vec( NULL, NULL, NULL, argv ) ) == NULL ||
-      ( args->envv = pip_copy_env( envv, pipid )            ) == NULL ) {
+  if( ( args->prog = strdup( prog )              ) == NULL ||
+      ( args->argv = pip_copy_vec( argv )        ) == NULL ||
+      ( args->envv = pip_copy_env( envv, pipid ) ) == NULL ) {
     err = ENOMEM;
     goto error;
   }
@@ -1688,6 +1701,7 @@ int pip_ulp_create( char *prog,
 
   if( err == 0 ) {
     void *stack;
+
     DBG;
     ulpt->task_parent =
       ( pip_task != NULL ) ? pip_task : pip_root->task_root;
