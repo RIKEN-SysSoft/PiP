@@ -94,7 +94,6 @@ int main( int argc, char **argv ) {
     }
     ntasks = i;
 
-
     TESTINT( pthread_barrier_init( &tc.barrier, NULL, ntasks+1 ) );
     TESTINT( pthread_mutex_unlock( &tc.mutex ) );
 

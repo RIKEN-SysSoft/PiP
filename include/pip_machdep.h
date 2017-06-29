@@ -22,6 +22,10 @@
 #endif
 #endif
 
+#ifndef PIP_CACHE_SZ
+#define PIP_CACHE_SZ		(64)
+#endif
+
 #ifndef PIP_LOCK_TYPE
 #include <stdint.h>
 typedef volatile uint32_t	pip_spinlock_t;

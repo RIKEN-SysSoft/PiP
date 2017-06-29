@@ -50,14 +50,10 @@
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
-/* for GDB */
-#define PIP_GDBINFO_ENV		"PIP_GDBINFO"
-/* for GDB */
-
 typedef	int(*main_func_t)(int,char**,char**);
 typedef int(*mallopt_t)(int,int);
 typedef void(*free_t)(void*);
-
+typedef void(*pthread_init_t)(int,char**,char**);
 typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
 typedef	void(*fflush_t)(FILE*);
@@ -65,6 +61,7 @@ typedef	void(*fflush_t)(FILE*);
 typedef struct {
   /* functions */
   main_func_t		main;	     /* main function address */
+  pthread_init_t	pthread_init; /* __pthread_init_minimum() */
   ctype_init_t		ctype_init;  /* to call __ctype_init() */
   glibc_init_t		glibc_init;  /* only in patched Glibc */
   fflush_t		libc_fflush; /* to call fflush() at the end */
@@ -119,39 +116,49 @@ typedef struct pip_task {
   };
 } pip_task_t;
 
+#define PIP_FILLER_SZ	(PIP_CACHE_SZ-sizeof(pip_spinlock_t))
+
 typedef struct {
   char			magic[PIP_MAGIC_LEN];
   unsigned int		version;
   size_t		root_size;
   size_t		size;
-
   pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
-  size_t		page_size;
-  unsigned int		opts;
-  unsigned int		actual_mode;
-  int			ntasks;
-  int			ntasks_curr;
-  int			ntasks_accum;
-  int			pipid_curr;
-  pip_clone_t	 	*cloneinfo;   /* only valid with PIP_MODE_PIPCLONE */
-
-  size_t		stack_size;
-
+  union {
+    struct {
+      size_t		page_size;
+      unsigned int	opts;
+      unsigned int	actual_mode;
+      int		ntasks;
+      int		ntasks_curr;
+      int		ntasks_accum;
+      int		pipid_curr;
+      pip_clone_t 	*cloneinfo;   /* only valid with process:preload */
+    };
+    char 		__filler0__[PIP_FILLER_SZ];
+  };
   pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
-  void 			*stack_flist;	  /* ULP: stack free list */
-
-  pip_task_t		*task_root; /* points to tasks[ntasks] */
+  union {
+    struct {
+      void		*stack_flist;	  /* ULP: stack free list */
+      size_t		stack_size;
+      pip_task_t	*task_root; /* points to tasks[ntasks] */
+    };
+    char 		__filler1__[PIP_FILLER_SZ];
+  };
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   pip_task_t		tasks[];
 } pip_root_t;
 
-  /* the following functions deeply depends on PiP execution mode */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+  /* the following functions deeply depends on PiP execution mode */
   int    pip_get_thread( int pipid, pthread_t *threadp );
   int    pip_is_pthread( int *flagp );
   int    pip_is_shared_fd( int *flagp );
   int    pip_is_shared_sighand( int *flagp );
-
 #ifdef __cplusplus
 }
 #endif
