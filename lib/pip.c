@@ -417,7 +417,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   size_t	sz;
   char		*envroot = NULL;
   char		*envtask = NULL;
-  char		*taskinfo = PIP_GDBINFO_ENV "=0x0";
   int		ntasks;
   int 		pipid;
   int 		i, err = 0;
@@ -475,7 +474,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       pip_root->task_root->export     = *rt_expp;
     }
     unsetenv( PIP_ROOT_ENV );
-    putenv( taskinfo );		/* for GDB */
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
@@ -856,12 +854,15 @@ static int pip_find_symbols( void *handle, pip_symbols_t *symp ) {
   //if( pip_root_p() ) pip_print_dsos();
 
   /* functions */
-  symp->main          = dlsym( handle, "main"         );
-  symp->ctype_init    = dlsym( handle, "__ctype_init" );
-  symp->glibc_init    = dlsym( handle, "glibc_init"   );
-  symp->mallopt       = dlsym( handle, "mallopt"      );
-  symp->libc_fflush   = dlsym( handle, "fflush"       );
-  symp->free          = dlsym( handle, "free"         );
+  symp->main          = dlsym( handle, "main"                         );
+#ifdef PIP_PTHREAD_INIT
+  symp->pthread_init  = dlsym( handle, "__pthread_initialize_minimal" );
+#endif
+  symp->ctype_init    = dlsym( handle, "__ctype_init"                 );
+  symp->glibc_init    = dlsym( handle, "glibc_init"                   );
+  symp->mallopt       = dlsym( handle, "mallopt"                      );
+  symp->libc_fflush   = dlsym( handle, "fflush"                       );
+  symp->free          = dlsym( handle, "free"                         );
   /* variables */
   symp->environ       = dlsym( handle, "environ"         );
   symp->libc_argvp    = dlsym( handle, "__libc_argv"     );
@@ -1008,6 +1009,12 @@ static int pip_init_glibc( pip_symbols_t *symbols,
   }
   *symbols->environ = envv;	/* setting environment vars */
 
+#ifdef PIP_PTHREAD_INIT
+  if( symbols->pthread_init != NULL ) {
+    symbols->pthread_init( argc, argv, envv );
+  }
+#endif
+
 #ifndef PIP_NO_MALLOPT
   if( symbols->mallopt != NULL ) {
     DBGF( ">> mallopt()" );
@@ -1063,10 +1070,7 @@ static int pip_do_spawn( void *thargs )  {
   int coreno  = args->coreno;
   pip_task_t *self = &pip_root->tasks[pipid];
   pip_spawnhook_t before = self->hook_before;
-  pip_spawnhook_t after  = self->hook_after;
   void *hook_arg         = self->hook_arg;
-  char	**new_envv;
-  char 	gdbinfo[128];
   int 	err = 0;
 
   DBG;
@@ -1107,9 +1111,6 @@ static int pip_do_spawn( void *thargs )  {
     pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d",
 		   argv[0], before, err );
     self->retval = err;
-  } else if( sprintf(gdbinfo, "%s=%p", PIP_GDBINFO_ENV, self->loaded) <= 0 ||
-	     ( new_envv = pip_copy_vec3( gdbinfo, NULL, NULL, envv )) == NULL){
-    self->retval = ENOMEM;
   } else {
     /* argv and/or envv might be changed in the hook function */
     ucontext_t 		ctx;
@@ -1128,21 +1129,15 @@ static int pip_do_spawn( void *thargs )  {
 #endif
 
       DBG;
-      argc = pip_init_glibc( &self->symbols, argv, new_envv, self->loaded, 1 );
+      argc = pip_init_glibc( &self->symbols, argv, envv, self->loaded, 1 );
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
 	    pipid, self->symbols.main, argc, argv[0], argv[1] );
-      self->retval = self->symbols.main( argc, argv, new_envv );
+      self->retval = self->symbols.main( argc, argv, envv );
       DBGF( "[%d] << main@%p(%d,%s,%s,...)",
 	    pipid, self->symbols.main, argc, argv[0], argv[1] );
     } else {
       DBGF( "!! main(%s,%s,...)", argv[0], argv[1] );
     }
-    free( new_envv );
-    if( after != NULL ) (void) after( hook_arg );
-    self->hook_before = NULL;
-    self->hook_after  = NULL;
-    self->hook_arg    = NULL;
-
     pip_glibc_fin( &self->symbols );
 
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
@@ -1481,10 +1476,12 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
 
   /* dlclose() and free() must be called only from the root process since */
   /* corresponding dlmopen() and malloc() is called by the root process   */
-  if( task->loaded    != NULL ) dlclose( task->loaded );
-  if( task->args.prog != NULL ) free( task->args.prog );
-  if( task->args.argv != NULL ) free( task->args.argv );
-  if( task->args.envv != NULL ) free( task->args.envv );
+  if( task->loaded     != NULL ) dlclose( task->loaded );
+  if( task->args.prog  != NULL ) free( task->args.prog );
+  if( task->args.argv  != NULL ) free( task->args.argv );
+  if( task->args.envv  != NULL ) free( task->args.envv );
+  /* and the after hook may free the hook_arg if it is malloc()ed */
+  if( task->hook_after != NULL ) (void) task->hook_after( task->hook_arg );
 
   pip_init_task_struct( task );
 }
@@ -1876,7 +1873,7 @@ int pip_ulp_do_finalize( int pipid, int *retvalp ) {
   ulp = pip_get_task_( pipid );
   if( ulp->type != PIP_TYPE_ULP ) RETURN( EPERM );
   pip_ulp_recycle_stack( ulp->stack );
-  pip_finalize_task( ulp, retvalp );
+  pip_finalize_task( ulp, retvalp ); /* FIXME: this violates the rule */
   RETURN( err );
 }
 
