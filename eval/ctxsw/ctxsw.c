@@ -55,7 +55,6 @@ __thread int        count_ctxsw;
 
 size_t        ncacheblk = 0;
 double        time_start, time_end;
-double        ave_nvcsw = 0.0;
 
 struct sync_st {
   int        count_ctxsw;
@@ -168,12 +167,7 @@ void spawn_tasks( char **argv, int ntasks ) {
   wait_sync1( &syncs );
   time_end = gettime();
 
-  for( i=0; i<ntasks; i++ ) {
-    (void) wait3( NULL, 0, &ru );
-    nctxsw += ru.ru_nvcsw;
-  }
-  ave_nvcsw = ((double) nctxsw) / ((double)ntasks);
-  TESTINT( pip_fin() );
+  for( i=0; i<ntasks; i++ ) pip_wait( i, NULL );
 }
 
 void eval_pip( char *argv[] ) {
@@ -300,11 +294,7 @@ void fork_only( int ntasks ) {
   wait_sync1( syncs );
   time_end = gettime();
 
-  for( i=0; i<ntasks; i++ ) {
-    wait3( NULL, 0, &ru );
-    nctxsw += ru.ru_nvcsw;
-  }
-  ave_nvcsw = ((double) nctxsw) / ((double)ntasks);
+  for( i=0; i<ntasks; i++ ) wait( NULL );
 }
 #endif
 
@@ -343,5 +333,8 @@ int main( int argc, char **argv ) {
     eval_pip( argv );
 #endif
   }
+#if defined(PIP)
+  TESTINT( pip_fin() );
+#endif
   return 0;
 }

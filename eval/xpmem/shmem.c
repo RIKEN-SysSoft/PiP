@@ -64,8 +64,10 @@ static inline int create_shmem( void **vaddrp ) {
   for( i=0; i<MMAP_SIZE/sizeof(int); i++ ) {
     data[i] = i;
   }
-  printf( "create_shmem(): fd=%d\n", fd );
+  //printf( "create_shmem(): fd=%d\n", fd );
+#ifdef HUGETLB
   system( "grep -i huge /proc/meminfo" );
+#endif
   return fd;
 }
 

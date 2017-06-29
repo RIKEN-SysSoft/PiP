@@ -1,5 +1,12 @@
 #!/usr/bin/sh
 
+cat $0
+echo "-------------------------------"
+date
+uname -a
+git describe
+echo "-------------------------------"
+
 export LD_PRELOAD=/home/ahori/work/PIP/PIP/preload/pip_preload.so
 
 NTASKS=50

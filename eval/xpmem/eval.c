@@ -2,9 +2,10 @@
 #include <xpmem_eval.h>
 #include <xpmem.h>
 #include <sys/mman.h>
+#include <stdint.h>
 
-static inline int overall_touch( void *region, int size ) {
-  int sum = 0;
+static inline long long overall_touch( void *region, int size ) {
+  long long sum = 0;
   int i;
 
   for( i=0; i<size/STRIDE; i++ ) {
@@ -25,7 +26,8 @@ int main( int argc, char **argv ) {
   double tm;
   int iter;
 #endif
-  int x, err;
+  long long x;
+  int err;
 
   x = 0;
   if( argc < 2 ) {
@@ -43,7 +45,7 @@ int main( int argc, char **argv ) {
 
   segid = strtoull( argv[1], NULL, 16 );
 #ifndef OVERALL
-  printf( "segid=%Lx\n", segid );
+  //printf( "segid=%lx\n", (uint64_t) segid );
   tm = rdtscp();
 #else
   tm = gettime();
@@ -60,7 +62,7 @@ int main( int argc, char **argv ) {
   xpmaddr.offset = 0;
 
 #ifndef OVERALL
-  printf( "segid=%Lx\n", segid );
+  //printf( "segid=%lx\n", (uint64_t) segid );
   tm = rdtscp();
 
   addr = xpmem_attach( xpmaddr, MMAP_SIZE, NULL );
@@ -80,7 +82,7 @@ int main( int argc, char **argv ) {
 #ifndef OVERALL
   x = touch( addr );
   print_time();
-  printf( "sum=%d\n", x );
+  printf( "sum=%Ld\n", x );
 #ifndef PERF_PF
   x = touch( addr );
   print_time();
@@ -104,7 +106,7 @@ int main( int argc, char **argv ) {
 #else
 #ifndef DETACH
   //printf( "Overall %g [sec]  iter=%d   %d\n", gettime() - tm, iter, x );
-  printf( "%g,  %d\n", gettime() - tm, x );
+  printf( "%g,  %Ld\n", gettime() - tm, x );
 #endif
 #endif
 
@@ -122,7 +124,7 @@ int main( int argc, char **argv ) {
   err = xpmem_release( apid );
 
 #ifdef DETACH
-  printf( "%g,  %d\n", gettime() - tm, x );
+  printf( "%g,  %Ld\n", gettime() - tm, x );
 #endif
 
 #ifndef OVERALL

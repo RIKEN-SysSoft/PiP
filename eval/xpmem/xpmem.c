@@ -27,12 +27,12 @@ int main( int argc, char **argv ) {
 
 #ifdef OVERALL
   if( argc < 2 ) {
-    printf( "no iterration\n" );
+    printf( "no iteration\n" );
     exit( 1 );
   }
 #else
   int ver = xpmem_version();
-  printf( "XPMEM: %d 0x%x\n", ver, ver );
+  //printf( "XPMEM: %d 0x%x\n", ver, ver );
 #endif
   TESTINT( create_region( &vaddr ) );
   tm = rdtscp();

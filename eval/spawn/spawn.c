@@ -31,9 +31,10 @@
 #include <spawn.h>
 #endif
 
-#define NTASKS_MAX	(100)
+#define NTASKS_MAX	(200)
 
 double	time_start, time_spawn, time_end;
+char *mode = "";
 
 #ifdef PIP
 void spawn_tasks( int ntasks ) {
@@ -43,7 +44,7 @@ void spawn_tasks( int ntasks ) {
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   TESTINT( ( pipid != PIP_PIPID_ROOT ) );
 
-  printf( "Mode: %s\n", pip_get_mode_str() );
+  mode = (char*) pip_get_mode_str();
 
   time_start = gettime();
   for( i=0; i<ntasks; i++ ) {
@@ -165,6 +166,7 @@ int main( int argc, char **argv ) {
     exit( 1 );
   }
 
+  mode = "";
 #if defined( PIP )
   spawn_tasks( ntasks );
   tag = "PIP";
@@ -181,8 +183,8 @@ int main( int argc, char **argv ) {
   create_threads( ntasks );
   tag = "PTHREADS";
 #endif
-  printf( "%g  %g  [sec] %d tasks -- %s\n",
-	  time_spawn - time_start, time_end - time_spawn, ntasks, tag );
+  printf( "%g,  %g,  [sec] %d tasks -- %s %s\n",
+	  time_spawn - time_start, time_end - time_spawn, ntasks, tag, mode );
 
   return 0;
 }

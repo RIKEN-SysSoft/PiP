@@ -229,7 +229,7 @@ void spawn_tasks( char **argv, int ntasks ) {
   wait_sync3( &syncs );
   time_end2 = gettime();
 
-  for( i=0; i<ntasks; i++ ) wait( NULL );
+  for( i=0; i<ntasks; i++ ) pip_wait( i, NULL );
 
   TESTINT( pip_fin() );
 }

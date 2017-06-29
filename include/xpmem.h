@@ -25,8 +25,8 @@
  */
 #define XPMEM_PERMIT_MODE	0x1
 
-typedef void* xpmem_segid_t;	/* segid returned from xpmem_make() */
-typedef void* xpmem_apid_t;	/* apid returned from xpmem_get() */
+typedef intptr_t xpmem_segid_t;	/* segid returned from xpmem_make() */
+typedef intptr_t xpmem_apid_t;	/* apid returned from xpmem_get() */
 
 struct xpmem_addr {
   xpmem_apid_t	apid;		/* apid that represents memory */

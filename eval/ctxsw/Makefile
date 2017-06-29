@@ -10,7 +10,7 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Eval.common
 
 PIPINCFLAGS = -I$(srcdir)/..
-PIPCFLAGS  = $(PIEFLAG) $(PIPINCFLAGS)
+PIPCFLAGS   = $(PIEFLAG) $(PIPINCFLAGS)
 
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
@@ -24,16 +24,19 @@ PROGRAMS_TO_INSTALL = # nothing
 include $(top_srcdir)/build/rule.mk
 
 %-pip: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPIP $(CPPFLAGS) $(PIPCFLAGS) -O0 -g $(PIPLDFLAGS) $< -o $@
+	$(CC) -DPIP $(CPPFLAGS) $(PIPCFLAGS) -O3 -lrt -g $(PIPLDFLAGS) $< -o $@
 
 %-thread: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD -pthread $(CPPFLAGS) -O0 -g $(LDFLAGS) $< -o $@
+	$(CC) -DTHREAD -pthread $(CPPFLAGS) -O3 -lrt -g $(LDFLAGS) $< -o $@
 
 %-forkonly: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DFORK_ONLY $(CPPFLAGS) -O0 -g $(LDFLAGS) $< -o $@
+	$(CC) -DFORK_ONLY $(CPPFLAGS) -O3 -lrt -g $(LDFLAGS) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
 
 eval:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; numactl -C 0 ./ctxsw-pip 15 1024; numactl -C 0 ./ctxsw-thread 15 1024; numactl -C 0 ./ctxsw-forkonly 15 1024 )
+	( export LD_PRELOAD=$(PIPLIBDIR)/../preload/pip_preload.so; \
+	echo -n "PIP:     "; numactl -C 0 ./ctxsw-pip      15 1024; \
+	echo -n "PTHREAD: "; numactl -C 0 ./ctxsw-thread   15 1024; \
+	echo -n "FORK:    "; numactl -C 0 ./ctxsw-forkonly 15 1024 )

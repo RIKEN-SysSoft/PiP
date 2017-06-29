@@ -9,21 +9,13 @@
 
 //#define PERF_PFBASE
 //#define PERF_PF
-#define BANDWIDTH
+//#define BANDWIDTH
 //#define HUGETLB
 //#define OVERALL
 //#define DETACH
 
 #define NTASKS_MAX	(50)
-#ifndef PERF_PF
-#ifndef HUGETLB
-#define MMAP_SIZE	((size_t)(1024*1024))
-#else
 #define MMAP_SIZE	((size_t)(2*1024*1024))
-#endif
-#else
-#define MMAP_SIZE	((size_t)(1024*1024))
-#endif
 
 static inline int create_region( void **vaddrp ) {
   void *vaddr;
@@ -47,14 +39,14 @@ static inline int create_region( void **vaddrp ) {
     return errno;
   }
 #ifndef OVERALL
-  printf( "vaddr=%p\n", vaddr );
+  //printf( "vaddr=%p\n", vaddr );
 #endif
 
   *vaddrp = vaddr;
   data    = (int*) vaddr;
   close( fd );
   for( i=0; i<MMAP_SIZE/sizeof(int); i++ ) {
-    data[i] = i;
+    data[i] = i / 128;
   }
 #ifdef HUGETLB
   system( "grep -i huge /proc/meminfo" );
@@ -85,8 +77,8 @@ uint64_t xptime[NITERS];
 #endif
 #endif
 
-static inline int touch( void *region ) {
-  int sum = 0;
+static inline long long touch( void *region ) {
+  long long sum = 0;
 #ifndef PERF_PFBASE
   int i;
 
@@ -112,7 +104,7 @@ static inline int touch( void *region ) {
 #ifndef OVERALL
 #ifdef BANDWIDTH
   dtm = gettime() - dtm;
-  printf( "Time: %g\n", dtm );
+  printf( "Time to sum: %g\n", dtm );
 #endif
 #endif
 #endif
