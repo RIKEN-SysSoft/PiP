@@ -17,6 +17,7 @@ doeval() {
 	echo -n "["$ITER"]" $1:$2 " "
 	./$1 $3 $4
     done
+    echo
 }
 
 for SZ in 4 8 16 32 64 128 256 512 1024
@@ -33,7 +34,6 @@ do
 	else
 	    doeval $PROG "" $NTASKS $SZ;
 	fi
-	echo
     done
     echo
 done

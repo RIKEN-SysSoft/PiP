@@ -18,6 +18,7 @@ doeval() {
 #	numactl -C 3 ./$1 $4 $3
 	numactl -C 3 ./$1 $3
     done
+    echo
 }
 
 #for TOUCH in 0 1 2 4 8 16 32 64 128 256 512 1024 2048 4096
@@ -32,12 +33,10 @@ do
 	    for PIPMODE in process:preload process:pipclone thread
 	    do
 		doeval $PROG $PIPMODE $TOUCH $NTASKS
-		echo
 	    done
 	else
 	    doeval $PROG "" $TOUCH $NTASKS;
 	fi
-	echo
     done
     echo
 done

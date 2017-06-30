@@ -125,7 +125,7 @@ void spawn_tasks( char **argv, int ntasks ) {
   argv[1] = "0";
   for( i=0; i<ntasks; i++ ) {
     pipid = i;
-    TESTINT( pip_spawn( argv[0], argv, NULL, i%16, &pipid, NULL, NULL, NULL ) );
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid, NULL, NULL, NULL ) );
   }
 
   wait_sync0( &syncs );

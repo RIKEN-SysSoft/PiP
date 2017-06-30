@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
     alloc_futex();
     TESTINT( pip_export( futex ) );
     pipid = 0;
-    TESTINT( pip_spawn( argv[0], argv, NULL, 0, &pipid, NULL, NULL, NULL ) );
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid, NULL, NULL, NULL ) );
     //printf( "[%d] >>eval_main\n", getpid() );
     eval_main();
     //printf( "[%d] <<eval_main\n", getpid() );
