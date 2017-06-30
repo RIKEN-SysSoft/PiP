@@ -183,8 +183,11 @@ int main( int argc, char **argv ) {
   create_threads( ntasks );
   tag = "PTHREADS";
 #endif
-  printf( "%g,  %g,  [sec] %d tasks -- %s %s\n",
-	  time_spawn - time_start, time_end - time_spawn, ntasks, tag, mode );
+  printf( "%g,  %g,  %g,  [sec] %d tasks -- %s %s\n",
+	  time_end   - time_start,
+	  time_spawn - time_start,
+	  time_end   - time_spawn,
+	  ntasks, tag, mode );
 
   return 0;
 }

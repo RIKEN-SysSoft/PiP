@@ -1,11 +1,22 @@
+/*
+ * $RIKEN_copyright:$
+ * $PIP_VERSION:$
+ * $PIP_license:$
+ */
+/*
+ * Written by Atsushi HORI <ahori@riken.jp>, 2017
+ */
+
+#define _GNU_SOURCE
+
+#include <eval.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <sched.h>
 #include <fcntl.h>
 #include <stdio.h>
-
-#include <eval.h>
 
 //#define PERF_PFBASE
 //#define PERF_PF
@@ -15,7 +26,19 @@
 //#define DETACH
 
 #define NTASKS_MAX	(50)
+#define NDATA		(1024)
 #define MMAP_SIZE	((size_t)(2*1024*1024))
+
+void corebind( int c ) {
+  cpu_set_t cpuset;
+
+  CPU_ZERO( &cpuset );
+  CPU_SET( c, &cpuset );
+  if( sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) {
+    fprintf( stderr, "sched_setaffinity(%d): %d\n", c, errno );
+    exit( 1 );
+  }
+}
 
 static inline int create_region( void **vaddrp ) {
   void *vaddr;
@@ -73,7 +96,7 @@ static inline int create_region( void **vaddrp ) {
 
 #ifndef BANDWIDTH
 #ifndef OVERALL
-uint64_t xptime[NITERS];
+unsigned int xptime[NDATA];
 #endif
 #endif
 
@@ -96,7 +119,7 @@ static inline long long touch( void *region ) {
     region += STRIDE;
 #ifndef BANDWIDTH
 #ifndef OVERALL
-    xptime[i] = rdtscp() - delta;
+    if( i < NDATA ) xptime[i] = rdtscp() - delta;
 #endif
 #endif
   }
@@ -116,8 +139,8 @@ static inline void print_time( void ) {
 #ifndef PERF_PF
 #ifndef OVERALL
   int i;
-  for( i=0; i<NITERS; i++ ) {
-    printf( "%lu\n", xptime[i] );
+  for( i=0; i<NDATA; i++ ) {
+    printf( "%u\n", xptime[i] );
   }
 #endif
 #endif

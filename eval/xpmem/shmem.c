@@ -7,6 +7,8 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+#include <xpmem_eval.h>
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
@@ -15,8 +17,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-
-#include <xpmem_eval.h>
 
 //#define HUGETLB
 
@@ -48,10 +48,12 @@ static inline int create_shmem( void **vaddrp ) {
 		fd,
 		0 );
   if( vaddr == MAP_FAILED ) {
-    printf( "create_shmem(): map failed\n" );
+    printf( "create_shmem(): map failed (%d)\n", errno );
     return -1;
   }
+#ifdef HUGETLB
   madvise( vaddr, MMAP_SIZE, MADV_HUGEPAGE );
+#endif
   tm = rdtscp() - tm;
   printf( "create: mmap(): %lu\n", tm );
   tm = rdtscp() - tm;
@@ -82,6 +84,7 @@ int main( int argc, char **argv ) {
   if( argc < 2 ) {
     fd = create_shmem( &vaddr );
     if( ( pid = fork() ) == 0 ) {
+      corebind( 1 );
       nargv[0] = argv[0];
       nargv[1] = SHMNAM;
       nargv[3] = NULL;

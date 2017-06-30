@@ -75,7 +75,7 @@ void wait_sync2( struct sync_st *syncs ) {
 }
 
 void print_page_table_size( void ) {
-  sleep( 1 );			/* we need this, otherwise /proc/meminfo */
+  sleep( 3 );			/* we need this, otherwise /proc/meminfo */
   system( "grep PageTables /proc/meminfo" );
 #ifdef USE_HUGETLB
   system( "grep HugePages  /proc/meminfo" );

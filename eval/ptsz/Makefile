@@ -42,7 +42,7 @@ include $(top_srcdir)/build/rule.mk
 	$(CC) -DFORK_ONLY -DACUM $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 post-clean-hook:
-	$(RM) *.E *.log
+	$(RM) *.E *.log $(PROGRAMS)
 
 eval:
 	( export LD_PRELOAD=$(build_topdir)/preload/pip_preload.so; numactl -C 1 ./mmap-pip 15 1024; numactl -C 1 ./mmap-thread 15 1024; numactl -C 1 ./mmap-forkonly 15 1024 )

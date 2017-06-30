@@ -7,15 +7,15 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+#include <xpmem_eval.h>
+#include <xpmem.h>
+
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
-
-#include <xpmem_eval.h>
-#include <xpmem.h>
 
 int main( int argc, char **argv ) {
   extern char **environ;
@@ -45,6 +45,7 @@ int main( int argc, char **argv ) {
     printf( "xpmem_make(): %d\n", errno );
   } else {
     if( ( pid = fork() ) == 0 ) {
+      corebind( 1 );
       sprintf( segidstr, "%lx", segid );
       //printf( "fork(%s)\n", segidstr );
 

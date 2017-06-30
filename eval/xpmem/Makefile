@@ -20,7 +20,7 @@ DEPINCS = ./xpmem_eval.h ../eval.h $(PIPINCDIR)/pip.h
 
 SRCS  =
 
-PROGS = eval-pip eval-xpmem pip xpmem shmem pip-ht xpmem-ht shmem-ht
+PROGS = eval-pip eval-xpmem pip xpmem shmem pip-ht xpmem-ht
 PROGS-NOXPMEM = eval-pip pip shmem
 
 all: $(PROGS)
@@ -46,9 +46,6 @@ pip-ht: pip.c xpmem_eval.h Makefile
 
 xpmem-ht: xpmem.c xpmem_eval.h Makefile
 	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o xpmem.c -o xpmem-ht  -DHUGETLB
-
-shmem-ht: shmem.c xpmem_eval.h Makefile
-	$(CC) -O3 -I. -I.. shmem.c -o shmem-ht -lrt -DHUGETLB
 
 clean:
 	rm -f $(PROGS) *~

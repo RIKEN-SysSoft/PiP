@@ -324,7 +324,7 @@ int main( int argc, char **argv ) {
 #elif defined( FORK_ONLY )
     fork_only( ntasks );
 #endif
-    printf( "%g [sec]  %d tasks  %d [Bytes] %d iter.\n",
+    printf( ",%g, [sec]  %d tasks  %d [Bytes] %d iter.\n",
 	    time_end - time_start, ntasks,
 	    ((int) ( ncacheblk * CACHEBLKSZ )), CTXSW_ITER );
 

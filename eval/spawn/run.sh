@@ -7,7 +7,7 @@ uname -a
 git describe
 echo "-------------------------------"
 
-export LD_PRELOAD=/home/ahori/work/PIP/PIP/preload/pip_preload.so
+export LD_PRELOAD=`pwd`/../../preload/pip_preload.so
 
 for NTASKS in 1 2 4 8 16 32 64 128
 do
@@ -20,7 +20,7 @@ do
 		export PIP_MODE=$PIPMODE
 		for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
 		do
-		    numactl -C 1 ./$PROG $NTASKS $NTASKS
+		    numactl -C 3 ./$PROG $NTASKS $NTASKS
 		    #./$PROG $NTASKS $NTASKS
 		done
 		unset PIP_MODE
@@ -29,7 +29,7 @@ do
 	else
 	    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
 	    do
-		numactl -C 1 ./$PROG $NTASKS $NTASKS
+		numactl -C 3 ./$PROG $NTASKS $NTASKS
 		#./$PROG $NTASKS $NTASKS
 	    done
 	    echo

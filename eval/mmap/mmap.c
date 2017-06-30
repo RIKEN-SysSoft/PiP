@@ -36,8 +36,8 @@
 #ifndef TOUCH
 
 #ifndef ACUM
-//#define MMAP_ITER	(10*1000)
-#define MMAP_ITER	(1000*1000)
+#define MMAP_ITER	(10*1000)
+//#define MMAP_ITER	(1000*1000)
 //#define MMAP_ITER	(10*1000*1000)
 #else
 #define MMAP_ITER	(100*1000)
@@ -212,7 +212,8 @@ void spawn_tasks( char **argv, int ntasks ) {
   argv[1] = "0";
   for( i=0; i<ntasks; i++ ) {
     pipid = i;
-    TESTINT( pip_spawn( argv[0], argv, NULL, i+1, &pipid, NULL, NULL, NULL ) );
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS,
+			&pipid, NULL, NULL, NULL ) );
   }
 
   wait_sync0( &syncs );
@@ -281,15 +282,11 @@ void eval_thread( void ) {
 void create_threads( int ntasks ) {
   pthread_t threads[NTASKS_MAX];
   pthread_attr_t attr;
-  cpu_set_t cpuset;
   int i;
 
   init_syncs( ntasks+1, &syncs );
   for( i=0; i<ntasks; i++ ) {
     TESTINT( pthread_attr_init( &attr ) );
-    CPU_ZERO( &cpuset );
-    CPU_SET( i+1, &cpuset );
-    TESTINT( pthread_attr_setaffinity_np( &attr, sizeof(cpuset), &cpuset ) );
     TESTINT( pthread_create( &threads[i],
 			     &attr,
 			     (void*(*)(void*))eval_thread,
@@ -320,7 +317,6 @@ void create_threads( int ntasks ) {
 void fork_only( int ntasks ) {
   void *mmapp;
   struct sync_st *syncs;
-  cpu_set_t cpuset;
   pid_t pid;
   int i;
 
@@ -336,9 +332,6 @@ void fork_only( int ntasks ) {
   init_syncs( ntasks+1, syncs );
 
   for( i=0; i<ntasks; i++ ) {
-    CPU_ZERO( &cpuset );
-    CPU_SET( i+1, &cpuset );
-    TESTSC( sched_setaffinity( getpid(), sizeof(cpuset), &cpuset ) );
     if( ( pid = fork() ) == 0 ) {
       wait_sync0( syncs );
       eval_mmap();
@@ -389,7 +382,7 @@ int main( int argc, char **argv ) {
 #elif defined( FORK_ONLY )
     fork_only( ntasks );
 #endif
-    printf( "%g [sec], %d tasks, %d iteration, %d [KB] mmap size\n",
+    printf( ",%g, [sec] %d tasks  %d iteration  %d [KB] mmap size\n",
 	    time_end - time_start, ntasks, MMAP_ITER, ((int)size)/1024 );
 #ifdef ACUM
     printf( "%g [sec]--munmap\n", time_end2 - time_start2 );

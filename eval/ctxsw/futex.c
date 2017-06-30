@@ -85,9 +85,11 @@ void eval_memset( int argc, char **argv ) {
       memset(buf, i, ws_pages * 4096);
     }
     memset_time = time_ns(&ts) - memset_time;
-    printf("%i memset on %4liK in %10lluns (%.1fns/page)\n",
+#ifdef AH
+    printf("%d memset on %4ldK in %10lluns (, %.1f, ns/page)\n",
            iterations, ws_pages * 4, memset_time,
            (memset_time / ((float) ws_pages * iterations)));
+#endif
     free(buf);
   }
 }
@@ -132,10 +134,15 @@ void eval_main( void ) {
   }
   const long long unsigned delta = time_ns(&ts) - start_ns - memset_time * 2;
   const int nswitches = iterations * 4;
-  printf("%i process context switches (wss:%4liK) in %12lluns (%.1f ns/ctxsw)\n",
+#ifdef AH
+  printf("%i process context switches (wss:%4liK) in %12lluns (, %.1f, ns/ctxsw)\n",
 	 nswitches, ws_pages * 4, delta, (delta / (float) nswitches));
+#else
+  printf("%d ctxsw (wss:%dK) , %g, ns/ctxsw\n",
+	 nswitches, ((int)ws_pages * 4), ( ((double)delta) / ((double)nswitches) ));
+#endif
   fflush( NULL );
-  wait(futex);
+  //wait(futex);
 }
 
 void alloc_futex( void ) {
@@ -168,6 +175,7 @@ int main(int argc, char** argv) {
     //printf( "[%d] >>eval_main\n", getpid() );
     eval_main();
     //printf( "[%d] <<eval_main\n", getpid() );
+    pip_wait( pipid, NULL );
   } else {
     TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &futex ) );
     ws_pages = strtol(argv[1], NULL, 10);
@@ -207,12 +215,5 @@ int main(int argc, char** argv) {
   }
 #endif
 
-#ifdef AH
-  sleep( 1 );
-  printf( "[%d] >>FLUSH\n", getpid() );
-  fflush( NULL );
-  printf( "[%d] <<FLUSH\n", getpid() );
-  sleep( 1 );
-#endif
   return 0;
 }
