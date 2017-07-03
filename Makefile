@@ -75,6 +75,10 @@ check:
 	( cd test && ./test.sh -A )
 .PHONY: check
 
+eval:
+	( cd eval && ./eval.sh )
+.PHONY: eval
+
 prog-distclean:
 	$(RM) config.log config.status include/config.h build/config.mk
 .PHONY: prog-distclean
