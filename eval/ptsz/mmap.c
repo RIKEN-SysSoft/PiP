@@ -16,6 +16,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <eval.h>
 #include <pip_machdep.h>
@@ -74,12 +75,24 @@ void wait_sync2( struct sync_st *syncs ) {
   wait_sync( &syncs->sync2 );
 }
 
-void print_page_table_size( void ) {
-  sleep( 3 );			/* we need this, otherwise /proc/meminfo */
+int get_page_table_size( void ) {
+  FILE *fp;
+  int ptsz = 0;
+
+  sleep( 3 );
+
+#ifdef AH
   system( "grep PageTables /proc/meminfo" );
 #ifdef USE_HUGETLB
   system( "grep HugePages  /proc/meminfo" );
 #endif
+#endif
+
+  fp = popen( "grep PageTables /proc/meminfo", "r" );
+  fscanf( fp, "%*s %d", &ptsz );
+  //printf( "PTSZ= %d\n", ptsz );
+  pclose( fp );
+  return ptsz;
 }
 
 void touch( struct sync_st *syncs ) {
@@ -112,9 +125,9 @@ void mmap_memory( char *arg, int ntasks ) {
 
 #ifdef PIP
 
-void spawn_tasks( char **argv, int ntasks ) {
+int spawn_tasks( char **argv, int ntasks ) {
   void *root_exp;
-  int pipid, i;
+  int pipid, ptsz, i;
 
   syncs.mmapp = mmapp;
   syncs.size  = size;
@@ -131,12 +144,13 @@ void spawn_tasks( char **argv, int ntasks ) {
   wait_sync0( &syncs );
   touch( &syncs );
   wait_sync1( &syncs );
-  print_page_table_size();
+  ptsz = get_page_table_size();
   wait_sync2( &syncs );
 
   for( i=0; i<ntasks; i++ ) pip_wait( i, NULL );
 
   TESTINT( pip_fin() );
+  return ptsz;
 }
 
 void eval_pip( char *argv[] ) {
@@ -168,9 +182,9 @@ void eval_thread( void ) {
   pthread_exit( NULL );
 }
 
-void create_threads( int ntasks ) {
+int  create_threads( int ntasks ) {
   pthread_t threads[NTASKS_MAX];
-  int i;
+  int ptsz, i;
 
   init_syncs( ntasks+1, &syncs );
   syncs.mmapp = mmapp;
@@ -184,22 +198,23 @@ void create_threads( int ntasks ) {
   wait_sync0( &syncs );
   touch( &syncs );
   wait_sync1( &syncs );
-  print_page_table_size();
+  ptsz = get_page_table_size();
   wait_sync2( &syncs );
 
   for( i=0; i<ntasks; i++ ) {
     TESTINT( pthread_join( threads[i], NULL ) );
   }
+  return ptsz;
 }
 #endif
 
 #ifdef FORK_ONLY
 
-void fork_only( int ntasks ) {
+int fork_only( int ntasks ) {
   void *mapp;
   struct sync_st *syncp;
   pid_t pid;
-  int i;
+  int ptsz, i;
 
   mapp = mmap( NULL,
 	       4096,
@@ -226,14 +241,17 @@ void fork_only( int ntasks ) {
   wait_sync0( syncp );
   touch( syncp );
   wait_sync1( syncp );
-  print_page_table_size();
+
+  ptsz = get_page_table_size();
   wait_sync2( syncp );
   for( i=0; i<ntasks; i++ ) wait( NULL );
+  return ptsz;
 }
 #endif
 
 int main( int argc, char **argv ) {
   int ntasks;
+  int ptsz0, ptsz1;
 
   if( argc < 3 ) {
     fprintf( stderr, "mmap-XXX <ntasks> <mmap-size[KB]>\n" );
@@ -247,17 +265,21 @@ int main( int argc, char **argv ) {
       fprintf( stderr, "Illegal number of tasks is specified.\n" );
       exit( 1 );
     }
-    print_page_table_size();
+    ptsz0 = get_page_table_size();
     mmap_memory( argv[2], ntasks );
 
 #if defined( PIP )
-    spawn_tasks( argv, ntasks );
+    ptsz1 = spawn_tasks( argv, ntasks );
 #elif defined( THREAD )
-    create_threads( ntasks );
+    ptsz1 = create_threads( ntasks );
 #elif defined( FORK_ONLY )
-    fork_only( ntasks );
+    ptsz1 = fork_only( ntasks );
 #endif
-    printf( "%d tasks, %d [MiB] mmap size\n", ntasks, (int)(size/SIZE1MB) );
+#ifdef AH
+    printf( "%d, [KB]  %d tasks  %d [MiB] mmap size\n",
+	    ptsz1 - ptsz0, ntasks, (int)(size/SIZE1MB) );
+#endif
+    printf( ", %d, [KB]\n", ptsz1 - ptsz0 );
 
   } else {			/* child task/process/thread */
 #if defined(PIP)

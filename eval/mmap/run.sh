@@ -1,13 +1,6 @@
 #!/usr/bin/sh
 
-cat $0
-echo "-------------------------------"
-date
-uname -a
-git describe
-echo "-------------------------------"
-
-export LD_PRELOAD=`pwd`/../../preload/pip_preload.so
+. ../eval.sh.inc
 
 NTASKS=10
 
@@ -20,13 +13,15 @@ doeval() {
     echo
 }
 
+csv_begin
+
 for SZ in 4 8 16 32 64 128 256 512 1024
 do
     for PROG in mmap-pip mmap-thread mmap-forkonly
     do
 	if [ $PROG == mmap-pip ]
 	then
-	    for PIPMODE in process:preload process:pipclone thread
+	    for PIPMODE in $MODE_LIST
 	    do
 		export PIP_MODE=$PIPMODE;
 		doeval $PROG $PIPMODE $NTASKS $SZ;
@@ -37,3 +32,5 @@ do
     done
     echo
 done
+
+csv_end

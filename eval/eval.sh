@@ -10,18 +10,18 @@ doeval() {
 }
 
 rotatelog() {
-    rm -f $file.10
-    mv -f $file.9 $file.10
-    mv -f $file.8 $file.9
-    mv -f $file.7 $file.8
-    mv -f $file.6 $file.7
-    mv -f $file.5 $file.6
-    mv -f $file.4 $file.5
-    mv -f $file.3 $file.4
-    mv -f $file.2 $file.3
-    mv -f $file.1 $file.2
-    mv -f $file.0 $file.1
-    mv -f $file   $file.0
+    rm -f $file.10 2>&1 > /dev/null
+    mv -f $file.9 $file.10 2>&1 > /dev/null
+    mv -f $file.8 $file.9 2>&1 > /dev/null
+    mv -f $file.7 $file.8 2>&1 > /dev/null
+    mv -f $file.6 $file.7 2>&1 > /dev/null
+    mv -f $file.5 $file.6 2>&1 > /dev/null
+    mv -f $file.4 $file.5 2>&1 > /dev/null
+    mv -f $file.3 $file.4 2>&1 > /dev/null
+    mv -f $file.2 $file.3 2>&1 > /dev/null
+    mv -f $file.1 $file.2 2>&1 > /dev/null
+    mv -f $file.0 $file.1 2>&1 > /dev/null
+    mv -f $file   $file.0 2>&1 > /dev/null
 }
 
 rotatelog;
