@@ -46,7 +46,11 @@ static inline uint64_t rdtscp() {
   return x;
 }
 #else
+#include <time.h>
 static inline uint64_t rdtscp() {
-  return 0;
+  struct timespec ts;
+  (void) clock_gettime( CLOCK_REALTIME, ts );
+  return ((uint64_t) ts->tv_sec) * 1000000000LLU
+    + (uint64_t) ts->tv_nsec;
 }
 #endif

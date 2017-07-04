@@ -1,6 +1,7 @@
 echo "cat << ignore-this-part >> /dev/null"
 
-export LD_PRELOAD=`pwd`/../../preload/pip_preload.so
+export LD_PRELOAD=`pwd`/../../preload/pip_preload.so:$LD_PRELOAD
+export LD_LIBRARY_PATH=`pwd`/../../lib/:$LD_LIBRARY_PATH
 
 csv_begin() {
     FN=`basename \`pwd\``
