@@ -33,7 +33,7 @@ eval-xpmem: eval.c xpmem_eval.h Makefile
 	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o eval.c -o eval-xpmem
 
 pip: pip.c xpmem_eval.h Makefile
-	$(CC) -O3 $(PIPINCFLAGS) -Wl,--dynamic-linker=/home/ahori/work/PIP/GLIBC/install/lib/ld-2.17.so -Wl,-rpath=/home/ahori/work/PIP/install/lib $(PIPLDFLAGS) pip.c -o pip -pthread
+	$(CC) -O3 $(PIPINCFLAGS) $(PIPLDFLAGS) pip.c -o pip -pthread
 
 xpmem: xpmem.c xpmem_eval.h Makefile
 	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o xpmem.c -o xpmem
@@ -42,7 +42,7 @@ shmem: shmem.c xpmem_eval.h Makefile
 	$(CC) -O3 -I. -I.. shmem.c -o shmem -lrt
 
 pip-ht: pip.c xpmem_eval.h Makefile
-	$(CC) -O3 $(PIPINCFLAGS) -Wl,--dynamic-linker=/home/ahori/work/PIP/GLIBC/install/lib/ld-2.17.so -Wl,-rpath=/home/ahori/work/PIP/install/lib $(PIPLDFLAGS) pip.c -o pip-ht -pthread -DHUGETLB
+	$(CC) -O3 $(PIPINCFLAGS) $(PIPLDFLAGS) pip.c -o pip-ht -pthread -DHUGETLB
 
 xpmem-ht: xpmem.c xpmem_eval.h Makefile
 	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o xpmem.c -o xpmem-ht  -DHUGETLB
