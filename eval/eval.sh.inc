@@ -39,9 +39,9 @@ NUMACTL() {
 MODE_LIST=`pip_mode_list process:preload; pip_mode_list process:pipclone; pip_mode_list thread`
 
 echo "==============================="
-cat $0
+../util/commentize $0
 echo "-------------------------------"
-grep "$ ./configure " ../../../config.log
+grep -e "$ ./configure --" ../../config.log
 echo `date` "  " `git describe`
 echo PIP_MODEs: $MODE_LIST
 uname -a

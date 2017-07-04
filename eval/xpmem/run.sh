@@ -9,7 +9,7 @@ do
     export PIP_MODE=$PIPMODE
     csv_begin PIP-small-$PIPMODE
     echo "#### PIP ($PIP_MODE) small-TLB"
-    numactl -C 3 ./pip
+    NUMACTL 3 ./pip
     csv_end PIP-small-$PIPMODE
     echo
 done
@@ -18,14 +18,14 @@ if [ -x ./xpmem ]
 then
     csv_begin XPMEM-small
     echo "#### XPMEM small-TLB"
-    numactl -C 3 ./xpmem
+    NUMACTL 3 ./xpmem
     csv_end XPMEM-small
     echo
 fi
 
 csv_begin SHMEM-small
 echo "#### SHMEM small-TLB"
-numactl -C 3 ./shmem
+NUMACTL 3 ./shmem
 csv_end SHMEM-small
 echo
 
@@ -36,7 +36,7 @@ then
 	export PIP_MODE=$PIPMODE
 	csv_begin PIP-huge-$PIPMODE
 	echo "#### PIP ($PIP_MODE) LARGE-TLB"
-	numactl -C 3 ./pip-ht
+	NUMACTL 3 ./pip-ht
 	csv_end PIP-huge-$PIPMODE
 	echo
     done
@@ -44,7 +44,7 @@ then
     then
 	csv_begin XPMEM-huge
 	echo "#### XPMEM LARGE-TLB"
-	numactl -C 3 ./xpmem-ht
+	NUMACTL 3 ./xpmem-ht
 	csv_end XPMEM-huge
 	echo
     fi
