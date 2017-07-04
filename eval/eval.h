@@ -30,6 +30,15 @@ static inline double gettime( void ) {
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
 }
 
+//#define NO_CLOCK_GETTIME
+#ifdef NO_CLOCK_GETTIME
+static inline uint64_t rdtscp() {
+  struct timeval tv;
+  (void) gettimeofday( &tv, NULL );
+  return ((uint64_t) tv.tv_sec) * 1000000000LLU
+    + (uint64_t) tv.tv_usec * 1000LLU;
+}
+#else
 #include <time.h>
 static inline uint64_t rdtscp() {
   struct timespec ts;
@@ -37,3 +46,4 @@ static inline uint64_t rdtscp() {
   return ((uint64_t) ts.tv_sec) * 1000000000LLU
     + (uint64_t) ts.tv_nsec;
 }
+#endif
