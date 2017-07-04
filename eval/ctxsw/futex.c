@@ -52,6 +52,7 @@ static inline int get_iterations(int ws_pages) {
   while (iterations * ws_pages * 4096L < 4294967296L) {  // 4GB
     iterations += 1000;
   }
+  iterations /= 10;
   return iterations;
 }
 
