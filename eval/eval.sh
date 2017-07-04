@@ -26,8 +26,8 @@ rotatelog() {
 
 rotatelog;
 
-doeval ctxsw 2>&1 | tee -a $file;
-doeval mmap  2>&1 | tee -a $file;
-doeval ptsz  2>&1 | tee -a $file;
-doeval spawn 2>&1 | tee -a $file;
+#doeval ctxsw 2>&1 | tee -a $file;
+#doeval mmap  2>&1 | tee -a $file;
+#doeval ptsz  2>&1 | tee -a $file;
+#doeval spawn 2>&1 | tee -a $file;
 doeval xpmem 2>&1 | tee -a $file;

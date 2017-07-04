@@ -42,7 +42,7 @@ int main( int argc, char **argv ) {
   printf( "xpmem_make(): %lu\n", tm );
 #endif
   if( segid == -1 ) {
-    printf( "xpmem_make(): %d\n", errno );
+    printf( "xpmem_make(): errno=%d\n", errno );
   } else {
     if( ( pid = fork() ) == 0 ) {
       corebind( 1 );

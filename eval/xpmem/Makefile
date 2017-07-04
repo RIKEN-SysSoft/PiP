@@ -27,25 +27,25 @@ all: $(PROGS)
 noxpmem: $(PROGS-NOXPMEM)
 
 eval-pip: eval.c xpmem_eval.h Makefile
-	$(CC) -O3 $(PIPINCFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) eval.c -o eval-pip -lpip -pie -rdynamic
+	$(CC) -O3 $(PIPINCFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) eval.c -o eval-pip -lpip -pie -rdynamic -lrt
 
 eval-xpmem: eval.c xpmem_eval.h Makefile
-	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o eval.c -o eval-xpmem
+	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o eval.c -o eval-xpmem -lrt
 
 pip: pip.c xpmem_eval.h Makefile
-	$(CC) -O3 $(PIPINCFLAGS) $(PIPLDFLAGS) pip.c -o pip -pthread
+	$(CC) -O3 $(PIPINCFLAGS) $(PIPLDFLAGS) pip.c -o pip -pthread -lrt
 
 xpmem: xpmem.c xpmem_eval.h Makefile
-	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o xpmem.c -o xpmem
+	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o xpmem.c -o xpmem -lrt
 
 shmem: shmem.c xpmem_eval.h Makefile
 	$(CC) -O3 -I. -I.. shmem.c -o shmem -lrt
 
 pip-ht: pip.c xpmem_eval.h Makefile
-	$(CC) -O3 $(PIPINCFLAGS) $(PIPLDFLAGS) pip.c -o pip-ht -pthread -DHUGETLB
+	$(CC) -O3 $(PIPINCFLAGS) $(PIPLDFLAGS) pip.c -o pip-ht -pthread -DHUGETLB -lrt
 
 xpmem-ht: xpmem.c xpmem_eval.h Makefile
-	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o xpmem.c -o xpmem-ht  -DHUGETLB
+	$(CC) -O3 $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o xpmem.c -o xpmem-ht  -DHUGETLB -lrt
 
 clean:
 	rm -f $(PROGS) *~

@@ -4,7 +4,7 @@
 
 #echo 10 > /proc/sys/vm/nr_hugepages
 
-for PIPMODE in process:preload process:pipclone thread
+for PIPMODE in $MODE_LIST
 do
     export PIP_MODE=$PIPMODE
     csv_begin PIP-small-$PIPMODE
@@ -31,7 +31,7 @@ echo
 
 if [ `cat /proc/sys/vm/nr_hugepages` -gt 0 ]
 then
-    for PIPMODE in process:preload process:pipclone thread
+    for PIPMODE in $MODE_LIST
     do
 	export PIP_MODE=$PIPMODE
 	csv_begin PIP-huge-$PIPMODE
