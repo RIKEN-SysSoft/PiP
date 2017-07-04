@@ -12,9 +12,9 @@ include $(srcdir)/../Eval.common
 XPMEM_DIR = /work/ahori/XPMEM/xpmem-eval
 XPMINCFLAGS = -I. -I.. -I$(XPMEM_DIR)/include
 
-PIPINCFLAGS = -I. -I.. -I/home/ahori/work/PIP/PIP/include
+PIPINCFLAGS = -I. -I.. -I`pwd`/../../include
 PIPCFLAGS  = $(CFLAGS) $(PIPINCFLAGS) -fpie
-PIPLDFLAGS = -L/home/ahori/work/PIP/install/lib -lpip -Wl,-rpath=/home/ahori/work/PIP/install/lib
+PIPLDFLAGS = -L`pwd`/../../lib -lpip
 
 DEPINCS = ./xpmem_eval.h ../eval.h $(PIPINCDIR)/pip.h
 
