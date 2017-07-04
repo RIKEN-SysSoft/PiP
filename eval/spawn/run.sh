@@ -15,7 +15,7 @@ do
 		export PIP_MODE=$PIPMODE
 		for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
 		do
-		    numactl -C 3 ./$PROG $NTASKS $NTASKS
+		    NUMACTL 3 ./$PROG $NTASKS $NTASKS
 		    #./$PROG $NTASKS $NTASKS
 		done
 		unset PIP_MODE
@@ -24,7 +24,7 @@ do
 	else
 	    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
 	    do
-		numactl -C 3 ./$PROG $NTASKS $NTASKS
+		NUMACTL 3 ./$PROG $NTASKS $NTASKS
 		#./$PROG $NTASKS $NTASKS
 	    done
 	    echo

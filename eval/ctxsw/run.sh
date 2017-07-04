@@ -8,8 +8,8 @@ doeval() {
     for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
     do
 	echo -n "["$ITER"]" $1:$2 " "
-#	numactl -C 3 ./$1 $4 $3
-	numactl -C 3 ./$1 $3
+#	NUMACTL 3 ./$1 $4 $3
+	NUMACTL 3 ./$1 $3
     done
     echo
 }

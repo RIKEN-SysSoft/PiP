@@ -11,10 +11,29 @@ csv_end() {
     echo "end-of-file-$1"
 }
 
-pip_mode_list () {
+pip_mode_list() {
     export PIP_MODE=$1;
     ../../test/util/pip_mode 2>/dev/null;
     unset PIP_MODE
+}
+
+NUMACTL_COMMAND=`which --skip-alias --skip-function numactl 2>/dev/null`;
+
+if [ -z $NUMACTL_COMMAND ]
+   then
+      echo "#WARN# No 'numactl' command #WARN#"
+fi
+
+NUMACTL() {
+    if [ -z $NUMACTL_COMMAND ]
+    then
+        shift;
+	$@;
+    else
+        CORENO=$1;
+	shift;
+        $NUMACTL_COMMAND -C $CORENO $@;
+    fi
 }
 
 MODE_LIST=`pip_mode_list process:preload; pip_mode_list process:pipclone; pip_mode_list thread`
@@ -22,6 +41,7 @@ MODE_LIST=`pip_mode_list process:preload; pip_mode_list process:pipclone; pip_mo
 echo "==============================="
 cat $0
 echo "-------------------------------"
+grep "$ ./configure " ../../../config.log
 echo `date` "  " `git describe`
 echo PIP_MODEs: $MODE_LIST
 uname -a
