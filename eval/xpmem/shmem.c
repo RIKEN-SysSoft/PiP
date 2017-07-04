@@ -117,7 +117,9 @@ int main( int argc, char **argv ) {
     if( vaddr == MAP_FAILED ) {
       printf( "main()=%d: map failed\n", errno );
     }
+#ifdef MADV_HUGEPAGE
     madvise( vaddr, MMAP_SIZE, MADV_HUGEPAGE );
+#endif
     tm = rdtscp() - tm;
     printf( "client: mmap(): %lu\n", tm );
     tm = rdtscp() - tm;
