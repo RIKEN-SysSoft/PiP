@@ -52,7 +52,9 @@ static inline int create_shmem( void **vaddrp ) {
     return -1;
   }
 #ifdef HUGETLB
+#ifdef MADV_HUGEPAGE
   madvise( vaddr, MMAP_SIZE, MADV_HUGEPAGE );
+#endif
 #endif
   tm = rdtscp() - tm;
   printf( "create: mmap(): %lu\n", tm );
