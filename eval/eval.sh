@@ -1,12 +1,12 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 file=eval-all.dat;
 
 doeval() {
-    echo "cat << EOFEOF > $1.dat"
+    echo "cat << end-of-header > $1.dat"
     cd $1;
     ./run.sh;
-    echo "EOFEOF"
+    echo "end-of-header"
 }
 
 rotatelog() {
@@ -26,10 +26,8 @@ rotatelog() {
 
 rotatelog;
 
-echo "#!/usr/bin/sh" > $file
-
 doeval ctxsw 2>&1 | tee -a $file;
-doeval mmap 2>&1  | tee -a $file;
-doeval ptsz 2>&1  | tee -a $file;
+doeval mmap  2>&1 | tee -a $file;
+doeval ptsz  2>&1 | tee -a $file;
 doeval spawn 2>&1 | tee -a $file;
 doeval xpmem 2>&1 | tee -a $file;

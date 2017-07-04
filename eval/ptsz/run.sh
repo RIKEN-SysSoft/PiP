@@ -1,9 +1,8 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 . ../eval.sh.inc
 
 PROGS="mmap-pip mmap-thread mmap-forkonly"
-NTASKS=50
 
 doeval() {
     if [ $1 == mmap-pip ]
@@ -30,11 +29,11 @@ doeval() {
 
 csv_begin
 
-for NTASKS in 10 20 30 40 60 80 120 160
+for NTASKS in 10 20 40 80 160
 do
     for PROG in ${PROGS}
     do
-	doeval ${PROG} ${NTASKS} 8 $ITER
+	doeval ${PROG} ${NTASKS} 128 $ITER
     done
 done
 
