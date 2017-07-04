@@ -30,27 +30,10 @@ static inline double gettime( void ) {
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
 }
 
-#ifdef __x86_64__
-static inline uint64_t rdtsc() {
-  uint64_t x;
-  __asm__ volatile ("rdtsc" : "=A" (x));
-  return x;
-}
-
-#define RDTSCP(X)	\
-  asm volatile ("rdtscp; shlq $32,%%rdx; orq %%rdx,%%rax;" : "=a" (X) :: "%rcx", "%rdx")
-
-static inline uint64_t rdtscp() {
-  uint64_t x;
-  RDTSCP( x );
-  return x;
-}
-#else
 #include <time.h>
 static inline uint64_t rdtscp() {
   struct timespec ts;
-  (void) clock_gettime( CLOCK_REALTIME, ts );
-  return ((uint64_t) ts->tv_sec) * 1000000000LLU
-    + (uint64_t) ts->tv_nsec;
+  (void) clock_gettime( CLOCK_REALTIME, &ts );
+  return ((uint64_t) ts.tv_sec) * 1000000000LLU
+    + (uint64_t) ts.tv_nsec;
 }
-#endif
