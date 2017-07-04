@@ -14,12 +14,14 @@ do
     echo
 done
 
-
-csv_begin XPMEM-small
-echo "#### XPMEM small-TLB"
-numactl -C 3 ./xpmem
-csv_end XPMEM-small
-echo
+if [ -x ./xpmem ]
+then
+    csv_begin XPMEM-small
+    echo "#### XPMEM small-TLB"
+    numactl -C 3 ./xpmem
+    csv_end XPMEM-small
+    echo
+fi
 
 csv_begin SHMEM-small
 echo "#### SHMEM small-TLB"
@@ -38,11 +40,14 @@ then
 	csv_end PIP-huge-$PIPMODE
 	echo
     done
-    csv_begin XPMEM-huge
-    echo "#### XPMEM LARGE-TLB"
-    numactl -C 3 ./xpmem-ht
-    csv_end XPMEM-huge
-    echo
+    if [ -x ./xpmem-ht ]
+    then
+	csv_begin XPMEM-huge
+	echo "#### XPMEM LARGE-TLB"
+	numactl -C 3 ./xpmem-ht
+	csv_end XPMEM-huge
+	echo
+    fi
 else
     csv_begin Error-Message
     echo "NO HugTLB pages allocated. To allocate HugeTLB pages:"
