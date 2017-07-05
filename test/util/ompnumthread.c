@@ -1,3 +1,8 @@
+/*
+ * $RIKEN_copyright:$
+ * $PIP_VERSION:$
+ * $PIP_license:$
+ */
 
 #include <omp.h>
 #include <stdio.h>
