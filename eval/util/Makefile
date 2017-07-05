@@ -8,11 +8,9 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS	= commentize.c
+SRCS	= commentize.c corebind.c
 
-all: commentize
-
-commentize: commentize.c
+all: commentize corebind
 
 PROGRAMS_TO_INSTALL = # nothing
 

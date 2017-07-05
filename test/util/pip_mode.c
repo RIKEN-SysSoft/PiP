@@ -1,3 +1,9 @@
+/*
+ * $RIKEN_copyright:$
+ * $PIP_VERSION:$
+ * $PIP_license:$
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
