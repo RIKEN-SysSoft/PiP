@@ -30,17 +30,27 @@ static inline double gettime( void ) {
   return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
 }
 
+/*
+ * rdtsc (read time stamp counter)
+ */
+
 //#define NO_CLOCK_GETTIME
-#ifdef NO_CLOCK_GETTIME
+#if defined(NO_CLOCK_GETTIME)
 static inline uint64_t rdtscp() {
   struct timeval tv;
   (void) gettimeofday( &tv, NULL );
   return ((uint64_t) tv.tv_sec) * 1000000000LLU
     + (uint64_t) tv.tv_usec * 1000LLU;
 }
+#elif defined(__GNUC__) && (defined(__sparcv9__) || defined(__sparc_v9__))
+static inline uint64_t rdtscp( void ) {
+  uint64_t rval;
+  asm volatile("rd %%tick,%0" : "=r"(rval));
+  return rval;
+}
 #else
 #include <time.h>
-static inline uint64_t rdtscp() {
+static inline uint64_t rdtscp( void ) {
   struct timespec ts;
   (void) clock_gettime( CLOCK_REALTIME, &ts );
   return ((uint64_t) ts.tv_sec) * 1000000000LLU
