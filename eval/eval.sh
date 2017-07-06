@@ -1,12 +1,14 @@
 #!/bin/sh
 
+export ITER_NUM=$1
+
 file=eval-all.dat;
 
 doeval() {
-    echo "cat << end-of-header > $1.dat"
+    echo "cat << end-of-an-evaluation > $1.dat"
     cd $1;
     ./run.sh;
-    echo "end-of-header"
+    echo "end-of-an-evaluation"
 }
 
 rotatelog() {

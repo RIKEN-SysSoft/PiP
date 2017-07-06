@@ -4,8 +4,6 @@
 
 csv_begin
 
-NTMAX=`../../test/util/dlmopen_count`
-
 for NTASKS in 1 2 4 8 16 32 64 128
 do
     if [ $NTASKS -gt $NTMAX ]
@@ -19,7 +17,7 @@ do
 	    for PIPMODE in $MODE_LIST
 	    do
 		export PIP_MODE=$PIPMODE
-		for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
+		for ITER in $ITER_NUM
 		do
 		    NUMACTL 3 ./$PROG $NTASKS $NTASKS
 		    #./$PROG $NTASKS $NTASKS
@@ -28,7 +26,7 @@ do
 		echo
 	    done
 	else
-	    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
+	    for ITER in $ITER_NUM
 	    do
 		NUMACTL 3 ./$PROG $NTASKS $NTASKS
 		#./$PROG $NTASKS $NTASKS

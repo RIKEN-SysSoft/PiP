@@ -10,7 +10,7 @@ doeval() {
 	for PIPMODE in $MODE_LIST
 	do
 	    export PIP_MODE=$PIPMODE;
-	    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
+	    for ITER in $ITER_NUM
 	    do
 		echo -n "["$ITER"]" $1:$PIPMODE $2 [Tasks] $3 "[MB]"
 		./$1 $2 $3
@@ -18,7 +18,7 @@ doeval() {
 	    echo
 	done
     else
-	for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
+	for ITER in $ITER_NUM
 	do
 	    echo -n "["$ITER"]" $1 $2 [Tasks] $3 "[MB]"
 	    ./$1 $2 $3
@@ -28,8 +28,6 @@ doeval() {
 }
 
 csv_begin
-
-NTMAX=`../../test/util/dlmopen_count`
 
 for NTASKS in 10 20 40 80 160
 do

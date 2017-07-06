@@ -3,8 +3,8 @@ echo "cat << ignore-this-part >> /dev/null"
 export LD_PRELOAD=`pwd`/../../preload/pip_preload.so
 export LD_LIBRARY_PATH=`pwd`/../../lib/:$LD_LIBRARY_PATH
 
-echo $LD_PRELOAD
-echo $LD_LIBRARY_PATH
+echo "LD_PRELOAD=     " $LD_PRELOAD
+echo "LD_LIBRARY_PATH=" $LD_LIBRARY_PATH
 
 csv_begin() {
     FN=`basename \`pwd\``
@@ -29,7 +29,14 @@ NUMACTL() {
 
 MODE_LIST=`pip_mode_list process:preload; \
 	   pip_mode_list process:pipclone; \
-	   pip_mode_list thread`
+	   pip_mode_list thread;`
+
+NTMAX=`../../test/util/dlmopen_count`
+
+if [ -z $ITER_NUM ]
+then
+    ITER_NUM="1 2 3 4 5 6 7 8 9 10 11 12"
+fi
 
 echo "==============================="
 ../util/commentize $0
@@ -39,7 +46,9 @@ echo "PageSize:  " `getconf PAGESIZE`
 echo "#CPU Cores:" `getconf _NPROCESSORS_ONLN`
 grep -e "$ ./configure --" ../../config.log
 echo `date` "  " `git describe`
-echo PIP_MODEs: $MODE_LIST
+echo "PIP_MODEs:" $MODE_LIST
+echo "NTMAX:    " $NTMAX
+echo "ITER_NUM: " $ITER_NUM
 echo "-------------------------------"
 
 echo "ignore-this-part"

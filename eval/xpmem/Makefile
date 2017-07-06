@@ -19,7 +19,7 @@ DEPINCS = ./xpmem_eval.h ../eval.h $(PIPINCDIR)/pip.h
 
 SRCS  =
 
-PROGS = eval-pip eval-xpmem pip xpmem shmem pip-ht xpmem-ht
+PROGS = eval-pip pip shmem pip-ht eval-xpmem xpmem xpmem-ht
 PROGS-NOXPMEM = eval-pip pip shmem
 
 all: $(PROGS)

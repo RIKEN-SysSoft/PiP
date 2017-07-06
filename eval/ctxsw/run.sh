@@ -3,9 +3,13 @@
 . ../eval.sh.inc
 
 NTASKS=50
+if [ $NTASKS -gt $NTMAX ]
+then
+    NTASKS=$NTMAX
+fi
 
 doeval() {
-    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
+    for ITER in $ITER_NUM
     do
 	echo -n "["$ITER"]" $1:$2 " "
 #	NUMACTL 3 ./$1 $4 $3

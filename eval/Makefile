@@ -8,6 +8,6 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = mmap ptsz spawn ctxsw util
+SUBDIRS = mmap ptsz spawn ctxsw util xpmem
 
 include $(top_srcdir)/build/rule.mk
