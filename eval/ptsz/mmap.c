@@ -42,9 +42,9 @@ size_t	size;
 struct sync_st {
   void 		*mmapp;
   size_t	size;
-  volatile int	sync0;
-  volatile int	sync1;
-  volatile int	sync2;
+  volatile long	sync0;
+  volatile long	sync1;
+  volatile long	sync2;
 };
 
 struct sync_st syncs;
@@ -55,7 +55,7 @@ void init_syncs( int n, struct sync_st *syncs ) {
   syncs->sync2 = n;
 }
 
-void wait_sync( volatile int *syncp ) {
+void wait_sync( volatile long *syncp ) {
   __sync_fetch_and_sub( syncp, 1 );
   while( *syncp > 0 ) {
     pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
@@ -81,6 +81,7 @@ int get_page_table_size( void ) {
 
   sleep( 3 );
 
+#ifdef NO_KEI_WORKAROUND
 #ifdef AH
   system( "grep PageTables /proc/meminfo" );
 #ifdef USE_HUGETLB
@@ -92,6 +93,21 @@ int get_page_table_size( void ) {
   fscanf( fp, "%*s %d", &ptsz );
   //printf( "PTSZ= %d\n", ptsz );
   pclose( fp );
+#else
+  {
+    char *line = NULL;
+    char keyword[128];
+    size_t n = 0;
+
+    if( ( fp = fopen( "/proc/meminfo", "r" ) ) != NULL ) {
+      while( getline( &line, &n, fp ) > 0 ) {
+	if( sscanf( line, "%s %d", keyword, &ptsz ) > 0 &&
+	    strcmp( keyword, "PageTables:" ) == 0 ) break;
+      }
+    }
+    //printf( "PageTables: %d [KB]\n", ptsz );
+  }
+#endif
   return ptsz;
 }
 
