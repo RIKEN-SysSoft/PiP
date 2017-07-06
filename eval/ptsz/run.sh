@@ -2,7 +2,7 @@
 
 . ../eval.sh.inc
 
-PROGS="./mmap-pip ./mmap-thread ./mmap-forkonly"
+PROGS="mmap-pip mmap-thread mmap-forkonly"
 
 doeval() {
     if [ $1 == mmap-pip ]
@@ -13,7 +13,7 @@ doeval() {
 	    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
 	    do
 		echo -n "["$ITER"]" $1:$PIPMODE $2 [Tasks] $3 "[MB]"
-		$1 $2 $3
+		./$1 $2 $3
 	    done
 	    echo
 	done
