@@ -29,8 +29,14 @@ doeval() {
 
 csv_begin
 
+NTMAX=`../../test/util/dlmopen_count`
+
 for NTASKS in 10 20 40 80 160
 do
+    if [ $NTASKS -gt $NTMAX ]
+    then
+	 break
+    fi
     for PROG in ${PROGS}
     do
 	doeval ${PROG} ${NTASKS} 128

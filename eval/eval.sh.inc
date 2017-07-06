@@ -27,15 +27,19 @@ NUMACTL() {
     ../util/corebind $CORENO $@;
 }
 
-MODE_LIST=`pip_mode_list process:preload; pip_mode_list process:pipclone; pip_mode_list thread`
+MODE_LIST=`pip_mode_list process:preload; \
+	   pip_mode_list process:pipclone; \
+	   pip_mode_list thread`
 
 echo "==============================="
 ../util/commentize $0
 echo "-------------------------------"
+uname -a
+echo "PageSize:  " `getconf PAGESIZE`
+echo "#CPU Cores:" `getconf _NPROCESSORS_ONLN`
 grep -e "$ ./configure --" ../../config.log
 echo `date` "  " `git describe`
 echo PIP_MODEs: $MODE_LIST
-uname -a
 echo "-------------------------------"
 
 echo "ignore-this-part"
