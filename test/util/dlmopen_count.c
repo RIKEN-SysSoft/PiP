@@ -1,3 +1,9 @@
+/*
+ * $RIKEN_copyright:$
+ * $PIP_VERSION:$
+ * $PIP_license:$
+ */
+
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <stdio.h>

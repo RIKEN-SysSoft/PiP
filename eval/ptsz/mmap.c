@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <sched.h>
 
 #include <eval.h>
 #include <pip_machdep.h>
@@ -59,6 +60,7 @@ void wait_sync( volatile long *syncp ) {
   __sync_fetch_and_sub( syncp, 1 );
   while( *syncp > 0 ) {
     pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
+    sched_yield();
     pip_pause(); pip_pause(); pip_pause(); pip_pause(); pip_pause();
   }
 }
@@ -198,7 +200,7 @@ void eval_thread( void ) {
   pthread_exit( NULL );
 }
 
-int  create_threads( int ntasks ) {
+int create_threads( int ntasks ) {
   pthread_t threads[NTASKS_MAX];
   int ptsz, i;
 
