@@ -4,8 +4,14 @@
 
 csv_begin
 
+NTMAX=`../../test/util/dlmopen_count`
+
 for NTASKS in 1 2 4 8 16 32 64 128
 do
+    if [ $NTASKS -gt $NTMAX ]
+    then
+	 break
+    fi
     for PROG in spawn-pip spawn-forkexec spawn-vforkexec spawn-posix spawn-thread
     do
 	if [ $PROG == spawn-pip ]

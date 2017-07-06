@@ -13,8 +13,7 @@ XPMEM_DIR = /work/ahori/XPMEM/xpmem-eval
 XPMINCFLAGS = -I. -I.. -I$(XPMEM_DIR)/include
 
 PIPINCFLAGS = -I. -I.. -I`pwd`/../../include
-PIPCFLAGS  = $(CFLAGS) $(PIPINCFLAGS) -fpie
-PIPLDFLAGS = -L`pwd`/../../lib -lpip
+PIPCFLAGS  = $(CFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
 
 DEPINCS = ./xpmem_eval.h ../eval.h $(PIPINCDIR)/pip.h
 
