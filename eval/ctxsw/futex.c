@@ -1,3 +1,13 @@
+/*
+ * Original Code (GPL):
+ * https://github.com/tsuna/contextswitch/blob/master/timectxsw.c
+ *
+ * See also:
+ * /http://blog.tsunanet.net/2010/11/how-long-does-it-take-to-make-context.html
+ *
+ * Modified by Atsushi HORI <ahori@riken.jp>, 2017
+ */
+
 // Copyright (C) 2010  Benoit Sigoure
 //
 // This program is free software: you can redistribute it and/or modify
