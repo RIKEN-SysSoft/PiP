@@ -1,3 +1,11 @@
+/*
+ * $RIKEN_copyright:$
+ * $PIP_VERSION:$
+ * $PIP_license:$
+ */
+/*
+ * Written by Atsushi HORI <ahori@riken.jp>, 2017
+ */
 
 #include <xpmem_eval.h>
 #include <xpmem.h>

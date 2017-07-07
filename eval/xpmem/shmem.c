@@ -4,7 +4,7 @@
  * $PIP_license:$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>, 2017
  */
 
 #include <xpmem_eval.h>
@@ -80,7 +80,8 @@ int main( int argc, char **argv ) {
   void *vaddr;
   pid_t pid;
   uint64_t tm;
-  int fd, sum;
+  int fd;
+  long long sum;
   static char *nargv[3];
 
   if( argc < 2 ) {

@@ -4,7 +4,7 @@
  * $PIP_license:$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>, 2017
  */
 
 #include <xpmem_eval.h>

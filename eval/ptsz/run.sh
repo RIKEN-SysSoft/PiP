@@ -2,7 +2,12 @@
 
 . ../eval.sh.inc
 
-PROGS="mmap-pip mmap-thread mmap-forkonly"
+if [ -x mmap-xpmem ]
+then
+    PROGS="mmap-pip mmap-thread mmap-forkonly mmap-xpmem"
+else
+    PROGS="mmap-pip mmap-thread mmap-forkonly"
+fi
 
 doeval() {
     if [ $1 == mmap-pip ]

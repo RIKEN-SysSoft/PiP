@@ -12,12 +12,15 @@ include $(srcdir)/../Eval.common
 PIPINCFLAGS = -I$(srcdir)/..
 PIPCFLAGS  = $(CFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
 
+#XPMEM_DIR = /home/ahori/work/ARM64/XPMEM/xpmem-master
+XPMEM_DIR = /work/ahori/XPMEM/xpmem-eval
+XPMINCFLAGS = -I. -I.. -I$(XPMEM_DIR)/include
+
 DEPINCS = ../eval.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
 SRCS  = mmap.c
 
-PROGRAMS  = mmap-pip mmap-thread mmap-forkonly \
-	mmap-pip-ac mmap-thread-ac mmap-forkonly-ac
+PROGRAMS  = mmap-pip mmap-thread mmap-forkonly mmap-xpmem
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -32,14 +35,8 @@ include $(top_srcdir)/build/rule.mk
 %-forkonly: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DFORK_ONLY $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-%-pip-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DPIP -DACUM $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< -o $@
-
-%-thread-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DTHREAD -DACUM $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -pthread $< -o $@
-
-%-forkonly-ac: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DFORK_ONLY -DACUM $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+%-xpmem: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DXPMEM $(XPMINCFLAGS) $(XPMEM_DIR)/lib/libxpmem.o $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log $(PROGRAMS)

@@ -32,6 +32,10 @@
 #include <sched.h>
 #endif
 
+#if defined(XPMEM)
+#include <xpmem.h>
+#endif
+
 #define NTASKS_MAX	(256)
 #define SIZE1MB		((size_t)(1*1024*1024))
 
@@ -135,7 +139,12 @@ void mmap_memory( char *arg, int ntasks ) {
 #ifdef USE_HUGETLB
 		MAP_HUGETLB |
 #endif
-		MAP_SHARED|MAP_ANONYMOUS,
+#ifndef XPMEM
+		MAP_SHARED|
+#else
+		MAP_PRIVATE|
+#endif
+		MAP_ANONYMOUS,
 		-1,
 		0 );
   TESTSC( ( mmapp == MAP_FAILED ) );
@@ -227,7 +236,6 @@ int create_threads( int ntasks ) {
 #endif
 
 #ifdef FORK_ONLY
-
 int fork_only( int ntasks ) {
   void *mapp;
   struct sync_st *syncp;
@@ -251,6 +259,64 @@ int fork_only( int ntasks ) {
     if( ( pid = fork() ) == 0 ) {
       wait_sync0( syncp );
       touch( syncp );
+      wait_sync1( syncp );
+      wait_sync2( syncp );
+      exit( 0 );
+    }
+  }
+  wait_sync0( syncp );
+  touch( syncp );
+  wait_sync1( syncp );
+
+  ptsz = get_page_table_size();
+  wait_sync2( syncp );
+  for( i=0; i<ntasks; i++ ) wait( NULL );
+  return ptsz;
+}
+#endif
+
+#ifdef XPMEM
+int xpmem( int ntasks ) {
+  void touch_xpmem( struct sync_st *syncs, void *addr ) {
+    void *p = addr;
+    void *q = p + syncs->size;
+    for( ; p<q; p+=4096 ) {
+      int *ip = (int*) p;
+      *ip = 123456;
+    }
+  }
+  void *mapp, *addr;
+  struct sync_st *syncp;
+  pid_t pid;
+  int ptsz, i;
+  xpmem_segid_t segid;
+
+  segid = xpmem_make( mmapp, size, XPMEM_PERMIT_MODE, (void*)0666 );
+
+  mapp = mmap( NULL,
+	       4096,
+	       PROT_READ|PROT_WRITE,
+	       MAP_SHARED|MAP_ANONYMOUS,
+	       -1,
+	       0 );
+  TESTSC( ( mapp == MAP_FAILED ) );
+
+  syncp = (struct sync_st*) mapp;
+  init_syncs( ntasks+1, syncp );
+  syncp->mmapp = mmapp;
+  syncp->size  = size;
+
+  for( i=0; i<ntasks; i++ ) {
+    if( ( pid = fork() ) == 0 ) {
+      xpmem_apid_t apid;
+      struct xpmem_addr xpmaddr;
+
+      wait_sync0( syncp );
+      apid = xpmem_get( segid, XPMEM_RDWR, XPMEM_PERMIT_MODE, NULL );
+      xpmaddr.apid   = apid;
+      xpmaddr.offset = 0;
+      addr = xpmem_attach( xpmaddr, size, NULL );
+      touch_xpmem( syncp, addr );
       wait_sync1( syncp );
       wait_sync2( syncp );
       exit( 0 );
@@ -292,6 +358,8 @@ int main( int argc, char **argv ) {
     ptsz1 = create_threads( ntasks );
 #elif defined( FORK_ONLY )
     ptsz1 = fork_only( ntasks );
+#elif defined( XPMEM )
+    ptsz1 = xpmem( ntasks );
 #endif
 #ifdef AH
     printf( "%d, [KB]  %d tasks  %d [MiB] mmap size\n",
