@@ -8,15 +8,14 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include bin preload util \
+SUBDIRS = lib include bin preload util sample \
 	test/util \
 	test/basics \
 	test/spawn \
 	test/compat \
 	test/openmp \
 	test/pthread \
-	eval sample \
-	test/fortran 
+	test/fortran
 
 include $(top_srcdir)/build/rule.mk
 
@@ -76,7 +75,7 @@ check:
 .PHONY: check
 
 eval:
-	( cd eval && ./eval.sh )
+	( cd eval && make && ./eval.sh )
 .PHONY: eval
 
 prog-distclean:
