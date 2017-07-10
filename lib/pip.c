@@ -27,7 +27,7 @@
 
 //#define PIP_NO_MALLOPT
 
-//#define DEBUG
+#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
@@ -737,7 +737,7 @@ static char **pip_copy_env( char **envsrc, int pipid ) {
 
   if( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 ||
       sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 ) {
-    RETURN( NULL );
+    return NULL;
   }
   return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
 }
