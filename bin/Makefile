@@ -9,8 +9,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
-PROGRAMS = $(PROGRAM) pmap
-MAN1_SRCS = piprun.c pmap.c
+PROGRAMS = $(PROGRAM) pmap hello
+MAN1_SRCS = piprun.c pmap.c hello.c
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
@@ -25,6 +25,10 @@ piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@
 
 pmap: pmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -I$(PIPINCDIR) $(LDFLAGS) $(LDLIBS) -O2 \
+	-fpie -pie -rdynamic $< -o $@ -pthread
+
+hello: hello.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -I$(PIPINCDIR) $(LDFLAGS) $(LDLIBS) -O2 \
 	-fpie -pie -rdynamic $< -o $@ -pthread
 
