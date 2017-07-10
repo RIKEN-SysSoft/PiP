@@ -13,11 +13,12 @@
  *
  * \section synopsis SYNOPSIS
  *
- *	\c \b piprun &lt;program&gt; ...
- *
+ *	\c \b piprun [-n &lt;N&gt;] &lt;program&gt; ...
  *
  * \section description DESCRIPTION
- * \b Run a program under PiP.
+ * \b Run a program under PiP. If \b -n &lt;N&gt; is specified, then
+ * \b N PiP tasks are created and run.
+ *
  *
  * \section environment ENVIRONMENT
  *
