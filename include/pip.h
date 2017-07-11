@@ -121,15 +121,17 @@
 #define PIP_ENV_MODE_PROCESS_PRELOAD	"process:preload"
 #define PIP_ENV_MODE_PROCESS_PIPCLONE	"process:pipclone"
 
-#define PIP_OPT_FORCEEXIT		(0x01)
 #define PIP_OPT_MASK			(0XFF)
+#define PIP_OPT_FORCEEXIT		(0x01)
+#define PIP_OPT_PGRP			(0x02)
 
 #define PIP_ENV_OPTS			"PIP_OPTS"
 #define PIP_ENV_OPTS_FORCEEXIT		"forceexit"
+#define PIP_ENV_OPTS_PGRP		"pgrp"
 
 #define PIP_VALID_OPTS	\
   ( PIP_MODE_PTHREAD | PIP_MODE_PROCESS_PRELOAD | PIP_MODE_PROCESS_PIPCLONE | \
-    PIP_OPT_FORCEEXIT )
+    PIP_OPT_FORCEEXIT | PIP_OPT_PGRP )
 
 #define PIP_ENV_STACKSZ		"PIP_STACKSZ"
 
@@ -157,6 +159,12 @@
 #include <errno.h>
 
 typedef int  (*pip_spawnhook_t)      ( void* );
+
+typedef struct pip_barrier {
+  int 			pipid_root;
+  int			count;
+  volatile uint32_t	barrier;
+} pip_barrier_t;
 
 #ifdef __cplusplus
 extern "C" {

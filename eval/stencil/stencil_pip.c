@@ -28,6 +28,7 @@ pthread_barrier_t barrier, *barrp;
 
 int get_page_table_size( void ) {
   int ptsz = 0;
+#ifndef FAST
   FILE *fp;
   char *line = NULL;
   char keyword[128];
@@ -43,6 +44,7 @@ int get_page_table_size( void ) {
     fclose( fp );
   }
   //printf( "PageTables: %d [KB]\n", ptsz );
+#endif
   return ptsz;
 }
 
@@ -194,17 +196,22 @@ int main(int argc, char **argv) {
 
   //printf("%i %i %i\n", bx, by, szsz);
 
+  double ta;
 #ifndef PIP
   double *mem = NULL;
   MPI_Win win;
+  ta=-MPI_Wtime(); // take time
   MPI_Win_allocate_shared(szsz, 1, MPI_INFO_NULL, shmcomm, &mem, &win);
+  ta+=MPI_Wtime();
 #else
+  ta=-MPI_Wtime(); // take time
   if( posix_memalign( (void**) &mem, 4096, szsz ) != 0 ) {
     fprintf( stderr, "Not enough memory\n" );
     exit( 1 );
   }
   memset( (void*) mem, 0, szsz );
   pthread_barrier_wait( barrp );
+  ta+=MPI_Wtime();
 #endif
 
   double *tmp;
@@ -358,7 +365,7 @@ int main(int argc, char **argv) {
 #endif
   if(!r) {
     ptsz = get_page_table_size() - ptsz;
-    printf("heat: %g  time, %g, %g, %i, %i [KB]\n", rheat, t, tb, ptsz, szsz*p/1024);
+    printf("heat: %g  time, %g, %g, %g, %i, %i [KB]\n", rheat, t, ta, tb, ptsz, szsz*p/1024);
   }
 #ifdef AH
   if(!r) {
