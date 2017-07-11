@@ -9,7 +9,7 @@
 
 #define PIP_INTERNAL_FUNCS
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 #include <netdb.h>
 
