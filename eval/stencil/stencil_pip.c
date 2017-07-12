@@ -227,8 +227,10 @@ int main(int argc, char **argv) {
   ta+=MPI_Wtime();
   memset( (void*) mem, 0, szsz );
 #else
+  pthread_barrier_wait( barrp );
   ta=-MPI_Wtime(); // take time
-  if( posix_memalign( (void**) &mem, 4096, szsz ) != 0 ) {
+  if( posix_memalign( (void**) &mem, 4096, szsz ) != 0 ||
+      mem == NULL ) {
     fprintf( stderr, "Not enough memory\n" );
     exit( 1 );
   }
