@@ -13,11 +13,12 @@
  *
  * \section synopsis SYNOPSIS
  *
- *	\c \b piprun &lt;program&gt; ...
- *
+ *	\c \b piprun [-n &lt;N&gt;] &lt;program&gt; ...
  *
  * \section description DESCRIPTION
- * \b Run a program under PiP.
+ * \b Run a program under PiP. If \b -n &lt;N&gt; is specified, then
+ * \b N PiP tasks are created and run.
+ *
  *
  * \section environment ENVIRONMENT
  *
@@ -26,6 +27,7 @@
 
 #include <sys/wait.h>
 #include <stdio.h>
+#include <string.h>
 #include <errno.h>
 #include <pip.h>
 
@@ -46,24 +48,34 @@ int main( int argc, char **argv ) {
 
   for( i=1; *argv[i]=='-'; i++ ) {
     if( strcmp( argv[i], "-n" ) == 0 ) {
-      ntasks = atoi( argv[++i] );
-      if( ntasks == 0 ) print_usage();
+      if( argv[i+1] == NULL || ( ntasks = atoi( argv[++i] ) ) == 0 ) {
+	print_usage();
+      }
     } else if( strcmp( argv[i], "-e" ) == 0 ) {
       opts |= PIP_OPT_FORCEEXIT;
     } else if( strcmp( argv[i], "-c" ) == 0 ) {
       coreno = atoi( argv[++i] );
+    } else if( strcmp( argv[i], "-b" ) == 0 ) {
+      coreno = -100;
     }
   }
+  opts |= PIP_OPT_PGRP;
   k = i;
   if( ( err = pip_init( &pipid, &ntasks, NULL, opts ) ) != 0 ) {
     fprintf( stderr, "pip_init()=%d\n", err );
   } else {
+    int c;
     for( i=0; i<ntasks; i++ ) {
+      if( coreno == -100 ) {
+	c = i;
+      } else {
+	c = coreno;
+      }
       pipid = i;
       err = pip_spawn( argv[k],
 		       &argv[k],
 		       NULL,
-		       coreno,
+		       c,
 		       &pipid,
 		       NULL,
 		       NULL,
@@ -71,7 +83,22 @@ int main( int argc, char **argv ) {
       if( err ) {
 	int j;
 	fprintf( stderr, "pip_spawn(%s)=%d\n", argv[1], err );
-	for( j=0; j<i; j++ ) pip_wait( i, NULL );
+	for( j=0; j<i; j++ ) {
+	  int status, mode, exst;
+	  pip_wait( i, &status );
+	  pip_get_mode( &mode );
+	  if( mode & PIP_MODE_PROCESS ) {
+	    if( WIFEXITED( status ) && ( exst = WEXITSTATUS( status ) ) > 0 ) {
+	      fprintf( stderr, "PIPID[%d] exited with %d\n", i, exst );
+	    } else if( WIFSIGNALED( status ) ) {
+	      int sig = WTERMSIG( status );
+	      fprintf( stderr,
+		       "PIPID[%d] signaled (%s)\n",
+		       i,
+		       strsignal(sig) );
+	    }
+	  }
+	}
 	goto error;
       }
     }

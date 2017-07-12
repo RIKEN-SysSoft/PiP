@@ -655,11 +655,18 @@ int pip_get_addr( int pipid, const char *name, void **addrp ) {
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( name == NULL || addrp == NULL            ) RETURN( EINVAL );
-  if( ( handle = pip_root->tasks[pipid].loaded ) != NULL ) {
+  DBGF( "pipid=%d", pipid );
+  if( pipid == PIP_PIPID_ROOT ) {;
+    *addrp = pip_dlsym( RTLD_DEFAULT, name );
+  } else if( pipid == PIP_PIPID_MYSELF ) {
+    *addrp = pip_dlsym( pip_task->loaded, name );
+  } else if( ( handle = pip_root->tasks[pipid].loaded ) != NULL ) {
     *addrp = pip_dlsym( handle, name );
     /* FIXME: pip_dlsym() has a lock but this does not prevent for user */
     /*        programs to directly call dl*() functions without lock    */
+    DBGF( "=%p", *addrp );
   } else {
+    DBG;
     err = ESRCH;		/* tentative */
   }
   RETURN( err );
@@ -737,7 +744,7 @@ static char **pip_copy_env( char **envsrc, int pipid ) {
 
   if( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 ||
       sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 ) {
-    RETURN( NULL );
+    return NULL;
   }
   return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
 }
@@ -1127,6 +1134,10 @@ static int pip_do_spawn( void *thargs )  {
 #ifdef PRINT_MAPS
       pip_print_maps();
 #endif
+
+      if( ( pip_root->opts & PIP_OPT_PGRP ) && !pip_is_pthread_() ) {
+	(void) setpgid( 0, 0 );	/* Is this meaningful ? */
+      }
 
       DBG;
       argc = pip_init_glibc( &self->symbols, argv, envv, self->loaded, 1 );
