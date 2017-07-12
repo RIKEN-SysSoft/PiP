@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <errno.h>
 
@@ -69,6 +70,26 @@
     if( __xyz != 0 ) exit( 9 );				\
   } while(0)
 #endif
+
+inline static int cpu_num_limit( void ) {
+  static bool initialized = false;
+  static long ncpu;
+
+  if( initialized ) {
+    return ncpu;
+  }
+
+  ncpu = sysconf( _SC_NPROCESSORS_ONLN );
+  if( ncpu == -1 ) {
+    fprintf( stderr, "sysconf( _SC_NPROCESSORS_ONLN ): %s\n",
+	     strerror(errno) );
+    exit( EXIT_FAILURE );
+  }
+  if( ncpu > 16 )
+    ncpu = 16;
+  initialized = true;
+  return ncpu;
+}
 
 inline static void pause_and_yield( int usec ) {
   if( usec > 0 ) usleep( usec );

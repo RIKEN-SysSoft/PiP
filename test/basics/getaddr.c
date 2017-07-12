@@ -87,8 +87,13 @@ int main( int argc, char **argv ) {
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<NTASKS; i++ ) {
       pipid = i;
-      err = pip_spawn( argv[0], argv, NULL, i%8, &pipid, NULL, NULL, NULL );
-      if( err ) break;
+      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
+		       &pipid, NULL, NULL, NULL );
+      if( err ) {
+	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
+		 i, NTASKS, strerror( err ) );
+	break;
+      }
       if( i != pipid ) {
 	printf( "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
 	break;
