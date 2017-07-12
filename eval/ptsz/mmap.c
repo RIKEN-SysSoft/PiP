@@ -110,6 +110,8 @@ int get_page_table_size( void ) {
 	if( sscanf( line, "%s %d", keyword, &ptsz ) > 0 &&
 	    strcmp( keyword, "PageTables:" ) == 0 ) break;
       }
+      free( line );
+      fclose( fp );
     }
     //printf( "PageTables: %d [KB]\n", ptsz );
   }
