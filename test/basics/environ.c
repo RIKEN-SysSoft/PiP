@@ -18,18 +18,9 @@
 int main( int argc, char **argv ) {
   extern char **environ;
   char *envv[4];
-  long ncpu;
-  int pipid, ntasks, cpu_limit;
+  int pipid, ntasks;
   int i, j;
   int err;
-
-  ncpu = sysconf( _SC_NPROCESSORS_ONLN );
-  if( ncpu == -1 ) {
-    fprintf( stderr, "sysconf( _SC_NPROCESSORS_ONLN ): %s\n",
-	     strerror(errno) );
-    return 1;
-  }
-  cpu_limit = ncpu < 16 ? ncpu : 16;
 
   ntasks = NTASKS;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
@@ -43,14 +34,15 @@ int main( int argc, char **argv ) {
       envv[j] = NULL;
 
       pipid = i;
-      err = pip_spawn( argv[0], argv, envv, i % cpu_limit,
+      err = pip_spawn( argv[0], argv, envv, i % cpu_num_limit(),
 		       &pipid, NULL, NULL, NULL );
 
       free( envv[0] );
       free( envv[1] );
       free( envv[2] );
       if( err != 0 ) {
-	fprintf( stderr, "pip_spawn(%d/%d): %s\n", i, NTASKS, strerror(err) );
+	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
+		 i, NTASKS, strerror( err ) );
 	break;
       }
 

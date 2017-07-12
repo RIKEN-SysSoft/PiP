@@ -32,8 +32,13 @@ int main( int argc, char **argv ) {
       newav[1] = pipid_str;
       newav[2] = NULL;
       pipid = i;
-      err = pip_spawn( newav[0], newav, NULL, i%4, &pipid, NULL, NULL, NULL );
-      if( err ) break;
+      err = pip_spawn( newav[0], newav, NULL, i % cpu_num_limit(),
+		       &pipid, NULL, NULL, NULL );
+      if( err ) {
+	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
+		 i, NTASKS, strerror( err ) );
+	break;
+      }
 
       if( i != pipid ) {
 	fprintf( stderr, "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );

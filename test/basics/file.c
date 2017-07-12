@@ -103,8 +103,11 @@ int main( int argc, char **argv ) {
 	int err;
 
 	pipid = i;
-	err = pip_spawn( argv[0], argv, NULL, i%4, &pipid, NULL, NULL, NULL );
+	err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
+			 &pipid, NULL, NULL, NULL );
 	if( err != 0 ) {
+	  fprintf( stderr, "pip_spawn(%d/%d): %s\n",
+		   i, NTASKS, strerror( err ) );
 	  break;
 	}
 	if( i != pipid ) {
