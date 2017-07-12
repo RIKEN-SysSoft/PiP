@@ -17,6 +17,7 @@ double *mem;
 
 #define MPI_Wtime		gettime
 int r,p;
+int npf;
 double heat; // total heat in system
 
 #define DBG
@@ -46,6 +47,27 @@ int get_page_table_size( void ) {
   //printf( "PageTables: %d [KB]\n", ptsz );
 #endif
   return ptsz;
+}
+
+int get_page_faults( void ) {
+  FILE *fp;
+  unsigned long npf = 0;
+
+  if( ( fp = fopen( "/proc/self/stat", "r" ) ) != NULL ) {
+    fscanf( fp,
+	    "%*d "		/* pid */
+	    "%*s "		/* comm */
+	    "%*c "		/* state */
+	    "%*d "		/* ppid */
+	    "%*d "		/* pgrp */
+	    "%*d "		/* session */
+	    "%*d "		/* tty_ny */
+	    "%*d "		/* tpgid */
+	    "%*u "		/* flags */
+	    "%lu ",		/* minflt */
+	    &npf );
+  }
+  return (int) npf;
 }
 
 int main(int argc, char **argv) {
@@ -203,6 +225,7 @@ int main(int argc, char **argv) {
   ta=-MPI_Wtime(); // take time
   MPI_Win_allocate_shared(szsz, 1, MPI_INFO_NULL, shmcomm, &mem, &win);
   ta+=MPI_Wtime();
+  memset( (void*) mem, 0, szsz );
 #else
   ta=-MPI_Wtime(); // take time
   if( posix_memalign( (void**) &mem, 4096, szsz ) != 0 ) {
@@ -283,6 +306,7 @@ int main(int argc, char **argv) {
     pthread_barrier_wait( barrp );
   }
 #endif
+  npf = get_page_faults();
   double t=-MPI_Wtime(); // take time
   tb = - t - tb;
 
@@ -345,13 +369,21 @@ int main(int argc, char **argv) {
 #ifndef PIP
   MPI_Win_unlock_all(win);
   t+=MPI_Wtime();
+  //printf( "[%d] npf %d\n", r, npf );
+  npf = get_page_faults() - npf;
 
   // get final heat in the system
   double rheat;
   MPI_Allreduce(&heat, &rheat, 1, MPI_DOUBLE, MPI_SUM, comm);
+
+  int tnpf = 0;
+  MPI_Allreduce(&npf, &tnpf, 1, MPI_INT, MPI_SUM, comm);
 #else
   pthread_barrier_wait( barrp );
   t+=MPI_Wtime();
+  //printf( "[%d] npf %d\n", r, npf );
+  npf = get_page_faults() - npf;
+  pthread_barrier_wait( barrp );
 
   double rheat = 0.0;
   // get final heat in the system
@@ -362,22 +394,31 @@ int main(int argc, char **argv) {
     //printf( "[%d] heat[%d]=%g (%p)\n", r, i, *heatp, heatp );
     rheat += *heatp;
   }
+
+  int tnpf=0, *npfp;
+  for( i=0; i<p; i++ ) {
+    TESTINT( pip_get_addr( i, "npf", (void**) &npfp ) );
+    tnpf += *npfp;
+  }
 #endif
+  //printf( "npf %d\n", npf );
   if(!r) {
     ptsz = get_page_table_size() - ptsz;
-    printf("heat: %g  time, %g, %g, %g, %i, %i [KB]\n", rheat, t, ta, tb, ptsz, szsz*p/1024);
+    printf("heat: %g  time, %g, %g, %g, %i, %i, [KB], %i\n", rheat, t, ta, tb, ptsz, szsz*p/1024, tnpf);
   }
 #ifdef AH
   if(!r) {
     printf("ASZ:%d  (%d)  PtSz: %d  SP: %d\n", szsz, szsz*p, ptsz, sp);
   }
 #endif
+  //printf( "PF %d\n", get_page_faults() );
 #ifndef PIP
   MPI_Win_free(&win);
   MPI_Comm_free(&shmcomm);
 
   MPI_Finalize();
 #else
+  pthread_barrier_wait( barrp );
   pip_fin();
 #endif
   return 0;
