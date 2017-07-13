@@ -161,9 +161,9 @@
 typedef int  (*pip_spawnhook_t)      ( void* );
 
 typedef struct pip_barrier {
-  int 			pipid_root;
-  int			count;
-  volatile uint32_t	barrier;
+  int			count_init;
+  volatile uint32_t	count;
+  volatile int		gsense;
 } pip_barrier_t;
 
 #ifdef __cplusplus
@@ -476,9 +476,32 @@ extern "C" {
   const char *pip_get_mode_str( void );
   /** @}*/
 
+  /**
+   * \brief initialize barrier synchronization structure
+   *  @{
+   *
+   * \param[in] barrp pointer to a PiP barrier structure
+   * \param[in] n number of participants of this barrier synchronization
+   *
+   */
+  void pip_barrier_init( pip_barrier_t *barrp, int n );
+  /** @}*/
+
+  /**
+   * \brief wait on barrier synchronization in a busy-wait way
+   *  @{
+   *
+   * \param[in] barrp pointer to a PiP barrier structure
+   *
+   * \note This barrier synchronization never blocks.
+   *
+   */
+  void pip_barrier_wait( pip_barrier_t *barrp );
+  /** @}*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-  int pip_idstr( char *buf, size_t sz );
+  int  pip_idstr( char *buf, size_t sz );
 
 #ifdef __cplusplus
 }
