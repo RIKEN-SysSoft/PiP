@@ -8,12 +8,16 @@ SIZE=4096
 ENERGY=1
 NITERS=1000
 PIPRUN=`pwd`/../../bin/piprun
+<<<<<<< HEAD
 NCPUS=`grep CPU /proc/cpuinfo | wc -l`
+=======
+MODES="process"
+>>>>>>> d438bc49f4a60e049b0a1d4415b7a14524cbe35a
 
 dofast() {
     if [ $1 == stencil_pip_fast ]
     then
-	for PIPMODE in $MODE_LIST
+	for PIPMODE in $MODES
 	do
 	    export PIP_MODE=$PIPMODE;
 	    for ITER in $ITER_NUM
@@ -56,6 +60,7 @@ doeval() {
     fi
 }
 
+<<<<<<< HEAD
 csv_begin fast
 
 for LCOUNT in 1 2 4 8 16 32 64 128
@@ -78,6 +83,30 @@ csv_end fast
 csv_begin
 
 for NTASKS in 1 2 4 8 16 32 64 128
+=======
+#csv_begin fast
+#
+#for LCOUNT in 1 2 4 8 16 32 64 128
+#do
+#    for NTASKS in 2 4 8 16 32 64 128 
+#    do
+#	if [ $NTASKS -gt $NTMAX ]
+#	then
+#	    break
+#	fi
+#	for PROG in ${FPROGS}
+#	do
+#	    dofast ${PROG} ${NTASKS} ${LCOUNT}
+#	done
+#    done
+#done
+#
+#csv_end fast
+
+csv_begin
+
+for NTASKS in 2 4 8 16 32 64 128 
+>>>>>>> d438bc49f4a60e049b0a1d4415b7a14524cbe35a
 do
     if [ $NTASKS -gt $NCPUS ]
     then
