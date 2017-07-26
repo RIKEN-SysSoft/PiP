@@ -20,11 +20,11 @@ int r,p;
 int npf;
 double heat; // total heat in system
 
-#define DBG
-//#define DBG	do { printf("[%d] %d\n", r, __LINE__ ); } while(0)
+//#define DBG
+#define DBG	do { printf("[%d] %d\n", r, __LINE__ ); } while(0)
 
 #ifdef PIP
-pthread_barrier_t barrier, *barrp;
+pip_barrier_t barrier, *barrp;
 #endif
 
 int get_page_table_size( void ) {
@@ -113,8 +113,11 @@ int main(int argc, char **argv) {
   }
   if( pipid == 0 ) {
     barrp = &barrier;
-    pthread_barrier_init( barrp, NULL, p );
+    DBG;
+    pip_barrier_init( barrp, p );
+    DBG;
   } else {
+    sleep( 3 );
     TESTINT( pip_get_addr( 0, "barrier", (void**) &barrp ) );
   }
   n = atoi(argv[1]); // nxn grid
@@ -122,6 +125,7 @@ int main(int argc, char **argv) {
   niters = atoi(argv[3]); // number of iterations
   r = pipid;
   //printf( "[%d] heat[%d]=(%p)\n", r, r, &heat );
+  printf( "[%d] barrp: %p\n", r, barrp );
 #endif
 #ifndef PIP
   MPI_Comm shmcomm;
@@ -225,9 +229,11 @@ int main(int argc, char **argv) {
   ta=-MPI_Wtime(); // take time
   MPI_Win_allocate_shared(szsz, 1, MPI_INFO_NULL, shmcomm, &mem, &win);
   ta+=MPI_Wtime();
-  memset( (void*) mem, 0, szsz );
+  //memset( (void*) mem, 0, szsz );
 #else
-  pthread_barrier_wait( barrp );
+  DBG;
+  pip_barrier_wait( barrp );
+  DBG;
   ta=-MPI_Wtime(); // take time
   if( posix_memalign( (void**) &mem, 4096, szsz ) != 0 ||
       mem == NULL ) {
@@ -235,7 +241,9 @@ int main(int argc, char **argv) {
     exit( 1 );
   }
   memset( (void*) mem, 0, szsz );
-  pthread_barrier_wait( barrp );
+  DBG;
+  pip_barrier_wait( barrp );
+  DBG;
   ta+=MPI_Wtime();
 #endif
 
@@ -304,9 +312,11 @@ int main(int argc, char **argv) {
     MPI_Barrier(shmcomm);
   }
 #else
+  DBG;
   for( int iter=0; iter<niters; iter++ ) {
-    pthread_barrier_wait( barrp );
+    pip_barrier_wait( barrp );
   }
+  DBG;
 #endif
   npf = get_page_faults();
   double t=-MPI_Wtime(); // take time
@@ -323,7 +333,7 @@ int main(int argc, char **argv) {
     MPI_Barrier(shmcomm);
 #else
     DBG;
-    pthread_barrier_wait( barrp );
+    pip_barrier_wait( barrp );
     DBG;
 #endif
     // exchange data with neighbors
@@ -381,11 +391,11 @@ int main(int argc, char **argv) {
   int tnpf = 0;
   MPI_Allreduce(&npf, &tnpf, 1, MPI_INT, MPI_SUM, comm);
 #else
-  pthread_barrier_wait( barrp );
+  pip_barrier_wait( barrp );
   t+=MPI_Wtime();
   //printf( "[%d] npf %d\n", r, npf );
   npf = get_page_faults() - npf;
-  pthread_barrier_wait( barrp );
+  pip_barrier_wait( barrp );
 
   double rheat = 0.0;
   // get final heat in the system
@@ -420,7 +430,7 @@ int main(int argc, char **argv) {
 
   MPI_Finalize();
 #else
-  pthread_barrier_wait( barrp );
+  pip_barrier_wait( barrp );
   pip_fin();
 #endif
   return 0;
