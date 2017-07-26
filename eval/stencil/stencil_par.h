@@ -8,11 +8,16 @@
 #ifndef STENCIL_PAR_H_
 #define STENCIL_PAR_H_
 
+#ifdef AH
 #ifndef PIP
 #include "mpi.h"
 #else
 #include <pip.h>
 #endif
+#endif
+
+#include <mpi.h>
+#include <pip.h>
 
 #include "../eval.h"
 

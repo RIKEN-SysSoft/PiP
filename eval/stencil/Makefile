@@ -14,8 +14,6 @@ MPICC=mpicc
 MPICFLAGS=-std=c99
 BINS=stencil_mpi stencil_pip stencil_mpi_fast stencil_pip_fast
 
-ICC = icc
-
 all: $(BINS)
 
 stencil_mpi: stencil_pip.c Makefile

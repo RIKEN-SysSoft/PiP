@@ -10,10 +10,23 @@
 #include <unistd.h>
 #include "stencil_par.h"
 
-#ifdef PIP
+#ifndef MPI_PROC_NULL
 #define MPI_PROC_NULL		PIP_PIPID_ROOT
-double *mem;
 #endif
+
+double *mem;
+
+#define USE_PIP_BARRIER
+
+#ifdef USE_PIP_BARRIER
+#define BARRIER_T		pip_barrier_t
+#define BARRIER_INIT(X,Y,Z)	pip_barrier_init((X),(Z))
+#define BARRIER_WAIT		pip_barrier_wait
+#else
+#define BARRIER_T		pthread_barrier_t
+#define BARRIER_INIT(X,Y,Z)	pthread_barrier_init((X),(Y),(Z))
+#define BARRIER_WAIT		pthread_barrier_wait
+#endif	/* USE_PIP_BARRIER */
 
 #define MPI_Wtime		gettime
 int r,p;
@@ -24,7 +37,7 @@ double heat; // total heat in system
 //#define DBG	do { printf("[%d] %d\n", r, __LINE__ ); } while(0)
 
 #ifdef PIP
-pthread_barrier_t barrier, *barrp;
+BARRIER_T barrier, *barrp;
 #endif
 
 int get_page_table_size( void ) {
@@ -82,51 +95,62 @@ int main(int argc, char **argv) {
   MPI_Comm_size(comm, &p);
 
   if (r==0) {
-      // argument checking
-      if(argc < 4) {
-          if(!r) printf("usage: stencil_mpi <n> <energy> <niters>\n");
-          MPI_Finalize();
-          exit(1);
-      }
+    // argument checking
+    if(argc < 4) {
+      if(!r) printf("usage: stencil_mpi <n> <energy> <niters>\n");
+      MPI_Finalize();
+      exit(1);
+    }
 
-      n = atoi(argv[1]); // nxn grid
-      energy = atoi(argv[2]); // energy to be injected per iteration
-      niters = atoi(argv[3]); // number of iterations
+    n = atoi(argv[1]); // nxn grid
+    energy = atoi(argv[2]); // energy to be injected per iteration
+    niters = atoi(argv[3]); // number of iterations
 
-      // distribute arguments
-      int args[3] = {n, energy, niters};
-      MPI_Bcast(args, 3, MPI_INT, 0, comm);
+    // distribute arguments
+    int args[3] = {n, energy, niters};
+    MPI_Bcast(args, 3, MPI_INT, 0, comm);
   }
   else {
-      int args[3];
-      MPI_Bcast(args, 3, MPI_INT, 0, comm);
-      n=args[0]; energy=args[1]; niters=args[2];
+    int args[3];
+    MPI_Bcast(args, 3, MPI_INT, 0, comm);
+    n=args[0]; energy=args[1]; niters=args[2];
   }
 #else
   int pipid, err;
+  if( !pip_isa_piptask() ) p = 1;
+
+  DBG;
   if( ( err = pip_init( &pipid, &p, NULL, 0 ) ) != 0 ) {
     fprintf( stderr, "pip_init()=%d\n", err );
     exit( 1 );
-  } else if( pipid == PIP_PIPID_ROOT ) {
-    fprintf( stderr, "piprun -n <N> ./a.out\n" );
-    exit( 1 );
   }
+  DBG;
+  barrp = &barrier;
   if( pipid == 0 ) {
-    barrp = &barrier;
-    pthread_barrier_init( barrp, NULL, p );
-  } else {
+    BARRIER_INIT( barrp, NULL, p );
+    BARRIER_WAIT( barrp );
+  } else if( p > 1 ) {
     TESTINT( pip_get_addr( 0, "barrier", (void**) &barrp ) );
+    sleep( 3 );
+    BARRIER_WAIT( barrp );
   }
+  DBG;
   n = atoi(argv[1]); // nxn grid
   energy = atoi(argv[2]); // energy to be injected per iteration
   niters = atoi(argv[3]); // number of iterations
-  r = pipid;
+  if( p > 1 ) {
+    r = pipid;
+  } else {
+    r = 0;
+  }
+  DBG;
   //printf( "[%d] heat[%d]=(%p)\n", r, r, &heat );
 #endif
 #ifndef PIP
   MPI_Comm shmcomm;
   MPI_Comm_split_type(comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shmcomm);
 #endif
+  DBG;
 
   int sp; // rank and size in shmem comm
 #ifndef PIP
@@ -135,6 +159,7 @@ int main(int argc, char **argv) {
 #else  /* Since PiP runs on one node */
   sp = p;
 #endif
+  DBG;
 
 #ifdef AH
   // this code works only on comm world!
@@ -192,6 +217,7 @@ int main(int argc, char **argv) {
     exit( 1 );
   }
 #endif
+  DBG;
 
   // determine my coordinates (x,y) -- r=x*a+y in the 2d processor array
   int rx = r % px;
@@ -227,7 +253,7 @@ int main(int argc, char **argv) {
   ta+=MPI_Wtime();
   memset( (void*) mem, 0, szsz );
 #else
-  pthread_barrier_wait( barrp );
+  if( p > 1 ) BARRIER_WAIT( barrp );
   ta=-MPI_Wtime(); // take time
   if( posix_memalign( (void**) &mem, 4096, szsz ) != 0 ||
       mem == NULL ) {
@@ -235,7 +261,7 @@ int main(int argc, char **argv) {
     exit( 1 );
   }
   memset( (void*) mem, 0, szsz );
-  pthread_barrier_wait( barrp );
+  if( p > 1 ) BARRIER_WAIT( barrp );
   ta+=MPI_Wtime();
 #endif
 
@@ -254,15 +280,22 @@ int main(int argc, char **argv) {
   MPI_Win_shared_query(win, east, &sz, &dsp_unit, &eastptr);
   MPI_Win_shared_query(win, west, &sz, &dsp_unit, &westptr);
 #else
-  double **memp;
-  TESTINT( pip_get_addr( (north>=0?north:0), "mem", (void**) &memp ) );
-  northptr = *memp;
-  TESTINT( pip_get_addr( (south>=0?south:0), "mem", (void**) &memp ) );
-  southptr = *memp;
-  TESTINT( pip_get_addr( (east>=0?east:0), "mem", (void**) &memp ) );
-  eastptr  = *memp;
-  TESTINT( pip_get_addr( (west>=0?west:0), "mem", (void**) &memp ) );
-  westptr  = *memp;
+  if( p > 1 ) {
+    double **memp;
+    TESTINT( pip_get_addr( (north>=0?north:0), "mem", (void**) &memp ) );
+    northptr = *memp;
+    TESTINT( pip_get_addr( (south>=0?south:0), "mem", (void**) &memp ) );
+    southptr = *memp;
+    TESTINT( pip_get_addr( (east>=0?east:0), "mem", (void**) &memp ) );
+    eastptr  = *memp;
+    TESTINT( pip_get_addr( (west>=0?west:0), "mem", (void**) &memp ) );
+    westptr  = *memp;
+  } else {
+    northptr = NULL;
+    southptr = NULL;
+    eastptr  = NULL;
+    westptr  = NULL;
+  }
 #endif
 
 #ifdef AH
@@ -281,7 +314,7 @@ int main(int argc, char **argv) {
   DBG;
 
   // initialize three heat sources
-  #define nsources 3
+#define nsources 3
   int sources[nsources][2] = {{n/2,n/2}, {n/3,n/3}, {n*4/5,n*8/9}};
   int locnsources=0; // number of sources in my area
   int locsources[nsources][2]; // sources local to my rank
@@ -296,6 +329,12 @@ int main(int argc, char **argv) {
     }
   }
 
+  npf = get_page_faults();
+#ifndef PIP
+  MPI_Barrier(shmcomm);
+#else
+  if( p > 1 ) BARRIER_WAIT( barrp );
+#endif
   double tb=MPI_Wtime(); // take time
 #ifndef PIP
   MPI_Win_lock_all(0, win);
@@ -304,11 +343,12 @@ int main(int argc, char **argv) {
     MPI_Barrier(shmcomm);
   }
 #else
-  for( int iter=0; iter<niters; iter++ ) {
-    pthread_barrier_wait( barrp );
+  if( p > 1 ) {
+    for( int iter=0; iter<niters; iter++ ) {
+      BARRIER_WAIT( barrp );
+    }
   }
 #endif
-  npf = get_page_faults();
   double t=-MPI_Wtime(); // take time
   tb = - t - tb;
 
@@ -323,7 +363,7 @@ int main(int argc, char **argv) {
     MPI_Barrier(shmcomm);
 #else
     DBG;
-    pthread_barrier_wait( barrp );
+    if( p > 1 ) BARRIER_WAIT( barrp );
     DBG;
 #endif
     // exchange data with neighbors
@@ -381,26 +421,33 @@ int main(int argc, char **argv) {
   int tnpf = 0;
   MPI_Allreduce(&npf, &tnpf, 1, MPI_INT, MPI_SUM, comm);
 #else
-  pthread_barrier_wait( barrp );
+  if( p > 1 ) BARRIER_WAIT( barrp );
   t+=MPI_Wtime();
   //printf( "[%d] npf %d\n", r, npf );
   npf = get_page_faults() - npf;
-  pthread_barrier_wait( barrp );
+  if( p > 1 ) BARRIER_WAIT( barrp );
 
   double rheat = 0.0;
   // get final heat in the system
   double *heatp;
   int i;
-  for( i=0; i<p; i++ ) {
-    TESTINT( pip_get_addr( i, "heat", (void**) &heatp ) );
-    //printf( "[%d] heat[%d]=%g (%p)\n", r, i, *heatp, heatp );
-    rheat += *heatp;
+  if( p > 1 ) {
+    for( i=0; i<p; i++ ) {
+      TESTINT( pip_get_addr( i, "heat", (void**) &heatp ) );
+      //printf( "[%d] heat[%d]=%g (%p)\n", r, i, *heatp, heatp );
+      rheat += *heatp;
+    }
+  } else {
+    rheat = heat;
   }
-
   int tnpf=0, *npfp;
-  for( i=0; i<p; i++ ) {
-    TESTINT( pip_get_addr( i, "npf", (void**) &npfp ) );
-    tnpf += *npfp;
+  if( p > 1 ) {
+    for( i=0; i<p; i++ ) {
+      TESTINT( pip_get_addr( i, "npf", (void**) &npfp ) );
+      tnpf += *npfp;
+    }
+  } else {
+    tnpf = npf;
   }
 #endif
   //printf( "npf %d\n", npf );
@@ -420,7 +467,7 @@ int main(int argc, char **argv) {
 
   MPI_Finalize();
 #else
-  pthread_barrier_wait( barrp );
+  if( p > 1 ) BARRIER_WAIT( barrp );
   pip_fin();
 #endif
   return 0;

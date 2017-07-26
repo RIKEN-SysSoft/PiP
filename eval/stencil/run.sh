@@ -4,11 +4,11 @@
 
 PROGS="stencil_pip stencil_mpi"
 FPROGS="stencil_pip_fast stencil_mpi_fast"
-SIZE=3200
+SIZE=4096
 ENERGY=1
 NITERS=1000
-FAST=1
 PIPRUN=`pwd`/../../bin/piprun
+NCPUS=`grep CPU /proc/cpuinfo | wc -l`
 
 dofast() {
     if [ $1 == stencil_pip_fast ]
@@ -18,16 +18,16 @@ dofast() {
 	    export PIP_MODE=$PIPMODE;
 	    for ITER in $ITER_NUM
 	    do
-		echo -n "["$ITER"]" $1:$PIPMODE $2 " "
-		$PIPRUN -n $2 ./$1 $SIZE $ENERGY $FAST
+		echo -n "["$ITER"]" $1:$PIPMODE $2 "(" $3 ") "
+		$PIPRUN -n $2 ./$1 $SIZE $ENERGY $3
 	    done
 	    echo
 	done
     else
 	for ITER in $ITER_NUM
 	do
-	    echo -n "["$ITER"]" $1 $2 " "
-	    mpirun -np $2 ./$1 $SIZE $ENERGY $FAST
+	    echo -n "["$ITER"]" $1 $2 "(" $3 ") "
+	    mpirun -np $2 ./$1 $SIZE $ENERGY $3
 	done
 	echo
     fi
@@ -58,15 +58,18 @@ doeval() {
 
 csv_begin fast
 
-for NTASKS in 1 2 4 8 16
+for LCOUNT in 1 2 4 8 16 32 64 128
 do
-    if [ $NTASKS -gt $NTMAX ]
-    then
-	 break
-    fi
-    for PROG in ${FPROGS}
+    for NTASKS in 1 2 4 8 16 32 64 128
     do
-	dofast ${PROG} ${NTASKS}
+	if [ $NTASKS -gt $NCPUS ]
+	then
+	    break
+	fi
+	for PROG in ${FPROGS}
+	do
+	    dofast ${PROG} ${NTASKS} ${LCOUNT}
+	done
     done
 done
 
@@ -74,9 +77,9 @@ csv_end fast
 
 csv_begin
 
-for NTASKS in 1 2 4 8 16
+for NTASKS in 1 2 4 8 16 32 64 128
 do
-    if [ $NTASKS -gt $NTMAX ]
+    if [ $NTASKS -gt $NCPUS ]
     then
 	 break
     fi
