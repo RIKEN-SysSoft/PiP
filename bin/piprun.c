@@ -25,7 +25,9 @@
  * \subsection PIP_MODE PIP_MODE
  */
 
+#define _GNU_SOURCE
 #include <sys/wait.h>
+#include <sched.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -36,10 +38,38 @@ static void print_usage( void ) {
   exit( 1 );
 }
 
+static int count_cpu( void ) {
+  cpu_set_t cpuset;
+  int i, c = -1;
+
+  if( sched_getaffinity( getpid(), sizeof(cpuset), &cpuset ) == 0 ) {
+    for( i=0, c=0; i<sizeof(cpuset)*8; i++ ) {
+      if( CPU_ISSET( i, &cpuset ) ) c++;
+    }
+  }
+  return c;
+}
+
+static int nth_core( int coreno ) {
+  cpu_set_t cpuset;
+  int i;
+
+  if( sched_getaffinity( getpid(), sizeof(cpuset), &cpuset ) == 0 ) {
+    for( i=0; i<sizeof(cpuset)*8; i++ ) {
+      if( CPU_ISSET( i, &cpuset ) ) {
+	if( coreno == 0 ) return i;
+	coreno --;
+      }
+    }
+  }
+  return -1;
+}
+
 int main( int argc, char **argv ) {
   int pipid  = 0;
   int ntasks = 1;
   int opts   = 0;
+  int ncores = count_cpu();
   int coreno = PIP_CPUCORE_ASIS;
   int i, k;
   int err    = 0;
@@ -53,8 +83,8 @@ int main( int argc, char **argv ) {
       }
     } else if( strcmp( argv[i], "-e" ) == 0 ) {
       opts |= PIP_OPT_FORCEEXIT;
-    } else if( strcmp( argv[i], "-c" ) == 0 ) {
-      coreno = atoi( argv[++i] );
+    } else if( strcmp( argv[i], "-c" ) == 0 && ncores > 0 ) {
+      coreno = atoi( argv[++i] ) % ncores;
     } else if( strcmp( argv[i], "-b" ) == 0 ) {
       coreno = -100;
     }
@@ -67,9 +97,12 @@ int main( int argc, char **argv ) {
     int c;
     for( i=0; i<ntasks; i++ ) {
       if( coreno == -100 ) {
-	c = i;
+	c = i % ncores;
       } else {
 	c = coreno;
+      }
+      if( ( c = nth_core( c ) ) < 0 ) {
+	c = PIP_CPUCORE_ASIS;
       }
       pipid = i;
       err = pip_spawn( argv[k],
