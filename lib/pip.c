@@ -1575,6 +1575,7 @@ int pip_get_pid_( int pipid, pid_t *pidp ) {
 }
 
 void pip_barrier_init( pip_barrier_t *barrp, int n ) {
+<<<<<<< HEAD
   barrp->count       = n;
   barrp->count_init  = n;
   barrp->gsense      = 0;
@@ -1583,17 +1584,31 @@ void pip_barrier_init( pip_barrier_t *barrp, int n ) {
 void pip_barrier_wait( pip_barrier_t *barrp ) {
   if( barrp->count_init > 1 ) {
     DBG;
+=======
+  barrp->count      = n;
+  barrp->count_init = n;
+  barrp->gsense     = 0;
+}
+
+void pip_barrier_wait( pip_barrier_t *barrp ) {
+  if( barrp->count > 1 ) {
+>>>>>>> d438bc49f4a60e049b0a1d4415b7a14524cbe35a
     int lsense = !barrp->gsense;
     if( __sync_sub_and_fetch( &barrp->count, 1 ) == 0 ) {
       DBG;
       barrp->count  = barrp->count_init;
       pip_memory_barrier();
       barrp->gsense = lsense;
+<<<<<<< HEAD
       DBG;
     } else {
       DBG;
       while( barrp->gsense != lsense ) pip_pause();
       DBG;
+=======
+    } else {
+      while( barrp->gsense != lsense ) pip_pause();
+>>>>>>> d438bc49f4a60e049b0a1d4415b7a14524cbe35a
     }
   }
 }

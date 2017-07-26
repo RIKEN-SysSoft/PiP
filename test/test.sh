@@ -38,8 +38,13 @@ print_summary()
 
 . ./test.sh.inc
 
+TEST_TOP_DIR=`pwd`
 TEST_LIST=test.list
 TEST_LOG_FILE=test.log
+TEST_LOG_XML=test.log.xml
+TEST_OUT_STDOUT=$TEST_TOP_DIR/test.out.stdout
+TEST_OUT_STDERR=$TEST_TOP_DIR/test.out.err
+TEST_OUT_TIME=$TEST_TOP_DIR/test.out.time
 
 mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak 2>/dev/null
 
@@ -134,9 +139,12 @@ n_UNRESOLVED=0
 n_UNTESTED=0
 n_UNSUPPORTED=0
 n_KILLED=0
+TOTAL_TIME=0
 
 LOG_BEG="=== ============================================================ ===="
 LOG_SEP="--- ------------------------------------------------------------ ----"
+
+echo "<testsuite>" >$TEST_LOG_XML
 
 while read line; do
 	set x $line
@@ -157,6 +165,7 @@ while read line; do
 		  echo "$LOG_SEP"
 		  date +'@@_ start at %s - %Y-%m-%d %H:%M:%S'
 		) >>$TEST_LOG_FILE
+		rm -f $TEST_OUT_STDOUT $TEST_OUT_STDERR $TEST_OUT_TIME
 
 		if [ ! -x $test ]; then
 			test_exit_status=$EXIT_UNTESTED
@@ -164,9 +173,12 @@ while read line; do
 			(
 				if cd $(dirname $test)
 				then
-					PIP_MODE=$pip_mode_name \
+					PIP_MODE=$pip_mode_name time -p sh -c "
 						./$(basename $test) \
-						</dev/null >>$TEST_LOG_FILE 2>&1
+						< /dev/null \
+						> $TEST_OUT_STDOUT \
+						2>$TEST_OUT_STDERR" \
+					    2>$TEST_OUT_TIME
 				else
 					exit $EXIT_UNTESTED
 				fi
@@ -187,13 +199,65 @@ while read line; do
 		*)			status=UNRESOLVED
 					msg="exit status $test_exit_status";;
 		esac
-		: ${msg:=$status}
 		eval "((n_$status=n_$status + 1))"
 
+		if [ -s $TEST_OUT_TIME ]; then
+			t=$(awk '$1 == "real" {print $2 + 0}' $TEST_OUT_TIME)
+		else
+			t=0
+		fi
+		# floating point expression
+		TOTAL_TIME=$(awk 'BEGIN {print '"$TOTAL_TIMME"'+'"$t"'; exit}')
 		(
-		  date +'@@~  end  at %s - %Y-%m-%d %H:%M:%S'
-		  echo "$LOG_SEP"
-		  printf "@:= %-60.60s %s\n" $test "$msg"
+			echo '  <testcase classname="'PIP'"' \
+				'name="'"${test} - ${pip_mode_name}"'"' \
+				'time="'"${t}"'">'
+			case $status in
+			PASS|XPASS)
+				;;
+			FAIL)
+				echo '    <failure type="'$status'"/>';;
+			XFAIL|UNTESTED|UNSUPPORTED)
+				echo '    <skipped/>';;
+			UNRESOLVED|KILLED)
+				printf '    <error type="'$status'"';
+				if [ -n "$msg" ]; then
+					printf ' message="'"$msg"'"'
+				fi
+				echo '/>'
+				;;
+			esac
+			if [ -s $TEST_OUT_STDOUT ]; then
+				printf '    <system-out><![CDATA['
+				cat $TEST_OUT_STDOUT
+				echo ']]></system-out>'
+			fi
+			if [ -s $TEST_OUT_STDERR ]; then
+				printf '    <system-err><![CDATA['
+				cat $TEST_OUT_STDERR
+				echo ']]></system-err>'
+			fi
+			echo '  </testcase>'
+		) >>$TEST_LOG_XML
+
+		: ${msg:=$status}
+		(
+			if [ -s $TEST_OUT_STDOUT ]; then
+				echo "@@:stdout"
+				cat $TEST_OUT_STDOUT
+			fi
+			if [ -s $TEST_OUT_STDERR ]; then
+				echo "@@:stderr"
+				cat $TEST_OUT_STDERR
+			fi
+			if [ -s $TEST_OUT_TIME ]; then
+				echo "@@:time"
+				cat $TEST_OUT_TIME
+			fi
+
+			date +'@@~  end  at %s - %Y-%m-%d %H:%M:%S'
+			echo "$LOG_SEP"
+			printf "@:= %-60.60s %s\n" $test "$msg"
 		) >>$TEST_LOG_FILE
 
 		echo " $msg"
@@ -203,6 +267,8 @@ while read line; do
 	done
 
 done < $TEST_LIST
+
+echo "</testsuite>" >>$TEST_LOG_XML
 
 (
 	echo $LOG_BEG
