@@ -33,8 +33,8 @@ int r,p;
 int npf;
 double heat; // total heat in system
 
-//#define DBG
-#define DBG	do { printf("[%d] %d\n", r, __LINE__ ); } while(0)
+#define DBG
+//#define DBG	do { printf("[%d] %d\n", r, __LINE__ ); } while(0)
 
 #ifdef PIP
 BARRIER_T barrier, *barrp;
@@ -145,7 +145,7 @@ int main(int argc, char **argv) {
   }
   DBG;
   //printf( "[%d] heat[%d]=(%p)\n", r, r, &heat );
-  printf( "[%d] barrp: %p\n", r, barrp );
+  //printf( "[%d] barrp: %p\n", r, barrp );
 #endif
 #ifndef PIP
   MPI_Comm shmcomm;
@@ -252,7 +252,7 @@ int main(int argc, char **argv) {
   ta=-MPI_Wtime(); // take time
   MPI_Win_allocate_shared(szsz, 1, MPI_INFO_NULL, shmcomm, &mem, &win);
   ta+=MPI_Wtime();
-  //memset( (void*) mem, 0, szsz );
+  memset( (void*) mem, 0, szsz );
 #else
   if( p > 1 ) BARRIER_WAIT( barrp );
   ta=-MPI_Wtime(); // take time
