@@ -84,12 +84,11 @@ int get_page_faults( void ) {
 }
 
 int main(int argc, char **argv) {
-#ifndef PIP
-  MPI_Init(&argc, &argv);
-#endif
   int ptsz=0;
   int n, energy, niters;
+
 #ifndef PIP
+  MPI_Init(&argc, &argv);
   MPI_Comm comm = MPI_COMM_WORLD;
   MPI_Comm_rank(comm, &r);
   MPI_Comm_size(comm, &p);
@@ -147,6 +146,7 @@ int main(int argc, char **argv) {
   //printf( "[%d] heat[%d]=(%p)\n", r, r, &heat );
   //printf( "[%d] barrp: %p\n", r, barrp );
 #endif
+
 #ifndef PIP
   MPI_Comm shmcomm;
   MPI_Comm_split_type(comm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &shmcomm);
