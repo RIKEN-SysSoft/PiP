@@ -42,6 +42,10 @@ do
     then
 	 break
     fi
+    if [ $NTASKS -gt $CORENUM ]
+    then
+	break
+    fi
     for PROG in ${PROGS}
     do
 	doeval ${PROG} ${NTASKS}

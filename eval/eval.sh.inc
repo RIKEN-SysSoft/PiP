@@ -38,12 +38,14 @@ then
     ITER_NUM="1 2 3 4 5 6 7 8 9 10 11 12"
 fi
 
+CORENUM=`getconf _NPROCESSORS_ONLN`
+
 echo "==============================="
 ../util/commentize $0
 echo "-------------------------------"
 uname -a
 echo "PageSize:  " `getconf PAGESIZE`
-echo "#CPU Cores:" `getconf _NPROCESSORS_ONLN`
+echo "#CPU Cores:" $CORENUM
 grep -e "$ ./configure --" ../../config.log
 echo `date` "  " `git describe`
 echo "PIP_MODEs:" $MODE_LIST
