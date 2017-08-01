@@ -7,6 +7,7 @@
  */
 
 #define _GNU_SOURCE
+#include <sys/mman.h>
 #include <unistd.h>
 #include "stencil_par.h"
 
@@ -32,6 +33,8 @@ double *mem;
 int r,p;
 int npf;
 double heat; // total heat in system
+#define nsources 3
+int locsources[nsources][2]; // sources local to my rank
 
 #define DBG
 //#define DBG	do { printf("[%d] %d\n", r, __LINE__ ); } while(0)
@@ -124,13 +127,15 @@ int main(int argc, char **argv) {
     exit( 1 );
   }
   DBG;
-  barrp = &barrier;
   if( pipid == 0 ) {
-    BARRIER_INIT( barrp, NULL, p );
+    BARRIER_INIT( &barrier, NULL, p );
+    barrp = &barrier;
     BARRIER_WAIT( barrp );
   } else if( p > 1 ) {
-    TESTINT( pip_get_addr( 0, "barrier", (void**) &barrp ) );
-    sleep( 3 );
+    BARRIER_T **addr;
+    TESTINT( pip_get_addr( 0, "barrp", (void**) &addr ) );
+    while( *addr == NULL );
+    barrp = *addr;
     BARRIER_WAIT( barrp );
   }
   DBG;
@@ -243,30 +248,76 @@ int main(int argc, char **argv) {
   int size = (bx+2)*(by+2); // process-local grid (including halos (thus +2))
   int szsz = 2*size*sizeof(double);
 
-  //printf("%i %i %i\n", bx, by, szsz);
-
   double ta;
 #ifndef PIP
   double *mem = NULL;
   MPI_Win win;
+  MPI_Barrier(shmcomm);
   ta=-MPI_Wtime(); // take time
   MPI_Win_allocate_shared(szsz, 1, MPI_INFO_NULL, shmcomm, &mem, &win);
+  //memset( (void*) mem, 0, szsz );
+  MPI_Barrier(shmcomm);
   ta+=MPI_Wtime();
-  memset( (void*) mem, 0, szsz );
 #else
-  if( p > 1 ) BARRIER_WAIT( barrp );
+  BARRIER_WAIT( barrp );
   ta=-MPI_Wtime(); // take time
+#ifdef POSIX_MEMALIGN
   if( posix_memalign( (void**) &mem, 4096, szsz ) != 0 ||
       mem == NULL ) {
     fprintf( stderr, "Not enough memory\n" );
     exit( 1 );
   }
-  memset( (void*) mem, 0, szsz );
-  if( p > 1 ) BARRIER_WAIT( barrp );
+#else
+#ifdef AHAH
+  {
+    int fd = open( "/dev/zero", O_RDONLY );
+    mem = NULL;
+    if( ( mem = mmap( NULL,
+		      ((szsz+4095)/4096)*4096,
+		      PROT_READ|PROT_WRITE,
+		      MAP_PRIVATE,
+		      fd, 0 ) ) == MAP_FAILED ) {
+      fprintf( stderr, "MAP_FAILD\n" );
+      exit( 1 );
+    }
+    close( fd );
+  }
+#else
+  {
+    if( r == 0 ) {
+      int fd = open( "/dev/zero", O_RDONLY );
+      mem = NULL;
+      if( ( mem = mmap( NULL,
+			szsz*p,
+			PROT_READ|PROT_WRITE,
+			MAP_PRIVATE,
+			fd, 0 ) ) == MAP_FAILED ) {
+	fprintf( stderr, "MAP_FAILD\n" );
+	exit( 1 );
+      }
+      close( fd );
+    }
+    BARRIER_WAIT( barrp );
+    if( r > 0 ) {
+      void **addr;
+      pip_get_addr( 0, "mem", (void**) &addr );
+      //printf( "[%d] addr: %p->%p\n", r, addr, *addr );
+      mem = (double*) ( *addr + ( szsz * r ) );
+    }
+  }
+#endif
+#endif
+  //memset( (void*) mem, 0, szsz );
+  BARRIER_WAIT( barrp );
   ta+=MPI_Wtime();
 #endif
 
-  double *tmp;
+#ifdef AH
+  printf("[%d:%d] %i %i %i (%i) at %p--%p\n",
+	 r, getpid(),
+	 bx, by, szsz, szsz*p, mem, ((void*)mem)+szsz);
+#endif
+
   double *northptr, *southptr, *eastptr, *westptr;
   double *northptr2, *southptr2, *eastptr2, *westptr2;
 
@@ -312,13 +363,16 @@ int main(int argc, char **argv) {
   eastptr2  = eastptr+size;
   westptr2  = westptr+size;
 
+  if( north == MPI_PROC_NULL ) north = -1;
+  if( south == MPI_PROC_NULL ) south = -1;
+  if( east  == MPI_PROC_NULL ) east  = -1;
+  if( west  == MPI_PROC_NULL ) west  = -1;
+
   DBG;
 
   // initialize three heat sources
-#define nsources 3
   int sources[nsources][2] = {{n/2,n/2}, {n/3,n/3}, {n*4/5,n*8/9}};
   int locnsources=0; // number of sources in my area
-  int locsources[nsources][2]; // sources local to my rank
   DBG;
   for (int i=0; i<nsources; ++i) { // determine which sources are in my patch
     int locx = sources[i][0] - offx;
@@ -334,7 +388,7 @@ int main(int argc, char **argv) {
 #ifndef PIP
   MPI_Barrier(shmcomm);
 #else
-  if( p > 1 ) BARRIER_WAIT( barrp );
+  BARRIER_WAIT( barrp );
 #endif
   double tb=MPI_Wtime(); // take time
 #ifndef PIP
@@ -344,10 +398,8 @@ int main(int argc, char **argv) {
     MPI_Barrier(shmcomm);
   }
 #else
-  if( p > 1 ) {
-    for( int iter=0; iter<niters; iter++ ) {
-      BARRIER_WAIT( barrp );
-    }
+  for( int iter=0; iter<niters; iter++ ) {
+    BARRIER_WAIT( barrp );
   }
   DBG;
 #endif
@@ -355,59 +407,28 @@ int main(int argc, char **argv) {
   tb = - t - tb;
 
   for(int iter=0; iter<niters; ++iter) {
+    void heat_source(int, int, double*);
+    double stencil_body(int, int, int, int, int, int, double*, double*,
+			double*, double*, double*, double*,
+			double*, double*, double*, double*);
     // refresh heat sources
-    for(int i=0; i<locnsources; ++i) {
-      aold[ind(locsources[i][0],locsources[i][1])] += energy; // heat source
-    }
+    heat_source(bx, energy, aold);
 
 #ifndef PIP
     MPI_Win_sync(win);
     MPI_Barrier(shmcomm);
 #else
     DBG;
-    if( p > 1 ) BARRIER_WAIT( barrp );
+    BARRIER_WAIT( barrp );
     DBG;
 #endif
-    // exchange data with neighbors
-    if(north != MPI_PROC_NULL) {
-      for(int i=0; i<bx; ++i) aold[ind(i+1,0)] = northptr2[ind(i+1,by)]; // pack loop - last valid region
-    }
-    if(south != MPI_PROC_NULL) {
-      for(int i=0; i<bx; ++i) aold[ind(i+1,by+1)] = southptr2[ind(i+1,1)]; // pack loop
-    }
-    if(east != MPI_PROC_NULL) {
-      for(int i=0; i<by; ++i) aold[ind(bx+1,i+1)] = eastptr2[ind(1,i+1)]; // pack loop
-    }
-    if(west != MPI_PROC_NULL) {
-      for(int i=0; i<by; ++i) aold[ind(0,i+1)] = westptr2[ind(bx,i+1)]; // pack loop
-    }
-    DBG;
+    heat = stencil_body(north, south, west, east,
+			bx, by,
+			anew, aold,
+			northptr, northptr2, southptr, southptr2,
+			eastptr, eastptr2, westptr, westptr2);
 
-    // update grid points
-    heat = 0.0;
-    for(int j=1; j<by+1; ++j) {
-      for(int i=1; i<bx+1; ++i) {
-        anew[ind(i,j)] = aold[ind(i,j)]/2.0 +
-	  ( aold[ind(i-1,j)] +
-	    aold[ind(i+1,j)] +
-	    aold[ind(i,j-1)] +
-	    aold[ind(i,j+1)] )/4.0/2.0;
-        heat += anew[ind(i,j)];
-      }
-    }
     //printf( "[%d] heat=%g\n", r, heat );
-
-    // swap arrays
-    tmp=anew; anew=aold; aold=tmp;
-    tmp=northptr; northptr=northptr2; northptr2=tmp;
-    tmp=southptr; southptr=southptr2; southptr2=tmp;
-    tmp=eastptr; eastptr=eastptr2; eastptr2=tmp;
-    tmp=westptr; westptr=westptr2; westptr2=tmp;
-
-#ifdef AH
-    // optional - print image
-    if(iter == niters-1) printarr_par(iter, anew, n, px, py, rx, ry, bx, by, offx, offy, comm);
-#endif
   }
   DBG;
 #ifndef PIP
@@ -423,11 +444,11 @@ int main(int argc, char **argv) {
   int tnpf = 0;
   MPI_Allreduce(&npf, &tnpf, 1, MPI_INT, MPI_SUM, comm);
 #else
-  if( p > 1 ) BARRIER_WAIT( barrp );
+  BARRIER_WAIT( barrp );
   t+=MPI_Wtime();
   //printf( "[%d] npf %d\n", r, npf );
   npf = get_page_faults() - npf;
-  if( p > 1 ) BARRIER_WAIT( barrp );
+  BARRIER_WAIT( barrp );
 
   double rheat = 0.0;
   // get final heat in the system
@@ -469,7 +490,7 @@ int main(int argc, char **argv) {
 
   MPI_Finalize();
 #else
-  if( p > 1 ) BARRIER_WAIT( barrp );
+  BARRIER_WAIT( barrp );
   pip_fin();
 #endif
   return 0;

@@ -27,7 +27,4 @@
 #include <string.h>
 #include <stdint.h>
 
-// row-major order
-#define ind(i,j) (j)*(bx+2)+(i)
-
 #endif /* STENCIL_PAR_H_ */
