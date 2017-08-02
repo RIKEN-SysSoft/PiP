@@ -8,6 +8,8 @@
 
 #define _GNU_SOURCE
 #include <sys/mman.h>
+#include <numa.h>
+#include <numaif.h>
 #include <unistd.h>
 #include "stencil_par.h"
 
@@ -42,6 +44,17 @@ int locsources[nsources][2]; // sources local to my rank
 #ifdef PIP
 BARRIER_T barrier, *barrp;
 #endif
+
+void print_numa( void ) {
+  int fd = open( "/proc/self/numa_maps", O_RDONLY );
+  while( 1 ) {
+    char buf[1024];
+    int sz;
+    if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
+    write( 1, buf, sz );
+  }
+  close( fd );
+}
 
 int get_page_table_size( void ) {
   int ptsz = 0;
@@ -89,6 +102,16 @@ int get_page_faults( void ) {
 int main(int argc, char **argv) {
   int ptsz=0;
   int n, energy, niters;
+
+  {
+    unsigned long nodemask = 0;
+    int maxnode = numa_max_possible_node();
+    nodemask = maxnode - 1;
+    //printf( "maxnode=%d\n", maxnode );
+    if( set_mempolicy( MPOL_BIND, &nodemask, maxnode ) != 0 ) {
+      printf( "set_mempolicy()=%d\n", errno );
+    }
+  }
 
 #ifndef PIP
   MPI_Init(&argc, &argv);
@@ -268,6 +291,7 @@ int main(int argc, char **argv) {
     exit( 1 );
   }
 #else
+  //#define AHAH
 #ifdef AHAH
   {
     int fd = open( "/dev/zero", O_RDONLY );
@@ -485,11 +509,24 @@ int main(int argc, char **argv) {
 #endif
   //printf( "PF %d\n", get_page_faults() );
 #ifndef PIP
+#ifdef PRT_NUMA
+  for( int i=0; i<p; i++ ) {
+    if( i == r ) {
+      printf( "[%d] NUMA\n", r );
+      print_numa();
+      fflush( NULL );
+    }
+    MPI_Barrier(shmcomm);
+  }
+#endif
   MPI_Win_free(&win);
   MPI_Comm_free(&shmcomm);
 
   MPI_Finalize();
 #else
+#ifdef PRT_NUMA
+  print_numa();
+#endif
   BARRIER_WAIT( barrp );
   pip_fin();
 #endif

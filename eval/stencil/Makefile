@@ -21,16 +21,16 @@ stencil.o: stencil.c Makefile
 	$(MPICC) -O3 $(CPPFLAGS) -std=c99 -fpie -c $< -o $@
 
 stencil_mpi: stencil_pip.c Makefile $(OBJ)
-	$(MPICC) -O3 $(CPPFLAGS) $(PIPCFLAGS) $< $(OBJ) -o $@
+	$(MPICC) -O3 $(CPPFLAGS) $(PIPCFLAGS) -lnuma $< $(OBJ) -o $@
 
 stencil_pip: stencil_pip.c Makefile $(OBJ)
-	$(MPICC) -DPIP -O3 $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< $(OBJ) -o $@
+	$(MPICC) -DPIP -O3 $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) -lnuma $< $(OBJ) -o $@
 
 stencil_mpi_fast: stencil_pip.c Makefile $(OBJ)
-	$(MPICC) -O3 -DFAST $(CPPFLAGS) $(PIPCFLAGS) $< $(OBJ) -o $@
+	$(MPICC) -O3 -DFAST $(CPPFLAGS) $(PIPCFLAGS) -lnuma $< $(OBJ) -o $@
 
 stencil_pip_fast: stencil_pip.c Makefile $(OBJ)
-	$(MPICC) -DPIP -DFAST -O3 $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< $(OBJ) -o $@
+	$(MPICC) -DPIP -DFAST -O3 $(CPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) -lnuma $< $(OBJ) -o $@
 
 clean:
 	rm -f $(BINS) $(OBJ) *~
