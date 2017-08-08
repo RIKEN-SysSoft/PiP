@@ -551,18 +551,22 @@ static int pip_task_p_( void ) {
 static int pip_check_pipid( int *pipidp ) {
   int pipid = *pipidp;
 
-  if( pip_root == NULL          ) RETURN( EPERM  );
-  if( pipid >= pip_root->ntasks ) RETURN( ENOENT );
+  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
   if( pipid != PIP_PIPID_MYSELF &&
       pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
-  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
-  if( pipid == PIP_PIPID_MYSELF ) {
+  if( pip_root == NULL          ) RETURN( EPERM  );
+  switch( pipid ) {
+  case PIP_PIPID_ROOT:
+    break;
+  case PIP_PIPID_ANY:
+    RETURN( EINVAL );
+  case PIP_PIPID_MYSELF:
     if( pip_root_p_() ) {
       *pipidp = PIP_PIPID_ROOT;
     } else {
-      if( pip_root->tasks[*pipidp].pipid != *pipidp ) RETURN( ENOENT );
       *pipidp = pip_task->pipid;
     }
+    break;
   }
   RETURN( 0 );
 }
@@ -1301,6 +1305,7 @@ int pip_spawn( char *prog,
 					(void*(*)(void*)) pip_do_spawn,
 					args,
 					&pid );
+    DBGF( "pip_clone_mostly_pthread_ptr()=%d", err );
   } else {
     pthread_attr_t 	attr;
     pid_t tid = pip_gettid();
@@ -1336,6 +1341,7 @@ int pip_spawn( char *prog,
 			      &attr,
 			      (void*(*)(void*)) pip_do_spawn,
 			      (void*) args );
+	DBGF( "pthread_create()=%d", errno );
       } while( 0 );
       /* unlock is done in the wrapper function */
       DBG;
@@ -1414,7 +1420,8 @@ int pip_get_id( int pipid, intptr_t *pidp ) {
   int err;
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
-  if( pidp == NULL ) RETURN( EINVAL );
+  if( pipid == PIP_PIPID_ROOT ) RETURN( EINVAL );
+  if( pidp  == NULL           ) RETURN( EINVAL );
 
   task = pip_get_task_( pipid );
   if( pip_is_pthread_() ) {
