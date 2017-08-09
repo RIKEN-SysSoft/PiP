@@ -1264,6 +1264,7 @@ int pip_spawn( char *prog,
   task->hook_before = before;
   task->hook_after  = after;
   task->hook_arg    = hookarg;
+  pip_spin_init( &task->lock_malloc );
 
 #ifdef PIP_DLMOPEN_AND_CLONE
   pip_spin_lock( &pip_root->lock_ldlinux );
@@ -1607,9 +1608,18 @@ void pip_barrier_wait( pip_barrier_t *barrp ) {
 #define PIP_ALIGN_TYPE	long long
 
 void *pip_malloc( size_t size ) {
+  pip_task_t *task;
+
+  if( pip_root_p_() ) {
+    task = pip_root->task_root;
+  } else {
+    task = pip_task;
+  }
+  pip_spin_lock(   &task->lock_malloc );
   void *p = malloc( size + sizeof(PIP_ALIGN_TYPE) );
-  int pipid = pip_get_pipid_();
-  *(int*) p = pipid;
+  pip_spin_unlock( &task->lock_malloc );
+
+  *(int*) p = pip_get_pipid_();
   p += sizeof(PIP_ALIGN_TYPE);
   return p;
 }
@@ -1629,7 +1639,11 @@ void pip_free( void *ptr ) {
     }
     /* need of sanity check on pipid */
     if( ( free_func = task->symbols.free ) != NULL ) {
+
+      pip_spin_lock(   &task->lock_malloc );
       free_func( ptr );
+      pip_spin_unlock( &task->lock_malloc );
+
     } else {
       pip_warn_mesg( "No free function" );
     }
