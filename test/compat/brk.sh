@@ -5,7 +5,7 @@
 trap 'rm -f $TEST_TMP; exit $EXIT_KILLED' $TEST_TRAP_SIGS
 
 # the "exit 0"  below is to prevent the followin abort:
-#	brk.sh: line 9: <PID> Segmentation fault      (core dumped) 
+#	brk.sh: line 9: <PID> Segmentation fault      (core dumped)
 ( ./brk; exit 0 ) >$TEST_TMP 2>&1
 if [ $(grep '^<.* brk:' <$TEST_TMP | wc -l) \
 	-eq $(expr $TEST_PIP_TASKS + 1) ] &&
