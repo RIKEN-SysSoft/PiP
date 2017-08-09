@@ -4,4 +4,4 @@
 
 nth=`../util/ompnumthread`
 
-./openmp 2>&1 | test_msg_count 'Hello World from thread' $nth
+$MCEXEC ./openmp 2>&1 | test_msg_count 'Hello World from thread' $nth

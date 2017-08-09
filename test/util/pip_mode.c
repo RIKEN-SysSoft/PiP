@@ -43,6 +43,16 @@ main(int argc, char **argv)
     fprintf( stderr, "pip_init: %s\n", strerror( rv ));
     return EXIT_FAILURE;
   }
+  if( pipid != PIP_PIPID_ROOT ) return 0;
+  pipid = 0;
+  rv = pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS,
+		  &pipid, NULL, NULL, NULL );
+  if ( rv != 0 ) {
+    fprintf( stderr, "pip_spawn: %s\n", strerror( rv ));
+    return EXIT_FAILURE;
+  } else {
+    (void) pip_wait( 0, NULL );
+  }
 
   rv = pip_get_mode( &mode );
   if ( rv != 0 ) {
