@@ -107,6 +107,7 @@ typedef struct pip_task {
       pip_spawnhook_t	hook_before;
       pip_spawnhook_t	hook_after;
       void		*hook_arg;
+      pip_spinlock_t	lock_malloc; /* lock for pip_malloc and pip_free */
     };
     struct {			/* for PiP ULPs */
       struct pip_task	*task_parent;

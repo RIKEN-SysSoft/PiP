@@ -1,12 +1,18 @@
 #!/bin/sh
 
 export LD_PRELOAD=`pwd`/../preload/pip_preload.so
-export OMP_NUM_THREADS=10
+export OMP_NUM_THREADS=`$MCEXEC ./util/ompnumthread`
 
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
 
 : ${TEST_PIP_TASKS:=$(./util/dlmopen_count -p)}
+
+if [ -n "$MCEXEC" ]; then
+    if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
+	TEST_PIP_TASKS=$OMP_NUM_THREADS;
+    fi
+fi
 
 print_summary()
 {
@@ -48,7 +54,6 @@ TEST_OUT_TIME=$TEST_TOP_DIR/test.out.time
 
 mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak 2>/dev/null
 
-pip_mode_list_all='L C T'
 pip_mode_name_P=process
 pip_mode_name_L=$pip_mode_name_P:preload
 pip_mode_name_C=$pip_mode_name_P:pipclone
@@ -107,6 +112,12 @@ if [ -z "$pip_mode_list" ]; then
     print_usage;
 fi
 
+if [ -n "$MCEXEC" ]; then
+    pip_mode_list_all='T';
+    echo MCEXEC=$MCEXEC
+else
+    pip_mode_list_all='L C T';
+fi
 
 echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 echo LD_PRELOAD=$LD_PRELOAD
