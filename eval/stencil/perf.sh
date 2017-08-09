@@ -4,8 +4,8 @@
 
 PROGS="stencil_pip stencil_mpi"
 FPROGS="stencil_pip_fast stencil_mpi_fast"
-#SIZE=4096
-SIZE=8192
+SIZE=4096
+#SIZE=8192
 ENERGY=1
 NITERS=1000
 FAST=1
@@ -15,8 +15,7 @@ MODES="process"
 MPIBIND="-binding map=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31"
 
 doperf() {
-#    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
-    for ITER in 1 2 3 4
+    for ITER in 1 2 3 4 5 6 7 8 9 10 11 12
     do
 	if [ $1 == stencil_pip_fast ]
 	then

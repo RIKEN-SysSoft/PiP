@@ -22,23 +22,34 @@ pip_mode_list() {
 }
 
 NUMACTL() {
+if [ -n "$MCEXEC" ]
+then
+	shift;
+	$MCEXEC $@;
+else
     CORENO=$1;
     shift;
     ../util/corebind $CORENO $@;
+fi
 }
 
-MODE_LIST=`pip_mode_list process:preload; \
-	   pip_mode_list process:pipclone; \
-	   pip_mode_list thread;`
+CORENUM=`$MCEXEC getconf _NPROCESSORS_ONLN`
 
-NTMAX=`../../test/util/dlmopen_count`
+if [ -n "$MCEXEC" ]
+then
+    MODE_LIST=pthread;
+    NTMAX=$CORENUM
+else
+    MODE_LIST=`pip_mode_list process:preload; \
+	   pip_mode_list process:pipclone; \
+   	   pip_mode_list thread;`;
+    NTMAX=`../../test/util/dlmopen_count`
+fi
 
 if [ -z $ITER_NUM ]
 then
-    ITER_NUM="1 2 3 4 5 6 7 8 9 10 11 12"
+    ITER_NUM="1 2 3 4 5 6 7 8 9 10 11 12";
 fi
-
-CORENUM=`getconf _NPROCESSORS_ONLN`
 
 echo "==============================="
 ../util/commentize $0
@@ -51,6 +62,10 @@ echo `date` "  " `git describe`
 echo "PIP_MODEs:" $MODE_LIST
 echo "NTMAX:    " $NTMAX
 echo "ITER_NUM: " $ITER_NUM
+if [ -n "$MCEXEC" ]
+then
+    echo mcexec: $MCEXEC
+fi
 echo "-------------------------------"
 
 echo "ignore-this-part"

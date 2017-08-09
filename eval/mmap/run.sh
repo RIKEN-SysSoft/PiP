@@ -8,7 +8,7 @@ doeval() {
     for ITER in $ITER_NUM
     do
 	echo -n "["$ITER"]" $1:$2 " "
-	./$1 $3 $4
+	$MCEXEC ./$1 $3 $4
     done
     echo
 }

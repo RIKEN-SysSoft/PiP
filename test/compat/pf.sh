@@ -7,4 +7,4 @@ if [ $ntasks -gt 10 ]; then
   ntasks=10
 fi
 
-./pf 2>&1 | test_msg_count 'done' `expr $ntasks + 1`
+$MCEXEC ./pf 2>&1 | test_msg_count 'done' `expr $ntasks + 1`

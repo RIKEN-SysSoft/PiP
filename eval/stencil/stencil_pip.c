@@ -105,10 +105,11 @@ int main(int argc, char **argv) {
 
   {
     unsigned long nodemask = 0;
-    int maxnode = numa_max_possible_node();
-    nodemask = maxnode - 1;
-    //printf( "maxnode=%d\n", maxnode );
-    if( set_mempolicy( MPOL_BIND, &nodemask, maxnode ) != 0 ) {
+    int maxnode = numa_max_node();
+    for( int i=0; i<=maxnode; i++ ) nodemask = ( nodemask << 1 ) | 1;
+    //printf( "maxnode=%d nodemask=0x%lx\n", maxnode, nodemask );
+    nodemask = 1;
+    if( set_mempolicy( MPOL_DEFAULT, &nodemask, maxnode ) != 0 ) {
       printf( "set_mempolicy()=%d\n", errno );
     }
   }
@@ -278,7 +279,9 @@ int main(int argc, char **argv) {
   MPI_Barrier(shmcomm);
   ta=-MPI_Wtime(); // take time
   MPI_Win_allocate_shared(szsz, 1, MPI_INFO_NULL, shmcomm, &mem, &win);
-  //memset( (void*) mem, 0, szsz );
+#ifdef MEMSET
+  memset( (void*) mem, 0, szsz );
+#endif
   MPI_Barrier(shmcomm);
   ta+=MPI_Wtime();
 #else
@@ -291,8 +294,7 @@ int main(int argc, char **argv) {
     exit( 1 );
   }
 #else
-  //#define AHAH
-#ifdef AHAH
+#ifdef NONCONTIG
   {
     int fd = open( "/dev/zero", O_RDONLY );
     mem = NULL;
@@ -331,7 +333,9 @@ int main(int argc, char **argv) {
   }
 #endif
 #endif
-  //memset( (void*) mem, 0, szsz );
+#ifdef MEMST
+  memset( (void*) mem, 0, szsz );
+#endif
   BARRIER_WAIT( barrp );
   ta+=MPI_Wtime();
 #endif

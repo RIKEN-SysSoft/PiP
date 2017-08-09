@@ -3,8 +3,8 @@
 . ../eval.sh.inc
 
 PROGS="stencil_pip stencil_mpi"
-#SIZE=4096
-SIZE=8192
+SIZE=4096
+#SIZE=8192
 ENERGY=1
 NITERS=1000
 PIPRUN=`pwd`/../../bin/piprun

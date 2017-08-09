@@ -4,7 +4,7 @@
 
 trap 'rm -f $TEST_TMP; exit $EXIT_KILLED' $TEST_TRAP_SIGS
 
-./ctype >$TEST_TMP 2>&1
+$MCEXEC ./ctype >$TEST_TMP 2>&1
 if [ $(grep '^MAIN: ABCDEFG$'   <$TEST_TMP | wc -l) -eq 1 ] &&
    [ $(grep '^CHILD: XYZ12345$' <$TEST_TMP | wc -l) -eq 1 ]
 then
