@@ -166,6 +166,8 @@ typedef struct pip_barrier {
   volatile int		gsense;
 } pip_barrier_t;
 
+#define PIP_BARRIER_INIT(N)	{(N),(N),0}
+
 #ifdef __cplusplus
 extern "C" {
 #endif
