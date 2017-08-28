@@ -1,0 +1,20 @@
+#include <stdio.h>
+#include <pip.h>
+
+int gvar = 0;
+
+pip_barrier_t barrier = PIP_BARRIER_INIT(5);
+
+int main( int argc, char **argv ) {
+  pip_barrier_t *barrp;
+  int pipid;
+
+  pip_init( &pipid, NULL, NULL, 0 );
+  gvar = pipid;
+
+  pip_get_addr( 0, "barrier", (void**) &barrp );
+  pip_barrier_wait( barrp );
+  printf( "[%d] gvar=%d\n", pipid, gvar );
+  pip_fin();
+  return 0;
+}
