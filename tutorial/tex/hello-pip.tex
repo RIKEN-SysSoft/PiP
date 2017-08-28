@@ -1,0 +1,147 @@
+
+\chapter{OpenMP vs. MPI vs. PiP}
+
+\section{Hello PiP}
+
+\lstinputlisting[style=program,caption={Hello OMP},label=prg:hello-omp]{../prgs/hello-omp.c}
+\begin{lstlisting}[style=example,caption={Output of ``Hello OMP''},label=out:hello-omp]
+$ OMP_NUM_THREADS=5 ./hello-omp
+Hello from OMP thread 3
+Hello from OMP thread 4
+Hello from OMP thread 2
+Hello from OMP thread 0
+Hello from OMP thread 1
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Hello MPI},label=hello-mpi]{../prgs/hello-mpi.c}
+\begin{lstlisting}[style=example,caption={Output of ``Hello MPI''},label=out:hello-mpi]
+$ mpiexec -np 5 ./hello-mpi
+Hello from MPI process 2
+Hello from MPI process 3
+Hello from MPI process 4
+Hello from MPI process 1
+Hello from MPI process 0
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Hello PiP},label=prg:hello-pip]{../prgs/hello-pip.c}
+\begin{lstlisting}[style=example,caption={Output of ``Hello PiP''},label=out:hello-pip]
+$ piprun -n 5 ./hello-pip
+Hello from PiP task 0
+Hello from PiP task 1
+Hello from PiP task 2
+Hello from PiP task 3
+Hello from PiP task 4
+\end{lstlisting}
+
+\section{Variables}
+
+
+\lstinputlisting[style=program,caption={Vars0 OMP},label=prg:vars0-omp]{../prgs/vars0-omp.c}
+\begin{lstlisting}[style=example,caption={Output of ``Vars0 OMP''},label=out:vars0-omp]
+$ OMP_NUM_THREADS=5 ./vars0-omp
+[1] gvar:0x601050 lvar:0x7ffd47c2bacc tid:0x7f9542221e4c
+[4] gvar:0x601050 lvar:0x7ffd47c2bacc tid:0x7f9540a1ee4c
+[0] gvar:0x601050 lvar:0x7ffd47c2bacc tid:0x7ffd47c2baac
+[3] gvar:0x601050 lvar:0x7ffd47c2bacc tid:0x7f954121fe4c
+[2] gvar:0x601050 lvar:0x7ffd47c2bacc tid:0x7f9541a20e4c
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars0 MPI},label=vars0-mpi]{../prgs/vars0-mpi.c}
+\begin{lstlisting}[style=example,caption={Output of ``Vars0 MPI''},label=out:vars0-mpi]
+[1] gvar:0x601050 lvar:0x7ffdeec8d088
+[2] gvar:0x601050 lvar:0x7ffd2e275998
+[3] gvar:0x601050 lvar:0x7ffc163f6c58
+[4] gvar:0x601050 lvar:0x7ffef9d2db88
+[0] gvar:0x601050 lvar:0x7ffe438034d8
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars0 PiP},label=prg:vars0-pip]{../prgs/vars0-pip.c}
+\begin{lstlisting}[style=example,caption={Output of ``Vars0 PiP''},label=out:vars0-pip]
+$ ../../bin/piprun -n 5 ./vars0-pip
+[0] gvar:0x7f6a22849050 lvar:0x7f6a21c6e4f8
+[1] gvar:0x7f6a21477050 lvar:0x7f6a2089c4f8
+[2] gvar:0x7f6a1bfff050 lvar:0x7f6a1b4244f8
+[3] gvar:0x7f6a1ac2d050 lvar:0x7f6a1a0524f8
+[4] gvar:0x7f6a1985b050 lvar:0x7f6a18c804f8
+\end{lstlisting}
+
+
+
+\lstinputlisting[style=program,caption={Vars1 OMP},label=prg:vars1-omp]{../prgs/vars1-omp.c}
+\begin{lstlisting}[style=example,caption={Output of ``Vars1 OMP''},label=out:vars1-omp]
+$ OMP_NUM_THREADS=5 ./vars1-omp
+[0] gvar=3
+[4] gvar=3
+[2] gvar=3
+[3] gvar=3
+[1] gvar=3
+$ OMP_NUM_THREADS=5 ./vars1-omp
+[1] gvar=4
+[2] gvar=4
+[0] gvar=4
+[3] gvar=4
+[4] gvar=4
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars1 MPI},label=vars1-mpi]{../prgs/vars1-mpi.c}
+\begin{lstlisting}[style=example,caption={Output of ``Vars1 MPI''},label=out:vars1-mpi]
+$ mpirun -np 5 ./vars1-mpi
+[0] gvar=0
+[1] gvar=1
+[2] gvar=2
+[3] gvar=3
+[4] gvar=4
+$ mpirun -np 5 ./vars1-mpi
+[0] gvar=0
+[1] gvar=1
+[2] gvar=2
+[3] gvar=3
+[4] gvar=4
+$ mpirun -np 5 ./vars1-mpi
+[0] gvar=0
+[1] gvar=1
+[2] gvar=2
+[3] gvar=3
+[4] gvar=4
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars1 PiP},label=prg:vars1-pip]{../prgs/vars1-pip.c}
+\begin{lstlisting}[style=example,caption={Output of ``Vars1 PiP''},label=out:vars1-pip]
+$ piprun -n 5 ./vars1-pip
+[4] gvar=4
+[2] gvar=2
+[3] gvar=3
+[0] gvar=0
+[1] gvar=1
+$ piprun -n 5 ./vars1-pip
+[3] gvar=3
+[2] gvar=2
+[4] gvar=4
+[0] gvar=0
+[1] gvar=1
+$ piprun -n 5 ./vars1-pip
+[4] gvar=4
+[3] gvar=3
+[1] gvar=1
+[2] gvar=2
+[0] gvar=0
+\end{lstlisting}
+
+
+\lstinputlisting[style=program,caption={Vars2 PiP},label=prg:vars2-pip]{../prgs/vars2-pip.c}
+\begin{lstlisting}[style=example,caption={Output of ``Vars2 PiP''},label=out:vars2-pip]
+$ piprun -n 5 ./vars2-pip
+[4] 1st: gvar=4
+[2] 1st: gvar=2
+[1] 1st: gvar=1
+[0] 1st: gvar=0
+[3] 1st: gvar=3
+[0] 2nd: gvar=100
+$ piprun -n 5 ./vars2-pip
+[0] 1st: gvar=0
+[4] 1st: gvar=4
+[3] 1st: gvar=3
+[1] 1st: gvar=1
+[2] 1st: gvar=2
+[0] 2nd: gvar=104
+\end{lstlisting}
