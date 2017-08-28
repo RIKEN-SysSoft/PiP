@@ -13,13 +13,13 @@ PIPLDFLAGS  = -L../../lib -lpip -lpthread -pie -rdynamic
 
 OMPCFLAGS = -fopenmp
 
-PIPSRCS  = hello-pip.c vars0-pip.c
-OMPSRCS  = hello-omp.c vars0-omp.c
-MPISRCS  = hello-mpi.c vars0-mpi.c
+PIPSRCS  = hello-pip.c vars0-pip.c vars1-pip.c vars2-pip.c
+OMPSRCS  = hello-omp.c vars0-omp.c vars1-omp.c
+MPISRCS  = hello-mpi.c vars0-mpi.c vars1-mpi.c
 
-PIPPRGS  = hello-pip vars0-pip
-OMPPRGS  = hello-omp vars0-omp
-MPIPRGS  = hello-mpi vars0-mpi
+PIPPRGS  = hello-pip vars0-pip vars1-pip vars2-pip
+OMPPRGS  = hello-omp vars0-omp vars1-omp
+MPIPRGS  = hello-mpi vars0-mpi vars1-mpi
 
 PROGRAMS = $(PIPPRGS) $(OMPPRGS) $(MPIPRGS)
 
