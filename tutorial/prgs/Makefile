@@ -2,26 +2,37 @@
 # $PIP_license:$
 # $RIKEN_copyright:$
 
-top_builddir = ../..
-top_srcdir = $(top_builddir)
-srcdir = .
+CC    = cc
+MPICC = mpicc
 
-include $(top_srcdir)/build/var.mk
+CFLAGS = -O2 -g
 
-PIPCFLAGS  = -I$(PIPINCDIR) $(CFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
+PIPCPPFLAGS = -I../../include
+PIPCFLAGS   = -fpie
+PIPLDFLAGS  = -L../../lib -lpip -lpthread -pie -rdynamic
 
-DEPINCS = $(PIPINCDIR)/pip.h
+OMPCFLAGS = -fopenmp
 
-SRCS  = hello-pip.c
+PIPSRCS  = hello-pip.c vars0-pip.c
+OMPSRCS  = hello-omp.c vars0-omp.c
+MPISRCS  = hello-mpi.c vars0-mpi.c
 
-PROGRAMS  = hello-pip
+PIPPRGS  = hello-pip vars0-pip
+OMPPRGS  = hello-omp vars0-omp
+MPIPRGS  = hello-mpi vars0-mpi
 
-PROGRAMS_TO_INSTALL = # nothing
+PROGRAMS = $(PIPPRGS) $(OMPPRGS) $(MPIPRGS)
 
-include $(top_srcdir)/build/rule.mk
+all: $(PROGRAMS)
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@
+%-pip: %-pip.c $(PIPSRCS) Makefile
+	$(CC) $(CFLAGS) $(PIPCPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) $< -o $@
 
-post-clean-hook:
-	$(RM) *.E *.log
+%-omp: %-omp.c $(OMPSRCS) Makefile
+	$(CC) $(CFLAGS) $(OMPCFLAGS) $< -o $@
+
+%-mpi: %-mpi.c $(MPISRCS) Makefile
+	$(MPICC) $(CFLAGS)  $< -o $@
+
+clean:
+	$(RM) *~ $(PROGRAMS)
