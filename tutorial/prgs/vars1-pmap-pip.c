@@ -4,15 +4,21 @@
 
 int gvar = 12345;
 
-pip_barrier_t barrier = PIP_BARRIER_INIT(5);
+#define N	(5)
+
+pip_barrier_t barrier = PIP_BARRIER_INIT(N);
 
 int main( int argc, char **argv ) {
   pip_barrier_t *barrp;
   int pipid, ntasks, i;
 
   pip_init( &pipid, &ntasks, NULL, 0 );
-  gvar = pipid;
+  if( ntasks != N ) {
+    printf( "Number of PiP tasks must be %d\n", N );
+    return 9;
+  }
 
+  gvar = pipid;
   pip_get_addr( 0, "barrier", (void**) &barrp );
   pip_barrier_wait( barrp );
   printf( "<%d> gvar=%d @%p\n", pipid, gvar, &gvar );
