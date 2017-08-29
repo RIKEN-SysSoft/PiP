@@ -4,7 +4,7 @@
 
 int gvar = 12345;
 
-#define N	(3)
+#define N	(5)
 
 pip_barrier_t barrier = PIP_BARRIER_INIT(N);
 
