@@ -25,7 +25,7 @@ int main( int argc, char **argv ) {
   {
     int *gvarp;
     pip_get_addr( 0, "gvar", (void**) &gvarp );
-    *gvarp = 54321;
+    *gvarp = 1000 + pipid;
     pip_barrier_wait( barrp );
     printf( "<%d> 2nd: gvar=%d\n", pipid, gvar );
   }
