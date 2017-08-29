@@ -20,14 +20,15 @@ int main( int argc, char **argv ) {
   gvar = pipid;
   pip_get_addr( 0, "barrier", (void**) &barrp );
   pip_barrier_wait( barrp );
-  printf( "<%d> 1st: gvar=%d\n", pipid, gvar );
+  printf( "<%d> 1st: gvar=%d @%p\n", pipid, gvar, &gvar );
   pip_barrier_wait( barrp );
   {
     int *gvarp;
     pip_get_addr( 0, "gvar", (void**) &gvarp );
     *gvarp = 1000 + pipid;
     pip_barrier_wait( barrp );
-    printf( "<%d> 2nd: gvar=%d\n", pipid, gvar );
+    printf( "<%d> 2nd: gvar=%d  gvarp=%p\n",
+	    pipid, gvar, gvarp );
   }
   pip_fin();
   return 0;
