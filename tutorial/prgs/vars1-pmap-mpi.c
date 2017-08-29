@@ -2,7 +2,7 @@
 #include <mpi.h>
 #include "pmap.h"
 
-int gvar = 0;
+int gvar = 12345;
 
 int main( int argc, char **argv ) {
   int rank, size, i;
