@@ -9,7 +9,8 @@ int main( int argc, char **argv ) {
   {
     gvar = omp_get_thread_num();
 #pragma omp barrier
-    printf( "[%d] gvar=%d\n", omp_get_thread_num(), gvar );
+    printf( "[%d] gvar=%d\n",
+	    omp_get_thread_num(), gvar );
   }
   return 0;
 }
