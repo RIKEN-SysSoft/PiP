@@ -1,27 +1,26 @@
 #include <stdio.h>
 #include <pip.h>
+#include "pmap.h"
 
-int gvar = 0;
+int gvar = 12345;
 
 pip_barrier_t barrier = PIP_BARRIER_INIT(5);
 
 int main( int argc, char **argv ) {
   pip_barrier_t *barrp;
-  int pipid;
+  int pipid, ntasks, i;
 
-  pip_init( &pipid, NULL, NULL, 0 );
+  pip_init( &pipid, &ntasks, NULL, 0 );
   gvar = pipid;
 
   pip_get_addr( 0, "barrier", (void**) &barrp );
   pip_barrier_wait( barrp );
-  printf( "<%d> 1st: gvar=%d\n", pipid, gvar );
+  printf( "<%d> gvar=%d @%p\n", pipid, gvar, &gvar );
+  fflush( stdout );
   pip_barrier_wait( barrp );
-  {
-    int *gvarp;
-    pip_get_addr( 0, "gvar", (void**) &gvarp );
-    *gvarp = pipid + 100;
+  for( i=0; i<ntasks; i++ ) {
+    if( i == pipid ) print_maps();
     pip_barrier_wait( barrp );
-    printf( "<%d> 2nd: gvar=%d\n", pipid, gvar );
   }
   pip_fin();
   return 0;

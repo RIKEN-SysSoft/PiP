@@ -8,10 +8,7 @@ int main( int argc, char **argv ) {
 #pragma omp parallel
   {
     gvar = omp_get_thread_num();
-  }
-
-#pragma omp parallel
-  {
+#pragma omp barrier
     printf( "[%d] gvar=%d\n", omp_get_thread_num(), gvar );
   }
   return 0;
