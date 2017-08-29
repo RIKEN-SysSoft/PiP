@@ -9,7 +9,8 @@ int main( int argc, char **argv ) {
 
   MPI_Init( &argc, &argv );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-  printf( "<%d> gvar:%p lvar:%p\n", rank, &gvar, &lvar );
+  printf( "<%d> gvar:%p lvar:%p\n",
+	  rank, &gvar, &lvar );
   MPI_Finalize();
   return 0;
 }
