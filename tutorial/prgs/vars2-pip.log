@@ -1,0 +1,120 @@
+<1> 1st: gvar=1 @0x7fd396e3b098
+<1> 2nd: gvar=1  gvarp=0x7fd39820e098
+<2> 1st: gvar=2 @0x7fd395a68098
+<2> 2nd: gvar=2  gvarp=0x7fd39820e098
+<0> 1st: gvar=0 @0x7fd39820e098
+<0> 2nd: gvar=1002  gvarp=0x7fd39820e098
+PID: 21569
+00400000-00402000 r-xp 00000000 00:28 55183955                           /home/ahori/work/PIP/PIP/bin/piprun
+00601000-00602000 r--p 00001000 00:28 55183955                           /home/ahori/work/PIP/PIP/bin/piprun
+00602000-00603000 rw-p 00002000 00:28 55183955                           /home/ahori/work/PIP/PIP/bin/piprun
+0159e000-015bf000 rw-p 00000000 00:00 0                                  [heap]
+7fd388000000-7fd388029000 rw-p 00000000 00:00 0 
+7fd388029000-7fd38c000000 ---p 00000000 00:00 0 
+7fd38c000000-7fd38c029000 rw-p 00000000 00:00 0 
+7fd38c029000-7fd390000000 ---p 00000000 00:00 0 
+7fd390000000-7fd390029000 rw-p 00000000 00:00 0 
+7fd390029000-7fd394000000 ---p 00000000 00:00 0 
+7fd394496000-7fd394696000 rw-p 00000000 00:00 0 
+7fd394696000-7fd394697000 ---p 00000000 00:00 0 
+7fd394697000-7fd394e97000 rw-p 00000000 00:00 0 
+7fd394e97000-7fd394e99000 r-xp 00000000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd394e99000-7fd395098000 ---p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd395098000-7fd395099000 r--p 00001000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd395099000-7fd39509a000 rw-p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39509a000-7fd395238000 r-xp 00000000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd395238000-7fd395438000 ---p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd395438000-7fd39543c000 r--p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd39543c000-7fd39543e000 rw-p 001a2000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd39543e000-7fd395443000 rw-p 00000000 00:00 0 
+7fd395443000-7fd395458000 r-xp 00000000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd395458000-7fd395657000 ---p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd395657000-7fd395658000 r--p 00014000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd395658000-7fd395659000 rw-p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd395659000-7fd39565d000 rw-p 00000000 00:00 0 
+7fd39565d000-7fd395665000 r-xp 00000000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd395665000-7fd395864000 ---p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd395864000-7fd395865000 r--p 00007000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd395865000-7fd395866000 rw-p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd395866000-7fd395868000 r-xp 00000000 00:28 50088050                   /home/ahori/vars2-pip
+7fd395868000-7fd395a67000 ---p 00002000 00:28 50088050                   /home/ahori/vars2-pip
+7fd395a67000-7fd395a68000 r--p 00001000 00:28 50088050                   /home/ahori/vars2-pip
+7fd395a68000-7fd395a69000 rw-p 00002000 00:28 50088050                   /home/ahori/vars2-pip
+7fd395a69000-7fd395a6a000 ---p 00000000 00:00 0 
+7fd395a6a000-7fd39626a000 rw-p 00000000 00:00 0 
+7fd39626a000-7fd39626c000 r-xp 00000000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39626c000-7fd39646b000 ---p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39646b000-7fd39646c000 r--p 00001000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39646c000-7fd39646d000 rw-p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39646d000-7fd39660b000 r-xp 00000000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd39660b000-7fd39680b000 ---p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd39680b000-7fd39680f000 r--p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd39680f000-7fd396811000 rw-p 001a2000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd396811000-7fd396816000 rw-p 00000000 00:00 0 
+7fd396816000-7fd39682b000 r-xp 00000000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd39682b000-7fd396a2a000 ---p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd396a2a000-7fd396a2b000 r--p 00014000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd396a2b000-7fd396a2c000 rw-p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd396a2c000-7fd396a30000 rw-p 00000000 00:00 0 
+7fd396a30000-7fd396a38000 r-xp 00000000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd396a38000-7fd396c37000 ---p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd396c37000-7fd396c38000 r--p 00007000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd396c38000-7fd396c39000 rw-p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd396c39000-7fd396c3b000 r-xp 00000000 00:28 50088050                   /home/ahori/vars2-pip
+7fd396c3b000-7fd396e3a000 ---p 00002000 00:28 50088050                   /home/ahori/vars2-pip
+7fd396e3a000-7fd396e3b000 r--p 00001000 00:28 50088050                   /home/ahori/vars2-pip
+7fd396e3b000-7fd396e3c000 rw-p 00002000 00:28 50088050                   /home/ahori/vars2-pip
+7fd396e3c000-7fd396e3d000 ---p 00000000 00:00 0 
+7fd396e3d000-7fd39763d000 rw-p 00000000 00:00 0                          [stack:21569]
+7fd39763d000-7fd39763f000 r-xp 00000000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39763f000-7fd39783e000 ---p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39783e000-7fd39783f000 r--p 00001000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd39783f000-7fd397840000 rw-p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd397840000-7fd3979de000 r-xp 00000000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd3979de000-7fd397bde000 ---p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd397bde000-7fd397be2000 r--p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd397be2000-7fd397be4000 rw-p 001a2000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd397be4000-7fd397be9000 rw-p 00000000 00:00 0 
+7fd397be9000-7fd397bfe000 r-xp 00000000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd397bfe000-7fd397dfd000 ---p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd397dfd000-7fd397dfe000 r--p 00014000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd397dfe000-7fd397dff000 rw-p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd397dff000-7fd397e03000 rw-p 00000000 00:00 0 
+7fd397e03000-7fd397e0b000 r-xp 00000000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd397e0b000-7fd39800a000 ---p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd39800a000-7fd39800b000 r--p 00007000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd39800b000-7fd39800c000 rw-p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd39800c000-7fd39800e000 r-xp 00000000 00:28 50088050                   /home/ahori/vars2-pip
+7fd39800e000-7fd39820d000 ---p 00002000 00:28 50088050                   /home/ahori/vars2-pip
+7fd39820d000-7fd39820e000 r--p 00001000 00:28 50088050                   /home/ahori/vars2-pip
+7fd39820e000-7fd39820f000 rw-p 00002000 00:28 50088050                   /home/ahori/vars2-pip
+7fd39820f000-7fd3983ad000 r-xp 00000000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd3983ad000-7fd3985ad000 ---p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd3985ad000-7fd3985b1000 r--p 0019e000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd3985b1000-7fd3985b3000 rw-p 001a2000 00:28 53481383                   /home/ahori/work/PIP/GLIBC/install/lib/libc-2.17.so
+7fd3985b3000-7fd3985b8000 rw-p 00000000 00:00 0 
+7fd3985b8000-7fd3985cd000 r-xp 00000000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd3985cd000-7fd3987cc000 ---p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd3987cc000-7fd3987cd000 r--p 00014000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd3987cd000-7fd3987ce000 rw-p 00015000 00:28 53481411                   /home/ahori/work/PIP/GLIBC/install/lib/libpthread-2.17.so
+7fd3987ce000-7fd3987d2000 rw-p 00000000 00:00 0 
+7fd3987d2000-7fd3987d4000 r-xp 00000000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd3987d4000-7fd3989d3000 ---p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd3989d3000-7fd3989d4000 r--p 00001000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd3989d4000-7fd3989d5000 rw-p 00002000 00:28 53481284                   /home/ahori/work/PIP/GLIBC/install/lib/libdl-2.17.so
+7fd3989d5000-7fd3989dd000 r-xp 00000000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd3989dd000-7fd398bdc000 ---p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd398bdc000-7fd398bdd000 r--p 00007000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd398bdd000-7fd398bde000 rw-p 00008000 00:28 51650387                   /home/ahori/work/PIP/install/lib/libpip.so
+7fd398bde000-7fd398bdf000 r-xp 00000000 00:28 51662616                   /home/ahori/work/PIP/install/lib/pip_preload.so
+7fd398bdf000-7fd398dde000 ---p 00001000 00:28 51662616                   /home/ahori/work/PIP/install/lib/pip_preload.so
+7fd398dde000-7fd398ddf000 r--p 00000000 00:28 51662616                   /home/ahori/work/PIP/install/lib/pip_preload.so
+7fd398ddf000-7fd398de0000 rw-p 00001000 00:28 51662616                   /home/ahori/work/PIP/install/lib/pip_preload.so
+7fd398de0000-7fd398dff000 r-xp 00000000 00:28 53481634                   /home/ahori/work/PIP/GLIBC/install/lib/ld-2.17.so
+7fd398ec5000-7fd398fd4000 rw-p 00000000 00:00 0 
+7fd398ff8000-7fd398ffe000 rw-p 00000000 00:00 0 
+7fd398ffe000-7fd398fff000 r--p 0001e000 00:28 53481634                   /home/ahori/work/PIP/GLIBC/install/lib/ld-2.17.so
+7fd398fff000-7fd399010000 rw-p 0001f000 00:28 53481634                   /home/ahori/work/PIP/GLIBC/install/lib/ld-2.17.so
+7ffd5a080000-7ffd5a0a3000 rw-p 00000000 00:00 0 
+7ffd5a0e4000-7ffd5a0e6000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]

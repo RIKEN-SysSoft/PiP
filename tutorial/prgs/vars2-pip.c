@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <pip.h>
+#include "pmap.h"
 
 int gvar = 12345;
 
-#define N	(5)
+#define N	(3)
 
-pip_barrier_t barrier = PIP_BARRIER_INIT(5);
+pip_barrier_t barrier = PIP_BARRIER_INIT(N);
 
 int main( int argc, char **argv ) {
   pip_barrier_t *barrp;
@@ -30,6 +31,7 @@ int main( int argc, char **argv ) {
     printf( "<%d> 2nd: gvar=%d  gvarp=%p\n",
 	    pipid, gvar, gvarp );
   }
+  if( pipid == 0 ) print_maps();
   pip_fin();
   return 0;
 }
