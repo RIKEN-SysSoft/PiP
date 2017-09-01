@@ -468,6 +468,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->task_root->pipid        = pipid;
     pip_root->task_root->type         = PIP_TYPE_ROOT;
     pip_root->task_root->symbols.free = (free_t) pip_dlsym( RTLD_DEFAULT, "free");
+    pip_root->task_root->loaded       = dlopen( NULL, RTLD_NOW );
     pip_root->task_root->thread       = pthread_self();
     pip_root->task_root->pid          = getpid();
     if( rt_expp != NULL ) {
@@ -661,7 +662,7 @@ int pip_get_addr( int pipid, const char *name, void **addrp ) {
   if( name == NULL || addrp == NULL            ) RETURN( EINVAL );
   DBGF( "pipid=%d", pipid );
   if( pipid == PIP_PIPID_ROOT ) {;
-    *addrp = pip_dlsym( RTLD_DEFAULT, name );
+    *addrp = pip_dlsym( pip_root->task_root->loaded, name );
   } else if( pipid == PIP_PIPID_MYSELF ) {
     *addrp = pip_dlsym( pip_task->loaded, name );
   } else if( ( handle = pip_root->tasks[pipid].loaded ) != NULL ) {
