@@ -16,7 +16,7 @@ int main( int argc, char **argv ) {
       pipid = i;
       pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL );
     }
-    for( i=0; i<N; i++ ) pip_wait( pipid, NULL );
+    for( i=0; i<N; i++ ) pip_wait( i, NULL );
   } else {
     int *xp;
 

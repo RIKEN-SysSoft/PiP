@@ -505,6 +505,11 @@ extern "C" {
 
   int  pip_idstr( char *buf, size_t sz );
 
+#ifdef PIP_EXPERIMENTAL
+  void *pip_malloc( size_t size );
+  void  pip_free( void *ptr );
+#endif
+
 #ifdef __cplusplus
 }
 #endif

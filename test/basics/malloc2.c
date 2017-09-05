@@ -9,6 +9,7 @@
 
 //#define DEBUG
 
+#define PIP_EXPERIMENTAL
 #include <test.h>
 #include <pip_internal.h>
 #include <pthread.h>
