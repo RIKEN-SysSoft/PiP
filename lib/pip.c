@@ -474,6 +474,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( rt_expp != NULL ) {
       pip_root->task_root->export     = *rt_expp;
     }
+    pip_spin_init( &pip_root->task_root->lock_malloc );
     unsetenv( PIP_ROOT_ENV );
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
