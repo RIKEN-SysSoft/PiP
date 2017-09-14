@@ -11,8 +11,7 @@ Process-in-Process (PiP) Installation
 * Patched GLIBC
   You can download the patched GLIBC from the following URL.
 
-	git clone -b pip-centos7 \
-		git@git.sys.aics.riken.jp:software/PIP-glibc
+git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-glibc
 
   With the GLIB which Linux distribution provides, the number of PiP
   tasks (see below) is limited to 15 or so. This limitation comes from
@@ -25,43 +24,31 @@ Process-in-Process (PiP) Installation
   GLIBC based on CentOS 7.2,
 
   +++ on x86_64
-	mkdir PIP-glibc.build
-	cd PIP-glibc.build
-	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
-		"CFLAGS=-mtune=generic -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
-		--enable-add-ons=ports,nptl,rtkaio,c_stubs,libidn \
-		--with-headers=/usr/include --enable-kernel=2.6.32 \
-		--enable-bind-now --build=x86_64-redhat-linux \
-		--enable-multi-arch --enable-obsolete-rpc \
-		--disable-profile --enable-nss-crypt --enable-systemtap
-	make -j3 && make install
+
+mkdir PIP-glibc.build
+cd PIP-glibc.build
+../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ CFLAGS="-mtune=generic -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" --enable-add-ons --with-headers=/usr/include --enable-kernel=2.6.32 --enable-bind-now --build=x86_64-redhat-linux --enable-multi-arch --enable-obsolete-rpc --disable-profile --enable-nss-crypt --enable-systemtap
+make -j3 && make install
 
   +++ on Aarch64 (ARM64)
-	mkdir PIP-glibc.build
-	cd PIP-glibc.build
-	../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ \
-		CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" \
-		--enable-add-ons=ports,nptl,c_stubs,libidn \
-		--with-headers=/usr/include --enable-kernel=2.6.32 \
-		--enable-bind-now --build=aarch64-redhat-linux \
-		--enable-obsolete-rpc --enable-systemtap \
-		--disable-profile --enable-nss-crypt
-	make -j3 -r CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3" \
-		PARALLELMFLAGS=
-	make -j1 install PARALLELMFLAGS=
+
+mkdir PIP-glibc.build
+cd PIP-glibc.build
+../PIP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ CFLAGS="-fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" --enable-add-ons --with-headers=/usr/include --enable-kernel=2.6.32 --enable-bind-now --build=aarch64-redhat-linux --enable-obsolete-rpc --enable-systemtap --disable-profile --enable-nss-crypt
+make -j3 -r CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3" PARALLELMFLAGS=
+make -j1 install PARALLELMFLAGS=
 
 * Building PiP
   At the PiP configuration, you must specify the installed GLIBC.
 
-	git clone git@git.sys.aics.riken.jp:software/PIP
-	cd PIP
-	./configure --prefix=<PIP_INSTALL_DIR> \
-		--with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
-	make install
+git clone git@git.sys.aics.riken.jp:software/PIP
+cd PIP
+./configure --prefix=<PIP_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
+make install
 
   After the successful PiP installation, you must do the following,
 
-	<PIP_INSTALL_DIR>/bin/piplnlibs
+<PIP_INSTALL_DIR>/bin/piplnlibs
 
   This command creates a number of symbolic links to the SOLIBs which
   are not installed by the patched GLIBC installation.
@@ -72,7 +59,7 @@ Process-in-Process (PiP) Installation
 * To compile, link, and run your PiP programs
   - PiP root process (spawning PiP tasks)
     must be linked with the PiP library and must specify the link
-    option as follows,
+    option as follows if you have the patched GLIBC,
 
 	--dynamic-linker=<GLIBC_INSTALL_DIR>/lib/ld-2.17.so
 
