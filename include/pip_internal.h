@@ -68,7 +68,7 @@ typedef struct {
   mallopt_t		mallopt;     /* to call mallopt() */
   free_t		free;	     /* to override free() - EXPERIMENTAL*/
   /* variables */
-  char 			***libc_argvp; /* to set __libc_argv */
+  char			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
   char			**progname;
   char			**progname_full;
@@ -76,11 +76,11 @@ typedef struct {
 } pip_symbols_t;
 
 typedef struct {
-  int 			pipid;
-  int	 		coreno;
-  char 			*prog;
-  char 			**argv;
-  char 			**envv;
+  int			pipid;
+  int			coreno;
+  char			*prog;
+  char			**argv;
+  char			**envv;
 } pip_spawn_args_t;
 
 #define PIP_TYPE_NONE	(0)
@@ -134,9 +134,9 @@ typedef struct {
       int		ntasks_curr;
       int		ntasks_accum;
       int		pipid_curr;
-      pip_clone_t 	*cloneinfo;   /* only valid with process:preload */
+      pip_clone_t	*cloneinfo;   /* only valid with process:preload */
     };
-    char 		__filler0__[PIP_FILLER_SZ];
+    char		__filler0__[PIP_FILLER_SZ];
   };
   pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
   union {
@@ -145,7 +145,7 @@ typedef struct {
       size_t		stack_size;
       pip_task_t	*task_root; /* points to tasks[ntasks] */
     };
-    char 		__filler1__[PIP_FILLER_SZ];
+    char		__filler1__[PIP_FILLER_SZ];
   };
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   pip_task_t		tasks[];
