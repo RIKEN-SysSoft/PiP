@@ -114,7 +114,7 @@ fi
 
 for libdir in ${extra_libdirs} ${glibc_default_libdir}
 do
-	ls ${libdir} | grep '^lib.*\.so[.0-9]*$' |
+	ls ${libdir} | grep '^lib.*\.so\(\.[0-9a-z]*\)*$' |
 	while read lib
 	do
 		if [ -f ${glibc_libdir}/$lib ]; then
