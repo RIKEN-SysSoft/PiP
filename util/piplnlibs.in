@@ -114,11 +114,9 @@ fi
 
 for libdir in ${extra_libdirs} ${glibc_default_libdir}
 do
-##	ls ${libdir} | grep '^lib.*\.so\.[0-9]*$' |
-        ls ${libdir}/lib*.so* |
+	ls ${libdir} | grep '^lib.*\.so[.0-9]*$' |
 	while read lib
 	do
-	        lib=`basename $lib`
 		if [ -f ${glibc_libdir}/$lib ]; then
 			continue
 		fi
