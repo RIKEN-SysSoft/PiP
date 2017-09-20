@@ -41,7 +41,7 @@ program_name=`basename $0`
 
 usage()
 {
-	echo >&2 "Usage: $program_name [-rs] [-a DIR]"
+	echo >&2 "Usage: $program_name [-rs]"
 	exit 2
 }
 
@@ -114,9 +114,11 @@ fi
 
 for libdir in ${extra_libdirs} ${glibc_default_libdir}
 do
-	ls ${libdir} | grep '^lib.*\.so\.[0-9]*$' |
+##	ls ${libdir} | grep '^lib.*\.so\.[0-9]*$' |
+        ls ${libdir}/lib*.so* |
 	while read lib
 	do
+	        lib=`basename $lib`
 		if [ -f ${glibc_libdir}/$lib ]; then
 			continue
 		fi
