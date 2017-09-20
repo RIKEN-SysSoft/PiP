@@ -7,12 +7,13 @@ Process-in-Process (PiP) Execution Mode
 
   1) PiP using pthread_create only
      "PIP_MODE=thread"
-     In this mode, a PiP task behaves more like a pthread, having no
-     PID.
+     In this mode, a PiP task behaves more like a pthread in terms of
+     PID, file descriptos, signal handling, termination, etc.
 
   2) otherwise,
      "PIP_MODE=process"
-     In this mode, a PiP task behaves more like a process, having PID.
+     In this mode, a PiP task behaves more like a process, in terms of
+     TID, file descriptors, signal handling, termination, etc.
 
   2-1) PiP using pthread_create and clone wrapper
      "PIP_MODE=process:preload, LD_PRELOAD=<PIP_INSTALL_DIR>/lib"
