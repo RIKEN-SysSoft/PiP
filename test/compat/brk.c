@@ -11,7 +11,8 @@
 #include <test.h>
 
 void print_brk( int id ) {
-  printf( "<%d> brk: %p\n", id, sbrk( 4096 ) );
+  errno = 0;
+  printf( "<%d> brk: %p (err=%d)\n", id, sbrk( 4096 ), errno );
 }
 
 struct task_comm {

@@ -15,6 +15,8 @@ then
 	test_exit_status=$EXIT_PASS
 elif grep -i 'segmentation fault' <$TEST_TMP >/dev/null; then
 	test_exit_status=$EXIT_XFAIL # known problem
+else
+	test_exit_status=$EXIT_PASS # since brk() is not thread safe, this can happen
 fi
 rm -f $TEST_TMP
 exit $test_exit_status
