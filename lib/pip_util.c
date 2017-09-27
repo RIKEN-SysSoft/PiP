@@ -16,9 +16,9 @@
 #include <pip_internal.h>
 #include <pip_util.h>
 
-extern int   pip_is_coefd( int );
-extern void *pip_get_dso_( void );
-extern int   pip_root_p_( void );
+extern int pip_is_coefd( int );
+extern int pip_get_dso( int pipid, void **loaded );
+extern int pip_root_p_( void );
 
 /* the following function(s) are for debugging */
 
@@ -136,18 +136,14 @@ double pip_gettime( void ) {
 void pip_print_loaded_solibs( FILE *file ) {
   void *handle = NULL;
   char idstr[PIPIDLEN];
+  int err;
 
   /* pip_init() must be called in advance */
   (void) pip_idstr( idstr, PIPIDLEN );
   if( file == NULL ) file = stderr;
 
-  if( !pip_root_p_() ) {
-    handle = pip_get_dso_();
-  } else {
-    handle = dlopen( NULL, RTLD_NOW );
-  }
-  if( handle == NULL ) {
-    fprintf( file, "%s (no solibs loaded)\n", idstr );
+  if( ( err = pip_get_dso( PIP_PIPID_MYSELF, &handle ) ) != 0 ) {
+    fprintf( file, "%s (no solibs found: %d)\n", idstr, err );
   } else {
     struct link_map *map = (struct link_map*) handle;
     for( ; map!=NULL; map=map->l_next ) {

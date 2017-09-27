@@ -589,10 +589,14 @@ static pip_task_t *pip_get_task_( int pipid ) {
   return task;
 }
 
-void *pip_get_dso_( void ) {
-  if( pip_ulp  != NULL ) return pip_get_task_( pip_ulp->pipid )->loaded;
-  if( pip_task != NULL ) return pip_task->loaded;
-  return NULL;
+int pip_get_dso( int pipid, void **loaded ) {
+  pip_task_t *task;
+  int err;
+
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  task = pip_get_task_( pipid );
+  if( loaded != NULL ) *loaded = task->loaded;
+  RETURN( 0 );
 }
 
 int pip_isa_ulp( void ) {
