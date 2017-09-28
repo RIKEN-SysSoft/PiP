@@ -16,7 +16,7 @@
  *	\c \b piprun [-n &lt;N&gt;] &lt;program&gt; ...
  *
  * \section description DESCRIPTION
- * \b Run a program under PiP. If \b -n &lt;N&gt; is specified, then
+ * \b Run a program as a PiP task. If \b -n &lt;N&gt; is specified, then
  * \b N PiP tasks are created and run.
  *
  *
@@ -76,8 +76,10 @@ int main( int argc, char **argv ) {
 
   if( argc < 2 || argv[1] == NULL ) print_usage();
 
-  for( i=1; *argv[i]=='-'; i++ ) {
-    if( strcmp( argv[i], "-n" ) == 0 ) {
+  for( i=1; argv[i]!=NULL && *argv[i]=='-'; i++ ) {
+    if( strcmp( argv[i], "-h" ) == 0 ) {
+      print_usage();
+    } else if( strcmp( argv[i], "-n" ) == 0 ) {
       if( argv[i+1] == NULL || ( ntasks = atoi( argv[++i] ) ) == 0 ) {
 	print_usage();
       }
@@ -87,6 +89,8 @@ int main( int argc, char **argv ) {
       coreno = atoi( argv[++i] ) % ncores;
     } else if( strcmp( argv[i], "-b" ) == 0 ) {
       coreno = -100;
+    } else {
+      print_usage();
     }
   }
   opts |= PIP_OPT_PGRP;
@@ -115,7 +119,12 @@ int main( int argc, char **argv ) {
 		       NULL );
       if( err ) {
 	int j;
-	fprintf( stderr, "pip_spawn(%s)=%d\n", argv[1], err );
+
+	if( err == ENOENT ) {
+	  fprintf( stderr, "'%s' not found\n", argv[k] );
+	} else {
+	  fprintf( stderr, "pip_spawn(%s)=%d\n", argv[1], err );
+	}
 	for( j=0; j<i; j++ ) {
 	  int status, mode, exst;
 	  pip_wait( i, &status );
