@@ -33,13 +33,14 @@ doxygen:
 			echo $$srcdir/$$dir; \
 		done <$$file; done | sort -u | tr '\012' ' ' ); \
 	( \
-	echo "man1 NO YES 1"; \
-	echo "man3 NO YES 3"; \
-	echo "html YES NO 3"; \
-	) | while read type html man man_ext; do \
+	echo "man1 NO  NO YES 1"; \
+	echo "man3 YES NO YES 3"; \
+	echo "html YES YES NO 3"; \
+	) | while read type repeat_brief html man man_ext; do \
 		echo ==== $$type =====; \
 		( \
 		cat $(top_srcdir)/build/common.doxy; \
+		echo "REPEAT_BRIEF = $$repeat_brief"; \
 		echo "STRIP_FROM_PATH = $$doxy_dirs"; \
 		echo "GENERATE_HTML = $$html"; \
 		echo "GENERATE_MAN = $$man"; \
