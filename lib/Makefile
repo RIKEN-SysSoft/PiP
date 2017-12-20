@@ -8,7 +8,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-CPPFLAGS = -I$(PIPINCDIR)
+CPPFLAGS += -I$(PIPINCDIR)
 CFLAGS += $(PICFLAG)
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
@@ -33,3 +33,6 @@ $(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
+
+debug:
+	CPPFLAGS="-DDEBUG" make all;
