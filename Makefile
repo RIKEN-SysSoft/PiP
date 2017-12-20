@@ -22,6 +22,9 @@ include $(top_srcdir)/build/rule.mk
 install: doxygen doxygen-install
 .PHONY: install
 
+debug:
+	CPPFLAGS="-DDEBUG" make all;
+
 ### doxygen
 
 doxygen:
