@@ -11,24 +11,26 @@
 #define _pip_gdb_if_h_
 
 enum pip_task_status_e {
-  PIP_TASK_GDBIF_NULL		= 0,
-  PIP_TASK_GDBIF_CREATED	= 1,
-  PIP_TASK_GDBIF_LOADED		= 2,
-  PIP_TASK_GDBIF_TERMINATED	= 3
+  PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in thsi struct */
+  PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawbn() is called and this sturucture is created */
+  /* Note: the oerder of state transition of the next two depends on implementation (option) */
+  /* do to rely on the order of the next two. */
+  PIP_GDBIF_STATUS_LOADED	= 2, /* just after calling dlmopen */
+  PIP_GDBIF_STATUS_SPAWNED	= 3, /* just after calling pthread_create() or clone() */
+  PIP_GDBIF_STATUS_TERMINATED	= 4  /* when the task is about to die (killed) */
 };
 
-enum pip_task_exec_mode_e {
-  PIP_TASK_GDBIF_MODE_NULL	= 0,
-  PIP_TASK_GDBIF_PROCESS	= 1,
-  PIP_TASK_GDBIF_THREAD		= 2
+enum pip_task_exec_mode_e {	/* One of the value (except NULL) is set when this structure is created */
+  /* and the value is left unchanged until the structure is put on the free list */
+  PIP_GDBIF_EXMODE_NULL		= 0,
+  PIP_GDBIF_EXMODE_PROCESS	= 1,
+  PIP_GDBIF_EXMODE_THREAD	= 2
 };
 
 struct pip_task_gdbif {
   /* double linked list */
   struct pip_task_gdbif *next;
   struct pip_task_gdbif *prev;
-  /* PID or TID of PiP task */
-  pid_t	pid;
   /* pathname of the program */
   char	*pathname;
   /* argc, argv and env */
@@ -37,11 +39,13 @@ struct pip_task_gdbif {
   char 	**envv;
   /* handle of the link map */
   void	*handle;
-  /* exit code */
-  int	exit_code;
-  /* hook function address */
+  /* hook function address, these addresses are set when the PiP task gets PIP_GDBIF_STATUS_LOADED */
   void	*hook_before_main;
   void	*hook_after_main;
+  /* PID or TID of the PiP task, the value of zero means nothing */
+  pid_t	pid;
+  /* exit code, this value is set when the PiP task gets PIP_GDBIF_STATUS_TERMINATED */
+  int	exit_code;
   /* pip task exec mode */
   enum pip_task_exec_mode_e	exec_mode;
   /* task status, this is set by PiP lib */
