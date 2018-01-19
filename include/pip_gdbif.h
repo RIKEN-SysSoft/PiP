@@ -10,7 +10,7 @@
 #ifndef _pip_gdb_if_h_
 #define _pip_gdb_if_h_
 
-enum pip_task_status_e {
+enum pip_task_status {
   PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in thsi struct */
   PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawbn() is called and this sturucture is created */
   /* Note: the oerder of state transition of the next two depends on implementation (option) */
@@ -20,7 +20,7 @@ enum pip_task_status_e {
   PIP_GDBIF_STATUS_TERMINATED	= 4  /* when the task is about to die (killed) */
 };
 
-enum pip_task_exec_mode_e {	/* One of the value (except NULL) is set when this structure is created */
+enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this structure is created */
   /* and the value is left unchanged until the structure is put on the free list */
   PIP_GDBIF_EXMODE_NULL		= 0,
   PIP_GDBIF_EXMODE_PROCESS	= 1,
@@ -47,12 +47,12 @@ struct pip_task_gdbif {
   /* exit code, this value is set when the PiP task gets PIP_GDBIF_STATUS_TERMINATED */
   int	exit_code;
   /* pip task exec mode */
-  enum pip_task_exec_mode_e	exec_mode;
+  enum pip_task_exec_mode	exec_mode;
   /* task status, this is set by PiP lib */
-  enum pip_task_status_e	status;
+  enum pip_task_status		status;
 };
 
-extern struct pip_task_gdbif	pip_task_gdbif_root;
-extern struct pip_task_gdbif	pip_task_gdbif_freelist;
+extern struct pip_task_gdbif	*pip_task_gdbif_root;
+extern struct pip_task_gdbif	*pip_task_gdbif_freelist;
 
 #endif /* _pip__gdb_if_h_ */
