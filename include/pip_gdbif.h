@@ -7,8 +7,8 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2018
 */
 
-#ifndef _pip_gdb_if_h_
-#define _pip_gdb_if_h_
+#ifndef _pip_gdbif_h_
+#define _pip_gdbif_h_
 
 enum pip_task_status {
   PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in thsi struct */
@@ -62,4 +62,4 @@ struct pip_task_gdbif {
 extern struct pip_task_gdbif	*pip_task_gdbif_root;
 extern struct pip_task_gdbif	*pip_task_gdbif_freelist;
 
-#endif /* _pip__gdb_if_h_ */
+#endif /* _pip_gdbif_h_ */
