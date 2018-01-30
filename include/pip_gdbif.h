@@ -50,6 +50,8 @@ struct pip_task_gdbif {
   enum pip_task_exec_mode	exec_mode;
   /* task status, this is set by PiP lib */
   enum pip_task_status		status;
+  /* the variable(s) below are set/reset by GDB */
+  int	gdb_status;		/* enum? */
 };
 
 extern struct pip_task_gdbif	*pip_task_gdbif_root;
