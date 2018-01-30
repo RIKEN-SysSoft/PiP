@@ -27,8 +27,11 @@ enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this str
   PIP_GDBIF_EXMODE_THREAD	= 2
 };
 
+typedef void(*pip_gdbif_hook_t)(void);
+
 struct pip_task_gdbif {
   /* double linked list */
+  /* assuming GDB only dereferencing the next pointer */
   struct pip_task_gdbif *next;
   struct pip_task_gdbif *prev;
   /* pathname of the program */
@@ -37,14 +40,16 @@ struct pip_task_gdbif {
   int	argc;
   char 	**argv;
   char 	**envv;
-  /* handle of the link map */
+  /* handle of the loaded link map */
   void	*handle;
-  /* hook function address, these addresses are set when the PiP task gets PIP_GDBIF_STATUS_LOADED */
-  void	*hook_before_main;
-  void	*hook_after_main;
+  /* hook function address, these addresses are set */
+  /* when the PiP task gets PIP_GDBIF_STATUS_LOADED */
+  pip_gdbif_hook_t	hook_before_main;
+  pip_gdbif_hook_t	hook_after_main;
   /* PID or TID of the PiP task, the value of zero means nothing */
   pid_t	pid;
-  /* exit code, this value is set when the PiP task gets PIP_GDBIF_STATUS_TERMINATED */
+  /* exit code, this value is set when the PiP task */
+  /* gets PIP_GDBIF_STATUS_TERMINATED */
   int	exit_code;
   /* pip task exec mode */
   enum pip_task_exec_mode	exec_mode;
