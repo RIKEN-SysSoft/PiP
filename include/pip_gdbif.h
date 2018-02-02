@@ -11,7 +11,7 @@
 #define _pip_gdbif_h_
 
 enum pip_task_status {
-  PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in thsi struct */
+  PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in this struct and invalid to access */
   PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawbn() is called and this sturucture is created */
   /* Note: the oerder of state transition of the next two depends on implementation (option) */
   /* do to rely on the order of the next two. */
@@ -27,9 +27,7 @@ enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this str
   PIP_GDBIF_EXMODE_THREAD	= 2
 };
 
-typedef void(*pip_gdbif_hook_t)(void);
-
-struct pip_task_gdbif {
+struct pip_gdbif_task {
   /* double linked list */
   /* assuming GDB only dereferencing the next pointer */
   struct pip_task_gdbif *next;
@@ -42,10 +40,6 @@ struct pip_task_gdbif {
   char 	**envv;
   /* handle of the loaded link map */
   void	*handle;
-  /* hook function address, these addresses are set */
-  /* when the PiP task gets PIP_GDBIF_STATUS_LOADED */
-  pip_gdbif_hook_t	hook_before_main;
-  pip_gdbif_hook_t	hook_after_main;
   /* PID or TID of the PiP task, the value of zero means nothing */
   pid_t	pid;
   /* exit code, this value is set when the PiP task */
@@ -59,7 +53,20 @@ struct pip_task_gdbif {
   int	gdb_status;		/* enum? */
 };
 
-extern struct pip_task_gdbif	*pip_task_gdbif_root;
-extern struct pip_task_gdbif	*pip_task_gdbif_freelist;
+
+typedef void(*pip_gdbif_hook_t)(void);
+
+struct pip_gdbif_root {
+  pip_spinlock_t	lock_root; /* lock for task_root */
+  struct pip_gdbif_task	*task_root;
+
+  pip_spinlock_t	lock_free; /* lock for task_free */
+  struct pip_gdbif_task	*task_free;
+
+  /* hook function address, these addresses are set */
+  /* when the PiP task gets PIP_GDBIF_STATUS_LOADED */
+  pip_gdbif_hook_t	hook_before_main;
+  pip_gdbif_hook_t	hook_after_main;
+};
 
 #endif /* _pip_gdbif_h_ */
