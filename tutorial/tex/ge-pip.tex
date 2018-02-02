@@ -6,7 +6,7 @@
 \lstset{basicstyle=\ttfamily, numberbychapter=true, showstringspaces=false,
   emph={pip\_init, pip\_fin, pip\_spawn, pip\_wait, 
     pip\_export, pip\_import, pip\_get\_addr, pip\_exit, 
-    pip\_barrier\_init, pip\_barrier\_wait,
+    pip\_barrier\_init, pip\_barrier\_wait, pip_barrier_t, PIP\_BARRIER\_INIT, 
     PIP\_PIPID\_ROOT, PIP\_PIPID\_ANY, PIP\_PIPID\_MYSELF, 
     PIP\_CPUCORE\_ASIS, 
     PIP\_MODE\_PTHREAD, PIP\_MODE\_PROCESS}, 
@@ -14,6 +14,8 @@
 \lstdefinestyle{program}{numbers=left, numberstyle=\tiny, numbersep=5pt, frame=tb, language=C}
 \lstdefinestyle{example}{numbers=left, numberstyle=\tiny, numbersep=5pt, language=, frame=tRBl}
 \lstdefinestyle{define}{frame=single, language=C}
+
+
 
 \title{Great Experiences with PiP} % Book title
 \author{Atsushi Hori} % Author
@@ -25,6 +27,7 @@
 
 
 \begin{document}
+\maketitle
 
 \newpage % Make sure the following content is on a new page
 
