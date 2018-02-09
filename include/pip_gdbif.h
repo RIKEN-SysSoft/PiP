@@ -32,6 +32,7 @@ struct pip_gdbif_task {
   /* assuming GDB only dereferencing the next pointer */
   struct pip_task_gdbif *next;
   struct pip_task_gdbif *prev;
+  struct pip_task_gdbif *root;
   /* pathname of the program */
   char	*pathname;
   /* argc, argv and env */
@@ -53,12 +54,11 @@ struct pip_gdbif_task {
   int	gdb_status;		/* enum? */
 };
 
-
-typedef void(*pip_gdbif_hook_t)(void);
+typedef void(*pip_gdbif_hook_t)(struct pip_gdbif_task*);
 
 struct pip_gdbif_root {
   pip_spinlock_t	lock_root; /* lock for task_root */
-  struct pip_gdbif_task	*task_root;
+  struct pip_gdbif_task	task_root;
 
   pip_spinlock_t	lock_free; /* lock for task_free */
   struct pip_gdbif_task	*task_free;
