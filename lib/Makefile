@@ -18,7 +18,9 @@ SRCS     = pip.c pip_util.c pvas.c
 OBJS	 = pip.o pip_util.o pvas.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
+	   $(PIPINCDIR)/pip_clone.h		\
 	   $(PIPINCDIR)/pip_debug.h		\
+	   $(PIPINCDIR)/pip_gdbif.h		\
 	   $(PIPINCDIR)/pip_internal.h 		\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
