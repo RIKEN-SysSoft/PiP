@@ -20,6 +20,12 @@ enum pip_task_status {
   PIP_GDBIF_STATUS_TERMINATED	= 4  /* when the task is about to die (killed) */
 };
 
+/* gdb -> libpip */
+enum pip_gdb_status {
+  PIP_GDBIF_GDB_DETACHED	= 0, /* this structure can be freed */
+  PIP_GDBIF_GDB_ATTACHED	= 1  /* gdb is using this, cannot be freed */
+}
+
 enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this structure is created */
   /* and the value is left unchanged until the structure is put on the free list */
   PIP_GDBIF_EXMODE_NULL		= 0,
@@ -51,7 +57,7 @@ struct pip_gdbif_task {
   /* task status, this is set by PiP lib */
   enum pip_task_status		status;
   /* the variable(s) below are set/reset by GDB */
-  int	gdb_status;		/* enum? */
+  enum pip_gdb_status		gdb_status;
 };
 
 typedef void(*pip_gdbif_hook_t)(struct pip_gdbif_task*);
