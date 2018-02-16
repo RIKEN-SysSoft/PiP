@@ -18,13 +18,13 @@ SRCS     = pip.c pip_util.c pvas.c
 OBJS	 = pip.o pip_util.o pvas.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
-	   $(PIPINCDIR)/pip_util.h 		\
-	   $(PIPINCDIR)/pip_ulp.h 		\
+	   $(PIPINCDIR)/pip_debug.h		\
 	   $(PIPINCDIR)/pip_internal.h 		\
+	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
-	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
-	   $(PIPINCDIR)/pip_debug.h		\
+	   $(PIPINCDIR)/pip_ulp.h 		\
+	   $(PIPINCDIR)/pip_util.h 		\
 	   $(PIPINCDIR)/pvas.h
 
 include $(top_srcdir)/build/rule.mk
