@@ -877,6 +877,7 @@ static int pip_find_symbols( void *handle, pip_symbols_t *symp ) {
 #endif
   symp->ctype_init    = dlsym( handle, "__ctype_init"                 );
   symp->glibc_init    = dlsym( handle, "glibc_init"                   );
+  symp->add_stack     = dlsym( handle, "pip_pthread_add_stack_user"   );
   symp->mallopt       = dlsym( handle, "mallopt"                      );
   symp->libc_fflush   = dlsym( handle, "fflush"                       );
   symp->free          = dlsym( handle, "free"                         );
@@ -1118,6 +1119,10 @@ static int pip_do_spawn( void *thargs )  {
   /*** end lock region ***/
   pip_spin_unlock( &pip_root->lock_ldlinux );
   if( err != 0 ) RETURN( err );
+#else
+  if( self->symbols.add_stack != NULL ) {
+    self->symbols.add_stack();
+  }
 #endif
   DBG;
   if( !pip_is_shared_fd_() ) pip_close_on_exec();
