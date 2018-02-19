@@ -1166,6 +1166,12 @@ static int pip_do_spawn( void *thargs )  {
     }
     pip_glibc_fin( &self->symbols );
 
+#ifndef PIP_CLONE_AND_DLMOPEN
+    if( pip_root->task_root->symbols.add_stack != NULL ) {
+      pip_root->task_root->symbols.add_stack();
+    }
+#endif
+
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       if( pip_is_pthread_() ) {	/* thread mode */
 	pthread_exit( NULL );
