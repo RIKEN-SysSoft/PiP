@@ -56,7 +56,7 @@ typedef void(*free_t)(void*);
 typedef void(*pthread_init_t)(int,char**,char**);
 typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
-typedef void(*add_stack_user)(void);
+typedef void(*add_stack_user_t)(void);
 typedef	void(*fflush_t)(FILE*);
 
 typedef struct {
@@ -65,7 +65,7 @@ typedef struct {
   pthread_init_t	pthread_init; /* __pthread_init_minimum() */
   ctype_init_t		ctype_init;  /* to call __ctype_init() */
   glibc_init_t		glibc_init;  /* only in patched Glibc */
-  add_stack_user	add_stack; /* for GDB workaroundn */
+  add_stack_user_t	add_stack; /* for GDB workaroundn */
   fflush_t		libc_fflush; /* to call fflush() at the end */
   mallopt_t		mallopt;     /* to call mallopt() */
   free_t		free;	     /* to override free() - EXPERIMENTAL*/
