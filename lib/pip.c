@@ -465,14 +465,16 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     for( i=0; i<ntasks+1; i++ ) {
       pip_init_task_struct( &pip_root->tasks[i] );
     }
-    pip_root->task_root->pipid        = pipid;
-    pip_root->task_root->type         = PIP_TYPE_ROOT;
-    pip_root->task_root->symbols.free = (free_t) pip_dlsym( RTLD_DEFAULT, "free");
-    pip_root->task_root->loaded       = dlopen( NULL, RTLD_NOW );
-    pip_root->task_root->thread       = pthread_self();
-    pip_root->task_root->pid          = getpid();
+    pip_root->task_root->pipid             = pipid;
+    pip_root->task_root->type              = PIP_TYPE_ROOT;
+    pip_root->task_root->symbols.add_stack = (add_stack_user_t)
+      pip_dlsym( RTLD_DEFAULT, "pip_pthread_add_stack_user");
+    pip_root->task_root->symbols.free      = (free_t) pip_dlsym( RTLD_DEFAULT, "free");
+    pip_root->task_root->loaded            = dlopen( NULL, RTLD_NOW );
+    pip_root->task_root->thread            = pthread_self();
+    pip_root->task_root->pid               = getpid();
     if( rt_expp != NULL ) {
-      pip_root->task_root->export     = *rt_expp;
+      pip_root->task_root->export          = *rt_expp;
     }
     pip_spin_init( &pip_root->task_root->lock_malloc );
     unsetenv( PIP_ROOT_ENV );
