@@ -855,6 +855,9 @@ static int pip_load_dso( void **handlep, char *path ) {
   }
   DBGF( "calling dlmopen(%s)", path );
   ES( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) );
+  if( pip_root->task_root->symbols.add_stack != NULL ) {
+    //pip_root->task_root->symbols.add_stack();
+  }
   DBG;
   if( loaded == NULL ) {
     if( ( err = pip_check_pie( path ) ) != 0 ) RETURN( err );
@@ -1122,8 +1125,9 @@ static int pip_do_spawn( void *thargs )  {
   pip_spin_unlock( &pip_root->lock_ldlinux );
   if( err != 0 ) RETURN( err );
 #else
+  //fprintf( stderr, "self->symbols.add_stack=%p\n", self->symbols.add_stack );
   if( self->symbols.add_stack != NULL ) {
-    self->symbols.add_stack();
+    //self->symbols.add_stack();
   }
 #endif
   DBG;
@@ -1170,7 +1174,7 @@ static int pip_do_spawn( void *thargs )  {
 
 #ifndef PIP_CLONE_AND_DLMOPEN
     if( pip_root->task_root->symbols.add_stack != NULL ) {
-      pip_root->task_root->symbols.add_stack();
+      //pip_root->task_root->symbols.add_stack();
     }
 #endif
 
