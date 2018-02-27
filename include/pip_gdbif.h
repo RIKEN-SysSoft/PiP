@@ -12,7 +12,7 @@
 
 enum pip_task_status {
   PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in this struct and invalid to access */
-  PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawn() is called and this struucture is created */
+  PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawn() is called and this structure is created */
   /* Note: the order of state transition of the next two depends on implementation (option) */
   /* do to rely on the order of the next two. */
   PIP_GDBIF_STATUS_LOADED	= 2, /* just after calling dlmopen */
