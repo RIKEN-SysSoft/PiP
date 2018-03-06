@@ -24,7 +24,7 @@ enum pip_task_status {
 enum pip_gdb_status {
   PIP_GDBIF_GDB_DETACHED	= 0, /* this structure can be freed */
   PIP_GDBIF_GDB_ATTACHED	= 1  /* gdb is using this, cannot be freed */
-}
+};
 
 enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this structure is created */
   /* and the value is left unchanged until the structure is put on the free list */
@@ -36,9 +36,9 @@ enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this str
 struct pip_gdbif_task {
   /* double linked list */
   /* assuming GDB only dereferencing the next pointer */
-  struct pip_task_gdbif *next;
-  struct pip_task_gdbif *prev;
-  struct pip_task_gdbif *root;
+  struct pip_gdbif_task *next;
+  struct pip_gdbif_task *prev;
+  struct pip_gdbif_task *root;
   /* pathname of the program */
   char	*pathname;
   /* argc, argv and env */
