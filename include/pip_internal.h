@@ -90,6 +90,8 @@ typedef struct {
 #define PIP_TYPE_TASK	(2)
 #define PIP_TYPE_ULP	(3)
 
+struct pip_gdbif_task;
+
 typedef struct pip_task {
   int			pipid;	 /* PiP ID */
   int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
@@ -100,6 +102,8 @@ typedef struct pip_task {
   pip_symbols_t		symbols;
   pip_spawn_args_t	args;	/* arguments for a PiP task */
   int			retval;
+
+  struct pip_gdbif_task	*gdbif_task;
 
   int			boundary[0];
   union {
