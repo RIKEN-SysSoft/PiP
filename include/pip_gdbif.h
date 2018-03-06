@@ -49,6 +49,7 @@ struct pip_gdbif_task {
   void	*handle;
   /* PID or TID of the PiP task, the value of zero means nothing */
   pid_t	pid;
+  int	pipid;
   /* exit code, this value is set when the PiP task */
   /* gets PIP_GDBIF_STATUS_TERMINATED */
   int	exit_code;
