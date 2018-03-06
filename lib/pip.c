@@ -498,6 +498,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     gdbif_root->task_root.envv = environ;
     gdbif_root->task_root.handle = NULL; /* XXX */
     gdbif_root->task_root.pid = getpid();
+    gdbif_root->task_root.pipid = -1;
     gdbif_root->task_root.exit_code = -1;
     gdbif_root->task_root.exec_mode =
       (opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
@@ -1341,6 +1342,7 @@ int pip_spawn( char *prog,
   gdbif_task->handle = NULL;
   gdbif_task->exit_code = -1;
   gdbif_task->pid = -1; /* will be initialized later */
+  gdbif_task->pipid = pipid;
   gdbif_task->exec_mode =
       (pip_root->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
       (pip_root->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
