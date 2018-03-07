@@ -64,16 +64,18 @@ struct pip_gdbif_task {
 typedef void(*pip_gdbif_hook_t)(struct pip_gdbif_task*);
 
 struct pip_gdbif_root {
-  pip_spinlock_t	lock_root; /* lock for task_root */
-  struct pip_gdbif_task	task_root;
-
-  pip_spinlock_t	lock_free; /* lock for task_free */
-  struct pip_gdbif_task	*task_free;
-
   /* hook function address, these addresses are set */
   /* when the PiP task gets PIP_GDBIF_STATUS_LOADED */
   pip_gdbif_hook_t	hook_before_main;
   pip_gdbif_hook_t	hook_after_main;
+
+  pip_spinlock_t	lock_free; /* lock for task_free */
+  struct pip_gdbif_task	*task_free;
+
+  pip_spinlock_t	lock_root; /* lock for task_root */
+  struct pip_gdbif_task	task_root; /* tasks[PIP_PIPID_ROOT]: not recommended */
+
+  struct pip_gdbif_task	tasks[];
 };
 
 #endif /* _pip_gdbif_h_ */

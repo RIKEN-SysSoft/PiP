@@ -130,6 +130,14 @@ static void pip_err_mesg( char *format, ... ) {
   pip_message( "PIP-ERROR%s:", format, ap );
 }
 
+static int pip_count_vec( char **vecsrc ) {
+  int n;
+
+  for( n=0; vecsrc[n]!= NULL; n++ );
+	
+  return( n );
+}
+
 static void pip_set_magic( pip_root_t *root ) {
   memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN );
 }
@@ -192,6 +200,45 @@ static void pip_init_task_struct( pip_task_t *taskp ) {
   memset( (void*) taskp, 0, offsetof(pip_task_t,boundary) );
   taskp->pipid = PIP_PIPID_NONE;
   taskp->type  = PIP_TYPE_NONE;
+}
+
+static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
+					pip_task_t *task) {
+  /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
+  gdbif_task->pathname = task->args.prog;
+  if ( task->args.argv == NULL ) {
+    gdbif_task->argc = 0;
+  } else {
+    gdbif_task->argc = pip_count_vec( task->args.argv );
+  }
+  gdbif_task->argv = task->args.argv;
+  gdbif_task->envv = task->args.envv;
+
+  gdbif_task->handle = task->loaded;
+  gdbif_task->exit_code = -1;
+  gdbif_task->pid = task->pid;
+  gdbif_task->pipid = task->pipid;
+  gdbif_task->exec_mode =
+      (pip_root->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
+      (pip_root->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
+      PIP_GDBIF_EXMODE_NULL;
+  gdbif_task->status = PIP_GDBIF_STATUS_NULL;
+  gdbif_task->gdb_status = PIP_GDBIF_GDB_DETACHED;
+}
+
+static void pip_init_gdbif_root_task_link(struct pip_gdbif_task *gdbif_task) {
+  gdbif_task->next = 
+  gdbif_task->prev = 
+  gdbif_task->root = gdbif_task;
+}
+
+static void pip_link_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task) {
+  gdbif_task->root = &pip_gdbif_root->task_root;
+  pip_spin_lock( &pip_gdbif_root->lock_root );
+  gdbif_task->prev = pip_gdbif_root->task_root.prev;
+  gdbif_task->next = &pip_gdbif_root->task_root;
+  gdbif_task->prev->next = pip_gdbif_root->task_root.prev = gdbif_task;
+  pip_spin_unlock( &pip_gdbif_root->lock_root );
 }
 
 #include <elf.h>
@@ -483,33 +530,18 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_spin_init( &pip_root->task_root->lock_malloc );
     unsetenv( PIP_ROOT_ENV );
 
-    /* XXX - or, is using malloc(3) ok here? */
-    err = pip_page_alloc( sizeof( *gdbif_root ), (void**) &gdbif_root );
-    if( err != 0 ) {
+    sz = sizeof( *gdbif_root ) + sizeof( gdbif_root->tasks[0] ) * ntasks;
+    if( ( err = pip_page_alloc( sz, (void**) &gdbif_root ) ) != 0 ) {
       RETURN( err );
     }
-    pip_spin_init( &gdbif_root->lock_root );
-    gdbif_root->task_root.next = 
-    gdbif_root->task_root.prev = 
-    gdbif_root->task_root.root = &gdbif_root->task_root;
-    gdbif_root->task_root.pathname = NULL; /* XXX */
-    gdbif_root->task_root.argc = 0; /* XXX */
-    gdbif_root->task_root.argv = NULL; /* XXX */
-    gdbif_root->task_root.envv = environ;
-    gdbif_root->task_root.handle = NULL; /* XXX */
-    gdbif_root->task_root.pid = getpid();
-    gdbif_root->task_root.pipid = -1;
-    gdbif_root->task_root.exit_code = -1;
-    gdbif_root->task_root.exec_mode =
-      (opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
-      (opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
-      PIP_GDBIF_EXMODE_NULL;
-    gdbif_root->task_root.status = PIP_GDBIF_STATUS_CREATED; /* XXX */
-    gdbif_root->task_root.gdb_status = PIP_GDBIF_GDB_DETACHED;
+    gdbif_root->hook_before_main = NULL; /* XXX */
+    gdbif_root->hook_after_main = NULL; /* XXX */
     pip_spin_init( &gdbif_root->lock_free );
     gdbif_root->task_free = NULL;
-    gdbif_root->hook_before_main = NULL;
-    gdbif_root->hook_after_main = NULL;
+    pip_spin_init( &gdbif_root->lock_root );
+    pip_init_gdbif_task_struct( &gdbif_root->task_root, pip_root->task_root );
+    pip_init_gdbif_root_task_link( &gdbif_root->task_root );
+    gdbif_root->task_root.status = PIP_GDBIF_STATUS_CREATED;
     pip_gdbif_root = gdbif_root; /* assign after initialization completed */
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
@@ -782,14 +814,6 @@ static char **pip_copy_vec( char **vecsrc ) {
   return pip_copy_vec3( NULL, NULL, NULL, vecsrc );
 }
 
-static int pip_count_vec( char **vecsrc ) {
-  int n;
-
-  for( n=0; vecsrc[n]!= NULL; n++ );
-	
-  return( n );
-}
-
 static char **pip_copy_env( char **envsrc, int pipid ) {
   char rootenv[128];
   char taskenv[128];
@@ -971,6 +995,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     } else {
       DBG;
       task->loaded = loaded;
+      task->gdbif_task->handle = loaded;
     }
   }
   RETURN( err );
@@ -1307,10 +1332,6 @@ int pip_spawn( char *prog,
   if( argv     == NULL ) RETURN( EINVAL );
   if( prog     == NULL ) prog = argv[0];
 
-  /* XXX - is using malloc(3) ok here? */
-  gdbif_task = malloc( sizeof(*gdbif_task) );
-  if ( gdbif_task == NULL ) RETURN ( ENOMEM );
-
   pipid = *pipidp;
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) goto error;
   task = &pip_root->tasks[pipid];
@@ -1333,29 +1354,10 @@ int pip_spawn( char *prog,
   task->hook_arg    = hookarg;
   pip_spin_init( &task->lock_malloc );
 
-  /* the following members are unavailable if PIP_GDBIF_STATUS_TERMINATED */
-  gdbif_task->pathname = args->prog;
-  gdbif_task->argc = pip_count_vec( args->argv );
-  gdbif_task->argv = args->argv;
-  gdbif_task->envv = args->envv;
-
-  gdbif_task->handle = NULL;
-  gdbif_task->exit_code = -1;
-  gdbif_task->pid = -1; /* will be initialized later */
-  gdbif_task->pipid = pipid;
-  gdbif_task->exec_mode =
-      (pip_root->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
-      (pip_root->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
-      PIP_GDBIF_EXMODE_NULL;
-  gdbif_task->status = PIP_GDBIF_STATUS_NULL;
-  gdbif_task->gdb_status = PIP_GDBIF_GDB_DETACHED;
-  gdbif_task->root = &pip_gdbif_root->task_root;
-  pip_spin_lock( &pip_gdbif_root->lock_root );
-  gdbif_task->prev = pip_gdbif_root->task_root.prev;
-  gdbif_task->next = &pip_gdbif_root->task_root;
-  gdbif_task->prev->next = pip_gdbif_root->task_root.prev = gdbif_task;
-  pip_spin_unlock( &pip_gdbif_root->lock_root );
-
+  gdbif_task = &pip_gdbif_root->tasks[pipid];
+  task->pid = -1; /* pip_init_gdbif_task_struct() refers this */
+  pip_init_gdbif_task_struct( gdbif_task, task );
+  pip_link_gdbif_task_struct( gdbif_task );
   task->gdbif_task = gdbif_task;
 
 #ifdef PIP_DLMOPEN_AND_CLONE
@@ -1596,11 +1598,10 @@ static void pip_finalize_gdbif_tasks( void ) {
   for( gdbif_task = pip_gdbif_root->task_root.next;
        gdbif_task != &pip_gdbif_root->task_root;
        gdbif_task = next ) {
-    next = gdbif_task->next; /* save before free( gdbif_task ) */
+    next = gdbif_task->next; /* save before logically freeing gdbif_task */
     if( gdbif_task->gdb_status != PIP_GDBIF_GDB_DETACHED ) continue;
     gdbif_task->prev->next = gdbif_task->next;
     gdbif_task->next->prev = gdbif_task->prev;
-    free( gdbif_task );
   }
 
   pip_spin_unlock( &pip_gdbif_root->lock_root );
