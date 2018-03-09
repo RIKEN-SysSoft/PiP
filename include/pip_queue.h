@@ -30,10 +30,12 @@
  * $FreeBSD$
  */
 
-#ifndef _SYS_QUEUE_H_
-#define	_SYS_QUEUE_H_
+#ifndef _pip_queue_h_
+#define	_pip_queue_h_
 
+#if 0 /* not necessary in PiP */
 #include <sys/cdefs.h>
+#endif
 
 /*
  * This file defines four types of data structures: singly-linked lists,
@@ -77,51 +79,51 @@
  * For details on the use of these macros, see the queue(3) manual page.
  *
  *
- *				SLIST	LIST	STAILQ	TAILQ
- * _HEAD			+	+	+	+
- * _HEAD_INITIALIZER		+	+	+	+
- * _ENTRY			+	+	+	+
- * _INIT			+	+	+	+
- * _EMPTY			+	+	+	+
- * _FIRST			+	+	+	+
- * _NEXT			+	+	+	+
- * _PREV			-	-	-	+
- * _LAST			-	-	+	+
- * _FOREACH			+	+	+	+
- * _FOREACH_SAFE		+	+	+	+
- * _FOREACH_REVERSE		-	-	-	+
- * _FOREACH_REVERSE_SAFE	-	-	-	+
- * _INSERT_HEAD			+	+	+	+
- * _INSERT_BEFORE		-	+	-	+
- * _INSERT_AFTER		+	+	+	+
- * _INSERT_TAIL			-	-	+	+
- * _CONCAT			-	-	+	+
- * _REMOVE_AFTER		+	-	+	-
- * _REMOVE_HEAD			+	-	+	-
- * _REMOVE			+	+	+	+
+ *				SLIST	LIST	STAILQ	TAILQ	HCIRCLEQ
+ * _HEAD			+	+	+	+	+
+ * _HEAD_INITIALIZER		+	+	+	+	+(HEAD_ENTRY)
+ * _ENTRY			+	+	+	+	+
+ * _INIT			+	+	+	+	+
+ * _EMPTY			+	+	+	+	+
+ * _FIRST			+	+	+	+	+
+ * _NEXT			+	+	+	+	+
+ * _PREV			-	-	-	+	+
+ * _LAST			-	-	+	+	+
+ * _FOREACH			+	+	+	+	+
+ * _FOREACH_SAFE		+	+	+	+	+
+ * _FOREACH_REVERSE		-	-	-	+	+
+ * _FOREACH_REVERSE_SAFE	-	-	-	+	+
+ * _INSERT_HEAD			+	+	+	+	+
+ * _INSERT_BEFORE		-	+	-	+	+
+ * _INSERT_AFTER		+	+	+	+	+
+ * _INSERT_TAIL			-	-	+	+	+
+ * _CONCAT			-	-	+	+	+
+ * _REMOVE_AFTER		+	-	+	-	+
+ * _REMOVE_HEAD			+	-	+	-	+
+ * _REMOVE			O(N)	+	O(N)	+	+
  *
  */
-#ifdef QUEUE_MACRO_DEBUG
+#ifdef PIP_QUEUE_MACRO_DEBUG
 /* Store the last 2 places the queue element or head was altered */
-struct qm_trace {
+struct pip_qm_trace {
 	char * lastfile;
 	int lastline;
 	char * prevfile;
 	int prevline;
 };
 
-#define	TRACEBUF	struct qm_trace trace;
-#define	TRASHIT(x)	do {(x) = (void *)-1;} while (0)
-#define	QMD_SAVELINK(name, link)	void **name = (void *)&(link)
+#define	PIP_TRACEBUF	struct pip_qm_trace trace;
+#define	PIP_TRASHIT(x)	do {(x) = (void *)-1;} while (0)
+#define	PIP_QMD_SAVELINK(name, link)	void **name = (void *)&(link)
 
-#define	QMD_TRACE_HEAD(head) do {					\
+#define	PIP_QMD_TRACE_HEAD(head) do {					\
 	(head)->trace.prevline = (head)->trace.lastline;		\
 	(head)->trace.prevfile = (head)->trace.lastfile;		\
 	(head)->trace.lastline = __LINE__;				\
 	(head)->trace.lastfile = __FILE__;				\
 } while (0)
 
-#define	QMD_TRACE_ELEM(elem) do {					\
+#define	PIP_QMD_TRACE_ELEM(elem) do {					\
 	(elem)->trace.prevline = (elem)->trace.lastline;		\
 	(elem)->trace.prevfile = (elem)->trace.lastfile;		\
 	(elem)->trace.lastline = __LINE__;				\
@@ -129,25 +131,25 @@ struct qm_trace {
 } while (0)
 
 #else
-#define	QMD_TRACE_ELEM(elem)
-#define	QMD_TRACE_HEAD(head)
-#define	QMD_SAVELINK(name, link)
-#define	TRACEBUF
-#define	TRASHIT(x)
-#endif	/* QUEUE_MACRO_DEBUG */
+#define	PIP_QMD_TRACE_ELEM(elem)
+#define	PIP_QMD_TRACE_HEAD(head)
+#define	PIP_QMD_SAVELINK(name, link)
+#define	PIP_TRACEBUF
+#define	PIP_TRASHIT(x)
+#endif	/* PIP_QUEUE_MACRO_DEBUG */
 
 /*
  * Singly-linked List declarations.
  */
-#define	SLIST_HEAD(name, type)						\
+#define	PIP_SLIST_HEAD(name, type)					\
 struct name {								\
 	struct type *slh_first;	/* first element */			\
 }
 
-#define	SLIST_HEAD_INITIALIZER(head)					\
+#define	PIP_SLIST_HEAD_INITIALIZER(head)				\
 	{ NULL }
 
-#define	SLIST_ENTRY(type)						\
+#define	PIP_SLIST_ENTRY(type)						\
 struct {								\
 	struct type *sle_next;	/* next element */			\
 }
@@ -155,83 +157,83 @@ struct {								\
 /*
  * Singly-linked List functions.
  */
-#define	SLIST_EMPTY(head)	((head)->slh_first == NULL)
+#define	PIP_SLIST_EMPTY(head)	((head)->slh_first == NULL)
 
-#define	SLIST_FIRST(head)	((head)->slh_first)
+#define	PIP_SLIST_FIRST(head)	((head)->slh_first)
 
-#define	SLIST_FOREACH(var, head, field)					\
-	for ((var) = SLIST_FIRST((head));				\
+#define	PIP_SLIST_FOREACH(var, head, field)				\
+	for ((var) = PIP_SLIST_FIRST((head));				\
 	    (var);							\
-	    (var) = SLIST_NEXT((var), field))
+	    (var) = PIP_SLIST_NEXT((var), field))
 
-#define	SLIST_FOREACH_SAFE(var, head, field, tvar)			\
-	for ((var) = SLIST_FIRST((head));				\
-	    (var) && ((tvar) = SLIST_NEXT((var), field), 1);		\
+#define	PIP_SLIST_FOREACH_SAFE(var, head, field, tvar)		\
+	for ((var) = PIP_SLIST_FIRST((head));				\
+	    (var) && ((tvar) = PIP_SLIST_NEXT((var), field), 1);	\
 	    (var) = (tvar))
 
-#define	SLIST_FOREACH_PREVPTR(var, varp, head, field)			\
-	for ((varp) = &SLIST_FIRST((head));				\
+#define	PIP_SLIST_FOREACH_PREVPTR(var, varp, head, field)		\
+	for ((varp) = &PIP_SLIST_FIRST((head));			\
 	    ((var) = *(varp)) != NULL;					\
-	    (varp) = &SLIST_NEXT((var), field))
+	    (varp) = &PIP_SLIST_NEXT((var), field))
 
-#define	SLIST_INIT(head) do {						\
-	SLIST_FIRST((head)) = NULL;					\
+#define	PIP_SLIST_INIT(head) do {					\
+	PIP_SLIST_FIRST((head)) = NULL;				\
 } while (0)
 
-#define	SLIST_INSERT_AFTER(slistelm, elm, field) do {			\
-	SLIST_NEXT((elm), field) = SLIST_NEXT((slistelm), field);	\
-	SLIST_NEXT((slistelm), field) = (elm);				\
+#define	PIP_SLIST_INSERT_AFTER(slistelm, elm, field) do {		\
+	PIP_SLIST_NEXT((elm), field) = PIP_SLIST_NEXT((slistelm), field); \
+	PIP_SLIST_NEXT((slistelm), field) = (elm);			\
 } while (0)
 
-#define	SLIST_INSERT_HEAD(head, elm, field) do {			\
-	SLIST_NEXT((elm), field) = SLIST_FIRST((head));			\
-	SLIST_FIRST((head)) = (elm);					\
+#define	PIP_SLIST_INSERT_HEAD(head, elm, field) do {			\
+	PIP_SLIST_NEXT((elm), field) = PIP_SLIST_FIRST((head));	\
+	PIP_SLIST_FIRST((head)) = (elm);				\
 } while (0)
 
-#define	SLIST_NEXT(elm, field)	((elm)->field.sle_next)
+#define	PIP_SLIST_NEXT(elm, field)	((elm)->field.sle_next)
 
-#define	SLIST_REMOVE(head, elm, type, field) do {			\
-	QMD_SAVELINK(oldnext, (elm)->field.sle_next);			\
-	if (SLIST_FIRST((head)) == (elm)) {				\
-		SLIST_REMOVE_HEAD((head), field);			\
+#define	PIP_SLIST_REMOVE(head, elm, type, field) do {			\
+	PIP_QMD_SAVELINK(oldnext, (elm)->field.sle_next);		\
+	if (PIP_SLIST_FIRST((head)) == (elm)) {			\
+		PIP_SLIST_REMOVE_HEAD((head), field);			\
+	} else {							\
+		struct type *curelm = PIP_SLIST_FIRST((head));	\
+		while (PIP_SLIST_NEXT(curelm, field) != (elm))	\
+			curelm = PIP_SLIST_NEXT(curelm, field);	\
+		PIP_SLIST_REMOVE_AFTER(curelm, field);		\
 	}								\
-	else {								\
-		struct type *curelm = SLIST_FIRST((head));		\
-		while (SLIST_NEXT(curelm, field) != (elm))		\
-			curelm = SLIST_NEXT(curelm, field);		\
-		SLIST_REMOVE_AFTER(curelm, field);			\
-	}								\
-	TRASHIT(*oldnext);						\
+	PIP_TRASHIT(*oldnext);					\
 } while (0)
 
-#define SLIST_REMOVE_AFTER(elm, field) do {				\
-	SLIST_NEXT(elm, field) =					\
-	    SLIST_NEXT(SLIST_NEXT(elm, field), field);			\
+#define PIP_SLIST_REMOVE_AFTER(elm, field) do {			\
+	PIP_SLIST_NEXT(elm, field) =					\
+	    PIP_SLIST_NEXT(PIP_SLIST_NEXT(elm, field), field);	\
 } while (0)
 
-#define	SLIST_REMOVE_HEAD(head, field) do {				\
-	SLIST_FIRST((head)) = SLIST_NEXT(SLIST_FIRST((head)), field);	\
+#define	PIP_SLIST_REMOVE_HEAD(head, field) do {			\
+	PIP_SLIST_FIRST((head)) =					\
+	    PIP_SLIST_NEXT(PIP_SLIST_FIRST((head)), field);		\
 } while (0)
 
-#define SLIST_SWAP(head1, head2, type) do {				\
-	struct type *swap_first = SLIST_FIRST(head1);			\
-	SLIST_FIRST(head1) = SLIST_FIRST(head2);			\
-	SLIST_FIRST(head2) = swap_first;				\
+#define PIP_SLIST_SWAP(head1, head2, type) do {			\
+	struct type *swap_first = PIP_SLIST_FIRST(head1);		\
+	PIP_SLIST_FIRST(head1) = PIP_SLIST_FIRST(head2);		\
+	PIP_SLIST_FIRST(head2) = swap_first;				\
 } while (0)
 
 /*
  * Singly-linked Tail queue declarations.
  */
-#define	STAILQ_HEAD(name, type)						\
+#define	PIP_STAILQ_HEAD(name, type)					\
 struct name {								\
 	struct type *stqh_first;/* first element */			\
 	struct type **stqh_last;/* addr of last next element */		\
 }
 
-#define	STAILQ_HEAD_INITIALIZER(head)					\
+#define	PIP_STAILQ_HEAD_INITIALIZER(head)				\
 	{ NULL, &(head).stqh_first }
 
-#define	STAILQ_ENTRY(type)						\
+#define	PIP_STAILQ_ENTRY(type)					\
 struct {								\
 	struct type *stqe_next;	/* next element */			\
 }
@@ -239,99 +241,102 @@ struct {								\
 /*
  * Singly-linked Tail queue functions.
  */
-#define	STAILQ_CONCAT(head1, head2) do {				\
-	if (!STAILQ_EMPTY((head2))) {					\
+#define	PIP_STAILQ_CONCAT(head1, head2) do {				\
+	if (!PIP_STAILQ_EMPTY((head2))) {				\
 		*(head1)->stqh_last = (head2)->stqh_first;		\
 		(head1)->stqh_last = (head2)->stqh_last;		\
-		STAILQ_INIT((head2));					\
+		PIP_STAILQ_INIT((head2));				\
 	}								\
 } while (0)
 
-#define	STAILQ_EMPTY(head)	((head)->stqh_first == NULL)
+#define	PIP_STAILQ_EMPTY(head)	((head)->stqh_first == NULL)
 
-#define	STAILQ_FIRST(head)	((head)->stqh_first)
+#define	PIP_STAILQ_FIRST(head)	((head)->stqh_first)
 
-#define	STAILQ_FOREACH(var, head, field)				\
-	for((var) = STAILQ_FIRST((head));				\
+#define	PIP_STAILQ_FOREACH(var, head, field)				\
+	for((var) = PIP_STAILQ_FIRST((head));				\
 	   (var);							\
-	   (var) = STAILQ_NEXT((var), field))
+	   (var) = PIP_STAILQ_NEXT((var), field))
 
 
-#define	STAILQ_FOREACH_SAFE(var, head, field, tvar)			\
-	for ((var) = STAILQ_FIRST((head));				\
-	    (var) && ((tvar) = STAILQ_NEXT((var), field), 1);		\
+#define	PIP_STAILQ_FOREACH_SAFE(var, head, field, tvar)		\
+	for ((var) = PIP_STAILQ_FIRST((head));			\
+	    (var) && ((tvar) = PIP_STAILQ_NEXT((var), field), 1);	\
 	    (var) = (tvar))
 
-#define	STAILQ_INIT(head) do {						\
-	STAILQ_FIRST((head)) = NULL;					\
-	(head)->stqh_last = &STAILQ_FIRST((head));			\
+#define	PIP_STAILQ_INIT(head) do {					\
+	PIP_STAILQ_FIRST((head)) = NULL;				\
+	(head)->stqh_last = &PIP_STAILQ_FIRST((head));		\
 } while (0)
 
-#define	STAILQ_INSERT_AFTER(head, tqelm, elm, field) do {		\
-	if ((STAILQ_NEXT((elm), field) = STAILQ_NEXT((tqelm), field)) == NULL)\
-		(head)->stqh_last = &STAILQ_NEXT((elm), field);		\
-	STAILQ_NEXT((tqelm), field) = (elm);				\
+#define	PIP_STAILQ_INSERT_AFTER(head, tqelm, elm, field) do {		\
+	if ((PIP_STAILQ_NEXT((elm), field) =				\
+	    PIP_STAILQ_NEXT((tqelm), field)) == NULL)			\
+		(head)->stqh_last = &PIP_STAILQ_NEXT((elm), field);	\
+	PIP_STAILQ_NEXT((tqelm), field) = (elm);			\
 } while (0)
 
-#define	STAILQ_INSERT_HEAD(head, elm, field) do {			\
-	if ((STAILQ_NEXT((elm), field) = STAILQ_FIRST((head))) == NULL)	\
-		(head)->stqh_last = &STAILQ_NEXT((elm), field);		\
-	STAILQ_FIRST((head)) = (elm);					\
+#define	PIP_STAILQ_INSERT_HEAD(head, elm, field) do {			\
+	if ((PIP_STAILQ_NEXT((elm), field) =				\
+	    PIP_STAILQ_FIRST((head))) == NULL)			\
+		(head)->stqh_last = &PIP_STAILQ_NEXT((elm), field);	\
+	PIP_STAILQ_FIRST((head)) = (elm);				\
 } while (0)
 
-#define	STAILQ_INSERT_TAIL(head, elm, field) do {			\
-	STAILQ_NEXT((elm), field) = NULL;				\
+#define	PIP_STAILQ_INSERT_TAIL(head, elm, field) do {			\
+	PIP_STAILQ_NEXT((elm), field) = NULL;				\
 	*(head)->stqh_last = (elm);					\
-	(head)->stqh_last = &STAILQ_NEXT((elm), field);			\
+	(head)->stqh_last = &PIP_STAILQ_NEXT((elm), field);		\
 } while (0)
 
-#define	STAILQ_LAST(head, type, field)					\
-	(STAILQ_EMPTY((head)) ?						\
+#define	PIP_STAILQ_LAST(head, type, field)				\
+	(PIP_STAILQ_EMPTY((head)) ?					\
 		NULL :							\
 	        ((struct type *)(void *)				\
-		((char *)((head)->stqh_last) - __offsetof(struct type, field))))
+		((char *)((head)->stqh_last) -				\
+		((long)&((struct type *)0)->field))))
 
-#define	STAILQ_NEXT(elm, field)	((elm)->field.stqe_next)
+#define	PIP_STAILQ_NEXT(elm, field)	((elm)->field.stqe_next)
 
-#define	STAILQ_REMOVE(head, elm, type, field) do {			\
-	QMD_SAVELINK(oldnext, (elm)->field.stqe_next);			\
-	if (STAILQ_FIRST((head)) == (elm)) {				\
-		STAILQ_REMOVE_HEAD((head), field);			\
+#define	PIP_STAILQ_REMOVE(head, elm, type, field) do {		\
+	PIP_QMD_SAVELINK(oldnext, (elm)->field.stqe_next);		\
+	if (PIP_STAILQ_FIRST((head)) == (elm)) {			\
+		PIP_STAILQ_REMOVE_HEAD((head), field);		\
+	} else {							\
+		struct type *curelm = PIP_STAILQ_FIRST((head));	\
+		while (PIP_STAILQ_NEXT(curelm, field) != (elm))	\
+			curelm = PIP_STAILQ_NEXT(curelm, field);	\
+		PIP_STAILQ_REMOVE_AFTER(head, curelm, field);		\
 	}								\
-	else {								\
-		struct type *curelm = STAILQ_FIRST((head));		\
-		while (STAILQ_NEXT(curelm, field) != (elm))		\
-			curelm = STAILQ_NEXT(curelm, field);		\
-		STAILQ_REMOVE_AFTER(head, curelm, field);		\
-	}								\
-	TRASHIT(*oldnext);						\
+	PIP_TRASHIT(*oldnext);					\
 } while (0)
 
-#define	STAILQ_REMOVE_HEAD(head, field) do {				\
-	if ((STAILQ_FIRST((head)) =					\
-	     STAILQ_NEXT(STAILQ_FIRST((head)), field)) == NULL)		\
-		(head)->stqh_last = &STAILQ_FIRST((head));		\
+#define	PIP_STAILQ_REMOVE_HEAD(head, field) do {			\
+	if ((PIP_STAILQ_FIRST((head)) =				\
+	     PIP_STAILQ_NEXT(PIP_STAILQ_FIRST((head)), field)) == NULL) \
+		(head)->stqh_last = &PIP_STAILQ_FIRST((head));	\
 } while (0)
 
-#define STAILQ_REMOVE_AFTER(head, elm, field) do {			\
-	if ((STAILQ_NEXT(elm, field) =					\
-	     STAILQ_NEXT(STAILQ_NEXT(elm, field), field)) == NULL)	\
-		(head)->stqh_last = &STAILQ_NEXT((elm), field);		\
+#define PIP_STAILQ_REMOVE_AFTER(head, elm, field) do {		\
+	if ((PIP_STAILQ_NEXT(elm, field) =				\
+	     PIP_STAILQ_NEXT(PIP_STAILQ_NEXT(elm, field), field)) == NULL) \
+		(head)->stqh_last = &PIP_STAILQ_NEXT((elm), field);	\
 } while (0)
 
-#define STAILQ_SWAP(head1, head2, type) do {				\
-	struct type *swap_first = STAILQ_FIRST(head1);			\
+#define PIP_STAILQ_SWAP(head1, head2, type) do {			\
+	struct type *swap_first = PIP_STAILQ_FIRST(head1);		\
 	struct type **swap_last = (head1)->stqh_last;			\
-	STAILQ_FIRST(head1) = STAILQ_FIRST(head2);			\
+	PIP_STAILQ_FIRST(head1) = PIP_STAILQ_FIRST(head2);		\
 	(head1)->stqh_last = (head2)->stqh_last;			\
-	STAILQ_FIRST(head2) = swap_first;				\
+	PIP_STAILQ_FIRST(head2) = swap_first;				\
 	(head2)->stqh_last = swap_last;					\
-	if (STAILQ_EMPTY(head1))					\
-		(head1)->stqh_last = &STAILQ_FIRST(head1);		\
-	if (STAILQ_EMPTY(head2))					\
-		(head2)->stqh_last = &STAILQ_FIRST(head2);		\
+	if (PIP_STAILQ_EMPTY(head1))					\
+		(head1)->stqh_last = &PIP_STAILQ_FIRST(head1);	\
+	if (PIP_STAILQ_EMPTY(head2))					\
+		(head2)->stqh_last = &PIP_STAILQ_FIRST(head2);	\
 } while (0)
 
+#if 0 /* LIST and TAILQ are disabled in PiP */
 
 /*
  * List declarations.
@@ -633,4 +638,146 @@ struct {								\
 		(head2)->tqh_last = &(head2)->tqh_first;		\
 } while (0)
 
-#endif /* !_SYS_QUEUE_H_ */
+#endif /* LIST and TAILQ are disabled in PiP */
+
+/*
+ * Doubly Linked Circular List with a Header
+ */
+#define PIP_HCIRCLEQ_HEAD(type)	struct type
+
+#define PIP_HCIRCLEQ_HEAD_ENTRY_INITIALIZER(head) \
+	{ &(head), &(head) }
+
+#define PIP_HCIRCLEQ_ENTRY(type) \
+struct { \
+	struct type *hcqe_next; \
+	struct type *hcqe_prev; \
+}
+
+#define PIP_HCIRCLEQ_INIT(head, field) do { \
+	(head).field.hcqe_next = (head).field.hcqe_prev = &(head); \
+} while (/*CONSTCOND*/0)
+
+#define PIP_HCIRCLEQ_IS_END(head, elm) \
+	((elm) == &(head))
+
+#define PIP_HCIRCLEQ_EMPTY(head, field) \
+	PIP_HCIRCLEQ_IS_END(head, (head).field.hcqe_next)
+
+#define PIP_HCIRCLEQ_NEXT(elm, field)	((elm)->field.hcqe_next)
+#define PIP_HCIRCLEQ_PREV(elm, field)	((elm)->field.hcqe_prev)
+#define PIP_HCIRCLEQ_FIRST(head, field) \
+	PIP_HCIRCLEQ_NEXT(&(head), field)
+#define PIP_HCIRCLEQ_LAST(head, field) \
+	PIP_HCIRCLEQ_PREV(&(head), field)
+
+#define PIP_HCIRCLEQ_INSERT_AFTER(at, elm, field) do { \
+	(elm)->field.hcqe_next = (at)->field.hcqe_next; \
+	(elm)->field.hcqe_prev = (at); \
+	(at)->field.hcqe_next->field.hcqe_prev = (elm); \
+	(at)->field.hcqe_next = (elm); \
+} while (/*CONSTCOND*/0)
+
+#define PIP_HCIRCLEQ_INSERT_BEFORE(at, elm, field) do { \
+	(elm)->field.hcqe_next = (at); \
+	(elm)->field.hcqe_prev = (at)->field.hcqe_prev; \
+	(at)->field.hcqe_prev->field.hcqe_next = (elm); \
+	(at)->field.hcqe_prev = (elm); \
+} while (/*CONSTCOND*/0)
+
+#define PIP_HCIRCLEQ_INSERT_HEAD(head, elm, field) \
+	PIP_HCIRCLEQ_INSERT_AFTER(&(head), elm, field)
+
+#define PIP_HCIRCLEQ_INSERT_TAIL(head, elm, field) \
+	PIP_HCIRCLEQ_INSERT_BEFORE(&(head), elm, field)
+
+#define PIP_HCIRCLEQ_REMOVE(elm, field) do { \
+	(elm)->field.hcqe_next->field.hcqe_prev = (elm)->field.hcqe_prev; \
+	(elm)->field.hcqe_prev->field.hcqe_next = (elm)->field.hcqe_next; \
+} while (/*CONSTCOND*/0)
+
+/* assert(!PIP_HCIRCLEQ_IS_END(head, (elm)->field.hcqe_next, field)); */
+#if 0
+#define PIP_HCIRCLEQ_REMOVE_AFTER(elm, field) \
+	PIP_HCIRCLEQ_REMOVE((elm)->field.hcqe_next, field)
+#else
+#define PIP_HCIRCLEQ_REMOVE_AFTER(elm, field) do { \
+	(elm)->field.hcqe_next = (elm)->field.hcqe_next->field.hcqe_next; \
+	(elm)->field.hcqe_next->field.hcqe_prev = (elm); \
+} while (/*CONSTCOND*/0)
+#endif
+
+/* assert(!PIP_HCIRCLEQ_IS_END(head, (elm)->field.hcqe_prev, field)); */
+#if 0
+#define PIP_HCIRCLEQ_REMOVE_BEFORE(elm, field) \
+	PIP_HCIRCLEQ_REMOVE((elm)->field.hcqe_prev, field)
+#else
+#define PIP_HCIRCLEQ_REMOVE_BEFORE(elm, field) do { \
+	(elm)->field.hcqe_prev = (elm)->field.hcqe_prev->field.hcqe_prev; \
+	(elm)->field.hcqe_prev->field.hcqe_next = (elm); \
+} while (/*CONSTCOND*/0)
+#endif
+
+/* assert(!PIP_HCIRCLEQ_EMPTY(head, field)); */
+#define PIP_HCIRCLEQ_REMOVE_HEAD(head, field)	\
+	PIP_HCIRCLEQ_REMOVE_AFTER(&(head), field)
+/* assert(!PIP_HCIRCLEQ_EMPTY(head, field)); */
+#define PIP_HCIRCLEQ_REMOVE_TAIL(head, field) \
+	PIP_HCIRCLEQ_REMOVE_BEFORE(&(head), field)
+
+#define PIP_HCIRCLEQ_CONCAT_BEFORE(at, head, field) do { \
+	if (!PIP_HCIRCLEQ_EMPTY(head, field)) { \
+		(head).field.hcqe_next->field.hcqe_prev = \
+		    (at)->field.hcqe_prev; \
+		(at)->field.hcqe_prev->field.hcqe_next = \
+		    (head).field.hcqe_next; \
+		(head).field.hcqe_prev->field.hcqe_next = at; \
+		(at)->field.hcqe_prev = (head).field.hcqe_prev; \
+		PIP_HCIRCLEQ_INIT(head, field); \
+	} \
+} while (/*CONSTCOND*/0)
+
+#define PIP_HCIRCLEQ_CONCAT_AFTER(at, head, field) do { \
+	if (!PIP_HCIRCLEQ_EMPTY(head, field)) { \
+		(head).field.hcqe_prev->field.hcqe_next = \
+		    (at)->field.hcqe_next; \
+		(at)->field.hcqe_next->field.hcqe_prev = \
+		    (head).field.hcqe_prev; \
+		(head).field.hcqe_next->field.hcqe_prev = at; \
+		(at)->field.hcqe_next = (head).field.hcqe_next; \
+		PIP_HCIRCLEQ_INIT(head, field); \
+	} \
+} while (/*CONSTCOND*/0)
+
+#define PIP_HCIRCLEQ_CONCAT_HEAD(head1, head2, field) \
+	PIP_HCIRCLEQ_CONCAT_AFTER(&head1, head2, field);
+
+#define PIP_HCIRCLEQ_CONCAT_TAIL(head1, head2, field) \
+	PIP_HCIRCLEQ_CONCAT_BEFORE(&head1, head2, field);
+
+#define PIP_HCIRCLEQ_CONCAT(head1, head2, field) \
+	PIP_HCIRCLEQ_CONCAT_TAIL(head1, head2, field);
+
+#define PIP_HCIRCLEQ_FOREACH(var, head, field) \
+	for ((var) = PIP_HCIRCLEQ_FIRST(head, field); \
+	    !PIP_HCIRCLEQ_IS_END(head, var); \
+	    (var) = PIP_HCIRCLEQ_NEXT(var, field))
+
+#define PIP_HCIRCLEQ_FOREACH_SAFE(var, head, field, tvar) \
+	for ((var) = PIP_HCIRCLEQ_FIRST(head, field); \
+	    !PIP_HCIRCLEQ_IS_END(head, var) && \
+	    ((tvar) = PIP_HCIRCLEQ_NEXT(var, field), 1); \
+	    (var) = (tvar))
+
+#define PIP_HCIRCLEQ_FOREACH_REVERSE(var, head, field) \
+	for ((var) = PIP_HCIRCLEQ_LAST(head, field); \
+	    !PIP_HCIRCLEQ_IS_END(head, var); \
+	    (var) = PIP_HCIRCLEQ_PREV(var, field))
+
+#define PIP_HCIRCLEQ_FOREACH_REVERSE_SAFE(var, head, field, tvar) \
+	for ((var) = PIP_HCIRCLEQ_LAST(head, field); \
+	    !PIP_HCIRCLEQ_IS_END(head, var) && \
+	    ((tvar) = PIP_HCIRCLEQ_PREV(var, field), 1); \
+	    (var) = (tvar))
+
+#endif /* !_pip_queue_h_ */
