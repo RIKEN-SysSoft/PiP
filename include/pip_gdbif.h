@@ -39,6 +39,7 @@ struct pip_gdbif_task {
   struct pip_gdbif_task *next;
   struct pip_gdbif_task *prev;
   struct pip_gdbif_task *root;
+  struct pip_gdbif_task *next_free;
   /* pathname of the program */
   char	*pathname;
   /* argc, argv and env */

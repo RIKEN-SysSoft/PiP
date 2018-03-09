@@ -204,6 +204,8 @@ static void pip_init_task_struct( pip_task_t *taskp ) {
 
 static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
 					pip_task_t *task) {
+  gdbif_task->next_free = NULL;
+
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
   gdbif_task->pathname = task->args.prog;
   if ( task->args.argv == NULL ) {
@@ -1587,23 +1589,23 @@ int pip_exit( int retval ) {
  */
 
 static void pip_finalize_gdbif_tasks( void ) {
-  struct pip_gdbif_task *gdbif_task, *next;
+  struct pip_gdbif_task *gdbif_task, **prev;
 
   if( pip_gdbif_root == NULL ) {
     DBGF( "pip_gdbif_root=NULL, pip_init() hasn't called?" );
     return;
   }
   pip_spin_lock( &pip_gdbif_root->lock_root );
-
-  for( gdbif_task = pip_gdbif_root->task_root.next;
-       gdbif_task != &pip_gdbif_root->task_root;
-       gdbif_task = next ) {
-    next = gdbif_task->next; /* save before logically freeing gdbif_task */
-    if( gdbif_task->gdb_status != PIP_GDBIF_GDB_DETACHED ) continue;
-    gdbif_task->prev->next = gdbif_task->next;
-    gdbif_task->next->prev = gdbif_task->prev;
+  prev = &pip_gdbif_root->task_free;
+  for( gdbif_task = *prev; gdbif_task != NULL; gdbif_task = *prev ) {
+    if( gdbif_task->gdb_status != PIP_GDBIF_GDB_DETACHED ) {
+      prev = &gdbif_task->next_free;
+    } else {
+      *prev = gdbif_task->next_free;
+      gdbif_task->prev->next = gdbif_task->next;
+      gdbif_task->next->prev = gdbif_task->prev;
+    }
   }
-
   pip_spin_unlock( &pip_gdbif_root->lock_root );
 }
 
@@ -1618,7 +1620,11 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
   gdbif_task->argc = 0;
   gdbif_task->argv = NULL;
   gdbif_task->envv = NULL;
+  pip_spin_lock( &pip_gdbif_root->lock_free );
+  gdbif_task->next_free = pip_gdbif_root->task_free;
+  pip_gdbif_root->task_free = gdbif_task;
   pip_finalize_gdbif_tasks();
+  pip_spin_unlock( &pip_gdbif_root->lock_free );
 
   if( retvalp != NULL ) *retvalp = ( task->retval & 0xFF );
   DBGF( "retval=%d", task->retval );
