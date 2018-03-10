@@ -10,6 +10,8 @@
 #ifndef _pip_gdbif_h_
 #define _pip_gdbif_h_
 
+#include "pip_queue.h"
+
 enum pip_task_status {
   PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in this struct and invalid to access */
   PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawn() is called and this structure is created */
@@ -36,10 +38,9 @@ enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this str
 struct pip_gdbif_task {
   /* double linked list */
   /* assuming GDB only dereferencing the next pointer */
-  struct pip_gdbif_task *next;
-  struct pip_gdbif_task *prev;
+  PIP_HCIRCLEQ_ENTRY(pip_gdbif_task) task_list;
   struct pip_gdbif_task *root;
-  struct pip_gdbif_task *next_free;
+  PIP_SLIST_ENTRY(pip_gdbif_task) free_list;
   /* pathname of the program */
   char	*pathname;
   /* argc, argv and env */
@@ -71,10 +72,11 @@ struct pip_gdbif_root {
   pip_gdbif_hook_t	hook_after_main;
 
   pip_spinlock_t	lock_free; /* lock for task_free */
-  struct pip_gdbif_task	*task_free;
+  PIP_SLIST_HEAD(, pip_gdbif_task) task_free;
 
   pip_spinlock_t	lock_root; /* lock for task_root */
-  struct pip_gdbif_task	task_root; /* tasks[PIP_PIPID_ROOT]: not recommended */
+  PIP_HCIRCLEQ_HEAD(pip_gdbif_task) task_root;
+  /* task_root == tasks[PIP_PIPID_ROOT], although it's not recommended */
 
   struct pip_gdbif_task	tasks[];
 };
