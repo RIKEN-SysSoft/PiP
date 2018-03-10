@@ -204,8 +204,6 @@ static void pip_init_task_struct( pip_task_t *taskp ) {
 
 static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
 					pip_task_t *task) {
-  gdbif_task->next_free = NULL;
-
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
   gdbif_task->pathname = task->args.prog;
   if ( task->args.argv == NULL ) {
@@ -229,17 +227,13 @@ static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
 }
 
 static void pip_init_gdbif_root_task_link(struct pip_gdbif_task *gdbif_task) {
-  gdbif_task->next = 
-  gdbif_task->prev = 
-  gdbif_task->root = gdbif_task;
+  PIP_HCIRCLEQ_INIT(*gdbif_task, task_list);
 }
 
 static void pip_link_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task) {
   gdbif_task->root = &pip_gdbif_root->task_root;
   pip_spin_lock( &pip_gdbif_root->lock_root );
-  gdbif_task->prev = pip_gdbif_root->task_root.prev;
-  gdbif_task->next = &pip_gdbif_root->task_root;
-  gdbif_task->prev->next = pip_gdbif_root->task_root.prev = gdbif_task;
+  PIP_HCIRCLEQ_INSERT_TAIL(pip_gdbif_root->task_root, gdbif_task, task_list);
   pip_spin_unlock( &pip_gdbif_root->lock_root );
 }
 
@@ -539,7 +533,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     gdbif_root->hook_before_main = NULL; /* XXX */
     gdbif_root->hook_after_main = NULL; /* XXX */
     pip_spin_init( &gdbif_root->lock_free );
-    gdbif_root->task_free = NULL;
+    PIP_SLIST_INIT(&gdbif_root->task_free);
     pip_spin_init( &gdbif_root->lock_root );
     pip_init_gdbif_task_struct( &gdbif_root->task_root, pip_root->task_root );
     pip_init_gdbif_root_task_link( &gdbif_root->task_root );
@@ -1589,21 +1583,21 @@ int pip_exit( int retval ) {
  */
 
 static void pip_finalize_gdbif_tasks( void ) {
-  struct pip_gdbif_task *gdbif_task, **prev;
+  struct pip_gdbif_task *gdbif_task, **prev, *next;
 
   if( pip_gdbif_root == NULL ) {
     DBGF( "pip_gdbif_root=NULL, pip_init() hasn't called?" );
     return;
   }
   pip_spin_lock( &pip_gdbif_root->lock_root );
-  prev = &pip_gdbif_root->task_free;
-  for( gdbif_task = *prev; gdbif_task != NULL; gdbif_task = *prev ) {
+  prev = &PIP_SLIST_FIRST(&pip_gdbif_root->task_free);
+  PIP_SLIST_FOREACH_SAFE(gdbif_task, &pip_gdbif_root->task_free, free_list,
+			 next) {
     if( gdbif_task->gdb_status != PIP_GDBIF_GDB_DETACHED ) {
-      prev = &gdbif_task->next_free;
+      prev = &PIP_SLIST_NEXT(gdbif_task, free_list);
     } else {
-      *prev = gdbif_task->next_free;
-      gdbif_task->prev->next = gdbif_task->next;
-      gdbif_task->next->prev = gdbif_task->prev;
+      *prev = next;
+      PIP_HCIRCLEQ_REMOVE(gdbif_task, task_list);
     }
   }
   pip_spin_unlock( &pip_gdbif_root->lock_root );
@@ -1621,8 +1615,7 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
   gdbif_task->argv = NULL;
   gdbif_task->envv = NULL;
   pip_spin_lock( &pip_gdbif_root->lock_free );
-  gdbif_task->next_free = pip_gdbif_root->task_free;
-  pip_gdbif_root->task_free = gdbif_task;
+  PIP_SLIST_INSERT_HEAD(&pip_gdbif_root->task_free, gdbif_task, free_list);
   pip_finalize_gdbif_tasks();
   pip_spin_unlock( &pip_gdbif_root->lock_free );
 
