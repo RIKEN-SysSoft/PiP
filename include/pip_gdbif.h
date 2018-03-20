@@ -10,7 +10,8 @@
 #ifndef _pip_gdbif_h_
 #define _pip_gdbif_h_
 
-#include "pip_queue.h"
+#include <pip_machdep.h> /* for pip_spinlock_t */
+#include <pip_queue.h>
 
 enum pip_task_status {
   PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in this struct and invalid to access */
