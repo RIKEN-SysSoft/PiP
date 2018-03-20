@@ -25,6 +25,7 @@ DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
 	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
+	   $(PIPINCDIR)/pip_queue.h 		\
 	   $(PIPINCDIR)/pip_ulp.h 		\
 	   $(PIPINCDIR)/pip_util.h 		\
 	   $(PIPINCDIR)/pvas.h
