@@ -9,7 +9,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
-PROGRAMS = $(PROGRAM) pmap hello
+PROGRAMS_TO_INSTALL = $(PROGRAM) pmap
+PROGRAMS = $(PROGRAMS_TO_INSTALL) hello
 MAN1_SRCS = piprun.c pmap.c hello.c
 
 CFLAGS += -pthread
