@@ -9,9 +9,11 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
+PROGRAMS = dlmopen_count pip_mode ompnumthread
+PROGRAMS_TO_INSTALL = # nothing
 SRCS	= dlmopen_count.c pip_mode.c
 
-all: dlmopen_count pip_mode ompnumthread
+all: $(PROGRAMS)
 
 pip_mode: pip_mode.c Makefile
 
@@ -19,7 +21,5 @@ dlmopen_count: dlmopen_count.c Makefile
 
 ompnumthread: ompnumthread.c Makefile
 	$(CC) -fopenmp -openmp -O2 $< -o$@
-
-PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
