@@ -44,12 +44,14 @@ struct pip_gdbif_task {
   PIP_SLIST_ENTRY(pip_gdbif_task) free_list;
   /* pathname of the program */
   char	*pathname;
+  char	*realpathname;
   /* argc, argv and env */
   int	argc;
   char 	**argv;
   char 	**envv;
   /* handle of the loaded link map */
   void	*handle;
+  void	*load_address;
   /* PID or TID of the PiP task, the value of zero means nothing */
   pid_t	pid;
   int	pipid;

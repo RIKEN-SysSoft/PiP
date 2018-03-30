@@ -206,6 +206,7 @@ static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
 					pip_task_t *task) {
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
   gdbif_task->pathname = task->args.prog;
+  gdbif_task->realpathname = NULL; /* filled by pip_load_gdbif() later */
   if ( task->args.argv == NULL ) {
     gdbif_task->argc = 0;
   } else {
@@ -214,7 +215,8 @@ static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
   gdbif_task->argv = task->args.argv;
   gdbif_task->envv = task->args.envv;
 
-  gdbif_task->handle = task->loaded;
+  gdbif_task->handle = task->loaded; /* filled by pip_load_gdbif() later */
+  gdbif_task->load_address = NULL; /* filled by pip_load_gdbif() later */
   gdbif_task->exit_code = -1;
   gdbif_task->pid = task->pid;
   gdbif_task->pipid = task->pipid;
@@ -235,6 +237,46 @@ static void pip_link_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task) {
   pip_spin_lock( &pip_gdbif_root->lock_root );
   PIP_HCIRCLEQ_INSERT_TAIL(pip_gdbif_root->task_root, gdbif_task, task_list);
   pip_spin_unlock( &pip_gdbif_root->lock_root );
+}
+
+/*
+ * NOTE: pip_load_gdbif() won't be called for PiP root tasks.
+ * thus, load_address and realpathname are both NULL for them.
+ * handle is available, though.
+ *
+ * because this function is only for PIP-gdb,
+ * this does not return any error, but warn.
+ */
+static void pip_load_gdbif( pip_task_t *task ) {
+  struct pip_gdbif_task *gdbif_task = task->gdbif_task;
+  Dl_info dli;
+  char buf[PATH_MAX];
+
+  gdbif_task->handle = task->loaded;
+
+  if( !dladdr( task->symbols.main, &dli ) ) {
+    pip_warn_mesg( "dladdr(%s) failure"
+		   " - PIP-gdb won't work with this PiP task %d",
+		   task->args.prog, task->pipid );
+    gdbif_task->load_address = NULL;
+  } else {
+    gdbif_task->load_address = dli.dli_fbase;
+  }
+
+  /* dli.dli_fname is same with task->args.prog and may be a relative path */
+  if( realpath( task->args.prog, buf ) == NULL ) {
+    gdbif_task->realpathname = NULL; /* give up */
+    pip_warn_mesg( "realpath(%s): %s"
+		   " - PIP-gdb won't work with this PiP task %d",
+		   task->args.prog, strerror( errno ), task->pipid );
+  } else {
+    gdbif_task->realpathname = strdup( buf );
+    if( gdbif_task->realpathname == NULL ) { /* give up */
+      pip_warn_mesg( "strdup(%s) failure"
+		     " - PIP-gdb won't work with this PiP task %d",
+		     task->args.prog, task->pipid );
+    }
+  }
 }
 
 #include <elf.h>
@@ -991,7 +1033,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     } else {
       DBG;
       task->loaded = loaded;
-      task->gdbif_task->handle = loaded;
+      pip_load_gdbif( task );
     }
   }
   RETURN( err );
@@ -1614,6 +1656,11 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
   gdbif_task->argc = 0;
   gdbif_task->argv = NULL;
   gdbif_task->envv = NULL;
+  if( gdbif_task->realpathname  != NULL ) {
+    char *p = gdbif_task->realpathname;
+    gdbif_task->realpathname = NULL; /* do this before free() for PIP-gdb */
+    free( p );
+  }
   pip_spin_lock( &pip_gdbif_root->lock_free );
   PIP_SLIST_INSERT_HEAD(&pip_gdbif_root->task_free, gdbif_task, free_list);
   pip_finalize_gdbif_tasks();
