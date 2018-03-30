@@ -23,10 +23,12 @@ int main() {
   MEMBER(struct pip_gdbif_task, task_list.hcqe_prev);
   MEMBER(struct pip_gdbif_task, root);
   MEMBER(struct pip_gdbif_task, pathname);
+  MEMBER(struct pip_gdbif_task, realpathname);
   MEMBER(struct pip_gdbif_task, argc);
   MEMBER(struct pip_gdbif_task, argv);
   MEMBER(struct pip_gdbif_task, envv);
   MEMBER(struct pip_gdbif_task, handle);
+  MEMBER(struct pip_gdbif_task, load_address);
   MEMBER(struct pip_gdbif_task, pid);
   MEMBER(struct pip_gdbif_task, pipid);
   MEMBER(struct pip_gdbif_task, exit_code);
