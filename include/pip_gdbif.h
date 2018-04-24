@@ -13,6 +13,12 @@
 #include <pip_machdep.h> /* for pip_spinlock_t */
 #include <pip_queue.h>
 
+/* make this independent from <pip.h> */
+enum pip_gdbif_pipid {
+  PIP_GDBIF_PIPID_ROOT		= -1,
+  PIP_GDBIF_PIPID_ANY		= -2
+};
+
 enum pip_task_status {
   PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in this struct and invalid to access */
   PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawn() is called and this structure is created */
@@ -79,7 +85,7 @@ struct pip_gdbif_root {
 
   pip_spinlock_t	lock_root; /* lock for task_root */
   PIP_HCIRCLEQ_HEAD(pip_gdbif_task) task_root;
-  /* task_root == tasks[PIP_PIPID_ROOT], although it's not recommended */
+  /* task_root == tasks[PIP_GDBIF_PIPID_ROOT], although it's not recommended */
 
   struct pip_gdbif_task	tasks[];
 };
