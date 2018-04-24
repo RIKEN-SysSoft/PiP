@@ -202,6 +202,17 @@ static void pip_init_task_struct( pip_task_t *taskp ) {
   taskp->type  = PIP_TYPE_NONE;
 }
 
+static int pipid_to_gdbif( int pipid ) {
+  switch( pipid ) {
+  case PIP_PIPID_ROOT:
+    return( PIP_GDBIF_PIPID_ROOT );
+  case PIP_PIPID_ANY:
+    return( PIP_GDBIF_PIPID_ANY );
+  default:
+    return( pipid );
+  }
+}
+
 static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
 					pip_task_t *task) {
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
@@ -219,7 +230,7 @@ static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
   gdbif_task->load_address = NULL; /* filled by pip_load_gdbif() later */
   gdbif_task->exit_code = -1;
   gdbif_task->pid = task->pid;
-  gdbif_task->pipid = task->pipid;
+  gdbif_task->pipid = pipid_to_gdbif( task->pipid );
   gdbif_task->exec_mode =
       (pip_root->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
       (pip_root->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
