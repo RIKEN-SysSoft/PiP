@@ -256,11 +256,13 @@ static void *pip_dlsym( void *handle, const char *name ) {
 }
 
 static void pip_dlclose( void *handle ) {
+#ifdef AH
   pip_spin_lock( &pip_root->lock_ldlinux );
   do {
     dlclose( handle );
   } while( 0 );
   pip_spin_unlock( &pip_root->lock_ldlinux );
+#endif
 }
 
 static int pip_check_opt_and_env( int *optsp ) {
@@ -1514,7 +1516,7 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
 
   /* dlclose() and free() must be called only from the root process since */
   /* corresponding dlmopen() and malloc() is called by the root process   */
-  if( task->loaded     != NULL ) dlclose( task->loaded );
+  if( task->loaded     != NULL ) pip_dlclose( task->loaded );
   if( task->args.prog  != NULL ) free( task->args.prog );
   if( task->args.argv  != NULL ) free( task->args.argv );
   if( task->args.envv  != NULL ) free( task->args.envv );
