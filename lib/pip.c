@@ -37,6 +37,7 @@
 #define PIP_INTERNAL_FUNCS
 #include <pip.h>
 #include <pip_util.h>
+#include <pip_gdbif.h>
 
 #ifdef EVAL
 
@@ -72,6 +73,8 @@ static int (*pip_clone_mostly_pthread_ptr) (
 	void *(*start_routine) (void *),
 	void *arg,
 	pid_t *pidp) = NULL;
+
+struct pip_gdbif_root	*pip_gdbif_root;
 
 int pip_root_p_( void ) {
   return pip_root != NULL && pip_task == NULL;
@@ -125,6 +128,14 @@ static void pip_err_mesg( char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   pip_message( "PIP-ERROR%s:", format, ap );
+}
+
+static int pip_count_vec( char **vecsrc ) {
+  int n;
+
+  for( n=0; vecsrc[n]!= NULL; n++ );
+	
+  return( n );
 }
 
 static void pip_set_magic( pip_root_t *root ) {
@@ -189,6 +200,94 @@ static void pip_init_task_struct( pip_task_t *taskp ) {
   memset( (void*) taskp, 0, offsetof(pip_task_t,boundary) );
   taskp->pipid = PIP_PIPID_NONE;
   taskp->type  = PIP_TYPE_NONE;
+}
+
+static int pipid_to_gdbif( int pipid ) {
+  switch( pipid ) {
+  case PIP_PIPID_ROOT:
+    return( PIP_GDBIF_PIPID_ROOT );
+  case PIP_PIPID_ANY:
+    return( PIP_GDBIF_PIPID_ANY );
+  default:
+    return( pipid );
+  }
+}
+
+static void pip_init_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task,
+					pip_task_t *task) {
+  /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
+  gdbif_task->pathname = task->args.prog;
+  gdbif_task->realpathname = NULL; /* filled by pip_load_gdbif() later */
+  if ( task->args.argv == NULL ) {
+    gdbif_task->argc = 0;
+  } else {
+    gdbif_task->argc = pip_count_vec( task->args.argv );
+  }
+  gdbif_task->argv = task->args.argv;
+  gdbif_task->envv = task->args.envv;
+
+  gdbif_task->handle = task->loaded; /* filled by pip_load_gdbif() later */
+  gdbif_task->load_address = NULL; /* filled by pip_load_gdbif() later */
+  gdbif_task->exit_code = -1;
+  gdbif_task->pid = task->pid;
+  gdbif_task->pipid = pipid_to_gdbif( task->pipid );
+  gdbif_task->exec_mode =
+      (pip_root->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
+      (pip_root->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
+      PIP_GDBIF_EXMODE_NULL;
+  gdbif_task->status = PIP_GDBIF_STATUS_NULL;
+  gdbif_task->gdb_status = PIP_GDBIF_GDB_DETACHED;
+}
+
+static void pip_init_gdbif_root_task_link(struct pip_gdbif_task *gdbif_task) {
+  PIP_HCIRCLEQ_INIT(*gdbif_task, task_list);
+}
+
+static void pip_link_gdbif_task_struct(	struct pip_gdbif_task *gdbif_task) {
+  gdbif_task->root = &pip_gdbif_root->task_root;
+  pip_spin_lock( &pip_gdbif_root->lock_root );
+  PIP_HCIRCLEQ_INSERT_TAIL(pip_gdbif_root->task_root, gdbif_task, task_list);
+  pip_spin_unlock( &pip_gdbif_root->lock_root );
+}
+
+/*
+ * NOTE: pip_load_gdbif() won't be called for PiP root tasks.
+ * thus, load_address and realpathname are both NULL for them.
+ * handle is available, though.
+ *
+ * because this function is only for PIP-gdb,
+ * this does not return any error, but warn.
+ */
+static void pip_load_gdbif( pip_task_t *task ) {
+  struct pip_gdbif_task *gdbif_task = task->gdbif_task;
+  Dl_info dli;
+  char buf[PATH_MAX];
+
+  gdbif_task->handle = task->loaded;
+
+  if( !dladdr( task->symbols.main, &dli ) ) {
+    pip_warn_mesg( "dladdr(%s) failure"
+		   " - PIP-gdb won't work with this PiP task %d",
+		   task->args.prog, task->pipid );
+    gdbif_task->load_address = NULL;
+  } else {
+    gdbif_task->load_address = dli.dli_fbase;
+  }
+
+  /* dli.dli_fname is same with task->args.prog and may be a relative path */
+  if( realpath( task->args.prog, buf ) == NULL ) {
+    gdbif_task->realpathname = NULL; /* give up */
+    pip_warn_mesg( "realpath(%s): %s"
+		   " - PIP-gdb won't work with this PiP task %d",
+		   task->args.prog, strerror( errno ), task->pipid );
+  } else {
+    gdbif_task->realpathname = strdup( buf );
+    if( gdbif_task->realpathname == NULL ) { /* give up */
+      pip_warn_mesg( "strdup(%s) failure"
+		     " - PIP-gdb won't work with this PiP task %d",
+		     task->args.prog, task->pipid );
+    }
+  }
 }
 
 #include <elf.h>
@@ -422,6 +521,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   int		ntasks;
   int 		pipid;
   int 		i, err = 0;
+  struct pip_gdbif_root *gdbif_root;
 
   if( pip_root != NULL ) RETURN( EBUSY ); /* already initialized */
 
@@ -480,6 +580,20 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
     pip_spin_init( &pip_root->task_root->lock_malloc );
     unsetenv( PIP_ROOT_ENV );
+
+    sz = sizeof( *gdbif_root ) + sizeof( gdbif_root->tasks[0] ) * ntasks;
+    if( ( err = pip_page_alloc( sz, (void**) &gdbif_root ) ) != 0 ) {
+      RETURN( err );
+    }
+    gdbif_root->hook_before_main = NULL; /* XXX */
+    gdbif_root->hook_after_main = NULL; /* XXX */
+    pip_spin_init( &gdbif_root->lock_free );
+    PIP_SLIST_INIT(&gdbif_root->task_free);
+    pip_spin_init( &gdbif_root->lock_root );
+    pip_init_gdbif_task_struct( &gdbif_root->task_root, pip_root->task_root );
+    pip_init_gdbif_root_task_link( &gdbif_root->task_root );
+    gdbif_root->task_root.status = PIP_GDBIF_STATUS_CREATED;
+    pip_gdbif_root = gdbif_root; /* assign after initialization completed */
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
@@ -857,6 +971,9 @@ static int pip_load_dso( void **handlep, char *path ) {
   }
   DBGF( "calling dlmopen(%s)", path );
   ES( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) );
+  if( pip_root->task_root->symbols.add_stack != NULL ) {
+    //pip_root->task_root->symbols.add_stack();
+  }
   DBG;
   if( loaded == NULL ) {
     if( ( err = pip_check_pie( path ) ) != 0 ) RETURN( err );
@@ -929,6 +1046,7 @@ static int pip_load_prog( char *prog, pip_task_t *task ) {
     } else {
       DBG;
       task->loaded = loaded;
+      pip_load_gdbif( task );
     }
   }
   RETURN( err );
@@ -1006,9 +1124,7 @@ static int pip_init_glibc( pip_symbols_t *symbols,
 			   char **envv,
 			   void *loaded,
 			   int flag ) {
-  int argc;
-
-  for( argc=0; argv[argc]!=NULL; argc++ );
+  int argc = pip_count_vec( argv );
 
   if( symbols->progname != NULL ) {
     char *p;
@@ -1124,8 +1240,9 @@ static int pip_do_spawn( void *thargs )  {
   pip_spin_unlock( &pip_root->lock_ldlinux );
   if( err != 0 ) RETURN( err );
 #else
+  //fprintf( stderr, "self->symbols.add_stack=%p\n", self->symbols.add_stack );
   if( self->symbols.add_stack != NULL ) {
-    self->symbols.add_stack();
+    //self->symbols.add_stack();
   }
 #endif
   DBG;
@@ -1172,7 +1289,7 @@ static int pip_do_spawn( void *thargs )  {
 
 #ifndef PIP_CLONE_AND_DLMOPEN
     if( pip_root->task_root->symbols.add_stack != NULL ) {
-      pip_root->task_root->symbols.add_stack();
+      //pip_root->task_root->symbols.add_stack();
     }
 #endif
 
@@ -1253,6 +1370,7 @@ int pip_spawn( char *prog,
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
   pip_task_t		*task = NULL;
+  struct pip_gdbif_task *gdbif_task = NULL;
   size_t		stack_size = pip_stack_size();
   int 			pipid;
   pid_t			pid = 0;
@@ -1286,6 +1404,12 @@ int pip_spawn( char *prog,
   task->hook_after  = after;
   task->hook_arg    = hookarg;
   pip_spin_init( &task->lock_malloc );
+
+  gdbif_task = &pip_gdbif_root->tasks[pipid];
+  task->pid = -1; /* pip_init_gdbif_task_struct() refers this */
+  pip_init_gdbif_task_struct( gdbif_task, task );
+  pip_link_gdbif_task_struct( gdbif_task );
+  task->gdbif_task = gdbif_task;
 
 #ifdef PIP_DLMOPEN_AND_CLONE
   pip_spin_lock( &pip_root->lock_ldlinux );
@@ -1378,6 +1502,8 @@ int pip_spawn( char *prog,
     task->pid = pid;
     pip_root->ntasks_accum ++;
     pip_root->ntasks_curr  ++;
+    gdbif_task->pid = pid;
+    gdbif_task->status = PIP_GDBIF_STATUS_CREATED;
     *pipidp = pipid;
 
   } else {
@@ -1392,6 +1518,7 @@ int pip_spawn( char *prog,
       if( task->loaded != NULL ) (void) pip_dlclose( task->loaded );
       pip_init_task_struct( task );
     }
+    if( gdbif_task != NULL ) free( gdbif_task );
   }
   DBGF( "<< pip_spawn(pipid=%d)", *pipidp );
   RETURN( err );
@@ -1490,6 +1617,8 @@ int pip_exit( int retval ) {
   } else if( pip_is_pthread_() || /* thread mode */
 	     pip_isa_ulp() ) {	  /* or ULP*/
     pip_task->retval = retval;
+    pip_task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+    pip_task->gdbif_task->exit_code = retval;
     DBGF( "[PIPID=%d] pip_exit(%d)!!!", pip_task->pipid, retval );
     (void) setcontext( pip_task->ctx_exit );
     DBGF( "[PIPID=%d] pip_exit() ????", pip_task->pipid );
@@ -1508,8 +1637,47 @@ int pip_exit( int retval ) {
  * The following functions must be called at root process
  */
 
+static void pip_finalize_gdbif_tasks( void ) {
+  struct pip_gdbif_task *gdbif_task, **prev, *next;
+
+  if( pip_gdbif_root == NULL ) {
+    DBGF( "pip_gdbif_root=NULL, pip_init() hasn't called?" );
+    return;
+  }
+  pip_spin_lock( &pip_gdbif_root->lock_root );
+  prev = &PIP_SLIST_FIRST(&pip_gdbif_root->task_free);
+  PIP_SLIST_FOREACH_SAFE(gdbif_task, &pip_gdbif_root->task_free, free_list,
+			 next) {
+    if( gdbif_task->gdb_status != PIP_GDBIF_GDB_DETACHED ) {
+      prev = &PIP_SLIST_NEXT(gdbif_task, free_list);
+    } else {
+      *prev = next;
+      PIP_HCIRCLEQ_REMOVE(gdbif_task, task_list);
+    }
+  }
+  pip_spin_unlock( &pip_gdbif_root->lock_root );
+}
+
 static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
+
+  struct pip_gdbif_task *gdbif_task = task->gdbif_task;
+
   DBGF( "pipid=%d", task->pipid );
+
+  gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+  gdbif_task->pathname = NULL;
+  gdbif_task->argc = 0;
+  gdbif_task->argv = NULL;
+  gdbif_task->envv = NULL;
+  if( gdbif_task->realpathname  != NULL ) {
+    char *p = gdbif_task->realpathname;
+    gdbif_task->realpathname = NULL; /* do this before free() for PIP-gdb */
+    free( p );
+  }
+  pip_spin_lock( &pip_gdbif_root->lock_free );
+  PIP_SLIST_INSERT_HEAD(&pip_gdbif_root->task_free, gdbif_task, free_list);
+  pip_finalize_gdbif_tasks();
+  pip_spin_unlock( &pip_gdbif_root->lock_free );
 
   if( retvalp != NULL ) *retvalp = ( task->retval & 0xFF );
   DBGF( "retval=%d", task->retval );
@@ -1561,6 +1729,8 @@ static int pip_do_wait( int pipid, int flag_try, int *retvalp ) {
     DBG;
     if( WIFEXITED( status ) ) {
       task->retval = WEXITSTATUS( status );
+      task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+      task->gdbif_task->exit_code = task->retval;
     } else if( WIFSIGNALED( status ) ) {
       pip_warn_mesg( "Signaled %s", strsignal( WTERMSIG( status ) ) );
     }
