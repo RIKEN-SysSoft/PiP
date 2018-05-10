@@ -29,6 +29,6 @@ compat/exit.sh
 compat/brk.sh
 compat/pf.sh
 compat/system.sh
-openmp/openmp.sh
+#openmp/openmp.sh
 fortran/fort.sh
 pthread/pthread.sh
