@@ -3,7 +3,7 @@
 
 #include "pmap.h"
 
-#define N	(3)
+#define N	(10)
 pip_barrier_t barrier = PIP_BARRIER_INIT(N);
 static int var = 12345;
 
