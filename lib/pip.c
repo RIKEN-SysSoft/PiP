@@ -1518,7 +1518,6 @@ int pip_spawn( char *prog,
       if( task->loaded != NULL ) (void) pip_dlclose( task->loaded );
       pip_init_task_struct( task );
     }
-    if( gdbif_task != NULL ) free( gdbif_task );
   }
   DBGF( "<< pip_spawn(pipid=%d)", *pipidp );
   RETURN( err );
