@@ -101,8 +101,8 @@ cd PIP-gdb
 
 * To debug your PiP programs
 
-    The following procedure attaches all PiP tasks which is created
-    by same PiP root task as GDB inferiors.
+    The following procedure attaches all PiP tasks, which are created
+    by same PiP root task, as GDB inferiors.
 	$ pip-gdb
 	(gdb) set pip-auto-attach on
 	(gdb) attach <PID-of-your-PiP-program>
@@ -116,7 +116,6 @@ cd PIP-gdb
 	* 1    process 6450 (pip root)  /somewhere/pip-root
 
     You can select and debug an inferior by the following GDB command:
-
 	(gdb) inferior 2
 	[Switching to inferior 2 [process 6451 (pip 0)] (/somewhere/pip-task-0)]
 
@@ -124,9 +123,7 @@ cd PIP-gdb
     a PiP root task, the newly created PiP child tasks aren't attached
     automatically, but you can add empty inferiors and then attach
     the PiP child tasks to the inferiors.
-
     e.g.
-
 	.... type Control-Z to stop the root task.
 	^Z
 	Program received signal SIGTSTP, Stopped (user).
@@ -152,6 +149,10 @@ cd PIP-gdb
 	  3    process 1903 (pip 1)     /somewhere/pip-task-1 
 	  2    process 1902 (pip 0)     /somewhere/pip-task-0 
 	  1    process 1897 (pip root)  /somewhere/pip-root
+
+    You can write the "set pip-auto-attach on" setting in your $HOME/.gdbinit
+    file.  In that case, you can attach all relevant PiP tasks by:
+	$ pip-gdb -p <PID-of-your-PiP-program>
 
 * FAQ on installation
 
@@ -182,4 +183,4 @@ cd PIP-gdb
   Enjoy !
 
   Atsushi Hori <ahori@riken.jp>
-  2017 March 2
+  2018 May 25
