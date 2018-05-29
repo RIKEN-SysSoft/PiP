@@ -89,7 +89,7 @@ static char *pip_pipidstr( char *buf ) {
   return idstr;
 }
 
-char * pip_get_type_str( pip_task_t *task ) {
+static char * pip_type_str_( pip_task_t *task ) {
   char *typestr = NULL;
   if( pip_task != NULL ) {
     switch( pip_task->type ) {
@@ -107,8 +107,8 @@ char * pip_get_type_str( pip_task_t *task ) {
   return typestr;
 }
 
-char *pip_ulp_get_type_str( pip_ulp_t *ulp ) {
-  return pip_get_type_str( PIP_TASK( ulp ) );
+char *pip_ulp_type_str( pip_ulp_t *ulp ) {
+  return pip_type_str_( PIP_TASK( ulp ) );
 }
 
 int pip_idstr( char *buf, size_t sz ) {
@@ -784,7 +784,7 @@ int pip_get_ntasks( int *ntasksp ) {
   RETURN( 0 );
 }
 
-static pip_task_t *pip_get_myself( void ) {
+static pip_task_t *pip_get_myself_( void ) {
   pip_task_t *task;
   if( pip_is_root_() ) {
     task = pip_root->task_root;
@@ -796,7 +796,7 @@ static pip_task_t *pip_get_myself( void ) {
 
 int pip_export( void *export ) {
   if( export == NULL ) RETURN( EINVAL );
-  pip_get_myself()->export = export;
+  pip_get_myself_()->export = export;
   RETURN( 0 );
 }
 
@@ -2206,9 +2206,10 @@ int pip_ulp_new( pip_spawn_program_t *progp,
       ( args->envv = pip_copy_env( progp->envv, pipid ) ) == NULL ) {
     ERRJ_ERR(ENOMEM);
   }
-  if( progp->funcname == NULL &&
-      ( args->argv = pip_copy_vec( progp->argv ) ) == NULL ) {
-    ERRJ_ERR(ENOMEM);
+  if( progp->funcname == NULL ) {
+    if( ( args->argv = pip_copy_vec( progp->argv ) ) == NULL ) {
+      ERRJ_ERR(ENOMEM);
+    }
   } else if( ( args->funcname = strdup( progp->funcname ) ) == NULL ) {
     ERRJ_ERR(ENOMEM);
   }
@@ -2323,14 +2324,6 @@ int pip_ulp_retire( int extval ) {
   RETURN( pip_retire_( pip_task, extval ) );
 }
 
-
-int pip_ulp_myself( pip_ulp_t **myselfp ) {
-  if( myselfp  == NULL ) RETURN( EINVAL );
-  if( pip_task == NULL ) RETURN( EPERM  );
-  *myselfp = PIP_ULP( pip_task );
-  return 0;
-}
-
 int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp ) {
   pip_task_t *task = PIP_TASK( ulp );
   if( pipidp == NULL ) RETURN( EINVAL );
@@ -2338,7 +2331,14 @@ int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp ) {
   return 0;
 }
 
-int pip_get_ulp( int pipid, pip_ulp_t **ulpp ) {
+int pip_ulp_myself( pip_ulp_t **ulpp ) {
+  if( ulpp     == NULL ) RETURN( EINVAL );
+  if( pip_root == NULL ) RETURN( EPERM );
+  *ulpp = PIP_ULP( pip_task );
+  return 0;
+}
+
+int pip_ulp_get( int pipid, pip_ulp_t **ulpp ) {
   pip_task_t *task;
   int err;
 

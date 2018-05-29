@@ -41,6 +41,17 @@
  * accessed. The PiP library supports the functions to export and
  * import the memory region to be accessible.
  *
+ * \section PiP User-Level Process (ULP)
+ *
+ * PiP also supports ULPs which are explicitly scheduled by PiP
+ * tasks. Unlike the other user-level thread libraries, PiP ULPs can
+ * run with different programs. Due to the GLIBC constraints, ULPs can
+ * be created by the PiP root process. The created ULPs are associated
+ * with a PiP task by specifying ULPs when the task is created by
+ * calling \e pip_spawn. A ULP can yield, suspend, and resume its
+ * execution by calling PiP ULP functions. A PiP task will be
+ * terminated only when all ULPs scheduled by the task terminate.
+ *
  * \section execution-mode Execution mode
  *
  * There are several PiP implementation modes which can be selected at
@@ -637,6 +648,7 @@ int pip_task_spawn( pip_spawn_program_t *programp,
 extern "C" {
 #endif
   /* the following functions deeply depends on PiP execution mode */
+  char  *pip_ulp_type_str( pip_ulp_t *ulp );
   int    pip_get_thread( int pipid, pthread_t *threadp );
   int    pip_is_pthread( int *flagp );
   int    pip_is_shared_fd( int *flagp );

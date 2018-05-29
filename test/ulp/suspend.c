@@ -30,6 +30,8 @@ int main( int argc, char **argv ) {
   ntasks = NULPS*2;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
+    pip_spawn_program_t prog;
+
     pip_ulp_t *ulp = NULL;
     root.pipid = pipid;
     for( i=0; i<NULPS; i++ ) {
@@ -41,25 +43,14 @@ int main( int argc, char **argv ) {
 			    ulp,
 			    &ulp ) );
     }
+    pip_spawn_from_main( &prog, argv[0], argv, NULL );
     pipid = 0;
-    TESTINT( pip_spawn_with_ulps( argv[0], argv, NULL, 0, &pipid,
-				  NULL, NULL, NULL, ulp ) );
+    TESTINT( pip_task_spawn_with_ulps( &prog, PIP_CPUCORE_ASIS, &pipid, ulp ));
     TESTINT( pip_wait( pipid, NULL ) );
   } else {
     fprintf( stderr, "\n<%d> Hello, ULP (stackvar@%p staticvar@%p)\n\n",
 	     pipid, &pipid, &root );
-    if( pipid == 0 ) {
-      pip_ulp_yield();
-      fprintf( stderr, "\n<%d> Resumed, ULP000 (stackvar@%p staticvar@%p)\n\n",
-	       pipid, &pipid, &root );
-    }
-    pip_ulp_yield();
-    fprintf( stderr, "\n<%d> Resumed-0, ULP (stackvar@%p staticvar@%p)\n\n",
-	     pipid, &pipid, &root );
-    pip_ulp_yield();
-    fprintf( stderr, "\n<%d> Resumed-2, ULP (stackvar@%p staticvar@%p)\n\n",
-	     pipid, &pipid, &root );
-    //pip_ulp_retire( pipid );
+    pip_exit( 0 );
   }
   TESTINT( pip_fin() );
   return 0;

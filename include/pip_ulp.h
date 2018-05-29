@@ -116,6 +116,9 @@ extern "C" {
    */
   int pip_ulp_resume( pip_ulp_t *ulp, int flags );
   /** @}*/
+  int pip_ulp_myself( pip_ulp_t **ulpp );
+
+  int pip_ulp_get( int pipid, pip_ulp_t **ulpp );
 
 #ifdef __cplusplus
 }
