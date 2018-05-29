@@ -16,7 +16,7 @@
 struct hostent *my_gethostbyname( char *name ) {
   DBG;
   pip_print_fs_segreg();
-  CHECK_CTYPE;
+  PIP_CHECK_CTYPE;
   return gethostbyname( name );
 }
 
@@ -25,7 +25,7 @@ int main( int argc, char **argv ) {
   int ntasks;
   struct hostent *he;
 
-  CHECK_CTYPE;
+  PIP_CHECK_CTYPE;
   pip_print_fs_segreg();
   ntasks = 1;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
@@ -41,7 +41,7 @@ int main( int argc, char **argv ) {
       fprintf( stderr, "hostname: %s\n", he->h_name );
     }
     print_maps();
-  CHECK_CTYPE;
+    PIP_CHECK_CTYPE;
 
     pipid = 0;
     TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
@@ -52,7 +52,7 @@ int main( int argc, char **argv ) {
   } else {
     //attachme();
     //print_maps();
-  CHECK_CTYPE;
+    PIP_CHECK_CTYPE;
 
     if( ( he = gethostbyname( "127.0.0.1" ) ) == NULL ) {
       DBG;
@@ -61,7 +61,7 @@ int main( int argc, char **argv ) {
       DBG;
       fprintf( stderr, "hostname: %s\n", he->h_name );
     }
-  CHECK_CTYPE;
+    PIP_CHECK_CTYPE;
     if( ( he = my_gethostbyname( "localhost" ) ) == NULL ) {
       DBG;
       fprintf( stderr, "gethostbyname( localhost ) fails\n" );

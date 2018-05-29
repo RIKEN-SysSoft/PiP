@@ -9,60 +9,48 @@
 
 #define PIP_INTERNAL_FUNCS
 
+//#define NULPS	(10)
 #define NULPS	(10)
-//#define NULPS	(2)
+//#define NULPS	(0)
 
 #define DEBUG
 #include <test.h>
+#include <pip_ulp.h>
 
 int a;
 
 static struct root{
-  pip_ulp_t 	root;
   int 		pipid;
-  int		n;
-  pip_ulp_t	ulp[NULPS];
 } root;
-
-void term_cb( void *aux ) {
-  struct root *rp = (struct root*) aux;
-  fprintf( stderr, "PIPID:%d - terminated (%p)\n", rp->pipid, rp );
-  rp->n++;
-  if( rp->n < NULPS ) {
-    pip_ulp_yield_to( NULL, &rp->ulp[rp->n] );
-  } else {
-    pip_ulp_yield_to( NULL, &rp->root );
-  }
-}
 
 int main( int argc, char **argv ) {
   int i, ntasks, pipid;
 
-  fprintf( stderr, "PID %d\n", getpid() );
+  //fprintf( stderr, "PID %d\n", getpid() );
 
-  ntasks = 20;
+  //ntasks = NULPS*2;
+  ntasks = 100;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
+    pip_ulp_t *ulp  = NULL;
     root.pipid = pipid;
-    root.n     = 0;
-    TESTINT( pip_make_ulp( pipid,
-			   term_cb,
-			   &root,
-			   &root.root ) );
     for( i=0; i<NULPS; i++ ) {
-      pipid = i;
-      TESTINT( pip_ulp_create( argv[0],
-			       argv,
-			       NULL,
-			       &pipid,
-			       term_cb,
-			       &root,
-			       &root.ulp[i] ) );
+      pipid = i + 1;
+      TESTINT( pip_ulp_new( argv[0],
+			    argv,
+			    NULL,
+			    &pipid,
+			    ulp,
+			    &ulp ) );
     }
-    TESTINT( pip_ulp_yield_to( &root.root, &root.ulp[0] ) );
+    pipid = 0;
+    TESTINT( pip_spawn_with_ulps( argv[0], argv, NULL, 0, &pipid,
+				  NULL, NULL, NULL, ulp ) );
+    TESTINT( pip_wait( pipid, NULL ) );
   } else {
-    fprintf( stderr, "<%d> Hello, ULP (stackvar@%p staticvar@%p)\n",
+    fprintf( stderr, "\n<%d> Hello from ULP (stackvar@%p staticvar@%p)\n\n",
 	     pipid, &pipid, &root );
+    if( pipid == 0 ) pip_ulp_retire( pipid );
   }
   TESTINT( pip_fin() );
   return 0;

@@ -47,9 +47,9 @@ inline static void pip_memory_barrier(void) {
 int arch_prctl( int, unsigned long* );
 
 inline static void pip_print_fs_segreg( void ) {
-  unsigned long fsreg;
-  if( arch_prctl( ARCH_GET_FS, &fsreg ) == 0 ) {
-    fprintf( stderr, "FS REGISTER: 0x%lx\n", fsreg );
+  intptr_t fsreg;
+  if( arch_prctl( ARCH_GET_FS, (unsigned long*) &fsreg ) == 0 ) {
+    fprintf( stderr, "FS REGISTER: 0x%lx\n", (intptr_t) fsreg );
   } else {
     fprintf( stderr, "FS REGISTER: (unable to get:%d)\n", errno );
   }
