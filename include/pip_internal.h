@@ -12,45 +12,49 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#ifdef PIP_INTERNAL_FUNCS
-
+#include <asm/prctl.h>
+#include <sys/prctl.h>
 #include <ucontext.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#include <pip_machdep.h>
 #include <pip_clone.h>
+#include <pip_machdep.h>
 #include <pip_debug.h>
 
-/** ULP supported version **/
+//#define PIP_SWITCH_TLS
+
+/** ULP supported version (NEW) */
+#define PIP_BASE_VERSION	(0x3000U)
+/** ULP supported version
 #define PIP_BASE_VERSION	(0x2000U)
+**/
 /** The very first stable release version
 #define PIP_BASE_VERSION	(0x1000U)
 **/
 
 #define PIP_VERSION		PIP_BASE_VERSION
 
-#define PIP_ROOT_ENV		"PIP_ROOT"
-#define PIP_TASK_ENV		"PIP_TASK"
+#define PIP_ROOT_ENV		"PIP_ROOT_ADDR"
+#define PIP_TASK_ENV		"PIP_TASK_PIPID"
 
 #define PIP_MAGIC_WORD		"PrcInPrc"
 #define PIP_MAGIC_LEN		(8)
-
-#define MAIN_FUNC		"main"
 
 #define PIP_PIPID_NONE		(-999)
 
 #define PIP_LD_SOLIBS		{ NULL }
 
-#define PIP_ULP_STACK_SIZE	(8*1024*1024) /* 8 MiB */
-#define PIP_ULP_MIN_STACK_SIZE	(1*1024*1024) /* 1 MiB */
-#define PIP_ULP_STACK_ALIGN	(256)
+#define PIP_STACK_SIZE	(8*1024*1024) /* 8 MiB */
+#define PIP_MIN_STACK_SIZE	(1*1024*1024) /* 1 MiB */
+#define PIP_STACK_ALIGN	(256)
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
 typedef	int(*main_func_t)(int,char**,char**);
+typedef	int(*start_func_t)(void*);
 typedef int(*mallopt_t)(int,int);
 typedef void(*free_t)(void*);
 typedef void(*pthread_init_t)(int,char**,char**);
@@ -61,14 +65,15 @@ typedef	void(*fflush_t)(FILE*);
 
 typedef struct {
   /* functions */
-  main_func_t		main;	     /* main function address */
+  main_func_t		main;	      /* main function address */
+  start_func_t		start;	      /* strat function instead of main */
   pthread_init_t	pthread_init; /* __pthread_init_minimum() */
-  ctype_init_t		ctype_init;  /* to call __ctype_init() */
-  glibc_init_t		glibc_init;  /* only in patched Glibc */
-  add_stack_user_t	add_stack; /* for GDB workaroundn */
-  fflush_t		libc_fflush; /* to call fflush() at the end */
-  mallopt_t		mallopt;     /* to call mallopt() */
-  free_t		free;	     /* to override free() - EXPERIMENTAL*/
+  ctype_init_t		ctype_init;   /* to call __ctype_init() */
+  glibc_init_t		glibc_init;   /* only in patched Glibc */
+  fflush_t		libc_fflush;  /* to call fflush() at the end */
+  mallopt_t		mallopt;      /* to call mallopt() */
+  free_t		free;	      /* to override free() - EXPERIMENTAL*/
+  add_stack_user_t	add_stack;    /* for GDB workarounnd */
   /* variables */
   char			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
@@ -82,48 +87,58 @@ typedef struct {
   int			coreno;
   char			*prog;
   char			**argv;
+  char			*funcname;
+  void			*start_arg;
   char			**envv;
 } pip_spawn_args_t;
 
-#define PIP_TYPE_NONE	(0)
-#define PIP_TYPE_ROOT	(1)
-#define PIP_TYPE_TASK	(2)
-#define PIP_TYPE_ULP	(3)
+#define PIP_TYPE_NONE	(0x0)
+#define PIP_TYPE_ROOT	(0x1)
+#define PIP_TYPE_TASK	(0x2)
+#define PIP_TYPE_ULP	(0x3)
 
 struct pip_gdbif_task;
 
-typedef struct pip_task {
-  int			pipid;	 /* PiP ID */
-  int			type;	 /* PIP_TYPE_TASK or PIP_TYPE_ULP */
+typedef struct {
+  ucontext_t		ctx;
+#ifdef PIP_SWITCH_TLS
+  unsigned long 	fsreg;
+#endif
+} pip_ctx_t;
 
-  void			*export;
-  ucontext_t		*ctx_exit;
-  void			*loaded;
+typedef struct pip_task {
+  pip_ulp_t		queue;	     /* ULP list elm and sisters */
+  pip_ulp_t		schedq;	     /* ULP scheduling queue */
+  pip_ulp_t		ulp_done;    /* done ULPs */
+  pip_spinlock_t	lock_schedq; /* lock for the scheduling queue */
+  struct pip_task	*task_sched; /* scheduling task */
+
+  int			pipid;	/* PiP ID */
+  int			type;	/* PIP_TYPE_TASK or PIP_TYPE_ULP */
+
+  void			*loaded; /* loaded DSO handle */
   pip_symbols_t		symbols;
-  pip_spawn_args_t	args;	/* arguments for a PiP task */
-  int			retval;
+  pip_spawn_args_t	args;	 /* arguments for a PiP task */
+  void *volatile	export;
+  pip_ctx_t		*ctx_exit;
+  int			flag_exit;
+  int			extval;
 
   struct pip_gdbif_task	*gdbif_task;
 
-  int			boundary[0];
-  union {
-    struct {			/* for PiP tasks */
-      pid_t		pid;	/* PID in process mode */
-      pthread_t		thread;	/* thread */
-      pip_spawnhook_t	hook_before;
-      pip_spawnhook_t	hook_after;
-      void		*hook_arg;
-      pip_spinlock_t	lock_malloc; /* lock for pip_malloc and pip_free */
-    };
-    struct {			/* for PiP ULPs */
-      struct pip_task	*task_parent;
-      void		*stack;
-      struct pip_ulp	*ulp;
-    };
-  };
-} pip_task_t;
+  /* PiP task (type==PIP_TYPE_TASK) */
+  pip_spinlock_t	lock_malloc; /* lock for pip_malloc and pip_free */
+  pid_t			pid;	/* PID in process mode */
+  pthread_t		thread;	/* thread */
+  pip_spawnhook_t	hook_before;
+  pip_spawnhook_t	hook_after;
+  void			*hook_arg;
 
-#define PIP_FILLER_SZ	(PIP_CACHE_SZ-sizeof(pip_spinlock_t))
+  /* PiP ULP (type==PIP_TYPE_ULP) */
+  void			*ulp_stack;
+  pip_ctx_t		*ctx_suspend;
+
+} pip_task_t;
 
 typedef struct {
   char			magic[PIP_MAGIC_LEN];
@@ -131,47 +146,75 @@ typedef struct {
   size_t		root_size;
   size_t		size;
   pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
-  union {
-    struct {
-      size_t		page_size;
-      unsigned int	opts;
-      unsigned int	actual_mode;
-      int		ntasks;
-      int		ntasks_curr;
-      int		ntasks_accum;
-      int		pipid_curr;
-      pip_clone_t	*cloneinfo;   /* only valid with process:preload */
-    };
-    char		__filler0__[PIP_FILLER_SZ];
-  };
-  pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
-  union {
-    struct {
-      void		*stack_flist;	  /* ULP: stack free list */
-      size_t		stack_size;
-      pip_task_t	*task_root; /* points to tasks[ntasks] */
-    };
-    char		__filler1__[PIP_FILLER_SZ];
-  };
+  size_t		page_size;
+  unsigned int		opts;
+  unsigned int		actual_mode;
+  int			ntasks;
+  int			ntasks_curr;
+  int			ntasks_accum;
+  int			pipid_curr;
+  pip_clone_t		*cloneinfo;   /* only valid with process:preload */
+  pip_task_t		*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
+  /* ULP */
+  pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
+  void			*stack_flist;	  /* ULP: stack free list */
+  size_t		stack_size;
+
   pip_task_t		tasks[];
 } pip_root_t;
 
+#define PIP_TASK(ULP)	((pip_task_t*)(ULP))
+#define PIP_ULP(TASK)	((pip_ulp_t*)(TASK))
+#define PIP_ULP_CTX(U)	(PIP_TASK(U)->ctx_suspend)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-  /* the following functions deeply depends on PiP execution mode */
-  int    pip_get_thread( int pipid, pthread_t *threadp );
-  int    pip_is_pthread( int *flagp );
-  int    pip_is_shared_fd( int *flagp );
-  int    pip_is_shared_sighand( int *flagp );
-#ifdef __cplusplus
+#ifdef PIP_SWITCH_TLS
+
+inline static int pip_get_fsreg( unsigned long *fsreg ) {
+  return arch_prctl(ARCH_GET_FS, (unsigned long) fsreg ) ? errno : 0;
+}
+
+inline static int pip_set_fsreg( unsigned long fsreg ) {
+  return arch_prctl(ARCH_SET_FS, fsreg) ? errno : 0;
+}
+
+#define pip_makecontext(CTX,F,C,...)	 \
+  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__);	\
+    pip_set_fsreg((CTX)->fsreg); } while(0)
+
+inline static int pip_save_context( pip_ctx_t *ctxp ) {
+  return ( pip_get_fsreg(&ctxp->fsreg) || getcontext(&ctxp->ctx) ) ? errno : 0;
+}
+
+inline static int pip_load_context( const pip_ctx_t *ctxp ) {
+  return ( pip_set_fsreg(ctxp->fsreg) || setcontext(&ctxp->ctx) ) ? errno : 0;
+}
+
+inline static int pip_swapcontext( pip_ctx_t *old, pip_ctx_t *new ) {
+  return ( pip_get_fsreg(&old->fsreg)          ||
+	   swapcontext( &old->ctx, &new->ctx ) ||
+	   pip_set_fsreg(new->fsreg) ) ? errno : 0;
+}
+#else
+#define pip_makecontext(CTX,F,C,...)	 \
+  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)
+
+inline static int pip_save_context( pip_ctx_t *ctxp ) {
+  return ( getcontext(&ctxp->ctx) ? errno : 0 );
+}
+
+inline static int pip_load_context( const pip_ctx_t *ctxp ) {
+    return ( setcontext(&ctxp->ctx) ? errno : 0 );
+}
+
+inline static int pip_swapcontext( pip_ctx_t *old, pip_ctx_t *new ) {
+    return ( swapcontext( &old->ctx, &new->ctx ) ? errno : 0 );
 }
 #endif
 
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#define pip_likely(x)		__builtin_expect((x),1)
+#define pip_unlikely(x)		__builtin_expect((x),0)
 
-#endif /* PIP_INTERNAL_FUNCS */
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif /* _pip_internal_h_ */

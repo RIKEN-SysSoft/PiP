@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018
 */
 
 #ifndef _pip_debug_h_
@@ -45,6 +45,13 @@
 #define ASSERT(X)	\
   do { if( !(X) ) DBGF( "%s failed !!!", #X ); } while(0)
 
+#define PIP_TASK_DESCRIBE( ID )				\
+  pip_task_describe( stderr, __func__, (ID), 0 );
+#define PIP_ULP_DESCRIBE( ULP )				\
+  void pip_ulp_describe( stderr, __func__, (ULP), 0 );
+#define PIP_ULP_QUEUE_DESCRIBE( Q )			\
+  pip_ulp_queue_describe( stderr, __func__, (Q) );
+
 #else
 
 #define DBG
@@ -52,16 +59,20 @@
 #define RETURN(X)	return (X)
 #define ASSERT(X)
 
+#define PIP_TASK_DESCRIBE( ID )
+#define PIP_ULP_DESCRIBE( ULP )
+#define PIP_ULP_QUEUE_DESCRIBE( Q )
+
 #endif
 
-#ifdef DO_CHECK_CTYPE
+#if defined( DO_CHECK_CTYPE ) || defined( DEBUG )
 #include <ctype.h>
-#define CHECK_CTYPE					\
+#define PIP_CHECK_CTYPE					\
   do{ DBGF( "__ctype_b_loc()=%p", __ctype_b_loc() );			\
   DBGF( "__ctype_toupper_loc()=%p", __ctype_toupper_loc() );		\
   DBGF( "__ctype_tolower_loc()=%p", __ctype_tolower_loc() ); } while( 0 )
 #else
-#define CHECK_CTYPE
+#define PIP_CHECK_CTYPE
 #endif
 
 #endif

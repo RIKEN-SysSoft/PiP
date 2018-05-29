@@ -18,7 +18,7 @@
 
 extern int pip_is_coefd( int );
 extern int pip_get_dso( int pipid, void **loaded );
-extern int pip_root_p_( void );
+extern int pip_is_root_( void );
 
 /* the following function(s) are for debugging */
 
@@ -135,11 +135,11 @@ double pip_gettime( void ) {
 
 void pip_print_loaded_solibs( FILE *file ) {
   void *handle = NULL;
-  char idstr[PIPIDLEN];
+  char idstr[PIP_MIDLEN];
   int err;
 
   /* pip_init() must be called in advance */
-  (void) pip_idstr( idstr, PIPIDLEN );
+  (void) pip_idstr( idstr, PIP_MIDLEN );
   if( file == NULL ) file = stderr;
 
   if( ( err = pip_get_dso( PIP_PIPID_MYSELF, &handle ) ) != 0 ) {
@@ -156,7 +156,7 @@ void pip_print_loaded_solibs( FILE *file ) {
       fprintf( file, "%s %s at %p\n", idstr, fname, (void*)map->l_addr );
     }
   }
-  if( pip_root_p_() && handle != NULL ) dlclose( handle );
+  if( pip_is_root_() && handle != NULL ) dlclose( handle );
 }
 
 static int

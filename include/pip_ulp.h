@@ -12,94 +12,113 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-typedef void (*pip_ulp_termcb_t) ( void* );
+#define PIP_ULP_INIT(L)					\
+  do { PIP_ULP_NEXT(L) = (L);				\
+    PIP_ULP_PREV(L) = (L); } while(0)
 
-#include <ucontext.h>
+/**
+#define PIP_ULP_NEXT(L)		(((pip_ulp_t*)(L))->next)
+#define PIP_ULP_PREV(L)		(((pip_ulp_t*)(L))->prev)
+#define PIP_ULP_PREV_NEXT(L)	(((pip_ulp_t*)(L))->prev->next)
+#define PIP_ULP_NEXT_PREV(L)	(((pip_ulp_t*)(L))->next->prev)
+**/
+#define PIP_ULP_NEXT(L)		((L)->next)
+#define PIP_ULP_PREV(L)		((L)->prev)
+#define PIP_ULP_PREV_NEXT(L)	((L)->prev->next)
+#define PIP_ULP_NEXT_PREV(L)	((L)->next->prev)
 
-typedef ucontext_t	pip_ulp_ctx_t;
+#define PIP_ULP_ENQ_FIRST(L,E)				\
+  do { PIP_ULP_NEXT(E)   = PIP_ULP_NEXT(L);		\
+    PIP_ULP_PREV(E)      = (L);				\
+    PIP_ULP_NEXT_PREV(L) = (E);				\
+    PIP_ULP_NEXT(L)      = (E); } while(0)
 
-typedef struct pip_ulp {
-  pip_ulp_ctx_t		*ctx;
-  pip_ulp_termcb_t	termcb;
-  void			*aux;
-  int			pipid;
-} pip_ulp_t;
+#define PIP_ULP_ENQ_LAST(L,E)				\
+  do { PIP_ULP_NEXT(E)   = (L);				\
+    PIP_ULP_PREV(E)      = PIP_ULP_PREV(L);		\
+    PIP_ULP_PREV_NEXT(L) = (E);				\
+    PIP_ULP_PREV(L)      = (E); } while(0)
 
-#define PIP_ULP_NEXT(L)		(((pip_dlist_t*)(L))->next)
-#define PIP_ULP_PREV(L)		(((pip_dlist_t*)(L))->prev)
-#define PIP_ULP_PREV_NEXT(L)	(((pip_dlist_t*)(L))->prev->next)
-#define PIP_ULP_NEXT_PREV(L)	(((pip_dlist_t*)(L))->next->prev)
+#define PIP_ULP_DEQ(L)					\
+  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);		\
+    PIP_ULP_PREV_NEXT(L) = PIP_ULP_NEXT(L); 		\
+    PIP_ULP_INIT(L); } while(0)
 
-#define PIP_ULP_LIST_INIT(L)				\
-  do { PIP_ULP_NEXT(L) = (pip_dlist_t*)(L);		\
-    PIP_ULP_PREV(L)    = (pip_dlist_t*)(L); } while(0)
+#define PIP_ULP_ISEMPTY(L)				\
+  ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
 
-#define PIP_ULP_ENQ(L,R)						\
-  do { PIP_ULP_NEXT(L)   = PIP_ULP_NEXT(R);				\
-    PIP_ULP_PREV(L)      = (pip_dlist_t*)(R);				\
-    PIP_ULP_NEXT(R)      = (pip_dlist_t*)(L);				\
-    PIP_ULP_NEXT_PREV(R) = (pip_dlist_t*)(L); } while(0)
-
-#define PIP_ULP_DEQ(L)						\
-  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);			\
-    PIP_ULP_PREV_NEXT(L)    = PIP_ULP_NEXT(L); } while(0)
-
-#define PIP_ULP_NULLQ(R)	( PIP_ULP_NEXT(R) == PIP_ULP_PREV(R) )
-
-#define PIP_ULP_ENQ_LOCK(L,R,lock)		\
-  do { pip_spin_lock(lock);			\
-    PIP_ULP_ENQ((L),(R));			\
+#define PIP_ULP_ENQ_LOCK(L,E,lock)			\
+  do { pip_spin_lock(lock);				\
+    PIP_ULP_ENQ((L),(E));				\
     pip_spin_unlock(lock); } while(0)
 
-#define PIP_ULP_DEQ_LOCK(L,lock)		\
-  do { pip_spin_lock(lock);			\
-    PIP_ULP_DEQ((L));				\
+#define PIP_ULP_DEQ_LOCK(L,lock)			\
+  do { pip_spin_lock(lock);				\
+    PIP_ULP_DEQ((L));					\
     pip_spin_unlock(lock); } while(0)
 
-typedef struct pip_dlist {
-  struct pip_dlist	*next;
-  struct pip_dlist	*prev;
-} pip_dlist_t;
+#define PIP_ULP_FOREACH(L,E)					\
+  for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
+
+#define PIP_ULP_FOREACH_SAFE(L,E,TV)				\
+  for( (E)=(L)->next, (TV)=PIP_ULP_NEXT(E);			\
+       (L)!=(E);						\
+       (E)=(TV), (TV)=PIP_ULP_NEXT(TV) )
+
+#define PIP_ULP_FOREACH_SAFE_XXX(L,E,TV)			\
+  for( (E)=(L), (TV)=PIP_ULP_NEXT(E); (L)!=(E); (E)=(TV) )
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @addtogroup libpip libpip
- * \brief the PiP-ULP library
- * @{
- * @file
- * @{
- */
+  /**
+   * \brief print internal info of a PiP ULP
+   *  @{
+   *
+   */
+  int pip_ulp_new( pip_spawn_program_t *programp,
+		   int *pipidp,
+		   pip_ulp_t *sisters,
+		   pip_ulp_t **newp );
+  /** @}*/
 
-  int pip_ulp_create( char *prog,
-		      char **argv,
-		      char **envv,
-		      int  *pipidp,
-		      pip_ulp_termcb_t termcb,
-		      void *aux,
-		      pip_ulp_t *ulpp );
-  int pip_make_ulp( int pipid,
-		    pip_ulp_termcb_t termcb,
-		    void *aux,
-		    pip_ulp_t *ulp );
-  int pip_ulp_yield_to( pip_ulp_t *oldulp, pip_ulp_t *newulp );
-  int pip_ulp_exit( int retval );
+  /**
+   * \brief print internal info of a PiP ULP
+   *  @{
+   *
+   */
+  int pip_ulp_yield( void );
+  /** @}*/
 
-/**
- * @}
- * @}
- */
+  /**
+   * \brief print internal info of a PiP ULP
+   *  @{
+   *
+   */
+  int pip_ulp_retire( int extval );
+  /** @}*/
+
+  /**
+   * \brief print internal info of a PiP ULP
+   *  @{
+   *
+   */
+  int pip_ulp_suspend( void );
+  /** @}*/
+
+  /**
+   * \brief print internal info of a PiP ULP
+   *  @{
+   *
+   */
+  int pip_ulp_resume( pip_ulp_t *ulp, int flags );
+  /** @}*/
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif /* _pip_ulp_h_ */

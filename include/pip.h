@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018
 */
 
 #ifndef _pip_h_
@@ -121,7 +121,7 @@
 #define PIP_ENV_MODE_PROCESS_PRELOAD	"process:preload"
 #define PIP_ENV_MODE_PROCESS_PIPCLONE	"process:pipclone"
 
-#define PIP_OPT_MASK			(0XFF)
+#define PIP_OPT_MASK			(0xFF)
 #define PIP_OPT_FORCEEXIT		(0x01)
 #define PIP_OPT_PGRP			(0x02)
 
@@ -136,12 +136,17 @@
 #define PIP_ENV_STACKSZ		"PIP_STACKSZ"
 
 #define PIP_PIPID_ROOT		(-1)
-#define PIP_PIPID_ANY		(-2)
-#define PIP_PIPID_MYSELF	(-3)
+#define PIP_PIPID_MYSELF	(-2)
+#define PIP_PIPID_SELF		(-2)
+#define PIP_PIPID_ANY		(-3)
+#define PIP_PIPID_NULL		(-4)
 
-#define PIP_NTASKS_MAX		(260)
+#define PIP_NTASKS_MAX		(300)
 
 #define PIP_CPUCORE_ASIS 	(-1)
+
+#define PIP_ULP_SCHED_FIFO	(0x0)
+#define PIP_ULP_SCHED_LIFO	(0x1)
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -158,7 +163,61 @@
 #include <string.h>
 #include <errno.h>
 
-typedef int  (*pip_spawnhook_t)      ( void* );
+typedef struct {
+  char			*prog;
+  char			**argv;
+  char			**envv;
+  char			*funcname;
+  void			*arg;
+} pip_spawn_program_t;
+
+static inline void
+pip_spawn_from_main( pip_spawn_program_t *progp,
+		     char *prog, char **argv, char **envv ) {
+  if( prog != NULL ) {
+    progp->prog   = prog;
+  } else {
+    progp->prog   = argv[0];
+  }
+  progp->argv     = argv;
+  progp->envv     = envv;
+  progp->funcname = NULL;
+  progp->arg      = NULL;
+}
+
+static inline void
+pip_spawn_from_func( pip_spawn_program_t *progp,
+		     char *prog, char *funcname, void *arg, char **envv ) {
+  progp->prog     = prog;
+  progp->argv     = NULL;
+  progp->envv     = envv;
+  progp->funcname = funcname;
+  progp->arg      = arg;
+}
+
+typedef int (*pip_spawnhook_t)( void* );
+typedef int (*pip_startfunc_t)( void* );
+
+typedef struct {
+  pip_spawnhook_t	before;
+  pip_spawnhook_t	after;
+  void 			*hookarg;
+} pip_spawn_hook_t;
+
+static inline void
+pip_spawn_hook( pip_spawn_hook_t *hook,
+		pip_spawnhook_t before,
+		pip_spawnhook_t after,
+		void *hookarg ) {
+  hook->before  = before;
+  hook->after   = after;
+  hook->hookarg = hookarg;
+}
+
+typedef struct pip_ulp {
+  struct pip_ulp	*next;
+  struct pip_ulp	*prev;
+} pip_ulp_t;
 
 typedef struct pip_barrier {
   int			count_init;
@@ -171,8 +230,6 @@ typedef struct pip_barrier {
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /**
  * @addtogroup libpip libpip
@@ -228,7 +285,7 @@ extern "C" {
   /** @}*/
 
   /**
-   * \brief spawn a PiP task
+   * \brief spawn a PiP task (ULP API Version 1)
    *  @{
    * \param[in] filename The executable to run as a PiP task
    * \param[in] argv Argument(s) for the spawned PiP task
@@ -250,6 +307,7 @@ extern "C" {
    *  with the argument \a hookarg described below.
    * \param[in] hookarg The argument for the \a before and \a after
    *  function call.
+   * \param[in] sisters ULP list to be scheduled by this task
    *
    * \return Return 0 on success. Return an error code on error.
    *
@@ -271,6 +329,55 @@ extern "C" {
   int pip_spawn( char *filename, char **argv, char **envv,
 		 int coreno, int *pipidp,
 		 pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
+  /** @}*/
+
+  /**
+   * \brief spawn a PiP task (ULP API Version 1)
+   *  @{
+   * \param[in] filename The executable to run as a PiP task
+   * \param[in] argv Argument(s) for the spawned PiP task
+   * \param[in] envv Environment variables for the spawned PiP task
+   * \param[in] coreno Core number for the PiP task to be bound to. If
+   *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
+   *  take place.
+   * \param[in,out] pipidp Specify PIPID of the spawned PiP task. If
+   *  \c PIP_PIPID_ANY is specified, then the PIPID of the spawned PiP
+   *  task is up to the PiP library and the assigned PIPID will be
+   *  returned.
+   * \param[in] before Just before the executing of the spawned PiP
+   *  task, this function is called so that file descriptors inherited
+   *  from the PiP root, for example, can deal with. This is only
+   *  effective with the PiP process mode. This function is called
+   *  with the argument \a hookarg described below.
+   * \param[in] after This function is called when the PiP task
+   *  terminates for the cleanup purpose. This function is called
+   *  with the argument \a hookarg described below.
+   * \param[in] hookarg The argument for the \a before and \a after
+   *  function call.
+   * \param[in] sisters ULP list to be scheduled by this task
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * This function is to spawn
+   * a PiP task. These functions are introduced to follow the
+   * programming style of conventional \c fork and \c
+   * exec. \a before function does the prologue found between the
+   * \c fork and \c exec. \a after function is to free the argument if
+   * it is \c malloc()ed. Note that the \a before and \a after
+   * functions are called in the different \e context from the spawned
+   * PiP task. More specifically, any variables defined in the spawned
+   * PiP task cannot be accessible from the \a before and \a after
+   * functions.
+   *
+   * \note In theory, there is no reason to restrict for a PiP task to
+   * spawn another PiP task. However, the current implementation fails
+   * to do so.
+   */
+int pip_task_spawn( pip_spawn_program_t *programp,
+		    int coreno,
+		    int *pipidp,
+		    pip_spawn_hook_t *hookp,
+		    pip_ulp_t *sisters );
   /** @}*/
 
   /**
@@ -479,6 +586,14 @@ extern "C" {
   /** @}*/
 
   /**
+   * \brief print internal info of a PiP task
+   *  @{
+   *
+   */
+  void pip_task_describe( FILE *fp, const char *tag, int pipid, int flags );
+  /** @}*/
+
+  /**
    * \brief initialize barrier synchronization structure
    *  @{
    *
@@ -501,8 +616,6 @@ extern "C" {
   void pip_barrier_wait( pip_barrier_t *barrp );
   /** @}*/
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
-
   int  pip_idstr( char *buf, size_t sz );
 
 #ifdef PIP_EXPERIMENTAL
@@ -510,12 +623,27 @@ extern "C" {
   void  pip_free( void *ptr );
 #endif
 
+#ifdef PIP_INTERNAL_FUNCS
+#include <pip_internal.h>
+#endif /* PIP_INTERNAL_FUNCS */
+
 #ifdef __cplusplus
 }
 #endif
 
+
 #ifdef PIP_INTERNAL_FUNCS
-#include <pip_internal.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+  /* the following functions deeply depends on PiP execution mode */
+  int    pip_get_thread( int pipid, pthread_t *threadp );
+  int    pip_is_pthread( int *flagp );
+  int    pip_is_shared_fd( int *flagp );
+  int    pip_is_shared_sighand( int *flagp );
+#ifdef __cplusplus
+}
+#endif
 #endif /* PIP_INTERNAL_FUNCS */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
