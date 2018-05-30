@@ -14,11 +14,11 @@
 
 #include <asm/prctl.h>
 #include <sys/prctl.h>
-#include <ucontext.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #include <pip_clone.h>
 #include <pip_machdep.h>
@@ -99,17 +99,9 @@ typedef struct {
 
 struct pip_gdbif_task;
 
-typedef struct {
-  ucontext_t		ctx;
-#ifdef PIP_SWITCH_TLS
-  unsigned long 	fsreg;
-#endif
-} pip_ctx_t;
-
 typedef struct pip_task {
   pip_ulp_t		queue;	     /* ULP list elm and sisters */
   pip_ulp_t		schedq;	     /* ULP scheduling queue */
-  pip_ulp_t		ulp_done;    /* done ULPs */
   pip_spinlock_t	lock_schedq; /* lock for the scheduling queue */
   struct pip_task	*task_sched; /* scheduling task */
 
@@ -137,6 +129,7 @@ typedef struct pip_task {
   /* PiP ULP (type==PIP_TYPE_ULP) */
   void			*ulp_stack;
   pip_ctx_t		*ctx_suspend;
+  pthread_mutex_t	mutex_wait;
 
 } pip_task_t;
 
@@ -164,56 +157,34 @@ typedef struct {
   pip_task_t		tasks[];
 } pip_root_t;
 
+extern pip_root_t	*pip_root;
+extern pip_task_t	*pip_task;
+
 #define PIP_TASK(ULP)	((pip_task_t*)(ULP))
 #define PIP_ULP(TASK)	((pip_ulp_t*)(TASK))
 #define PIP_ULP_CTX(U)	(PIP_TASK(U)->ctx_suspend)
 
-#ifdef PIP_SWITCH_TLS
-
-inline static int pip_get_fsreg( unsigned long *fsreg ) {
-  return arch_prctl(ARCH_GET_FS, (unsigned long) fsreg ) ? errno : 0;
-}
-
-inline static int pip_set_fsreg( unsigned long fsreg ) {
-  return arch_prctl(ARCH_SET_FS, fsreg) ? errno : 0;
-}
-
-#define pip_makecontext(CTX,F,C,...)	 \
-  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__);	\
-    pip_set_fsreg((CTX)->fsreg); } while(0)
-
-inline static int pip_save_context( pip_ctx_t *ctxp ) {
-  return ( pip_get_fsreg(&ctxp->fsreg) || getcontext(&ctxp->ctx) ) ? errno : 0;
-}
-
-inline static int pip_load_context( const pip_ctx_t *ctxp ) {
-  return ( pip_set_fsreg(ctxp->fsreg) || setcontext(&ctxp->ctx) ) ? errno : 0;
-}
-
-inline static int pip_swapcontext( pip_ctx_t *old, pip_ctx_t *new ) {
-  return ( pip_get_fsreg(&old->fsreg)          ||
-	   swapcontext( &old->ctx, &new->ctx ) ||
-	   pip_set_fsreg(new->fsreg) ) ? errno : 0;
-}
-#else
-#define pip_makecontext(CTX,F,C,...)	 \
-  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)
-
-inline static int pip_save_context( pip_ctx_t *ctxp ) {
-  return ( getcontext(&ctxp->ctx) ? errno : 0 );
-}
-
-inline static int pip_load_context( const pip_ctx_t *ctxp ) {
-    return ( setcontext(&ctxp->ctx) ? errno : 0 );
-}
-
-inline static int pip_swapcontext( pip_ctx_t *old, pip_ctx_t *new ) {
-    return ( swapcontext( &old->ctx, &new->ctx ) ? errno : 0 );
-}
-#endif
-
 #define pip_likely(x)		__builtin_expect((x),1)
 #define pip_unlikely(x)		__builtin_expect((x),0)
+
+#define PIP_MIDLEN	(64)
+
+#define ERRJ		{ DBG;                goto error; }
+#define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }
+#define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
+#define ERRJ_CHK(FUNC)	{ if( (FUNC) ) goto error; }
+
+#ifdef EVAL
+#define ES(V,F)		\
+  do { double __st=pip_gettime(); if(F) (V) += pip_gettime() - __st; } while(0)
+double time_dlmopen   = 0.0;
+double time_load_dso  = 0.0;
+double time_load_prog = 0.0;
+#define REPORT(V)	 printf( "%s: %g\n", #V, V );
+#else
+#define ES(V,F)		if(F)
+#define REPORT(V)
+#endif
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

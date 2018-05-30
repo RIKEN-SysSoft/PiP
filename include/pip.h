@@ -182,6 +182,21 @@ typedef struct {
   void			*arg;
 } pip_spawn_program_t;
 
+  /**
+   * \brief Setting information to invoke as a PiP task
+   *  @{
+   * \param[in,out] progp Pointer to the \t pip_spawn_program_t
+   *  structure in which the program invokation information is set
+   * \param[in] prog Filename of the program
+   * \param[in] argv Argument vector
+   * \param[in] envv Environment variables
+   *
+   * This function sets the required information to invoke a program,
+   * starting from the \t main() function.
+   *
+   * \sa pip_task_spawn(3), pip_spawn_from_func(3)
+   *
+   */
 static inline void
 pip_spawn_from_main( pip_spawn_program_t *progp,
 		     char *prog, char **argv, char **envv ) {
@@ -196,6 +211,21 @@ pip_spawn_from_main( pip_spawn_program_t *progp,
   progp->arg      = NULL;
 }
 
+  /**
+   * \brief Setting information to invoke as a PiP task
+   *  @{
+   * \param[in,out] progp Pointer to the \t pip_spawn_prohgram_t
+   *  structure in which the program invokation information is set
+   * \param[in] prog Filename of the program
+   * \param[in] funcname Function name to be started
+   * \param[in] envv Environment variables
+   *
+   * This function sets the required information to invoke a program,
+   * starting from the \t main() function.
+   *
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   *
+   */
 static inline void
 pip_spawn_from_func( pip_spawn_program_t *progp,
 		     char *prog, char *funcname, void *arg, char **envv ) {
@@ -205,6 +235,7 @@ pip_spawn_from_func( pip_spawn_program_t *progp,
   progp->funcname = funcname;
   progp->arg      = arg;
 }
+  /** @}*/
 
 typedef int (*pip_spawnhook_t)( void* );
 typedef int (*pip_startfunc_t)( void* );
@@ -215,6 +246,33 @@ typedef struct {
   void 			*hookarg;
 } pip_spawn_hook_t;
 
+  /**
+   * \brief Setting invokation hook information
+   *  @{
+   * \param[in] before Just before the executing of the spawned PiP
+   *  task, this function is called so that file descriptors inherited
+   *  from the PiP root, for example, can deal with. This is only
+   *  effective with the PiP process mode. This function is called
+   *  with the argument \a hookarg described below.
+   * \param[in] after This function is called when the PiP task
+   *  terminates for the cleanup purpose. This function is called
+   *  with the argument \a hookarg described below.
+   * \param[in] hookarg The argument for the \a before and \a after
+   *  function call.
+   *
+   * The \a before and \a after functions are introduced to follow the
+   * programming style of conventional \c fork and \c
+   * exec. \a before function does the prologue found between the
+   * \c fork and \c exec. \a after function is to free the argument if
+   * it is \c malloc()ed. Note that the \a before and \a after
+   * functions are called in the different \e context from the spawned
+   * PiP task. More specifically, any variables defined in the spawned
+   * PiP task cannot be accessible from the \a before and \a after
+   * functions.
+   *
+   * \sa pip_task_spawn(3)
+   *
+   */
 static inline void
 pip_spawn_hook( pip_spawn_hook_t *hook,
 		pip_spawnhook_t before,
@@ -224,6 +282,7 @@ pip_spawn_hook( pip_spawn_hook_t *hook,
   hook->after   = after;
   hook->hookarg = hookarg;
 }
+  /** @}*/
 
 typedef struct pip_ulp {
   struct pip_ulp	*next;
@@ -251,7 +310,6 @@ extern "C" {
  */
 
   /**
-   *
    * \brief Initialize the PiP library.
    *  @{
    * \param[out] pipidp When this is called by the PiP root
@@ -343,11 +401,9 @@ extern "C" {
   /** @}*/
 
   /**
-   * \brief spawn a PiP task (ULP API Version 1)
+   * \brief spawn a PiP task (ULP API Version 2)
    *  @{
-   * \param[in] filename The executable to run as a PiP task
-   * \param[in] argv Argument(s) for the spawned PiP task
-   * \param[in] envv Environment variables for the spawned PiP task
+   * \param[in] progp Program information to spawn as a PiP task
    * \param[in] coreno Core number for the PiP task to be bound to. If
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
@@ -355,36 +411,20 @@ extern "C" {
    *  \c PIP_PIPID_ANY is specified, then the PIPID of the spawned PiP
    *  task is up to the PiP library and the assigned PIPID will be
    *  returned.
-   * \param[in] before Just before the executing of the spawned PiP
-   *  task, this function is called so that file descriptors inherited
-   *  from the PiP root, for example, can deal with. This is only
-   *  effective with the PiP process mode. This function is called
-   *  with the argument \a hookarg described below.
-   * \param[in] after This function is called when the PiP task
-   *  terminates for the cleanup purpose. This function is called
-   *  with the argument \a hookarg described below.
-   * \param[in] hookarg The argument for the \a before and \a after
-   *  function call.
-   * \param[in] sisters ULP list to be scheduled by this task
+   * \param[in] hookp Hook information to be invoked before and after
+   *  the program invokation.
+   * \param[in] sisters List of ULPs to be scheduled by this task
    *
    * \return Return 0 on success. Return an error code on error.
-   *
-   * This function is to spawn
-   * a PiP task. These functions are introduced to follow the
-   * programming style of conventional \c fork and \c
-   * exec. \a before function does the prologue found between the
-   * \c fork and \c exec. \a after function is to free the argument if
-   * it is \c malloc()ed. Note that the \a before and \a after
-   * functions are called in the different \e context from the spawned
-   * PiP task. More specifically, any variables defined in the spawned
-   * PiP task cannot be accessible from the \a before and \a after
-   * functions.
    *
    * \note In theory, there is no reason to restrict for a PiP task to
    * spawn another PiP task. However, the current implementation fails
    * to do so.
+   *
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   *
    */
-int pip_task_spawn( pip_spawn_program_t *programp,
+int pip_task_spawn( pip_spawn_program_t *progp,
 		    int coreno,
 		    int *pipidp,
 		    pip_spawn_hook_t *hookp,
@@ -506,7 +546,7 @@ int pip_task_spawn( pip_spawn_program_t *programp,
   /** @}*/
 
   /**
-   * \brief terminate PiP task
+   * \brief terminate PiP task or ULP
    *  @{
    * \param[in] retval Terminate PiP task with the exit number
    * specified with this parameter.
@@ -628,6 +668,7 @@ int pip_task_spawn( pip_spawn_program_t *programp,
   /** @}*/
 
   int  pip_idstr( char *buf, size_t sz );
+  int pip_ulp_myself( pip_ulp_t **ulpp );
 
 #ifdef PIP_EXPERIMENTAL
   void *pip_malloc( size_t size );
@@ -648,7 +689,7 @@ int pip_task_spawn( pip_spawn_program_t *programp,
 extern "C" {
 #endif
   /* the following functions deeply depends on PiP execution mode */
-  char  *pip_ulp_type_str( pip_ulp_t *ulp );
+  char  *pip_type_str( void );
   int    pip_get_thread( int pipid, pthread_t *threadp );
   int    pip_is_pthread( int *flagp );
   int    pip_is_shared_fd( int *flagp );

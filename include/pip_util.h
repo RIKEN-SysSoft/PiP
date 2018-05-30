@@ -17,29 +17,17 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <pip.h>
-
-#define PIP_MIDLEN	(64)
-
-#define ERRJ		{ DBG;                goto error; }
-#define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }
-#define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
-#define ERRJ_CHK(FUNC)	{ if( (FUNC) ) goto error; }
-
-#ifdef EVAL
-#define ES(V,F)		\
-  do { double __st=pip_gettime(); if(F) (V) += pip_gettime() - __st; } while(0)
-double time_dlmopen   = 0.0;
-double time_load_dso  = 0.0;
-double time_load_prog = 0.0;
-#define REPORT(V)	 printf( "%s: %g\n", #V, V );
-#else
-#define ES(V,F)		if(F)
-#define REPORT(V)
-#endif
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+  int pip_check_pie( char *path );
+
+  void pip_info_mesg( char *format, ... );
+  void pip_warn_mesg( char *format, ... );
+  void pip_err_mesg( char *format, ... );
 
   void pip_print_maps( void );
   void pip_print_fd( int fd );

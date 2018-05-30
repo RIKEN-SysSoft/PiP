@@ -107,6 +107,36 @@ inline static int pip_spin_destroy (pip_spinlock_t *lock) {
 inline static void pip_print_fs_segreg( void ) {}
 #endif
 
+#ifndef PIP_CTX_T
+#include <ucontext.h>
+typedef struct {
+  ucontext_t		ctx;
+} pip_ctx_t;
+#endif
+
+#ifndef PIP_MAKE_CONTEXT
+#define pip_make_context(CTX,F,C,...)	 \
+  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)
+#endif
+
+#ifndef PIP_SAVE_CONTEXT
+inline static int pip_save_context( pip_ctx_t *ctxp ) {
+  return ( getcontext(&ctxp->ctx) ? errno : 0 );
+}
+#endif
+
+#ifndef PIP_LOAD_CONTEXT
+inline static int pip_load_context( const pip_ctx_t *ctxp ) {
+    return ( setcontext(&ctxp->ctx) ? errno : 0 );
+}
+#endif
+
+#ifndef PIP_SWAP_CONTEXT
+inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
+    return ( swapcontext( &old->ctx, &new->ctx ) ? errno : 0 );
+}
+#endif
+
 #endif
 
 #endif
