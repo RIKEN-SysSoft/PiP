@@ -13,12 +13,247 @@
 #include <elf.h>
 
 #include <pip.h>
+#include <pip_ulp.h>
 #include <pip_internal.h>
 #include <pip_util.h>
 
 extern int pip_is_coefd( int );
 extern int pip_get_dso( int pipid, void **loaded );
 extern int pip_is_root_( void );
+
+int pip_check_pie( char *path ) {
+  Elf64_Ehdr elfh;
+  int fd;
+  int err = 0;
+
+  if( ( fd = open( path, O_RDONLY ) ) < 0 ) {
+    err = errno;
+  } else {
+    if( read( fd, &elfh, sizeof( elfh ) ) != sizeof( elfh ) ) {
+      pip_warn_mesg( "Unable to read '%s'", path );
+      err = EUNATCH;
+    } else if( elfh.e_ident[EI_MAG0] != ELFMAG0 ||
+	       elfh.e_ident[EI_MAG1] != ELFMAG1 ||
+	       elfh.e_ident[EI_MAG2] != ELFMAG2 ||
+	       elfh.e_ident[EI_MAG3] != ELFMAG3 ) {
+      pip_warn_mesg( "'%s' is not an ELF file", path );
+      err = EUNATCH;
+    } else if( elfh.e_type != ET_DYN ) {
+      pip_warn_mesg( "'%s' is not DYNAMIC (PIE)", path );
+      err = ELIBEXEC;
+    }
+    (void) close( fd );
+  }
+  return err;
+}
+
+char *pip_pipidstr( char *buf ) {
+  char *idstr;
+
+  switch( pip_task->pipid ) {
+  case PIP_PIPID_ROOT:
+    idstr = "?root?";
+    break;
+  case PIP_PIPID_MYSELF:
+    idstr = "?myself?";
+    break;
+  case PIP_PIPID_ANY:
+    idstr = "?myself?";
+    break;
+  case PIP_PIPID_NULL:
+    idstr = "?null?";
+    break;
+  default:
+    (void) sprintf( buf, "%d", pip_task->pipid );
+    idstr = buf;
+    break;
+  }
+  return idstr;
+}
+
+char * pip_type_str( void ) {
+  char *typestr = NULL;
+  if( pip_task != NULL ) {
+    switch( pip_task->type ) {
+    case PIP_TYPE_ROOT:
+      typestr= "root";
+      break;
+    case PIP_TYPE_TASK:
+      typestr = "task";
+      break;
+    case PIP_TYPE_ULP:
+      typestr = "ulp";
+      break;
+    }
+  }
+  return typestr;
+}
+
+int pip_idstr( char *buf, size_t sz ) {
+  pid_t	pid = getpid();
+  char *pre  = "<";
+  char *post = ">";
+  char *idstr, idnum[64];
+  int	n = 0;
+
+  if( pip_task == NULL ) {
+    n = snprintf( buf, sz, "%snotask:(%d)%s", pre, pid, post );
+  } else {
+    switch( pip_task->type ) {
+    case PIP_TYPE_ROOT:
+      n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
+      break;
+    case PIP_TYPE_TASK:
+      idstr = pip_pipidstr( idnum );
+      n = snprintf( buf, sz, "%sTSK:%s(%d)%s", pre, idstr, pid, post );
+      break;
+    case PIP_TYPE_ULP:
+      idstr = pip_pipidstr( idnum );
+      n = snprintf( buf, sz, "%sULP:%s(%d)%s", pre, idstr, pid, post );
+      break;
+    case PIP_TYPE_NONE:
+      n = snprintf( buf, sz, "%s\?\?\?\?(%d)%s", pre, pid, post );
+      break;
+    default:
+      n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
+		    pre, pip_task->type, pid, post );
+      break;
+    }
+  }
+  return n;
+}
+
+static void pip_message( char *tagf, char *format, va_list ap ) {
+#define PIP_MESGLEN		(512)
+  char mesg[PIP_MESGLEN];
+  char idstr[PIP_MIDLEN];
+  int len;
+
+  len = pip_idstr( idstr, PIP_MIDLEN );
+  len = snprintf( &mesg[0], PIP_MESGLEN-len, tagf, idstr );
+  vsnprintf( &mesg[len], PIP_MESGLEN-len, format, ap );
+  fprintf( stderr, "%s\n", mesg );
+}
+
+void pip_info_mesg( char *format, ... ) {
+  va_list ap;
+  va_start( ap, format );
+  pip_message( "PiP-INFO%s ", format, ap );
+}
+
+void pip_warn_mesg( char *format, ... ) {
+  va_list ap;
+  va_start( ap, format );
+  pip_message( "PiP-WARN%s ", format, ap );
+}
+
+void pip_err_mesg( char *format, ... ) {
+  va_list ap;
+  va_start( ap, format );
+  pip_message( "PiP-ERROR%s ", format, ap );
+}
+
+int pip_check_pipid( int* );
+pip_task_t *pip_get_task_( int );
+
+void pip_ulp_describe( FILE *fp, const char *tag, pip_ulp_t *ulp, int flags ) {
+  if( ulp != NULL ) {
+    pip_task_t *task = PIP_TASK( ulp );
+    if( tag == NULL ) {
+      pip_info_mesg( "ULP[%d](ctx=%p)@%p",
+		     task->pipid,
+		     task->ctx_suspend,
+		     task );
+    } else {
+      pip_info_mesg( "%s:ULP[%d](ctx=%p)@%p",
+		     tag,
+		     task->pipid,
+		     task->ctx_suspend,
+		     task );
+    }
+  } else {
+    if( tag == NULL ) {
+      pip_info_mesg( "ULP:(nil)" );
+    } else {
+      pip_info_mesg( "%s: ULP:(nil)", tag );
+    }
+  }
+}
+
+void pip_task_describe( FILE *fp, const char *tag, int pipid, int flags ) {
+  pip_task_t *task;
+
+  DBG;
+  if( pip_check_pipid( &pipid ) == 0 ) {
+    task = pip_get_task_( pipid );
+    if( tag == NULL ) {
+      pip_info_mesg( "%p (sched:%p,ctx:%p)",
+		     task,
+		     task->task_sched,
+		     task->ctx_suspend );
+    } else {
+      pip_info_mesg( "%s: %p (sched:%p,ctx:%p)",
+		     tag,
+		     task,
+		     task->task_sched,
+		     task->ctx_suspend );
+    }
+  } else {
+    if( tag == NULL ) {
+      pip_info_mesg( "TASK:(pipid:%d is invlaid)", pipid );
+    } else {
+      pip_info_mesg( "%s: TASK:(pipid:%d is invlaid)", tag, pipid );
+    }
+  }
+}
+
+void pip_ulp_queue_describe( FILE *fp, const char *tag, pip_ulp_t *queue ) {
+  DBG;
+  if( queue != NULL ) {
+    pip_task_t 	*t;
+    pip_ulp_t 	*u;
+    int i;
+
+    if( tag == NULL ) {
+      pip_info_mesg( "QUEUE:%p (next:%p prev:%p)",
+		     queue, queue->next, queue->prev );
+    } else {
+      pip_info_mesg( "QUEUE:%p (next:%p prev:%p)",
+		     queue, queue->next, queue->prev );
+    }
+    i = 0;
+    PIP_ULP_FOREACH( queue, u ) {
+      t = PIP_TASK( u );
+      if( tag == NULL ) {
+	pip_info_mesg( "(%d) pipid:%d "
+		       "(ctx=%p):%p  next:%p  prev=%p",
+		       i,
+		       t->pipid,
+		       t->ctx_suspend,
+		       t,
+		       u->next,
+		       u->prev );
+      } else {
+	pip_info_mesg( "(%d) pipid:%d %s: "
+		       "(ctx=%p):%p  next:%p  prev=%p",
+		       i,
+		       t->pipid,
+		       tag,
+		       t->ctx_suspend,
+		       t,
+		       u->next,
+		       u->prev );
+      }
+      i++;
+    }
+  } else {
+    if( tag == NULL ) {
+      pip_info_mesg( "TASK:(nil)" );
+    } else {
+      pip_info_mesg( "%s: TASK:(nil)", tag );
+    }
+  }
+}
 
 /* the following function(s) are for debugging */
 

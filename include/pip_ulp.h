@@ -12,16 +12,22 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#define PIP_ULP_INIT(L)					\
-  do { PIP_ULP_NEXT(L) = (L);				\
-    PIP_ULP_PREV(L) = (L); } while(0)
+#include <pip.h>
 
-/**
-#define PIP_ULP_NEXT(L)		(((pip_ulp_t*)(L))->next)
-#define PIP_ULP_PREV(L)		(((pip_ulp_t*)(L))->prev)
-#define PIP_ULP_PREV_NEXT(L)	(((pip_ulp_t*)(L))->prev->next)
-#define PIP_ULP_NEXT_PREV(L)	(((pip_ulp_t*)(L))->next->prev)
-**/
+typedef struct {
+  pip_ulp_t	waiting;
+  pip_ulp_t	*holder;
+} pip_ulp_mutex_t;
+
+typedef struct pip_ulp_barrier {
+  pip_ulp_t	waiting;
+  int		count_init;
+  int		count;
+} pip_ulp_barrier_t;
+
+#define PIP_ULP_INIT(L)					\
+  do { PIP_ULP_NEXT(L) = (L); PIP_ULP_PREV(L) = (L); } while(0)
+
 #define PIP_ULP_NEXT(L)		((L)->next)
 #define PIP_ULP_PREV(L)		((L)->prev)
 #define PIP_ULP_PREV_NEXT(L)	((L)->prev->next)
@@ -47,16 +53,6 @@
 #define PIP_ULP_ISEMPTY(L)				\
   ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
 
-#define PIP_ULP_ENQ_LOCK(L,E,lock)			\
-  do { pip_spin_lock(lock);				\
-    PIP_ULP_ENQ((L),(E));				\
-    pip_spin_unlock(lock); } while(0)
-
-#define PIP_ULP_DEQ_LOCK(L,lock)			\
-  do { pip_spin_lock(lock);				\
-    PIP_ULP_DEQ((L));					\
-    pip_spin_unlock(lock); } while(0)
-
 #define PIP_ULP_FOREACH(L,E)					\
   for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
 
@@ -75,50 +71,108 @@ extern "C" {
 #endif
 
   /**
-   * \brief print internal info of a PiP ULP
+   * \brief Create a PiP ULP
    *  @{
+   * \param[in] progp Pointer to the \t pip_spawn_program_t
+   * \param[in,out] pipidp Specify PIPID of the new ULP. If
+   *  \c PIP_PIPID_ANY is specified, then the PIPID of the new ULP
+   *  is up to the PiP library and the assigned PIPID will be
+   *  returned.
+   * \param[in,out] sisters List of ULPs to be scheduled by the same
+   *  PiP task. Or, \t NULL to specify no list.
+   * \param[out} newp Created ULP is returned.
    *
+   *
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
    */
-  int pip_ulp_new( pip_spawn_program_t *programp,
+  int pip_ulp_new( pip_spawn_program_t *progp,
 		   int *pipidp,
 		   pip_ulp_t *sisters,
 		   pip_ulp_t **newp );
   /** @}*/
 
   /**
-   * \brief print internal info of a PiP ULP
+   * \brief Yield
    *  @{
    *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * \sa pip_ulp_suspend(3), pip_ulp_resume(3)
    */
   int pip_ulp_yield( void );
   /** @}*/
 
   /**
-   * \brief print internal info of a PiP ULP
+   * \brief Suspend the current ULP and schedule the next ULP eligible
+   *  to run.
    *  @{
    *
-   */
-  int pip_ulp_retire( int extval );
-  /** @}*/
-
-  /**
-   * \brief print internal info of a PiP ULP
-   *  @{
+   * The suspended ULP can be eligible to run when \b pip_ulp_resume()
+   * is called. If there is no ULPs eligible to run as the result of
+   * calling this function, it returns \a EDEADLK.
    *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * \sa pip_ulp_resume(3), pip_ulp_yield(3)
    */
   int pip_ulp_suspend( void );
   /** @}*/
 
   /**
-   * \brief print internal info of a PiP ULP
+   * \brief
    *  @{
    *
    */
   int pip_ulp_resume( pip_ulp_t *ulp, int flags );
   /** @}*/
-  int pip_ulp_myself( pip_ulp_t **ulpp );
 
+  /**
+   * \brief
+   *  @{
+   *
+   */
   int pip_ulp_get( int pipid, pip_ulp_t **ulpp );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  int pip_ulp_mutex_init( pip_ulp_mutex_t *mutex );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  int pip_ulp_mutex_lock( pip_ulp_mutex_t *mutex );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  int pip_ulp_mutex_unlock( pip_ulp_mutex_t *mutex );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  void pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp );
+  /** @}*/
 
 #ifdef __cplusplus
 }
