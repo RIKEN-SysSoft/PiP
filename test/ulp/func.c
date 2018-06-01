@@ -29,57 +29,78 @@
 #endif
 
 int my_ulp_main( void ) {
-  pip_ulp_t *ulp = NULL;
-  int pipid;
-  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
-  TESTINT( pip_ulp_myself( &ulp ) );
-  char *type = pip_type_str();
+  int pipid, schedid;
 
+  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
   TESTINT( pip_get_pipid( &pipid ) );
+  TESTINT( pip_get_ulp_sched( &schedid ) );
+
   fprintf( stderr,
 #ifndef DEBUG
-	   "<%d> Hello from ULP (%s)\n",
+	   "<%d> Hello from ULP -- sched:%d\n",
 #else
-	   "\n<%d> Hello from ULP (%s)\n\n",
+	   "\n<%d> Hello from ULP -- sched:%d\n\n",
 #endif
-	   pipid, type );
+	   pipid, schedid );
   return pipid;
 }
 
 int my_tsk_main( void ) {
-  pip_ulp_t *ulp = NULL;
   int pipid;
-  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
-  TESTINT( pip_ulp_myself( &ulp ) );
-  char *type = pip_type_str();
 
+  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
   TESTINT( pip_get_pipid( &pipid ) );
   fprintf( stderr,
 #ifndef DEBUG
-	   "<%d> Hello from TASK (%s)\n",
+	   "<%d> Hello from TASK\n",
 #else
-	   "\n<%d> Hello from TASK (%s)\n\n",
+	   "\n<%d> Hello from TASK\n\n",
 #endif
-	   pipid, type );
+	   pipid );
   return pipid;
 }
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog_ulp, prog_tsk;
   pip_ulp_t 		*ulp;
-  int			pipid;
+  int			ntasks, nulps, pipid;
   int 			i, j, k;
+
+  if( argc > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = NTASKS;
+  }
+  if( ntasks < 2 ) {
+    fprintf( stderr,
+	     "Too small number of PiP tasks (must be latrger than 3)\n" );
+  }
+  if( ntasks >= 256 ) {
+    fprintf( stderr,
+	     "Too many number of PiP tasks (must be less than 256)\n" );
+  }
+  if( argc > 2 ) {
+    nulps = atoi( argv[2] );
+    if( nulps >= ntasks ) {
+      fprintf( stderr,
+	       "Number of ULPs (%d) must be larget than or equal to "
+	       "the number of PiP tasks (%d)\n",
+	       nulps, ntasks );
+    }
+  } else {
+    nulps = NULPS;
+  }
 
   pip_spawn_from_func( &prog_ulp, argv[0], "my_ulp_main", NULL, NULL );
   pip_spawn_from_func( &prog_tsk, argv[0], "my_tsk_main", NULL, NULL );
   TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
 
   k = 0;
-  while( k < NTASKS ) {
+  while( k < ntasks ) {
     //fprintf( stderr, "i=%d/%d\n", i, ntasks );
     ulp = NULL;
-    for( j=0; j<NULPS; j++ ) {
-      if( k >= NTASKS - 2 ) break;
+    for( j=0; j<nulps; j++ ) {
+      if( k >= ntasks - 2 ) break;
       //fprintf( stderr, "i=%d/%d  j=%d/%d\n", i, ntasks, j, NULPS );
       pipid = k++;
       TESTINT( pip_ulp_new( &prog_ulp, &pipid, ulp, &ulp ) );

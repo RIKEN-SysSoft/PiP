@@ -23,6 +23,9 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
+
+#include <pip_util.h>
 
 #define DBG_PRTBUF	char _dbuf[1024]={'\0'}
 #define DBG_PRNT(...)	sprintf(_dbuf+strlen(_dbuf),__VA_ARGS__)
@@ -48,7 +51,7 @@
 #define PIP_TASK_DESCRIBE( ID )				\
   pip_task_describe( stderr, __func__, (ID) );
 #define PIP_ULP_DESCRIBE( ULP )				\
-  void pip_ulp_describe( stderr, __func__, (ULP) );
+  pip_ulp_describe( stderr, __func__, (ULP) );
 #define PIP_ULP_QUEUE_DESCRIBE( Q )			\
   pip_ulp_queue_describe( stderr, __func__, (Q) );
 

@@ -31,7 +31,23 @@
 //#define NULPS	(3)
 
 int main( int argc, char **argv ) {
+  int ntasks, nulps;
   int i, pipid;
+
+  if( argc   > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = NTASKS;
+  }
+  if( ntasks < 2 ) {
+    fprintf( stderr,
+	     "Too small number of PiP tasks (must be latrger than 1)\n" );
+  }
+  if( ntasks >= 256 ) {
+    fprintf( stderr,
+	     "Too many number of PiP tasks (must be less than 256)\n" );
+  }
+  nulps = ntasks - 1;
 
   TESTINT( pip_init( &pipid, NULL, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
@@ -39,13 +55,13 @@ int main( int argc, char **argv ) {
     pip_ulp_t *ulp = NULL;
 
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    for( i=0; i<NULPS; i++ ) {
+    for( i=0; i<nulps; i++ ) {
       pipid = i + 1;
       TESTINT( pip_ulp_new( &prog, &pipid, ulp, &ulp ) );
     }
     pipid = 0;
     TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, ulp ));
-    for( i=0; i<NULPS+1; i++ ) {
+    for( i=0; i<ntasks; i++ ) {
       int status;
       TESTINT( pip_wait( i, &status ) );
       if( status == i ) {
