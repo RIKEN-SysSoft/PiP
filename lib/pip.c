@@ -32,6 +32,9 @@
 #include <pip_util.h>
 #include <pip_gdbif.h>
 
+#define IF_LIKELY(C)		if( pip_likely( C ) )
+#define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
+
 extern char 		**environ;
 
 /*** note that the following static variables are   ***/
@@ -1196,6 +1199,7 @@ static int pip_ulp_switch( pip_task_t *old_task, pip_ulp_t *ulp ) {
   int		err = 0;
 
   DBG;
+  PIP_ULP_DESCRIBE( ulp );
   if( new_task->ctx_suspend == NULL ) { /* for the first time being scheduled */
     DBG;
     newctxp = &newctx;
@@ -1225,7 +1229,7 @@ static void pip_set_extval( pip_task_t *task, int extval ) {
   }
 }
 
-static void pip_ulp_sched_next( pip_task_t *sched ) {
+static int pip_ulp_sched_next( pip_task_t *sched ) {
   /* wait for all ULP terminations */
   pip_ulp_t 	*queue, *next;
   pip_task_t 	*nxt_task;
@@ -1236,28 +1240,31 @@ static void pip_ulp_sched_next( pip_task_t *sched ) {
   DBGF( "sched:%p", sched );;
   queue = &sched->schedq;
   //pip_spin_lock( &sched->lock_schedq );
-  if( PIP_ULP_ISEMPTY( &sched->schedq ) ) {
-    //pip_spin_unlock( &sched->lock_schedq );
-    nxt_ctxp = sched->ctx_exit;
-  } else {
+  {
+    if( PIP_ULP_ISEMPTY( &sched->schedq ) ) {
+      //pip_spin_unlock( &sched->lock_schedq );
+      RETURN( ENOENT );
+    }
     next = PIP_ULP_NEXT( queue );
     PIP_ULP_DEQ( next );
-    //pip_spin_unlock( &sched->lock_schedq );
-    DBG;
-    nxt_task = PIP_TASK( next );
-    if( nxt_task->ctx_suspend == NULL ) { /* for the first time scheduling */
-      nxt_ctxp = &nxt_ctx;
-      err = pip_ulp_newctx( nxt_task, nxt_ctxp ); /* reset nxt_ctx */
-      if( err ) {
-	pip_err_mesg( "Unable to create a new ULP context (%d)", err );
-	exit( err );
-      }
-      nxt_task->ctx_suspend = nxt_ctxp;
-    } else {
-      nxt_ctxp = nxt_task->ctx_suspend;
+  }
+  //pip_spin_unlock( &sched->lock_schedq );
+  DBG;
+  nxt_task = PIP_TASK( next );
+  if( nxt_task->ctx_suspend == NULL ) { /* for the first time scheduling */
+    nxt_ctxp = &nxt_ctx;
+    err = pip_ulp_newctx( nxt_task, nxt_ctxp ); /* reset nxt_ctx */
+    if( err ) {
+      pip_err_mesg( "Unable to create a new ULP context (%d)", err );
+      exit( err );
     }
+    nxt_task->ctx_suspend = nxt_ctxp;
+  } else {
+    nxt_ctxp = nxt_task->ctx_suspend;
   }
   pip_load_context( nxt_ctxp );
+  /* never reach here */
+  return 0;
 }
 
 static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
@@ -1310,7 +1317,9 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
 
   DBGF( "PIPID:%d", self->pipid );
 
-  pip_ulp_sched_next( self->task_sched );
+  if( pip_ulp_sched_next( self->task_sched ) == ENOENT ) {
+    pip_load_context( self->task_sched->ctx_exit );
+  }
 }
 
 static int pip_do_spawn( void *thargs )  {
@@ -1395,7 +1404,7 @@ static int pip_do_spawn( void *thargs )  {
     if( !flag_jump ) {
       flag_jump = 1;
       DBGF( "PIPID:%d", self->pipid );
-      pip_ulp_sched_next( self );
+      (void) pip_ulp_sched_next( self );
     }
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       if( pip_is_pthread_() ) {	/* thread mode */
@@ -1808,9 +1817,16 @@ static int pip_do_wait( int pipid, int flag_try, int *extvalp ) {
   DBGF( "pipid=%d  type=%d", pipid, task->type );
   if( task->type == PIP_TYPE_ULP ) {
     DBG;
-    pthread_mutex_lock(    &task->mutex_wait );
-    pthread_mutex_unlock(  &task->mutex_wait );
-    pthread_mutex_destroy( &task->mutex_wait );
+    if( flag_try ) {
+      if( ( err = pthread_mutex_trylock( &task->mutex_wait ) ) == 0 &&
+	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
+	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 );
+    } else {
+      if( ( err = pthread_mutex_lock(    &task->mutex_wait ) ) == 0 &&
+	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
+	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 ) {
+      }
+    }
     DBG;
   } else if( pip_is_pthread_() ) { /* thread mode */
     DBG;
@@ -1921,7 +1937,6 @@ int pip_wait( int pipid, int *extvalp ) {
 }
 
 int pip_trywait( int pipid, int *extvalp ) {
-  DBG;
   RETURN( pip_do_wait( pipid, 1, extvalp ) );
 }
 
@@ -2017,6 +2032,15 @@ void pip_free( void *ptr ) {
 /* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
 /*-----------------------------------------------------*/
 
+int pip_get_ulp_sched( int *pipidp ) {
+  pip_task_t *sched = pip_task->task_sched;
+
+  if( pipidp == NULL ) RETURN( EINVAL );
+  if( sched  == NULL ) RETURN( EPERM ); /* i.e., suspended */
+  *pipidp = sched->pipid;
+  return 0;
+}
+
 int pip_ulp_new( pip_spawn_program_t *progp,
 		 int  *pipidp,
 		 pip_ulp_t *sisters,
@@ -2040,7 +2064,7 @@ int pip_ulp_new( pip_spawn_program_t *progp,
       progp->prog     == NULL ) progp->prog = progp->argv[0];
   if( sisters != NULL ) {
     if( ( task = PIP_TASK( sisters ) ) != NULL &&
-	  task->type                   != PIP_TYPE_ULP ) RETURN( EPERM );
+	task->type                   != PIP_TYPE_ULP ) RETURN( EPERM );
     if( task->flag_exit ) RETURN( ESRCH );
   }
   DBGF( ">> pip_ulp_new()" );
@@ -2113,12 +2137,12 @@ int pip_ulp_yield( void ) {
 
   DBG;
   sched = pip_task->task_sched;
-  if( sched == NULL ) RETURN( EPERM );
+  IF_UNLIKELY( sched == NULL ) RETURN( EPERM );
   queue = &sched->schedq;
   //DBGF( "LOCK:%p", &sched->lock_schedq );
   //pip_spin_lock( &sched->lock_schedq );
   {
-    if( !PIP_ULP_ISEMPTY( queue ) ) {
+    IF_LIKELY( !PIP_ULP_ISEMPTY( queue ) ) {
       PIP_ULP_ENQ_LAST( queue, PIP_ULP( pip_task ) );
       next = PIP_ULP_NEXT( queue );
       PIP_ULP_DEQ( next );
@@ -2126,33 +2150,28 @@ int pip_ulp_yield( void ) {
   }
   //pip_spin_unlock( &sched->lock_schedq );
   //DBGF( "UNLOCK:%p", &sched->lock_schedq );
-
-  RETURN( pip_ulp_switch( pip_task, next ) );
+  if ( next != NULL ) {
+    RETURN( pip_ulp_switch( pip_task, next ) );
+  }
+  return 0;
 }
 
 int pip_ulp_suspend( void ) {
-  pip_task_t	*sched;
-  pip_ulp_t	*queue;
-  int		empty;
+  pip_task_t 	*task_sched = pip_task->task_sched;
+  pip_ctx_t	ctx;
+  volatile int	flag_jump;	/* must be volatile */
 
-  //if( pip_task->type == PIP_TYPE_TASK ) RETURN( EDEADLK );
-  sched = pip_task->task_sched;
-  queue = &sched->schedq;
-
-  empty =0;
-  //DBGF( "LOCK:%p", &sched->lock_schedq );
-  //pip_spin_lock( &sched->lock_schedq );
-  {
-    empty = PIP_ULP_ISEMPTY( queue );
-  }
-  //pip_spin_unlock( &sched->lock_schedq );
-  //DBGF( "UNLOCK:%p", &sched->lock_schedq );
-
-  if( empty ) {
-    RETURN( EDEADLK );
-  } else {
+  DBG;
+  flag_jump = 0;
+  pip_task->ctx_suspend = &ctx;
+  pip_save_context( &ctx );
+  if( !flag_jump ) {
+    flag_jump = 1;
     pip_task->task_sched = NULL;
-    pip_ulp_sched_next( pip_task );
+    if( pip_ulp_sched_next( task_sched ) == ENOENT ) {
+      pip_task->task_sched = task_sched; /* undo */
+      RETURN( EDEADLK );
+    }
   }
   RETURN( 0 );
 }
@@ -2183,6 +2202,16 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   RETURN( 0 );
 }
 
+int pip_ulp_wait_sisters( void ) {
+  if( !pip_is_task() ) RETURN( EPERM );
+  while( !PIP_ULP_ISEMPTY( &pip_task->schedq ) ) {
+    DBG;
+    PIP_ULP_QUEUE_DESCRIBE( &pip_task->schedq );
+    pip_ulp_yield();
+  }
+  return 0;
+}
+
 int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp ) {
   pip_task_t *task;
   if( pipidp == NULL ) RETURN( EINVAL );
@@ -2211,65 +2240,89 @@ int pip_ulp_get( int pipid, pip_ulp_t **ulpp ) {
 }
 
 int pip_ulp_mutex_init( pip_ulp_mutex_t *mutex ) {
+  DBG;
   if( mutex == NULL ) RETURN( EINVAL );
   PIP_ULP_INIT( &mutex->waiting );
+  mutex->sched  = NULL;
   mutex->holder = NULL;
   return 0;
 }
 
 int pip_ulp_mutex_lock( pip_ulp_mutex_t *mutex ) {
-  int err = 0;
-
-  if( mutex == NULL ) {
-    err = EINVAL;
-  } else if( mutex->holder == NULL ) {
+  DBG;
+  IF_UNLIKELY( mutex == NULL ) {
+    RETURN( EINVAL );
+  } else IF_UNLIKELY( mutex->sched != NULL &&
+		      mutex->sched != pip_task->task_sched ) {
+    RETURN( EPERM );
+  } else IF_UNLIKELY( mutex->holder == PIP_ULP( pip_task ) ) {
+    RETURN( EDEADLK );
+  } else IF_LIKELY( mutex->holder == NULL ) {
+    DBG;
     mutex->holder = PIP_ULP( pip_task );
-  } else if( mutex->holder == PIP_ULP( pip_task ) ) {
-    err = EDEADLK;
+    IF_UNLIKELY( mutex->sched == NULL ) {
+      mutex->sched = pip_task->task_sched;
+    }
   } else {
+    DBG;
     PIP_ULP_ENQ_LAST( &mutex->waiting, PIP_ULP( pip_task ) );
-    err = pip_ulp_suspend();
+    RETURN( pip_ulp_suspend() );
   }
-  RETURN( err );
+  DBG;
+  return 0;
 }
 
 int pip_ulp_mutex_unlock( pip_ulp_mutex_t *mutex ) {
   pip_ulp_t *ulp;
-  int err = 0;
 
-  if( mutex == NULL ) {
-    err = EINVAL;
-  } else if( mutex->holder == NULL ||
-	     PIP_ULP_ISEMPTY( &mutex->waiting ) ) {
-    err = EPERM;
-  } else {
+  DBG;
+  IF_UNLIKELY( mutex == NULL ) {
+    RETURN( EINVAL );
+  } else IF_UNLIKELY( pip_task->task_sched != mutex->sched ) {
+    RETURN( EPERM );
+  } else IF_UNLIKELY( mutex->holder == NULL ) {
+    RETURN( EPERM );
+  }
+  DBG;
+  IF_LIKELY( !PIP_ULP_ISEMPTY( &mutex->waiting ) ) {
     ulp = PIP_ULP_NEXT( &mutex->waiting );
     mutex->holder = ulp;
     PIP_ULP_DEQ( ulp );
-    err = pip_ulp_resume( ulp, 0 );
+    DBG;
+    RETURN( pip_ulp_resume( ulp, 0 ) );
   }
-  RETURN( err );
+  return 0;
 }
 
 void pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n ) {
   PIP_ULP_INIT( &barrp->waiting );
-  barrp->count       = n;
-  barrp->count_init  = n;
+  barrp->sched      = NULL;
+  barrp->count      = n;
+  barrp->count_init = n;
 }
 
 int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp ) {
   pip_ulp_t 	*ulp, *u;
   int 		err = 0;
 
-  if( barrp == NULL ) RETURN( EINVAL );
+  IF_UNLIKELY( barrp        == NULL ) RETURN( EINVAL );
+  if( barrp->sched == NULL ) {
+    barrp->sched = (void*) pip_task->task_sched;
+  } else IF_UNLIKELY( barrp->sched != (void*) pip_task->task_sched ) {
+    RETURN( EPERM );
+  }
+
   if( barrp->count_init > 1 ) {
-    if( -- barrp->count == 0 ) {
+    IF_UNLIKELY( -- barrp->count == 0 ) {
+      DBG;
       PIP_ULP_FOREACH_SAFE( &barrp->waiting, ulp, u ) {
 	PIP_ULP_DEQ( ulp );
-	if( ( err = pip_ulp_resume( ulp, 0 ) ) != 0 ) RETURN( err );
+	IF_UNLIKELY( ( err = pip_ulp_resume( ulp, 0 ) ) != 0 ) RETURN( err );
       }
       barrp->count = barrp->count_init;
+      barrp->sched = NULL;
     } else {
+      DBG;
       PIP_ULP_ENQ_LAST( &barrp->waiting, PIP_ULP( pip_task ) );
       err = pip_ulp_suspend();
     }

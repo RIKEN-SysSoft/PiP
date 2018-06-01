@@ -14,12 +14,14 @@
 
 #include <pip.h>
 
-typedef struct {
+typedef struct pip_ulp_mutex {
+  void		*sched;
   pip_ulp_t	waiting;
   pip_ulp_t	*holder;
 } pip_ulp_mutex_t;
 
 typedef struct pip_ulp_barrier {
+  void		*sched;
   pip_ulp_t	waiting;
   int		count_init;
   int		count;
@@ -131,7 +133,23 @@ extern "C" {
    *  @{
    *
    */
+  int pip_ulp_wait_sisters( void );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
   int pip_ulp_get( int pipid, pip_ulp_t **ulpp );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  int pip_get_ulp_sched( int *pipidp );
   /** @}*/
 
   /**

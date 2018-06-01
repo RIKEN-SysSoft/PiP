@@ -9,7 +9,7 @@
 
 #define PIP_INTERNAL_FUNCS
 
-#define DEBUG
+//#define DEBUG
 
 #include <test.h>
 #include <pip_ulp.h>
@@ -32,47 +32,74 @@
 #define NULPS		(NTASKS-5)
 #endif
 
-pip_ulp_barrier_t barr;
+#define BIAS		(10000)
+
+struct expo {
+  volatile int		c;
+  pip_ulp_barrier_t 	barr;
+} expo;
 
 int main( int argc, char **argv ) {
-  pip_ulp_barrier_t *barrp;
-  int i, pipid;
+  struct expo *expop;
+  int ntasks = 0;
+  int i, pipid, nulps;
 
-  barrp = &barr;
-  pip_ulp_barrier_init( barrp, NULPS );
-  TESTINT( pip_init( &pipid, NULL, (void**) &barrp, 0 ) );
+  if( argc   > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = NTASKS;
+  }
+  if( ntasks < 2 ) {
+    fprintf( stderr,
+	     "Too small number of PiP tasks (must be latrger than 1)\n" );
+  }
+  nulps = ntasks - 1;
+
+  pip_ulp_barrier_init( &expo.barr, ntasks );
+  expo.c = BIAS;
+  expop  = &expo;
+  TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
     pip_ulp_t *ulp = NULL;
 
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    for( i=0; i<NULPS; i++ ) {
-      pipid = i + 1;
+    for( i=0; i<nulps; i++ ) {
+      pipid = i;
       TESTINT( pip_ulp_new( &prog, &pipid, ulp, &ulp ) );
     }
-    pipid = 0;
+    pipid = i;
     TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, ulp ));
-    for( i=0; i<NULPS+1; i++ ) {
-      int status;
-      TESTINT( pip_wait( i, &status ) );
-      if( status == i ) {
-	fprintf( stderr, "Succeeded (%d)\n", i );
-      } else {
-	fprintf( stderr, "pip_wait(%d):%d\n", i, status );
-      }
+    for( i=0; i<ntasks; i++ ) {
+      TESTINT( pip_wait( i, NULL ) );
     }
   } else {
     if( pip_is_ulp() ) {
-      for( i=0; i<NULPS; i++ ) {
-	TESTINT( pip_ulp_barrier_wait( barrp ) );
+
+      /* Disturbances */
+      int nyields = rand() % nulps;
+      for( i=0; i<nyields; i++ ) TESTINT( pip_ulp_yield() );
+
+      for( i=0; i<nulps; i++ ) {
+	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
 	if( i == pipid ) {
-	  fprintf( stderr, "<%d> Hello ULP !!\n", pipid );
+	  if( (expop->c)++ == ( pipid + BIAS ) ) {
+	    fprintf( stderr, "<%d> Hello ULP !!\n", pipid );
+	  } else {
+	    fprintf( stderr, "<%d> Bad ULP !!\n", pipid );
+	  }
 	}
       }
     } else {
-      fprintf( stderr, "<%d> Hello TASK !!\n", pipid );
+      for( i=0; i<nulps; i++ ) {
+	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
+      }
+      if( pipid == ( ntasks - 1 ) && expop->c == ( pipid + BIAS ) ) {
+	fprintf( stderr, "<%d> Hello TASK !!\n", pipid );
+      } else {
+	fprintf( stderr, "<%d> Bad TASK !!\n", pipid );
+      }
     }
-    TESTINT( pip_exit( pipid ) );
   }
   TESTINT( pip_fin() );
   return 0;
