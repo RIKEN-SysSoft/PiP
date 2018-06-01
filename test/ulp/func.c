@@ -21,10 +21,12 @@
 # endif
 # define NULPS		(4)
 #else
+# ifdef NTASKS
+#  undef NTASKS
+#  define NTASKS	(250)
+# endif
 # define NULPS		(10)
 #endif
-
-int a;
 
 int my_ulp_main( void ) {
   pip_ulp_t *ulp = NULL;
@@ -41,7 +43,7 @@ int my_ulp_main( void ) {
 	   "\n<%d> Hello from ULP (%s)\n\n",
 #endif
 	   pipid, type );
-  return 0;
+  return pipid;
 }
 
 int my_tsk_main( void ) {
@@ -59,25 +61,26 @@ int my_tsk_main( void ) {
 	   "\n<%d> Hello from TASK (%s)\n\n",
 #endif
 	   pipid, type );
-  return 0;
+  return pipid;
 }
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog_ulp, prog_tsk;
   pip_ulp_t 		*ulp;
-  int			ntasks, pipid;
+  int			pipid;
   int 			i, j, k;
 
   pip_spawn_from_func( &prog_ulp, argv[0], "my_ulp_main", NULL, NULL );
   pip_spawn_from_func( &prog_tsk, argv[0], "my_tsk_main", NULL, NULL );
   TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
-  ntasks = NTASKS / ( NULPS + 1 );
+
   k = 0;
-  for( i=0; i<ntasks; i++ ) {
-    fprintf( stderr, "i=%d/%d\n", i, ntasks );
+  while( k < NTASKS ) {
+    //fprintf( stderr, "i=%d/%d\n", i, ntasks );
     ulp = NULL;
     for( j=0; j<NULPS; j++ ) {
-      fprintf( stderr, "i=%d/%d  j=%d/%d\n", i, ntasks, j, NULPS );
+      if( k >= NTASKS - 2 ) break;
+      //fprintf( stderr, "i=%d/%d  j=%d/%d\n", i, ntasks, j, NULPS );
       pipid = k++;
       TESTINT( pip_ulp_new( &prog_ulp, &pipid, ulp, &ulp ) );
     }
@@ -87,7 +90,11 @@ int main( int argc, char **argv ) {
   for( i=0; i<k; i++ ) {
     int status;
     TESTINT( pip_wait( i, &status ) );
-    fprintf( stderr, "pip_wait(%d):%d\n", i, status );
+    if( status == i ) {
+      fprintf( stderr, "Succeeded (%d)\n", i );
+    } else {
+      fprintf( stderr, "pip_wait(%d):%d\n", i, status );
+    }
   }
   TESTINT( pip_fin() );
   return 0;

@@ -22,8 +22,8 @@
 #endif
 #endif
 
-#ifndef PIP_CACHE_SZ
-#define PIP_CACHE_SZ		(64)
+#ifndef PIP_CACHEBLK_SZ
+#define PIP_CACHEBLK_SZ		(64)
 #endif
 
 #ifndef PIP_LOCK_TYPE
