@@ -175,11 +175,12 @@
 #include <errno.h>
 
 typedef struct {
-  char			*prog;
-  char			**argv;
-  char			**envv;
-  char			*funcname;
-  void			*arg;
+  char		*prog;
+  char		**argv;
+  char		**envv;
+  char		*funcname;
+  void		*arg;
+  void 		*reserved[3];
 } pip_spawn_program_t;
 
   /**
@@ -637,19 +638,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief print internal info of a PiP task
-   *  @{
-   *
-   */
-  void pip_task_describe( FILE *fp, const char *tag, int pipid, int flags );
-  /** @}*/
-
-  /**
    * \brief initialize barrier synchronization structure
    *  @{
    *
    * \param[in] barrp pointer to a PiP barrier structure
-   * \param[in] n number of participants of this barrier synchronization
+   * \param[in] n number of participants of this barrier
+   * synchronization
    *
    */
   void pip_barrier_init( pip_barrier_t *barrp, int n );
@@ -661,23 +655,24 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \param[in] barrp pointer to a PiP barrier structure
    *
-   * \note This barrier synchronization never blocks.
+   * \note This barrier synchronization never blocks (i.e., no
+   * systemcall is called );
    *
    */
   void pip_barrier_wait( pip_barrier_t *barrp );
   /** @}*/
 
+  int  pip_is_root( void );
+  int  pip_is_task( void );
+  int  pip_is_ulp(  void );
+
   int  pip_idstr( char *buf, size_t sz );
-  int pip_ulp_myself( pip_ulp_t **ulpp );
+  int  pip_ulp_myself( pip_ulp_t **ulpp );
 
 #ifdef PIP_EXPERIMENTAL
   void *pip_malloc( size_t size );
   void  pip_free( void *ptr );
 #endif
-
-#ifdef PIP_INTERNAL_FUNCS
-#include <pip_internal.h>
-#endif /* PIP_INTERNAL_FUNCS */
 
 #ifdef __cplusplus
 }
@@ -685,6 +680,9 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 
 
 #ifdef PIP_INTERNAL_FUNCS
+
+#include <pip_internal.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

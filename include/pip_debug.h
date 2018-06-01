@@ -46,9 +46,9 @@
   do { if( !(X) ) DBGF( "%s failed !!!", #X ); } while(0)
 
 #define PIP_TASK_DESCRIBE( ID )				\
-  pip_task_describe( stderr, __func__, (ID), 0 );
+  pip_task_describe( stderr, __func__, (ID) );
 #define PIP_ULP_DESCRIBE( ULP )				\
-  void pip_ulp_describe( stderr, __func__, (ULP), 0 );
+  void pip_ulp_describe( stderr, __func__, (ULP) );
 #define PIP_ULP_QUEUE_DESCRIBE( Q )			\
   pip_ulp_queue_describe( stderr, __func__, (Q) );
 

@@ -100,48 +100,63 @@ typedef struct {
 struct pip_gdbif_task;
 
 typedef struct pip_task {
-  pip_ulp_t		queue;	     /* ULP list elm and sisters */
-  pip_ulp_t		schedq;	     /* ULP scheduling queue */
-  pip_spinlock_t	lock_schedq; /* lock for the scheduling queue */
-  struct pip_task	*task_sched; /* scheduling task */
-
-  int			pipid;	/* PiP ID */
-  int			type;	/* PIP_TYPE_TASK or PIP_TYPE_ULP */
-
-  void			*loaded; /* loaded DSO handle */
-  pip_symbols_t		symbols;
-  pip_spawn_args_t	args;	 /* arguments for a PiP task */
-  void *volatile	export;
-  pip_ctx_t		*ctx_exit;
-  int			flag_exit;
-  int			extval;
-
-  struct pip_gdbif_task	*gdbif_task;
-
-  /* PiP task (type==PIP_TYPE_TASK) */
-  pip_spinlock_t	lock_malloc; /* lock for pip_malloc and pip_free */
-  pid_t			pid;	/* PID in process mode */
-  pthread_t		thread;	/* thread */
-  pip_spawnhook_t	hook_before;
-  pip_spawnhook_t	hook_after;
-  void			*hook_arg;
-
+  /* Frequently accessing part (packed into a cache block */
+  union {
+    struct {
+      pip_ulp_t		queue;	     /* !!! DO NOT MOVE THIS AROUND !!! */
+      pip_ulp_t		schedq;	     /* ULP scheduling queue */
+      pip_spinlock_t	lock_schedq; /* lock of scheduling queue (no need ?) */
+      struct pip_task	*task_sched; /* scheduling task */
+      int		pipid;	     /* PiP ID */
+      int		type;	/* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
+      void *volatile	export;
+    };
+    char		__gap0__[PIP_CACHEBLK_SZ];
+  };
   /* PiP ULP (type==PIP_TYPE_ULP) */
-  void			*ulp_stack;
-  pip_ctx_t		*ctx_suspend;
-  pthread_mutex_t	mutex_wait;
+  union {
+    struct {
+      pip_spinlock_t	lock_resume;  /* lock for migration */
+      void		*ulp_stack;   /* stack area of this ULP */
+      pip_ctx_t		*ctx_suspend; /* context to resume */
+      pthread_mutex_t	mutex_wait; /* mutex to block at pip_wait() */
+    };
+    char		__gap1__[PIP_CACHEBLK_SZ];
+  };
+  /* PiP task (type==PIP_TYPE_TASK) */
+  union {
+    struct {
+      pid_t		pid;	/* PID in process mode */
+      pthread_t		thread;	/* thread */
+      pip_spawnhook_t	hook_before; /* before spawning hook */
+      pip_spawnhook_t	hook_after;  /* after spawning hook */
+      void		*hook_arg;   /* hook arg */
+      pip_spinlock_t	lock_malloc; /* lock for pip_malloc and pip_free */
+    };
+    char		__gap2__[PIP_CACHEBLK_SZ];
+  };
+  /* common part */
+  void			*loaded; /* loaded DSO handle */
+  pip_symbols_t		symbols; /* symbols */
+  pip_spawn_args_t	args;	 /* arguments for a PiP task */
+  pip_ctx_t		*ctx_exit; /* longjump context for pip_exit() */
+  int			flag_exit; /* if this task is terminated or not */
+  int			extval;	   /* exit value */
+
+  struct pip_gdbif_task	*gdbif_task; /* GDB interface */
 
 } pip_task_t;
 
 typedef struct {
+  /* sanity check info */
   char			magic[PIP_MAGIC_LEN];
   unsigned int		version;
   size_t		root_size;
   size_t		size;
+  /* actual root info */
   pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
   size_t		page_size;
   unsigned int		opts;
-  unsigned int		actual_mode;
   int			ntasks;
   int			ntasks_curr;
   int			ntasks_accum;
@@ -149,12 +164,13 @@ typedef struct {
   pip_clone_t		*cloneinfo;   /* only valid with process:preload */
   pip_task_t		*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
-  /* ULP */
+  /* ULP related info */
   pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
   void			*stack_flist;	  /* ULP: stack free list */
   size_t		stack_size;
-
+  /* PiP tasks array */
   pip_task_t		tasks[];
+
 } pip_root_t;
 
 extern pip_root_t	*pip_root;
@@ -173,18 +189,6 @@ extern pip_task_t	*pip_task;
 #define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }
 #define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
 #define ERRJ_CHK(FUNC)	{ if( (FUNC) ) goto error; }
-
-#ifdef EVAL
-#define ES(V,F)		\
-  do { double __st=pip_gettime(); if(F) (V) += pip_gettime() - __st; } while(0)
-double time_dlmopen   = 0.0;
-double time_load_dso  = 0.0;
-double time_load_prog = 0.0;
-#define REPORT(V)	 printf( "%s: %g\n", #V, V );
-#else
-#define ES(V,F)		if(F)
-#define REPORT(V)
-#endif
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
