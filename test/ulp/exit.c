@@ -42,25 +42,28 @@ int main( int argc, char **argv ) {
   if( ntasks < 2 ) {
     fprintf( stderr,
 	     "Too small number of PiP tasks (must be latrger than 1)\n" );
+    exit( 1 );
   }
   if( ntasks >= 256 ) {
     fprintf( stderr,
 	     "Too many number of PiP tasks (must be less than 256)\n" );
+    exit( 1 );
   }
   nulps = ntasks - 1;
 
   TESTINT( pip_init( &pipid, NULL, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
-    pip_ulp_t *ulp = NULL;
+    pip_ulp_t ulps;
 
+    PIP_ULP_INIT( &ulps );
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
     for( i=0; i<nulps; i++ ) {
       pipid = i + 1;
-      TESTINT( pip_ulp_new( &prog, &pipid, ulp, &ulp ) );
+      TESTINT( pip_ulp_new( &prog, &pipid, &ulps, NULL ) );
     }
     pipid = 0;
-    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, ulp ));
+    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, &ulps ));
     for( i=0; i<ntasks; i++ ) {
       int status;
       TESTINT( pip_wait( i, &status ) );

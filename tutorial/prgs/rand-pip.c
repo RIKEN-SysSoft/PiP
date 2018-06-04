@@ -11,9 +11,9 @@ pthread_barrier_t barrier, *barrp;
 
 int main( int argc, char **argv ) {
   int i, pipid, seed = 1;
-  int ntasks = 4;
+  int ntasks = 100;
 
-  pip_init( &pipid, NULL, NULL, 0 );
+  pip_init( &pipid, &ntasks, NULL, 0 );
   if( pipid == 0 ) {
 #ifdef USE_PIP_BARRIER
     printf( "PIP BARRIER\n" );
@@ -37,6 +37,7 @@ int main( int argc, char **argv ) {
     pthread_barrier_wait( barrp );
 #endif
     printf( "<%d> %d : %d\n", pipid, rand(), rand_r(&seed) );
+    fflush( NULL );
   }
   pip_fin();
   return 0;

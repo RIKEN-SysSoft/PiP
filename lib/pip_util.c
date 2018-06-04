@@ -219,43 +219,51 @@ void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
 
 void pip_ulp_queue_describe( FILE *fp, const char *tag, pip_ulp_t *queue ) {
   if( queue != NULL ) {
-    pip_task_t 	*t;
-    pip_ulp_t 	*u;
-    int i;
-
-    if( tag == NULL ) {
-      pip_info_fmesg( fp, "QUEUE:%p (next:%p prev:%p)",
-		      queue, queue->next, queue->prev );
-    } else {
-      pip_info_fmesg( fp, "QUEUE:%p (next:%p prev:%p)",
-		      queue, queue->next, queue->prev );
-    }
-    i = 0;
-    PIP_ULP_FOREACH( queue, u ) {
-      t = PIP_TASK( u );
+    if( PIP_ULP_ISEMPTY( queue ) ) {
       if( tag == NULL ) {
-	pip_info_fmesg( fp,
-			"(%d) pipid:%d "
-			"(ctx=%p):%p  next:%p  prev=%p",
-			i,
-			t->pipid,
-			t->ctx_suspend,
-			t,
-			u->next,
-			u->prev );
+	pip_info_fmesg( fp, "QUEUE:%p  EMPTY", queue );
       } else {
-	pip_info_fmesg( fp,
-			"(%d) pipid:%d %s: "
-			"(ctx=%p):%p  next:%p  prev=%p",
-			i,
-			t->pipid,
-			tag,
-			t->ctx_suspend,
-			t,
-			u->next,
-			u->prev );
+	pip_info_fmesg( fp, "QUEUE:%p  EMPTY", queue );
       }
-      i++;
+    } else {
+      pip_task_t 	*t;
+      pip_ulp_t 	*u;
+      int i = 0;
+
+      if( tag == NULL ) {
+	pip_info_fmesg( fp, "QUEUE:%p (next:%p prev:%p)",
+			queue, queue->next, queue->prev );
+      } else {
+	pip_info_fmesg( fp, "QUEUE:%p (next:%p prev:%p)",
+			queue, queue->next, queue->prev );
+      }
+      PIP_ULP_FOREACH( queue, u ) {
+	t = PIP_TASK( u );
+	if( tag == NULL ) {
+	  pip_info_fmesg( fp,
+			  "(%d) pipid:%d "
+			  "(ctx=%p):%p  next:%p  prev=%p",
+			  i,
+			  t->pipid,
+			  t->ctx_suspend,
+			  t,
+			  u->next,
+			  u->prev );
+	} else {
+	  pip_info_fmesg( fp,
+			  "(%d) pipid:%d %s: "
+			"(ctx=%p):%p  next:%p  prev=%p",
+			  i,
+			  t->pipid,
+			  tag,
+			  t->ctx_suspend,
+			  t,
+			  u->next,
+			  u->prev );
+	}
+      sleep ( 1 );
+	i++;
+      }
     }
   } else {
     if( tag == NULL ) {
