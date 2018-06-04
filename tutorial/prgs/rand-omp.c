@@ -14,6 +14,7 @@ int main( int argc, char **argv ) {
     for( i=0; i<4; i++ ) {
 #pragma omp barrier
       printf( "<%d> %d : %d\n", tid, rand(), rand_r(&seed) );
+      fflush( NULL );
     }
   }
   return 0;

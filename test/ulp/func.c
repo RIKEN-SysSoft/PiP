@@ -62,7 +62,7 @@ int my_tsk_main( void ) {
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog_ulp, prog_tsk;
-  pip_ulp_t 		*ulp;
+  pip_ulp_t 		ulps;
   int			ntasks, nulps, pipid;
   int 			i, j, k;
 
@@ -73,11 +73,13 @@ int main( int argc, char **argv ) {
   }
   if( ntasks < 2 ) {
     fprintf( stderr,
-	     "Too small number of PiP tasks (must be latrger than 3)\n" );
+	     "Too small number of PiP tasks (must be latrger than 1)\n" );
+    exit( 1 );
   }
   if( ntasks >= 256 ) {
     fprintf( stderr,
 	     "Too many number of PiP tasks (must be less than 256)\n" );
+    exit( 1 );
   }
   if( argc > 2 ) {
     nulps = atoi( argv[2] );
@@ -86,6 +88,7 @@ int main( int argc, char **argv ) {
 	       "Number of ULPs (%d) must be larget than or equal to "
 	       "the number of PiP tasks (%d)\n",
 	       nulps, ntasks );
+      exit( 1 );
     }
   } else {
     nulps = NULPS;
@@ -97,16 +100,20 @@ int main( int argc, char **argv ) {
 
   k = 0;
   while( k < ntasks ) {
+    PIP_ULP_INIT( &ulps );
     //fprintf( stderr, "i=%d/%d\n", i, ntasks );
-    ulp = NULL;
     for( j=0; j<nulps; j++ ) {
       if( k >= ntasks - 2 ) break;
       //fprintf( stderr, "i=%d/%d  j=%d/%d\n", i, ntasks, j, NULPS );
       pipid = k++;
-      TESTINT( pip_ulp_new( &prog_ulp, &pipid, ulp, &ulp ) );
+      TESTINT( pip_ulp_new( &prog_ulp, &pipid, &ulps, NULL ) );
     }
     pipid = k++;
-    TESTINT( pip_task_spawn( &prog_tsk, PIP_CPUCORE_ASIS, &pipid, NULL, ulp ));
+    TESTINT( pip_task_spawn( &prog_tsk,
+			     PIP_CPUCORE_ASIS,
+			     &pipid,
+			     NULL,
+			     &ulps ));
   }
   for( i=0; i<k; i++ ) {
     int status;

@@ -52,10 +52,17 @@ typedef struct pip_ulp_barrier {
     PIP_ULP_PREV_NEXT(L) = PIP_ULP_NEXT(L); 		\
     PIP_ULP_INIT(L); } while(0)
 
+#define PIP_ULP_MOVE_QUEUE(P,Q)				\
+  do { PIP_ULP_NEXT_PREV(Q) = (P);			\
+    PIP_ULP_PREV_NEXT(Q) = (P);				\
+    PIP_ULP_NEXT(P) = PIP_ULP_NEXT(Q);			\
+    PIP_ULP_PREV(P) = PIP_ULP_PREV(Q);			\
+    PIP_ULP_INIT(Q); } while(0)
+
 #define PIP_ULP_ISEMPTY(L)				\
   ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
 
-#define PIP_ULP_FOREACH(L,E)					\
+#define PIP_ULP_FOREACH(L,E)				\
   for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
 
 #define PIP_ULP_FOREACH_SAFE(L,E,TV)				\
@@ -141,7 +148,23 @@ extern "C" {
    *  @{
    *
    */
+  int pip_ulp_myself( pip_ulp_t **ulpp );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
   int pip_ulp_get( int pipid, pip_ulp_t **ulpp );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp );
   /** @}*/
 
   /**

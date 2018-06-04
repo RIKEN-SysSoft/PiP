@@ -11,7 +11,6 @@ int main( int argc, char **argv ) {
     MPI_Barrier( MPI_COMM_WORLD );
     printf( "<%d> %d : %d\n", rank, rand(), rand_r(&seed) );
     fflush( NULL );
-    sleep( 1 );
   }
   MPI_Finalize();
   return 0;

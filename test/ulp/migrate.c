@@ -9,85 +9,148 @@
 
 #define PIP_INTERNAL_FUNCS
 
+#define DEBUG
+
 #include <test.h>
 #include <pip_ulp.h>
 
-//#define DEBUG
+#ifndef DEBUG
+#define ULP_COUNT 	(100);
+#else
+#define ULP_COUNT 	(10);
+#endif
 
 #ifdef DEBUG
-# ifdef NTASKS
-#  undef NTASKS
-#  define NTASKS	(10)
-# endif
-# define NULPS		(4)
+# define MTASKS	(10)
 #else
-# define NULPS		(10)
+# define MTASKS	(NTASKS/2)
 #endif
 
-int a;
+#define NULPS		(NTASKS/2)
 
-int my_ulp_main( void ) {
-  pip_ulp_t *ulp = NULL;
-  int pipid;
-  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
-  TESTINT( pip_ulp_myself( &ulp ) );
-  char *type = pip_type_str();
+struct expo {
+  pip_barrier_t		barr;
+  pip_spinlock_t	lock;
+  pip_ulp_t		queue;
+} expo;
+struct expo *expop;
 
-  TESTINT( pip_get_pipid( &pipid ) );
-  fprintf( stderr,
-#ifndef DEBUG
-	   "<%d> Hello from ULP (%s)\n",
-#else
-	   "\n<%d> Hello from ULP (%s)\n\n",
-#endif
-	   pipid, type );
-  return 0;
-}
+int ulp_count = ULP_COUNT;
 
-int my_tsk_main( void ) {
-  pip_ulp_t *ulp = NULL;
-  int pipid;
-  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
-  TESTINT( pip_ulp_myself( &ulp ) );
-  char *type = pip_type_str();
+void ulp_main( void* null ) {
+  pip_ulp_t *myself;
+  int pipid_myself, pipid_sched;
 
-  TESTINT( pip_get_pipid( &pipid ) );
-  fprintf( stderr,
-#ifndef DEBUG
-	   "<%d> Hello from TASK (%s)\n",
-#else
-	   "\n<%d> Hello from TASK (%s)\n\n",
-#endif
-	   pipid, type );
-  return 0;
+  TESTINT( pip_init( &pipid_myself, NULL, NULL, 0 ) );
+  DBG;
+  while( 1 ) {
+    TESTINT( pip_get_ulp_sched( &pipid_sched ) );
+    if( --ulp_count <= 0 ) break;
+    fprintf( stderr, "[PIPID:%d] sched: %d  [%d]\n",
+	     pipid_myself, pipid_sched, ulp_count );
+    TESTINT( pip_ulp_myself( &myself ) );
+
+    pip_spin_lock( &expop->lock );
+    {
+      PIP_ULP_ENQ_LAST( &expop->queue, myself );
+    }
+    pip_spin_unlock( &expop->lock );
+
+    TESTINT( pip_ulp_suspend() );
+  }
 }
 
 int main( int argc, char **argv ) {
-  pip_spawn_program_t	prog_ulp, prog_tsk;
-  pip_ulp_t 		*ulp;
-  int			ntasks, pipid;
-  int 			i, j, k;
+  int ntasks, nulps;
+  int i, j, pipid;
 
-  pip_spawn_from_func( &prog_ulp, argv[0], "my_ulp_main", NULL, NULL );
-  pip_spawn_from_func( &prog_tsk, argv[0], "my_tsk_main", NULL, NULL );
-  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
-  ntasks = NTASKS / ( NULPS + 1 );
-  k = 0;
-  for( i=0; i<ntasks; i++ ) {
-    fprintf( stderr, "i=%d/%d\n", i, ntasks );
-    ulp = NULL;
-    for( j=0; j<NULPS; j++ ) {
-      fprintf( stderr, "i=%d/%d  j=%d/%d\n", i, ntasks, j, NULPS );
-      pipid = k++;
-      TESTINT( pip_ulp_new( &prog_ulp, &pipid, ulp, &ulp ) );
-    }
-    pipid = k++;
-    TESTINT( pip_task_spawn( &prog_tsk, PIP_CPUCORE_ASIS, &pipid, NULL, ulp ));
+  if( argc > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = MTASKS;
   }
-  for( i=0; i<k; i++ ) {
-    int status;
-    TESTINT( pip_wait( i, &status ) );
-    fprintf( stderr, "pip_wait(%d):%d\n", i, status );
+  if( ntasks < 2 ) {
+    fprintf( stderr,
+	     "Too small number of PiP tasks (must be latrger than 1)\n" );
+    exit( 1 );
+  } else if( ntasks > PIP_NTASKS_MAX ) {
+    fprintf( stderr, "Number of PiP tasks (%d) is too large\n", ntasks );
+    exit( 1 );
+  }
+  if( argc > 2 ) {
+    nulps = atoi( argv[2] );
+    if( nulps == 0 ) {
+      fprintf( stderr, "Number of ULPs must be larget than zero\n" );
+      exit( 1 );
+    } else if( nulps > PIP_NTASKS_MAX ) {
+      fprintf( stderr,
+	       "Number of PiP tasks (%d) and ULPs (%d) are too large\n",
+	       ntasks,
+	       nulps );
+      exit( 1 );
+    } else if ( nulps < ntasks ) {
+      fprintf( stderr,
+	       "Number of PiP tasks (%d) must be larger than "
+	       "or equal to the number of ULPs (%d) \n",
+	       ntasks,
+	       nulps );
+      exit( 1 );
+    }
+  } else {
+    nulps = NULPS;
+  }
+
+  TESTINT( pip_init( &pipid, NULL, NULL, 0 ) );
+  if( pipid == PIP_PIPID_ROOT ) {
+    pip_spawn_program_t func;
+    pip_spawn_program_t prog;
+
+    pip_spawn_from_func( &func, argv[0], "ulp_main", NULL, NULL );
+    pip_barrier_init( &expo.barr, ntasks );
+    pip_spin_init( &expo.lock );
+    PIP_ULP_INIT( &expo.queue );
+
+    j = MTASKS;
+    for( i=0; i<nulps; i++ ) {
+      pipid = j++;
+      TESTINT( pip_ulp_new( &func, &pipid, &expo.queue, NULL ) );
+    }
+    //PIP_ULP_ENQ_FIRST( ulp, &expo.queue );
+    PIP_ULP_QUEUE_DESCRIBE( &expo.queue );
+    TESTINT( pip_export( (void*) &expo ) );
+    DBGF( "expop: %p", &expo );;
+
+    pip_spawn_from_main( &prog, argv[0], argv, NULL );
+    j = 0;
+    for( i=0; i<ntasks; i++ ) {
+      pipid = j++;
+      TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, NULL ) );
+    }
+    for( i=0; i<ntasks+nulps; i++ ) {
+      TESTINT( pip_wait( i, NULL ) );
+    }
+  } else {
+    TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &expop ) );
+    pip_barrier_wait( &expop->barr );
+    DBGF( "expop: %p", expop );;
+
+    while( 1 ) {
+      pip_ulp_t *next;
+
+      DBG;
+      pip_spin_lock( &expop->lock );
+      {
+	PIP_ULP_QUEUE_DESCRIBE( &expop->queue );
+	if( PIP_ULP_ISEMPTY( &expop->queue) ) break;
+	next = PIP_ULP_NEXT( &expop->queue );
+	PIP_ULP_DEQ( &expop->queue );
+      }
+      pip_spin_unlock( &expop->lock );
+
+      TESTINT( pip_ulp_resume( next, 0 ) );
+    }
+    DBG;
+    pip_spin_unlock( &expop->lock );
   }
   TESTINT( pip_fin() );
   return 0;

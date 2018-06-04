@@ -1219,14 +1219,16 @@ static int pip_ulp_switch( pip_task_t *old_task, pip_ulp_t *ulp ) {
 }
 
 static void pip_set_extval( pip_task_t *task, int extval ) {
-  if( !task->flag_exit ) {
-    DBGF( "extval=%d", extval );
-    task->flag_exit = 1;
+  DBGF( "extval=%d", extval );
+  if( extval != 0 && task->extval == 0 ) {
     task->gdbif_task->exit_code = task->extval = extval;
-    pip_memory_barrier();
-    task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
-    pip_flush_stdio( task );
+    if( !task->flag_exit ) {
+      task->flag_exit = 1;
+      pip_memory_barrier();
+      task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+    }
   }
+  pip_flush_stdio( task );
 }
 
 static int pip_ulp_sched_next( pip_task_t *sched ) {
@@ -1515,7 +1517,9 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     pip_task_t	*dtask;
 
     DBG;
-    PIP_ULP_ENQ_FIRST( sisters, &task->schedq );
+    //PIP_ULP_ENQ_FIRST( sisters, &task->schedq );
+    PIP_ULP_MOVE_QUEUE( &task->schedq, sisters );
+    PIP_ULP_QUEUE_DESCRIBE( &task->schedq );
     PIP_ULP_FOREACH( &task->schedq, daughter ) {
       dtask = PIP_TASK( daughter );
       DBGF( "daughter [%d] (next:%d)  ctx:%p", dtask->pipid,
@@ -2055,6 +2059,8 @@ int pip_ulp_new( pip_spawn_program_t *progp,
   if( pip_root        == NULL ) RETURN( EPERM  );
   if( pipidp          == NULL ) RETURN( EINVAL );
   if( !pip_is_root()          ) RETURN( EPERM  );
+  if( sisters         == NULL &&
+      newp            == NULL ) RETURN( EINVAL );
   if( progp           == NULL ) RETURN( EINVAL );
   if( progp->funcname != NULL &&
       progp->argv     != NULL ) RETURN( EINVAL );
@@ -2062,11 +2068,13 @@ int pip_ulp_new( pip_spawn_program_t *progp,
       progp->argv     == NULL ) RETURN( EINVAL );
   if( progp->funcname == NULL &&
       progp->prog     == NULL ) progp->prog = progp->argv[0];
+#ifdef AH
   if( sisters != NULL ) {
     if( ( task = PIP_TASK( sisters ) ) != NULL &&
-	task->type                   != PIP_TYPE_ULP ) RETURN( EPERM );
+	  task->type                   != PIP_TYPE_ULP ) RETURN( EPERM );
     if( task->flag_exit ) RETURN( ESRCH );
   }
+#endif
   DBGF( ">> pip_ulp_new()" );
 
   if( progp->envv == NULL ) progp->envv = environ;
@@ -2079,7 +2087,7 @@ int pip_ulp_new( pip_spawn_program_t *progp,
   if( ( err = pthread_mutex_lock( &task->mutex_wait ) ) != 0 ) ERRJ;
 
   if( sisters != NULL ) {
-    PIP_ULP_ENQ_FIRST( sisters, PIP_ULP( task ) );
+    PIP_ULP_ENQ_LAST( sisters, PIP_ULP( task ) );
   }
 
   gdbif_task = &pip_gdbif_root->tasks[pipid];
@@ -2150,7 +2158,7 @@ int pip_ulp_yield( void ) {
   }
   //pip_spin_unlock( &sched->lock_schedq );
   //DBGF( "UNLOCK:%p", &sched->lock_schedq );
-  if ( next != NULL ) {
+  IF_UNLIKELY( next != NULL ) {
     RETURN( pip_ulp_switch( pip_task, next ) );
   }
   return 0;
@@ -2180,10 +2188,12 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   pip_task_t	*task, *sched;
   pip_ulp_t	*queue;
 
-  if( ulp == NULL   ) RETURN( EINVAL );
+  IF_UNLIKELY( ulp == NULL ) RETURN( EINVAL );
   task = PIP_TASK( ulp );
-  if( task->flag_exit          ) RETURN( ESRCH ); /* already terminated */
-  if( task->task_sched != NULL ) RETURN( EBUSY ); /* already being scheduled */
+  IF_UNLIKELY( task->flag_exit ) RETURN( ESRCH ); /* already terminated */
+  IF_UNLIKELY( task->task_sched != NULL ) {
+    RETURN( EBUSY ); /* already being scheduled */
+  }
   sched = pip_task->task_sched;
   task->task_sched = sched;
   queue = &sched->schedq;
