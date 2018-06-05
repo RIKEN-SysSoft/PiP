@@ -107,16 +107,15 @@ typedef struct pip_task {
       pip_ulp_t		schedq;	     /* ULP scheduling queue */
       pip_spinlock_t	lock_schedq; /* lock of scheduling queue (no need ?) */
       struct pip_task	*task_sched; /* scheduling task */
-      int		pipid;	     /* PiP ID */
-      int		type;	/* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
-      void *volatile	export;
+      struct pip_task	*task_resume; /* scheduling task to be resumed */
+      int32_t		pipid;	     /* PiP ID */
+      int32_t		type;	/* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
   };
   /* PiP ULP (type==PIP_TYPE_ULP) */
   union {
     struct {
-      pip_spinlock_t	lock_resume;  /* lock for migration */
       void		*ulp_stack;   /* stack area of this ULP */
       pip_ctx_t		*ctx_suspend; /* context to resume */
       pthread_mutex_t	mutex_wait; /* mutex to block at pip_wait() */
@@ -139,10 +138,11 @@ typedef struct pip_task {
   void			*loaded; /* loaded DSO handle */
   pip_symbols_t		symbols; /* symbols */
   pip_spawn_args_t	args;	 /* arguments for a PiP task */
+  void *volatile	export;
   pip_ctx_t		*ctx_exit; /* longjump context for pip_exit() */
   int			flag_exit; /* if this task is terminated or not */
   int			extval;	   /* exit value */
-
+  /* GDB interface */
   struct pip_gdbif_task	*gdbif_task; /* GDB interface */
 
 } pip_task_t;

@@ -85,7 +85,7 @@ int main( int argc, char **argv ) {
     nulps = atoi( argv[2] );
     if( nulps >= ntasks ) {
       fprintf( stderr,
-	       "Number of ULPs (%d) must be larget than or equal to "
+	       "Number of ULPs (%d) must be less than "
 	       "the number of PiP tasks (%d)\n",
 	       nulps, ntasks );
       exit( 1 );
