@@ -53,11 +53,12 @@ typedef struct pip_ulp_barrier {
     PIP_ULP_INIT(L); } while(0)
 
 #define PIP_ULP_MOVE_QUEUE(P,Q)				\
-  do { PIP_ULP_NEXT_PREV(Q) = (P);			\
+  do { if( !PIP_ULP_ISEMPTY(Q) ) {			\
+    PIP_ULP_NEXT_PREV(Q) = (P);				\
     PIP_ULP_PREV_NEXT(Q) = (P);				\
     PIP_ULP_NEXT(P) = PIP_ULP_NEXT(Q);			\
     PIP_ULP_PREV(P) = PIP_ULP_PREV(Q);			\
-    PIP_ULP_INIT(Q); } while(0)
+    PIP_ULP_INIT(Q); } } while(0)
 
 #define PIP_ULP_ISEMPTY(L)				\
   ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
@@ -140,7 +141,15 @@ extern "C" {
    *  @{
    *
    */
-  int pip_ulp_wait_sisters( void );
+  int pip_ulp_migrate( pip_ulp_t *ulp, int flags );
+  /** @}*/
+
+  /**
+   * \brief
+   *  @{
+   *
+   */
+  int pip_ulp_yield_to( pip_ulp_t *ulp );
   /** @}*/
 
   /**
