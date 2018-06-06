@@ -12,67 +12,25 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <pip.h>
+#include <pip_machdep.h>
+
+typedef struct pip_ulp_locked_queue {
+  pip_spinlock_t	lock;
+  pip_ulp_queue_t	queue;
+} pip_ulp_locked_queue_t;
 
 typedef struct pip_ulp_mutex {
-  void		*sched;
-  pip_ulp_t	waiting;
-  pip_ulp_t	*holder;
+  void			*sched;
+  void			*holder;
+  pip_ulp_queue_t	waiting;
 } pip_ulp_mutex_t;
 
 typedef struct pip_ulp_barrier {
-  void		*sched;
-  pip_ulp_t	waiting;
-  int		count_init;
-  int		count;
+  void			*sched;
+  pip_ulp_t		waiting;
+  int			count_init;
+  int			count;
 } pip_ulp_barrier_t;
-
-#define PIP_ULP_INIT(L)					\
-  do { PIP_ULP_NEXT(L) = (L); PIP_ULP_PREV(L) = (L); } while(0)
-
-#define PIP_ULP_NEXT(L)		((L)->next)
-#define PIP_ULP_PREV(L)		((L)->prev)
-#define PIP_ULP_PREV_NEXT(L)	((L)->prev->next)
-#define PIP_ULP_NEXT_PREV(L)	((L)->next->prev)
-
-#define PIP_ULP_ENQ_FIRST(L,E)				\
-  do { PIP_ULP_NEXT(E)   = PIP_ULP_NEXT(L);		\
-    PIP_ULP_PREV(E)      = (L);				\
-    PIP_ULP_NEXT_PREV(L) = (E);				\
-    PIP_ULP_NEXT(L)      = (E); } while(0)
-
-#define PIP_ULP_ENQ_LAST(L,E)				\
-  do { PIP_ULP_NEXT(E)   = (L);				\
-    PIP_ULP_PREV(E)      = PIP_ULP_PREV(L);		\
-    PIP_ULP_PREV_NEXT(L) = (E);				\
-    PIP_ULP_PREV(L)      = (E); } while(0)
-
-#define PIP_ULP_DEQ(L)					\
-  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);		\
-    PIP_ULP_PREV_NEXT(L) = PIP_ULP_NEXT(L); 		\
-    PIP_ULP_INIT(L); } while(0)
-
-#define PIP_ULP_MOVE_QUEUE(P,Q)				\
-  do { if( !PIP_ULP_ISEMPTY(Q) ) {			\
-    PIP_ULP_NEXT_PREV(Q) = (P);				\
-    PIP_ULP_PREV_NEXT(Q) = (P);				\
-    PIP_ULP_NEXT(P) = PIP_ULP_NEXT(Q);			\
-    PIP_ULP_PREV(P) = PIP_ULP_PREV(Q);			\
-    PIP_ULP_INIT(Q); } } while(0)
-
-#define PIP_ULP_ISEMPTY(L)				\
-  ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
-
-#define PIP_ULP_FOREACH(L,E)				\
-  for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
-
-#define PIP_ULP_FOREACH_SAFE(L,E,TV)				\
-  for( (E)=(L)->next, (TV)=PIP_ULP_NEXT(E);			\
-       (L)!=(E);						\
-       (E)=(TV), (TV)=PIP_ULP_NEXT(TV) )
-
-#define PIP_ULP_FOREACH_SAFE_XXX(L,E,TV)			\
-  for( (E)=(L), (TV)=PIP_ULP_NEXT(E); (L)!=(E); (E)=(TV) )
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
@@ -97,7 +55,7 @@ extern "C" {
    */
   int pip_ulp_new( pip_spawn_program_t *progp,
 		   int *pipidp,
-		   pip_ulp_t *sisters,
+		   pip_ulp_queue_t *sisters,
 		   pip_ulp_t **newp );
   /** @}*/
 
@@ -134,14 +92,6 @@ extern "C" {
    *
    */
   int pip_ulp_resume( pip_ulp_t *ulp, int flags );
-  /** @}*/
-
-  /**
-   * \brief
-   *  @{
-   *
-   */
-  int pip_ulp_migrate( pip_ulp_t *ulp, int flags );
   /** @}*/
 
   /**
@@ -223,6 +173,18 @@ extern "C" {
    */
   int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp );
   /** @}*/
+
+  int pip_ulp_locked_queue_init(   pip_ulp_locked_queue_t *queue );
+  int pip_ulp_enqueue_and_suspend( pip_ulp_locked_queue_t *queue,
+				   int flags );
+  int pip_ulp_dequeue_and_migrate( pip_ulp_locked_queue_t *queue,
+				   pip_ulp_t **ulpp,
+				   int flag );
+  int pip_ulp_enqueue_locked_queue( pip_ulp_locked_queue_t *queue,
+				    pip_ulp_t *ulp,
+				    int flags );
+  int pip_ulp_dequeue_locked_queue( pip_ulp_locked_queue_t *queue,
+				    pip_ulp_t **ulpp );
 
 #ifdef __cplusplus
 }
