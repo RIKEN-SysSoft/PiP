@@ -32,6 +32,14 @@
 #include <pip_util.h>
 #include <pip_gdbif.h>
 
+#ifdef PIP_ULP_NEED_SCHED_LOCK
+#define PIP_ULP_SCHED_LOCK(S)	pip_spin_lock(   &(S)->lock_schedq );
+#define PIP_ULP_SCHED_UNLOCK(S)	pip_spin_unlock( &(S)->lock_schedq );
+#else
+#define PIP_ULP_SCHED_LOCK(S)
+#define PIP_ULP_SCHED_UNLOCK(S)
+#endif
+
 #define IF_LIKELY(C)		if( pip_likely( C ) )
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
 
@@ -1240,16 +1248,16 @@ static int pip_ulp_sched_next( pip_task_t *sched ) {
 
   DBGF( "sched:%p", sched );;
   queue = &sched->schedq;
-  pip_spin_lock( &sched->lock_schedq );
+  PIP_ULP_SCHED_LOCK( sched );
   {
     if( PIP_ULP_ISEMPTY( &sched->schedq ) ) {
-      pip_spin_unlock( &sched->lock_schedq );
+      PIP_ULP_SCHED_UNLOCK( sched );
       RETURN( ENOENT );
     }
     next = PIP_ULP_NEXT( queue );
     PIP_ULP_DEQ( next );
   }
-  pip_spin_unlock( &sched->lock_schedq );
+  PIP_ULP_SCHED_UNLOCK( sched );
   DBG;
   nxt_task = PIP_TASK( next );
   if( nxt_task->ctx_suspend == NULL ) { /* for the first time scheduling */
@@ -1902,27 +1910,6 @@ static int pip_do_wait( int pipid, int flag_try, int *extvalp ) {
 
     /* dlclose() and free() must be called only from the root process since */
     /* corresponding dlmopen() and malloc() is called by the root process   */
-#ifdef AHAHAH
-    if( 0 ) {
-      /* finalizing daughters */
-      pip_ulp_t *ulp, *u;
-      PIP_ULP_FOREACH_SAFE( &task->ulp_done, ulp, u ) {
-	pip_task_t *t = PIP_TASK( ulp );
-
-	PIP_ULP_DEQ( ulp );
-	if( t->loaded        != NULL ) pip_dlclose( t->loaded );
-	if( t->args.prog     != NULL ) free( t->args.prog );
-	if( t->args.argv     != NULL ) free( t->args.argv );
-	if( t->args.envv     != NULL ) free( t->args.envv );
-	if( t->args.funcname != NULL ) free( t->args.funcname );
-	if( *t->symbols.progname_full != NULL ) {
-	  free( *t->symbols.progname_full );
-	}
-	DBG;
-	pip_reset_task_struct( t );
-      }
-    }
-#endif
     if( task->type == PIP_TYPE_ULP ) {
       pip_ulp_recycle_stack( task->ulp_stack );
     }
@@ -2151,7 +2138,8 @@ int pip_ulp_yield( void ) {
   sched = pip_task->task_sched;
   IF_UNLIKELY( sched == NULL ) RETURN( EPERM );
   queue = &sched->schedq;
-  pip_spin_lock( &sched->lock_schedq );
+
+  PIP_ULP_SCHED_LOCK( sched );
   {
     IF_LIKELY( !PIP_ULP_ISEMPTY( queue ) ) {
       PIP_ULP_ENQ_LAST( queue, PIP_ULP( pip_task ) );
@@ -2159,7 +2147,8 @@ int pip_ulp_yield( void ) {
       PIP_ULP_DEQ( next );
     }
   }
-  pip_spin_unlock( &sched->lock_schedq );
+  PIP_ULP_SCHED_UNLOCK( sched );
+
   IF_UNLIKELY( next != NULL ) {
     RETURN( pip_ulp_switch_( pip_task, next ) );
   }
@@ -2190,8 +2179,8 @@ int pip_ulp_suspend( void ) {
 }
 
 int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
-  pip_task_t	*task, *sched;
   pip_ulp_t	*queue;
+  pip_task_t	*task, *sched;
 
   IF_UNLIKELY( ulp == NULL ) RETURN( EINVAL );
   task = PIP_TASK( ulp );
@@ -2206,53 +2195,144 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   task->task_resume = NULL;
   queue = &sched->schedq;
 
-  pip_spin_lock( &sched->lock_schedq );
+  PIP_ULP_SCHED_LOCK( sched );
   {
     if( flags == PIP_ULP_SCHED_LIFO ) {
       PIP_ULP_ENQ_FIRST( queue, ulp );
     } else {
-      PIP_ULP_ENQ_LAST( queue, ulp );
+      PIP_ULP_ENQ_LAST(  queue, ulp );
     }
   }
-  pip_spin_unlock( &sched->lock_schedq );
+  PIP_ULP_SCHED_UNLOCK( sched );
   RETURN( 0 );
 }
 
-int pip_ulp_migrate( pip_ulp_t *ulp, int flags ) {
-  pip_task_t	*task, *sched;
-  pip_ulp_t	*queue;
+int pip_ulp_locked_queue_init(  pip_ulp_locked_queue_t *queue ) {
+  pip_spin_init( &queue->lock );
+  PIP_ULP_INIT( &queue->queue );
+  return 0;
+}
 
-  IF_UNLIKELY( ulp == NULL ) RETURN( EINVAL );
-  task = PIP_TASK( ulp );
-  IF_UNLIKELY( task->flag_exit ) RETURN( ESRCH ); /* already terminated */
-  IF_UNLIKELY( task->type == PIP_TYPE_TASK &&
-	       task != pip_task ) RETURN( EPERM ); /* task is not migratable */
-  IF_UNLIKELY( task->task_sched != NULL ) {
-    pip_warn_mesg( "task-sched:%p", task->task_sched );
-    pip_task_describe( stderr, "ULP", task->pipid );
-    pip_warn_mesg( "task-sched:%p", task->task_sched );
-    //RETURN( EBUSY ); /* already being scheduled */
+int pip_ulp_enqueue_and_suspend( pip_ulp_locked_queue_t *queue, int flags ) {
+  pip_task_t 	*task_sched = pip_task->task_sched;
+  pip_ctx_t	ctx;
+  volatile int	flag_jump;	/* must be volatile */
+  int 		err = 0;
+
+  if( queue == NULL ) RETURN( EINVAL );
+  if( pip_is_task() ) RETURN( EPERM  ); /* task cannot be migrated */
+
+  pip_spin_lock( &queue->lock );
+
+  if( flags == PIP_ULP_SCHED_LIFO ) {
+    PIP_ULP_ENQ_FIRST( &queue->queue, PIP_ULP( pip_task ) );
+  } else {
+    PIP_ULP_ENQ_LAST(  &queue->queue, PIP_ULP( pip_task ) );
   }
+
+  flag_jump = 0;
+  pip_task->ctx_suspend = &ctx;
+  pip_save_context( &ctx );
+  IF_LIKELY( !flag_jump ) {
+    flag_jump = 1;
+    pip_task->task_resume = task_sched;
+    pip_task->task_sched  = NULL;
+
+    pip_spin_unlock( &queue->lock );
+    IF_UNLIKELY( pip_ulp_sched_next( task_sched ) == ENOENT ) {
+      /* undo */
+      pip_task->task_resume = NULL;
+      pip_task->task_sched = task_sched;
+      err = EDEADLK;
+    }
+  } else {
+    pip_spin_unlock( &queue->lock );
+  }
+  RETURN( err );
+}
+
+int pip_ulp_dequeue_and_migrate( pip_ulp_locked_queue_t *queue,
+				 pip_ulp_t **ulpp,
+				 int flags ) {
+  pip_task_t	*task, *sched;
+  pip_ulp_t	*next;
+  int		err = 0;
+
+  if( queue == NULL) RETURN( EINVAL );
+
+  pip_spin_lock( &queue->lock );
+
+  if( PIP_ULP_ISEMPTY( &queue->queue ) ) ERRJ_ERR( ENOENT );
+  next = PIP_ULP_NEXT( &queue->queue );
+  PIP_ULP_DEQ( next );
+
+  task = PIP_TASK( next );
+  IF_UNLIKELY( task->flag_exit ) ERRJ_ERR( ESRCH ); /* already terminated */
+  IF_UNLIKELY( task->type == PIP_TYPE_TASK &&
+	       task != pip_task ) {
+    ERRJ_ERR( EPERM );		/* task is not migratable (excepting myself) */
+  }
+  IF_UNLIKELY( task->task_sched != NULL ) ERRJ_ERR( EBUSY );
+
   sched = pip_task->task_sched;
   task->task_sched  = sched;
   task->task_resume = NULL;
-  queue = &sched->schedq;
 
-  pip_spin_lock( &sched->lock_schedq );
+  PIP_ULP_SCHED_LOCK( sched );
   {
     if( flags == PIP_ULP_SCHED_LIFO ) {
-      PIP_ULP_ENQ_FIRST( queue, ulp );
+      PIP_ULP_ENQ_FIRST( &sched->schedq, next );
     } else {
-      PIP_ULP_ENQ_LAST( queue, ulp );
+      PIP_ULP_ENQ_LAST(  &sched->schedq, next );
     }
   }
-  pip_spin_unlock( &sched->lock_schedq );
-  RETURN( 0 );
+  PIP_ULP_SCHED_UNLOCK( sched );
+
+  if( ulpp != NULL ) *ulpp = next;
+
+ error:
+  pip_spin_unlock( &queue->lock );
+  RETURN( err );
+}
+
+int pip_ulp_enqueue_locked_queue( pip_ulp_locked_queue_t *queue,
+				  pip_ulp_t *ulp,
+				  int flags ) {
+  if( queue == NULL ) RETURN( EINVAL );
+  pip_spin_lock( &queue->lock );
+  if( flags == PIP_ULP_SCHED_LIFO ) {
+    PIP_ULP_ENQ_FIRST( &queue->queue, ulp );
+  } else {
+    PIP_ULP_ENQ_LAST(  &queue->queue, ulp );
+  }
+  pip_spin_unlock( &queue->lock );
+  return 0;
+}
+
+int pip_ulp_dequeue_locked_queue( pip_ulp_locked_queue_t *queue,
+				  pip_ulp_t **ulpp ) {
+  pip_ulp_t	*ulp;
+  int 		err = 0;
+
+  if( queue == NULL ) {
+    err = EINVAL;
+  } else {
+    pip_spin_lock( &queue->lock );
+    if( PIP_ULP_ISEMPTY( &queue->queue ) ) {
+      err = ENOENT;
+    } else {
+      ulp = PIP_ULP_NEXT( &queue->queue );
+      PIP_ULP_DEQ( ulp );
+      if( ulpp != NULL ) *ulpp = ulp;
+    }
+    pip_spin_unlock( &queue->lock );
+  }
+  RETURN( err );
 }
 
 int pip_ulp_yield_to( pip_ulp_t *ulp ) {
-  pip_task_t	*sched, *task;
   pip_ulp_t	*queue;
+  pip_task_t	*sched, *task;
 
   IF_UNLIKELY( ulp   == NULL ) RETURN( EINVAL );
   sched = pip_task->task_sched;
@@ -2260,18 +2340,20 @@ int pip_ulp_yield_to( pip_ulp_t *ulp ) {
   queue = &sched->schedq;
   task  = PIP_TASK( ulp );
   IF_UNLIKELY( task->task_sched != sched ) RETURN( EPERM );
-  pip_spin_lock( &sched->lock_schedq );
+
+  PIP_ULP_SCHED_LOCK( sched );
   {
     PIP_ULP_DEQ( ulp );
     PIP_ULP_ENQ_LAST( queue, PIP_ULP( pip_task ) );
   }
-  pip_spin_unlock( &sched->lock_schedq );
+  PIP_ULP_SCHED_UNLOCK( sched );
 
   RETURN( pip_ulp_switch_( pip_task, ulp ) );
 }
 
 int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp ) {
-  pip_task_t *task;
+  pip_task_t	*task;
+
   IF_UNLIKELY( pipidp == NULL ) RETURN( EINVAL );
   task = PIP_TASK( ulp );
   IF_UNLIKELY( task->type != PIP_TYPE_ULP ) RETURN( EPERM );

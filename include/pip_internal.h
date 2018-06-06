@@ -180,6 +180,53 @@ extern pip_task_t	*pip_task;
 #define PIP_ULP(TASK)	((pip_ulp_t*)(TASK))
 #define PIP_ULP_CTX(U)	(PIP_TASK(U)->ctx_suspend)
 
+#define PIP_ULP_INIT(L)					\
+  do { PIP_ULP_NEXT(L) = (L); PIP_ULP_PREV(L) = (L); } while(0)
+
+#define PIP_ULP_NEXT(L)		((L)->next)
+#define PIP_ULP_PREV(L)		((L)->prev)
+#define PIP_ULP_PREV_NEXT(L)	((L)->prev->next)
+#define PIP_ULP_NEXT_PREV(L)	((L)->next->prev)
+
+#define PIP_ULP_ENQ_FIRST(L,E)				\
+  do { PIP_ULP_NEXT(E)   = PIP_ULP_NEXT(L);		\
+    PIP_ULP_PREV(E)      = (L);				\
+    PIP_ULP_NEXT_PREV(L) = (E);				\
+    PIP_ULP_NEXT(L)      = (E); } while(0)
+
+#define PIP_ULP_ENQ_LAST(L,E)				\
+  do { PIP_ULP_NEXT(E)   = (L);				\
+    PIP_ULP_PREV(E)      = PIP_ULP_PREV(L);		\
+    PIP_ULP_PREV_NEXT(L) = (E);				\
+    PIP_ULP_PREV(L)      = (E); } while(0)
+
+#define PIP_ULP_DEQ(L)					\
+  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);		\
+    PIP_ULP_PREV_NEXT(L) = PIP_ULP_NEXT(L); 		\
+    PIP_ULP_INIT(L); } while(0)
+
+#define PIP_ULP_MOVE_QUEUE(P,Q)				\
+  do { if( !PIP_ULP_ISEMPTY(Q) ) {			\
+    PIP_ULP_NEXT_PREV(Q) = (P);				\
+    PIP_ULP_PREV_NEXT(Q) = (P);				\
+    PIP_ULP_NEXT(P) = PIP_ULP_NEXT(Q);			\
+    PIP_ULP_PREV(P) = PIP_ULP_PREV(Q);			\
+    PIP_ULP_INIT(Q); } } while(0)
+
+#define PIP_ULP_ISEMPTY(L)				\
+  ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
+
+#define PIP_ULP_FOREACH(L,E)				\
+  for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
+
+#define PIP_ULP_FOREACH_SAFE(L,E,TV)				\
+  for( (E)=(L)->next, (TV)=PIP_ULP_NEXT(E);			\
+       (L)!=(E);						\
+       (E)=(TV), (TV)=PIP_ULP_NEXT(TV) )
+
+#define PIP_ULP_FOREACH_SAFE_XXX(L,E,TV)			\
+  for( (E)=(L), (TV)=PIP_ULP_NEXT(E); (L)!=(E); (E)=(TV) )
+
 #define pip_likely(x)		__builtin_expect((x),1)
 #define pip_unlikely(x)		__builtin_expect((x),0)
 

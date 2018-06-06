@@ -174,6 +174,19 @@
 #include <string.h>
 #include <errno.h>
 
+typedef struct pip_barrier {
+  int				count_init;
+  volatile uint32_t		count;
+  volatile int			gsense;
+} pip_barrier_t;
+
+typedef struct pip_ulp_queue {
+  struct pip_ulp_queue		*next;
+  struct pip_ulp_queue		*prev;
+} pip_ulp_queue_t;
+
+typedef pip_ulp_queue_t		pip_ulp_t;
+
 typedef struct {
   char		*prog;
   char		**argv;
@@ -274,27 +287,15 @@ typedef struct {
    * \sa pip_task_spawn(3)
    *
    */
-static inline void
-pip_spawn_hook( pip_spawn_hook_t *hook,
-		pip_spawnhook_t before,
-		pip_spawnhook_t after,
-		void *hookarg ) {
+static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
+				   pip_spawnhook_t before,
+				   pip_spawnhook_t after,
+				   void *hookarg ) {
   hook->before  = before;
   hook->after   = after;
   hook->hookarg = hookarg;
 }
   /** @}*/
-
-typedef struct pip_ulp {
-  struct pip_ulp	*next;
-  struct pip_ulp	*prev;
-} pip_ulp_t;
-
-typedef struct pip_barrier {
-  int			count_init;
-  volatile uint32_t	count;
-  volatile int		gsense;
-} pip_barrier_t;
 
 #define PIP_BARRIER_INIT(N)	{(N),(N),0}
 
