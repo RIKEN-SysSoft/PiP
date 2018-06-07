@@ -38,17 +38,25 @@ typedef struct pip_ulp_barrier {
 extern "C" {
 #endif
 
+/**
+ * @addtogroup libpip libpip
+ * \brief the PiP library
+ * @{
+ * @file
+ * @{
+ */
+
   /**
    * \brief Create a PiP ULP
    *  @{
-   * \param[in] progp Pointer to the \t pip_spawn_program_t
+   * \param[in] progp Pointer to the \c pip_spawn_program_t
    * \param[in,out] pipidp Specify PIPID of the new ULP. If
    *  \c PIP_PIPID_ANY is specified, then the PIPID of the new ULP
    *  is up to the PiP library and the assigned PIPID will be
    *  returned.
    * \param[in,out] sisters List of ULPs to be scheduled by the same
-   *  PiP task. Or, \t NULL to specify no list.
-   * \param[out} newp Created ULP is returned.
+   *  PiP task. Or, \c NULL to specify no list.
+   * \param[out] newp Created ULP is returned.
    *
    *
    * \sa pip_task_spawn(3), pip_spawn_from_main(3)
@@ -283,5 +291,10 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
+
+/**
+ * @}
+ * @}
+ */
 
 #endif /* _pip_ulp_h_ */
