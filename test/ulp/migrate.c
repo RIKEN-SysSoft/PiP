@@ -40,12 +40,11 @@ void ulp_main( void* null ) {
 
   TESTINT( pip_init( &pipid_myself, NULL, (void**) &expop, 0 ) );
   TESTINT( !pip_is_ulp() );
-  DBGF( "count:%d" , ulp_count );
   while( --ulp_count >= 0 ) {
     TESTINT( pip_get_ulp_sched( &pipid_sched ) );
     fprintf( stderr, "[ULPID:%d]  sched-task: %d  [%d]\n",
 	     pipid_myself, pipid_sched, ulp_count );
-    TESTINT( pip_ulp_enqueue_and_suspend( &expop->queue, 0 ) );
+    TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, 0 ) );
   }
   DBG;
 }
@@ -108,7 +107,7 @@ int main( int argc, char **argv ) {
       pip_ulp_t *ulp;
       pipid = j++;
       TESTINT( pip_ulp_new( &func, &pipid, NULL, &ulp ) );
-      TESTINT( pip_ulp_enqueue_locked_queue( &expop->queue, ulp, 0 ) );
+      TESTINT( pip_ulp_enqueue_with_lock( &expop->queue, ulp, 0 ) );
     }
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
     j = 0;
@@ -125,9 +124,8 @@ int main( int argc, char **argv ) {
     while( 1 ) {
       pip_ulp_t *next;
       int err = pip_ulp_dequeue_and_migrate( &expop->queue, &next, 0 );
-      if( err != 0 ) {
-	TESTINT( err != ENOENT );
-	/* there is no ulp to schedule */
+      if( err != 0 ) { /* there is no ulp to schedule (or error happens) */
+	TESTINT( err != ENOENT ); /* error ? */
 	break;
       } else {
 	TESTINT( pip_ulp_yield_to( next ) );
