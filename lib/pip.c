@@ -1871,8 +1871,10 @@ static int pip_do_wait( int pipid, int flag_try, int *extvalp ) {
       int extval = WEXITSTATUS( status );
       pip_set_extval( task, extval );
     } else if( WIFSIGNALED( status ) ) {
-      pip_warn_mesg( "PiP Task [%d] receives %s",
-		     task->pipid, strsignal( WTERMSIG( status ) ) );
+      int sig = WTERMSIG( status );
+      pip_warn_mesg( "PiP Task [%d] receives %s signal",
+		     task->pipid, strsignal(sig) );
+      pip_set_extval( task, sig + 128 );
     }
     DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
@@ -2213,7 +2215,7 @@ int pip_ulp_locked_queue_init(  pip_ulp_locked_queue_t *queue ) {
   return 0;
 }
 
-int pip_ulp_enqueue_and_suspend( pip_ulp_locked_queue_t *queue, int flags ) {
+int pip_ulp_suspend_and_enqueue( pip_ulp_locked_queue_t *queue, int flags ) {
   pip_task_t 	*task_sched = pip_task->task_sched;
   pip_ctx_t	ctx;
   volatile int	flag_jump;	/* must be volatile */
@@ -2295,9 +2297,9 @@ int pip_ulp_dequeue_and_migrate( pip_ulp_locked_queue_t *queue,
   RETURN( err );
 }
 
-int pip_ulp_enqueue_locked_queue( pip_ulp_locked_queue_t *queue,
-				  pip_ulp_t *ulp,
-				  int flags ) {
+int pip_ulp_enqueue_with_lock( pip_ulp_locked_queue_t *queue,
+			       pip_ulp_t *ulp,
+			       int flags ) {
   if( queue == NULL ) RETURN( EINVAL );
   pip_spin_lock( &queue->lock );
   if( flags == PIP_ULP_SCHED_LIFO ) {
@@ -2309,8 +2311,8 @@ int pip_ulp_enqueue_locked_queue( pip_ulp_locked_queue_t *queue,
   return 0;
 }
 
-int pip_ulp_dequeue_locked_queue( pip_ulp_locked_queue_t *queue,
-				  pip_ulp_t **ulpp ) {
+int pip_ulp_dequeue_with_lock( pip_ulp_locked_queue_t *queue,
+			       pip_ulp_t **ulpp ) {
   pip_ulp_t	*ulp;
   int 		err = 0;
 
@@ -2446,13 +2448,12 @@ int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp ) {
   int 		err = 0;
 
   IF_UNLIKELY( barrp        == NULL ) RETURN( EINVAL );
-  IF_UNLIKELY( barrp->sched == NULL ) {
-    barrp->sched = (void*) pip_task->task_sched;
-  } else IF_UNLIKELY( barrp->sched != (void*) pip_task->task_sched ) {
-    RETURN( EPERM );
-  }
-
   IF_LIKELY( barrp->count_init > 1 ) {
+    IF_UNLIKELY( barrp->sched == NULL ) {
+      barrp->sched = (void*) pip_task->task_sched;
+    } else IF_UNLIKELY( barrp->sched != (void*) pip_task->task_sched ) {
+      RETURN( EPERM );
+    }
     IF_UNLIKELY( -- barrp->count == 0 ) {
       DBG;
       PIP_ULP_FOREACH_SAFE( &barrp->waiting, ulp, u ) {

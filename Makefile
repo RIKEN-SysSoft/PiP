@@ -15,7 +15,8 @@ SUBDIRS = lib include bin preload util sample \
 	test/compat \
 	test/openmp \
 	test/pthread \
-	test/fortran
+	test/fortran \
+	test/ulp
 
 include $(top_srcdir)/build/rule.mk
 
@@ -23,7 +24,7 @@ install: doxygen doxygen-install
 .PHONY: install
 
 debug:
-	CPPFLAGS="-DDEBUG" make all;
+	export CPPFLAGS+=" -DDEBUG"; make all;
 
 ### doxygen
 

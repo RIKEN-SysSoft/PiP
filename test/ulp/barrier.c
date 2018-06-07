@@ -19,11 +19,6 @@
 #  undef NTASKS
 #  define NTASKS	(10)
 # endif
-#else
-# ifdef NTASKS
-#  undef NTASKS
-#  define NTASKS	(250)	/* must be less tahn 256 (0xff) */
-# endif
 #endif
 
 #ifndef DEBUG
@@ -62,7 +57,7 @@ int main( int argc, char **argv ) {
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
-    pip_ulp_t ulps;
+    pip_ulp_queue_t ulps;
 
     PIP_ULP_INIT( &ulps );
     pip_spawn_from_main( &prog, argv[0], argv, NULL );

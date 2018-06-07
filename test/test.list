@@ -32,3 +32,9 @@ compat/system.sh
 #openmp/openmp.sh
 fortran/fort.sh
 pthread/pthread.sh
+ulp/ulpnew.sh
+ulp/yield.sh
+ulp/func.sh
+ulp/exit.sh
+ulp/mutex.sh
+ulp/barrier.sh
