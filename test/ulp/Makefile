@@ -22,3 +22,6 @@ test-file:
 
 post-clean-hook:
 	$(RM) *.E *.log
+
+test:
+	( cd ../; ./test -A ulp/test.list )

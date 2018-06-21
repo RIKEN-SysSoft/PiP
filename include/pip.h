@@ -558,6 +558,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return 0 on success. Return an error code on error.
    *
+   * \sa pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
+   *
    */
   int pip_exit( int retval );
   /** @}*/
@@ -568,13 +570,15 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \param[in] pipid PIPID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
    *
-   * \note This function never returns when it succeeds.
+   * \note This function blocks until the specified PiP task terminates.
    * \note This function can be used regardless to the PiP execution
-   * mode. However, only the least significant 2 bytes are
+   * mode. However, only the least significant 2 bytes of the exit value are
    * effective. This is because of the compatibility with the
    * \c exit glibc function.
    *
    * \return Return 0 on success. Return an error code on error.
+   *
+   * \sa pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
    *
    */
   int pip_wait( int pipid, int *retval );
@@ -591,8 +595,50 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return 0 on success. Return an error code on error.
    *
+   * \sa pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3)
+   *
    */
   int pip_trywait( int pipid, int *retval );
+  /** @}*/
+
+  /**
+   * \brief wait for the termination of any PiP task
+   *  @{
+   * \param[out] pipid PIPID of terminated PiP task.
+   * \param[out] retval Exit value of the terminated PiP task
+   *
+   * \note This function blocks until one of PiP tasks terminates.
+   * \note This function can be used regardless to the PiP execution
+   * mode. However, only the least significant 2 bytes are
+   * effective. This is because of the compatibility with the
+   * \c exit glibc function.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3)
+   *
+   */
+  int pip_wait_any( int *pipid, int *retval );
+  /** @}*/
+
+  /**
+   * \brief wait for the termination of any PiP task
+   *  @{
+   * \param[out] pipid PIPID of terminated PiP task.
+   * \param[out] retval Exit value of the terminated PiP task
+   *
+   * \note This function never blocks.
+   * \note This function can be used regardless to the PiP execution
+   * mode. However, only the least significant 2 bytes are
+   * effective. This is because of the compatibility with the
+   * \c exit glibc function.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3)
+   *
+   */
+  int pip_trywait_any( int *pipid, int *retval );
   /** @}*/
 
   /**

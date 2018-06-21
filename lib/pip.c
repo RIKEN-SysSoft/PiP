@@ -492,7 +492,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->task_root->thread       = pthread_self();
     pip_root->task_root->pid          = getpid();
     if( rt_expp != NULL ) {
-      pip_root->task_root->export          = *rt_expp;
+      pip_root->task_root->export     = *rt_expp;
     }
     pip_task             = pip_root->task_root;
     pip_task->type       = PIP_TYPE_ROOT;
@@ -683,6 +683,7 @@ int pip_import( int pipid, void **exportp  ) {
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   task = pip_get_task_( pipid );
   *exportp = (void*) task->export;
+  if( *exportp == NULL ) pip_pause();
   pip_memory_barrier();
   RETURN( 0 );
 }
@@ -1228,11 +1229,18 @@ static int pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
 static void pip_set_extval( pip_task_t *task, int extval ) {
   DBGF( "extval=%d", extval );
   if( extval != 0 && task->extval == 0 ) {
+    /* race condition is here. does this matter ? */
     task->gdbif_task->exit_code = task->extval = extval;
-    if( !task->flag_exit ) {
-      task->flag_exit = 1;
-      pip_memory_barrier();
-      task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+  }
+  if( !task->flag_exit ) {
+    task->flag_exit = 1;
+    pip_memory_barrier();
+    task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+    /* in either mode, for pip_wait_any() to wait for ULPs, we need SIGCHLD */
+    if( pip_is_pthread_() ) {
+      (void) pthread_kill( pip_root->task_root->thread, SIGCHLD );
+    } else {
+      (void) kill( pip_root->task_root->pid, SIGCHLD );
     }
   }
   pip_flush_stdio( task );
@@ -1687,6 +1695,7 @@ int pip_fin( void ) {
     if( err == 0 ) {
       void *stack, *next;
       DBG;
+      /* freeing allocated memory regions */
       for( stack = pip_root->stack_flist; stack != NULL; stack = next ) {
 	next = *((void**) stack);
 	free( stack - pip_root->page_size );
@@ -1695,7 +1704,7 @@ int pip_fin( void ) {
       free( pip_root );
       pip_root = NULL;
       pip_task = NULL;
-
+      /* report accumulated timer values, if set */
       PIP_REPORT( time_load_dso  );
       PIP_REPORT( time_load_prog );
       PIP_REPORT( time_dlmopen   );
@@ -1937,6 +1946,84 @@ int pip_trywait( int pipid, int *extvalp ) {
   RETURN( pip_do_wait( pipid, 1, extvalp ) );
 }
 
+static void pip_null_sighand( void ) { return; }
+
+static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
+  struct sigaction 	sigact, sigact_old;
+  sigset_t		sigset_old;
+  int 			i, pipid, count;
+  int			err = 0;
+
+  if( !pip_is_root() ) RETURN( EPERM );
+
+  memset( &sigact, 0, sizeof( sigact ) );
+  if( sigemptyset( &sigact.sa_mask )        != 0 ) RETURN( errno );
+  if( sigaddset( &sigact.sa_mask, SIGCHLD ) != 0 ) RETURN( errno );
+  if( pthread_sigmask( SIG_SETMASK,
+		       &sigact.sa_mask,
+		       &sigset_old ) != 0 ) RETURN( errno );
+  sigact.sa_sigaction = (void(*)()) pip_null_sighand;
+  if( sigaction( SIGCHLD, &sigact, &sigact_old ) < 0 ) goto error;
+
+ retry:
+  DBGF( "[0] flag_exit=%d", pip_root->tasks[0].flag_exit );
+  count = 0;
+  pipid = -1;
+  for( i=0; i<pip_root->ntasks; i++ ) { /* we can make this fatser ... */
+    if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
+    if( pip_root->tasks[i].flag_exit ) {
+      /* terminated task found */
+      pipid = i;
+      err = pip_do_wait( pipid, flag_try, extvalp );
+      if( err == 0 && pipidp != NULL ) *pipidp = pipid;
+      goto done;
+    }
+  }
+  DBGF( "count=%d", count );
+  if( count == 0 || 		/* no alive PiP task, or */
+      flag_try ) {		/* non-blocking call */
+    err = ECHILD;
+  } else {
+    sigset_t 	sigset;
+
+    if( sigemptyset( &sigset ) != 0 ) {
+      err = errno;
+      goto done;
+    }
+//#define PIP_USE_SIGWAIT
+#ifdef PIP_USE_SIGWAIT
+    {
+      int	sig;
+      if( sigaddset( &sigset, SIGCHLD ) != 0 ) {
+	err = errno;
+	goto done;
+      }
+      if( ( err = sigwait( &sigset, &sig ) ) == 0 ) goto retry;
+    }
+#else
+    (void) sigsuspend( &sigset );
+    goto retry;
+#endif
+  }
+ done:
+  /* undo signal setting */
+  if( sigaction( SIGCHLD, &sigact_old, NULL ) < 0 ) RETURN( errno );
+ error:
+  if( pthread_sigmask( SIG_SETMASK,
+		       &sigset_old,
+		       NULL ) != 0 ) RETURN( errno );
+  RETURN( err );
+}
+
+int pip_wait_any( int *pipidp, int *extvalp ) {
+  DBG;
+  RETURN( pip_do_waitany( 0, pipidp, extvalp ) );
+}
+
+int pip_trywait_any( int *pipidp, int *extvalp ) {
+  RETURN( pip_do_waitany( 1, pipidp, extvalp ) );
+}
+
 pip_clone_t *pip_get_cloneinfo_( void ) {
   return pip_root->cloneinfo;
 }
@@ -2168,7 +2255,7 @@ int pip_ulp_suspend( void ) {
   pip_save_context( &ctx );
   IF_LIKELY( !flag_jump ) {
     flag_jump = 1;
-    pip_task->task_resume = pip_task->task_sched;
+    //pip_task->task_resume = pip_task->task_sched;
     pip_task->task_sched  = NULL;
     IF_UNLIKELY( pip_ulp_sched_next( task_sched ) == ENOENT ) {
       /* undo */
@@ -2188,11 +2275,13 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   task = PIP_TASK( ulp );
   IF_UNLIKELY( task->flag_exit ) RETURN( ESRCH ); /* already terminated */
   /* check if already being scheduled */
-  IF_UNLIKELY( task->task_resume == NULL ||
+  IF_UNLIKELY( //task->task_resume == NULL ||
 	       task->task_sched  != NULL ) {
     RETURN( EBUSY );
   }
-  sched = task->task_resume;
+  //sched = task->task_resume;
+  sched = pip_task->task_sched;
+
   task->task_sched = sched;
   task->task_resume = NULL;
   queue = &sched->schedq;
@@ -2237,7 +2326,7 @@ int pip_ulp_suspend_and_enqueue( pip_ulp_locked_queue_t *queue, int flags ) {
   pip_save_context( &ctx );
   IF_LIKELY( !flag_jump ) {
     flag_jump = 1;
-    pip_task->task_resume = task_sched;
+    //pip_task->task_resume = task_sched;
     pip_task->task_sched  = NULL;
 
     pip_spin_unlock( &queue->lock );
@@ -2447,7 +2536,7 @@ int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp ) {
   pip_ulp_t 	*ulp, *u;
   int 		err = 0;
 
-  IF_UNLIKELY( barrp        == NULL ) RETURN( EINVAL );
+  IF_UNLIKELY( barrp == NULL ) RETURN( EINVAL );
   IF_LIKELY( barrp->count_init > 1 ) {
     IF_UNLIKELY( barrp->sched == NULL ) {
       barrp->sched = (void*) pip_task->task_sched;
@@ -2467,6 +2556,8 @@ int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp ) {
       PIP_ULP_ENQ_LAST( &barrp->waiting, PIP_ULP( pip_task ) );
       err = pip_ulp_suspend();
     }
+  } else {
+    /* nothing to do */
   }
   RETURN( err );
 }
