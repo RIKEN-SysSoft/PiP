@@ -12,6 +12,10 @@
 #include <test.h>
 #include <pip_ulp.h>
 
+// SCHEDULING ORDER
+// at compile time or each function
+// pip_ulp_yield() should have the scheduling flag
+
 //#define DEBUG
 
 #ifdef DEBUG
