@@ -174,6 +174,20 @@
 #include <string.h>
 #include <errno.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+/**
+ * @addtogroup libpip libpip
+ * \brief the PiP library
+ * @{
+ * @file
+ * @{
+ */
+
 typedef struct pip_barrier {
   int				count_init;
   volatile uint32_t		count;
@@ -228,14 +242,14 @@ pip_spawn_from_main( pip_spawn_program_t *progp,
   /**
    * \brief Setting information to invoke as a PiP task
    *  @{
-   * \param[in,out] progp Pointer to the \t pip_spawn_prohgram_t
+   * \param[in,out] progp Pointer to the \c pip_spawn_program_t
    *  structure in which the program invokation information is set
    * \param[in] prog Filename of the program
    * \param[in] funcname Function name to be started
    * \param[in] envv Environment variables
    *
    * This function sets the required information to invoke a program,
-   * starting from the \t main() function.
+   * starting from the \c main() function.
    *
    * \sa pip_task_spawn(3), pip_spawn_from_main(3)
    *
@@ -298,18 +312,6 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
   /** @}*/
 
 #define PIP_BARRIER_INIT(N)	{(N),(N),0}
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @addtogroup libpip libpip
- * \brief the PiP library
- * @{
- * @file
- * @{
- */
 
   /**
    * \brief Initialize the PiP library.
@@ -378,7 +380,6 @@ extern "C" {
    *  with the argument \a hookarg described below.
    * \param[in] hookarg The argument for the \a before and \a after
    *  function call.
-   * \param[in] sisters ULP list to be scheduled by this task
    *
    * \return Return 0 on success. Return an error code on error.
    *
@@ -725,6 +726,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 }
 #endif
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifdef PIP_INTERNAL_FUNCS
 
