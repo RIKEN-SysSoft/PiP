@@ -2003,10 +2003,8 @@ static int pip_find_terminated( int *pipidp ) {
 }
 
 static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
-  struct sigaction 	sigact, sigact_old;
-  sigset_t		sigset_old;
-  int 			pipid, count;
-  int			err = 0;
+  int	pipid, count;
+  int	err = 0;
 
   if( !pip_is_root() ) RETURN( EPERM );
 
@@ -2014,63 +2012,64 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   if( pipid != PIP_PIPID_NONE ) {
     err = pip_do_wait( pipid, flag_try, extvalp );
     if( err == 0 && pipidp != NULL ) *pipidp = pipid;
-    goto done_nosig;
+    RETURN( err );
   }
-  if( count == 0 || 		/* no alive PiP task, or */
-      flag_try ) {		/* non-blocking call */
-    RETURN( ECHILD );
-  }
+  /* try again, due to the race condition */
+  do {
+    struct sigaction 	sigact, sigact_old;
+    sigset_t		sigset_old;
 
-  memset( &sigact, 0, sizeof( sigact ) );
-  if( sigemptyset( &sigact.sa_mask )        != 0 ) RETURN( errno );
-  if( sigaddset( &sigact.sa_mask, SIGCHLD ) != 0 ) RETURN( errno );
-  if( pthread_sigmask( SIG_SETMASK,
-		       &sigact.sa_mask,
-		       &sigset_old ) != 0 ) RETURN( errno );
-  sigact.sa_sigaction = (void(*)()) pip_null_sighand;
-  if( sigaction( SIGCHLD, &sigact, &sigact_old ) < 0 ) goto error;
+    memset( &sigact, 0, sizeof( sigact ) );
+    if( sigemptyset( &sigact.sa_mask )        != 0 ) RETURN( errno );
+    if( sigaddset( &sigact.sa_mask, SIGCHLD ) != 0 ) RETURN( errno );
+    if( pthread_sigmask( SIG_SETMASK,
+			 &sigact.sa_mask,
+			 &sigset_old ) != 0 ) RETURN( errno );
+    sigact.sa_sigaction = (void(*)()) pip_null_sighand;
+    if( sigaction( SIGCHLD, &sigact, &sigact_old ) < 0 ) goto error;
 
- retry:
-  count = pip_find_terminated( &pipid );
-  if( pipid != PIP_PIPID_NONE ) {
-    err = pip_do_wait( pipid, flag_try, extvalp );
-    if( err == 0 && pipidp != NULL ) *pipidp = pipid;
-    goto done;
-  }
-  /* no terminated task found */
-  if( count == 0 || 		/* no alive PiP task, or */
-      flag_try ) {		/* non-blocking call */
-    err = ECHILD;
-  } else {
-    sigset_t 	sigset;
-
-    if( sigemptyset( &sigset ) != 0 ) {
-      err = errno;
+  retry:
+    count = pip_find_terminated( &pipid );
+    if( pipid != PIP_PIPID_NONE ) {
+      err = pip_do_wait( pipid, flag_try, extvalp );
+      if( err == 0 && pipidp != NULL ) *pipidp = pipid;
       goto done;
     }
-//#define PIP_USE_SIGWAIT
-#ifdef PIP_USE_SIGWAIT
-    {
-      int sig;
-      if( sigaddset( &sigset, SIGCHLD ) != 0 ) {
+    /* no terminated task found */
+    if( count == 0 || 		/* no alive PiP task, or */
+	flag_try ) {		/* non-blocking call */
+      err = ECHILD;
+    } else {
+      sigset_t 	sigset;
+
+      if( sigemptyset( &sigset ) != 0 ) {
 	err = errno;
 	goto done;
       }
-      if( ( err = sigwait( &sigset, &sig ) ) == 0 ) goto retry;
-    }
+      //#define PIP_USE_SIGWAIT
+#ifdef PIP_USE_SIGWAIT
+      {
+	int sig;
+	if( sigaddset( &sigset, SIGCHLD ) != 0 ) {
+	  err = errno;
+	  goto done;
+	}
+	if( ( err = sigwait( &sigset, &sig ) ) == 0 ) goto retry;
+      }
 #else
-    (void) sigsuspend( &sigset ); /* always returns EINTR */
-    goto retry;
+      (void) sigsuspend( &sigset ); /* always returns EINTR */
+      goto retry;
 #endif
-  }
- done:
-  /* undo signal setting */
-  if( sigaction( SIGCHLD, &sigact_old, NULL ) < 0 ) RETURN( errno );
- error:
-  if( pthread_sigmask( SIG_SETMASK,
-		       &sigset_old,
-		       NULL ) != 0 ) RETURN( errno );
- done_nosig:
+    }
+  done:
+    /* undo signal setting */
+    if( sigaction( SIGCHLD, &sigact_old, NULL ) < 0 ) RETURN( errno );
+  error:
+    if( pthread_sigmask( SIG_SETMASK,
+			 &sigset_old,
+			 NULL ) != 0 ) RETURN( errno );
+  } while( 0 );
+
   RETURN( err );
 }
 
