@@ -138,14 +138,15 @@ static int pip_page_alloc( size_t sz, void **allocp ) {
 
 static void pip_reset_task_struct( pip_task_t *task ) {
   memset( (void*) task, 0, sizeof( pip_task_t ) );
-  task->pipid = PIP_PIPID_NONE;
-  task->type  = PIP_TYPE_NONE;
-  task->pid   = -1; /* pip_init_gdbif_task_struct() refers this */
+  task->type = PIP_TYPE_NONE;
+  task->pid  = -1; /* pip_init_gdbif_task_struct() refers this */
   PIP_ULP_INIT( &task->queue  );
   PIP_ULP_INIT( &task->schedq );
   pip_spin_init( &task->lock_schedq );
   pip_spin_init( &task->lock_malloc );
   (void) pthread_mutex_init( &task->mutex_wait, NULL );
+  pip_memory_barrier();
+  task->pipid = PIP_PIPID_NONE;
 }
 
 static int pipid_to_gdbif( int pipid ) {
@@ -1228,22 +1229,22 @@ static int pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
 
 static void pip_set_extval( pip_task_t *task, int extval ) {
   DBGF( "extval=%d", extval );
-  if( extval != 0 && task->extval == 0 ) {
-    /* race condition is here. does this matter ? */
-    task->gdbif_task->exit_code = task->extval = extval;
-  }
   if( !task->flag_exit ) {
-    task->flag_exit = 1;
+    task->flag_exit = PIP_EXITED;
     pip_memory_barrier();
+    if( extval != 0 && task->extval == 0 ) {
+      task->gdbif_task->exit_code = task->extval = extval;
+    }
     task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
     /* in either mode, for pip_wait_any() to wait for ULPs, we need SIGCHLD */
-    if( pip_is_pthread_() ) {
-      (void) pthread_kill( pip_root->task_root->thread, SIGCHLD );
-    } else {
-      (void) kill( pip_root->task_root->pid, SIGCHLD );
+    if( !pip_is_root() ) {
+      if( pip_is_pthread_() ) {
+	(void) pthread_kill( pip_root->task_root->thread, SIGCHLD );
+      } else {
+	(void) kill( pip_root->task_root->pid, SIGCHLD );
+      }
     }
   }
-  pip_flush_stdio( task );
 }
 
 static int pip_ulp_sched_next( pip_task_t *sched ) {
@@ -1329,6 +1330,7 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
 	    self->args.funcname, self->symbols.start, start_arg );
     }
   }
+  pip_flush_stdio( self );
   pip_set_extval( self, extval );
   (void) pthread_mutex_unlock( &self->mutex_wait );
 
@@ -1385,6 +1387,7 @@ static int pip_do_spawn( void *thargs )  {
   /* calling hook, if any */
   if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "before-hook:%p returns %d", argv[0], before, err );
+    fflush( NULL );
     pip_set_extval( self, err );
   } else {
     /* argv and/or envv might be changed in the hook function */
@@ -1414,8 +1417,6 @@ static int pip_do_spawn( void *thargs )  {
     } else {
       DBGF( "!! main(%s,%s,...)", argv[0], argv[1] );
     }
-    pip_set_extval( self, extval );
-
     flag_jump = 0;
     (void) pip_save_context( &ctx_exit );
     if( !flag_jump ) {
@@ -1423,6 +1424,9 @@ static int pip_do_spawn( void *thargs )  {
       DBGF( "PIPID:%d", self->pipid );
       (void) pip_ulp_sched_next( self );
     }
+    pip_flush_stdio( self );
+    pip_set_extval( self, extval );
+
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       if( pip_is_pthread_() ) {	/* thread mode */
 	pthread_exit( (void*) &self->extval );
@@ -1791,8 +1795,9 @@ int pip_kill( int pipid, int signal ) {
 int pip_exit( int extval ) {
   int err = 0;
 
+  pip_flush_stdio( pip_task );
+  pip_set_extval( pip_task, extval );
   if( pip_is_task() || pip_is_ulp() ) {
-    pip_set_extval( pip_task, extval );
     err = pip_load_context( pip_task->ctx_exit );
     /* never reach here, hopefully */
   } else {
@@ -1868,7 +1873,13 @@ static int pip_do_wait( int pipid, int flag_try, int *extvalp ) {
   } else {			/* process mode */
     int status = 0;
     pid_t pid;
+#ifdef __WALL
+    /* __WALL: Wait for all children, egardless oftype */
+    /* ("clone" or "non-clone") [from man page]        */
     int options = __WALL;
+#else
+    int options = 0;
+#endif
     DBG;
     if( flag_try ) options |= WNOHANG;
     while( 1 ) {
@@ -1951,14 +1962,64 @@ int pip_trywait( int pipid, int *extvalp ) {
 
 static void pip_null_sighand( void ) { return; }
 
+static int pip_find_terminated( int *pipidp ) {
+  static int	sidx = 0;
+  int		count, i;
+
+  pip_spin_lock( &pip_root->lock_tasks );
+  /*** start lock region ***/
+  {
+    count = 0;
+    for( i=sidx; i<pip_root->ntasks; i++ ) {
+      if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
+      if( pip_root->tasks[i].flag_exit == PIP_EXITED ) {
+	/* terminated task found */
+	pip_root->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
+	pip_memory_barrier();
+	*pipidp = i;
+	sidx = i + 1;
+	goto done;
+      }
+    }
+    for( i=0; i<sidx; i++ ) {
+      if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
+      if( pip_root->tasks[i].flag_exit == PIP_EXITED ) {
+	/* terminated task found */
+	pip_root->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
+	pip_memory_barrier();
+	*pipidp = i;
+	sidx = i + 1;
+	goto done;
+      }
+    }
+    *pipidp = PIP_PIPID_NONE;
+  }
+ done:
+  /*** end lock region ***/
+  pip_spin_unlock( &pip_root->lock_tasks );
+
+  DBGF( "PIPID=%d  count=%d", *pipidp, count );
+  return( count );
+}
+
 static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   struct sigaction 	sigact, sigact_old;
   sigset_t		sigset_old;
-  static int		sidx = 0;
-  int 			i, pipid, count;
+  int 			pipid, count;
   int			err = 0;
 
   if( !pip_is_root() ) RETURN( EPERM );
+
+  count = pip_find_terminated( &pipid );
+  if( pipid != PIP_PIPID_NONE ) {
+    err = pip_do_wait( pipid, flag_try, extvalp );
+    if( err == 0 && pipidp != NULL ) *pipidp = pipid;
+    goto done_nosig;
+  }
+  if( count == 0 || 		/* no alive PiP task, or */
+      flag_try ) {		/* non-blocking call */
+    RETURN( ECHILD );
+  }
 
   memset( &sigact, 0, sizeof( sigact ) );
   if( sigemptyset( &sigact.sa_mask )        != 0 ) RETURN( errno );
@@ -1970,32 +2031,13 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   if( sigaction( SIGCHLD, &sigact, &sigact_old ) < 0 ) goto error;
 
  retry:
-  DBGF( "[0] flag_exit=%d", pip_root->tasks[0].flag_exit );
-  count = 0;
-  pipid = -1;
-  for( i=sidx; i<pip_root->ntasks; i++ ) { /* we can make this fatser ... */
-    if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
-    if( pip_root->tasks[i].flag_exit ) {
-      /* terminated task found */
-      pipid = i;
-      sidx  = i + 1;
-      err = pip_do_wait( pipid, flag_try, extvalp );
-      if( err == 0 && pipidp != NULL ) *pipidp = pipid;
-      goto done;
-    }
+  count = pip_find_terminated( &pipid );
+  if( pipid != PIP_PIPID_NONE ) {
+    err = pip_do_wait( pipid, flag_try, extvalp );
+    if( err == 0 && pipidp != NULL ) *pipidp = pipid;
+    goto done;
   }
-  for( i=0; i<sidx; i++ ) { /* we can make this fatser ... */
-    if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
-    if( pip_root->tasks[i].flag_exit ) {
-      /* terminated task found */
-      pipid = i;
-      sidx  = i + 1;
-      err = pip_do_wait( pipid, flag_try, extvalp );
-      if( err == 0 && pipidp != NULL ) *pipidp = pipid;
-      goto done;
-    }
-  }
-  DBGF( "count=%d", count );
+  /* no terminated task found */
   if( count == 0 || 		/* no alive PiP task, or */
       flag_try ) {		/* non-blocking call */
     err = ECHILD;
@@ -2009,7 +2051,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
 //#define PIP_USE_SIGWAIT
 #ifdef PIP_USE_SIGWAIT
     {
-      int	sig;
+      int sig;
       if( sigaddset( &sigset, SIGCHLD ) != 0 ) {
 	err = errno;
 	goto done;
@@ -2017,7 +2059,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
       if( ( err = sigwait( &sigset, &sig ) ) == 0 ) goto retry;
     }
 #else
-    (void) sigsuspend( &sigset );
+    (void) sigsuspend( &sigset ); /* always returns EINTR */
     goto retry;
 #endif
   }
@@ -2028,6 +2070,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   if( pthread_sigmask( SIG_SETMASK,
 		       &sigset_old,
 		       NULL ) != 0 ) RETURN( errno );
+ done_nosig:
   RETURN( err );
 }
 

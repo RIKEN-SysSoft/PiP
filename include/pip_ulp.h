@@ -222,7 +222,9 @@ extern "C" {
    *  @{
    * \param[in] queue pointer to the locked queue to be initialized
    *
-   * \sa pip_ulp_suspend_and_enqueue(3), pip_ulp_dequeue_and_resume(3)
+   * \sa pip_ulp_suspend_and_enqueue(3),
+   * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
+   * pip_ulp_dequeue_with_lock(3)
    */
   int pip_ulp_locked_queue_init( pip_ulp_locked_queue_t *queue );
   /** @}*/
@@ -232,12 +234,14 @@ extern "C" {
    *  specified locked queue
    *  @{
    * \param[in] queue pointer to a locked ULP queue
-   * \param[in] flags Specifying scheduling policy
+   * \param[in] flag Specifying scheduling policy
    *
-   * \sa pip_ulp_locked_queue_init(3), pip_ulp_dequeue_and_resume(3)
+   * \sa pip_ulp_locked_queue_init(3),
+   * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
+   * pip_ulp_dequeue_with_lock(3)
    */
   int pip_ulp_suspend_and_enqueue( pip_ulp_locked_queue_t *queue,
-				   int flags );
+				   int flag );
   /** @}*/
 
   /**
@@ -245,10 +249,12 @@ extern "C" {
    *  eligible to run
    *  @{
    * \param[in] queue pointer to a locked ULP queue
-   * \param[out] Dequeued PiP ULP
-   * \param[in] flags Specifying scheduling policy
+   * \param[out] ulpp Dequeued PiP ULP
+   * \param[in] flag Specifying scheduling policy
    *
-   * \sa pip_ulp_mutex_init(3)
+   * \sa pip_ulp_locked_queue_init(3),
+   * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3),
+   * pip_ulp_dequeue_with_lock(3)
    */
   int pip_ulp_dequeue_and_migrate( pip_ulp_locked_queue_t *queue,
 				   pip_ulp_t **ulpp,
@@ -258,18 +264,17 @@ extern "C" {
   /**
    * \brief Put a PiP ULP into the specified locked queue
    *  @{
-   * \param[in] barrp pointer to the PiP ULP barrier
-   *
-   * \note This PiP ULP barrier can only be used to synchronize ULPs
-   * and a PiP task having the same scheduling domain.
-   *
    * \param[in] queue pointer to a locked ULP queue
    * \param[out] ulp PiP ULP to be enqueued
-   * \param[in] flags Specifying scheduling policy
+   * \param[in] flag Specifying scheduling policy
+   *
+   * \sa pip_ulp_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
+   * pip_ulp_suspend_and_enqueue(3),
+   * pip_ulp_dequeue_with_lock(3)
    */
   int pip_ulp_enqueue_with_lock( pip_ulp_locked_queue_t *queue,
 				 pip_ulp_t *ulp,
-				 int flags );
+				 int flag );
   /** @}*/
 
   /**
@@ -277,12 +282,12 @@ extern "C" {
    *  @{
    * \param[in] queue pointer to a locked ULP queue
    * \param[out] ulpp pointer to the dequeued PiP ULP
-   * \param[in] flags Specifying scheduling policy
    *
    * \note This PiP ULP barrier can only be used to synchronize ULPs
    * and a PiP task having the same scheduling domain.
    *
-   * \sa pip_ulp_mutex_init(3)
+   * \sa pip_ulp_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
+   * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3)
    */
   int pip_ulp_dequeue_with_lock( pip_ulp_locked_queue_t *queue,
 				 pip_ulp_t **ulpp );

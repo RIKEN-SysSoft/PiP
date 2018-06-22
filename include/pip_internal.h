@@ -43,7 +43,7 @@
 #define PIP_MAGIC_WORD		"PrcInPrc"
 #define PIP_MAGIC_LEN		(8)
 
-#define PIP_PIPID_NONE		(-999)
+#define PIP_PIPID_NONE		(-9999)
 
 #define PIP_LD_SOLIBS		{ NULL }
 
@@ -52,6 +52,9 @@
 #define PIP_STACK_ALIGN	(256)
 
 #define PIP_MASK32		(0xFFFFFFFF)
+
+#define PIP_EXITED		(1)
+#define PIP_EXIT_FINALIZE	(2)
 
 typedef	int(*main_func_t)(int,char**,char**);
 typedef	int(*start_func_t)(void*);
@@ -140,7 +143,7 @@ typedef struct pip_task {
   pip_spawn_args_t	args;	 /* arguments for a PiP task */
   void *volatile	export;
   pip_ctx_t		*ctx_exit; /* longjump context for pip_exit() */
-  int			flag_exit; /* if this task is terminated or not */
+  volatile int		flag_exit; /* if this task is terminated or not */
   int			extval;	   /* exit value */
   /* GDB interface */
   struct pip_gdbif_task	*gdbif_task; /* GDB interface */

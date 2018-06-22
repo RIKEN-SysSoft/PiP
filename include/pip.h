@@ -159,6 +159,8 @@
 #define PIP_ULP_SCHED_FIFO	(0x0)
 #define PIP_ULP_SCHED_LIFO	(0x1)
 
+#define PIP_BARRIER_INIT(N)	{(N),(N),0}
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -173,20 +175,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
-
-/**
- * @addtogroup libpip libpip
- * \brief the PiP library
- * @{
- * @file
- * @{
- */
 
 typedef struct pip_barrier {
   int				count_init;
@@ -209,6 +197,29 @@ typedef struct {
   void		*arg;
   void 		*reserved[3];
 } pip_spawn_program_t;
+
+typedef int (*pip_spawnhook_t)( void* );
+typedef int (*pip_startfunc_t)( void* );
+
+typedef struct {
+  pip_spawnhook_t	before;
+  pip_spawnhook_t	after;
+  void 			*hookarg;
+} pip_spawn_hook_t;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+/**
+ * @addtogroup libpip libpip
+ * \brief the PiP library
+ * @{
+ * @file
+ * @{
+ */
 
   /**
    * \brief Setting information to invoke as a PiP task
@@ -265,15 +276,6 @@ pip_spawn_from_func( pip_spawn_program_t *progp,
 }
   /** @}*/
 
-typedef int (*pip_spawnhook_t)( void* );
-typedef int (*pip_startfunc_t)( void* );
-
-typedef struct {
-  pip_spawnhook_t	before;
-  pip_spawnhook_t	after;
-  void 			*hookarg;
-} pip_spawn_hook_t;
-
   /**
    * \brief Setting invokation hook information
    *  @{
@@ -311,7 +313,9 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
 }
   /** @}*/
 
-#define PIP_BARRIER_INIT(N)	{(N),(N),0}
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+#endif
 
   /**
    * \brief Initialize the PiP library.
@@ -716,12 +720,29 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   void pip_barrier_wait( pip_barrier_t *barrp );
   /** @}*/
 
+  /**
+   * \brief check if calling PiP task is PiP root or not
+   *  @{
+   *
+   */
   int  pip_is_root( void );
-  int  pip_is_task( void );
-  int  pip_is_ulp(  void );
+  /** @}*/
 
-  int  pip_idstr( char *buf, size_t sz );
-  int  pip_ulp_myself( pip_ulp_t **ulpp );
+  /**
+   * \brief check if calling PiP task is a PiP task or not
+   *  @{
+   *
+   */
+  int  pip_is_task( void );
+  /** @}*/
+
+  /**
+   * \brief check if calling PiP task is a PiP ULP or not
+   *  @{
+   *
+   */
+  int  pip_is_ulp(  void );
+  /** @}*/
 
 #ifdef PIP_EXPERIMENTAL
   void *pip_malloc( size_t size );
@@ -733,6 +754,17 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 #endif
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  int    pip_idstr( char *buf, size_t sz );
+
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef PIP_INTERNAL_FUNCS
 
