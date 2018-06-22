@@ -551,11 +551,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief terminate PiP task or ULP
    *  @{
-   * \param[in] retval Terminate PiP task with the exit number
+   * \param[in] retval Terminate PiP task or ULP with the exit number
    * specified with this parameter.
    *
    * \note This function can be used regardless to the PiP execution
    * mode.
+   * \note If this function is called by a PiP task having one or more
+   * ULPs then the actual termination of the PiP task is postponed
+   * until all the associated (scheduling) ULP(s) terminate(s).
    *
    * \return Return 0 on success. Return an error code on error.
    *
@@ -571,7 +574,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \param[in] pipid PIPID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
    *
-   * \note This function blocks until the specified PiP task terminates.
+   * \note This function blocks until the specified PiP task or ULP
+   * terminates.
    * \note This function can be used regardless to the PiP execution
    * mode. However, only the least significant 2 bytes of the exit value are
    * effective. This is because of the compatibility with the
@@ -608,7 +612,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \param[out] pipid PIPID of terminated PiP task.
    * \param[out] retval Exit value of the terminated PiP task
    *
-   * \note This function blocks until one of PiP tasks terminates.
+   * \note This function blocks until one of PiP tasks or ULPs
+   * terminates.
    * \note This function can be used regardless to the PiP execution
    * mode. However, only the least significant 2 bytes are
    * effective. This is because of the compatibility with the
@@ -648,6 +653,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \param[out] pipid PIPID of a target PiP task
    * \param[out] signal signal number to be delivered
    *
+   * \note Only the PiP task can be the target of the signal delivery.
    * \note This function can be used regardless to the PiP execution
    * mode.
    *
