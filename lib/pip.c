@@ -1773,12 +1773,15 @@ int pip_kill( int pipid, int signal ) {
   if( signal < 0 ) RETURN( EINVAL );
 
   task = pip_get_task_( pipid );
-  if( pip_is_pthread_() ) {
-    err = pthread_kill( task->thread, signal );
-    DBGF( "pthread_kill(sig=%d)=%d", signal, err );
-  } else if( task->type == PIP_TYPE_TASK ) {
-    if( kill( task->pid, signal ) < 0 ) err = errno;
-    DBGF( "kill(sig=%d)=%d", signal, err );
+  if( task->type == PIP_TYPE_ROOT ||
+      task->type == PIP_TYPE_TASK) {
+    if( pip_is_pthread_() ) {
+      err = pthread_kill( task->thread, signal );
+      DBGF( "pthread_kill(sig=%d)=%d", signal, err );
+    } else {
+      if( kill( task->pid, signal ) != 0 ) err = errno;
+      DBGF( "kill(sig=%d)=%d", signal, err );
+    }
   } else {
     err = EPERM;
   }
@@ -1951,6 +1954,7 @@ static void pip_null_sighand( void ) { return; }
 static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   struct sigaction 	sigact, sigact_old;
   sigset_t		sigset_old;
+  static int		sidx = 0;
   int 			i, pipid, count;
   int			err = 0;
 
@@ -1969,11 +1973,23 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   DBGF( "[0] flag_exit=%d", pip_root->tasks[0].flag_exit );
   count = 0;
   pipid = -1;
-  for( i=0; i<pip_root->ntasks; i++ ) { /* we can make this fatser ... */
+  for( i=sidx; i<pip_root->ntasks; i++ ) { /* we can make this fatser ... */
     if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
     if( pip_root->tasks[i].flag_exit ) {
       /* terminated task found */
       pipid = i;
+      sidx  = i + 1;
+      err = pip_do_wait( pipid, flag_try, extvalp );
+      if( err == 0 && pipidp != NULL ) *pipidp = pipid;
+      goto done;
+    }
+  }
+  for( i=0; i<sidx; i++ ) { /* we can make this fatser ... */
+    if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
+    if( pip_root->tasks[i].flag_exit ) {
+      /* terminated task found */
+      pipid = i;
+      sidx  = i + 1;
       err = pip_do_wait( pipid, flag_try, extvalp );
       if( err == 0 && pipidp != NULL ) *pipidp = pipid;
       goto done;
@@ -2063,52 +2079,6 @@ void pip_barrier_wait( pip_barrier_t *barrp ) {
     } else {
       while( barrp->gsense != lsense ) pip_pause();
     }
-  }
-}
-
-/*** The following malloc/free functions are just for experimenmtal ***/
-/*** These will be replaced by the ones by using MPC allocator      ***/
-
-/* long long to align */
-#define PIP_ALIGN_TYPE	long long
-
-void *pip_malloc( size_t size ) {
-  pip_task_t *task = pip_task;
-
-  pip_spin_lock(   &task->lock_malloc );
-  void *p = malloc( size + sizeof(PIP_ALIGN_TYPE) );
-  pip_spin_unlock( &task->lock_malloc );
-
-  *(int*) p = pip_get_pipid_();
-  p += sizeof(PIP_ALIGN_TYPE);
-  return p;
-}
-
-void pip_free( void *ptr ) {
-  pip_task_t *task;
-  free_t free_func;
-  int pipid;
-
-  ptr  -= sizeof(PIP_ALIGN_TYPE);
-  pipid = *(int*) ptr;
-  if( pipid >= 0 || pipid == PIP_PIPID_ROOT ) {
-    if( pipid == PIP_PIPID_ROOT ) {
-      task = pip_root->task_root;
-    } else {
-      task = &pip_root->tasks[pipid];
-    }
-    /* need of sanity check on pipid */
-    if( ( free_func = task->symbols.free ) != NULL ) {
-
-      pip_spin_lock(   &task->lock_malloc );
-      free_func( ptr );
-      pip_spin_unlock( &task->lock_malloc );
-
-    } else {
-      pip_warn_mesg( "No free function" );
-    }
-  } else {
-    free( ptr );
   }
 }
 
@@ -2560,4 +2530,50 @@ int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp ) {
     /* nothing to do */
   }
   RETURN( err );
+}
+
+/*** The following malloc/free functions are just for experimenmtal ***/
+/*** These will be replaced by the ones by using MPC allocator      ***/
+
+/* long long to align */
+#define PIP_ALIGN_TYPE	long long
+
+void *pip_malloc( size_t size ) {
+  pip_task_t *task = pip_task;
+
+  pip_spin_lock(   &task->lock_malloc );
+  void *p = malloc( size + sizeof(PIP_ALIGN_TYPE) );
+  pip_spin_unlock( &task->lock_malloc );
+
+  *(int*) p = pip_get_pipid_();
+  p += sizeof(PIP_ALIGN_TYPE);
+  return p;
+}
+
+void pip_free( void *ptr ) {
+  pip_task_t *task;
+  free_t free_func;
+  int pipid;
+
+  ptr  -= sizeof(PIP_ALIGN_TYPE);
+  pipid = *(int*) ptr;
+  if( pipid >= 0 || pipid == PIP_PIPID_ROOT ) {
+    if( pipid == PIP_PIPID_ROOT ) {
+      task = pip_root->task_root;
+    } else {
+      task = &pip_root->tasks[pipid];
+    }
+    /* need of sanity check on pipid */
+    if( ( free_func = task->symbols.free ) != NULL ) {
+
+      pip_spin_lock(   &task->lock_malloc );
+      free_func( ptr );
+      pip_spin_unlock( &task->lock_malloc );
+
+    } else {
+      pip_warn_mesg( "No free function" );
+    }
+  } else {
+    free( ptr );
+  }
 }

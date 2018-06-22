@@ -17,6 +17,7 @@ basics/stack.sh
 basics/malloc.sh
 basics/malloc2.sh
 basics/waitany.sh
+basics/waitany2.sh
 spawn/spawns.sh
 compat/gethostname.sh
 compat/gethostbyname.sh
@@ -39,3 +40,4 @@ ulp/func.sh
 ulp/exit.sh
 ulp/mutex.sh
 ulp/barrier.sh
+ulp/waitany.sh

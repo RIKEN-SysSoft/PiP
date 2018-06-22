@@ -9,9 +9,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = ulpnew.c func.c exit.c yield.c barrier.c mutex.c mighrate.c
+SRCS  = ulpnew.c func.c exit.c yield.c barrier.c mutex.c mighrate.c waitany.c
 
-PROGRAMS  = ulpnew func exit yield barrier mutex migrate
+PROGRAMS  = ulpnew func exit yield barrier mutex migrate waitany
 
 PROGRAMS_TO_INSTALL = # nothing
 

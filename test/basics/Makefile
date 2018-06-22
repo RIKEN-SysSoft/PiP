@@ -29,11 +29,12 @@ SRCS  = initfin.c \
 	recursive.c \
 	varvars.c \
 	getaddr.c \
-	waitany.c
+	waitany.c \
+	waitany2.c \
 
 PROGRAMS  = initfin stack export environ malloc malloc2 file \
             wait signal exit mutex barrier core numa hook spawn \
-	    null recursive varvars getaddr waitany
+	    null recursive varvars getaddr waitany waitany2
 
 PROGRAMS_TO_INSTALL = # nothing
 
