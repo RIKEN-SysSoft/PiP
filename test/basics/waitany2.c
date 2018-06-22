@@ -53,8 +53,8 @@ int main( int argc, char **argv ) {
 	fprintf( stderr, "NGNGNG [ROOT] PIPID[%d] %d\n", pipid, extval );
       } else {
 #ifdef DEBUG
-	fprintf( stderr, "OKOKOK [ROOT] PIPID[%d] %d\n", pipid, extval );
 #endif
+	fprintf( stderr, "OKOKOK [ROOT] PIPID[%d] %d\n", pipid, extval );
       }
     }
     if( !flag ) {
