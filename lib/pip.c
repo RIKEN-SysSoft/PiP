@@ -2319,11 +2319,9 @@ int pip_ulp_suspend( void ) {
   pip_save_context( &ctx );
   IF_LIKELY( !flag_jump ) {
     flag_jump = 1;
-    //pip_task->task_resume = pip_task->task_sched;
     pip_task->task_sched  = NULL;
     IF_UNLIKELY( pip_ulp_sched_next( sched ) == ENOENT ) {
       /* undo */
-      //pip_task->task_resume = NULL;
       pip_task->task_sched = sched;
       RETURN( EDEADLK );
     }
@@ -2341,10 +2339,8 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   /* check if already being scheduled */
   IF_UNLIKELY( task->task_sched != NULL ) RETURN( EBUSY );
 
-  //sched = task->task_resume;
   sched = pip_task->task_sched;
   task->task_sched = sched;
-  //task->task_resume = NULL;
   queue = &sched->schedq;
 
   PIP_ULP_SCHED_LOCK( sched );
@@ -2387,13 +2383,11 @@ int pip_ulp_suspend_and_enqueue( pip_ulp_locked_queue_t *queue, int flags ) {
   pip_save_context( &ctx );
   IF_LIKELY( !flag_jump ) {
     flag_jump = 1;
-    //pip_task->task_resume = sched;
     pip_task->task_sched = NULL;
 
     pip_spin_unlock( &queue->lock );
     IF_UNLIKELY( pip_ulp_sched_next( sched ) == ENOENT ) {
       /* undo */
-      //pip_task->task_resume = NULL;
       pip_task->task_sched = sched;
       err = EDEADLK;
     }
@@ -2427,7 +2421,6 @@ int pip_ulp_dequeue_and_migrate( pip_ulp_locked_queue_t *queue,
 
   sched = pip_task->task_sched;
   task->task_sched  = sched;
-  //task->task_resume = NULL;
 
   PIP_ULP_SCHED_LOCK( sched );
   {
