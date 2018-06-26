@@ -48,7 +48,7 @@
 #include <pip_debug.h>
 
 #define PRINT_FL(FSTR,V)	\
-  fprintf(stderr,"%s:%d %s=%d\n",__FILE__,__LINE__,FSTR,V)
+  fprintf(stderr,"%s:%d (%s)=%d\n",__FILE__,__LINE__,FSTR,V)
 
 #ifndef DEBUG
 
@@ -66,7 +66,7 @@
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
+    TPRT( "<< (%s)=%d", #F, __xyz );			\
     if( __xyz != 0 ) exit( 9 );				\
   } while(0)
 #endif

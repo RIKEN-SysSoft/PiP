@@ -32,6 +32,7 @@
 extern "C" {
 #endif
 
+  pid_t pip_gettid( void );
   int  pip_check_pie( char *path );
 
   void pip_info_mesg( char *format, ... );

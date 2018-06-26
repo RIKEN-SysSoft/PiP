@@ -9,7 +9,7 @@
 
 #define PIP_INTERNAL_FUNCS
 
-//#define DEBUG
+#define DEBUG
 
 #include <test.h>
 #include <pip_ulp.h>
@@ -33,20 +33,24 @@ struct expo {
   pip_ulp_locked_queue_t	queue;
 } expo;
 
-void ulp_main( void* null ) {
+int ulp_main( void* null ) {
   struct expo *expop;
   int ulp_count = ULP_COUNT;
-  int pipid_myself, pipid_sched;
+  int pipid_myself;
 
   TESTINT( pip_init( &pipid_myself, NULL, (void**) &expop, 0 ) );
   TESTINT( !pip_is_ulp() );
   while( --ulp_count >= 0 ) {
+#ifdef DEBUG
+    int pipid_sched;
     TESTINT( pip_get_ulp_sched( &pipid_sched ) );
     fprintf( stderr, "[ULPID:%d]  sched-task: %d  [%d]\n",
 	     pipid_myself, pipid_sched, ulp_count );
+#endif
     TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, 0 ) );
   }
-  DBG;
+  DBGF( "ULP terminates" );
+  return pipid_myself;
 }
 
 int main( int argc, char **argv ) {
@@ -118,6 +122,7 @@ int main( int argc, char **argv ) {
     for( i=0; i<ntasks+nulps; i++ ) {
       TESTINT( pip_wait( i, NULL ) );
     }
+    fprintf( stderr, "SUCCEEDED\n" );
   } else {
     TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &expop ) );
     pip_barrier_wait( &expop->barr );
@@ -125,10 +130,15 @@ int main( int argc, char **argv ) {
       pip_ulp_t *next;
       int err = pip_ulp_dequeue_and_migrate( &expop->queue, &next, 0 );
       if( err != 0 ) { /* there is no ulp to schedule (or error happens) */
-	TESTINT( err != ENOENT ); /* error ? */
+	if( err != ENOENT ) { /* error ? */
+	  DBGF( "**** pip_ulp_dequeue_and_migrate():%d", err );
+	  pip_ulp_describe( stderr, "", next );
+	}
 	break;
       } else {
-	TESTINT( pip_ulp_yield_to( next ) );
+	err = pip_ulp_yield_to( next );
+	//TESTINT( pip_ulp_yield() );
+	if( err ) pip_ulp_describe( stderr, "", next );
       }
     }
   }

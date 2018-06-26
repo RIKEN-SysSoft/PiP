@@ -9,6 +9,7 @@
 
 #define _GNU_SOURCE
 
+#include <sys/syscall.h>
 #include <stdio.h>
 #include <dlfcn.h>
 #include <elf.h>
@@ -101,8 +102,12 @@ char * pip_type_str( void ) {
   return typestr;
 }
 
+pid_t pip_gettid( void ) {
+  return (pid_t) syscall( (long int) SYS_gettid );
+}
+
 int pip_idstr( char *buf, size_t sz ) {
-  pid_t	pid = getpid();
+  pid_t	pid = pip_gettid();
   char *pre  = "<";
   char *post = ">";
   char *idstr, idnum[64];
