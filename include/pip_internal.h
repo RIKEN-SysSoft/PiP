@@ -110,7 +110,6 @@ typedef struct pip_task {
       pip_ulp_t		schedq;	     /* ULP scheduling queue */
       pip_spinlock_t	lock_schedq; /* lock of scheduling queue (no need ?) */
       struct pip_task	*task_sched; /* scheduling task */
-      struct pip_task	*task_resume; /* scheduling task to be resumed */
       int32_t		pipid;	     /* PiP ID */
       int32_t		type;	/* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
     };

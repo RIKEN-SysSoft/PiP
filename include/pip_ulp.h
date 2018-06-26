@@ -27,7 +27,7 @@ typedef struct pip_ulp_mutex {
 
 typedef struct pip_ulp_barrier {
   void			*sched;
-  pip_ulp_t		waiting;
+  pip_ulp_queue_t	waiting;
   int			count_init;
   int			count;
 } pip_ulp_barrier_t;
