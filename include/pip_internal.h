@@ -171,6 +171,8 @@ typedef struct {
   pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
   void			*stack_flist;	  /* ULP: stack free list */
   size_t		stack_size;
+  /* for chaining SIGCHLD */
+  struct sigaction	sigact_chain;
   /* PiP tasks array */
   pip_task_t		tasks[];
 

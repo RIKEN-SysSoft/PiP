@@ -17,7 +17,8 @@ basics/stack.sh
 basics/malloc.sh
 basics/malloc2.sh
 basics/waitany.sh
-basics/waitany2.sh
+basics/sigchld.sh
+basics/sigchld2.sh
 spawn/spawns.sh
 compat/gethostname.sh
 compat/gethostbyname.sh

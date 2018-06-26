@@ -27,7 +27,7 @@ int main( int argc, char **argv ) {
   int nulps;
   int i, pipid;
 
-  if( argc   > 1 ) {
+  if( argc > 1 ) {
     ntasks = atoi( argv[1] );
   } else {
     ntasks = NTASKS;
