@@ -16,10 +16,6 @@
 #include <pip_machdep_x86_64.h>
 #elif defined(__aarch64__)
 #include <pip_machdep_aarch64.h>
-#else
-#ifdef AHA
-#error "Unsupported Machine Type"
-#endif
 #endif
 
 #ifndef PIP_CACHEBLK_SZ
@@ -103,7 +99,24 @@ inline static int pip_spin_destroy (pip_spinlock_t *lock) {
 }
 #endif
 
-#ifndef PIP_PRINT_FSREG
+#ifndef PIP_ATOMIC_TYPE
+#include <stdint.h>
+typedef volatile uint32_t	pip_atomic_t;
+#endif
+
+#ifndef PIP_ATOMIC_ADD_AND_FETCH
+inline static pip_atomic_t pip_atomic_add_and_fetch( pip_atomic_t *p, int v ) {
+  return __sync_add_and_fetch( p, v );
+}
+#endif
+
+#ifndef PIP_ATOMIC_SUB_AND_FETCH
+inline static pip_atomic_t pip_atomic_sub_and_fetch( pip_atomic_t *p, int v ) {
+  return  __sync_sub_and_fetch( p, v );
+}
+#endif
+
+#ifndef PIP_GET_FSREG
 inline static void pip_print_fs_segreg( void ) {}
 #endif
 

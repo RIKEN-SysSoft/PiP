@@ -27,6 +27,7 @@ int main( int argc, char **argv ) {
 
   } else {
     fprintf( stderr, "<%d> Hello, I am fine !!\n", pipid );
+    //sleep( 10 );
   }
   return 0;
 }
