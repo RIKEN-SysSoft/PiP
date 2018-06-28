@@ -10,6 +10,7 @@
 #define _GNU_SOURCE
 
 #include <sys/syscall.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <dlfcn.h>
 #include <elf.h>

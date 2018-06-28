@@ -187,6 +187,7 @@ typedef struct pip_ulp_queue {
   struct pip_ulp_queue		*prev;
 } pip_ulp_queue_t;
 
+typedef pip_ulp_queue_t		pip_list_t;
 typedef pip_ulp_queue_t		pip_ulp_t;
 
 typedef struct {
@@ -206,6 +207,9 @@ typedef struct {
   pip_spawnhook_t	after;
   void 			*hookarg;
 } pip_spawn_hook_t;
+
+#include <semaphore.h>
+typedef sem_t 	pip_semaphore_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -743,6 +747,17 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
   int  pip_is_ulp(  void );
   /** @}*/
+
+
+  int pip_semaphore_init( pip_semaphore_t *sem, int val );
+  int pip_semaphore_post( pip_semaphore_t *sem );
+  int pip_semaphore_wait( pip_semaphore_t *sem );
+  int pip_semaphore_trywait( pip_semaphore_t *sem );
+  int pip_semaphore_fin( pip_semaphore_t *sem );
+  int pip_is_alive( int pipid );
+  int pip_named_export( void *exp, const char *format, ... );
+  int pip_named_import( int pipid, void **expp, const char *format, ... );
+
 
 #ifdef PIP_EXPERIMENTAL
   void *pip_malloc( size_t size );

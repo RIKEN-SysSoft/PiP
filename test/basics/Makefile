@@ -32,12 +32,14 @@ SRCS  = initfin.c \
 	waitany.c \
 	waitany2.c \
 	sigchld.c \
-	sigchld2.c
+	sigchld2.c \
+	semaphore.c \
+	semaphore2.c sem.c
 
 PROGRAMS  = initfin stack export environ malloc malloc2 file \
             wait signal exit mutex barrier core numa hook spawn \
 	    null recursive varvars getaddr waitany waitany2 \
-	    sigchld sigchld2
+	    sigchld sigchld2 semaphore semaphore2 sem
 
 PROGRAMS_TO_INSTALL = # nothing
 

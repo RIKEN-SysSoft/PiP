@@ -18,7 +18,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdarg.h>
+#ifndef PIP_USE_MUTEX
+#include <semaphore.h>
+#endif
 
 #include <pip_clone.h>
 #include <pip_machdep.h>
@@ -120,7 +122,11 @@ typedef struct pip_task {
     struct {
       void		*ulp_stack;   /* stack area of this ULP */
       pip_ctx_t		*ctx_suspend; /* context to resume */
+#ifdef PIP_USE_MUTEX
       pthread_mutex_t	mutex_wait; /* mutex to block at pip_wait() */
+#else
+      sem_t		sem_wait; /* semaphore rp block at pip_wait() */
+#endif
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };
@@ -141,6 +147,7 @@ typedef struct pip_task {
   pip_symbols_t		symbols; /* symbols */
   pip_spawn_args_t	args;	 /* arguments for a PiP task */
   void *volatile	export;
+  void			*named_exptab;
   pip_ctx_t		*ctx_exit; /* longjump context for pip_exit() */
   volatile int		flag_exit; /* if this task is terminated or not */
   int			extval;	   /* exit value */
@@ -230,6 +237,12 @@ extern pip_task_t	*pip_task;
 
 #define PIP_ULP_FOREACH_SAFE_XXX(L,E,TV)			\
   for( (E)=(L), (TV)=PIP_ULP_NEXT(E); (L)!=(E); (E)=(TV) )
+
+#define PIP_LIST_INIT(L)	PIP_ULP_INIT(L)
+#define PIP_LIST_ISEMPTY(L)	PIP_ULP_ISEMPTY(L)
+#define PIP_LIST_ADD(L,E)	PIP_ULP_ENQ_LAST(L,E)
+#define PIP_LIST_DEL(E)		PIP_ULP_DEQ(E)
+#define PIP_LIST_FOREACH(L,E)	PIP_ULP_FOREACH(L,E)
 
 #define pip_likely(x)		__builtin_expect((x),1)
 #define pip_unlikely(x)		__builtin_expect((x),0)

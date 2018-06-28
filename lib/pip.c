@@ -54,6 +54,8 @@ pip_task_t	*pip_task = NULL;
 
 static pip_clone_t*	pip_cloneinfo = NULL;
 
+void pip_named_export_fin( int );
+
 static int (*pip_clone_mostly_pthread_ptr) (
 	pthread_t *newthread,
 	int clone_flags,
@@ -150,7 +152,11 @@ static void pip_reset_task_struct( pip_task_t *task ) {
   PIP_ULP_INIT( &task->schedq );
   pip_spin_init( &task->lock_schedq );
   pip_spin_init( &task->lock_malloc );
+#ifdef PIP_USE_MUTEX
   (void) pthread_mutex_init( &task->mutex_wait, NULL );
+#else
+  (void) sem_init( &task->sem_wait, 0, 0 );
+#endif
   pip_memory_barrier();
   task->pipid = PIP_PIPID_NONE;
 }
@@ -440,6 +446,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 }
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
+  int pip_named_export_init( int );
   size_t	sz;
   char		*envroot = NULL;
   char		*envtask = NULL;
@@ -466,6 +473,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     sz = sizeof( pip_root_t ) + sizeof( pip_task_t ) * ( ntasks + 1 );
     if( ( err = pip_page_alloc( sz, (void**) &pip_root ) ) != 0 ) {
+      RETURN( err );
+    }
+    if( ( err = pip_named_export_init( ntasks + 1 ) ) != 0 ) {
+      free( pip_root );
       RETURN( err );
     }
     (void) memset( pip_root, 0, sz );
@@ -637,6 +648,15 @@ pip_task_t *pip_get_task_( int pipid ) {
     break;
   }
   return task;
+}
+
+int pip_is_alive( int pipid ) {
+  int 		err = pip_check_pipid( &pipid );
+  if( err == 0 ) {
+    pip_task_t	*task = pip_get_task_( pipid );
+    if( task->pipid != pipid || task->flag_exit ) err = EACCES;
+  }
+  return err;
 }
 
 int pip_get_dso( int pipid, void **loaded ) {
@@ -1358,8 +1378,13 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
   sched = self->task_sched;
   self->task_sched = NULL;
   pip_flush_stdio( self );
+#ifdef PIP_USE_MUTEX
   (void) pthread_mutex_unlock( &self->mutex_wait );
+#else
+  (void) sem_post( &self->sem_wait );
+#endif
   pip_set_extval( self, extval );
+  pip_named_export_fin( self->pipid );
   (void) pip_raise_sigchld();
   DBG;
   if( pip_ulp_sched_next( sched ) == ENOENT ) {
@@ -1456,6 +1481,7 @@ static int pip_do_spawn( void *thargs )  {
     }
     pip_flush_stdio( self );
     pip_set_extval( self, extval );
+    pip_named_export_fin( self->pipid );
     (void) pip_raise_sigchld();
 
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
@@ -1710,6 +1736,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 }
 
 int pip_fin( void ) {
+  int pip_named_export_fin_all( int );
   int ntasks, i, err = 0;
 
   DBG;
@@ -1739,6 +1766,8 @@ int pip_fin( void ) {
       PIP_REPORT( time_load_dso  );
       PIP_REPORT( time_load_prog );
       PIP_REPORT( time_dlmopen   );
+
+      err = pip_named_export_fin_all( ntasks );
     }
   }
   RETURN( err );
@@ -1827,6 +1856,7 @@ int pip_exit( int extval ) {
   DBG;
   pip_flush_stdio( pip_task );
   pip_set_extval( pip_task, extval );
+  pip_named_export_fin( pip_task->pipid );
   if( pip_is_task() || pip_is_ulp() ) {
     err = pip_load_context( pip_task->ctx_exit );
     /* never reach here, hopefully */
@@ -1878,14 +1908,21 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   if( task->type == PIP_TYPE_ULP ) {
     DBG;
     if( flag_try ) {
+#ifdef PIP_USE_MUTEX
       if( ( err = pthread_mutex_trylock( &task->mutex_wait ) ) == 0 &&
 	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
 	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 );
+#else
+      err = sem_trywait( &task->sem_wait );
+#endif
     } else {
+#ifdef PIP_USE_MUTEX
       if( ( err = pthread_mutex_lock(    &task->mutex_wait ) ) == 0 &&
 	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
-	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 ) {
-      }
+	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 );
+#else
+      err = sem_wait( &task->sem_wait );
+#endif
     }
     DBG;
   } else if( pip_is_pthread_() ) { /* thread mode */
@@ -2175,6 +2212,31 @@ void pip_barrier_wait( pip_barrier_t *barrp ) {
   }
 }
 
+int pip_semaphore_init( pip_semaphore_t *sem, int val ) {
+  if( sem_init( sem, 0, val ) != 0 ) RETURN( errno );
+  return 0;
+}
+
+int pip_semaphore_post( pip_semaphore_t *sem ) {
+  if( sem_post( sem ) != 0 ) RETURN( errno );
+  return 0;
+}
+
+int pip_semaphore_wait( pip_semaphore_t *sem ) {
+  if( sem_wait( sem ) != 0 ) RETURN( errno );
+  return 0;
+}
+
+int pip_semaphore_trywait( pip_semaphore_t *sem ) {
+  if( sem_trywait( sem ) != 0 ) RETURN( errno );
+  return 0;
+}
+
+int pip_semaphore_fin( pip_semaphore_t *sem ) {
+  if( sem_destroy( sem ) != 0 ) RETURN( errno );
+  return 0;
+}
+
 /*-----------------------------------------------------*/
 /* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
 /*-----------------------------------------------------*/
@@ -2228,7 +2290,9 @@ int pip_ulp_new( pip_spawn_program_t *progp,
   pip_reset_task_struct( task );
   task->pipid = pipid;
   task->type  = PIP_TYPE_ULP;
+#ifdef PIP_USE_MUTEX
   if( ( err = pthread_mutex_lock( &task->mutex_wait ) ) != 0 ) ERRJ;
+#endif
 
   if( sisters != NULL ) {
     PIP_ULP_ENQ_LAST( sisters, PIP_ULP( task ) );

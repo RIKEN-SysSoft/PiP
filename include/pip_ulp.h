@@ -15,8 +15,13 @@
 #include <pip_machdep.h>
 
 typedef struct pip_ulp_locked_queue {
-  pip_spinlock_t	lock;
-  pip_ulp_queue_t	queue;
+  union {
+    struct {
+      pip_spinlock_t	lock;
+      pip_ulp_queue_t	queue;
+    };
+    char		__gap0__[PIP_CACHEBLK_SZ];
+  };
 } pip_ulp_locked_queue_t;
 
 typedef struct pip_ulp_mutex {
