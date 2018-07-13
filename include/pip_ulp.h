@@ -14,6 +14,61 @@
 
 #include <pip_machdep.h>
 
+#define PIP_ULP_INIT(L)					\
+  do { PIP_ULP_NEXT(L) = (L); PIP_ULP_PREV(L) = (L); } while(0)
+
+#define PIP_ULP_NEXT(L)		((L)->next)
+#define PIP_ULP_PREV(L)		((L)->prev)
+#define PIP_ULP_PREV_NEXT(L)	((L)->prev->next)
+#define PIP_ULP_NEXT_PREV(L)	((L)->next->prev)
+
+#define PIP_ULP_ENQ_FIRST(L,E)				\
+  do { PIP_ULP_NEXT(E)   = PIP_ULP_NEXT(L);		\
+    PIP_ULP_PREV(E)      = (L);				\
+    PIP_ULP_NEXT_PREV(L) = (E);				\
+    PIP_ULP_NEXT(L)      = (E); } while(0)
+
+#define PIP_ULP_ENQ_LAST(L,E)				\
+  do { PIP_ULP_NEXT(E)   = (L);				\
+    PIP_ULP_PREV(E)      = PIP_ULP_PREV(L);		\
+    PIP_ULP_PREV_NEXT(L) = (E);				\
+    PIP_ULP_PREV(L)      = (E); } while(0)
+
+#define PIP_ULP_DEQ(L)					\
+  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);		\
+    PIP_ULP_PREV_NEXT(L) = PIP_ULP_NEXT(L); 		\
+    PIP_ULP_INIT(L); } while(0)
+
+#define PIP_ULP_MOVE_QUEUE(P,Q)				\
+  do { if( !PIP_ULP_ISEMPTY(Q) ) {			\
+    PIP_ULP_NEXT_PREV(Q) = (P);				\
+    PIP_ULP_PREV_NEXT(Q) = (P);				\
+    PIP_ULP_NEXT(P) = PIP_ULP_NEXT(Q);			\
+    PIP_ULP_PREV(P) = PIP_ULP_PREV(Q);			\
+    PIP_ULP_INIT(Q); } } while(0)
+
+#define PIP_ULP_ISEMPTY(L)				\
+  ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
+
+#define PIP_ULP_FOREACH(L,E)				\
+  for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
+
+#define PIP_ULP_FOREACH_SAFE(L,E,TV)				\
+  for( (E)=(L)->next, (TV)=PIP_ULP_NEXT(E);			\
+       (L)!=(E);						\
+       (E)=(TV), (TV)=PIP_ULP_NEXT(TV) )
+
+#define PIP_ULP_FOREACH_SAFE_XXX(L,E,TV)			\
+  for( (E)=(L), (TV)=PIP_ULP_NEXT(E); (L)!=(E); (E)=(TV) )
+
+#define PIP_LIST_INIT(L)	PIP_ULP_INIT(L)
+#define PIP_LIST_ISEMPTY(L)	PIP_ULP_ISEMPTY(L)
+#define PIP_LIST_ADD(L,E)	PIP_ULP_ENQ_LAST(L,E)
+#define PIP_LIST_DEL(E)		PIP_ULP_DEQ(E)
+#define PIP_LIST_MOVE(P,Q)	PIP_ULP_MOVE_QUEUE(P,Q)
+#define PIP_LIST_FOREACH(L,E)	PIP_ULP_FOREACH(L,E)
+#define PIP_LIST_FOREACH_SAFE(L,E,F)	PIP_ULP_FOREACH_SAFE(L,E,F)
+
 typedef struct pip_ulp_locked_queue {
   union {
     struct {
@@ -44,17 +99,15 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup libpip libpip
- * \brief the PiP library
- * @{
- * @file
+ * @addtogroup libpip_ulp libpip_ulp
+ * \brief the PiP/ULP library
  * @{
  */
 
   /**
    * \brief Create a PiP ULP
    *  @{
-   * \param[in] progp Pointer to the \c pip_spawn_program_t
+   * \param[in] progp Pointer to the \c pip_spawn_program_t structure
    * \param[in,out] pipidp Specify PIPID of the new ULP. If
    *  \c PIP_PIPID_ANY is specified, then the PIPID of the new ULP
    *  is up to the PiP library and the assigned PIPID will be
@@ -64,7 +117,7 @@ extern "C" {
    * \param[out] newp Created ULP is returned.
    *
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3)
    */
   int pip_ulp_new( pip_spawn_program_t *progp,
 		   int *pipidp,
@@ -206,7 +259,7 @@ extern "C" {
    *
    * \sa pip_ulp_mutex_wait(3)
    */
-  void pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n );
+  int pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n );
   /** @}*/
 
   /**
@@ -303,7 +356,6 @@ extern "C" {
 #endif
 
 /**
- * @}
  * @}
  */
 

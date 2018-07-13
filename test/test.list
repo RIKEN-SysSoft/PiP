@@ -8,7 +8,7 @@ basics/core.sh
 basics/numa.sh
 basics/hook.sh
 basics/spawn.sh
-basics/getaddr.sh
+#basics/getaddr.sh
 basics/environ.sh
 basics/export.sh
 basics/barrier.sh
@@ -29,7 +29,7 @@ compat/gettimeofday.sh
 compat/ctype.sh
 compat/main.sh
 compat/exit.sh
-compat/brk.sh
+#compat/brk.sh
 compat/pf.sh
 compat/system.sh
 #openmp/openmp.sh
@@ -42,3 +42,5 @@ ulp/exit.sh
 ulp/mutex.sh
 ulp/barrier.sh
 ulp/waitany.sh
+universal/barrier.sh
+namexp/namexp.sh

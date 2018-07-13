@@ -4,7 +4,7 @@
   * $PIP_license:$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2017
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2018
 */
 
 #ifndef _pip_internal_h_
@@ -58,6 +58,8 @@
 #define PIP_EXITED		(1)
 #define PIP_EXIT_FINALIZE	(2)
 
+struct pip_task;
+
 typedef	int(*main_func_t)(int,char**,char**);
 typedef	int(*start_func_t)(void*);
 typedef int(*mallopt_t)(int,int);
@@ -67,6 +69,7 @@ typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
 typedef void(*add_stack_user_t)(void);
 typedef	void(*fflush_t)(FILE*);
+typedef int(*named_export_fin_t)(struct pip_task*);
 
 typedef struct {
   /* functions */
@@ -79,6 +82,7 @@ typedef struct {
   mallopt_t		mallopt;      /* to call mallopt() */
   free_t		free;	      /* to override free() - EXPERIMENTAL*/
   add_stack_user_t	add_stack;    /* for GDB workarounnd */
+  named_export_fin_t	named_export_fin; /* for free()ing hash entries */
   /* variables */
   char			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
@@ -112,6 +116,7 @@ typedef struct pip_task {
       pip_ulp_t		schedq;	     /* ULP scheduling queue */
       pip_spinlock_t	lock_schedq; /* lock of scheduling queue (no need ?) */
       struct pip_task	*task_sched; /* scheduling task */
+      struct pip_task	*task_resume; /* scheduling task when resumed */
       int32_t		pipid;	     /* PiP ID */
       int32_t		type;	/* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
     };
@@ -125,7 +130,7 @@ typedef struct pip_task {
 #ifdef PIP_USE_MUTEX
       pthread_mutex_t	mutex_wait; /* mutex to block at pip_wait() */
 #else
-      sem_t		sem_wait; /* semaphore rp block at pip_wait() */
+      sem_t		sem_wait; /* semaphore to block at pip_wait() */
 #endif
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
@@ -187,65 +192,12 @@ typedef struct {
 extern pip_root_t	*pip_root;
 extern pip_task_t	*pip_task;
 
+#define pip_likely(x)		__builtin_expect((x),1)
+#define pip_unlikely(x)		__builtin_expect((x),0)
+
 #define PIP_TASK(ULP)	((pip_task_t*)(ULP))
 #define PIP_ULP(TASK)	((pip_ulp_t*)(TASK))
 #define PIP_ULP_CTX(U)	(PIP_TASK(U)->ctx_suspend)
-
-#define PIP_ULP_INIT(L)					\
-  do { PIP_ULP_NEXT(L) = (L); PIP_ULP_PREV(L) = (L); } while(0)
-
-#define PIP_ULP_NEXT(L)		((L)->next)
-#define PIP_ULP_PREV(L)		((L)->prev)
-#define PIP_ULP_PREV_NEXT(L)	((L)->prev->next)
-#define PIP_ULP_NEXT_PREV(L)	((L)->next->prev)
-
-#define PIP_ULP_ENQ_FIRST(L,E)				\
-  do { PIP_ULP_NEXT(E)   = PIP_ULP_NEXT(L);		\
-    PIP_ULP_PREV(E)      = (L);				\
-    PIP_ULP_NEXT_PREV(L) = (E);				\
-    PIP_ULP_NEXT(L)      = (E); } while(0)
-
-#define PIP_ULP_ENQ_LAST(L,E)				\
-  do { PIP_ULP_NEXT(E)   = (L);				\
-    PIP_ULP_PREV(E)      = PIP_ULP_PREV(L);		\
-    PIP_ULP_PREV_NEXT(L) = (E);				\
-    PIP_ULP_PREV(L)      = (E); } while(0)
-
-#define PIP_ULP_DEQ(L)					\
-  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);		\
-    PIP_ULP_PREV_NEXT(L) = PIP_ULP_NEXT(L); 		\
-    PIP_ULP_INIT(L); } while(0)
-
-#define PIP_ULP_MOVE_QUEUE(P,Q)				\
-  do { if( !PIP_ULP_ISEMPTY(Q) ) {			\
-    PIP_ULP_NEXT_PREV(Q) = (P);				\
-    PIP_ULP_PREV_NEXT(Q) = (P);				\
-    PIP_ULP_NEXT(P) = PIP_ULP_NEXT(Q);			\
-    PIP_ULP_PREV(P) = PIP_ULP_PREV(Q);			\
-    PIP_ULP_INIT(Q); } } while(0)
-
-#define PIP_ULP_ISEMPTY(L)				\
-  ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
-
-#define PIP_ULP_FOREACH(L,E)				\
-  for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
-
-#define PIP_ULP_FOREACH_SAFE(L,E,TV)				\
-  for( (E)=(L)->next, (TV)=PIP_ULP_NEXT(E);			\
-       (L)!=(E);						\
-       (E)=(TV), (TV)=PIP_ULP_NEXT(TV) )
-
-#define PIP_ULP_FOREACH_SAFE_XXX(L,E,TV)			\
-  for( (E)=(L), (TV)=PIP_ULP_NEXT(E); (L)!=(E); (E)=(TV) )
-
-#define PIP_LIST_INIT(L)	PIP_ULP_INIT(L)
-#define PIP_LIST_ISEMPTY(L)	PIP_ULP_ISEMPTY(L)
-#define PIP_LIST_ADD(L,E)	PIP_ULP_ENQ_LAST(L,E)
-#define PIP_LIST_DEL(E)		PIP_ULP_DEQ(E)
-#define PIP_LIST_FOREACH(L,E)	PIP_ULP_FOREACH(L,E)
-
-#define pip_likely(x)		__builtin_expect((x),1)
-#define pip_unlikely(x)		__builtin_expect((x),0)
 
 #define PIP_MIDLEN	(64)
 
