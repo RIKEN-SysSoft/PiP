@@ -273,6 +273,7 @@ static int pip_named_do_import( int pipid, void **expp, int flag_nblk, const cha
   task = pip_get_task_( pipid );
 
   namexp = (pip_named_exptab_t*) task->named_exptab;
+  if( namexp == NULL ) RETURN( EACCES );
   if( vasprintf( &name, format, ap ) < 0 || name == NULL ) RETURN( ENOMEM );
   hash = pip_name_hash( name );
 
