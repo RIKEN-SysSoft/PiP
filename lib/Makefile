@@ -13,9 +13,9 @@ CFLAGS += $(PICFLAG)
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
 LIBRARY  = libpip.so
-SRCS     = pip.c pip_namexp.c pip_util.c
+SRCS     = pip.c pip_namexp.c pip_universal.c pip_util.c
 
-OBJS	 = pip.o pip_namexp.o pip_util.o
+OBJS	 = pip.o pip_namexp.o pip_universal.o pip_util.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_clone.h		\
@@ -23,6 +23,7 @@ DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_internal.h 		\
 	   $(PIPINCDIR)/pip_queue.h 		\
 	   $(PIPINCDIR)/pip_ulp.h 		\
+	   $(PIPINCDIR)/pip_universal.h		\
 	   $(PIPINCDIR)/pip_util.h		\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\

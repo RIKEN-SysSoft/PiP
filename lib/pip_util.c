@@ -273,10 +273,11 @@ void pip_ulp_queue_describe( FILE *fp, const char *tag, pip_ulp_t *queue ) {
       if( tag == NULL ) {
 	pip_info_fmesg( fp,
 			"QUEUE[%d] pipid:%d "
-			"(sched:%p,ctx=%p)@%p next:%p prev=%p",
+			"(sched:%p,resume:%p,ctx=%p)@%p next:%p prev=%p",
 			i,
 			t->pipid,
 			t->task_sched,
+			t->task_resume,
 			t->ctx_suspend,
 			t,
 			u->next,
@@ -284,17 +285,18 @@ void pip_ulp_queue_describe( FILE *fp, const char *tag, pip_ulp_t *queue ) {
       } else {
 	pip_info_fmesg( fp,
 			"%s: QUEUE[%d] pipid:%d "
-			"(sched:%p,ctx=%p)@%p next:%p prev=%p",
+			"(sched:%p,resume:%p,ctx=%p)@%p next:%p prev=%p",
 			tag,
 			i,
 			t->pipid,
 			t->task_sched,
+			t->task_resume,
 			t->ctx_suspend,
 			t,
 			u->next,
 			u->prev );
       }
-      if( u->next == u->prev ) {
+      if( u->next == u->prev && u->next != queue ) {
 	if( tag == NULL ) {
 	  pip_info_fmesg( fp, "QUEUE looped list !!!!!!!!!!!!!" );
 	} else {

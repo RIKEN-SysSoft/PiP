@@ -27,6 +27,8 @@
 #include <errno.h>
 
 #include <pip.h>
+#include <pip_ulp.h>
+#include <pip_universal.h>
 #include <pip_util.h>
 #include <pip_machdep.h>
 
@@ -175,10 +177,11 @@ inline static char *signal_name( int sig ) {
 
 inline static void set_signal_watcher( int signal ) {
   void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    fprintf( stderr, "!!!!!! SIGNAL: %s(%d) (pid=%d) !!!!!!\n",
+    fprintf( stderr, "!!!!!! SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
 	     signal_name( siginfo->si_signo ),
 	     siginfo->si_signo,
-	     siginfo->si_pid  );
+	     siginfo->si_addr,
+	     getpid() );
   }
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );

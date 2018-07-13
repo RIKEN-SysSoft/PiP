@@ -16,7 +16,9 @@ SUBDIRS = lib include bin preload util sample \
 	test/openmp \
 	test/pthread \
 	test/fortran \
-	test/ulp
+	test/ulp \
+	test/universal \
+	test/namexp
 
 include $(top_srcdir)/build/rule.mk
 
