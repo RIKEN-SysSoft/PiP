@@ -41,7 +41,7 @@ typedef struct pip_universal_barrier {
    * \brief initialize barrier universal synchronization structure
    *  @{
    *
-   * \param[in] barrp pointer to a PiP barrier structure
+   * \param[in] ubarr pointer to a PiP barrier structure
    * \param[in] n number of participants of this barrier
    * synchronization
    *
@@ -54,7 +54,7 @@ int pip_universal_barrier_init( pip_universal_barrier_t *ubarr, int n );
    * \brief wait on a universal barrier synchronization
    *  @{
    *
-   * \param[in] barrp pointer to a PiP barrier structure
+   * \param[in] ubarr pointer to a PiP barrier structure
    *
    * \note Unlike \c pip_task_barrier_wait(3), ths barrier synchronization
    * may block and can be used for both of PiP tasks and ULPs.
@@ -71,7 +71,7 @@ int pip_universal_barrier_wait( pip_universal_barrier_t *ubarr );
    * \brief finalizea universal barrier synchronization
    *  @{
    *
-   * \param[in] barrp pointer to a PiP barrier structure
+   * \param[in] ubarr pointer to a PiP barrier structure
    *
    * \sa pip_universal_barrier_init(3), pip_universal_barrier_wait(3)
    */
