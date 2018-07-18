@@ -89,7 +89,7 @@ struct pip_gdbif_task {
   int	pipid;
   /* exit code, this value is set when the PiP task */
   /* gets PIP_GDBIF_STATUS_TERMINATED */
-  int	exit_code;
+  volatile int	exit_code;
   /* pip task exec mode */
   enum pip_task_exec_mode	exec_mode;
   /* task status, this is set by PiP lib */

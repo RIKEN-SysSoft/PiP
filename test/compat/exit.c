@@ -40,6 +40,8 @@ int main( int argc, char **argv ) {
   int pipid = 999;
   int ntasks;
 
+  set_signal_watcher( SIGSEGV );
+
   ntasks = 1;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {

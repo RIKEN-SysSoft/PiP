@@ -29,7 +29,7 @@
 # 	  System Software Devlopment Team. All rights researved$
 
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += $(PIEFLAG) -pthread
+CFLAGS +=
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h \
 	$(PIPINCDIR)/pip_ulp.h $(PIPINCDIR)/pip_internal.h \

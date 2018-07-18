@@ -72,16 +72,59 @@ inline static void pip_memory_barrier(void) {
 
 int arch_prctl( int, unsigned long* );
 
+inline static int pip_get_fsreg( intptr_t *fsreg ) {
+  return arch_prctl(ARCH_GET_FS, (unsigned long*) fsreg ) ? errno : 0;
+}
+#define PIP_GET_FSREG
+
+inline static int pip_set_fsreg( intptr_t fsreg ) {
+  return arch_prctl(ARCH_SET_FS, (unsigned long*) fsreg) ? errno : 0;
+}
+#define PIP_SET_FSREG
+
 inline static void pip_print_fs_segreg( void ) {
-  unsigned long fsreg;
-  if( arch_prctl( ARCH_GET_FS, &fsreg ) == 0 ) {
-    fprintf( stderr, "FS REGISTER: 0x%lx\n", fsreg );
+  intptr_t fsreg;
+  if( arch_prctl( ARCH_GET_FS, (unsigned long*) &fsreg ) == 0 ) {
+    fprintf( stderr, "FS REGISTER: 0x%lx\n", (intptr_t) fsreg );
   } else {
     fprintf( stderr, "FS REGISTER: (unable to get:%d)\n", errno );
   }
 }
 #define PIP_PRINT_FSREG
 
-#endif
+#ifdef PIP_ULP_SWITCH_TLS
+#include <ucontext.h>
+
+typedef struct {
+  intptr_t	fsreg;
+  ucontext_t	ctx;
+} pip_ctx_t;
+#define PIP_CTX_T
+
+#define pip_make_context(CTX,F,C,...)	 \
+  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__);	\
+    pip_set_fsreg((CTX)->fsreg); } while(0)
+#define PIP_MAKE_CONTEXT
+
+inline static int pip_save_context( pip_ctx_t *ctxp ) {
+  return ( pip_get_fsreg(&ctxp->fsreg) || getcontext(&ctxp->ctx) ) ? errno : 0;
+}
+#define PIP_SAVE_CONTEXT
+
+inline static int pip_load_context( const pip_ctx_t *ctxp ) {
+  return ( pip_set_fsreg(ctxp->fsreg) || setcontext(&ctxp->ctx) ) ? errno : 0;
+}
+#define PIP_LOAD_CONTEXT
+
+inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
+  return ( pip_get_fsreg(&old->fsreg)          ||
+	   swapcontext( &old->ctx, &new->ctx ) ||
+	   pip_set_fsreg(new->fsreg) ) ? errno : 0;
+}
+#define PIP_SWAP_CONTEXT
+
+#endif /* PIP_ULP_SWITCH_TLS */
+
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif

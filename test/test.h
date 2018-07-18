@@ -53,6 +53,8 @@
 #include <errno.h>
 
 #include <pip.h>
+#include <pip_ulp.h>
+#include <pip_universal.h>
 #include <pip_util.h>
 #include <pip_machdep.h>
 
@@ -74,7 +76,7 @@
 #include <pip_debug.h>
 
 #define PRINT_FL(FSTR,V)	\
-  fprintf(stderr,"%s:%d %s=%d\n",__FILE__,__LINE__,FSTR,V)
+  fprintf(stderr,"%s:%d (%s)=%d\n",__FILE__,__LINE__,FSTR,V)
 
 #ifndef DEBUG
 
@@ -92,7 +94,7 @@
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
+    TPRT( "<< (%s)=%d", #F, __xyz );			\
     if( __xyz != 0 ) exit( 9 );				\
   } while(0)
 #endif
@@ -201,10 +203,11 @@ inline static char *signal_name( int sig ) {
 
 inline static void set_signal_watcher( int signal ) {
   void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    fprintf( stderr, "!!!!!! SIGNAL: %s(%d) (pid=%d) !!!!!!\n",
+    fprintf( stderr, "!!!!!! SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
 	     signal_name( siginfo->si_signo ),
 	     siginfo->si_signo,
-	     siginfo->si_pid  );
+	     siginfo->si_addr,
+	     getpid() );
   }
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );

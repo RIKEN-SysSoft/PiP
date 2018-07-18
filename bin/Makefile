@@ -37,7 +37,8 @@ include $(top_srcdir)/build/var.mk
 PROGRAM = piprun
 PROGRAMS_TO_INSTALL = $(PROGRAM) pmap
 PROGRAMS = $(PROGRAMS_TO_INSTALL) hello
-MAN1_SRCS = piprun.c pmap.c hello.c
+#AH180607#MAN1_SRCS = piprun.c pmap.c hello.c
+MAN1_SRCS = piprun.c pmap.c
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"

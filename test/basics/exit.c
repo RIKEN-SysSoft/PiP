@@ -73,7 +73,7 @@ int main( int argc, char **argv ) {
     TESTINT( pip_fin() );
 
   } else {
-    fprintf( stderr, "Hello, I am PIPID[%d] ...", pipid );
+    fprintf( stderr, "Hello, I am PIPID[%d/%d] ...", pipid, getpid() );
     pip_exit( pipid );
   }
   return 0;
