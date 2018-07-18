@@ -51,4 +51,4 @@ post-clean-hook:
 	$(RM) *.E *.log
 
 test:
-	( cd ../; ./test -A ulp/test.list )
+	( cd ../; ./test.sh -A ulp/test.list )
