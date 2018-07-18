@@ -1,5 +1,0 @@
-
-CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += $(PIEFLAG)
-
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
