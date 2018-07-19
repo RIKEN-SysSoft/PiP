@@ -18,8 +18,8 @@ This project is licensed under the 2-clause simplified BSD License - see the [LI
 
 ## Related Software
 
-* [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patchd GNU libc for PiP
-* [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patchd gdb to debug PiP root and PiP tasks.
+* [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
+* [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
 
 ## Refernce
 
