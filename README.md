@@ -21,6 +21,6 @@ This project is licensed under the 2-clause simplified BSD License - see the [LI
 * [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patchd GNU libc for PiP
 * [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patchd gdb to debug PiP root and PiP tasks.
 
-## Refernce
+## Reference
 
 A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Process-in-process: techniques for practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: https://doi.org/10.1145/3208040.3208045
