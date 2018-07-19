@@ -77,7 +77,7 @@
  * run with different programs. Due to the GLIBC constraints, ULPs can
  * be created by the PiP root process. The created ULPs are associated
  * with a PiP task by specifying ULPs when the task is created by
- * calling \e pip_spawn. A ULP can yield, suspend, and resume its
+ * calling \b pip_spawn(). A ULP can yield, suspend, and resume its
  * execution by calling PiP ULP functions. A PiP task will be
  * terminated only when all ULPs scheduled by the task terminate.
  *
@@ -261,14 +261,14 @@ extern "C" {
    * \brief Setting information to invoke a PiP task starting from the
    *  main function
    *  @{
-   * \param[in,out] progp Pointer to the \t pip_spawn_program_t
+   * \param[in,out] progp Pointer to the \c pip_spawn_program_t
    *  structure in which the program invokation information is set
    * \param[in] prog Filename of the program
    * \param[in] argv Argument vector
    * \param[in] envv Environment variables
    *
    * This function sets the required information to invoke a program,
-   * starting from the \t main() function.
+   * starting from the \c main() function.
    *
    * \return This function does not return any error code.
    *
@@ -363,8 +363,8 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Initialize the PiP library.
    *  @{
    * \param[out] pipidp When this is called by the PiP root
-   *  process, then this returns PIP_PIPID_ROOT, otherwise it returns
-   *  the PIPID of the calling PiP task.
+   *  process, then this returns \c PIP_PIPID_ROOT, otherwise it returns
+   *  the PiP ID of the calling PiP task.
    * \param[in,out] ntasks When called by the PiP root, it specifies
    *  the maximum number of PiP tasks. When called by a PiP task, then
    *  it returns the number specified by the PiP root.
@@ -417,9 +417,9 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \param[in] coreno Core number for the PiP task to be bound to. If
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
-   * \param[in,out] pipidp Specify PIPID of the spawned PiP task. If
-   *  \c PIP_PIPID_ANY is specified, then the PIPID of the spawned PiP
-   *  task is up to the PiP library and the assigned PIPID will be
+   * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
+   *  \c PIP_PIPID_ANY is specified, then the PiP ID of the spawned PiP
+   *  task is up to the PiP library and the assigned PiP ID will be
    *  returned.
    * \param[in] hookp Hook information to be invoked before and after
    *  the program invokation.
@@ -435,7 +435,7 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \return zero is returned if this function succeeds. On error, an
    * error number is returned.
    * \retval EPERM PiP task tries to spawn child task
-   * \retval EBUSY Specified PIPID is alredy occupied
+   * \retval EBUSY Specified PiP ID is alredy occupied
    *
    * \sa pip_task_spawn(3), pip_spawn_from_main(3), pip_ulp_new(3)
    *
@@ -462,7 +462,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * once.
    *
    * \note The exported address can only be retrieved by
-   * \c pip_named_import(3).
+   * \b pip_named_import(3).
    * \note There is no size parameter to specify the length of the
    * exported region because there is no way to restrict the access
    * outside of the exported region.
@@ -485,14 +485,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief import the exposed memory region of the other.
    *  @{
-   * \param[in] pipid The PIPID to import the exposed address
+   * \param[in] pipid The PiP ID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
    *  the PiP task specified by the \a pipid.
    * \param[in] format a \c printf format to give the exported address a name
    *
-   * \note To avoid deadlock, the corresponding \c pip_named_export(3)
-   * must be called beofre calling \c pip_named_import(3);
-   * \note Unlike \c pip_import(3), this function might be blocked until the
+   * \note To avoid deadlock, the corresponding \b pip_named_export(3)
+   * must be called beofre calling \b pip_named_import(3);
+   * \note Unlike \b pip_import(3), this function might be blocked until the
    * target address is exported by the target task. Once a name is
    * associated by an address, the address associated with the name
    * cannot be changed.
@@ -518,12 +518,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief non-blocking version of \c pip_named_import
    *  @{
-   * \param[in] pipid The PIPID to import the exposed address
+   * \param[in] pipid The PiP ID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
    *  the PiP task specified by the \a pipid.
    * \param[in] format a \c printf format to give the exported address a name
    *
-   * \note The imported address must be exported by \c pip_named_export(3).
+   * \note The imported address must be exported by \b pip_named_export(3).
    * \note When the named export cannot be found at the specified
    * task, then this function returns immediately. It is guaranteed
    * that the will be no ULP context switching take place in this
@@ -567,13 +567,13 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief import the exposed memory region of the other.
    *  @{
-   * \param[in] pipid The PIPID to import the exposed address
+   * \param[in] pipid The PiP ID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
    *  the PiP task specified by the \a pipid.
    *
    * \note It is the users' responsibility to synchronize. When the
    * target region is not exported yet , then this function returns
-   * NULL. If the root exports its region by the \c pip_init function
+   * NULL. If the root exports its region by the \b pip_init() function
    * call, then it is guaranteed to be imported by PiP tasks at any
    * time.
    *
@@ -586,10 +586,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief get PIPID
+   * \brief get PiP ID
    *  @{
    * \param[out] pipidp This parameter points to the variable which
-   *  will be set to the PIPID of the calling process.
+   *  will be set to the PiP ID of the calling process.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINVAL \c pipidp is \c NULL
@@ -616,10 +616,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if the calling task is a PiP task or not
    *  @{
    *
-   * \return Returns an boolean value.
+   * \return Return an boolean value.
    *
    * \note Unlike most of the other PiP functions, this can be called
-   * BEFORE calling the \c pip_init() function.
+   * BEFORE calling the \b pip_init() function.
    */
   int pip_isa_piptask( void );
   /** @}*/
@@ -662,7 +662,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief wait for the termination of a PiP task
    *  @{
-   * \param[in] pipid PIPID to wait for.
+   * \param[in] pipid PiP ID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
    *
    * \note This function blocks until the specified PiP task or ULP
@@ -685,7 +685,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief wait for the termination of a PiP task in a non-blocking way
    *  @{
-   * \param[in] pipid PIPID to wait for.
+   * \param[in] pipid PiP ID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
    *
    * \note This function can be used regardless to the PiP execution
@@ -706,7 +706,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief wait for the termination of any PiP task
    *  @{
-   * \param[out] pipid PIPID of terminated PiP task.
+   * \param[out] pipid PiP ID of terminated PiP task.
    * \param[out] retval Exit value of the terminated PiP task
    *
    * \note This function blocks until one of PiP tasks or ULPs
@@ -729,7 +729,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief wait for the termination of any PiP task
    *  @{
-   * \param[out] pipid PIPID of terminated PiP task.
+   * \param[out] pipid PiP ID of terminated PiP task.
    * \param[out] retval Exit value of the terminated PiP task
    *
    * \note This function never blocks.
@@ -751,7 +751,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief deliver a signal to a PiP task
    *  @{
-   * \param[out] pipid PIPID of a target PiP task
+   * \param[out] pipid PiP ID of a target PiP task
    * \param[out] signal signal number to be delivered
    *
    * \note Only the PiP task can be the target of the signal delivery.
@@ -770,12 +770,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief deliver a process or thread ID defined by the system
    *  @{
-   * \param[out] pipid PIPID of a target PiP task
+   * \param[out] pipid PiP ID of a target PiP task
    * \param[out] idp a pointer to store the ID value
    *
    * \note The returned object depends on the PiP mode. In the process
-   * mode it returns PID, in the thread mode it returns thread (\t
-   * pthread_t) associated with the PiP task
+   * mode it returns PID, in the thread mode it returns thread
+   * (`pthread_t`) associated with the PiP task
    * \note This function can be used regardless to the PiP execution
    * mode.
    *
@@ -834,7 +834,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if calling PiP task is PiP root or not
    *  @{
    *
-   * \return Returns true if the caller is the PiP root
+   * \return Return true if the caller is the PiP root
    */
   int  pip_is_root( void );
   /** @}*/
@@ -843,7 +843,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if calling PiP task is a PiP task or not
    *  @{
    *
-   * \return Returns true if the caller is a PiP task
+   * \return Return true if the caller is a PiP task
    */
   int  pip_is_task( void );
   /** @}*/
@@ -852,7 +852,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if calling PiP task is a PiP ULP or not
    *  @{
    *
-   * \return Returns true if the caller is a PiP ULP
+   * \return Return true if the caller is a PiP ULP
    */
   int  pip_is_ulp(  void );
   /** @}*/
@@ -862,7 +862,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  @{
    * \param[in] PiP ID to check
    *
-   * \return Returns true if the specified PiP task or ULP is alive
+   * \return Return true if the specified PiP task or ULP is alive
    * and running
    */
   int pip_is_alive( int pipid );
@@ -897,9 +897,9 @@ extern "C" {
    * \param[in] coreno Core number for the PiP task to be bound to. If
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
-   * \param[in,out] pipidp Specify PIPID of the spawned PiP task. If
-   *  \c PIP_PIPID_ANY is specified, then the PIPID of the spawned PiP
-   *  task is up to the PiP library and the assigned PIPID will be
+   * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
+   *  \c PIP_PIPID_ANY is specified, then the PiP ID of the spawned PiP
+   *  task is up to the PiP library and the assigned PiP ID will be
    *  returned.
    * \param[in] before Just before the executing of the spawned PiP
    *  task, this function is called so that file descriptors inherited
@@ -937,22 +937,22 @@ extern "C" {
   /**  DEPRECATED
    * \brief import the exposed memory region of the other.
    *  @{
-   * \param[in] pipid The PIPID to import the exposed address
+   * \param[in] pipid The PiP ID to import the exposed address
    * \param[in] symnam The name of a symbol existing in the specified PiP task
    * \param[out] addrp The address of the variable of
    *  the PiP task specified by the \a pipid.
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \note pip_get_addr() function is unable to get proper addresses
+   * \note \b pip_get_addr() function is unable to get proper addresses
    * for local (static) or TLS variables.
    *
-   * \note Although the pip_get_addr() fucntion can be used to get a
+   * \note Although the \b pip_get_addr() fucntion can be used to get a
    * function address, calling the function of the other PiP task by
    * its address is very tricky and it may result in an unexpected
    * bahavior.
    *
-   * \note By definition of the dlsym() Glibc function, this may
+   * \note By definition of the `dlsym()` Glibc function, this may
    * return NULL even if the variable having the specified name exists.
    */
   int pip_get_addr( int pipid, const char *symnam, void **addrp );
