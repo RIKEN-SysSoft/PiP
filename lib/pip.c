@@ -1,18 +1,18 @@
 /*
- * $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+ * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
  * 	  System Software Devlopment Team. All rights researved$
  * $PIP_VERSION: Version 1.0$
  * $PIP_license: <Simplified BSD License>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the 
+ *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * The views and conclusions contained in the software and documentation
  * are those of the authors and should not be interpreted as representing
  * official policies, either expressed or implied, of the PiP project.$
@@ -95,7 +95,6 @@ static int (*pip_clone_mostly_pthread_ptr) (
 
 struct pip_gdbif_root	*pip_gdbif_root;
 
-/* pipis__root_() is called from pip_util.c and it must not be static */
 int pip_is_root( void ) {
   return pip_task != NULL && pip_task->type == PIP_TYPE_ROOT;
 }
@@ -726,7 +725,6 @@ static pip_task_t *pip_get_myself_( void ) {
 }
 
 int pip_export( void *export ) {
-  if( export == NULL ) RETURN( EINVAL );
   pip_get_myself_()->export = export;
   RETURN( 0 );
 }
@@ -2443,6 +2441,7 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
 }
 
 int pip_ulp_locked_queue_init(  pip_ulp_locked_queue_t *queue ) {
+  if( queue == NULL ) RETURN( EINVAL );
   pip_spin_init( &queue->lock );
   PIP_ULP_INIT( &queue->queue );
   return 0;
@@ -2575,7 +2574,6 @@ int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp ) {
 
   IF_UNLIKELY( pipidp == NULL ) RETURN( EINVAL );
   task = PIP_TASK( ulp );
-  IF_UNLIKELY( task->type != PIP_TYPE_ULP ) RETURN( EPERM );
   *pipidp = task->pipid;
   return 0;
 }
@@ -2654,6 +2652,7 @@ int pip_ulp_mutex_unlock( pip_ulp_mutex_t *mutex ) {
 }
 
 int pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n ) {
+  if( barrp == NULL || n < 1 ) RETURN( EINVAL );
   PIP_ULP_INIT( &barrp->waiting );
   barrp->sched      = NULL;
   barrp->count      = n;

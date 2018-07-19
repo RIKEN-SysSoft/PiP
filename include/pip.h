@@ -1,18 +1,18 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
   * 	  System Software Devlopment Team. All rights researved$
   * $PIP_VERSION: Version 1.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
   * met:
-  * 
+  *
   * 1. Redistributions of source code must retain the above copyright
   *    notice, this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the 
+  *    notice, this list of conditions and the following disclaimer in the
   *    documentation and/or other materials provided with the distribution.
-  * 
+  *
   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
   * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
   * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,7 +24,7 @@
   * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  * 
+  *
   * The views and conclusions contained in the software and documentation
   * are those of the authors and should not be interpreted as representing
   * official policies, either expressed or implied, of the PiP project.$
@@ -91,10 +91,9 @@
  * - \c Process.
  *
  * In the pthread mode, although each PiP task has its own variables
- * unlike thread, PiP task behaves more like Pthread, having no PID,
+ * unlike thread, PiP task behaves more like Pthread, having a TID,
  * having the same file descriptor space, having the same signal
  * delivery semantics as Pthread does, and so on.
- *
  * In the process mode, PiP task behaves more like a process, having
  * a PID, having an independent file descriptor space, having the same
  * signal delivery semantics as Linux process does, and so on.
@@ -136,8 +135,8 @@
  *
  * \section gdb-issue GDB issue
  *
- * Currently gdb debugger only works with the PiP root. PiP-aware GDB
- * will be provided soon.
+ * The normal gdb debugger only works with the PiP root. PiP-aware GDB
+ * is also provided and must be used for debugging PiP tasks.
  *
  * \section author Author
  *  Atsushi Hori (RIKEN, Japan) ahori@riken.jp
@@ -259,7 +258,8 @@ extern "C" {
  */
 
   /**
-   * \brief Setting information to invoke aa PiP task
+   * \brief Setting information to invoke a PiP task starting from the
+   *  main function
    *  @{
    * \param[in,out] progp Pointer to the \t pip_spawn_program_t
    *  structure in which the program invokation information is set
@@ -269,6 +269,8 @@ extern "C" {
    *
    * This function sets the required information to invoke a program,
    * starting from the \t main() function.
+   *
+   * \return This function does not return any error code.
    *
    * \sa pip_task_spawn(3), pip_spawn_from_func(3)
    *
@@ -288,7 +290,8 @@ static inline void pip_spawn_from_main( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief Setting information to invoke a PiP task
+   * \brief Setting information to invoke a PiP task starting from
+   *  any global function
    *  @{
    * \param[in,out] progp Pointer to the \c pip_spawn_program_t
    *  structure in which the program invokation information is set
@@ -298,6 +301,8 @@ static inline void pip_spawn_from_main( pip_spawn_program_t *progp,
    *
    * This function sets the required information to invoke a program,
    * starting from the \c main() function.
+   *
+   * \return This function does not return any error code.
    *
    * \sa pip_task_spawn(3), pip_spawn_from_main(3)
    *
@@ -371,8 +376,10 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    *  returns the exporting address of the PiP root, if any.
    * \param[in] opts This must be zero at the point of this writing.
    *
-   * \return zero is returned if this function succeeds. On error, error number is returned.
-   * \retval EINVAL \e notasks is a negative number, or the option combination is ivalid
+   * \return zero is returned if this function succeeds. On error, an
+   * error number is returned.
+   * \retval EINVAL \e notasks is a negative number, or the option
+   * combination is ivalid
    * \retval EOVERFLOW \c notasks is too latrge
    * \retval ENOMEM unable to allocate memory
    *
@@ -416,16 +423,19 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    *  returned.
    * \param[in] hookp Hook information to be invoked before and after
    *  the program invokation.
-   * \param[in] sisters List of ULPs to be scheduled by this task
-   *
-   * \return zero is returned if this function succeeds. On error, error number is returned.
-   * \retval EPERM PiP task tries to spawn child task
-   * \retval EBUSY Specified PIPID is alredy occupied
+   * \param[in] sisters List of ULPs to be scheduled by this task. \c
+   *  sisters can be \c NULL when there is no ULPs to be scheduled by
+   *  this created task.
    *
    * \note In theory, there is no reason to restrict for a PiP task to
    * spawn another PiP task. However, the current implementation fails
    * to do so. If the root process is multithreaded, only the main
    * thread can call this function.
+   *
+   * \return zero is returned if this function succeeds. On error, an
+   * error number is returned.
+   * \retval EPERM PiP task tries to spawn child task
+   * \retval EBUSY Specified PIPID is alredy occupied
    *
    * \sa pip_task_spawn(3), pip_spawn_from_main(3), pip_ulp_new(3)
    *
@@ -451,10 +461,20 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * The PiP root or a PiP task can export a memory region only
    * once.
    *
-   * \note The exported address can only be retrieved by \c pip_named_import(3).
+   * \note The exported address can only be retrieved by
+   * \c pip_named_import(3).
    * \note There is no size parameter to specify the length of the
    * exported region because there is no way to restrict the access
    * outside of the exported region.
+   * \note The design of this function is prioritized for ease of use
+   * and this function works not in a efficient way. So, do not use
+   * this in a time critical path.
+   *
+   * \return zero is returned if this function succeeds. On error, an
+   * error number is returned.
+   * \retval EINVAL \c format is \c NULL
+   * \retval ENOMEM not enough memory available
+   * \retval EBUSY the specified name is already in use
    *
    * \sa pip_named_import(3)
    */
@@ -470,8 +490,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  the PiP task specified by the \a pipid.
    * \param[in] format a \c printf format to give the exported address a name
    *
-   * \return Return 0 on success. Return an error code on error.
-   *
    * \note To avoid deadlock, the corresponding \c pip_named_export(3)
    * must be called beofre calling \c pip_named_import(3);
    * \note Unlike \c pip_import(3), this function might be blocked until the
@@ -481,6 +499,15 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \note If this function is called by a ULP or a task having
    * ULP(s), then this call may result in context switching to the
    * other ULP.
+   * \note The design of this function is prioritized for ease of use
+   * and this function works not in a efficient way. So, do not use
+   * this in a time critical path.
+   *
+   * \return zero is returned if this function succeeds. On error, an
+   * error number is returned.
+   * \retval EINVAL \c format is \c NULL
+   * \retval ENOMEM not enough memory available
+   * \retval ECANCELED the target task is terminated during the query
    *
    * \sa pip_named_export(3)
    */
@@ -496,13 +523,18 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  the PiP task specified by the \a pipid.
    * \param[in] format a \c printf format to give the exported address a name
    *
-   * \return Return 0 on success. Return an error code on error.
-   *
    * \note The imported address must be exported by \c pip_named_export(3).
    * \note When the named export cannot be found at the specified
    * task, then this function returns immediately. It is guaranteed
    * that the will be no ULP context switching take place in this
    * function call.
+   *
+   * \return zero is returned if this function succeeds. On error, an
+   * error number is returned.
+   * \retval EINVAL \c format is \c NULL
+   * \retval ENOMEM not enough memory available
+   * \retval ECANCELED the target task is terminated during the query
+   * \retval ENOENT there is no export having the specified name
    *
    * \sa pip_named_export(3)
    */
@@ -518,14 +550,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  process or task to the others.
    *  function call.
    *
-   * \return Return 0 on success. Return an error code on error.
-   *
    * The PiP root or a PiP task can export a memory region only
    * once.
    *
    * \note There is no size parameter to specify the length of the
    * exported region because there is no way to restrict the access
    * outside of the exported region.
+   *
+   * \return Return 0 on success. Return an error code on error.
    *
    * \sa pip_import(3)
    */
@@ -539,13 +571,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \param[out] expp The starting address of the exposed region of
    *  the PiP task specified by the \a pipid.
    *
-   * \return Return 0 on success. Return an error code on error.
-   *
    * \note It is the users' responsibility to synchronize. When the
    * target region is not exported yet , then this function returns
    * NULL. If the root exports its region by the \c pip_init function
    * call, then it is guaranteed to be imported by PiP tasks at any
    * time.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c expp is \c NULL
    *
    * \sa pip_export(3)
    */
@@ -559,6 +592,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  will be set to the PIPID of the calling process.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c pipidp is \c NULL
    *
    */
   int pip_get_pipid( int *pipidp );
@@ -571,6 +605,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  will be set to the maximum number of the PiP tasks.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c ntasksp is \c NULL
+   * \retval EPERM PiP library is not yet initialized
    *
    */
   int pip_get_ntasks( int *ntasksp );
@@ -580,7 +616,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if the calling task is a PiP task or not
    *  @{
    *
-   * \return Return 0 on success. Return an error code on error.
+   * \return Returns an boolean value.
    *
    * \note Unlike most of the other PiP functions, this can be called
    * BEFORE calling the \c pip_init() function.
@@ -595,6 +631,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  will be set to the PiP execution mode
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c modep is \c NULL
+   * \retval EPERM PiP library is not yet initialized
    *
    */
   int pip_get_mode( int *modep );
@@ -612,7 +650,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * ULPs then the actual termination of the PiP task is postponed
    * until all the associated (scheduling) ULP(s) terminate(s).
    *
-   * \return Return 0 on success. Return an error code on error.
+   * \return This function does not return if it succeeds. It return an
+   * error code on error.
    *
    * \sa pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
    *
@@ -634,6 +673,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \c exit glibc function.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The caller is not the PiP root
+   * \retval EDEADLK The specified \c pipid is the PiP root
    *
    * \sa pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
    *
@@ -651,6 +692,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * mode.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The caller is not the PiP root
+   * \retval EDEADLK The specified \c pipid is the PiP root
+   * \retval ESRCH There is no running PiP task having the specified
+   * 	     PiP ID
    *
    * \sa pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3)
    *
@@ -672,6 +717,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \c exit glibc function.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The caller is not the PiP root
+   * \retval ESRCH There is no running PiP task
    *
    * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3)
    *
@@ -692,6 +739,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \c exit glibc function.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The caller is not the PiP root
+   * \retval ESRCH There is no running PiP task
    *
    * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3)
    *
@@ -710,17 +759,23 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * mode.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized
+   * \retval EINVAL An invalid signal number or invalid PiP ID is
+   * specified
    *
    */
   int pip_kill( int pipid, int signal );
   /** @}*/
 
   /**
-   * \brief deliver a process or thread ID
+   * \brief deliver a process or thread ID defined by the system
    *  @{
    * \param[out] pipid PIPID of a target PiP task
    * \param[out] idp a pointer to store the ID value
    *
+   * \note The returned object depends on the PiP mode. In the process
+   * mode it returns PID, in the thread mode it returns thread (\t
+   * pthread_t) associated with the PiP task
    * \note This function can be used regardless to the PiP execution
    * mode.
    *
@@ -751,7 +806,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \param[in] n number of participants of this barrier
    * synchronization
    *
-   * \sa pip_task_barrier_wait(3), pip_universal_barrier_init(3), pip_universal_barrier_wait(3)
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c barrp is \c NULL or \c n is invalid
+   *
+   * \sa pip_task_barrier_wait(3), pip_universal_barrier_init(3),
+   * pip_universal_barrier_wait(3)
    */
   int pip_task_barrier_init( pip_barrier_t *barrp, int n );
   /** @}*/
@@ -761,6 +820,9 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  @{
    *
    * \param[in] barrp pointer to a PiP barrier structure
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c barrp is \c NULL
    *
    * \sa pip_task_barrier_init(3), pip_universal_barrier_init(3), pip_universal_barrier_wait(3)
    *
@@ -772,6 +834,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if calling PiP task is PiP root or not
    *  @{
    *
+   * \return Returns true if the caller is the PiP root
    */
   int  pip_is_root( void );
   /** @}*/
@@ -780,6 +843,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if calling PiP task is a PiP task or not
    *  @{
    *
+   * \return Returns true if the caller is a PiP task
    */
   int  pip_is_task( void );
   /** @}*/
@@ -788,6 +852,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \brief check if calling PiP task is a PiP ULP or not
    *  @{
    *
+   * \return Returns true if the caller is a PiP ULP
    */
   int  pip_is_ulp(  void );
   /** @}*/
@@ -795,7 +860,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief check if the specified PiP task is alive or not
    *  @{
+   * \param[in] PiP ID to check
    *
+   * \return Returns true if the specified PiP task or ULP is alive
+   * and running
    */
   int pip_is_alive( int pipid );
   /** @}*/

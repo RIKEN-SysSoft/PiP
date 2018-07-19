@@ -1,18 +1,18 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
   * 	  System Software Devlopment Team. All rights researved$
   * $PIP_VERSION: Version 1.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
   * met:
-  * 
+  *
   * 1. Redistributions of source code must retain the above copyright
   *    notice, this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the 
+  *    notice, this list of conditions and the following disclaimer in the
   *    documentation and/or other materials provided with the distribution.
-  * 
+  *
   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
   * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
   * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,13 +24,13 @@
   * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  * 
+  *
   * The views and conclusions contained in the software and documentation
   * are those of the authors and should not be interpreted as representing
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2018
 */
 
 #ifndef _pip_ulp_h_
@@ -142,6 +142,12 @@ extern "C" {
    *  PiP task. Or, \c NULL to specify no list.
    * \param[out] newp Created ULP is returned.
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c progp and/or \c pipidp is \c NULL
+   * \retval EINVAL The contents of \c progp is invlaid
+   * \retval EPERM The caller is not the PiP root
+   * \retval EAGAIN The specified PiP ID is already in use
+   * \retval ENOMEM Not enough memory
    *
    * \sa pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3)
    */
@@ -172,6 +178,7 @@ extern "C" {
    * calling this function, it returns \a EDEADLK.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EDEADLK There is no other ULP eligible to run
    *
    * \sa pip_ulp_resume(3), pip_ulp_yield(3)
    */
@@ -184,6 +191,10 @@ extern "C" {
    * \param[in] ulp ULP to resume
    * \param[in] flags Specifying scheduling policy
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c ulp is \c NULL
+   * \retval EBUSY The specified ULP is already eligible to run
+   *
    */
   int pip_ulp_resume( pip_ulp_t *ulp, int flags );
   /** @}*/
@@ -193,6 +204,10 @@ extern "C" {
    *  @{
    * \param[in] ulp Target PiP ULP to be scheduled
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c ulp is \c NULL
+   * \retval EPERM The specified ULP is scheduled by the other PiP task
+   *
    */
   int pip_ulp_yield_to( pip_ulp_t *ulp );
   /** @}*/
@@ -201,6 +216,10 @@ extern "C" {
    * \brief Get the current PiP ULP
    *  @{
    * \param[out] ulpp The current PiP ULP
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c ulpp is \c NULL
+   * \retval EPERM PiP library is not yet initialized
    *
    */
   int pip_ulp_myself( pip_ulp_t **ulpp );
@@ -212,6 +231,10 @@ extern "C" {
    * \param[in] pipid PiP ID
    * \param[out] ulpp Returned PiP ULP
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL Invalid PiP ID is specified
+   * \retval EPERM PiP library is not yet initialized
+   *
    */
   int pip_ulp_get( int pipid, pip_ulp_t **ulpp );
   /** @}*/
@@ -222,6 +245,9 @@ extern "C" {
    * \param[in] ulp PiP ULP
    * \param[out] pipidp PiP ID pointer
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c pipidp is \c NULL
+   *
    */
   int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp );
   /** @}*/
@@ -230,6 +256,10 @@ extern "C" {
    * \brief Get the PiP ID of the scheduling PiP task of the current ULP
    *  @{
    * \param[out] pipidp PiP ID pointer of the scheduling task
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c pipidp is \c NULL
+   * \retval The target is not eligible to run
    *
    */
   int pip_get_ulp_sched( int *pipidp );
@@ -242,6 +272,9 @@ extern "C" {
    *
    * \note This PiP ULP mutex can only be used to lock ULPs and a PiP
    * task having the same scheduling domain.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c mutex is \c NULL
    *
    * \sa pip_ulp_mutex_lock(3), pip_ulp_mutex_unlock(3)
    */
@@ -256,6 +289,12 @@ extern "C" {
    * \note This PiP ULP mutex can only be used to lock ULPs and a PiP
    * task having the same scheduling domain.
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c mutex is \c NULL
+   * \retval EDEADLK Tries to lock again
+   * \retval EPERM The lock is owned by the other PiP task
+   * (i.e. different scheduling domain)
+   *
    * \sa pip_ulp_mutex_init(3), pip_ulp_mutex_unlock(3)
    */
   int pip_ulp_mutex_lock( pip_ulp_mutex_t *mutex );
@@ -268,6 +307,11 @@ extern "C" {
    *
    * \note This PiP ULP mutex can only be used to lock ULPs and a PiP
    * task having the same scheduling domain.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c mutex is \c NULL
+   * \retval EPERM The lock is owned by the other PiP task
+   * (i.e. different scheduling domain)
    *
    * \sa pip_ulp_mutex_init(3), pip_ulp_mutex_lock(3)
    */
@@ -283,7 +327,10 @@ extern "C" {
    * \note This PiP ULP barrier can only be used to synchronize ULPs
    * and a PiP task having the same scheduling domain.
    *
-   * \sa pip_ulp_mutex_wait(3)
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c barrier is \c NULL or \c n is invalid
+   *
+   * \sa pip_ulp_barrier_wait(3)
    */
   int pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n );
   /** @}*/
@@ -296,7 +343,12 @@ extern "C" {
    * \note This PiP ULP barrier can only be used to synchronize ULPs
    * and a PiP task having the same scheduling domain.
    *
-   * \sa pip_ulp_mutex_init(3)
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c barrier is \c NULL
+   * \retval EPERM The barrier has different scheduling domain
+   * \retval EDEADLK There is no other PiP task or ULP eligible to run
+   *
+   * \sa pip_ulp_barrier_init(3)
    */
   int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp );
   /** @}*/
@@ -305,6 +357,9 @@ extern "C" {
    * \brief Initialize alocked ULP queue
    *  @{
    * \param[in] queue pointer to the locked queue to be initialized
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c queue is \c NULL
    *
    * \sa pip_ulp_suspend_and_enqueue(3),
    * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
@@ -315,10 +370,14 @@ extern "C" {
 
   /**
    * \brief Suspend the current PiP ULP and enqueue it to the
-   *  specified locked queue
+   *  specified locked queue for possible migration
    *  @{
    * \param[in] queue pointer to a locked ULP queue
    * \param[in] flag Specifying scheduling policy
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c queue is \c NULL
+   * \retval EPERM a PiP task cannot be migrated
    *
    * \sa pip_ulp_locked_queue_init(3),
    * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
@@ -336,6 +395,11 @@ extern "C" {
    * \param[out] ulpp Dequeued PiP ULP
    * \param[in] flag Specifying scheduling policy
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c queue is \c NULL
+   * \retval ENOENT The specified queue is empty
+   * \retval EPERM The ULP in the queue to be scheduled is a PiP task
+   *
    * \sa pip_ulp_locked_queue_init(3),
    * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3),
    * pip_ulp_dequeue_with_lock(3)
@@ -351,6 +415,9 @@ extern "C" {
    * \param[in] queue pointer to a locked ULP queue
    * \param[out] ulp PiP ULP to be enqueued
    * \param[in] flag Specifying scheduling policy
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c queue is \c NULL
    *
    * \sa pip_ulp_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
    * pip_ulp_suspend_and_enqueue(3),
@@ -369,6 +436,9 @@ extern "C" {
    *
    * \note This PiP ULP barrier can only be used to synchronize ULPs
    * and a PiP task having the same scheduling domain.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c queue is \c NULL
    *
    * \sa pip_ulp_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
    * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3)
