@@ -854,18 +854,18 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return true if the caller is a PiP ULP
    */
-  int  pip_is_ulp(  void );
+  int  pip_is_ulp( void );
   /** @}*/
 
   /**
    * \brief check if the specified PiP task is alive or not
    *  @{
-   * \param[in] PiP ID to check
+   * \param[in] pipid PiP ID to check
    *
    * \return Return true if the specified PiP task or ULP is alive
-   * and running
+   * (i.e., not yet terminated) and running
    */
-  int pip_is_alive( int pipid );
+  int  pip_is_alive( int pipid );
   /** @}*/
 
 

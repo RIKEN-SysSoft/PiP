@@ -1,18 +1,18 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
   * 	  System Software Devlopment Team. All rights researved$
   * $PIP_VERSION: Version 1.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
   * met:
-  * 
+  *
   * 1. Redistributions of source code must retain the above copyright
   *    notice, this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the 
+  *    notice, this list of conditions and the following disclaimer in the
   *    documentation and/or other materials provided with the distribution.
-  * 
+  *
   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
   * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
   * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,7 +24,7 @@
   * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  * 
+  *
   * The views and conclusions contained in the software and documentation
   * are those of the authors and should not be interpreted as representing
   * official policies, either expressed or implied, of the PiP project.$
@@ -75,9 +75,9 @@
 
 #define PIP_LD_SOLIBS		{ NULL }
 
-#define PIP_STACK_SIZE	(8*1024*1024) /* 8 MiB */
-#define PIP_MIN_STACK_SIZE	(1*1024*1024) /* 1 MiB */
-#define PIP_STACK_ALIGN	(256)
+#define PIP_STACK_SIZE		(8*1024*1024) /* 8 MiB */
+#define PIP_STACK_SIZE_MIN	(1*1024*1024) /* 1 MiB */
+#define PIP_STACK_ALIGN		(256)
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
@@ -93,7 +93,6 @@ typedef void(*free_t)(void*);
 typedef void(*pthread_init_t)(int,char**,char**);
 typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
-typedef void(*add_stack_user_t)(void);
 typedef	void(*fflush_t)(FILE*);
 typedef int(*named_export_fin_t)(struct pip_task*);
 
@@ -107,7 +106,6 @@ typedef struct {
   fflush_t		libc_fflush;  /* to call fflush() at the end */
   mallopt_t		mallopt;      /* to call mallopt() */
   free_t		free;	      /* to override free() - EXPERIMENTAL*/
-  add_stack_user_t	add_stack;    /* for GDB workarounnd */
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
   /* variables */
   char			***libc_argvp; /* to set __libc_argv */

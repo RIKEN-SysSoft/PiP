@@ -531,8 +531,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->task_root = &pip_root->tasks[ntasks];
     pip_root->task_root->pipid       = pipid;
     pip_root->task_root->type        = PIP_TYPE_ROOT;
-    pip_root->task_root->symbols.add_stack = (add_stack_user_t)
-      pip_dlsym( RTLD_DEFAULT, "pip_pthread_add_stack_user");
     pip_root->task_root->symbols.free = (free_t)pip_dlsym(RTLD_DEFAULT,"free");
     pip_root->task_root->loaded       = dlopen( NULL, RTLD_NOW );
     pip_root->task_root->thread       = pthread_self();
@@ -875,7 +873,7 @@ static size_t pip_stack_size( void ) {
 	scale *= 1024;
       case 'B': case 'b':
 	sz *= scale;
-	for( i=PIP_MIN_STACK_SIZE; i<sz; i*=2 );
+	for( i=PIP_STACK_SIZE_MIN; i<sz; i*=2 );
 	sz = i;
 	break;
       }
@@ -936,9 +934,6 @@ static int pip_load_dso( void **handlep, char *path ) {
   }
   DBGF( "calling dlmopen(%s)", path );
   PIP_ACCUM( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) == NULL );
-  if( pip_root->task_root->symbols.add_stack != NULL ) {
-    //pip_root->task_root->symbols.add_stack();
-  }
   DBG;
   if( loaded == NULL ) {
     if( ( err = pip_check_pie( path ) ) != 0 ) RETURN( err );
@@ -957,26 +952,25 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   int err = 0;
 
   /* functions */
-  symp->main          = dlsym( handle, "main"                         );
+  symp->main             = dlsym( handle, "main"                         );
   if( progp->funcname != NULL ) {
-    symp->start       = dlsym( handle, progp->funcname                );
+    symp->start          = dlsym( handle, progp->funcname                );
   }
 #ifdef PIP_PTHREAD_INIT
-  symp->pthread_init  = dlsym( handle, "__pthread_initialize_minimal" );
+  symp->pthread_init     = dlsym( handle, "__pthread_initialize_minimal" );
 #endif
-  symp->ctype_init       = dlsym( handle, "__ctype_init"               );
-  symp->glibc_init       = dlsym( handle, "glibc_init"                 );
-  symp->add_stack        = dlsym( handle, "pip_pthread_add_stack_user" );
-  symp->mallopt          = dlsym( handle, "mallopt"                    );
-  symp->libc_fflush      = dlsym( handle, "fflush"                     );
-  symp->free             = dlsym( handle, "free"                       );
-  symp->named_export_fin = dlsym( handle, "pip_named_export_fin"       );
+  symp->ctype_init       = dlsym( handle, "__ctype_init"                 );
+  symp->glibc_init       = dlsym( handle, "glibc_init"                   );
+  symp->mallopt          = dlsym( handle, "mallopt"                      );
+  symp->libc_fflush      = dlsym( handle, "fflush"                       );
+  symp->free             = dlsym( handle, "free"                         );
+  symp->named_export_fin = dlsym( handle, "pip_named_export_fin"         );
   /* variables */
-  symp->environ       = dlsym( handle, "environ"         );
-  symp->libc_argvp    = dlsym( handle, "__libc_argv"     );
-  symp->libc_argcp    = dlsym( handle, "__libc_argc"     );
-  symp->progname      = dlsym( handle, "__progname"      );
-  symp->progname_full = dlsym( handle, "__progname_full" );
+  symp->environ          = dlsym( handle, "environ"                      );
+  symp->libc_argvp       = dlsym( handle, "__libc_argv"                  );
+  symp->libc_argcp       = dlsym( handle, "__libc_argc"                  );
+  symp->progname         = dlsym( handle, "__progname"                   );
+  symp->progname_full    = dlsym( handle, "__progname_full"              );
 
   /* check mandatory symbols */
   DBGF( "env:%p  func(%s):%p   main:%p",
@@ -1377,9 +1371,6 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
   start_arg = self->args.start_arg;
 
   if( ( extval = pip_named_export_init( self ) ) == 0 ) {
-    if( self->symbols.add_stack != NULL ) {
-      //self->symbols.add_stack();
-    }
     DBG;
     argc = pip_glibc_init( &self->symbols, prog, argv, envv, self->loaded );
 
@@ -1463,10 +1454,6 @@ static int pip_do_spawn( void *thargs )  {
     }
   }
 #endif
-  //fprintf( stderr, "self->symbols.add_stack=%p\n", self->symbols.add_stack );
-  if( self->symbols.add_stack != NULL ) {
-    //self->symbols.add_stack();
-  }
   if( !pip_is_shared_fd_() ) pip_close_on_exec();
 #ifdef PRINT_MAPS
   pip_print_maps();
