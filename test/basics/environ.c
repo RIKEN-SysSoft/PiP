@@ -54,9 +54,9 @@ int main( int argc, char **argv ) {
     for( i=0; i<NTASKS; i++ ) {
 
       j  = 0;
-      asprintf( &envv[j++], "%s=%d", PIPENV0, i+10 );
-      asprintf( &envv[j++], "%s=%d", PIPENV1, i+100 );
-      asprintf( &envv[j++], "%s=%d", PIPENV2, i+1000 );
+      TESTSYSERR( asprintf( &envv[j++], "%s=%d", PIPENV0, i+10 ) );
+      TESTSYSERR( asprintf( &envv[j++], "%s=%d", PIPENV1, i+100 ) );
+      TESTSYSERR( asprintf( &envv[j++], "%s=%d", PIPENV2, i+1000 ) );
       envv[j] = NULL;
 
       pipid = i;
@@ -109,9 +109,9 @@ int main( int argc, char **argv ) {
     } else {
       int err = 0;
 
-      asprintf( &key, "%s:%d", PIPENV, pipid );
+      TESTSYSERR( asprintf( &key, "%s:%d", PIPENV, pipid ) );
       for( i=0; i<1000; i++ ) {
-	asprintf( &env, "%s=%d", key, i+pipid );
+	TESTSYSERR( asprintf( &env, "%s=%d", key, i+pipid ) );
 	//fprintf( stderr, "<%d> putenv(%s)\n", pipid, env );
 	if( putenv( env ) != 0 ) {
 	  err = 1;

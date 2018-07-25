@@ -55,8 +55,12 @@
 
 #define DBG_PRTBUF	char _dbuf[1024]={'\0'}
 #define DBG_PRNT(...)	sprintf(_dbuf+strlen(_dbuf),__VA_ARGS__)
-#define DBG_OUTPUT	do { _dbuf[ strlen( _dbuf ) ] = '\n';	\
-    write( 2, _dbuf, strlen(_dbuf) ); _dbuf[0]='\0';} while(0)
+#define DBG_OUTPUT	\
+  do { int _dbuf_len = strlen( _dbuf ), _dbuf_rv;		\
+    _dbuf[ _dbuf_len ] = '\n';					\
+    _dbuf_rv = write( 2, _dbuf, _dbuf_len + 1 );		\
+    (void)_dbuf_rv;						\
+    _dbuf[0]='\0';} while(0)
 #define DBG_TAG							\
   do { char __tag[64]; pip_idstr(__tag,64);			\
     DBG_PRNT("%s %s:%d %s(): ",__tag,				\
