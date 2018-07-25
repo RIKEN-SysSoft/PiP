@@ -48,16 +48,16 @@ DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 include $(top_srcdir)/build/rule.mk
 
 piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(LDLIBS) \
-	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
+	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@ $(LDLIBS)
 
 pmap: pmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) $(LDLIBS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread
+	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
 
 hello: hello.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) $(LDLIBS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread
+	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
 
 post-clean-hook:
 	$(RM) *.E *.log

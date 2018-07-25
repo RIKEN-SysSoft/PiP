@@ -35,6 +35,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PIPCFLAGS  = -I$(PIPINCDIR) $(CFLAGS) $(PIEFLAG) $(PIPINCFLAGS)
+LDLIBS += $(PIPLDLIB) -ldl
 
 DEPINCS = $(PIPINCDIR)/pip.h
 
@@ -47,7 +48,7 @@ PROGRAMS_TO_INSTALL = # nothing
 include $(top_srcdir)/build/rule.mk
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@
+	$(CC) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@ $(LDLIBS) -ldl
 
 post-clean-hook:
 	$(RM) *.E *.log
