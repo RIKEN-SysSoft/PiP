@@ -66,7 +66,7 @@ int main( int argc, char **argv ) {
     TESTINT( pip_fin() );
 
   } else {
-    system( "hostname" );
+    TESTSYSERR( system( "hostname" ) );
   }
   return 0;
 }

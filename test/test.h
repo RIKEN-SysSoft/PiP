@@ -80,6 +80,10 @@
 
 #define TESTINT(F)		\
   do{int __xyz=(F); if(__xyz){PRINT_FL(#F,__xyz);exit(9);}} while(0)
+#define TESTSYSERR(F)		\
+  do{int __xyz=(F); if(__xyz == -1){PRINT_FL(#F,__xyz);exit(9);}} while(0)
+#define TEST_EXPECT(F, X)	\
+  do{int __xyz=(F); if(__xyz != X){PRINT_FL(#F,__xyz);exit(9);}} while(0)
 
 #else
 
@@ -94,6 +98,20 @@
     int __xyz = (F);					\
     TPRT( "<< %s=%d", #F, __xyz );			\
     if( __xyz != 0 ) exit( 9 );				\
+  } while(0)
+#define TESTSYSERR(F)		\
+  do{ 							\
+    TPRT( ">> %s", #F );				\
+    int __xyz = (F);					\
+    TPRT( "<< %s=%d", #F, __xyz );			\
+    if( __xyz == -1 ) exit( 9 );			\
+  } while(0)
+#define TEST_EXPECT(F, X)				\
+  do{ 							\
+    TPRT( ">> %s", #F );				\
+    int __xyz = (F);					\
+    TPRT( "<< %s=%d", #F, __xyz );			\
+    if( __xyz != X ) exit( 9 );				\
   } while(0)
 #endif
 
@@ -129,7 +147,7 @@ inline static void print_maps( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    write( 1, buf, sz );
+    TEST_EXPECT( write( 1, buf, sz ), sz );
   }
   close( fd );
 }
@@ -140,7 +158,7 @@ inline static void print_numa( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    write( 1, buf, sz );
+    TEST_EXPECT( write( 1, buf, sz ), sz );
   }
   close( fd );
 }
