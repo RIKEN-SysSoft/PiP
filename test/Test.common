@@ -30,16 +30,17 @@
 
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
 CFLAGS +=
+LDLIBS += $(PIPLDLIB) -ldl
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h \
 	$(PIPINCDIR)/pip_ulp.h $(PIPINCDIR)/pip_internal.h \
 	$(PIPINCDIR)/pip_machdep.h $(PIPINCDIR)/pip_debug.h
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
 
 %: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) -pie $< -o $@
+	$(CXX) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) -pie $< -o $@ $(LDLIBS)
 
 %: %.f $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(FC) $(CPPFLAGS) $(FFLAGS) $(PIPLDFLAGS) -fPIE $< -o $@
+	$(FC) $(CPPFLAGS) $(FFLAGS) $(PIPLDFLAGS) -fPIE $< -o $@ $(LDLIBS)

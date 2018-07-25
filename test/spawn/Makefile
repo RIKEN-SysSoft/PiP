@@ -35,6 +35,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
+LDLIBS += $(PIPLDLIB) -ldl
+
 SRCS    = a.c spawns.c spawnp.c
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
@@ -54,7 +56,7 @@ c.out: a.out
 	cp $< $@
 
 a.out: a.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS)  $(PIPLDFLAGS) $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS)  $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
 
 post-clean-hook:
 	$(RM) *.E *.log

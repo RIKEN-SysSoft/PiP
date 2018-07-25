@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 export LD_PRELOAD=`pwd`/../preload/pip_preload.so
 export OMP_NUM_THREADS=`$MCEXEC ./util/ompnumthread`
