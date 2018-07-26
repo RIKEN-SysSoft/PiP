@@ -204,9 +204,13 @@ extern "C" {
    *  @{
    * \param[in] ulp Target PiP ULP to be scheduled
    *
+   * Context-switch to the specified ULP. If \c ulp is \c NULL, then
+   * this works the same as \c pip_ulp_yield() does.
+   *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c ulp is \c NULL
-   * \retval EPERM The specified ULP is scheduled by the other PiP task
+   * \retval EPERM The specified ULP is being scheduled by the other
+   * PiP task
    *
    */
   int pip_ulp_yield_to( pip_ulp_t *ulp );
@@ -330,7 +334,9 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c barrier is \c NULL or \c n is invalid
    *
-   * \sa pip_ulp_barrier_wait(3)
+   * \sa pip_ulp_barrier_wait(3), pip_task_barrier_init(3),
+   * pip_task_barrier_wait(3), pip_universal_barrier_init(3),
+   * pip_universal_barrier_wait(3)
    */
   int pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n );
   /** @}*/
@@ -348,7 +354,9 @@ extern "C" {
    * \retval EPERM The barrier has different scheduling domain
    * \retval EDEADLK There is no other PiP task or ULP eligible to run
    *
-   * \sa pip_ulp_barrier_init(3)
+   * \sa pip_ulp_barrier_init(3), pip_task_barrier_init(3),
+   * pip_task_barrier_wait(3), pip_universal_barrier_init(3),
+   * pip_universal_barrier_wait(3)
    */
   int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp );
   /** @}*/

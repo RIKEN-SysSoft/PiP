@@ -91,13 +91,15 @@ int pip_universal_barrier_init( pip_universal_barrier_t *ubarr, int n );
    * ULP(s), then this call may result in context switching to the
    * other ULP.
    * \note The design of this function is prioritized for ease of use
-   * and this function works not in a efficient way. So, do not use
+   * and this function works not in an efficient way. So, do not use
    * this in a time critical path.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c ubarr is \c NULL
    *
    * \sa pip_universal_barrier_init(3), pip_universal_barrier_fin(3)
+   * pip_task_barrier_init(3), pip_task_barrier_wait(3),
+   * pip_ulp_barrier_init(3), pip_ulp_barrier_wait(3),
    */
 int pip_universal_barrier_wait( pip_universal_barrier_t *ubarr );
   /** @}*/
@@ -111,6 +113,8 @@ int pip_universal_barrier_wait( pip_universal_barrier_t *ubarr );
    * \return Return 0 on success. Return an error code on error.
    *
    * \sa pip_universal_barrier_init(3), pip_universal_barrier_wait(3)
+   * pip_task_barrier_init(3), pip_task_barrier_wait(3),
+   * pip_ulp_barrier_init(3), pip_ulp_barrier_wait(3),
    */
 int pip_universal_barrier_fin( pip_universal_barrier_t *ubarr );
   /** @}*/

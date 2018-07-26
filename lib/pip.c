@@ -1935,7 +1935,9 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
 	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 );
 #else
-      err = sem_trywait( &task->sem_wait );
+      if( sem_trywait( &task->sem_wait ) != 0 ) {
+	if( errno != EINTR ) err = errno;
+      }
 #endif
     } else {
 #ifdef PIP_USE_MUTEX
@@ -1943,7 +1945,13 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
 	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 );
 #else
-      err = sem_wait( &task->sem_wait );
+      while( 1 ) {
+	if( sem_wait( &task->sem_wait ) == 0 ) break;
+	if( errno != EINTR ) {
+	  err = errno;
+	  break;
+	}
+      }
 #endif
     }
     DBG;
@@ -1968,32 +1976,25 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 #endif
     DBG;
     if( flag_try ) options |= WNOHANG;
-    while( 1 ) {
-      errno = 0;
-      DBG;
-      if( ( pid = waitpid( task->pid, &status, options ) ) >= 0 ) break;
-      DBG;
-      if( errno == EINTR ) continue;
+    if( ( pid = waitpid( task->pid, &status, options ) ) < 0 ) {
       err = errno;
-      break;
+    } else {
+      if( WIFEXITED( status ) ) {
+	int extval = WEXITSTATUS( status );
+	pip_set_extval( task, extval );
+      } else if( WIFSIGNALED( status ) ) {
+	int sig = WTERMSIG( status );
+	pip_warn_mesg( "PiP Task [%d] receives %s signal",
+		       task->pipid, strsignal(sig) );
+	pip_set_extval( task, sig + 128 );
+      }
+      DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
     }
-    DBG;
-    if( WIFEXITED( status ) ) {
-      int extval = WEXITSTATUS( status );
-      pip_set_extval( task, extval );
-    } else if( WIFSIGNALED( status ) ) {
-      int sig = WTERMSIG( status );
-      pip_warn_mesg( "PiP Task [%d] receives %s signal",
-		     task->pipid, strsignal(sig) );
-      pip_set_extval( task, sig + 128 );
-    }
-    DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
   }
-  DBGF( "extval=%d", task->extval );
   if( err == 0 ) {
     struct pip_gdbif_task *gdbif_task = task->gdbif_task;
 
-    DBGF( "pipid=%d", task->pipid );
+    DBGF( "pipid=%d  extval=%d", task->pipid, task->extval );
 
     gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
     pip_memory_barrier();
@@ -2536,7 +2537,7 @@ int pip_ulp_yield_to( pip_ulp_t *ulp ) {
   pip_ulp_t	*queue;
   pip_task_t	*sched, *task;
 
-  IF_UNLIKELY( ulp   == NULL ) RETURN( EINVAL );
+  IF_UNLIKELY( ulp   == NULL ) RETURN( pip_ulp_yield() );
   sched = pip_task->task_sched;
   IF_UNLIKELY( sched == NULL ) RETURN( EPERM );
   queue = &sched->schedq;

@@ -431,6 +431,8 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    * spawn another PiP task. However, the current implementation fails
    * to do so. If the root process is multithreaded, only the main
    * thread can call this function.
+   * \note In the process mode, the file descriptors set the
+   * close-on-exec flag will be closed on the created child task.
    *
    * \return zero is returned if this function succeeds. On error, an
    * error number is returned.
@@ -467,7 +469,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * exported region because there is no way to restrict the access
    * outside of the exported region.
    * \note The design of this function is prioritized for ease of use
-   * and this function works not in a efficient way. So, do not use
+   * and this function works not in an efficient way. So, do not use
    * this in a time critical path.
    *
    * \return zero is returned if this function succeeds. On error, an
@@ -509,7 +511,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ENOMEM not enough memory available
    * \retval ECANCELED the target task is terminated during the query
    *
-   * \sa pip_named_export(3)
+   * \sa pip_named_export(3), pip_export(3), pip_import(3)
    */
   int pip_named_import( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
@@ -536,7 +538,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECANCELED the target task is terminated during the query
    * \retval ENOENT there is no export having the specified name
    *
-   * \sa pip_named_export(3)
+   * \sa pip_named_export(3), pip_export(3), pip_import(3)
    */
   int pip_named_tryimport( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
@@ -559,7 +561,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \sa pip_import(3)
+   * \sa pip_import(3), pip_named_export(3), pip_named_import(3)
    */
   int pip_export( void *exp );
   /** @}*/
@@ -580,7 +582,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EINVAL \c expp is \c NULL
    *
-   * \sa pip_export(3)
+   * \sa pip_export(3), pip_named_export(3), pip_named_import(3)
    */
   int pip_import( int pipid, void **expp );
   /** @}*/
@@ -809,7 +811,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c barrp is \c NULL or \c n is invalid
    *
-   * \sa pip_task_barrier_wait(3), pip_universal_barrier_init(3),
+   * \note This barrier works on only PiP tasks.
+   *
+   * \sa pip_task_barrier_wait(3), pip_ulp_barrier_init(3),
+   * pip_ulp_barrier_wait(3),
+   * pip_universal_barrier_init(3),
    * pip_universal_barrier_wait(3)
    */
   int pip_task_barrier_init( pip_barrier_t *barrp, int n );
@@ -824,7 +830,9 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c barrp is \c NULL
    *
-   * \sa pip_task_barrier_init(3), pip_universal_barrier_init(3), pip_universal_barrier_wait(3)
+   * \sa pip_task_barrier_init(3), pip_ulp_barrier_init(3),
+   * pip_ulp_barrier_wait(3), pip_universal_barrier_init(3),
+   * pip_universal_barrier_wait(3)
    *
    */
   int pip_task_barrier_wait( pip_barrier_t *barrp );

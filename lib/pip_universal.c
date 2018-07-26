@@ -100,7 +100,13 @@ int pip_universal_barrier_wait( pip_universal_barrier_t *ubarr ) {
       ubarr->count_sem --;
       pip_spin_unlock( &ubarr->lock );
       DBGF( ">> sem_wait[%p,%p,%d]", ubarr, &ubarr->semaphore[t], t );
-      if( sem_wait( &ubarr->semaphore[t] ) != 0 ) err = errno;
+      while( 1 ) {
+	if( sem_wait( &ubarr->semaphore[t] ) == 0 ) break;
+	if( errno != EINTR ) {
+	  err = errno;
+	  break;
+	}
+      }
       DBGF( "<< sem_wait" );
       pip_spin_lock( &ubarr->lock );
     } else {	/* switch to the other ULP */
