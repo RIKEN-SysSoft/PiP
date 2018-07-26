@@ -50,6 +50,8 @@
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
+//#define PIP_USE_MUTEX
+
 /* the EVAL env. is to measure the time for calling dlmopen() */
 //#define EVAL
 
@@ -186,7 +188,7 @@ static void pip_reset_task_struct( pip_task_t *task ) {
 #ifdef PIP_USE_MUTEX
   (void) pthread_mutex_init( &task->mutex_wait, NULL );
 #else
-  (void) sem_init( &task->sem_wait, 0, 0 );
+  (void) sem_init( &task->sem_wait, 1, 0 );
 #endif
   pip_memory_barrier();
   task->pipid = PIP_PIPID_NONE;
@@ -485,11 +487,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   int 		i, err = 0;
   struct pip_gdbif_root *gdbif_root;
 
-  if( !pip_is_main_thread() ) RETURN( EPERM ); /* must be called from main */
   if( pip_root != NULL )      RETURN( EBUSY ); /* already initialized */
   if( ( envroot = getenv( PIP_ROOT_ENV ) ) == NULL ) {
-    /* root process ? */
-
+    /* root process */
+    if( !pip_is_main_thread() ) RETURN( EPERM ); /* must be called from main */
     if( ntasksp == NULL ) {
       ntasks = PIP_NTASKS_MAX;
     } else if( *ntasksp <= 0 ) {
@@ -565,24 +566,31 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
     /* child task */
+    DBG;
     if( ( err = pip_set_root( envroot ) ) != 0 ) RETURN( err );
+    DBG;
     pipid = (int) strtoll( envtask, NULL, 10 );
+    DBG;
     if( pipid < 0 || pipid >= pip_root->ntasks ) {
       pip_err_mesg( "PiP-ID is too large (pipid=%d)" );
       RETURN( EPERM );
     }
+    DBG;
     pip_task = &pip_root->tasks[pipid];
     ntasks   = pip_root->ntasks;
     if( ntasksp != NULL ) *ntasksp = ntasks;
     if( rt_expp != NULL ) *rt_expp = (void*) pip_root->task_root->export;
+    DBG;
 
     unsetenv( PIP_ROOT_ENV );
     unsetenv( PIP_TASK_ENV );
 
   } else {
+    DBG;
     RETURN( EPERM );
   }
   /* root and child */
+    DBG;
   if( pipidp != NULL ) *pipidp = pipid;
   DBGF( "pip_root=%p  pip_task=%p", pip_root, pip_task );
 

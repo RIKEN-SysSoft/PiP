@@ -51,7 +51,7 @@
 #  undef NTASKS
 #  define NTASKS	(250)
 # endif
-# define NULPS		(10)
+# define NULPS		(4)
 #endif
 
 int my_ulp_main( void ) {
@@ -71,40 +71,29 @@ int my_tsk_main( void ) {
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog_ulp, prog_tsk;
   pip_ulp_t 		ulps;
-  int			ntasks, nulps, pipid;
-  int 			i, j, k;
+  int			ntasks=0, nulps=0, pipid;
+  int 			total, i, j, k;
 
-  if( argc > 1 ) {
-    ntasks = atoi( argv[1] );
+  if( argc == 1 ) {
+    nulps  = NULPS;
+    ntasks = NTASKS / ( nulps + 1 );
   } else {
-    ntasks = NTASKS;
+    if( argc > 1 ) ntasks = atoi( argv[1] );
+    if( argc > 2 ) nulps  = atoi( argv[2] );
   }
-  if( ntasks < 2 ) {
-    fprintf( stderr,
-	     "Too small number of PiP tasks (must be latrger than 1)\n" );
-    exit( 1 );
-  }
-  if( ntasks >= 256 ) {
-    fprintf( stderr,
-	     "Too many number of PiP tasks (must be less than 256)\n" );
-    exit( 1 );
-  }
-  if( argc > 2 ) {
-    nulps = atoi( argv[2] );
-    if( nulps >= ntasks ) {
-      fprintf( stderr,
-	       "Number of ULPs (%d) must be less than "
-	       "the number of PiP tasks (%d)\n",
-	       nulps, ntasks );
+  if( ntasks == 0 ) {
+      fprintf( stderr, "Not enough number of tasks\n" );
       exit( 1 );
-    }
-  } else {
-    nulps = NULPS;
+  }
+  total = ntasks * nulps + ntasks;
+  if( total > NTASKS ) {
+    fprintf( stderr, "Too large\n" );
+    exit( 1 );
   }
 
   pip_spawn_from_func( &prog_ulp, argv[0], "my_ulp_main", NULL, NULL );
   pip_spawn_from_func( &prog_tsk, argv[0], "my_tsk_main", NULL, NULL );
-  TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
+  TESTINT( pip_init( NULL, &total, NULL, 0 ) );
 
   k = 0;
   while( k < ntasks ) {
