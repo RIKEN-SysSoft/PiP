@@ -37,7 +37,7 @@
 #include <test.h>
 
 //#define NITERS	(10000)
-#define NITERS	(100)
+#define NITERS	(50)
 
 #define NULPS	(10)
 

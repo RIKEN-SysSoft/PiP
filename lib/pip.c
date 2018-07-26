@@ -51,6 +51,7 @@
 //#define PRINT_FDS
 
 //#define PIP_USE_MUTEX
+//#define PIP_USE_SIGQUEUE
 
 /* the EVAL env. is to measure the time for calling dlmopen() */
 //#define EVAL
@@ -107,10 +108,6 @@ int pip_is_task( void ) {
 
 int pip_is_ulp( void ) {
   return pip_task != NULL && pip_task->type == PIP_TYPE_ULP;
-}
-
-static int pip_is_main_thread( void ) {
-  return syscall(SYS_gettid) == getpid();
 }
 
 static int pip_count_vec( char **vecsrc ) {
@@ -490,7 +487,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   if( pip_root != NULL )      RETURN( EBUSY ); /* already initialized */
   if( ( envroot = getenv( PIP_ROOT_ENV ) ) == NULL ) {
     /* root process */
-    if( !pip_is_main_thread() ) RETURN( EPERM ); /* must be called from main */
     if( ntasksp == NULL ) {
       ntasks = PIP_NTASKS_MAX;
     } else if( *ntasksp <= 0 ) {
@@ -590,7 +586,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     RETURN( EPERM );
   }
   /* root and child */
-    DBG;
+  DBG;
   if( pipidp != NULL ) *pipidp = pipid;
   DBGF( "pip_root=%p  pip_task=%p", pip_root, pip_task );
 
@@ -1297,13 +1293,10 @@ static int pip_raise_sigchld( void ) {
 
   if( pip_is_pthread_() ) {
     DBG;
-    //#define PIP_USE_SIGQUEUE
 #ifndef PIP_USE_SIGQUEUE
     if( pthread_kill( pip_root->task_root->thread, SIGCHLD ) == ESRCH ) {
       DBG;
-      if( kill( pip_root->task_root->pid, SIGCHLD ) != 0 ) {
-	err = errno;
-      }
+      if( kill( pip_root->task_root->pid, SIGCHLD ) != 0 ) err = errno;
     }
 #else
     if( pthread_sigqueue( pip_root->task_root->thread,
@@ -1592,7 +1585,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 
   if( pip_root        == NULL ) RETURN( EPERM  );
   if( pipidp          == NULL ) RETURN( EINVAL );
-  if( !pip_is_main_thread()   ) RETURN( EPERM  );
   if( !pip_is_root()          ) RETURN( EPERM  );
   if( progp           == NULL ) RETURN( EINVAL );
   if( progp->funcname != NULL &&
@@ -1769,7 +1761,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 int pip_fin( void ) {
   int ntasks, i, err = 0;
 
-  DBG;
+  if( pip_root == NULL ) RETURN( EPERM );
   if( pip_is_root() ) {		/* root */
     ntasks = pip_root->ntasks;
     for( i=0; i<ntasks; i++ ) {
@@ -2050,7 +2042,6 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 static int pip_do_wait( int pipid, int flag_try, int *extvalp ) {
   int err;
 
-  if( !pip_is_main_thread() )                    RETURN( EPERM );
   if( !pip_is_root() )                           RETURN( EPERM );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
@@ -2126,8 +2117,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   int	pipid, count;
   int	err = 0;
 
-  if( !pip_is_main_thread() ) RETURN( EPERM  );
-  if( !pip_is_root()        ) RETURN( EPERM );
+  if( !pip_is_root() ) RETURN( EPERM );
 
   DBG;
   count = pip_find_terminated( &pipid );
@@ -2273,7 +2263,6 @@ int pip_ulp_new( pip_spawn_program_t *progp,
 
   if( pip_root        == NULL ) RETURN( EPERM  );
   if( pipidp          == NULL ) RETURN( EINVAL );
-  if( !pip_is_main_thread()   ) RETURN( EPERM  );
   if( !pip_is_root()          ) RETURN( EPERM  );
   if( sisters         == NULL &&
       newp            == NULL ) RETURN( EINVAL );

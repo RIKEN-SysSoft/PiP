@@ -15,7 +15,7 @@ basics/barrier.sh
 basics/varvars.sh
 basics/stack.sh
 basics/malloc.sh
-basics/malloc2.sh
+#basics/malloc2.sh
 basics/waitany.sh
 basics/sigchld.sh
 basics/sigchld2.sh
@@ -35,6 +35,7 @@ compat/system.sh
 #openmp/openmp.sh
 fortran/fort.sh
 pthread/pthread.sh
+pthread/cthread.sh
 ulp/ulpnew.sh
 ulp/yield.sh
 ulp/func.sh

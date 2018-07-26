@@ -79,7 +79,7 @@ int main( int argc, char **argv ) {
   if( ntasks >= 256 ) {
     fprintf( stderr,
 	     "Too many number of PiP tasks (must be less than 256)\n" );
-    exit( 1 );
+    ntasks = 255;
   }
   nulps = ntasks - 1;
 
