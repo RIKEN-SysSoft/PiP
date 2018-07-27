@@ -237,17 +237,23 @@ pip_new_export_entry( void *address, char *name, pip_hash_t hash ) {
 }
 
 int pip_named_export( void *exp, const char *format, ... ) {
-  va_list ap;
-  va_start( ap, format );
   pip_named_exptab_t *namexp = (pip_named_exptab_t*) pip_task->named_exptab;
   pip_namexp_entry_t *entry, *new;
   pip_namexp_list_t  *head;
+  va_list 	ap;
   pip_hash_t 	hash;
   char 		*name = NULL;
   int 		err = 0;
 
-  if( format == NULL ) RETURN( EINVAL );
-  if( vasprintf( &name, format, ap ) < 0 || name == NULL ) RETURN( ENOMEM );
+  va_start( ap, format );
+  if( format == NULL ) {
+    err = EINVAL;
+    goto error;
+  }
+  if( vasprintf( &name, format, ap ) < 0 || name == NULL ) {
+    err = ENOMEM;
+    goto error;
+  }
   hash = pip_name_hash( name );
   DBGF( "pipid:%d  name:%s", pip_task->pipid, name );
 
@@ -279,10 +285,16 @@ int pip_named_export( void *exp, const char *format, ... ) {
   pip_unlock_hashtab_head( head );
   pip_ulp_yield();
   free( name );
+ error:
+  va_end( ap );
   RETURN( err );
 }
 
-static int pip_named_do_import( int pipid, void **expp, int flag_nblk, const char *format, va_list ap ) {
+static int pip_named_do_import( int pipid,
+				void **expp,
+				int flag_nblk,
+				const char *format,
+				va_list ap ) {
   pip_task_t	     *task;
   pip_named_exptab_t *namexp;
   pip_namexp_entry_t *entry, *new = NULL;
@@ -386,12 +398,18 @@ static int pip_named_do_import( int pipid, void **expp, int flag_nblk, const cha
 
 int pip_named_import( int pipid, void **expp, const char *format, ... ) {
   va_list ap;
+  int err;
   va_start( ap, format );
-  RETURN( pip_named_do_import( pipid, expp, 0, format, ap ) );
+  err = pip_named_do_import( pipid, expp, 0, format, ap );
+  va_end( ap );
+  RETURN( err );
 }
 
 int pip_named_tryimport( int pipid, void **expp, const char *format, ... ) {
   va_list ap;
+  int err;
   va_start( ap, format );
-  RETURN( pip_named_do_import( pipid, expp, 1, format, ap ) );
+  err = pip_named_do_import( pipid, expp, 1, format, ap );
+  va_end( ap );
+  RETURN( err );
 }

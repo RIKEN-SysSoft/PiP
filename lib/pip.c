@@ -1515,7 +1515,7 @@ static int pip_do_spawn( void *thargs )  {
     }
   }
   DBG;
-  RETURN( 0 );
+  RETURN( self->extval );
 }
 
 static int pip_find_a_free_task( int *pipidp ) {
