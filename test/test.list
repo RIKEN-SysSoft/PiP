@@ -3,6 +3,8 @@ basics/file.sh
 basics/wait.sh
 basics/signal.sh
 basics/exit.sh
+basics/exit1.sh
+basics/exit2.sh
 basics/mutex.sh
 basics/core.sh
 basics/numa.sh

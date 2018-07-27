@@ -45,6 +45,8 @@ SRCS  = initfin.c \
 	wait.c \
 	signal.c \
 	exit.c \
+	exit1.c \
+	exit2.c \
 	mutex.c \
 	barrier.c \
 	core.c \
@@ -61,7 +63,7 @@ SRCS  = initfin.c \
 	sigchld2.c
 
 PROGRAMS  = initfin stack export environ malloc malloc2 file \
-            wait signal exit mutex barrier core numa hook spawn \
+            wait signal exit exit1 exit2 mutex barrier core numa hook spawn \
 	    null recursive varvars getaddr waitany waitany2 \
 	    sigchld sigchld2
 
