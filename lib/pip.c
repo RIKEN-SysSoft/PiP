@@ -1756,6 +1756,78 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   RETURN( err );
 }
 
+/*
+ * The following functions must be called at root process
+ */
+
+static void pip_finalize_gdbif_tasks( void ) {
+  struct pip_gdbif_task *gdbif_task, **prev, *next;
+
+  if( pip_gdbif_root == NULL ) {
+    DBGF( "pip_gdbif_root=NULL, pip_init() hasn't called?" );
+    return;
+  }
+  pip_spin_lock( &pip_gdbif_root->lock_root );
+  prev = &PIP_SLIST_FIRST(&pip_gdbif_root->task_free);
+  PIP_SLIST_FOREACH_SAFE(gdbif_task, &pip_gdbif_root->task_free, free_list,
+			 next) {
+    if( gdbif_task->gdb_status != PIP_GDBIF_GDB_DETACHED ) {
+      prev = &PIP_SLIST_NEXT(gdbif_task, free_list);
+    } else {
+      *prev = next;
+      PIP_HCIRCLEQ_REMOVE(gdbif_task, task_list);
+    }
+  }
+  pip_spin_unlock( &pip_gdbif_root->lock_root );
+}
+
+static void pip_finalize_task( pip_task_t *task, int *extvalp ) {
+  struct pip_gdbif_task *gdbif_task = task->gdbif_task;
+
+  DBGF( "pipid=%d  extval=%d", task->pipid, task->extval );
+
+  /* the after hook is supposed to free the hook_arg being malloc()ed */
+  /* and this is the reason to call this from the root process        */
+  if( task->hook_after != NULL ) (void) task->hook_after( task->hook_arg );
+
+  gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+  pip_memory_barrier();
+  gdbif_task->pathname = NULL;
+  gdbif_task->argc = 0;
+  gdbif_task->argv = NULL;
+  gdbif_task->envv = NULL;
+  if( gdbif_task->realpathname  != NULL ) {
+    char *p = gdbif_task->realpathname;
+    gdbif_task->realpathname = NULL; /* do this before free() for PIP-gdb */
+    pip_memory_barrier();
+    free( p );
+  }
+  pip_spin_lock( &pip_gdbif_root->lock_free );
+  {
+    PIP_SLIST_INSERT_HEAD(&pip_gdbif_root->task_free, gdbif_task, free_list);
+    pip_finalize_gdbif_tasks();
+  }
+  pip_spin_unlock( &pip_gdbif_root->lock_free );
+
+  DBGF( "flag=%d  extval=%d", task->flag_exit, task->extval );
+  if( extvalp != NULL ) *extvalp = ( task->extval & 0xFF );
+
+  /* dlclose() and free() must be called only from the root process since */
+  /* corresponding dlmopen() and malloc() is called by the root process   */
+  if( task->type == PIP_TYPE_ULP ) {
+    pip_ulp_recycle_stack( task->ulp_stack );
+  }
+  if( task->loaded     != NULL ) pip_dlclose( task->loaded );
+  if( task->args.prog  != NULL ) free( task->args.prog );
+  if( task->args.argv  != NULL ) free( task->args.argv );
+  if( task->args.envv  != NULL ) free( task->args.envv );
+  if( *task->symbols.progname_full != NULL ) {
+    free( *task->symbols.progname_full );
+  }
+  DBG;
+  pip_reset_task_struct( task );
+}
+
 int pip_fin( void ) {
   int ntasks, i, err = 0;
 
@@ -1767,10 +1839,16 @@ int pip_fin( void ) {
 	  !pip_root->tasks[i].flag_exit ) {
 	if( pip_is_pthread_() ) {
 	  if( pthread_kill( pip_root->tasks[i].thread, 0 ) != 0 &&
-	      errno == ESRCH ) continue;
+	      errno == ESRCH ) {
+	    pip_finalize_task( &pip_root->tasks[i], NULL );
+	    continue;
+	  }
 	} else {
 	  if( kill( pip_root->tasks[i].pid, 0 ) != 0 &&
-	      errno == ESRCH ) continue;
+	      errno == ESRCH ) {
+	    pip_finalize_task( &pip_root->tasks[i], NULL );
+	    continue;
+	  }
 	}
 	DBGF( "%d/%d [pipid=%d (type=%d)] -- BUSY",
 	      i, ntasks, pip_root->tasks[i].pipid, pip_root->tasks[i].type );
@@ -1904,31 +1982,6 @@ int pip_exit( int extval ) {
   RETURN( err );
 }
 
-/*
- * The following functions must be called at root process
- */
-
-static void pip_finalize_gdbif_tasks( void ) {
-  struct pip_gdbif_task *gdbif_task, **prev, *next;
-
-  if( pip_gdbif_root == NULL ) {
-    DBGF( "pip_gdbif_root=NULL, pip_init() hasn't called?" );
-    return;
-  }
-  pip_spin_lock( &pip_gdbif_root->lock_root );
-  prev = &PIP_SLIST_FIRST(&pip_gdbif_root->task_free);
-  PIP_SLIST_FOREACH_SAFE(gdbif_task, &pip_gdbif_root->task_free, free_list,
-			 next) {
-    if( gdbif_task->gdb_status != PIP_GDBIF_GDB_DETACHED ) {
-      prev = &PIP_SLIST_NEXT(gdbif_task, free_list);
-    } else {
-      *prev = next;
-      PIP_HCIRCLEQ_REMOVE(gdbif_task, task_list);
-    }
-  }
-  pip_spin_unlock( &pip_gdbif_root->lock_root );
-}
-
 static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   pip_task_t *task;
   int err = 0;
@@ -2002,52 +2055,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
       DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
     }
   }
-  if( err == 0 ) {
-    struct pip_gdbif_task *gdbif_task = task->gdbif_task;
-
-    DBGF( "pipid=%d  extval=%d", task->pipid, task->extval );
-
-    gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
-    pip_memory_barrier();
-    gdbif_task->pathname = NULL;
-    gdbif_task->argc = 0;
-    gdbif_task->argv = NULL;
-    gdbif_task->envv = NULL;
-    if( gdbif_task->realpathname  != NULL ) {
-      char *p = gdbif_task->realpathname;
-      gdbif_task->realpathname = NULL; /* do this before free() for PIP-gdb */
-      pip_memory_barrier();
-      free( p );
-    }
-    pip_spin_lock( &pip_gdbif_root->lock_free );
-    {
-      PIP_SLIST_INSERT_HEAD(&pip_gdbif_root->task_free, gdbif_task, free_list);
-      pip_finalize_gdbif_tasks();
-    }
-    pip_spin_unlock( &pip_gdbif_root->lock_free );
-
-    DBGF( "flag=%d  extval=%d", task->flag_exit, task->extval );
-    if( extvalp != NULL ) *extvalp = ( task->extval & 0xFF );
-
-    /* the after hook is supposed to free the hook_arg being malloc()ed */
-    /* and this is the reason to call this from the root process        */
-    if( task->hook_after != NULL ) (void) task->hook_after( task->hook_arg );
-
-    /* dlclose() and free() must be called only from the root process since */
-    /* corresponding dlmopen() and malloc() is called by the root process   */
-    if( task->type == PIP_TYPE_ULP ) {
-      pip_ulp_recycle_stack( task->ulp_stack );
-    }
-    if( task->loaded     != NULL ) pip_dlclose( task->loaded );
-    if( task->args.prog  != NULL ) free( task->args.prog );
-    if( task->args.argv  != NULL ) free( task->args.argv );
-    if( task->args.envv  != NULL ) free( task->args.envv );
-    if( *task->symbols.progname_full != NULL ) {
-      free( *task->symbols.progname_full );
-    }
-    DBG;
-    pip_reset_task_struct( task );
-  }
+  if( err == 0 ) pip_finalize_task( task, extvalp );
   RETURN( err );
 }
 
