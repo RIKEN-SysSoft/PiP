@@ -1398,17 +1398,16 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
     sched = self->task_sched;
     self->task_sched = NULL;
     pip_flush_stdio( self );
+    pip_set_extval( self, extval );
 #ifdef PIP_USE_MUTEX
     (void) pthread_mutex_unlock( &self->mutex_wait );
 #else
     (void) sem_post( &self->sem_wait );
 #endif
   }
-  pip_set_extval( self, extval );
 
   /* free() must be called in the task's context */
   (void) self->symbols.named_export_fin( self );
-
   (void) pip_raise_sigchld();
   DBG;
   if( sched != NULL && pip_ulp_sched_next( sched ) == ENOENT ) {
@@ -1462,7 +1461,7 @@ static int pip_do_spawn( void *thargs )  {
   /* calling hook, if any */
      if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "before-hook:%p returns %d", argv[0], before, err );
-    fflush( NULL );
+    pip_flush_stdio( self );
     pip_set_extval( self, err );
     (void) pip_raise_sigchld();
   } else {
@@ -1514,8 +1513,8 @@ static int pip_do_spawn( void *thargs )  {
       }
     }
   }
-  DBG;
-  RETURN( self->extval );
+  DBGF( "RETURN %d", self->extval );
+  return self->extval;
 }
 
 static int pip_find_a_free_task( int *pipidp ) {
@@ -1743,7 +1742,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
       if( task->loaded != NULL ) (void) pip_dlclose( task->loaded );
       pip_reset_task_struct( task );
     }
-
     if( sisters != NULL ) {
       pip_ulp_t 	*daughter, *next;
       pip_task_t	*dtask;
@@ -1765,7 +1763,15 @@ int pip_fin( void ) {
   if( pip_is_root() ) {		/* root */
     ntasks = pip_root->ntasks;
     for( i=0; i<ntasks; i++ ) {
-      if( pip_root->tasks[i].pipid != PIP_PIPID_NONE ) {
+      if( !pip_root->tasks[i].pipid == PIP_PIPID_NONE &&
+	  !pip_root->tasks[i].flag_exit ) {
+	if( pip_is_pthread_() ) {
+	  if( pthread_kill( pip_root->tasks[i].thread, 0 ) != 0 &&
+	      errno == ESRCH ) continue;
+	} else {
+	  if( kill( pip_root->tasks[i].pid, 0 ) != 0 &&
+	      errno == ESRCH ) continue;
+	}
 	DBGF( "%d/%d [pipid=%d (type=%d)] -- BUSY",
 	      i, ntasks, pip_root->tasks[i].pipid, pip_root->tasks[i].type );
 	err = EBUSY;
@@ -1877,8 +1883,11 @@ int pip_kill( int pipid, int signal ) {
 int pip_exit( int extval ) {
   int err = 0;
   DBG;
-  pip_flush_stdio( pip_task );
+  fflush( NULL );
+  (void) pip_named_export_fin( pip_task );
   pip_set_extval( pip_task, extval );
+  //(void) pip_raise_sigchld(); /* by doing this, SIGCHLD is doubled */
+
   if( pip_is_task() || pip_is_ulp() ) {
     err = pip_load_context( pip_task->ctx_exit );
     /* never reach here, hopefully */
@@ -1891,6 +1900,7 @@ int pip_exit( int extval ) {
   }
   /* hopefully, never reach here */
  error:
+  fflush( NULL );
   RETURN( err );
 }
 
@@ -1977,6 +1987,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     DBG;
     if( flag_try ) options |= WNOHANG;
     if( ( pid = waitpid( task->pid, &status, options ) ) < 0 ) {
+      DBG;
       err = errno;
     } else {
       if( WIFEXITED( status ) ) {

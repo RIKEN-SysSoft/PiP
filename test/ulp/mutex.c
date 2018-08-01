@@ -66,6 +66,8 @@ int main( int argc, char **argv ) {
   int		ntasks, nulps, pipid;
   int 		i;
 
+  set_sigsegv_watcher();
+
   if( argc > 1 ) {
     ntasks = atoi( argv[1] );
   } else {
@@ -76,23 +78,16 @@ int main( int argc, char **argv ) {
 	     "Too small number of PiP tasks (must be latrger than 3)\n" );
     exit( 1 );
   }
-  if( ntasks >= 256 ) {
-    fprintf( stderr,
-	     "Too many number of PiP tasks (must be less than 256)\n" );
-    ntasks = 255;
-  }
   nulps = ntasks - 1;
 
-  if( !pip_isa_piptask() ) {
-    TESTINT( pip_ulp_mutex_init( &expo.mutex ) );
-    expo.x = 0;
-    expop = &expo;
-  }
-
+  expop = &expo;
   TESTINT( pip_init( &pipid, &ntasks, (void**) &expop, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
     pip_ulp_t ulps;
+
+    TESTINT( pip_ulp_mutex_init( &expo.mutex ) );
+    expo.x = 0;
 
     PIP_ULP_INIT( &ulps );
     pip_spawn_from_main( &prog, argv[0], argv, NULL );

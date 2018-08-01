@@ -38,8 +38,6 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <asm/prctl.h>
-#include <sys/prctl.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdlib.h>

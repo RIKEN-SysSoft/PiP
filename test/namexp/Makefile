@@ -43,6 +43,8 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
+LDLIBS += -lm
+
 test-file:
 	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )
 

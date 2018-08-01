@@ -39,7 +39,7 @@
 #include <pip_ulp.h>
 #include <pip_universal.h>
 
-#define NITERS	(100)
+#define NITERS	(30)
 //#define NITERS	(10)
 #define NULPS	(10)
 
@@ -124,7 +124,7 @@ int main( int argc, char **argv, char **envv ) {
 	if( isatty(1) ) fprintf( stderr, "[%d] %d\n", pipid, i );
       }
       TESTINT( pip_universal_barrier_wait( &expop->ubarr ) );
-      if( rand() % total == pipid ) usleep( 100 ); /* disturbance */
+      if( rand() % total == pipid ) usleep( 10 ); /* disturbance */
       expop->count[pipid] ++;
       TESTINT( pip_universal_barrier_wait( &expop->ubarr ) );
     }

@@ -35,9 +35,10 @@
 
 //#define DEBUG
 #include <test.h>
+#include <math.h>
 
 //#define NITERS	(10000)
-#define NITERS	(10)
+#define NITERS	(30)
 
 #define NULPS	(10)
 
@@ -112,7 +113,7 @@ int main( int argc, char **argv, char **envv ) {
     TESTINT( pip_universal_barrier_wait( barrp ) );
     if( pipid == 0 ) fprintf( stderr, "\nGO\n\n" );
 #endif
-    ntest = total / 9;
+    ntest = (int) sqrtf( (float) total );
     if( ntest == 0 ) ntest = 5;
     srand( pipid );
     TESTINT( pip_universal_barrier_wait( barrp  ) );
