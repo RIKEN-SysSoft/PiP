@@ -85,7 +85,7 @@ int main( int argc, char **argv ) {
       if( retval != ( i & 0xFF ) ) {
 	fprintf( stderr, "[PIPID=%d] waitpid() returns %d ???\n", i, retval );
       } else {
-	fprintf( stderr, " terminated. OK\n" );
+	fprintf( stderr, "[PIPID=%d] terminated. OK\n", i );
       }
     }
   } else {
