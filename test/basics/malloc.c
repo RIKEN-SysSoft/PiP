@@ -83,8 +83,10 @@ int malloc_loop( int pipid ) {
     printf( "mask:0x%lx  %ld MiB\n", mask, mask/(1024*1024) );
   }
 
-  fprintf( stderr, "<%d> enterring malloc_loop. this can take a while...\n",
-	   pipid );
+  if( isatty( 1 ) ) {
+    fprintf( stderr, "<%d> enterring malloc_loop. this can take a while...\n",
+	     pipid );
+  }
   for( i=0; i<NTIMES; i++ ) {
     int32_t sz;
     void *p;
@@ -128,7 +130,7 @@ int main( int argc, char **argv ) {
   exp   = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    for( i=0; i<NTASKS; i++ ) {
+    for( i=0; i<ntasks; i++ ) {
       pipid = i;
       err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
 		       &pipid, NULL, NULL, NULL );

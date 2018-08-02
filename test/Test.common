@@ -29,7 +29,7 @@
 # 	  System Software Devlopment Team. All rights researved$
 
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS +=
+CFLAGS += -g
 LDLIBS += $(PIPLDLIB) -ldl
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h \

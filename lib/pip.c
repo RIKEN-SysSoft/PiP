@@ -1277,13 +1277,16 @@ static int pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
 }
 
 static void pip_set_extval( pip_task_t *task, int extval ) {
+  if( extval != 0 && task->extval == 0 ) {
+    task->gdbif_task->exit_code = task->extval = extval;
+  }
+}
+
+static void pip_task_terminated( pip_task_t *task ) {
   if( !task->flag_exit ) {
-    DBGF( "extval=%d", extval );
+    DBGF( "extval=%d", task->extval );
     task->flag_exit = PIP_EXITED;
     pip_memory_barrier();
-    if( extval != 0 && task->extval == 0 ) {
-      task->gdbif_task->exit_code = task->extval = extval;
-    }
     task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
   }
 }
@@ -1399,6 +1402,11 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
     self->task_sched = NULL;
     pip_flush_stdio( self );
     pip_set_extval( self, extval );
+
+    /* free() must be called in the task's context */
+    (void) self->symbols.named_export_fin( self );
+
+    pip_task_terminated( self );
 #ifdef PIP_USE_MUTEX
     (void) pthread_mutex_unlock( &self->mutex_wait );
 #else
@@ -1406,8 +1414,6 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
 #endif
   }
 
-  /* free() must be called in the task's context */
-  (void) self->symbols.named_export_fin( self );
   (void) pip_raise_sigchld();
   DBG;
   if( sched != NULL && pip_ulp_sched_next( sched ) == ENOENT ) {
@@ -1459,10 +1465,11 @@ static int pip_do_spawn( void *thargs )  {
   pip_print_maps();
 #endif
   /* calling hook, if any */
-     if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
+  if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "before-hook:%p returns %d", argv[0], before, err );
     pip_flush_stdio( self );
     pip_set_extval( self, err );
+    pip_task_terminated( self );
     (void) pip_raise_sigchld();
   } else {
     /* argv and/or envv might be changed in the hook function */
@@ -1472,6 +1479,7 @@ static int pip_do_spawn( void *thargs )  {
     flag_jump = 0;
     self->ctx_exit = &ctx_exit;
     (void) pip_save_context( &ctx_exit );
+    DBG;
     if( !flag_jump ) {
       flag_jump = 1;
       DBGF( "<<<<<<<< ctx:%p >>>>>>>>", &ctx_exit );
@@ -1492,19 +1500,26 @@ static int pip_do_spawn( void *thargs )  {
     } else {
       DBGF( "!! main(%s,%s,...)", argv[0], argv[1] );
     }
-    flag_jump = 0;
-    (void) pip_save_context( &ctx_exit );
-  DBG;
-    if( !flag_jump ) {
-      flag_jump = 1;
-      DBGF( "PIPID:%d", self->pipid );
-      (void) pip_ulp_sched_next( self );
+    /* the after hook is supposed to free the hook_arg being malloc()ed */
+    /* and this is the reason to call this from the root process        */
+    if( self->hook_after != NULL ) (void) self->hook_after( self->hook_arg );
+    DBG;
+    if( !PIP_ULP_ISEMPTY( &self->schedq ) ) {
+      flag_jump = 0;
+      (void) pip_save_context( &ctx_exit );
+      DBG;
+      if( !flag_jump ) {
+	flag_jump = 1;
+	DBGF( "PIPID:%d", self->pipid );
+	(void) pip_ulp_sched_next( self );
+      }
     }
-  DBG;
+    DBG;
     /* no ulps eligible to run and we can terminate this ulp */
     pip_flush_stdio( self );
     pip_set_extval( self, extval );
     (void) pip_named_export_fin( self );
+    pip_task_terminated( self );
     (void) pip_raise_sigchld();
 
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
@@ -1788,10 +1803,6 @@ static void pip_finalize_task( pip_task_t *task, int *extvalp ) {
 
   DBGF( "pipid=%d  extval=%d", task->pipid, task->extval );
 
-  /* the after hook is supposed to free the hook_arg being malloc()ed */
-  /* and this is the reason to call this from the root process        */
-  if( task->hook_after != NULL ) (void) task->hook_after( task->hook_arg );
-
   gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
   pip_memory_barrier();
   gdbif_task->pathname = NULL;
@@ -1967,8 +1978,6 @@ int pip_exit( int extval ) {
   (void) pip_named_export_fin( pip_task );
   pip_set_extval( pip_task, extval );
   DBG;
-  //(void) pip_raise_sigchld(); /* by doing this, SIGCHLD is doubled */
-
   if( pip_is_task() || pip_is_ulp() ) {
     DBG;
     err = pip_load_context( pip_task->ctx_exit );
@@ -2050,11 +2059,13 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
       if( WIFEXITED( status ) ) {
 	int extval = WEXITSTATUS( status );
 	pip_set_extval( task, extval );
+	pip_task_terminated( task );
       } else if( WIFSIGNALED( status ) ) {
 	int sig = WTERMSIG( status );
-	pip_warn_mesg( "PiP Task [%d] receives %s signal",
+	pip_warn_mesg( "PiP Task [%d] terminated by %s signal",
 		       task->pipid, strsignal(sig) );
 	pip_set_extval( task, sig + 128 );
+	pip_task_terminated( task );
       }
       DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
     }

@@ -112,7 +112,7 @@ int pip_named_export_fin( pip_task_t *task ) {
   pip_namexp_list_t	*head;
   pip_namexp_entry_t	*entry;
   pip_list_t		*list, *next;
-  int 			i, err = 0;
+  int 			i;
 
   DBG;
   if( namexp != NULL ) {
@@ -127,7 +127,9 @@ int pip_named_export_fin( pip_task_t *task ) {
 	  pip_del_namexp( entry );
 	  free( entry->name );
 	  free( entry );
-	} else {		/* the is a query entry, it must be free()ed by the query task or ulp */
+	} else {
+	  /* the is a query entry, it must be */
+	  /* free()ed by the query task or ulp */
 	  entry->flag_canceled = 1;
 	}
       }
@@ -135,7 +137,8 @@ int pip_named_export_fin( pip_task_t *task ) {
       //pip_namexp_unlock( &head->lock );
     }
   }
-  RETURN( err );
+  DBG;
+  RETURN( 0 );
 }
 
 void pip_named_export_fin_all( void ) {
