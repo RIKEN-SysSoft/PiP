@@ -57,11 +57,31 @@ int my_random( int32_t *rnump ) {
   return errno;
 }
 
+int	ntasks = 0;
 size_t  min = 999999999;
 size_t	max = 0;
 
 int malloc_loop( int pipid ) {
+  unsigned long mem = get_total_memory(); /* KB */
+  unsigned long mask;
   int i, j;
+
+  mem *= 1024;
+  if( pipid == PIP_PIPID_ROOT && isatty( 1 ) ) {
+    printf( "mem:0x%lx  %ld MiB \n", mem, mem/(1024*1024) );
+  }
+  mem /= ( ntasks + 1 ) * 2;
+  if( pipid == PIP_PIPID_ROOT && isatty( 1 ) ) {
+    printf( "mem:0x%lx  %ld MiB\n", mem, mem/(1024*1024) );
+  }
+
+  mask = 1024 * 1024;
+  while( mask < mem ) mask *= 2;
+  mask -= 1;
+
+  if( pipid == PIP_PIPID_ROOT && isatty( 1 ) ) {
+    printf( "mask:0x%lx  %ld MiB\n", mask, mask/(1024*1024) );
+  }
 
   fprintf( stderr, "<%d> enterring malloc_loop. this can take a while...\n",
 	   pipid );
@@ -70,8 +90,8 @@ int malloc_loop( int pipid ) {
     void *p;
 
     TESTINT( my_random( &sz ) );
-    sz <<= 4;
-    sz &= 0x07FFF0;
+    sz <<= 6;
+    sz &= mask;
     if( sz == 0 ) sz = 256;
     if( ( p = malloc( sz ) ) == NULL ) return ENOMEM;
     memset( p, ( pipid & 0xff ), sz );
@@ -97,13 +117,15 @@ struct task_comm {
 int main( int argc, char **argv ) {
   struct task_comm 	tc;
   void *exp;
-  int pipid, ntasks;
+  int pipid;
   int i;
   int err;
 
-  ntasks = NTASKS;
+  if( argc    > 1 ) ntasks = atoi( argv[1] );
+  if( ntasks == 0 ) ntasks = NTASKS;
+
   tc.go = 0;
-  exp    = (void*) &tc;
+  exp   = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<NTASKS; i++ ) {
@@ -112,7 +134,7 @@ int main( int argc, char **argv ) {
 		       &pipid, NULL, NULL, NULL );
       if( err != 0 ) {
 	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
-		 i, NTASKS, strerror( err ) );
+		 i, ntasks, strerror( err ) );
 	break;
       }
       if( i != pipid ) {
@@ -143,9 +165,11 @@ int main( int argc, char **argv ) {
     pthread_barrier_wait( &tcp->barrier );
 
     TESTINT( malloc_loop( pipid ) );
-    fprintf( stderr,
-	     "<PIPID=%d,PID=%d> Hello, I am fine (sz:%d--%d, %d times) !!\n",
-	     pipid, getpid(), (int) min, (int) max, NTIMES );
+    if( isatty( 1 ) ) {
+      fprintf( stderr,
+	       "<PIPID=%d> Hello, I am fine (sz:%d--%d[KiB], %d times) !!\n",
+	       pipid, (int) min/1024, (int) max/1024, NTIMES );
+    }
   }
   return 0;
 }
