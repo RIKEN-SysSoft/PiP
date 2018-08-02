@@ -50,7 +50,11 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) ntasks = atoi( argv[1] );
   if( ntasks == 0 ) ntasks = NTASKS;
 
+#ifdef AH
   TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODE_PROCESS ) );
+#endif
+  TESTINT( pip_init( &pipid, &ntasks, NULL,
+		     PIP_MODE_PROCESS|PIP_OPT_FORCEEXIT ) );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<ntasks; i++ ) {
 
@@ -85,7 +89,7 @@ int main( int argc, char **argv ) {
       if( retval != ( i & 0xFF ) ) {
 	fprintf( stderr, "[PIPID=%d] waitpid() returns %d ???\n", i, retval );
       } else {
-	fprintf( stderr, " terminated. OK\n" );
+        fprintf( stderr, "[PIPID=%d] terminated. OK\n", i );
       }
     }
   } else {

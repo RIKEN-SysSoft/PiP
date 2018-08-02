@@ -1507,14 +1507,14 @@ static int pip_do_spawn( void *thargs )  {
 
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       if( pip_is_pthread_() ) {	/* thread mode */
-	pthread_exit( (void*) &self->extval );
+	pthread_exit( (void*) &extval );
       } else {			/* process mode */
-	exit( self->extval );
+	exit( extval );
       }
     }
   }
-  DBGF( "RETURN %d", self->extval );
-  return self->extval;
+  DBGF( "RETURN %d", extval );
+  return extval;
 }
 
 static int pip_find_a_free_task( int *pipidp ) {
