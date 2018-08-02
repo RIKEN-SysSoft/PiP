@@ -1494,11 +1494,13 @@ static int pip_do_spawn( void *thargs )  {
     }
     flag_jump = 0;
     (void) pip_save_context( &ctx_exit );
+  DBG;
     if( !flag_jump ) {
       flag_jump = 1;
       DBGF( "PIPID:%d", self->pipid );
       (void) pip_ulp_sched_next( self );
     }
+  DBG;
     /* no ulps eligible to run and we can terminate this ulp */
     pip_flush_stdio( self );
     pip_set_extval( self, extval );
@@ -1964,9 +1966,11 @@ int pip_exit( int extval ) {
   fflush( NULL );
   (void) pip_named_export_fin( pip_task );
   pip_set_extval( pip_task, extval );
+  DBG;
   //(void) pip_raise_sigchld(); /* by doing this, SIGCHLD is doubled */
 
   if( pip_is_task() || pip_is_ulp() ) {
+    DBG;
     err = pip_load_context( pip_task->ctx_exit );
     /* never reach here, hopefully */
   } else {

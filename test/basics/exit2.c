@@ -77,5 +77,5 @@ int main( int argc, char **argv ) {
     exit( pipid );
     /* never reach here */
   }
-  return 0;;
+  return 0;
 }

@@ -39,14 +39,18 @@
 int root_exp = 0;
 
 int main( int argc, char **argv ) {
-  int pipid, ntasks;
+  int pipid, ntasks = 0;
   int i;
   int err;
 
-  ntasks = NTASKS;
+  if( argc > 1 ) ntasks = atoi( argv[1] );
+  if( ntasks == 0 ) ntasks = NTASKS;
+
+  set_sigsegv_watcher();
+
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    for( i=0; i<NTASKS; i++ ) {
+    for( i=0; i<ntasks; i++ ) {
       int retval;
 
       pipid = i;
@@ -54,7 +58,7 @@ int main( int argc, char **argv ) {
 		       &pipid, NULL, NULL, NULL );
       if( err ) {
 	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
-		 i, NTASKS, strerror( err ) );
+		 i, ntasks, strerror( err ) );
 	break;
       }
 

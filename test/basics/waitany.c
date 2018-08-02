@@ -60,6 +60,8 @@ int main( int argc, char **argv ) {
   if( ntasks < 1 ) ntasks = NTASKS;
   ntasks = ( ntasks > 256 ) ? 256 : ntasks;
 
+  set_sigsegv_watcher();
+
   barrp = &barr;
   pip_barrier_init( barrp, ntasks+1 );
 

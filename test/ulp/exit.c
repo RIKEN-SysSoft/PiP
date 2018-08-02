@@ -77,6 +77,8 @@ int main( int argc, char **argv ) {
   }
   nulps = ntasks - 1;
 
+  set_sigsegv_watcher();
+
   TESTINT( pip_init( &pipid, NULL, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
