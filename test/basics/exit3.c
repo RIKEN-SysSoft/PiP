@@ -50,7 +50,8 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) ntasks = atoi( argv[1] );
   if( ntasks == 0 ) ntasks = NTASKS;
 
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODE_PROCESS ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL,
+		     PIP_MODE_PROCESS|PIP_OPT_FORCEEXIT ) );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<ntasks; i++ ) {
 
