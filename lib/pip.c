@@ -523,23 +523,25 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->page_size = sysconf( _SC_PAGESIZE );
     for( i=0; i<ntasks+1; i++ ) {
       pip_reset_task_struct( &pip_root->tasks[i] );
-      (void) pip_named_export_init( &pip_root->tasks[i] );
     }
     pip_root->task_root = &pip_root->tasks[ntasks];
-    pip_root->task_root->pipid       = pipid;
-    pip_root->task_root->type        = PIP_TYPE_ROOT;
-    pip_root->task_root->symbols.free = (free_t)pip_dlsym(RTLD_DEFAULT,"free");
-    pip_root->task_root->loaded       = dlopen( NULL, RTLD_NOW );
-    pip_root->task_root->thread       = pthread_self();
-    pip_root->task_root->pid          = getpid();
+    pip_task               = pip_root->task_root;
+    pip_task->type         = PIP_TYPE_ROOT;
+    pip_task->pipid        = pipid;
+    pip_task->type         = PIP_TYPE_ROOT;
+    pip_task->symbols.free = (free_t)pip_dlsym(RTLD_DEFAULT,"free");
+    pip_task->loaded       = dlopen( NULL, RTLD_NOW );
+    pip_task->thread       = pthread_self();
+    pip_task->pid          = getpid();
     if( rt_expp != NULL ) {
-      pip_root->task_root->export     = *rt_expp;
+      pip_task->export     = *rt_expp;
     }
-    pip_task             = pip_root->task_root;
-    pip_task->type       = PIP_TYPE_ROOT;
-    pip_task->task_sched = pip_task;
-
-    pip_spin_init( &pip_root->task_root->lock_malloc );
+    pip_task->task_sched   = pip_task;
+    if( ( err = pip_named_export_init( pip_task ) ) != 0 ) {
+      free( pip_root );
+      RETURN( err );
+    }
+    pip_spin_init( &pip_task->lock_malloc );
     unsetenv( PIP_ROOT_ENV );
 
     sz = sizeof( *gdbif_root ) + sizeof( gdbif_root->tasks[0] ) * ntasks;
@@ -577,7 +579,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ntasksp != NULL ) *ntasksp = ntasks;
     if( rt_expp != NULL ) *rt_expp = (void*) pip_root->task_root->export;
     DBG;
-
+    if( ( err = pip_named_export_init( pip_task ) ) != 0 ) RETURN( err );
     unsetenv( PIP_ROOT_ENV );
     unsetenv( PIP_TASK_ENV );
 
@@ -586,10 +588,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     RETURN( EPERM );
   }
   /* root and child */
-  DBG;
   if( pipidp != NULL ) *pipidp = pipid;
   DBGF( "pip_root=%p  pip_task=%p", pip_root, pip_task );
-
   RETURN( err );
 }
 
@@ -1374,45 +1374,42 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
   envv      = self->args.envv;
   start_arg = self->args.start_arg;
 
-  if( ( extval = pip_named_export_init( self ) ) == 0 ) {
-    DBG;
-    argc = pip_glibc_init( &self->symbols, prog, argv, envv, self->loaded );
+  argc = pip_glibc_init( &self->symbols, prog, argv, envv, self->loaded );
 
-    flag_jump = 0;
-    self->ctx_exit = &ctx_exit;
-    (void) pip_save_context( &ctx_exit );
-    if( !flag_jump ) {
-      flag_jump = 1;
-      if( self->symbols.start == NULL ) {
-	DBGF( ">> ULPmain@%p(%d,%s,%s,...)",
-	      self->symbols.main, argc, argv[0], argv[1] );
-	extval = self->symbols.main( argc, argv, envv );
-	DBGF( "<< ULPmain@%p(%d,%s,%s,...)",
-	      self->symbols.main, argc, argv[0], argv[1] );
-      } else {
-	DBGF( ">> %s:%p(%p)",
-	      self->args.funcname, self->symbols.start, start_arg );
-	extval = self->symbols.start( start_arg );
-	DBGF( "<< %s:%p(%p)",
-	      self->args.funcname, self->symbols.start, start_arg );
-      }
+  flag_jump = 0;
+  self->ctx_exit = &ctx_exit;
+  (void) pip_save_context( &ctx_exit );
+  if( !flag_jump ) {
+    flag_jump = 1;
+    if( self->symbols.start == NULL ) {
+      DBGF( ">> ULPmain@%p(%d,%s,%s,...)",
+	    self->symbols.main, argc, argv[0], argv[1] );
+      extval = self->symbols.main( argc, argv, envv );
+      DBGF( "<< ULPmain@%p(%d,%s,%s,...)",
+	    self->symbols.main, argc, argv[0], argv[1] );
+    } else {
+      DBGF( ">> %s:%p(%p)",
+	    self->args.funcname, self->symbols.start, start_arg );
+      extval = self->symbols.start( start_arg );
+      DBGF( "<< %s:%p(%p)",
+	    self->args.funcname, self->symbols.start, start_arg );
     }
-    /* note: task_sched miht be cahnged due to migration */
-    sched = self->task_sched;
-    self->task_sched = NULL;
-    pip_flush_stdio( self );
-    pip_set_extval( self, extval );
-
-    /* free() must be called in the task's context */
-    (void) self->symbols.named_export_fin( self );
-
-    pip_task_terminated( self );
-#ifdef PIP_USE_MUTEX
-    (void) pthread_mutex_unlock( &self->mutex_wait );
-#else
-    (void) sem_post( &self->sem_wait );
-#endif
   }
+  /* note: task_sched miht be changed due to migration */
+  sched = self->task_sched;
+  self->task_sched = NULL;
+  pip_flush_stdio( self );
+  pip_set_extval( self, extval );
+
+  /* free() must be called in the task's context */
+  (void) self->symbols.named_export_fin( self );
+
+  pip_task_terminated( self );
+#ifdef PIP_USE_MUTEX
+  (void) pthread_mutex_unlock( &self->mutex_wait );
+#else
+  (void) sem_post( &self->sem_wait );
+#endif
 
   (void) pip_raise_sigchld();
   DBG;
@@ -1422,28 +1419,63 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
   /* never reach here, hopefully */
 }
 
-static int pip_do_spawn( void *thargs )  {
-  /* The context of this function is of the root task                */
-  /* so the global var; pip_task (and pip_root) are of the root task */
-  pip_spawn_args_t *args   = (pip_spawn_args_t*) thargs;
-  int	 	pipid      = args->pipid;
+static int pip_jump_into( pip_spawn_args_t *args, pip_task_t *self )
+  __attribute__((noinline));
+static int pip_jump_into( pip_spawn_args_t *args, pip_task_t *self ) {
   char  	*prog      = args->prog;
   char 		**argv     = args->argv;
   char 		**envv     = args->envv;
   void		*start_arg = args->start_arg;
+  int 		argc;
+  int		extval = 0;
+  pip_ctx_t 	ctx_exit;
+  volatile int	flag_jump;	/* must be volatile */
+
+  flag_jump = 0;
+  self->ctx_exit = &ctx_exit;
+  (void) pip_save_context( &ctx_exit );
+  DBG;
+  if( !flag_jump ) {
+    flag_jump = 1;
+    DBGF( "<<<<<<<< ctx:%p >>>>>>>>", &ctx_exit );
+    argc = pip_glibc_init( &self->symbols, prog, argv, envv, self->loaded );
+    if( self->symbols.start == NULL ) {
+      DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
+	    args->pipid, self->symbols.main, argc, argv[0], argv[1] );
+      extval = self->symbols.main( argc, argv, envv );
+      DBGF( "[%d] << main@%p(%d,%s,%s,...)",
+	    args->pipid, self->symbols.main, argc, argv[0], argv[1] );
+    } else {
+      DBGF( "[%d] >> %s:%p(%p)",
+	    args->pipid, args->funcname, self->symbols.start, start_arg );
+      extval = self->symbols.start( start_arg );
+      DBGF( "[%d] >> %s:%p(%p)",
+	    args->pipid, args->funcname, self->symbols.start, start_arg );
+    }
+  } else {
+    DBGF( "!! main(%s,%s,...)", argv[0], argv[1] );
+  }
+  return extval;
+}
+
+static void *pip_do_spawn( void *thargs )  {
+  /* The context of this function is of the root task                */
+  /* so the global var; pip_task (and pip_root) are of the root task */
+  pip_spawn_args_t *args   = (pip_spawn_args_t*) thargs;
+  int	 	pipid      = args->pipid;
+  char 		**argv     = args->argv;
   int 		coreno     = args->coreno;
   pip_task_t 	*self      = &pip_root->tasks[pipid];
   pip_spawnhook_t before   = self->hook_before;
   void 		*hook_arg  = self->hook_arg;
   pip_ctx_t 	ctx_exit;
   volatile int	flag_jump;	/* must be volatile */
-  int 		argc;
   int		extval = 0;
   int		err = 0;
 
-  if( ( err = pip_named_export_init( self ) ) != 0 ) RETURN( err );
-  if( ( err = pip_corebind( coreno )        ) != 0 ) RETURN( err );
-
+  if( ( err = pip_corebind( coreno ) ) != 0 ) {
+    pip_warn_mesg( "failed to bund CPU core (%d)", err );
+  }
   self->thread = pthread_self();
 
 #ifdef DEBUG
@@ -1460,46 +1492,23 @@ static int pip_do_spawn( void *thargs )  {
     }
   }
 #endif
+
   if( !pip_is_shared_fd_() ) pip_close_on_exec();
-#ifdef PRINT_MAPS
-  pip_print_maps();
-#endif
+
   /* calling hook, if any */
   if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
-    pip_warn_mesg( "before-hook:%p returns %d", argv[0], before, err );
+    pip_warn_mesg( "[%s] before-hook returns %d", argv[0], before, err );
     pip_flush_stdio( self );
     pip_set_extval( self, err );
     pip_task_terminated( self );
     (void) pip_raise_sigchld();
+    extval = err;
+
   } else {
-    /* argv and/or envv might be changed in the hook function */
     if( ( pip_root->opts & PIP_OPT_PGRP ) && !pip_is_pthread_() ) {
       (void) setpgid( 0, 0 );	/* Is this meaningful ? */
     }
-    flag_jump = 0;
-    self->ctx_exit = &ctx_exit;
-    (void) pip_save_context( &ctx_exit );
-    DBG;
-    if( !flag_jump ) {
-      flag_jump = 1;
-      DBGF( "<<<<<<<< ctx:%p >>>>>>>>", &ctx_exit );
-      argc = pip_glibc_init( &self->symbols, prog, argv, envv, self->loaded );
-      if( self->symbols.start == NULL ) {
-	DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
-	      pipid, self->symbols.main, argc, argv[0], argv[1] );
-	extval = self->symbols.main( argc, argv, envv );
-	DBGF( "[%d] << main@%p(%d,%s,%s,...)",
-	      pipid, self->symbols.main, argc, argv[0], argv[1] );
-      } else {
-	DBGF( "[%d] >> %s:%p(%p)",
-	      pipid, args->funcname, self->symbols.start, start_arg );
-	extval = self->symbols.start( start_arg );
-	DBGF( "[%d] >> %s:%p(%p)",
-	      pipid, args->funcname, self->symbols.start, start_arg );
-      }
-    } else {
-      DBGF( "!! main(%s,%s,...)", argv[0], argv[1] );
-    }
+    extval = pip_jump_into( args, self );
     /* the after hook is supposed to free the hook_arg being malloc()ed */
     /* and this is the reason to call this from the root process        */
     if( self->hook_after != NULL ) (void) self->hook_after( self->hook_arg );
@@ -1514,11 +1523,12 @@ static int pip_do_spawn( void *thargs )  {
 	(void) pip_ulp_sched_next( self );
       }
     }
-    DBG;
     /* no ulps eligible to run and we can terminate this ulp */
+    DBG;
+    /* free() must be called in the task's context */
+    (void) self->symbols.named_export_fin( self );
     pip_flush_stdio( self );
     pip_set_extval( self, extval );
-    (void) pip_named_export_fin( self );
     pip_task_terminated( self );
     (void) pip_raise_sigchld();
 
@@ -1530,8 +1540,7 @@ static int pip_do_spawn( void *thargs )  {
       }
     }
   }
-  DBGF( "RETURN %d", extval );
-  return extval;
+  return NULL;
 }
 
 static int pip_find_a_free_task( int *pipidp ) {
@@ -1638,7 +1647,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
       dtask->task_sched = task;
     }
   }
-
   if( progp->envv == NULL ) progp->envv = environ;
   args = &task->args;
   args->start_arg = progp->arg;
@@ -1658,12 +1666,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     }
   }
   DBG;
-
   gdbif_task = &pip_gdbif_root->tasks[pipid];
   pip_init_gdbif_task_struct( gdbif_task, task );
   pip_link_gdbif_task_struct( gdbif_task );
   task->gdbif_task = gdbif_task;
-
   DBG;
   pip_spin_lock( &pip_root->lock_ldlinux );
   /*** begin lock region ***/
@@ -2041,26 +2047,30 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
       DBGF( "pthread_join(%d)=%d", task->extval, err );
     }
   } else {			/* process mode */
-    int status = 0;
+    int status  = 0;
+    int options = 0;
     pid_t pid;
+
 #ifdef __WALL
     /* __WALL: Wait for all children, egardless oftype */
     /* ("clone" or "non-clone") [from man page]        */
-    int options = __WALL;
-#else
-    int options = 0;
+    options |= __WALL;
 #endif
     DBG;
     if( flag_try ) options |= WNOHANG;
+    DBGF( "task:%p  task->pid:%d  pipid:%d", task, task->pid, task->pipid );
     if( ( pid = waitpid( task->pid, &status, options ) ) < 0 ) {
       DBG;
       err = errno;
     } else {
+    DBG;
       if( WIFEXITED( status ) ) {
+    DBG;
 	int extval = WEXITSTATUS( status );
 	pip_set_extval( task, extval );
 	pip_task_terminated( task );
       } else if( WIFSIGNALED( status ) ) {
+    DBG;
 	int sig = WTERMSIG( status );
 	pip_warn_mesg( "PiP Task [%d] terminated by %s signal",
 		       task->pipid, strsignal(sig) );
@@ -2070,7 +2080,9 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
       DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
     }
   }
+    DBG;
   if( err == 0 ) pip_finalize_task( task, extvalp );
+    DBG;
   RETURN( err );
 }
 

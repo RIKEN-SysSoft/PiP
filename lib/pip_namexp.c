@@ -68,6 +68,7 @@ typedef struct {
 } pip_namexp_list_t;
 
 typedef struct {
+  int				pipid;
   pip_namexp_list_t		hash_table[PIP_HASHTAB_SZ];
 } pip_named_exptab_t;
 
@@ -99,6 +100,8 @@ int pip_named_export_init( pip_task_t *task ) {
   namexp = (pip_named_exptab_t*) malloc( sizeof( pip_named_exptab_t ) );
   if( namexp == NULL ) RETURN( ENOMEM );
   memset( namexp, 0, sizeof( pip_named_exptab_t ) );
+
+  namexp->pipid = task->pipid;
   for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
     pip_spin_init( &namexp->hash_table[i].lock );
     PIP_LIST_INIT( &namexp->hash_table[i].list );
@@ -116,6 +119,10 @@ int pip_named_export_fin( pip_task_t *task ) {
 
   DBG;
   if( namexp != NULL ) {
+    if( namexp->pipid != task->pipid ) {
+      pip_err_mesg( "%s is called by PIPID:%d, but it was created by PIPID:%d",
+		    __func__, task->pipid, namexp->pipid );
+    }
     for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
       head = &namexp->hash_table[i];
 

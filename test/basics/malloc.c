@@ -64,6 +64,7 @@ size_t	max = 0;
 int malloc_loop( int pipid ) {
   unsigned long mem = get_total_memory(); /* KB */
   unsigned long mask;
+  int ntimes = ( 500 * cpu_num_limit() ) / ntasks;
   int i, j;
 
   mem *= 1024;
@@ -87,7 +88,7 @@ int malloc_loop( int pipid ) {
     fprintf( stderr, "<%d> enterring malloc_loop. this can take a while...\n",
 	     pipid );
   }
-  for( i=0; i<NTIMES; i++ ) {
+  for( i=0; i<ntimes; i++ ) {
     int32_t sz;
     void *p;
 
@@ -167,11 +168,9 @@ int main( int argc, char **argv ) {
     pthread_barrier_wait( &tcp->barrier );
 
     TESTINT( malloc_loop( pipid ) );
-    if( isatty( 1 ) ) {
-      fprintf( stderr,
-	       "<PIPID=%d> Hello, I am fine (sz:%d--%d[KiB], %d times) !!\n",
-	       pipid, (int) min/1024, (int) max/1024, NTIMES );
-    }
+    fprintf( stderr,
+	     "<PIPID=%d> Hello, I am fine (sz:%d--%d[KiB], %d times) !!\n",
+	     pipid, (int) min/1024, (int) max/1024, NTIMES );
   }
   return 0;
 }
