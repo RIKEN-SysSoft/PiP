@@ -1991,7 +1991,6 @@ int pip_exit( int extval ) {
   }
   /* hopefully, never reach here */
  error:
-  fflush( NULL );
   RETURN( err );
 }
 
