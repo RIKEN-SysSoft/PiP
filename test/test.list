@@ -1,22 +1,21 @@
 basics/initfin.sh
 basics/file.sh
 basics/wait.sh
-basics/signal.sh
+#basics/signal.sh -- test program is not yet completed
 basics/exit.sh
-basics/exit1.sh
 basics/mutex.sh
 basics/core.sh
-basics/numa.sh
+#basics/numa.sh -- test program is not yet completed
 basics/hook.sh
 basics/spawn.sh
-#basics/getaddr.sh
+#basics/getaddr.sh -- pip_get_addr is deprecatde
 basics/environ.sh
 basics/export.sh
 basics/barrier.sh
 basics/varvars.sh
 basics/stack.sh
 basics/malloc.sh
-#basics/malloc2.sh
+#basics/malloc2.sh -- pip_malloc/pip_free are deprectaed
 basics/waitany.sh
 basics/sigchld.sh
 spawn/spawns.sh
@@ -31,8 +30,8 @@ compat/main.sh
 compat/exit.sh
 compat/exit2.sh
 compat/exit3.sh
-compat/sigchld2.sh
-#compat/brk.sh
+compat/sigchld.sh
+#compat/brk.sh -- (s)brk test is not appropriate since they are not multithread-safe
 compat/pf.sh
 compat/system.sh
 #openmp/openmp.sh

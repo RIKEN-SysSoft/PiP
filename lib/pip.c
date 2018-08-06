@@ -1562,7 +1562,7 @@ static void *pip_do_spawn( void *thargs )  {
 
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       if( pip_is_pthread_() ) {	/* thread mode */
-	pthread_exit( (void*) &extval );
+	pthread_exit( (void*) &self->extval );
       } else {			/* process mode */
 	exit( extval );
       }
@@ -2021,8 +2021,18 @@ int pip_exit( int extval ) {
     (void) pip_named_export_fin( pip_task );
     DBG;
     pip_set_extval( pip_task, extval );
+
+    if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
+      if( pip_is_pthread_() ) {	/* thread mode */
+	pthread_exit( (void*) &pip_task->extval );
+      } else {			/* process mode */
+	exit( extval );
+      }
+    }
+#ifdef AH
     DBGF( "pip_task->ctx_exit:%p", pip_task->ctx_exit );
     err = pip_load_context( pip_task->ctx_exit );
+#endif
     /* never reach here, hopefully */
   } else {
     if( pip_is_root() ) {
