@@ -1389,6 +1389,7 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
 
   flag_jump = 0;
   self->ctx_exit = &ctx_exit;
+  DBGF( "ctx_exit:%p", &ctx_exit );
   (void) pip_save_context( &ctx_exit );
   if( !flag_jump ) {
     flag_jump = 1;
@@ -1425,8 +1426,9 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L )  {
   DBGF( "[%d] task:%p gdbif_task:%p", self->pipid, self, self->gdbif_task );
   DBG;
   if( sched != NULL && pip_ulp_sched_next( sched ) == ENOENT ) {
-  DBGF( "[%d] task:%p gdbif_task:%p", self->pipid, self, self->gdbif_task );
-  (void) pip_load_context( sched->ctx_exit );
+    DBGF( "[%d] task:%p gdbif_task:%p", self->pipid, self, self->gdbif_task );
+    DBGF( "ctx_exit:%p", sched->ctx_exit );
+    (void) pip_load_context( sched->ctx_exit );
   }
   /* never reach here, hopefully */
 }
@@ -1445,6 +1447,7 @@ static int pip_jump_into( pip_spawn_args_t *args, pip_task_t *self ) {
 
   flag_jump = 0;
   self->ctx_exit = &ctx_exit;
+  DBGF( "ctx_exit:%p", &ctx_exit );
   (void) pip_save_context( &ctx_exit );
   DBG;
   if( !flag_jump ) {
@@ -1476,6 +1479,7 @@ static void pip_sched_ulps( pip_task_t *self ) {
   pip_ctx_t 	ctx_exit;
   volatile int	flag_jump = 0;	/* must be volatile */
 
+  DBGF( "ctx_exit:%p", &ctx_exit );
   self->ctx_exit = &ctx_exit;
   (void) pip_save_context( &ctx_exit );
   if( !flag_jump ) {
@@ -2015,7 +2019,9 @@ int pip_exit( int extval ) {
   if( pip_is_task() || pip_is_ulp() ) {
     DBG;
     (void) pip_named_export_fin( pip_task );
+    DBG;
     pip_set_extval( pip_task, extval );
+    DBGF( "pip_task->ctx_exit:%p", pip_task->ctx_exit );
     err = pip_load_context( pip_task->ctx_exit );
     /* never reach here, hopefully */
   } else {

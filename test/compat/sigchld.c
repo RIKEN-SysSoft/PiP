@@ -66,6 +66,8 @@ int main( int argc, char **argv ) {
   int ntasks = 0;
   int i;
 
+  set_signal_watcher( SIGSEGV );
+
   if( argc   > 1 ) ntasks = atoi( argv[1] );
   if( ntasks < 1 ) ntasks = NTASKS;
   ntasks = ( ntasks > 256 ) ? 256 : ntasks;

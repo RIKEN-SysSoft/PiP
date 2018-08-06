@@ -39,17 +39,6 @@
 
 pip_barrier_t barr, *barrp;
 
-void my_sleep( int n ) {
-  struct timespec tm, tr;
-  tm.tv_sec = 0;
-  tm.tv_nsec = n * 1000 * 1000;
-#ifdef DEBUG
-  tm.tv_sec  = 1 * n;
-  tm.tv_nsec = 0;
-#endif
-  (void) nanosleep( &tm, &tr );
-}
-
 int main( int argc, char **argv ) {
   int pipid = 999;
   int ntasks = 0;
