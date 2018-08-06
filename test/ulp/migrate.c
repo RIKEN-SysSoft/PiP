@@ -40,6 +40,8 @@
 #include <test.h>
 #include <pip_ulp.h>
 
+#define DEBUG
+
 #ifndef DEBUG
 #define ULP_COUNT 	(100);
 #else
@@ -76,13 +78,13 @@ int ulp_main( void* null ) {
     TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, 0 ) );
   }
   DBGF( "ULP terminates" );
-  return pipid_myself;
+  return 0;
 }
 
 int main( int argc, char **argv ) {
   struct expo *expop;
   int ntasks, nulps;
-  int i, j, pipid;
+  int i, j, pipid, status, flag=0;
 
   if( argv[1] != NULL ) {
     ntasks = atoi( argv[1] );
@@ -146,9 +148,18 @@ int main( int argc, char **argv ) {
       TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, NULL ) );
     }
     for( i=0; i<ntasks+nulps; i++ ) {
-      TESTINT( pip_wait( i, NULL ) );
+      TESTINT( pip_wait( i, &status ) );
+      if( status != 0 ) {
+	flag = 9;
+	fprintf( stderr, "PIPID:%d exited with non-zero value (%d)\n",
+		 i, status );
+      }
     }
-    fprintf( stderr, "SUCCEEDED\n" );
+    if( !flag ) {
+      fprintf( stderr, "SUCCEEDED\n" );
+    } else {
+      fprintf( stderr, "FAILED !!!!\n" );
+    }
   } else {
     TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &expop ) );
     pip_barrier_wait( &expop->barr );
@@ -156,18 +167,20 @@ int main( int argc, char **argv ) {
       pip_ulp_t *next;
       int err = pip_ulp_dequeue_and_migrate( &expop->queue, &next, 0 );
       if( err != 0 ) { /* there is no ulp to schedule (or error happens) */
-	if( err != ENOENT ) { /* error ? */
-	  DBGF( "**** pip_ulp_dequeue_and_migrate():%d", err );
-	  pip_ulp_describe( stderr, "", next );
-	}
-	break;
+	if( err == ENOENT ) break;
+	fprintf( stderr, "**** pip_ulp_dequeue_and_migrate():%d\n", err );
+	pip_ulp_describe( stderr, "", next );
+	flag = 9;
       } else {
 	err = pip_ulp_yield_to( next );
-	//TESTINT( pip_ulp_yield() );
-	if( err ) pip_ulp_describe( stderr, "", next );
+	if( err ) {
+	  fprintf( stderr, "**** pip_ulp_yield_to():%d\n", err );
+	  pip_ulp_describe( stderr, "", next );
+	  flag = 9;
+	}
       }
     }
   }
   TESTINT( pip_fin() );
-  return 0;
+  return flag;
 }

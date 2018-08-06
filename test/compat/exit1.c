@@ -30,85 +30,51 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
- */
-
-#define PIP_INTERNAL_FUNCS
-
-#define NULPS	(NTASKS-10)
-//#define NULPS	(10)
-//#define NULPS	(3)
-
-#define NYIELDS	(5*1000)
-//#define NYIELDS	(1*1000)
+  * Written by Atsushi HORI <ahori@riken.jp>, 2018
+*/
 
 //#define DEBUG
-#define PIP_EVAL
-
 #include <test.h>
-#include <pip_ulp.h>
+
+int root_exp = 0;
 
 int main( int argc, char **argv ) {
-  int ntasks = 0;
-  int nulps;
-  int i, pipid;
+  int pipid, ntasks;
+  int i;
+  int err;
 
-  set_sigsegv_watcher();
-
-  if( argc > 1 ) {
-    ntasks = atoi( argv[1] );
-  } else {
-    ntasks = NTASKS;
-  }
-  if( ntasks < 2 ) {
-    fprintf( stderr,
-	     "Too small number of PiP tasks (must be latrger than 1)\n" );
-    exit( 1 );
-  }
-  nulps = ntasks - 1;
-
+  ntasks = NTASKS;
   TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    pip_spawn_program_t prog;
-    pip_ulp_t ulps;
+    for( i=0; i<NTASKS; i++ ) {
+      int retval;
 
-    PIP_ULP_INIT( &ulps );
-    pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    for( i=0; i<nulps; i++ ) {
       pipid = i;
-      TESTINT( pip_ulp_new( &prog, &pipid, &ulps, NULL ) );
-    }
-    pipid = i;
-    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, &ulps ) );
+      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
+		       &pipid, NULL, NULL, NULL );
+      if( err ) {
+	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
+		 i, NTASKS, strerror( err ) );
+	break;
+      }
 
-    for( i=0; i<nulps+1; i++ ) {
-      TESTINT( pip_wait( i, NULL ) );
+      if( i != pipid ) {
+	fprintf( stderr, "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
+	break;
+      }
+      DBGF( "calling pip_wait(%d)", i );
+      TESTINT( pip_wait( i, &retval ) );
+      if( retval != ( i & 0xFF ) ) {
+	fprintf( stderr, "[PIPID=%d] pip_wait() returns %d ???\n", i, retval );
+      } else {
+        fprintf( stderr, "[PIPID=%d] terminated. OK\n", i );
+      }
     }
+    TESTINT( pip_fin() );
+
   } else {
-    double time_yield = 0.0;
-    double one_yield;
-    for( i=0; i<nulps*10; i++ ) { /* warming-up */
-      TESTINT( pip_ulp_yield() );
-    }
-    for( i=0; i<NYIELDS; i++ ) {
-      PIP_ACCUM( time_yield, pip_ulp_yield()==0 );
-    }
-    one_yield = time_yield;
-    one_yield /= ((double) NYIELDS ) * ((double)(nulps+1));
-    if( pip_is_task() ) {
-      fprintf( stderr,
-	       "Hello, this is TASK (%d)  "
-	       "[one yield() call takes %g usec / %g sec]\n",
-	       pipid,
-	       one_yield*1e6, time_yield );
-    } else if( pip_is_ulp() ) {
-      fprintf( stderr,
-	       "Hello, this is ULP (%d)  "
-	       "[one yield() call takes %g usec / %g sec]\n",
-	       pipid,
-	       one_yield*1e6, time_yield );
-    }
+    fprintf( stderr, "Hello, I am PIPID[%d/%d] ...", pipid, getpid() );
+    return pipid;
   }
-  TESTINT( pip_fin() );
   return 0;
 }

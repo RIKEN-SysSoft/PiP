@@ -4,8 +4,6 @@ basics/wait.sh
 basics/signal.sh
 basics/exit.sh
 basics/exit1.sh
-basics/exit2.sh
-basics/exit3.sh
 basics/mutex.sh
 basics/core.sh
 basics/numa.sh
@@ -21,7 +19,6 @@ basics/malloc.sh
 #basics/malloc2.sh
 basics/waitany.sh
 basics/sigchld.sh
-basics/sigchld2.sh
 spawn/spawns.sh
 compat/gethostname.sh
 compat/gethostbyname.sh
@@ -32,6 +29,9 @@ compat/gettimeofday.sh
 compat/ctype.sh
 compat/main.sh
 compat/exit.sh
+compat/exit2.sh
+compat/exit3.sh
+compat/sigchld2.sh
 #compat/brk.sh
 compat/pf.sh
 compat/system.sh
@@ -43,6 +43,7 @@ ulp/ulpnew.sh
 ulp/yield.sh
 ulp/func.sh
 ulp/exit.sh
+ulp/migrate.sh
 ulp/mutex.sh
 ulp/barrier.sh
 ulp/waitany.sh

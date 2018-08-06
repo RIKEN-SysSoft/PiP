@@ -219,9 +219,14 @@ inline static char *signal_name( int sig ) {
   return signam_tab[sig];
 }
 
+int pip_get_pipid_( void );
+
 inline static void set_signal_watcher( int signal ) {
   void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    fprintf( stderr, "!!!!!! SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
+    fprintf( stderr,
+	     "[PIPID:%d,PID:%d] SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
+	     pip_get_pipid_(),
+	     getpid(),
 	     signal_name( siginfo->si_signo ),
 	     siginfo->si_signo,
 	     siginfo->si_addr,
@@ -343,12 +348,14 @@ inline static void set_sigsegv_watcher( void ) {
       sigcode = "(unknown)";
     }
     fprintf( stderr,
-	     "!!!!!! SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n",
+	     "[PIPID:%d,PID:%d] SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n",
+	     pip_get_pipid_(),
+	     getpid(),
 	     (void*) pc,
 	     siginfo->si_pid,
 	     siginfo->si_addr,
 	     sigcode );
-    print_maps();
+    //print_maps();
   }
 
   struct sigaction sigact;

@@ -45,9 +45,6 @@ SRCS  = initfin.c \
 	wait.c \
 	signal.c \
 	exit.c \
-	exit1.c \
-	exit2.c \
-	exit3.c \
 	mutex.c \
 	barrier.c \
 	core.c \
@@ -60,13 +57,12 @@ SRCS  = initfin.c \
 	getaddr.c \
 	waitany.c \
 	waitany2.c \
-	sigchld.c \
-	sigchld2.c
+	sigchld.c
 
 PROGRAMS  = initfin stack export environ malloc malloc2 file \
-            wait signal exit exit1 exit2 exit3 mutex barrier core numa hook  \
+            wait signal exit mutex barrier core numa hook \
 	    spawn null recursive varvars getaddr waitany waitany2 \
-	    sigchld sigchld2
+	    sigchld
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -77,3 +73,8 @@ test-file:
 
 post-clean-hook:
 	$(RM) *.E *.log
+
+check: test
+
+test:
+	( cd ../; ./test.sh -A basics/test.list )

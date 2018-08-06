@@ -50,5 +50,7 @@ test-file:
 post-clean-hook:
 	$(RM) *.E *.log
 
+check: test
+
 test:
 	( cd ../; ./test.sh -A ulp/test.list )

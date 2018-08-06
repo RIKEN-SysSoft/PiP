@@ -39,9 +39,7 @@
 #include <sched.h>
 #include <stdio.h>
 
-#ifndef DEBUG
 //#define DEBUG
-#endif
 
 #include <pip.h>
 #include <pip_ulp.h>
@@ -125,8 +123,6 @@ int pip_named_export_fin( pip_task_t *task ) {
     }
     for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
       head = &namexp->hash_table[i];
-
-      //pip_namexp_lock( &head->lock );
       pip_spin_lock( &head->lock );
       PIP_LIST_FOREACH_SAFE( (pip_list_t*) &head->list, list, next ) {
 	entry = (pip_namexp_entry_t*) list;
@@ -141,7 +137,6 @@ int pip_named_export_fin( pip_task_t *task ) {
 	}
       }
       pip_spin_unlock( &head->lock );
-      //pip_namexp_unlock( &head->lock );
     }
   }
   DBG;
@@ -285,7 +280,6 @@ int pip_named_export( void *exp, const char *format, ... ) {
 	pip_add_namexp( head, new );
 	/* note: we cannot free this entry since it was created by the */
 	/* other PiP task and in this case that PiP task must free it  */
-	//err = pip_namexp_semaphore_post_all( entry );
       }
     } else {
       /* already exists */

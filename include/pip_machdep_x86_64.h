@@ -66,13 +66,13 @@ inline static void pip_memory_barrier(void) {
 }
 #define PIP_MEMORY_BARRIER
 
+#if defined( PIP_PRINT_FSREG ) || defined( PIP_ULP_SWITCH_TLS )
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #include <errno.h>
 
 int arch_prctl( int, unsigned long* );
 
-#ifdef AH
 inline static int pip_get_fsreg( intptr_t *fsreg ) {
   return arch_prctl(ARCH_GET_FS, (unsigned long*) fsreg ) ? errno : 0;
 }
@@ -82,7 +82,6 @@ inline static int pip_set_fsreg( intptr_t fsreg ) {
   return arch_prctl(ARCH_SET_FS, (unsigned long*) fsreg) ? errno : 0;
 }
 #define PIP_SET_FSREG
-#endif
 
 inline static void pip_print_fs_segreg( void ) {
   intptr_t fsreg;
@@ -93,6 +92,7 @@ inline static void pip_print_fs_segreg( void ) {
   }
 }
 #define PIP_PRINT_FSREG
+#endif	/* PIP_X86_FSREG */
 
 #ifdef PIP_ULP_SWITCH_TLS
 #include <ucontext.h>
