@@ -70,7 +70,7 @@ int main( int argc, char **argv ) {
 	     "Too small number of PiP tasks (must be latrger than 1)\n" );
     exit( 1 );
   }
-  if( ntasks >= 256 ) {
+  if( ntasks > NTASKS ) {
     fprintf( stderr,
 	     "Too many number of PiP tasks (must be less than 256)\n" );
     exit( 1 );
@@ -95,10 +95,10 @@ int main( int argc, char **argv ) {
     for( i=0; i<ntasks; i++ ) {
       int status;
       TESTINT( pip_wait( i, &status ) );
-      if( status == i ) {
+      if( status == ( i & 0xff ) ) {
 	fprintf( stderr, "Succeeded (%d)\n", i );
       } else {
-	fprintf( stderr, "pip_wait(%d):%d\n", i, status );
+	fprintf( stderr, "pip_wait(%d!=%d)\n", i & 0xff, status );
       }
     }
   } else {

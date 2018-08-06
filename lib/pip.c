@@ -1481,11 +1481,13 @@ static void pip_sched_ulps( pip_task_t *self ) {
 
   DBGF( "ctx_exit:%p", &ctx_exit );
   self->ctx_exit = &ctx_exit;
-  (void) pip_save_context( &ctx_exit );
-  if( !flag_jump ) {
-    flag_jump = 1;
-    DBGF( "PIPID:%d", self->pipid );
-    (void) pip_ulp_sched_next( self );
+  while( !PIP_ULP_ISEMPTY( &self->schedq ) ) {
+    (void) pip_save_context( &ctx_exit );
+    if( !flag_jump ) {
+      flag_jump = 1;
+      DBGF( "PIPID:%d", self->pipid );
+      (void) pip_ulp_sched_next( self );
+    }
   }
 }
 
@@ -1542,9 +1544,7 @@ static void *pip_do_spawn( void *thargs )  {
     /* and this is the reason to call this from the root process        */
     if( self->hook_after != NULL ) (void) self->hook_after( self->hook_arg );
     DBG;
-    if( !PIP_ULP_ISEMPTY( &self->schedq ) ) {
-      pip_sched_ulps( self );
-    }
+    pip_sched_ulps( self );
     /* no ulps eligible to run and we can terminate this ulp */
     DBGF( "[%d] task:%p gdbif_task:%p", self->pipid, self, self->gdbif_task );
     DBG;
@@ -2016,12 +2016,9 @@ int pip_exit( int extval ) {
   DBG;
   fflush( NULL );
   DBG;
-  if( pip_is_task() || pip_is_ulp() ) {
-    DBG;
+  if( pip_is_task() ) {
     (void) pip_named_export_fin( pip_task );
-    DBG;
     pip_set_extval( pip_task, extval );
-
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       if( pip_is_pthread_() ) {	/* thread mode */
 	pthread_exit( (void*) &pip_task->extval );
@@ -2029,11 +2026,11 @@ int pip_exit( int extval ) {
 	exit( extval );
       }
     }
-#ifdef AH
+  } else if( pip_is_ulp() ) {
+    (void) pip_named_export_fin( pip_task );
+    pip_set_extval( pip_task, extval );
     DBGF( "pip_task->ctx_exit:%p", pip_task->ctx_exit );
     err = pip_load_context( pip_task->ctx_exit );
-#endif
-    /* never reach here, hopefully */
   } else {
     if( pip_is_root() ) {
       if( ( err = pip_fin() ) != 0 ) goto error;
