@@ -1,0 +1,17 @@
+compat/gethostname.sh
+compat/gethostbyname.sh
+compat/dlopen.sh
+compat/initfini.sh
+compat/iftask.sh
+compat/gettimeofday.sh
+compat/ctype.sh
+compat/main.sh
+compat/exit.sh
+compat/exit1.sh
+compat/exit2.sh
+compat/exit3.sh
+compat/exit4.sh
+#compat/brk.sh
+compat/pf.sh
+compat/system.sh
+compat/sigchld.sh
