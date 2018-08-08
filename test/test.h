@@ -348,7 +348,9 @@ inline static void set_sigsegv_watcher( void ) {
       sigcode = "(unknown)";
     }
     fprintf( stderr,
-	     "[PIPID:%d,PID:%d] SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n",
+	     "\n"
+	     "[PIPID:%d,PID:%d] SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n"
+	     "\n",
 	     pip_get_pipid_(),
 	     getpid(),
 	     (void*) pc,

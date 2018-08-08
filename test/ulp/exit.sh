@@ -2,8 +2,8 @@
 
 . ../test.sh.inc
 
-unset TEST_PIP_TASKS
-TEST_PIP_TASKS=`../util/dlmopen_count -p -m 250`
+##unset TEST_PIP_TASKS
+##TEST_PIP_TASKS=`../util/dlmopen_count -p -m 250`
 
 ##echo TEST_PIP_TASKS=$TEST_PIP_TASKS
 

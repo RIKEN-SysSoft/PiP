@@ -39,14 +39,17 @@
 //#define NULPS	(10)
 //#define NULPS	(3)
 
-#define NYIELDS	(5*1000)
+//#define NYIELDS	(5*1000)
 //#define NYIELDS	(1*1000)
+#define NYIELDS	(10)
 
 //#define DEBUG
 #define PIP_EVAL
 
 #include <test.h>
-#include <pip_ulp.h>
+
+pip_ulp_barrier_t barr;
+pip_ulp_barrier_t *barrp = &barr;
 
 int main( int argc, char **argv ) {
   int ntasks = 0;
@@ -67,11 +70,12 @@ int main( int argc, char **argv ) {
   }
   nulps = ntasks - 1;
 
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
+  TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
     pip_ulp_t ulps;
 
+    pip_ulp_barrier_init( barrp, ntasks );
     PIP_ULP_INIT( &ulps );
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
     for( i=0; i<nulps; i++ ) {
@@ -87,14 +91,19 @@ int main( int argc, char **argv ) {
   } else {
     double time_yield = 0.0;
     double one_yield;
+
     for( i=0; i<nulps*10; i++ ) { /* warming-up */
       TESTINT( pip_ulp_yield() );
     }
+
+    pip_ulp_barrier_wait( barrp );
     for( i=0; i<NYIELDS; i++ ) {
       PIP_ACCUM( time_yield, pip_ulp_yield()==0 );
     }
+    pip_ulp_barrier_wait( barrp );
+
     one_yield = time_yield;
-    one_yield /= ((double) NYIELDS ) * ((double)(nulps+1));
+    one_yield /= ((double) NYIELDS ) * ((double)ntasks);
     if( pip_is_task() ) {
       fprintf( stderr,
 	       "Hello, this is TASK (%d)  "

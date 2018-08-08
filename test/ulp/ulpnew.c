@@ -95,7 +95,6 @@ int main( int argc, char **argv ) {
 	     "\n<%d> Hello, %s (stackvar@%p staticvar@%p)\n\n",
 #endif
 	     pipid, type, &pipid, &root );
-    //pip_exit( 0 );
   }
   TESTINT( pip_fin() );
   return 0;

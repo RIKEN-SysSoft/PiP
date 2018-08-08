@@ -45,11 +45,6 @@
 #  undef NTASKS
 #  define NTASKS	(10)
 # endif
-#else
-# ifdef NTASKS
-#  undef NTASKS
-#  define NTASKS	(250)	/* must be less tahn 256 (0xff) */
-# endif
 #endif
 
 #define NULPS		(NTASKS-10)
@@ -59,6 +54,7 @@
 int main( int argc, char **argv ) {
   int ntasks, nulps;
   int i, pipid;
+  int flag = 0;
 
   if( argc   > 1 ) {
     ntasks = atoi( argv[1] );
@@ -99,12 +95,16 @@ int main( int argc, char **argv ) {
 	fprintf( stderr, "Succeeded (%d)\n", i );
       } else {
 	fprintf( stderr, "pip_wait(%d!=%d)\n", i & 0xff, status );
+	flag = 9;
       }
+    }
+    if( flag ) {
+      fprintf( stderr, "FAILED !!!!\n" );
     }
   } else {
     fprintf( stderr, "<%d> Hello !!\n", pipid );
     TESTINT( pip_exit( pipid ) );
   }
   TESTINT( pip_fin() );
-  return 0;
+  return flag;
 }

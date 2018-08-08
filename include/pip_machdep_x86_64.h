@@ -38,16 +38,11 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-/**** Spin Lock ****/
-
 #include <stdint.h>
-
-typedef volatile uint32_t	pip_spinlock_t;
-#define PIP_LOCK_TYPE
 
 inline static void pip_pause( void ) {
 #if !defined( __KNC__ ) && !defined( __MIC__ )
-  asm volatile("pause" ::: "memory");
+  asm volatile( "pause" ::: "memory" );
 #else  /* Xeon PHI (KNC) */
   /* the following value is tentative and must be tuned !! */
   asm volatile( "movl $4,%eax;"
@@ -57,12 +52,12 @@ inline static void pip_pause( void ) {
 #define PIP_PAUSE
 
 inline static void pip_write_barrier(void) {
-  asm volatile("sfence":::"memory");
+  asm volatile( "sfence":::"memory" );
 }
 #define PIP_WRITE_BARRIER
 
 inline static void pip_memory_barrier(void) {
-  asm volatile("mfence":::"memory");
+  asm volatile( "mfence":::"memory" );
 }
 #define PIP_MEMORY_BARRIER
 

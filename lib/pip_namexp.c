@@ -115,7 +115,7 @@ int pip_named_export_fin( pip_task_t *task ) {
   pip_list_t		*list, *next;
   int 			i;
 
-  DBG;
+  DBGF( "PIPID:%d", task->pipid );
   if( namexp != NULL ) {
     if( namexp->pipid != task->pipid ) {
       pip_err_mesg( "%s is called by PIPID:%d, but it was created by PIPID:%d",
@@ -148,7 +148,7 @@ void pip_named_export_fin_all( void ) {
 
   DBGF( "pip_root->ntasks:%d", pip_root->ntasks );
   for( i=0; i<pip_root->ntasks; i++ ) {
-    DBGF( "PiP tasks: %d", i );
+    DBGF( "PiP task: %d", i );
     free( pip_root->tasks[i].named_exptab );
     pip_root->tasks[i].named_exptab = NULL;
   }
@@ -156,6 +156,7 @@ void pip_named_export_fin_all( void ) {
   (void) pip_named_export_fin( pip_root->task_root );
   free( pip_root->task_root->named_exptab );
   pip_root->task_root->named_exptab = NULL;
+  DBG;
 }
 
 static void pip_lock_hashtab_head( pip_namexp_list_t *head ) {

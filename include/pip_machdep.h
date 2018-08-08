@@ -59,6 +59,8 @@ typedef volatile uint32_t	pip_spinlock_t;
 #ifndef PIP_PAUSE
 inline static void pip_pause( void ) {
   /* nop */
+  static int x = 0;
+  x ++;
 }
 #endif
 
@@ -77,7 +79,6 @@ inline static void pip_memory_barrier(void) {
 #ifndef PIP_SPIN_TRYLOCK_WV
 inline static pip_spinlock_t
 pip_spin_trylock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
-  pip_memory_barrier();
   return __sync_val_compare_and_swap( lock, 0, lv );
 }
 #endif
@@ -90,27 +91,22 @@ pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
 #endif
 
 #ifndef PIP_SPIN_TRYLOCK
-inline static pip_spinlock_t
-pip_spin_trylock( pip_spinlock_t *lock ) {
-  int oldval;
-
-  pip_memory_barrier();
+inline static pip_spinlock_t pip_spin_trylock( pip_spinlock_t *lock ) {
   if( *lock != 0 ) return 0;
-  oldval = __sync_val_compare_and_swap( lock, 0, 1 );
+  int oldval = __sync_val_compare_and_swap( lock, 0, 1 );
   return oldval == 0;
 }
 #endif
 
 #ifndef PIP_SPIN_LOCK
-inline static void
-pip_spin_lock( pip_spinlock_t *lock ) {
+inline static void pip_spin_lock( pip_spinlock_t *lock ) {
   while( !pip_spin_trylock( lock ) ) pip_pause();
 }
 #endif
 
 #ifndef PIP_SPIN_UNLOCK
 inline static void pip_spin_unlock (pip_spinlock_t *lock) {
-  __sync_lock_release(lock);
+  __sync_lock_release( lock );	/* *lock <= 0 */
 }
 #endif
 

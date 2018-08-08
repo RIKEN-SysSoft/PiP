@@ -40,7 +40,7 @@
 #include <test.h>
 #include <pip_ulp.h>
 
-#define DEBUG
+//#define DEBUG
 
 #ifndef DEBUG
 #define ULP_COUNT 	(100);
@@ -66,6 +66,8 @@ int ulp_main( void* null ) {
   int ulp_count = ULP_COUNT;
   int pipid_myself;
 
+  set_sigsegv_watcher();
+
   TESTINT( pip_init( &pipid_myself, NULL, (void**) &expop, 0 ) );
   TESTINT( !pip_is_ulp() );
   while( --ulp_count >= 0 ) {
@@ -86,6 +88,8 @@ int main( int argc, char **argv ) {
   int ntasks, nulps;
   int i, j, pipid, status, flag=0;
 
+  set_sigsegv_watcher();
+
   if( argv[1] != NULL ) {
     ntasks = atoi( argv[1] );
   } else {
@@ -103,12 +107,6 @@ int main( int argc, char **argv ) {
     nulps = atoi( argv[2] );
     if( nulps == 0 ) {
       fprintf( stderr, "Number of ULPs must be larget than zero\n" );
-      exit( 1 );
-    } else if( nulps > PIP_NTASKS_MAX ) {
-      fprintf( stderr,
-	       "Number of PiP tasks (%d) and ULPs (%d) are too large\n",
-	       ntasks,
-	       nulps );
       exit( 1 );
     }
   } else {
@@ -131,7 +129,7 @@ int main( int argc, char **argv ) {
     pip_spawn_program_t prog;
 
     pip_spawn_from_func( &func, argv[0], "ulp_main", NULL, NULL );
-    pip_barrier_init( &expop->barr, ntasks );
+    pip_task_barrier_init( &expop->barr, ntasks );
     TESTINT( pip_ulp_locked_queue_init( &expop->queue ) );
 
     j = ntasks;

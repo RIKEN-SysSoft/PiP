@@ -39,7 +39,7 @@
 #include <pip_ulp.h>
 #include <pip_universal.h>
 
-#define NITERS	(30)
+#define NITERS	(50)
 //#define NITERS	(10)
 #define NULPS	(10)
 
