@@ -4,8 +4,8 @@
 
 trap 'rm -f $TEST_TMP; exit $EXIT_KILLED' $TEST_TRAP_SIGS
 
-((N0=$TEST_PIP_TASKS / 3))
-((N1=$TEST_PIP_TASKS / 3 + 1))
+N0=$(expr $TEST_PIP_TASKS / 3 )
+N1=$(expr $TEST_PIP_TASKS / 3 + 1 )
 
 ./spawns >$TEST_TMP 2>&1
 if [ $(fgrep 'Hello, I am fine !' <$TEST_TMP | wc -l) -eq $TEST_PIP_TASKS ] &&
