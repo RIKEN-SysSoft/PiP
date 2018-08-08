@@ -46,7 +46,7 @@
 int main( int argc, char **argv ) {
   extern char **environ;
   char *envv[4];
-  int pipid, ntasks;
+  int pipid, ntasks = 0;
   int i, j;
   int err;
 
