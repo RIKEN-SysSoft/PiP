@@ -35,22 +35,19 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = ulpnew.c func.c exit.c yield.c barrier.c mutex.c \
-	mighrate.c migrate.c waitany.c
+LDLIBS += $(PIPLDLIB) -ldl
 
-PROGRAMS  = ulpnew func exit yield barrier mutex migrate migrate2 waitany
+SRCS    = spinlock.c
+
+PROGRAMS = spinlock
+
+DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
+
+LDLIBS += -lm
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-test-file:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )
-
 post-clean-hook:
 	$(RM) *.E *.log
-
-check: test
-
-test:
-	( cd ../; ./test.sh -A ulp/test.list )

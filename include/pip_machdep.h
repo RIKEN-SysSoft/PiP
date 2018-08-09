@@ -77,7 +77,7 @@ inline static void pip_memory_barrier(void) {
 #endif
 
 #ifndef PIP_SPIN_TRYLOCK_WV
-inline static pip_spinlock_t
+inline static int
 pip_spin_trylock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
   return __sync_val_compare_and_swap( lock, 0, lv );
 }
@@ -91,7 +91,7 @@ pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
 #endif
 
 #ifndef PIP_SPIN_TRYLOCK
-inline static pip_spinlock_t pip_spin_trylock( pip_spinlock_t *lock ) {
+inline static int pip_spin_trylock( pip_spinlock_t *lock ) {
   if( *lock != 0 ) return 0;
   int oldval = __sync_val_compare_and_swap( lock, 0, 1 );
   return oldval == 0;

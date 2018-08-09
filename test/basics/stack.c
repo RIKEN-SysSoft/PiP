@@ -137,7 +137,7 @@ int main( int argc, char **argv ) {
     TESTINT( pthread_mutex_unlock( &tc.mutex ) );
 
     pthread_barrier_wait( barrp );
-    print_maps();
+    //print_maps();
     pthread_barrier_wait( barrp );
 
     for( i=0; i<ntasks; i++ ) TESTINT( pip_wait( i, NULL ) );
@@ -151,7 +151,7 @@ int main( int argc, char **argv ) {
     TESTINT( pthread_mutex_lock( &tcp->mutex ) );
     TESTINT( pthread_mutex_unlock( &tcp->mutex ) );
 
-    print_task_info( pipid );
+    //print_task_info( pipid );
 
     fflush( NULL );
     pthread_barrier_wait( barrp );

@@ -208,7 +208,6 @@ extern "C" {
    * this works the same as \c pip_ulp_yield() does.
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c ulp is \c NULL
    * \retval EPERM The specified ULP is being scheduled by the other
    * PiP task
    *
@@ -238,7 +237,6 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL Invalid PiP ID is specified
    * \retval EPERM PiP library is not yet initialized
-   *
    */
   int pip_ulp_get( int pipid, pip_ulp_t **ulpp );
   /** @}*/
@@ -249,9 +247,11 @@ extern "C" {
    * \param[in] ulp PiP ULP
    * \param[out] pipidp PiP ID pointer
    *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c pipidp is \c NULL
+   * \note If \c ulp is \c NULL, then the PiP id of the current ULP is
+   * returned.
    *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized
    */
   int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp );
   /** @}*/
@@ -264,9 +264,8 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c pipidp is \c NULL
    * \retval The target is not eligible to run
-   *
    */
-  int pip_get_ulp_sched( int *pipidp );
+  int pip_ulp_get_sched( int *pipidp );
   /** @}*/
 
   /**
