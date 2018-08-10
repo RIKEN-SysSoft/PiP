@@ -43,7 +43,8 @@
 //#define DEBUG
 
 #ifndef DEBUG
-#define ULP_COUNT 	(1000)
+//#define ULP_COUNT 	(1000)
+#define ULP_COUNT 	(10)
 #else
 #define ULP_COUNT 	(10)
 #endif
@@ -80,12 +81,19 @@ struct expo {
   pip_ulp_locked_queue_t	queue;
 } expo;
 
+__thread int var_tls;
+
 int ulp_main( void* null ) {
+  int *var_tls_p;
   struct expo *expop;
   int pipid, pipid_sched0, pipid_sched1;
   int ulp_count = 0, mgrt_count = 0;
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
+
+  var_tls_p = &var_tls;
+  //fprintf( stderr, "[%d] var_tls@%p\n", pipid, var_tls_p );
+
   TESTINT( !pip_is_ulp() );
   TESTINT( pip_ulp_get_sched_task( &pipid_sched0 ) );
   while( ulp_count++ < ULP_COUNT ) {
@@ -101,6 +109,10 @@ int ulp_main( void* null ) {
 #ifdef SCHED_CHECK
     SCHED_CHECK;
 #endif
+    if( var_tls_p != &var_tls ) {
+      fprintf( stderr, "[%d] var_tls@%p != %p !!!!\n",
+	       pipid, var_tls_p, &var_tls );
+    }
   }
   fprintf( stderr, "[%d] mgrt:%d\n", pipid, mgrt_count );
   TESTINT( pip_fin() );

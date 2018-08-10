@@ -34,14 +34,19 @@
  */
 
 #include <test.h>
+#include <pip_internal.h>
 #include <pthread.h>
 #include <malloc.h>
 
 #define NTIMES		(100)
 #define RSTATESZ	(256)
 
+#define MALLOC_MAX	(1024*1024*32)
+
 static char rstate[RSTATESZ];
 //static struct random_data rbuf;
+
+size_t pip_stack_size( void );
 
 int my_initstate( int pipid ) {
   if( pipid < 0 ) pipid = 123456;
@@ -67,27 +72,30 @@ int malloc_loop( int pipid ) {
   int ntimes = ( 500 * cpu_num_limit() ) / ntasks;
   int i, j;
 
-  mem *= 1024;
+  mem *= 1024;			/* Bytes */
   if( pipid == PIP_PIPID_ROOT && isatty( 1 ) ) {
     printf( "mem:0x%lx  %ld MiB \n", mem, mem/(1024*1024) );
   }
-  mem /= ( ntasks + 1 ) * 2;
+  mem -= PIP_STACK_SIZE * ntasks; /* subtract stacks */
+  mem /= ntasks + 1;
   if( pipid == PIP_PIPID_ROOT && isatty( 1 ) ) {
     printf( "mem:0x%lx  %ld MiB\n", mem, mem/(1024*1024) );
   }
 
-  mask = 1024 * 1024;
+  mask = 128 * 1024;
   while( mask < mem ) mask *= 2;
+  mask /= 32;
   mask -= 1;
 
   if( pipid == PIP_PIPID_ROOT && isatty( 1 ) ) {
     printf( "mask:0x%lx  %ld MiB\n", mask, mask/(1024*1024) );
   }
-
+#ifdef AH
   if( isatty( 1 ) ) {
     fprintf( stderr, "<%d> enterring malloc_loop. this can take a while...\n",
 	     pipid );
   }
+#endif
   for( i=0; i<ntimes; i++ ) {
     int32_t sz;
     void *p;
@@ -95,8 +103,9 @@ int malloc_loop( int pipid ) {
     TESTINT( my_random( &sz ) );
     sz <<= 6;
     sz &= mask;
-    if( sz == 0 ) sz = 256;
-    if( ( p = malloc( sz ) ) == NULL ) return ENOMEM;
+    sz = ( sz < 8 ) ? 8 : sz;
+    sz &= MALLOC_MAX - 1;
+    if( ( p = malloc( sz ) ) == NULL ) return -1;
     memset( p, ( pipid & 0xff ), sz );
     for( j=0; j<sz; j++ ) {
       if( ((unsigned char*)p)[j] != ( pipid & 0xff ) ) {
@@ -131,6 +140,7 @@ int main( int argc, char **argv ) {
   exp   = (void*) &tc;
   TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
+    fprintf( stderr, "StackSize:%ld MiB\n", pip_stack_size()/1024/1024 );
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
       err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),

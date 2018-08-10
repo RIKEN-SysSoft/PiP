@@ -849,7 +849,7 @@ static char **pip_copy_env( char **envsrc, int pipid ) {
   return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
 }
 
-static size_t pip_stack_size( void ) {
+size_t pip_stack_size( void ) {
   char 		*env, *endptr;
   size_t 	sz, scale;
   int 		i;
@@ -890,9 +890,9 @@ static size_t pip_stack_size( void ) {
 	  sz = PIP_STACK_SIZE;
 	  break;
 	}
+	sz = ( sz < PIP_STACK_SIZE_MIN ) ? PIP_STACK_SIZE_MIN : sz;
       }
     }
-    sz = ( sz < PIP_STACK_SIZE_MIN ) ? PIP_STACK_SIZE_MIN : sz;
     pip_root->stack_size = sz;
   }
   return sz;
