@@ -56,7 +56,7 @@ int my_ulp_main( void ) {
   set_sigsegv_watcher();
   TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
   TESTINT( pip_get_pipid( &pipid ) );
-  TESTINT( pip_ulp_get_sched( &schedid ) );
+  TESTINT( pip_ulp_get_sched_task( &schedid ) );
 
   fprintf( stderr,
 #ifndef DEBUG

@@ -39,8 +39,6 @@
 #include <test.h>
 #include <time.h>
 
-pip_barrier_t barr, *barrp;
-
 void my_sleep( int n ) {
   struct timespec tm, tr;
   tm.tv_sec = 0;
@@ -72,7 +70,7 @@ int main( int argc, char **argv ) {
   if( ntasks < 1 ) ntasks = NTASKS;
   ntasks = ( ntasks > 256 ) ? 256 : ntasks;
 
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     struct sigaction 	sigact;
 

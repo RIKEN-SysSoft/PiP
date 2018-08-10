@@ -265,7 +265,7 @@ extern "C" {
    * \retval EINAVL \c pipidp is \c NULL
    * \retval The target is not eligible to run
    */
-  int pip_ulp_get_sched( int *pipidp );
+  int pip_ulp_get_sched_task( int *pipidp );
   /** @}*/
 
   /**

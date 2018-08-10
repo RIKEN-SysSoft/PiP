@@ -57,7 +57,7 @@
 #define NULPS		(NTASKS/2)
 
 struct expo {
-  pip_barrier_t			barr;
+  pip_task_barrier_t		barr;
   pip_ulp_locked_queue_t	queue;
 } expo;
 
@@ -161,7 +161,7 @@ int main( int argc, char **argv ) {
     }
   } else {
     TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &expop ) );
-    pip_barrier_wait( &expop->barr );
+    pip_task_barrier_wait( &expop->barr );
     while( 1 ) {
       pip_ulp_t *next;
       int err = pip_ulp_dequeue_and_migrate( &expop->queue, &next, 0 );

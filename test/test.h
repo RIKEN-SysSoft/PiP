@@ -347,6 +347,7 @@ inline static void set_sigsegv_watcher( void ) {
     } else {
       sigcode = "(unknown)";
     }
+    fflush( NULL );
     fprintf( stderr,
 	     "\n"
 	     "[PIPID:%d,PID:%d] SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n"

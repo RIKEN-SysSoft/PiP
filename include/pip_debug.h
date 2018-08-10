@@ -1,18 +1,18 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
   * 	  System Software Devlopment Team. All rights researved$
   * $PIP_VERSION: Version 1.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
   * met:
-  * 
+  *
   * 1. Redistributions of source code must retain the above copyright
   *    notice, this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the 
+  *    notice, this list of conditions and the following disclaimer in the
   *    documentation and/or other materials provided with the distribution.
-  * 
+  *
   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
   * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
   * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,7 +24,7 @@
   * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  * 
+  *
   * The views and conclusions contained in the software and documentation
   * are those of the authors and should not be interpreted as representing
   * official policies, either expressed or implied, of the PiP project.$
@@ -71,12 +71,12 @@
 #define DBGF(...)							\
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; }while(0)
 #define RETURN(X)						\
-  do { DBG_PRTBUF; int __xxx=(X); if(__xxx) {				\
-      DBG_TAG; DBG_PRNT("ERROR RETURN (%d)",__xxx); DBG_OUTPUT; }	\
-    return (__xxx); } while(0)
+  do { DBG_PRTBUF; int __xxx=(X); DBG_TAG; if(__xxx) {		\
+      DBG_PRNT("ERROR RETURN (%d)",__xxx);				\
+    } else { DBG_PRNT("<<<<"); } DBG_OUTPUT; return (__xxx); } while(0)
 
 #define ASSERT(X)	\
-  do { if( !(X) ) DBGF( "%s failed !!!", #X ); } while(0)
+  do { if( !(X) ) DBGF( "\n%s Assertion FAILED !!!\n", #X ); } while(0)
 
 #define PIP_TASK_DESCRIBE( ID )				\
   pip_task_describe( stderr, __func__, (ID) );
@@ -97,6 +97,11 @@
 #define PIP_ULP_QUEUE_DESCRIBE( Q )
 
 #endif
+
+#define ERRJ		{ DBG;                goto error; }
+#define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }
+#define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
+#define ERRJ_CHK(FUNC)	{ if( (FUNC) ) { DBG; goto error; } }
 
 #if defined( DO_CHECK_CTYPE ) || defined( DEBUG )
 #include <ctype.h>

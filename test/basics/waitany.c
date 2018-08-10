@@ -37,7 +37,7 @@
 #include <test.h>
 #include <time.h>
 
-pip_barrier_t barr, *barrp;
+pip_task_barrier_t barr, *barrp;
 
 void my_sleep( int n ) {
   struct timespec tm, tr;
@@ -63,7 +63,7 @@ int main( int argc, char **argv ) {
   set_sigsegv_watcher();
 
   barrp = &barr;
-  pip_barrier_init( barrp, ntasks+1 );
+  pip_task_barrier_init( barrp, ntasks+1 );
 
   TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
@@ -72,7 +72,7 @@ int main( int argc, char **argv ) {
       TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			  NULL, NULL, NULL ) );
     }
-    pip_barrier_wait( barrp );
+    pip_task_barrier_wait( barrp );
     my_sleep( ntasks / 2 );
     flag = 0;
     for( i=0; i<ntasks; i++ ) {
@@ -94,7 +94,7 @@ int main( int argc, char **argv ) {
     TESTINT( pip_fin() );
 
   } else {
-    pip_barrier_wait( barrp );
+    pip_task_barrier_wait( barrp );
     if( pipid > ntasks/2 ) my_sleep( ntasks - pipid );
     //fprintf( stderr, "[%d] Hello, I am fine !!\n", pipid );
     pip_exit( pipid );

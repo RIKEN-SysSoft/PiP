@@ -38,12 +38,12 @@
 //#define DEBUG
 
 #include <test.h>
-#include <pip_ulp.h>
+#include <pip_universal.h>
 
 //#define DEBUG
 
 #ifndef DEBUG
-#define ULP_COUNT 	(100)
+#define ULP_COUNT 	(1000)
 #else
 #define ULP_COUNT 	(10)
 #endif
@@ -51,11 +51,12 @@
 #ifdef DEBUG
 # define MTASKS	(10)
 #else
+//# define MTASKS	(NTASKS/4)
 # define MTASKS	(NTASKS/2)
 //# define MTASKS	(10)
 #endif
 
-#define NULPS		(NTASKS/2)
+#define NULPS		(NTASKS-MTASKS)
 
 #ifdef DEBUG
 #define SCHED_CHECK	\
@@ -64,31 +65,44 @@
 	     __LINE__, pip_task->pipid, pip_task->task_sched->pipid )
 #endif
 
+#ifdef OLD_BARRIER
+#define PIP_BARRIER_T		pip_task_barrier_t
+#define PIP_BARRIER_INIT_F	pip_task_barrier_init
+#define PIP_BARRIER_WAIT_F	pip_task_barrier_wait
+#else
+#define PIP_BARRIER_T		pip_universal_barrier_t
+#define PIP_BARRIER_INIT_F	pip_universal_barrier_init
+#define PIP_BARRIER_WAIT_F	pip_universal_barrier_wait
+#endif
+
 struct expo {
-  pip_barrier_t			barr;
+  PIP_BARRIER_T			barr;
   pip_ulp_locked_queue_t	queue;
 } expo;
 
 int ulp_main( void* null ) {
   struct expo *expop;
-  int ulp_count = ULP_COUNT;
-  int pipid;
+  int pipid, pipid_sched0, pipid_sched1;
+  int ulp_count = 0, mgrt_count = 0;
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
   TESTINT( !pip_is_ulp() );
-  while( --ulp_count >= 0 ) {
+  TESTINT( pip_ulp_get_sched_task( &pipid_sched0 ) );
+  while( ulp_count++ < ULP_COUNT ) {
+    TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, 0 ) );
+    TESTINT( pip_ulp_get_sched_task( &pipid_sched1 ) );
+    if( pipid_sched0 != pipid_sched1 ) mgrt_count ++;
+    pipid_sched0 = pipid_sched1;
 #define AH
 #ifdef AH
-    int pipid_sched;
-    TESTINT( pip_ulp_get_sched( &pipid_sched ) );
-    fprintf( stderr, "[ULPID:%d]  sched-task: %d  [%d/%d]\n",
-	     pipid, pipid_sched, ulp_count, ULP_COUNT );
+    fprintf( stderr, "[ULPID:%d,PID:%d]  sched-task: %d  [%d/%d]\n",
+	     pipid, getpid(), pipid_sched0, ulp_count, ULP_COUNT );
 #endif
 #ifdef SCHED_CHECK
     SCHED_CHECK;
 #endif
-    TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, 0 ) );
   }
+  fprintf( stderr, "[%d] mgrt:%d\n", pipid, mgrt_count );
   TESTINT( pip_fin() );
   return 0;
 }
@@ -101,7 +115,7 @@ int task_main( void* null ) {
   set_sigsegv_watcher();
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
-  pip_task_barrier_wait( &expop->barr );
+  PIP_BARRIER_WAIT_F( &expop->barr );
 
   while( 1 ) {
 #ifdef SCHED_CHECK
@@ -109,20 +123,17 @@ int task_main( void* null ) {
 #endif
     err = pip_ulp_dequeue_and_migrate( &expop->queue, &next, 0 );
     if( err == 0 ) {
-      if( ( err = pip_ulp_yield() ) != 0 ) {
-	fprintf( stderr, "[%d] pip_ulp_yield_to():%d\n", pipid, err );
-	pip_ulp_describe( stderr, "", next );
-	flag = 9;
-	break;
-      }
+      TESTINT( pip_ulp_yield() );
+      continue;
     } else if( err != ENOENT ) {
       fprintf( stderr, "[%d] pip_ulp_dequeue_and_migrate():%d\n", pipid, err );
-      pip_ulp_describe( stderr, "", next );
       flag = 9;
+      break;
     } else {      /* exit loop when no ulp to schedule (ENOENT) */
       break;
     }
   }
+  PIP_BARRIER_WAIT_F( &expop->barr );
   TESTINT( pip_fin() );
   return flag;
 }
@@ -132,6 +143,7 @@ int main( int argc, char **argv ) {
   pip_spawn_program_t ulpp;
   struct expo *expop;
   int ntasks, nulps;
+  int tskc=0, ulpc=0;
   int i, j, pipid, status, flag=0;
 
   set_sigsegv_watcher();
@@ -150,7 +162,7 @@ int main( int argc, char **argv ) {
     fprintf( stderr, "Number of PiP tasks (%d) is too large\n", ntasks );
     exit( 1 );
   }
-  if( argv[1] != NULL && argv[2] != NULL ) {
+  if( argc > 2 && argv[2] != NULL ) {
     nulps = atoi( argv[2] );
     if( nulps == 0 ) {
       fprintf( stderr, "Number of ULPs must be larget than zero\n" );
@@ -161,7 +173,7 @@ int main( int argc, char **argv ) {
   }
 #else
   ntasks = MTASKS;
-  nulps = NTASKS - ntasks;
+  nulps  = NTASKS - ntasks;
 #endif
 
   DBGF( "ntasks:%d  nulps:%d", ntasks, nulps );
@@ -176,7 +188,7 @@ int main( int argc, char **argv ) {
 
   expop = &expo;
   TESTINT( pip_init( &pipid, &nt, (void**) &expop, 0 ) );
-  pip_task_barrier_init( &expop->barr, ntasks );
+  PIP_BARRIER_INIT_F( &expop->barr, ntasks );
   TESTINT( pip_ulp_locked_queue_init( &expop->queue ) );
 
   pip_spawn_from_func( &ulpp, argv[0], "ulp_main",  NULL, NULL );
@@ -196,10 +208,18 @@ int main( int argc, char **argv ) {
   }
 
   for( i=0; i<nt; i++ ) {
-    TESTINT( pip_wait( i, &status ) );
-    if( status != 0 ) {
+    TESTINT( pip_wait_any( &pipid, &status ) );
+    if( status == 0 ) {
+      if( pipid >= ntasks ) {
+	ulpc ++;
+	fprintf( stderr, "ULP:%d terminated (%d/%d)\n", pipid, ulpc, nulps );
+      } else {
+	tskc ++;
+	fprintf( stderr, "TSK:%d terminated (%d/%d)\n", pipid, tskc, ntasks );
+      }
+    } else {
       fprintf( stderr, "PIPID:%d exited with non-zero value (%d)\n",
-	       i, status );
+	       pipid, status );
       flag = ( status > flag ) ? status : flag;
     }
   }
