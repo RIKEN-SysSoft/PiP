@@ -61,20 +61,29 @@ inline static void pip_memory_barrier(void) {
 }
 #define PIP_MEMORY_BARRIER
 
-#if defined( PIP_PRINT_FSREG ) || defined( PIP_ULP_SWITCH_TLS )
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #include <errno.h>
 
 int arch_prctl( int, unsigned long* );
 
-inline static int pip_get_fsreg( intptr_t *fsreg ) {
-  return arch_prctl(ARCH_GET_FS, (unsigned long*) fsreg ) ? errno : 0;
+inline static int pip_get_tls( intptr_t *tlsp ) {
+  return arch_prctl(ARCH_GET_FS, (unsigned long*) tlsp ) ? errno : 0;
+}
+#define PIP_GET_TLS
+
+inline static int pip_get_fsreg( intptr_t *tlsp ) {
+  return pip_get_tls( tlsp );
 }
 #define PIP_GET_FSREG
 
-inline static int pip_set_fsreg( intptr_t fsreg ) {
-  return arch_prctl(ARCH_SET_FS, (unsigned long*) fsreg) ? errno : 0;
+inline static int pip_set_tls( intptr_t tls ) {
+  return arch_prctl(ARCH_SET_FS, (unsigned long*) tls) ? errno : 0;
+}
+#define PIP_SET_TLS
+
+inline static int pip_set_fsreg( intptr_t tls ) {
+  return pip_set_tls( tls );
 }
 #define PIP_SET_FSREG
 
@@ -87,40 +96,38 @@ inline static void pip_print_fs_segreg( void ) {
   }
 }
 #define PIP_PRINT_FSREG
-#endif	/* PIP_X86_FSREG */
 
-#ifdef PIP_ULP_SWITCH_TLS
+//#define PIP_CTX_WITH_TLS
+#ifdef PIP_CTX_WITH_TLS
 #include <ucontext.h>
 
 typedef struct {
-  intptr_t	fsreg;
+  intptr_t	tls;
   ucontext_t	ctx;
 } pip_ctx_t;
 #define PIP_CTX_T
 
 #define pip_make_context(CTX,F,C,...)	 \
   do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__);	\
-    pip_set_fsreg((CTX)->fsreg); } while(0)
+    pip_get_tls(&(CTX)->tls); } while(0)
 #define PIP_MAKE_CONTEXT
 
 inline static int pip_save_context( pip_ctx_t *ctxp ) {
-  return ( pip_get_fsreg(&ctxp->fsreg) || getcontext(&ctxp->ctx) ) ? errno : 0;
+  return ( getcontext(&ctxp->ctx) ) ? errno : 0;
 }
 #define PIP_SAVE_CONTEXT
 
 inline static int pip_load_context( const pip_ctx_t *ctxp ) {
-  return ( pip_set_fsreg(ctxp->fsreg) || setcontext(&ctxp->ctx) ) ? errno : 0;
+  return ( pip_set_tls(ctxp->tls) || setcontext(&ctxp->ctx) ) ? errno : 0;
 }
 #define PIP_LOAD_CONTEXT
 
 inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
-  return ( pip_get_fsreg(&old->fsreg)          ||
-	   swapcontext( &old->ctx, &new->ctx ) ||
-	   pip_set_fsreg(new->fsreg) ) ? errno : 0;
+  return ( swapcontext( &old->ctx, &new->ctx ) ||
+	   pip_set_tls(new->tls) ) ? errno : 0;
 }
 #define PIP_SWAP_CONTEXT
-
-#endif /* PIP_ULP_SWITCH_TLS */
+#endif
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

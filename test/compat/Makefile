@@ -37,11 +37,11 @@ include $(srcdir)/../Test.common
 
 SRCS  = gethostname.c gethostbyname.c initfini.c iftask.c gettimeofday.c \
 	ctype.c main.c exit.c exit1.c exit2.c exit3.c exit4.c abort.c \
-	brk.c pf.c fork.c sid.c system.c sigchld.c
+	brk.c pf.c fork.c sid.c system.c sigchld.c malloc.c malloc2.c
 
 PROGRAMS = gethostname gethostbyname dlopen initfini iftask gettimeofday \
 	ctype main exit exit1 exit2 exit3 exit4 abort \
-	brk pf fork sid system sigchld
+	brk pf fork sid system sigchld malloc malloc2
 
 PROGRAMS_TO_INSTALL = # nothing
 

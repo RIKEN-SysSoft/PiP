@@ -84,16 +84,11 @@ struct expo {
 __thread int var_tls;
 
 int ulp_main( void* null ) {
-  int *var_tls_p;
   struct expo *expop;
   int pipid, pipid_sched0, pipid_sched1;
   int ulp_count = 0, mgrt_count = 0;
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
-
-  var_tls_p = &var_tls;
-  //fprintf( stderr, "[%d] var_tls@%p\n", pipid, var_tls_p );
-
   TESTINT( !pip_is_ulp() );
   TESTINT( pip_ulp_get_sched_task( &pipid_sched0 ) );
   while( ulp_count++ < ULP_COUNT ) {
@@ -101,7 +96,7 @@ int ulp_main( void* null ) {
     TESTINT( pip_ulp_get_sched_task( &pipid_sched1 ) );
     if( pipid_sched0 != pipid_sched1 ) mgrt_count ++;
     pipid_sched0 = pipid_sched1;
-#define AH
+    //#define AH
 #ifdef AH
     fprintf( stderr, "[ULPID:%d,PID:%d]  sched-task: %d  [%d/%d]\n",
 	     pipid, getpid(), pipid_sched0, ulp_count, ULP_COUNT );
@@ -109,12 +104,8 @@ int ulp_main( void* null ) {
 #ifdef SCHED_CHECK
     SCHED_CHECK;
 #endif
-    if( var_tls_p != &var_tls ) {
-      fprintf( stderr, "[%d] var_tls@%p != %p !!!!\n",
-	       pipid, var_tls_p, &var_tls );
-    }
   }
-  fprintf( stderr, "[%d] mgrt:%d\n", pipid, mgrt_count );
+  //if( isatty( 1 ) ) fprintf( stderr, "[%d] mgrt:%d\n", pipid, mgrt_count );
   TESTINT( pip_fin() );
   return 0;
 }
@@ -222,12 +213,14 @@ int main( int argc, char **argv ) {
   for( i=0; i<nt; i++ ) {
     TESTINT( pip_wait_any( &pipid, &status ) );
     if( status == 0 ) {
-      if( pipid >= ntasks ) {
-	ulpc ++;
-	fprintf( stderr, "ULP:%d terminated (%d/%d)\n", pipid, ulpc, nulps );
-      } else {
-	tskc ++;
-	fprintf( stderr, "TSK:%d terminated (%d/%d)\n", pipid, tskc, ntasks );
+      if( isatty( 1 ) ) {
+	if( pipid >= ntasks ) {
+	  ulpc ++;
+	  fprintf( stderr, "ULP:%d terminated (%d/%d)\n", pipid, ulpc, nulps );
+	} else {
+	  tskc ++;
+	  fprintf( stderr, "TSK:%d terminated (%d/%d)\n", pipid, tskc, ntasks);
+	}
       }
     } else {
       fprintf( stderr, "PIPID:%d exited with non-zero value (%d)\n",

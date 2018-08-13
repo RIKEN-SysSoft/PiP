@@ -36,11 +36,14 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
 SRCS  = ulpnew.c func.c exit.c yield.c barrier.c mutex.c \
-	mighrate.c migrate.c waitany.c
+	mighrate.c migrate2.c migrate3.c waitany.c tls.c
 
-PROGRAMS  = ulpnew func exit yield barrier mutex migrate migrate2 waitany
+PROGRAMS  = ulpnew func exit yield barrier mutex \
+	migrate migrate2 migrate3 waitany tls
 
 PROGRAMS_TO_INSTALL = # nothing
+
+LDFLAGS += -lpthread
 
 include $(top_srcdir)/build/rule.mk
 

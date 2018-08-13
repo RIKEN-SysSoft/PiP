@@ -124,10 +124,12 @@ typedef struct {
   char			**envv;
 } pip_spawn_args_t;
 
-#define PIP_TYPE_NONE	(0x0)
-#define PIP_TYPE_ROOT	(0x1)
-#define PIP_TYPE_TASK	(0x2)
-#define PIP_TYPE_ULP	(0x3)
+#define PIP_TYPE_NONE		(0x000)
+#define PIP_TYPE_ROOT		(0x100)
+#define PIP_TYPE_TASK		(0x080)
+#define PIP_TYPE_ULP		(0x040)
+#define PIP_TYPE_ULP_MGRT	(0x020)
+#define PIP_TYPE_ULP_NEW	(0x010)
 
 struct pip_gdbif_task;
 
@@ -145,7 +147,7 @@ typedef struct pip_task {
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
   };
-  /* PiP ULP (type==PIP_TYPE_ULP) */
+  /* PiP ULP (type&PIP_TYPE_ULP) */
   union {
     struct {
       void		*ulp_stack;   /* stack area of this ULP */
@@ -158,7 +160,7 @@ typedef struct pip_task {
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };
-  /* PiP task (type==PIP_TYPE_TASK) */
+  /* PiP task (type&PIP_TYPE_TASK) */
   union {
     struct {
       pid_t		pid;	/* PID in process mode */
