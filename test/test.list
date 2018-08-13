@@ -43,7 +43,7 @@ ulp/ulpnew.sh
 ulp/yield.sh
 ulp/func.sh
 ulp/exit.sh
-ulp/migrate.sh
+#ulp/migrate.sh
 ulp/mutex.sh
 ulp/barrier.sh
 ulp/waitany.sh
