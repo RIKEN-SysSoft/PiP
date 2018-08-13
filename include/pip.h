@@ -209,7 +209,7 @@
 
 #include <pip_machdep.h>
 
-typedef struct pip_barrier {
+typedef struct pip_task_barrier {
   union {
     struct {
       int		count_init;
@@ -218,7 +218,10 @@ typedef struct pip_barrier {
     };
     char		__gap__[PIP_CACHEBLK_SZ];
   };
-} pip_barrier_t;
+} pip_task_barrier_t;
+
+/* the following type is just for backward compatibility */
+typedef pip_task_barrier_t	pip_barrier_t __attribute__ ((deprecated));
 
 typedef struct pip_ulp_queue {
   struct pip_ulp_queue		*next;
@@ -818,7 +821,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * pip_universal_barrier_init(3),
    * pip_universal_barrier_wait(3)
    */
-  int pip_task_barrier_init( pip_barrier_t *barrp, int n );
+  int pip_task_barrier_init( pip_task_barrier_t *barrp, int n );
   /** @}*/
 
   /**
@@ -835,7 +838,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * pip_universal_barrier_wait(3)
    *
    */
-  int pip_task_barrier_wait( pip_barrier_t *barrp );
+  int pip_task_barrier_wait( pip_task_barrier_t *barrp );
   /** @}*/
 
   /**
@@ -893,8 +896,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 extern "C" {
 #endif
 
-  int pip_barrier_init( pip_barrier_t *barrp, int n );
-  int pip_barrier_wait( pip_barrier_t *barrp );
+  int pip_barrier_init( pip_task_barrier_t *barrp, int n );
+  int pip_barrier_wait( pip_task_barrier_t *barrp );
 
   /** DEPRECATED
    * \brief spawn a PiP task (ULP API Version 1)

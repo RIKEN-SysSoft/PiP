@@ -39,12 +39,12 @@
 #include <pip_ulp.h>
 #include <pip_universal.h>
 
-#define NITERS	(30)
+#define NITERS	(50)
 //#define NITERS	(10)
 #define NULPS	(10)
 
 struct expo {
-  pip_barrier_t			pbarr;
+  pip_task_barrier_t		pbarr;
   pip_universal_barrier_t	ubarr;
   int				*count;
   int				error;
@@ -80,7 +80,7 @@ int main( int argc, char **argv, char **envv ) {
     pip_ulp_queue_t 	ulps;
 
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    TESTINT( pip_barrier_init(           &expop->pbarr, ntasks ) );
+    TESTINT( pip_task_barrier_init(      &expop->pbarr, ntasks ) );
     TESTINT( pip_universal_barrier_init( &expop->ubarr, total  ) );
     expop->count = (int*) malloc( sizeof(int) * total );
     expop->error = 0;
@@ -108,7 +108,7 @@ int main( int argc, char **argv, char **envv ) {
     for( i=0; i<nulps; i++ ) {
       TESTINT( pip_ulp_yield() );
     }
-    TESTINT( pip_barrier_wait( &expop->pbarr ) );
+    TESTINT( pip_task_barrier_wait( &expop->pbarr ) );
 
     for( i=0; i<niters; i++ ) {
       TESTINT( pip_universal_barrier_wait( &expop->ubarr ) );

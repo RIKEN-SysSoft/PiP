@@ -39,9 +39,7 @@
 #include <sched.h>
 #include <stdio.h>
 
-#ifndef DEBUG
 //#define DEBUG
-#endif
 
 #include <pip.h>
 #include <pip_ulp.h>
@@ -68,6 +66,7 @@ typedef struct {
 } pip_namexp_list_t;
 
 typedef struct {
+  int				pipid;
   pip_namexp_list_t		hash_table[PIP_HASHTAB_SZ];
 } pip_named_exptab_t;
 
@@ -99,6 +98,8 @@ int pip_named_export_init( pip_task_t *task ) {
   namexp = (pip_named_exptab_t*) malloc( sizeof( pip_named_exptab_t ) );
   if( namexp == NULL ) RETURN( ENOMEM );
   memset( namexp, 0, sizeof( pip_named_exptab_t ) );
+
+  namexp->pipid = task->pipid;
   for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
     pip_spin_init( &namexp->hash_table[i].lock );
     PIP_LIST_INIT( &namexp->hash_table[i].list );
@@ -112,14 +113,16 @@ int pip_named_export_fin( pip_task_t *task ) {
   pip_namexp_list_t	*head;
   pip_namexp_entry_t	*entry;
   pip_list_t		*list, *next;
-  int 			i, err = 0;
+  int 			i;
 
-  DBG;
+  DBGF( "PIPID:%d", task->pipid );
   if( namexp != NULL ) {
+    if( namexp->pipid != task->pipid ) {
+      pip_err_mesg( "%s is called by PIPID:%d, but it was created by PIPID:%d",
+		    __func__, task->pipid, namexp->pipid );
+    }
     for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
       head = &namexp->hash_table[i];
-
-      //pip_namexp_lock( &head->lock );
       pip_spin_lock( &head->lock );
       PIP_LIST_FOREACH_SAFE( (pip_list_t*) &head->list, list, next ) {
 	entry = (pip_namexp_entry_t*) list;
@@ -127,15 +130,17 @@ int pip_named_export_fin( pip_task_t *task ) {
 	  pip_del_namexp( entry );
 	  free( entry->name );
 	  free( entry );
-	} else {		/* the is a query entry, it must be free()ed by the query task or ulp */
+	} else {
+	  /* the is a query entry, it must be */
+	  /* free()ed by the query task or ulp */
 	  entry->flag_canceled = 1;
 	}
       }
       pip_spin_unlock( &head->lock );
-      //pip_namexp_unlock( &head->lock );
     }
   }
-  RETURN( err );
+  DBG;
+  RETURN( 0 );
 }
 
 void pip_named_export_fin_all( void ) {
@@ -143,7 +148,7 @@ void pip_named_export_fin_all( void ) {
 
   DBGF( "pip_root->ntasks:%d", pip_root->ntasks );
   for( i=0; i<pip_root->ntasks; i++ ) {
-    DBGF( "PiP tasks: %d", i );
+    DBGF( "PiP task: %d", i );
     free( pip_root->tasks[i].named_exptab );
     pip_root->tasks[i].named_exptab = NULL;
   }
@@ -151,6 +156,7 @@ void pip_named_export_fin_all( void ) {
   (void) pip_named_export_fin( pip_root->task_root );
   free( pip_root->task_root->named_exptab );
   pip_root->task_root->named_exptab = NULL;
+  DBG;
 }
 
 static void pip_lock_hashtab_head( pip_namexp_list_t *head ) {
@@ -275,7 +281,6 @@ int pip_named_export( void *exp, const char *format, ... ) {
 	pip_add_namexp( head, new );
 	/* note: we cannot free this entry since it was created by the */
 	/* other PiP task and in this case that PiP task must free it  */
-	//err = pip_namexp_semaphore_post_all( entry );
       }
     } else {
       /* already exists */

@@ -37,18 +37,7 @@
 #include <test.h>
 #include <time.h>
 
-pip_barrier_t barr, *barrp;
-
-void my_sleep( int n ) {
-  struct timespec tm, tr;
-  tm.tv_sec = 0;
-  tm.tv_nsec = n * 1000 * 1000;
-#ifdef DEBUG
-  tm.tv_sec  = 1 * n;
-  tm.tv_nsec = 0;
-#endif
-  (void) nanosleep( &tm, &tr );
-}
+pip_task_barrier_t barr, *barrp;
 
 int main( int argc, char **argv ) {
   int pipid = 999;
@@ -61,7 +50,7 @@ int main( int argc, char **argv ) {
   ntasks = ( ntasks > 256 ) ? 256 : ntasks;
 
   barrp = &barr;
-  pip_barrier_init( barrp, ntasks+1 );
+  pip_task_barrier_init( barrp, ntasks+1 );
 
   TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
@@ -70,7 +59,7 @@ int main( int argc, char **argv ) {
       TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			  NULL, NULL, NULL ) );
     }
-    pip_barrier_wait( barrp );
+    pip_task_barrier_wait( barrp );
     flag = 0;
     for( i=0; i<ntasks; i++ ) {
       TESTINT( pip_wait_any( &pipid, &extval ) );
@@ -91,7 +80,7 @@ int main( int argc, char **argv ) {
     TESTINT( pip_fin() );
 
   } else {
-    pip_barrier_wait( barrp );
+    pip_task_barrier_wait( barrp );
     //fprintf( stderr, "[%d] Hello, I am fine !!\n", pipid );
     pip_exit( pipid );
     /* never reach here */

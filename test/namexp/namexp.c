@@ -38,7 +38,7 @@
 #include <math.h>
 
 //#define NITERS	(10000)
-#define NITERS	(30)
+#define NITERS	(100)
 
 #define NULPS	(10)
 
@@ -55,14 +55,22 @@ int main( int argc, char **argv, char **envv ) {
   int i, j, k, flag;
 
   set_signal_watcher( SIGSEGV );
-  if( argc == 1 ) {
-    nulps  = NULPS;
-    ntasks = NTASKS / ( nulps + 1 );
+  if( argc > 2 ) {
+    nulps  = atoi( argv[2] );
   } else {
-    if( argc > 1 ) ntasks = atoi( argv[1] );
-    if( argc > 2 ) nulps  = atoi( argv[2] );
-    if( argc > 3 ) niters = atoi( argv[3] );
+    nulps  = NULPS;
   }
+  if( argc > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = NTASKS / ( nulps + 1 );
+  }
+  if( argc > 3 ) {
+    niters = atoi( argv[3] );
+  } else {
+    niters = NITERS;
+  }
+
   total = ntasks * nulps + ntasks;
   if( total < 1 ) {
       fprintf( stderr, "Not enough number of tasks\n" );
@@ -72,7 +80,6 @@ int main( int argc, char **argv, char **envv ) {
     fprintf( stderr, "Too large\n" );
     exit( 1 );
   }
-  if( niters == 0 ) niters = NITERS;
 
   TESTINT( ( a = (int*) malloc( sizeof(int) * niters ) ) == NULL );
   for( i=0; i<niters; i++ ) a[i] = i + BIAS;
@@ -131,7 +138,9 @@ int main( int argc, char **argv, char **envv ) {
 	if( pipid == 0 ) fprintf( stderr, "ITER:%d : %d\n", i, j );
 #endif
       }
-      if( pipid == 0 && i % 10 == 0 ) fprintf( stderr, "ITER:%d\n", i );
+      if( pipid == 0 && i % 10 == 0 ) {
+	fprintf( stderr, "ITER:%d\n", i );
+      }
     }
 #ifdef DEBUG
     fprintf( stderr, "\n[pipid:%d] DONE\n\n", pipid );

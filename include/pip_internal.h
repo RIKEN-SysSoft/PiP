@@ -124,10 +124,12 @@ typedef struct {
   char			**envv;
 } pip_spawn_args_t;
 
-#define PIP_TYPE_NONE	(0x0)
-#define PIP_TYPE_ROOT	(0x1)
-#define PIP_TYPE_TASK	(0x2)
-#define PIP_TYPE_ULP	(0x3)
+#define PIP_TYPE_NONE		(0x000)
+#define PIP_TYPE_ROOT		(0x100)
+#define PIP_TYPE_TASK		(0x080)
+#define PIP_TYPE_ULP		(0x040)
+#define PIP_TYPE_ULP_MGRT	(0x020)
+#define PIP_TYPE_ULP_NEW	(0x010)
 
 struct pip_gdbif_task;
 
@@ -145,7 +147,7 @@ typedef struct pip_task {
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
   };
-  /* PiP ULP (type==PIP_TYPE_ULP) */
+  /* PiP ULP (type&PIP_TYPE_ULP) */
   union {
     struct {
       void		*ulp_stack;   /* stack area of this ULP */
@@ -158,7 +160,7 @@ typedef struct pip_task {
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };
-  /* PiP task (type==PIP_TYPE_TASK) */
+  /* PiP task (type&PIP_TYPE_TASK) */
   union {
     struct {
       pid_t		pid;	/* PID in process mode */
@@ -176,7 +178,7 @@ typedef struct pip_task {
   pip_spawn_args_t	args;	 /* arguments for a PiP task */
   void *volatile	export;
   void			*named_exptab;
-  pip_ctx_t		*ctx_exit; /* longjump context for pip_exit() */
+  pip_ctx_t		*context;
   volatile int		flag_exit; /* if this task is terminated or not */
   int			extval;	   /* exit value */
   /* GDB interface */
@@ -215,19 +217,14 @@ typedef struct {
 extern pip_root_t	*pip_root;
 extern pip_task_t	*pip_task;
 
-#define pip_likely(x)		__builtin_expect((x),1)
-#define pip_unlikely(x)		__builtin_expect((x),0)
+#define pip_likely(x)	__builtin_expect((x),1)
+#define pip_unlikely(x)	__builtin_expect((x),0)
 
 #define PIP_TASK(ULP)	((pip_task_t*)(ULP))
 #define PIP_ULP(TASK)	((pip_ulp_t*)(TASK))
 #define PIP_ULP_CTX(U)	(PIP_TASK(U)->ctx_suspend)
 
 #define PIP_MIDLEN	(64)
-
-#define ERRJ		{ DBG;                goto error; }
-#define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }
-#define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
-#define ERRJ_CHK(FUNC)	{ if( (FUNC) ) goto error; }
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

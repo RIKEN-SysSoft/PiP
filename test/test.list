@@ -1,27 +1,22 @@
 basics/initfin.sh
 basics/file.sh
 basics/wait.sh
-basics/signal.sh
+#basics/signal.sh -- test program is not yet completed
 basics/exit.sh
-basics/exit1.sh
-basics/exit2.sh
-basics/exit3.sh
 basics/mutex.sh
 basics/core.sh
-basics/numa.sh
+#basics/numa.sh -- test program is not yet completed
 basics/hook.sh
 basics/spawn.sh
-#basics/getaddr.sh
+#basics/getaddr.sh -- pip_get_addr is deprecatde
 basics/environ.sh
 basics/export.sh
 basics/barrier.sh
 basics/varvars.sh
 basics/stack.sh
-basics/malloc.sh
-#basics/malloc2.sh
+#basics/malloc2.sh -- pip_malloc/pip_free are deprectaed
 basics/waitany.sh
 basics/sigchld.sh
-basics/sigchld2.sh
 spawn/spawns.sh
 compat/gethostname.sh
 compat/gethostbyname.sh
@@ -32,9 +27,14 @@ compat/gettimeofday.sh
 compat/ctype.sh
 compat/main.sh
 compat/exit.sh
-#compat/brk.sh
+compat/exit1.sh
+compat/exit2.sh
+compat/exit3.sh
+compat/sigchld.sh
+#compat/brk.sh -- (s)brk test is not appropriate since they are not multithread-safe
 compat/pf.sh
 compat/system.sh
+compat/malloc.sh
 #openmp/openmp.sh
 fortran/fort.sh
 pthread/pthread.sh
@@ -43,6 +43,7 @@ ulp/ulpnew.sh
 ulp/yield.sh
 ulp/func.sh
 ulp/exit.sh
+#ulp/migrate.sh
 ulp/mutex.sh
 ulp/barrier.sh
 ulp/waitany.sh

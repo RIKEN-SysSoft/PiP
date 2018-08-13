@@ -47,19 +47,16 @@
 # endif
 # define NULPS		(4)
 #else
-# ifdef NTASKS
-#  undef NTASKS
-#  define NTASKS	(250)
-# endif
 # define NULPS		(10)
 #endif
 
 int my_ulp_main( void ) {
   int pipid, schedid;
 
+  set_sigsegv_watcher();
   TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
   TESTINT( pip_get_pipid( &pipid ) );
-  TESTINT( pip_get_ulp_sched( &schedid ) );
+  TESTINT( pip_ulp_get_sched_task( &schedid ) );
 
   fprintf( stderr,
 #ifndef DEBUG
@@ -74,6 +71,7 @@ int my_ulp_main( void ) {
 int my_tsk_main( void ) {
   int pipid;
 
+  set_sigsegv_watcher();
   TESTINT( pip_init( NULL, NULL, NULL, 0 ) );
   TESTINT( pip_get_pipid( &pipid ) );
   fprintf( stderr,
@@ -92,6 +90,8 @@ int main( int argc, char **argv ) {
   int			ntasks, nulps, pipid;
   int 			i, j, k;
 
+  set_sigsegv_watcher();
+
   if( argc > 1 ) {
     ntasks = atoi( argv[1] );
   } else {
@@ -102,7 +102,7 @@ int main( int argc, char **argv ) {
 	     "Too small number of PiP tasks (must be latrger than 1)\n" );
     exit( 1 );
   }
-  if( ntasks >= 256 ) {
+  if( ntasks >= NTASKS ) {
     fprintf( stderr,
 	     "Too many number of PiP tasks (must be less than 256)\n" );
     exit( 1 );
@@ -144,7 +144,7 @@ int main( int argc, char **argv ) {
   for( i=0; i<k; i++ ) {
     int status;
     TESTINT( pip_wait( i, &status ) );
-    if( status == i ) {
+    if( status == ( i & 0xff ) ) {
       fprintf( stderr, "Succeeded (%d)\n", i );
     } else {
       fprintf( stderr, "pip_wait(%d):%d\n", i, status );

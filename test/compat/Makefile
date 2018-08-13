@@ -3,13 +3,13 @@
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-# 
+#
 # 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the 
+#    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -21,11 +21,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
 top_builddir = ../..
@@ -36,10 +36,12 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
 SRCS  = gethostname.c gethostbyname.c initfini.c iftask.c gettimeofday.c \
-	ctype.c main.c exit.c abort.c brk.c pf.c fork.c sid.c system.c
+	ctype.c main.c exit.c exit1.c exit2.c exit3.c exit4.c abort.c \
+	brk.c pf.c fork.c sid.c system.c sigchld.c malloc.c malloc2.c
 
 PROGRAMS = gethostname gethostbyname dlopen initfini iftask gettimeofday \
-	ctype main exit abort brk pf fork sid system
+	ctype main exit exit1 exit2 exit3 exit4 abort \
+	brk pf fork sid system sigchld malloc malloc2
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -47,3 +49,8 @@ include $(top_srcdir)/build/rule.mk
 
 post-clean-hook:
 	$(RM) *.E *.log
+
+check: test
+
+test:
+	( cd ../; ./test.sh -A compat/test.list )

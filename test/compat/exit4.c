@@ -30,100 +30,73 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
- */
-
-#define PIP_INTERNAL_FUNCS
+  * Written by Atsushi HORI <ahori@riken.jp>, 2018
+*/
 
 //#define DEBUG
-
 #include <test.h>
-#include <pip_ulp.h>
 
-#ifdef DEBUG
-# ifdef NTASKS
-#  undef NTASKS
-#  define NTASKS	(10)
-# endif
-#endif
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
 
-#ifndef DEBUG
-#define NULPS		(NTASKS-10)
-#else
-#define NULPS		(NTASKS-5)
-#endif
-
-#define BIAS		(10000)
-
-struct expo {
-  volatile int		c;
-  pip_ulp_barrier_t 	barr;
-} expo;
+int root_exp = 0;
 
 int main( int argc, char **argv ) {
-  struct expo *expop;
-  int ntasks = 0;
-  int i, pipid, nulps;
+  int pipid, ntasks = 0;
+  int i, retval = 0;
+  int err;
 
-  if( argc   > 1 ) {
-    ntasks = atoi( argv[1] );
-  } else {
-    ntasks = NTASKS;
-  }
-  if( ntasks < 2 ) {
-    fprintf( stderr,
-	     "Too small number of PiP tasks (must be latrger than 1)\n" );
-    exit( 1 );
-  }
-  nulps = ntasks - 1;
+  set_signal_watcher( SIGSEGV );
 
-  expo.c = BIAS;
-  expop  = &expo;
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &expop, 0 ) );
+  if( argc > 1 ) ntasks = atoi( argv[1] );
+  if( ntasks == 0 ) ntasks = NTASKS;
+
+  TESTINT( pip_init( &pipid, &ntasks, NULL,
+		     PIP_MODE_PROCESS|PIP_OPT_FORCEEXIT ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    pip_spawn_program_t prog;
-    pip_ulp_queue_t ulps;
-
-    pip_ulp_barrier_init( &expo.barr, ntasks );
-    PIP_ULP_INIT( &ulps );
-    pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    for( i=0; i<nulps; i++ ) {
-      pipid = i;
-      TESTINT( pip_ulp_new( &prog, &pipid, &ulps, NULL ) );
-    }
-    pipid = i;
-    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, &ulps ));
     for( i=0; i<ntasks; i++ ) {
-      TESTINT( pip_wait( i, NULL ) );
+
+      pipid = i;
+      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
+		       &pipid, NULL, NULL, NULL );
+      if( err ) {
+	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
+		 i, NTASKS, strerror( err ) );
+	break;
+      }
     }
-  } else {
-    if( pip_is_ulp() ) {
+    for( i=0; i<ntasks; i++ ) {
+      pid_t pid = -1;
 
-      /* Disturbances */
-      int nyields = rand() % nulps;
-      for( i=0; i<nyields; i++ ) TESTINT( pip_ulp_yield() );
-
-      for( i=0; i<nulps; i++ ) {
-	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
-	if( i == pipid ) {
-	  if( (expop->c)++ == ( pipid + BIAS ) ) {
-	    fprintf( stderr, "<%d> Hello ULP !!\n", pipid );
-	  } else {
-	    fprintf( stderr, "<%d> Bad ULP !!\n", pipid );
+      TESTINT( pip_get_id( i, (intptr_t*) &pid ) );
+      retval = 99999;
+      {
+	int wst;
+	while( 1 ) {
+	  if( waitpid( pid, &wst, 0 ) >= 0 ) {
+	    if( WIFEXITED( wst ) ) {
+	      retval = WEXITSTATUS( wst );
+	    }
+	    break;
+	  } else if( errno != EINTR ) {
+	    fprintf( stderr, "waitpid()=%d !!!!!!\n", errno );
+	    break;
 	  }
 	}
       }
-    } else {
-      for( i=0; i<nulps; i++ ) {
-	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
-      }
-      if( pipid == ( ntasks - 1 ) && expop->c == ( pipid + BIAS ) ) {
-	fprintf( stderr, "<%d> Hello TASK !!\n", pipid );
+      if( retval != ( i & 0xFF ) ) {
+	fprintf( stderr,
+		 "[PIPID=%d,PID=%d] waitpid() returns %d ???\n",
+		 i, pid, retval );
       } else {
-	fprintf( stderr, "<%d> Bad TASK !!\n", pipid );
+        fprintf( stderr, "[PIPID=%d,PID=%d] terminated. OK\n", i, pid );
       }
     }
+  } else {
+    fprintf( stderr, "Hello, I am PIPID[%d, pid=%d]\n", pipid, getpid() );
   }
   TESTINT( pip_fin() );
-  return 0;
+
+  return pip_exit( pipid );
 }

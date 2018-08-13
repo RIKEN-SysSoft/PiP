@@ -33,97 +33,68 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#define PIP_INTERNAL_FUNCS
+#include <signal.h>
 
 //#define DEBUG
-
 #include <test.h>
-#include <pip_ulp.h>
+#include <time.h>
 
+void my_sleep( int n ) {
+  struct timespec tm, tr;
+  tm.tv_sec = 0;
+  tm.tv_nsec = n * 1000 * 1000;
 #ifdef DEBUG
-# ifdef NTASKS
-#  undef NTASKS
-#  define NTASKS	(10)
-# endif
+  tm.tv_sec  = 1 * n;
+  tm.tv_nsec = 0;
 #endif
+  (void) nanosleep( &tm, &tr );
+}
 
-#ifndef DEBUG
-#define NULPS		(NTASKS-10)
-#else
-#define NULPS		(NTASKS-5)
+int count_sigchld = 0;;
+
+void sigchld_handler( int sig ) {
+#ifdef DEBUG
+  fprintf( stderr, "SIGCHLD\n" );
 #endif
-
-#define BIAS		(10000)
-
-struct expo {
-  volatile int		c;
-  pip_ulp_barrier_t 	barr;
-} expo;
+  count_sigchld ++;
+}
 
 int main( int argc, char **argv ) {
-  struct expo *expop;
+  int pipid = 999;
   int ntasks = 0;
-  int i, pipid, nulps;
+  int i;
 
-  if( argc   > 1 ) {
-    ntasks = atoi( argv[1] );
-  } else {
-    ntasks = NTASKS;
-  }
-  if( ntasks < 2 ) {
-    fprintf( stderr,
-	     "Too small number of PiP tasks (must be latrger than 1)\n" );
-    exit( 1 );
-  }
-  nulps = ntasks - 1;
+  set_signal_watcher( SIGSEGV );
 
-  expo.c = BIAS;
-  expop  = &expo;
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &expop, 0 ) );
+  if( argc   > 1 ) ntasks = atoi( argv[1] );
+  if( ntasks < 1 ) ntasks = NTASKS;
+  ntasks = ( ntasks > 256 ) ? 256 : ntasks;
+
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    pip_spawn_program_t prog;
-    pip_ulp_queue_t ulps;
+    struct sigaction 	sigact;
 
-    pip_ulp_barrier_init( &expo.barr, ntasks );
-    PIP_ULP_INIT( &ulps );
-    pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    for( i=0; i<nulps; i++ ) {
-      pipid = i;
-      TESTINT( pip_ulp_new( &prog, &pipid, &ulps, NULL ) );
-    }
-    pipid = i;
-    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, &ulps ));
+    memset( &sigact, 0, sizeof( sigact ) );
+    TESTINT( sigemptyset( &sigact.sa_mask ) );
+    TESTINT( sigaddset( &sigact.sa_mask, SIGCHLD ) );
+    //sigact.sa_flags = SA_SIGINFO;
+    sigact.sa_sigaction = (void(*)()) sigchld_handler;
+    TESTINT( sigaction( SIGCHLD, &sigact, NULL ) );
     for( i=0; i<ntasks; i++ ) {
-      TESTINT( pip_wait( i, NULL ) );
+      pipid = i;
+      TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			  NULL, NULL, NULL ) );
+      TESTINT( pip_wait_any( NULL, NULL ) );
     }
-  } else {
-    if( pip_is_ulp() ) {
-
-      /* Disturbances */
-      int nyields = rand() % nulps;
-      for( i=0; i<nyields; i++ ) TESTINT( pip_ulp_yield() );
-
-      for( i=0; i<nulps; i++ ) {
-	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
-	if( i == pipid ) {
-	  if( (expop->c)++ == ( pipid + BIAS ) ) {
-	    fprintf( stderr, "<%d> Hello ULP !!\n", pipid );
-	  } else {
-	    fprintf( stderr, "<%d> Bad ULP !!\n", pipid );
-	  }
-	}
-      }
+    if( count_sigchld == ntasks ) {
+      fprintf( stderr, "SUCCEEDED\n" );
     } else {
-      for( i=0; i<nulps; i++ ) {
-	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
-      }
-      if( pipid == ( ntasks - 1 ) && expop->c == ( pipid + BIAS ) ) {
-	fprintf( stderr, "<%d> Hello TASK !!\n", pipid );
-      } else {
-	fprintf( stderr, "<%d> Bad TASK !!\n", pipid );
-      }
+      fprintf( stderr, "FAILED (%d!=%d)\n", count_sigchld, ntasks );
     }
+    TESTINT( pip_fin() );
+  } else {
+    pip_exit( pipid );
+    /* never reach here */
   }
-  TESTINT( pip_fin() );
   return 0;
 }

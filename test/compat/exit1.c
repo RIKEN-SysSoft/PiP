@@ -30,71 +30,51 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
- */
-
-#include <signal.h>
+  * Written by Atsushi HORI <ahori@riken.jp>, 2018
+*/
 
 //#define DEBUG
 #include <test.h>
-#include <time.h>
 
-pip_barrier_t barr, *barrp;
-
-void my_sleep( int n ) {
-  struct timespec tm, tr;
-  tm.tv_sec = 0;
-  tm.tv_nsec = n * 1000 * 1000;
-#ifdef DEBUG
-  tm.tv_sec  = 1 * n;
-  tm.tv_nsec = 0;
-#endif
-  (void) nanosleep( &tm, &tr );
-}
-
-int count_sigchld = 0;;
-
-void sigchld_handler( int sig ) {
-#ifdef DEBUG
-  fprintf( stderr, "SIGCHLD\n" );
-#endif
-  count_sigchld ++;
-}
+int root_exp = 0;
 
 int main( int argc, char **argv ) {
-  int pipid = 999;
-  int ntasks = 0;
+  int pipid, ntasks;
   int i;
+  int err;
 
-  if( argc   > 1 ) ntasks = atoi( argv[1] );
-  if( ntasks < 1 ) ntasks = NTASKS;
-  ntasks = ( ntasks > 256 ) ? 256 : ntasks;
-
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ) );
+  ntasks = NTASKS;
+  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    struct sigaction 	sigact;
+    for( i=0; i<NTASKS; i++ ) {
+      int retval;
 
-    memset( &sigact, 0, sizeof( sigact ) );
-    TESTINT( sigemptyset( &sigact.sa_mask ) );
-    TESTINT( sigaddset( &sigact.sa_mask, SIGCHLD ) );
-    //sigact.sa_flags = SA_SIGINFO;
-    sigact.sa_sigaction = (void(*)()) sigchld_handler;
-    TESTINT( sigaction( SIGCHLD, &sigact, NULL ) );
-    for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			  NULL, NULL, NULL ) );
-      TESTINT( pip_wait_any( NULL, NULL ) );
-    }
-    if( count_sigchld == ntasks ) {
-      fprintf( stderr, "SUCCEEDED\n" );
-    } else {
-      fprintf( stderr, "FAILED (%d!=%d)\n", count_sigchld, ntasks );
+      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
+		       &pipid, NULL, NULL, NULL );
+      if( err ) {
+	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
+		 i, NTASKS, strerror( err ) );
+	break;
+      }
+
+      if( i != pipid ) {
+	fprintf( stderr, "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
+	break;
+      }
+      DBGF( "calling pip_wait(%d)", i );
+      TESTINT( pip_wait( i, &retval ) );
+      if( retval != ( i & 0xFF ) ) {
+	fprintf( stderr, "[PIPID=%d] pip_wait() returns %d ???\n", i, retval );
+      } else {
+        fprintf( stderr, "[PIPID=%d] terminated. OK\n", i );
+      }
     }
     TESTINT( pip_fin() );
+
   } else {
-    pip_exit( pipid );
-    /* never reach here */
+    fprintf( stderr, "Hello, I am PIPID[%d/%d] ...", pipid, getpid() );
+    return pipid;
   }
   return 0;
 }

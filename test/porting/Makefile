@@ -28,19 +28,26 @@
 # $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += -g
+top_builddir = ../..
+top_srcdir = $(top_builddir)
+srcdir = .
+
+include $(top_srcdir)/build/var.mk
+include $(srcdir)/../Test.common
+
 LDLIBS += $(PIPLDLIB) -ldl
 
-DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h \
-	$(PIPINCDIR)/pip_ulp.h $(PIPINCDIR)/pip_internal.h \
-	$(PIPINCDIR)/pip_machdep.h $(PIPINCDIR)/pip_debug.h
+SRCS    = spinlock.c
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
+PROGRAMS = spinlock
 
-%: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) -pie $< -o $@ $(LDLIBS)
+DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
-%: %.f $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(FC) $(CPPFLAGS) $(FFLAGS) $(PIPLDFLAGS) -fPIE $< -o $@ $(LDLIBS)
+LDLIBS += -lm
+
+PROGRAMS_TO_INSTALL = # nothing
+
+include $(top_srcdir)/build/rule.mk
+
+post-clean-hook:
+	$(RM) *.E *.log

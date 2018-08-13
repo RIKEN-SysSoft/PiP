@@ -30,98 +30,60 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
- */
-
-#define PIP_INTERNAL_FUNCS
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+*/
 
 //#define DEBUG
-
 #include <test.h>
-#include <pip_ulp.h>
+#include <math.h>
 
-#ifdef DEBUG
-# ifdef NTASKS
-#  undef NTASKS
-#  define NTASKS	(10)
-# endif
-#endif
+#define NITERS	(100*1000)
 
-#ifndef DEBUG
-#define NULPS		(NTASKS-10)
-#else
-#define NULPS		(NTASKS-5)
-#endif
+typedef struct ex {
+  pip_spinlock_t lock;
+  volatile long long x;
+} ex_t;
 
-#define BIAS		(10000)
-
-struct expo {
-  volatile int		c;
-  pip_ulp_barrier_t 	barr;
-} expo;
+ex_t ex;
 
 int main( int argc, char **argv ) {
-  struct expo *expop;
-  int ntasks = 0;
-  int i, pipid, nulps;
+  ex_t *exp = &ex;
+  int pipid, ntasks, i;
 
-  if( argc   > 1 ) {
-    ntasks = atoi( argv[1] );
-  } else {
-    ntasks = NTASKS;
-  }
-  if( ntasks < 2 ) {
-    fprintf( stderr,
-	     "Too small number of PiP tasks (must be latrger than 1)\n" );
-    exit( 1 );
-  }
-  nulps = ntasks - 1;
+  ntasks = NTASKS;
+  pip_spin_init( &exp->lock );
+  exp->x = 0;
 
-  expo.c = BIAS;
-  expop  = &expo;
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &expop, 0 ) );
+  TESTINT( pip_init( &pipid, &ntasks, (void**) &exp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    pip_spawn_program_t prog;
-    pip_ulp_queue_t ulps;
-
-    pip_ulp_barrier_init( &expo.barr, ntasks );
-    PIP_ULP_INIT( &ulps );
-    pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    for( i=0; i<nulps; i++ ) {
+    for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      TESTINT( pip_ulp_new( &prog, &pipid, &ulps, NULL ) );
+      TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS,
+			  &pipid, NULL, NULL, NULL ) );
     }
-    pipid = i;
-    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL, &ulps ));
     for( i=0; i<ntasks; i++ ) {
       TESTINT( pip_wait( i, NULL ) );
     }
-  } else {
-    if( pip_is_ulp() ) {
 
-      /* Disturbances */
-      int nyields = rand() % nulps;
-      for( i=0; i<nyields; i++ ) TESTINT( pip_ulp_yield() );
-
-      for( i=0; i<nulps; i++ ) {
-	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
-	if( i == pipid ) {
-	  if( (expop->c)++ == ( pipid + BIAS ) ) {
-	    fprintf( stderr, "<%d> Hello ULP !!\n", pipid );
-	  } else {
-	    fprintf( stderr, "<%d> Bad ULP !!\n", pipid );
-	  }
-	}
-      }
+    long long k = (long) ntasks * (long) NITERS;
+    if( exp->x == k ) {
+      fprintf( stderr, "Succeded\n" );
     } else {
-      for( i=0; i<nulps; i++ ) {
-	TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
-      }
-      if( pipid == ( ntasks - 1 ) && expop->c == ( pipid + BIAS ) ) {
-	fprintf( stderr, "<%d> Hello TASK !!\n", pipid );
-      } else {
-	fprintf( stderr, "<%d> Bad TASK !!\n", pipid );
-      }
+      fprintf( stderr, "FAILED %Ld: %Ld\n", exp->x, k );
+    }
+  } else {
+    double z;
+    for( i=0; i<NITERS; i++ ) {
+      pip_spin_lock( &exp->lock );
+      z = exp->x;
+      z = z * z;
+      z = sqrt( z );
+#ifdef AH
+      pip_spin_unlock( &exp->lock );
+      pip_spin_lock( &exp->lock );
+#endif
+      exp->x = z + 1.01;
+      pip_spin_unlock( &exp->lock );
     }
   }
   TESTINT( pip_fin() );
