@@ -979,6 +979,10 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   symp->libc_fflush      = dlsym( handle, "fflush"                       );
   symp->free             = dlsym( handle, "free"                         );
   symp->named_export_fin = dlsym( handle, "pip_named_export_fin"         );
+  DBGF( "named_export_fin@%p", symp->named_export_fin );
+    /* pip_named_export_fin symbol may not be found when the task
+       program is not linked with the PiP lib. (due to not calling
+       any PiP functions) */
   /* variables */
   symp->environ          = dlsym( handle, "environ"                      );
   symp->libc_argvp       = dlsym( handle, "__libc_argv"                  );
@@ -1240,7 +1244,19 @@ static void pip_task_terminated( pip_task_t *task, int extval ) {
     task->symbols.libc_fflush( NULL );
     DBGF( "<< [%d] fflush@%p()", task->pipid, task->symbols.libc_fflush );
   }
-  (void) task->symbols.named_export_fin( task );
+  if( task == pip_task ) {
+    DBG;
+    pip_named_export_fin( task );
+  } else if( task->symbols.named_export_fin != NULL ) {
+    /* pip_named_export_fin symbol may not be found when the task
+       program is not linked with the PiP lib. (due to not calling
+       any PiP functions) */
+    /* In this case, the PiP task never calls pip_named_* functions
+       and no need of free() */
+    (void) task->symbols.named_export_fin( task );
+  } else {
+    DBGF( "task->symbols.named_export_fin == NULL !!!!" );
+  }
   if( !task->flag_exit ) {
     DBGF( "[%d] extval=%d", task->pipid, task->extval );
     task->flag_exit = PIP_EXITED;
