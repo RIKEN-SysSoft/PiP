@@ -19,5 +19,5 @@ if [ $(fgrep 'Hello, I am fine !' <$TEST_TMP | wc -l) -eq $TEST_PIP_TASKS ] &&
 then
 	test_exit_status=$EXIT_PASS
 fi
-#rm -f $TEST_TMP
+rm -f $TEST_TMP
 exit $test_exit_status
