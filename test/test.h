@@ -441,11 +441,13 @@ inline static void set_sigint_watcher( void ) {
 
 unsigned long get_total_memory( void ) {
   FILE *fp;
+  int ns = 0;
   unsigned long memtotal = 0;
 
   if( ( fp = fopen( "/proc/meminfo", "r" ) ) != NULL ) {
-    fscanf( fp, "MemTotal: %lu", &memtotal );
+    ns = fscanf( fp, "MemTotal: %lu", &memtotal );
     fclose( fp );
   }
-  return( memtotal );
+  if ( ns > 0 ) return memtotal;
+  return 0;
 }
