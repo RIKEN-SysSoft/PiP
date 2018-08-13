@@ -1432,7 +1432,7 @@ static void pip_ulp_start_( int pipid, int root_H, int root_L ) {
   pip_task_t 	*self, *sched;
   int		extval;
 
-  DBGF( "pipid=%d  root=0x%x:%x tls:%p", pipid, root_H, root_L, tlsp );
+  DBGF( "pipid=%d  root=0x%x:%x", pipid, root_H, root_L );
   //pip_set_tls( (intptr_t) tlsp );
   root = (pip_root_t*)
     ( ( ((intptr_t) root_H)<<32 ) | ( ((intptr_t) root_L) & PIP_MASK32 ) );

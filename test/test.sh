@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export LD_PRELOAD=`pwd`/../preload/pip_preload.so
 export OMP_NUM_THREADS=`$MCEXEC ./util/ompnumthread`
+export LD_PRELOAD=`pwd`/../preload/pip_preload.so
 
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
