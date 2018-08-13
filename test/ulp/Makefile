@@ -43,8 +43,6 @@ PROGRAMS  = ulpnew func exit yield barrier mutex \
 
 PROGRAMS_TO_INSTALL = # nothing
 
-LDFLAGS += -lpthread
-
 include $(top_srcdir)/build/rule.mk
 
 test-file:
