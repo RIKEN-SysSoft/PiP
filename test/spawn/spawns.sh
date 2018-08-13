@@ -7,6 +7,7 @@ trap 'rm -f $TEST_TMP; exit $EXIT_KILLED' $TEST_TRAP_SIGS
 N0=$(expr $TEST_PIP_TASKS / 3 )
 N1=$(expr $TEST_PIP_TASKS / 3 + 1 )
 
+# redmine #508
 #./spawns >$TEST_TMP 2>&1
 ./spawns 2>&1 | tee $TEST_TMP > /dev/null
 if [ $(fgrep 'Hello, I am fine !' <$TEST_TMP | wc -l) -eq $TEST_PIP_TASKS ] &&
