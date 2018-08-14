@@ -39,13 +39,11 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <pthread.h>
+#include <semaphore.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#ifndef PIP_USE_MUTEX
-#include <semaphore.h>
-#endif
 
 #include <pip_clone.h>
 #include <pip_machdep.h>
@@ -148,15 +146,18 @@ typedef struct pip_task {
     char		__gap0__[PIP_CACHEBLK_SZ];
   };
   /* PiP ULP (type&PIP_TYPE_ULP) */
+  void 			*ulp_stack; /* OBS */
   union {
     struct {
-      void		*ulp_stack;   /* stack area of this ULP */
       pip_ctx_t		*ctx_suspend; /* context to resume */
-#ifdef PIP_USE_MUTEX
-      pthread_mutex_t	mutex_wait; /* mutex to block at pip_wait() */
-#else
-      sem_t		sem_wait; /* semaphore to block at pip_wait() */
-#endif
+      union {
+	pthread_mutex_t	mutex_sleep; /* mutex to sleep */
+	sem_t		sem_sleep; /* semaphore to sleep */
+      };
+      union {
+	pthread_mutex_t	mutex_wait; /* mutex to block at pip_wait() */
+	sem_t		sem_wait; /* semaphore to block at pip_wait() */
+      };
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };
