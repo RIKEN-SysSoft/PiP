@@ -37,9 +37,9 @@ include $(srcdir)/../Test.common
 
 LDLIBS += $(PIPLDLIB) -ldl
 
-SRCS    = spinlock.c
+SRCS    = spinlock.c segreg.c
 
-PROGRAMS = spinlock
+PROGRAMS = spinlock segreg
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 

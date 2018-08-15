@@ -426,9 +426,6 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    *  returned.
    * \param[in] hookp Hook information to be invoked before and after
    *  the program invokation.
-   * \param[in] sisters List of ULPs to be scheduled by this task. \c
-   *  sisters can be \c NULL when there is no ULPs to be scheduled by
-   *  this created task.
    *
    * \note In theory, there is no reason to restrict for a PiP task to
    * spawn another PiP task. However, the current implementation fails
@@ -448,8 +445,7 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
 int pip_task_spawn( pip_spawn_program_t *progp,
 		    int coreno,
 		    int *pipidp,
-		    pip_spawn_hook_t *hookp,
-		    pip_ulp_t *sisters );
+		    pip_spawn_hook_t *hookp );
   /** @}*/
 
 
@@ -627,6 +623,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * BEFORE calling the \b pip_init() function.
    */
   int pip_isa_piptask( void );
+  /** @}*/
+
+  /**
+   * \brief return the number of awake tasks (i.e., not ULP)
+   *  @{
+   * \return Return the number of awake tasks
+   */
+  int pip_count_awake_tasks( void );
   /** @}*/
 
   /**
@@ -847,7 +851,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return true if the caller is the PiP root
    */
-  int  pip_is_root( void );
+  int  pip_isa_root( void );
   /** @}*/
 
   /**
@@ -856,7 +860,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return true if the caller is a PiP task
    */
-  int  pip_is_task( void );
+  int  pip_isa_task( void );
   /** @}*/
 
   /**
@@ -865,7 +869,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return true if the caller is a PiP ULP
    */
-  int  pip_is_ulp( void );
+  int  pip_isa_ulp( void );
   /** @}*/
 
   /**
@@ -878,7 +882,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
   int  pip_is_alive( int pipid );
   /** @}*/
-
 
 #ifdef PIP_EXPERIMENTAL
   void *pip_malloc( size_t size );
@@ -985,7 +988,7 @@ extern "C" {
   /* the following functions deeply depends on PiP execution mode */
   char  *pip_type_str( void );
   int    pip_get_thread( int pipid, pthread_t *threadp );
-  int    pip_is_pthread( int *flagp );
+  int    pip_is_threaded( int *flagp );
   int    pip_is_shared_fd( int *flagp );
   int    pip_is_shared_sighand( int *flagp );
 #ifdef __cplusplus

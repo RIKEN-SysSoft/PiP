@@ -95,7 +95,7 @@
 #define PIP_LIST_FOREACH(L,E)	PIP_ULP_FOREACH(L,E)
 #define PIP_LIST_FOREACH_SAFE(L,E,F)	PIP_ULP_FOREACH_SAFE(L,E,F)
 
-typedef struct pip_ulp_locked_queue {
+typedef struct pip_locked_queue {
   union {
     struct {
       pip_spinlock_t	lock;
@@ -103,7 +103,7 @@ typedef struct pip_ulp_locked_queue {
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
   };
-} pip_ulp_locked_queue_t;
+} pip_locked_queue_t;
 
 typedef struct pip_ulp_mutex {
   void			*sched;
@@ -131,30 +131,26 @@ extern "C" {
  */
 
   /**
-   * \brief Create a PiP ULP
+   * \brief sleep the curren PiP task and enqueue it as a ULP
    *  @{
-   * \param[in] progp Pointer to the \c pip_spawn_program_t structure
-   * \param[in,out] pipidp Specify PIPID of the new ULP. If
-   *  \c PIP_PIPID_ANY is specified, then the PIPID of the new ULP
-   *  is up to the PiP library and the assigned PIPID will be
-   *  returned.
-   * \param[in,out] sisters List of ULPs to be scheduled by the same
-   *  PiP task. Or, \c NULL to specify no list.
-   * \param[out] newp Created ULP is returned.
+   * \param[in] queue A locked queue
+   * \param[in] flags Enqueue policy
    *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c progp and/or \c pipidp is \c NULL
-   * \retval EINVAL The contents of \c progp is invlaid
-   * \retval EPERM The caller is not the PiP root
-   * \retval EAGAIN The specified PiP ID is already in use
-   * \retval ENOMEM Not enough memory
-   *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3)
+   * \return Return true if the specified PiP task or ULP is alive
+   * (i.e., not yet terminated) and running
    */
-  int pip_ulp_new( pip_spawn_program_t *progp,
-		   int *pipidp,
-		   pip_ulp_queue_t *sisters,
-		   pip_ulp_t **newp );
+  int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags );
+  /** @}*/
+
+  /**
+   * \brief dequeue a ULP from the queue and wakeup it as a PiP task
+   *  @{
+   * \param[in] queue A locked queue
+   *
+   * \return Return true if the specified PiP task or ULP is alive
+   * (i.e., not yet terminated) and running
+   */
+  int pip_dequeue_and_wakeup( pip_locked_queue_t *queue );
   /** @}*/
 
   /**
@@ -372,7 +368,7 @@ extern "C" {
    * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
    * pip_ulp_dequeue_with_lock(3)
    */
-  int pip_ulp_locked_queue_init( pip_ulp_locked_queue_t *queue );
+  int pip_locked_queue_init( pip_locked_queue_t *queue );
   /** @}*/
 
   /**
@@ -386,11 +382,11 @@ extern "C" {
    * \retval EINAVL \c queue is \c NULL
    * \retval EPERM a PiP task cannot be migrated
    *
-   * \sa pip_ulp_locked_queue_init(3),
+   * \sa pip_locked_queue_init(3),
    * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
    * pip_ulp_dequeue_with_lock(3)
    */
-  int pip_ulp_suspend_and_enqueue( pip_ulp_locked_queue_t *queue,
+  int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
 				   int flag );
   /** @}*/
 
@@ -407,11 +403,11 @@ extern "C" {
    * \retval ENOENT The specified queue is empty
    * \retval EPERM The ULP in the queue to be scheduled is a PiP task
    *
-   * \sa pip_ulp_locked_queue_init(3),
+   * \sa pip_locked_queue_init(3),
    * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3),
    * pip_ulp_dequeue_with_lock(3)
    */
-  int pip_ulp_dequeue_and_migrate( pip_ulp_locked_queue_t *queue,
+  int pip_ulp_dequeue_and_migrate( pip_locked_queue_t *queue,
 				   pip_ulp_t **ulpp,
 				   int flag );
   /** @}*/
@@ -426,13 +422,13 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    *
-   * \sa pip_ulp_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
+   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
    * pip_ulp_suspend_and_enqueue(3),
    * pip_ulp_dequeue_with_lock(3)
    */
-  int pip_ulp_enqueue_with_lock( pip_ulp_locked_queue_t *queue,
-				 pip_ulp_t *ulp,
-				 int flag );
+  int pip_enqueue_with_lock( pip_locked_queue_t *queue,
+			     pip_ulp_t *ulp,
+			     int flag );
   /** @}*/
 
   /**
@@ -447,11 +443,11 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    *
-   * \sa pip_ulp_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
+   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
    * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3)
    */
-  int pip_ulp_dequeue_with_lock( pip_ulp_locked_queue_t *queue,
-				 pip_ulp_t **ulpp );
+  int pip_dequeue_with_lock( pip_locked_queue_t *queue,
+			     pip_ulp_t **ulpp );
   /** @}*/
 
 #ifdef __cplusplus

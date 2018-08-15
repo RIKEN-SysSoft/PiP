@@ -126,8 +126,6 @@ typedef struct {
 #define PIP_TYPE_ROOT		(0x100)
 #define PIP_TYPE_TASK		(0x080)
 #define PIP_TYPE_ULP		(0x040)
-#define PIP_TYPE_ULP_MGRT	(0x020)
-#define PIP_TYPE_ULP_NEW	(0x010)
 
 struct pip_gdbif_task;
 

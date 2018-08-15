@@ -463,7 +463,7 @@ void pip_fprint_loaded_solibs( FILE *fp ) {
       pip_info_fmesg( fp, "%s %s at %p\n", idstr, fname, (void*)map->l_addr );
     }
   }
-  if( pip_is_root() && handle != NULL ) dlclose( handle );
+  if( pip_isa_root() && handle != NULL ) dlclose( handle );
 }
 
 void pip_print_loaded_solibs( FILE *file ) {

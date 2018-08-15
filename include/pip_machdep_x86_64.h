@@ -97,7 +97,7 @@ inline static void pip_print_fs_segreg( void ) {
 }
 #define PIP_PRINT_FSREG
 
-//#define PIP_CTX_WITH_TLS
+#define PIP_CTX_WITH_TLS
 #ifdef PIP_CTX_WITH_TLS
 #include <ucontext.h>
 
@@ -113,18 +113,27 @@ typedef struct {
 #define PIP_MAKE_CONTEXT
 
 inline static int pip_save_context( pip_ctx_t *ctxp ) {
-  return ( getcontext(&ctxp->ctx) ) ? errno : 0;
+#ifdef PIP_CTX_WITH_TLS
+  pip_get_tls( &ctxp->tls );
+#endif
+  return ( getcontext( &ctxp->ctx ) ) ? errno : 0;
 }
 #define PIP_SAVE_CONTEXT
 
 inline static int pip_load_context( const pip_ctx_t *ctxp ) {
-  return ( pip_set_tls(ctxp->tls) || setcontext(&ctxp->ctx) ) ? errno : 0;
+#ifndef PIP_CTX_WITH_TLS
+  pip_set_tls( ctxp->tls );
+#endif
+  return ( setcontext( &ctxp->ctx ) ) ? errno : 0;
 }
 #define PIP_LOAD_CONTEXT
 
-inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
-  return ( swapcontext( &old->ctx, &new->ctx ) ||
-	   pip_set_tls(new->tls) ) ? errno : 0;
+inline static int pip_swap_context( pip_ctx_t *oldp, pip_ctx_t *newp ) {
+#ifndef PIP_CTX_WITH_TLS
+  pip_get_tls( &oldp->tls );
+  pip_set_tls( newp->tls );
+#endif
+  return ( swapcontext( &oldp->ctx, &newp->ctx ) ) ? errno : 0;
 }
 #define PIP_SWAP_CONTEXT
 #endif
