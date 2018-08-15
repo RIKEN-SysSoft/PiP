@@ -156,8 +156,10 @@ pip_clone_t *pip_get_cloneinfo_( void ) {
 
 int pip_page_alloc( size_t sz, void **allocp ) {
   size_t pgsz;
-  if( pip_root == NULL ) {	/* in pip_init () (), no pip_root yet */
+  if( pip_root == NULL ) {	/* no pip_root yet */
     pgsz = sysconf( _SC_PAGESIZE );
+  } else if( pip_root->page_size == 0 ) {
+    pip_root->page_size = pgsz = sysconf( _SC_PAGESIZE );
   } else {
     pgsz = pip_root->page_size;
   }
@@ -165,19 +167,71 @@ int pip_page_alloc( size_t sz, void **allocp ) {
   RETURN( posix_memalign( allocp, pgsz, sz ) );
 }
 
+static void pip_blocking_init( pip_blocking_t *blocking ) {
+#ifdef PIP_USE_MUTEX
+  (void) pthread_mutex_init( &blocking->mutex, NULL );
+#else
+  (void) sem_init( &blocking->semaphore, 1, 0 );
+#endif
+}
+
+static void pip_blocking_fin( pip_blocking_t *blocking ) {
+#ifdef PIP_USE_MUTEX
+  (void) pthread_mutex_destroy( &blocking->mutex, NULL );
+#else
+  (void) sem_destroy( &blocking->semaphore );
+#endif
+}
+
+static int pip_tryblock( pip_blocking_t *blocking ) {
+  int err = 0;
+#ifdef PIP_USE_MUTEX
+  if( ( err = pthread_mutex_trylock( &blocking->mutex ) ) == 0 &&
+      ( err = pthread_mutex_unlock(  &blocking->mutex ) ) == 0 );
+#else
+  if( sem_trywait( &blocking->semaphore ) != 0 ) {
+    if( errno != EINTR ) err = errno;
+  }
+#endif
+  RETURN( err );
+}
+
+static int pip_block( pip_blocking_t *blocking ) {
+  int err = 0;
+
+#ifdef PIP_USE_MUTEX
+  if( ( err = pthread_mutex_lock(    &blocking->mutex ) ) == 0 &&
+      ( err = pthread_mutex_unlock(  &blocking->mutex ) ) == 0 &&
+      ( err = pthread_mutex_destroy( &blocking->mutex ) ) == 0 );
+#else
+  while( 1 ) {
+    if( sem_wait( &blocking->semaphore ) == 0 ) break;
+    if( errno != EINTR ) {
+      err = errno;
+      break;
+    }
+  }
+#endif
+  RETURN( err );
+}
+
+static void pip_unblock( pip_blocking_t *blocking ) {
+#ifdef PIP_USE_MUTEX
+  (void) pthread_mutex_unlock( &blocking->mutex );
+#else
+  (void) sem_post( &blocking->semaphore );
+#endif
+}
+
 static void pip_reset_task_struct( pip_task_t *task ) {
   memset( (void*) task, 0, sizeof( pip_task_t ) );
   task->type = PIP_TYPE_NONE;
-  task->pid  = -1; /* pip_init_gdbif_task_struct() refers this */
+  task->pid  = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_ULP_INIT( &task->queue  );
   PIP_ULP_INIT( &task->schedq );
   pip_spin_init( &task->lock_schedq );
   pip_spin_init( &task->lock_malloc );
-#ifdef PIP_USE_MUTEX
-  (void) pthread_mutex_init( &task->mutex_wait, NULL );
-#else
-  (void) sem_init( &task->sem_wait, 1, 0 );
-#endif
+  pip_blocking_init( &task->wait );
   pip_memory_barrier();
   task->pipid = PIP_PIPID_NONE;
 }
@@ -185,7 +239,7 @@ static void pip_reset_task_struct( pip_task_t *task ) {
 int pip_count_vec( char **vecsrc ) {
   int n = 0;
   if( vecsrc != NULL ) {
-    for( n=0; vecsrc[n]!= NULL; n++ );
+    for( ; vecsrc[n]!= NULL; n++ );
   }
   return( n );
 }
@@ -431,7 +485,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->ntasks    = ntasks;
     pip_root->cloneinfo = pip_cloneinfo;
     pip_root->opts      = opts;
-    pip_root->page_size = sysconf( _SC_PAGESIZE );
     for( i=0; i<ntasks+1; i++ ) {
       pip_reset_task_struct( &pip_root->tasks[i] );
     }
@@ -1161,11 +1214,7 @@ static void pip_task_notify( pip_task_t *task ) {
   DBG;
   if( task->type & PIP_TYPE_ULP ) {
     /* wake up root waiting for termination */
-#ifdef PIP_USE_MUTEX
-    (void) pthread_mutex_unlock( &task->mutex_wait );
-#else
-    (void) sem_post( &task->sem_wait );
-#endif
+    pip_unblock( &task->wait );
   }
   if( !( task->type & PIP_TYPE_ROOT ) ) {
     (void) pip_raise_sigchld();
@@ -1177,11 +1226,7 @@ static void pip_force_exit( pip_task_t *task, int extval ) {
   DBG;
   if( task->type & PIP_TYPE_ULP ) {
     /* wake up root waiting for termination */
-#ifdef PIP_USE_MUTEX
-    (void) pthread_mutex_unlock( &task->mutex_wait );
-#else
-    (void) sem_post( &task->sem_wait );
-#endif
+    pip_unblock( &task->wait );
   }
   if( pip_is_pthread_() ) {	/* thread mode */
     if( !( task->type & PIP_TYPE_ROOT ) ) {
@@ -1854,29 +1899,9 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     /* ULP */
     DBG;
     if( flag_try ) {
-#ifdef PIP_USE_MUTEX
-      if( ( err = pthread_mutex_trylock( &task->mutex_wait ) ) == 0 &&
-	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
-	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 );
-#else
-      if( sem_trywait( &task->sem_wait ) != 0 ) {
-	if( errno != EINTR ) err = errno;
-      }
-#endif
+      err = pip_tryblock( &task->wait );
     } else {
-#ifdef PIP_USE_MUTEX
-      if( ( err = pthread_mutex_lock(    &task->mutex_wait ) ) == 0 &&
-	  ( err = pthread_mutex_unlock(  &task->mutex_wait ) ) == 0 &&
-	  ( err = pthread_mutex_destroy( &task->mutex_wait ) ) == 0 );
-#else
-      while( 1 ) {
-	if( sem_wait( &task->sem_wait ) == 0 ) break;
-	if( errno != EINTR ) {
-	  err = errno;
-	  break;
-	}
-      }
-#endif
+      err = pip_block( &task->wait );
     }
   } else if( pip_is_pthread_() ) {
     /* thread mode */
@@ -2129,6 +2154,7 @@ int pip_ulp_get_sched_task( int *pipidp ) {
   RETURN( 0 );
 }
 
+#ifdef AHA
 int pip_ulp_new( pip_spawn_program_t *progp,
 		 int *pipidp,
 		 pip_ulp_t *sisters,
@@ -2212,6 +2238,15 @@ int pip_ulp_new( pip_spawn_program_t *progp,
   }
   DBGF( "<< pip_ulp_new(pipid:%d, ctx:%p)=%d", pipid, task->ctx_suspend, err );
   RETURN( err );
+}
+#endif
+
+int pip_sleep_and_enqueue( pip_ulp_locked_queue_t *queue ) {
+  if( pip_task == NULL ) RETURN( EPERM );
+}
+
+int pip_dequeue_and_wakeup( pip_ulp_locked_queue_t *queue ) {
+  if( pip_task == NULL ) RETURN( EPERM );
 }
 
 static inline int pip_ulp_yield_( pip_task_t *task ) {

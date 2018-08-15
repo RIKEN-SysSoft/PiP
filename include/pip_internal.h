@@ -131,6 +131,13 @@ typedef struct {
 
 struct pip_gdbif_task;
 
+typedef struct pip_blocking {
+  union {			/* mutex or semaphore */
+    pthread_mutex_t	mutex;
+    sem_t		semaphore;
+  };
+} pip_blocking_t;
+
 typedef struct pip_task {
   /* Frequently accessing part (packed into a cache block */
   union {
@@ -150,14 +157,8 @@ typedef struct pip_task {
   union {
     struct {
       pip_ctx_t		*ctx_suspend; /* context to resume */
-      union {
-	pthread_mutex_t	mutex_sleep; /* mutex to sleep */
-	sem_t		sem_sleep; /* semaphore to sleep */
-      };
-      union {
-	pthread_mutex_t	mutex_wait; /* mutex to block at pip_wait() */
-	sem_t		sem_wait; /* semaphore to block at pip_wait() */
-      };
+      pip_blocking_t	sleep;
+      pip_blocking_t	wait;
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };
