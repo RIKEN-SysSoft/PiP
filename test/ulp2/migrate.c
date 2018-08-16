@@ -59,13 +59,6 @@
 
 #define NULPS		(NTASKS-MTASKS)
 
-#ifdef DEBUG
-#define SCHED_CHECK	\
-  if( pip_task->task_sched->pipid > MTASKS ) \
-    fprintf( stderr, "%d: ??? [%d,%d] ???\n", \
-	     __LINE__, pip_task->pipid, pip_task->task_sched->pipid )
-#endif
-
 #define OLD_BARRIER
 #ifdef OLD_BARRIER
 #define PIP_BARRIER_T		pip_task_barrier_t
@@ -146,13 +139,12 @@ int main( int argc, char **argv ) {
 
   set_sigsegv_watcher();
 
-#ifndef SCHED_CHECK
   if( argv[1] != NULL ) {
     ntasks = atoi( argv[1] );
   } else {
     ntasks = MTASKS;
   }
-  if( ntasks < 1 ) {
+  if( ntasks < 2 ) {
     fprintf( stderr,
 	     "Too small number of PiP tasks (must be latrger than 0)\n" );
     exit( 1 );
@@ -167,16 +159,12 @@ int main( int argc, char **argv ) {
       exit( 1 );
     }
   } else {
-    nulps = NTASKS - ntasks;
+    nulps = ( ntasks + 1 ) / 2;
+    ntasks -= nulps;
   }
-#else
-  ntasks = MTASKS;
-  nulps  = NTASKS - ntasks;
-#endif
-
   DBGF( "ntasks:%d  nulps:%d", ntasks, nulps );
-  int nt = ntasks + nulps;
 
+  int nt = ntasks + nulps;
   if( nt > NTASKS ) {
     fprintf( stderr,
 	     "Number of PiP tasks (%d) and ULPs (%d) are too large\n",
@@ -186,6 +174,7 @@ int main( int argc, char **argv ) {
 
   expop = &expo;
   TESTINT( pip_init( &pipid, &nt, (void**) &expop, 0 ) );
+
   PIP_BARRIER_INIT_F( &expop->barr_ulps, nulps + 1 );
   PIP_BARRIER_INIT_F( &expop->barr_tsks, ntasks    );
   TESTINT( pip_locked_queue_init( &expop->queue ) );

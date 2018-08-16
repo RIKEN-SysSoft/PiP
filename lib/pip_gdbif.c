@@ -76,6 +76,7 @@ void pip_gdbif_load( pip_task_t *task ) {
   struct pip_gdbif_task *gdbif_task = task->gdbif_task;
   Dl_info dli;
   char buf[PATH_MAX];
+  ENTER;
 
   if( gdbif_task != NULL ) {
     gdbif_task->handle = task->loaded;
@@ -106,6 +107,7 @@ void pip_gdbif_load( pip_task_t *task ) {
       }
     }
   }
+  RETURNV;
 }
 
 void pip_gdbif_exit( pip_task_t *task, int extval ) {
@@ -118,6 +120,7 @@ void pip_gdbif_exit( pip_task_t *task, int extval ) {
 void pip_gdbif_task_commit( pip_task_t *task ) {
   struct pip_gdbif_task *gdbif_task =
     &pip_gdbif_root->tasks[task->pipid];
+
   gdbif_task->pid = task->pid;
   pip_memory_barrier();
   gdbif_task->status = PIP_GDBIF_STATUS_CREATED;
@@ -129,6 +132,7 @@ void pip_gdbif_task_commit( pip_task_t *task ) {
 
 static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
 					pip_task_t *task ) {
+  ENTER;
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
   gdbif_task->pathname     = task->args.prog;
   gdbif_task->realpathname = NULL; /* filled by pip_load_gdbif() later */
@@ -151,6 +155,7 @@ static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
     PIP_GDBIF_EXMODE_NULL;
   gdbif_task->status     = PIP_GDBIF_STATUS_NULL;
   gdbif_task->gdb_status = PIP_GDBIF_GDB_DETACHED;
+  RETURNV;
 }
 
 static void pip_gdbif_init_root_task_link( struct pip_gdbif_task *gdbif_task ){
@@ -177,6 +182,7 @@ int pip_gdbif_initialize_root( int ntasks ) {
   size_t sz;
   int    err;
 
+  ENTER;
   sz = sizeof( *gdbif_root ) + sizeof( gdbif_root->tasks[0] ) * ntasks;
   if( ( err = pip_page_alloc( sz, (void**) &gdbif_root ) ) != 0 ) {
     RETURN( err );
@@ -197,6 +203,7 @@ int pip_gdbif_initialize_root( int ntasks ) {
 static void pip_gdbif_finalize_tasks( void ) {
   struct pip_gdbif_task *gdbif_task, **prev, *next;
 
+  ENTER;
   if( pip_gdbif_root == NULL ) {
     DBGF( "pip_gdbif_root=NULL, pip_init() hasn't called?" );
     return;
@@ -213,11 +220,13 @@ static void pip_gdbif_finalize_tasks( void ) {
     }
   }
   pip_spin_unlock( &pip_gdbif_root->lock_root );
+  RETURNV;
 }
 
 void pip_gdbif_finalize_task( pip_task_t *task ) {
   struct pip_gdbif_task *gdbif_task = task->gdbif_task;
 
+  ENTER;
   if( gdbif_task != NULL ) {
     gdbif_task->status   = PIP_GDBIF_STATUS_TERMINATED;
     pip_memory_barrier();
@@ -239,4 +248,5 @@ void pip_gdbif_finalize_task( pip_task_t *task ) {
     }
     pip_spin_unlock( &pip_gdbif_root->lock_free );
   }
+  RETURNV;
 }

@@ -71,6 +71,8 @@
 #define PIP_ULP_SCHED_UNLOCK(S)
 #endif
 
+#define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
+
 #define IF_LIKELY(C)		if( pip_likely( C ) )
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
 
@@ -163,7 +165,7 @@ int pip_page_alloc( size_t sz, void **allocp ) {
   } else {
     pgsz = pip_root->page_size;
   }
-  sz = ( ( sz + pgsz - 1 ) / pgsz ) * pgsz;
+  sz = ROUNDUP( sz, pgsz );
   RETURN( posix_memalign( allocp, pgsz, sz ) );
 }
 
@@ -183,7 +185,7 @@ static void pip_blocking_fin( pip_blocking_t *blocking ) {
 #endif
 }
 
-static int pip_tryblock( pip_blocking_t *blocking ) {
+static inline int pip_tryblock( pip_blocking_t *blocking ) {
   int err = 0;
 #ifdef PIP_USE_MUTEX
   if( ( err = pthread_mutex_trylock( &blocking->mutex ) ) == 0 &&
@@ -196,13 +198,12 @@ static int pip_tryblock( pip_blocking_t *blocking ) {
   RETURN( err );
 }
 
-static int pip_block( pip_blocking_t *blocking ) {
+static inline int pip_block( pip_blocking_t *blocking ) {
   int err = 0;
 
 #ifdef PIP_USE_MUTEX
   if( ( err = pthread_mutex_lock(    &blocking->mutex ) ) == 0 &&
-      ( err = pthread_mutex_unlock(  &blocking->mutex ) ) == 0 &&
-      ( err = pthread_mutex_destroy( &blocking->mutex ) ) == 0 );
+      ( err = pthread_mutex_unlock(  &blocking->mutex ) ) == 0 );
 #else
   while( 1 ) {
     if( sem_wait( &blocking->semaphore ) == 0 ) break;
@@ -212,7 +213,7 @@ static int pip_block( pip_blocking_t *blocking ) {
     }
   }
 #endif
-  RETURN( err );
+  return err;
 }
 
 static void pip_unblock( pip_blocking_t *blocking ) {
@@ -1080,23 +1081,22 @@ static int pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
   RETURN( err );
 }
 
-static int pip_raise_sigchld( void ) {
+static int pip_raise_signal( pip_task_t *task, int sig ) {
   int err = 0;
 
+  ENTER;
   if( pip_is_threaded_() ) {
-    DBG;
 #ifndef PIP_USE_SIGQUEUE
-    if( pthread_kill( pip_root->task_root->thread, SIGCHLD ) == ESRCH ) {
-      DBG;
-      if( kill( pip_root->task_root->pid, SIGCHLD ) != 0 ) err = errno;
+    if( pthread_kill( task->thread, sig ) == ESRCH ) {
+      if( kill( task->pid, sig ) != 0 ) err = errno;
     }
 #else
-    if( pthread_sigqueue( pip_root->task_root->thread,
-			  SIGCHLD,
+    if( pthread_sigqueue( task->thread,
+			  sig,
 			  (const union sigval)0 ) == ESRCH ) {
       DBG;
-      if( sigqueue( pip_root->task_root->pid,
-		    SIGCHLD,
+      if( sigqueue( task->pid,
+		    sig,
 		    (const union sigval) 0 ) != 0 ) {
 	err = errno;
       }
@@ -1104,6 +1104,14 @@ static int pip_raise_sigchld( void ) {
 #endif
   }
   RETURN( err );
+}
+
+static int pip_raise_sigchld( void ) {
+  RETURN( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
+}
+
+static int pip_raise_ulp_sigterm( pip_task_t *task ) {
+  RETURN( pip_raise_signal( task, PIP_ULP_TERMSIG ) );
 }
 
 static void pip_task_terminated( pip_task_t *task, int extval ) {
@@ -1134,26 +1142,24 @@ static void pip_task_terminated( pip_task_t *task, int extval ) {
 }
 
 static void pip_task_notify( pip_task_t *task ) {
-  DBG;
+  ENTER;
   if( task->type & PIP_TYPE_ULP ) {
-    /* wake up root waiting for termination */
-    pip_unblock( &task->wait );
+    (void) pip_raise_ulp_sigterm( task );
+  } else if( !( task->type & PIP_TYPE_ROOT ) ) {
+    if( pip_is_threaded_() ) {
+      (void) pip_raise_sigchld();
+    }
   }
-  if( !( task->type & PIP_TYPE_ROOT ) ) {
-    (void) pip_raise_sigchld();
-  }
-  DBG;
+  RETURNV;
 }
 
 static void pip_force_exit( pip_task_t *task, int extval ) {
-  DBG;
-  if( task->type & PIP_TYPE_ULP ) {
-    /* wake up root waiting for termination */
-    pip_unblock( &task->wait );
-  }
+  ENTER;
   if( pip_is_threaded_() ) {	/* thread mode */
     if( !( task->type & PIP_TYPE_ROOT ) ) {
-      (void) pip_raise_sigchld();
+      if( pip_is_threaded_() ) {
+	(void) pip_raise_sigchld();
+      }
     }
     pthread_exit( NULL );
   } else {			/* process mode */
@@ -1286,6 +1292,43 @@ static int pip_jump_into( pip_spawn_args_t *args, pip_task_t *self ) {
   return extval;
 }
 
+
+static int pip_ulp_termination_handler( void ) {
+  void pip_ulp_sigterm( int sig ) {
+    int pip_exit( int );
+    ENTER;
+    if( pip_task->flag_exit ) {
+      pip_exit( pip_task->extval );
+    } else {
+      pip_load_context( pip_task->ctx_suspend );
+    }
+    /* never reach here */
+  }
+  struct sigaction sigact;
+  stack_t ss;
+  size_t sz = ROUNDUP( MINSIGSTKSZ, pip_root->page_size );
+  void *sigstack;
+  int err;
+
+  ENTER;
+  if( ( err = pip_page_alloc( sz, &sigstack ) ) ==0 ) {
+    memset( (void*) &ss, 0, sizeof( ss ) );
+    ss.ss_sp   = sigstack;
+    ss.ss_size = sz;
+    if( sigaltstack( &ss, NULL ) != 0 ) {
+      err = errno;
+    } else {
+      memset( (void*) &sigact, 0, sizeof( sigact ) );
+      sigact.sa_handler = pip_ulp_sigterm;
+      sigact.sa_flags   = SA_ONSTACK | SA_RESETHAND | SA_RESTART;
+      if( sigaction( PIP_ULP_TERMSIG, &sigact, NULL ) != 0 ) {
+	err = errno;
+      }
+    }
+  }
+  RETURN( err );
+}
+
 static void *pip_do_spawn( void *thargs )  {
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
@@ -1320,12 +1363,14 @@ static void *pip_do_spawn( void *thargs )  {
     }
   }
 #endif
+
   if( !pip_is_shared_fd_() ) pip_close_on_exec();
   /* calling hook, if any */
   if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "[%s] before-hook returns %d", argv[0], before, err );
     extval = err;
-
+  } else if( ( err = pip_ulp_termination_handler() ) != 0 ) {
+    extval = err;
   } else {
     if( ( pip_root->opts & PIP_OPT_PGRP ) && !pip_is_threaded_() ) {
       (void) setpgid( 0, 0 );	/* Is this meaningful ? */
@@ -1342,7 +1387,7 @@ static void *pip_do_spawn( void *thargs )  {
     /* note: task_sched might be changed due to migration */
     pip_task_t *sched = self->task_sched;
     pip_task_terminated( self, extval );
-    pip_task_notify( self );
+    pip_raise_ulp_sigterm( self );
     /* beyond this point, do not touch self, since it might be reset by root */
     (void) pip_ulp_sched_next( sched );
   } else {
@@ -1352,6 +1397,7 @@ static void *pip_do_spawn( void *thargs )  {
     }
     pip_task_terminated( self, extval );
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
+      DBG;
       pip_force_exit( self, extval );
       /* never reach here */
     } else {
@@ -1474,7 +1520,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
       /* hoping anon maps would be mapped onto the closer numa node */
       PIP_ACCUM( time_load_prog,
 		 ( err = pip_load_prog( progp, task ) ) == 0 );
-     /* and of course, the corebinding must be undone */
+      /* and of course, the corebinding must be undone */
       (void) pip_undo_corebind( coreno, &cpuset );
     }
   } while( 0 );
@@ -1693,8 +1739,6 @@ int pip_kill( int pipid, int signal ) {
   task = pip_get_task_( pipid );
   if( task->type & PIP_TYPE_ROOT ||
       task->type & PIP_TYPE_TASK ) {
-    err = pthread_kill( task->thread, signal );
-#ifdef AHAH
     if( pip_is_threaded_() ) {
       err = pthread_kill( task->thread, signal );
       DBGF( "pthread_kill(sig=%d)=%d", signal, err );
@@ -1702,7 +1746,6 @@ int pip_kill( int pipid, int signal ) {
       if( kill( task->pid, signal ) != 0 ) err = errno;
       DBGF( "kill(sig=%d)=%d", signal, err );
     }
-#endif
   } else {			/* signal cannot be sent to ULPs */
     err = EPERM;
   }
@@ -1722,15 +1765,9 @@ int pip_exit( int extval ) {
   sched = pip_task->task_sched;
   if( pip_isa_ulp() ) {
     pip_task_terminated( pip_task, extval );
-    if( !PIP_ULP_ISEMPTY( &sched->schedq ) ) {
-      pip_task_notify( pip_task );
-      /* simply sched others */
-      (void) pip_ulp_sched_next( sched );
-      /* never reach here */
-    } else {
-      pip_force_exit( pip_task, extval );
-      /* never reach here */
-    }
+    pip_raise_ulp_sigterm( pip_task );
+    (void) pip_ulp_sched_next( sched );
+
   } else if( pip_isa_task() ) {
     while( !PIP_ULP_ISEMPTY( &sched->schedq ) ) {
       /* task_sched of PiP task is never changed */
@@ -1738,6 +1775,7 @@ int pip_exit( int extval ) {
     }
     /* if there is no other ULP eligible to run, then terminate itself */
     pip_task_terminated( pip_task, extval );
+    DBG;
     pip_force_exit( pip_task, extval );
     /* never reach here */
   } else {
@@ -1756,7 +1794,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   task = pip_get_task_( pipid );
   if( task->type == PIP_TYPE_NONE ) RETURN( ESRCH );
 
-  DBGF( "pipid=%d  type=%d", pipid, task->type );
+  DBGF( "pipid=%d  type=0x%x", pipid, task->type );
   if( task->type & PIP_TYPE_ULP ) {
     /* ULP */
     DBG;
@@ -1871,18 +1909,19 @@ static int pip_find_terminated( int *pipidp ) {
 
 static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
   void pip_sighand_sigchld( int sig, siginfo_t *siginfo, void *null ) {
-    DBG;
+    ENTER;
     if( pip_root != NULL ) {
       struct sigaction *sigact = &pip_root->sigact_chain;
       if( sigact->sa_sigaction != NULL ) {
 	/* if user sets a signal handler, then it must be called */
 	if( sigact->sa_sigaction != (void*) SIG_DFL &&  /* SIG_DFL==0 */
 	    sigact->sa_sigaction != (void*) SIG_IGN ) { /* SIG_IGN==1 */
-	  /* if signal handler is set, then call it */
+	  /* if signal handler is set by user, then call it */
 	  sigact->sa_sigaction( sig, siginfo, null );
 	}
       }
     }
+    RETURNV;
   }
   struct sigaction 	sigact;
   struct sigaction	*sigact_old = &pip_root->sigact_chain;
@@ -2065,9 +2104,10 @@ int pip_dequeue_with_lock( pip_locked_queue_t *queue, pip_ulp_t **ulpp ) {
 int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags ) {
   pip_task_t *task = pip_task;
   pip_ulp_t  *ulp  = PIP_ULP( task );
-  volatile int flag_jump;	/* must be volatile */
+  volatile int flag_jump;
   int err = 0;
 
+  ENTER;
   if( queue    == NULL ) RETURN( EINVAL );
   if( pip_task == NULL ) RETURN( EPERM  );
   if( pip_isa_ulp()    ) RETURN( EPERM  );
@@ -2085,9 +2125,10 @@ int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags ) {
       pip_enqueue_with_policy( &queue->queue, ulp, flags );
       pip_spin_unlock( &queue->lock );
       /* sleep */
+      DBG;
       pip_block( &task->sleep );
-      /* wakeup */
-      pip_load_context( task->ctx_suspend );
+      /* DANGER ZONE DANGER ZONE DANGER ZONE */
+      /* stack might be corrupted !!!!!!!!!! */
     }
   }
   RETURN( err );
@@ -2098,6 +2139,7 @@ int pip_dequeue_and_wakeup( pip_locked_queue_t *queue ) {
   pip_ulp_t	*next;
   int 		err = 0;
 
+  ENTER;
   if( queue    == NULL ) RETURN( EINVAL );
   if( pip_task == NULL ) RETURN( EPERM );
 
@@ -2107,11 +2149,9 @@ int pip_dequeue_and_wakeup( pip_locked_queue_t *queue ) {
       next = PIP_ULP_NEXT( &queue->queue );
       task = PIP_TASK( next );
       if( task->type & PIP_TYPE_ULP ) {
-	PIP_ULP_QUEUE_DESCRIBE( &queue->queue );
 	PIP_ULP_DEQ( next );
 	task->type &= ~PIP_TYPE_ULP;
-	PIP_ULP_QUEUE_DESCRIBE( &queue->queue );
-	pip_unblock( &task->sleep );
+	pip_raise_ulp_sigterm( pip_task );
       } else {
 	err = EPERM;
       }
@@ -2127,6 +2167,7 @@ static inline int pip_ulp_yield_( pip_task_t *task ) {
   pip_ulp_t	*queue, *next;
   pip_task_t	*sched = task->task_sched;
 
+  ENTER;
   queue = &sched->schedq;
   PIP_ULP_SCHED_LOCK( sched );
   {
@@ -2151,7 +2192,7 @@ int pip_ulp_suspend( void ) {
   volatile int	flag_jump;	/* must be volatile */
   int err = 0;
 
-  DBG;
+  ENTER;
   if( sched == NULL                     ) RETURN( EPERM   );
   if( PIP_ULP_ISEMPTY( &sched->schedq ) ) RETURN( EDEADLK );
 
@@ -2174,6 +2215,7 @@ int pip_ulp_suspend( void ) {
 int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   pip_task_t	*task, *sched;
 
+  ENTER;
   IF_UNLIKELY( ulp == NULL ) RETURN( EINVAL );
   task = PIP_TASK( ulp );
   //IF_UNLIKELY( task->flag_exit ) RETURN( ESRCH ); /* already terminated */
@@ -2194,13 +2236,13 @@ int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue, int flags ) {
   volatile int	flag_jump;	/* must be volatile */
   int 		err = 0;
 
+  ENTER;
   if( queue == NULL ) RETURN( EINVAL );
   if( !pip_isa_ulp() ) RETURN( 3  ); /* task cannot be migrated */
   if( PIP_ULP_ISEMPTY( &sched->schedq ) ) RETURN( EDEADLK );
 
   pip_spin_lock( &queue->lock ); /* LOCK */
   flag_jump = 0;
-  DBG;
   (void) pip_save_context( pip_task->context );
   IF_LIKELY( !flag_jump ) {
     flag_jump = 1;

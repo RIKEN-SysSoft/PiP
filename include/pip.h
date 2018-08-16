@@ -189,9 +189,6 @@
 #define PIP_ULP_SCHED_FIFO	(0x0)
 #define PIP_ULP_SCHED_LIFO	(0x1)
 
-#define PIP_BARRIER_INIT(N)		{(N),(N),0}
-#define PIP_TASK_BARRIER_INIT(N)	{(N),(N),0}
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -219,7 +216,6 @@ typedef struct pip_task_barrier {
     char		__gap__[PIP_CACHEBLK_SZ];
   };
 } pip_task_barrier_t;
-
 /* the following type is just for backward compatibility */
 typedef pip_task_barrier_t	pip_barrier_t __attribute__ ((deprecated));
 
@@ -677,13 +673,15 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \note This function blocks until the specified PiP task or ULP
    * terminates.
    * \note This function can be used regardless to the PiP execution
-   * mode. However, only the least significant 2 bytes of the exit value are
+   * mode.
+   * \note Only the least significant 2 bytes of the exit value are
    * effective. This is because of the compatibility with the
    * \c exit glibc function.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The caller is not the PiP root
    * \retval EDEADLK The specified \c pipid is the PiP root
+   * \retval EINTR The call was interrupted by a signal
    *
    * \sa pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
    *

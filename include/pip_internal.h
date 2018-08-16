@@ -81,6 +81,9 @@
 #define PIP_EXITED		(1)
 #define PIP_EXIT_FINALIZE	(2)
 
+//#define PIP_ULP_TERMSIG		(SIGRTMIN+10) /* a real-time signal */
+#define PIP_ULP_TERMSIG		(SIGUSR1) /* a real-time signal */
+
 struct pip_task;
 
 typedef	int(*main_func_t)(int,char**,char**);

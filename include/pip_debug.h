@@ -71,11 +71,13 @@
 #define DBGF(...)							\
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
 #define ENTER						\
-  do { DBG_PRTBUF; DBG_PRNT(">>>>"); } DBG_OUTPUT; } while(0)
+  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(">>>>"); DBG_OUTPUT; } while(0)
 #define RETURN(X)						\
   do { DBG_PRTBUF; int __xxx=(X); DBG_TAG; if(__xxx) {		\
       DBG_PRNT("ERROR RETURN (%d)",__xxx);				\
-    } else { DBG_PRNT("<<<<"); } DBG_OUTPUT; return (__xxx); } while(0)
+    } else { DBG_PRNT("<<<<"); } DBG_OUTPUT; return(__xxx); } while(0)
+#define RETURNV								\
+  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT("<<<<"); DBG_OUTPUT; return; } while(0)
 
 #define ASSERT(X)	\
   do { if( !(X) ) DBGF( "\n%s Assertion FAILED !!!\n", #X ); } while(0)
@@ -93,6 +95,7 @@
 #define DBGF(...)
 #define ENTER
 #define RETURN(X)	return (X)
+#define RETURNV
 #define ASSERT(X)
 
 #define PIP_TASK_DESCRIBE( ID )

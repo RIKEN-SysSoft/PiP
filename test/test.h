@@ -272,19 +272,24 @@ inline static void watch_anysignal( void ) {
   set_signal_watcher( SIGTTOU );
 }
 
-inline static void set_signal_echo( int signal ) {
-  void signal_echo( int sig, siginfo_t *siginfo, void *dummy ) {
-    fprintf( stderr, "!!!!!! ECHO SIGNAL: %s(%d) (pid=%d) !!!!!!\n",
-	     signal_name( siginfo->si_signo ),
-	     siginfo->si_signo,
-	     siginfo->si_pid  );
-    TESTINT( pip_kill( PIP_PIPID_ROOT, siginfo->si_signo ) );
-  }
+inline static void set_signal_handler( int signal, void(*handler)() ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = signal_echo;
+  sigact.sa_sigaction = handler;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
   TESTINT( sigaction( signal, &sigact, NULL ) );
+}
+
+static void signal_echo( int sig, siginfo_t *siginfo, void *dummy ) {
+  fprintf( stderr, "!!!!!! ECHO SIGNAL: %s(%d) (pid=%d) !!!!!!\n",
+	   signal_name( siginfo->si_signo ),
+	   siginfo->si_signo,
+	   siginfo->si_pid  );
+  TESTINT( pip_kill( PIP_PIPID_ROOT, siginfo->si_signo ) );
+}
+
+inline static void set_signal_echo( int signal ) {
+  set_signal_handler( signal, signal_echo );
 }
 
 inline static void echo_anysignal( void ) {

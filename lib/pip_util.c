@@ -102,14 +102,14 @@ char *pip_pipidstr( char *buf ) {
 static char *pip_type_str_( int type ) {
   char *typestr;
 
-  if( type & PIP_TYPE_ROOT ) {
-    typestr= "root";
+  if( type & PIP_TYPE_ULP ) {
+    typestr = "ulp";
   } else if( type & PIP_TYPE_TASK ) {
     typestr = "task";
-  } else if( type & PIP_TYPE_ULP ) {
-    typestr = "ulp";
+  } else if( type & PIP_TYPE_ROOT ) {
+    typestr= "root";
   } else {
-    typestr = "(unknown)";
+    typestr = "(?)";
   }
   return typestr;
 }
