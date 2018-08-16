@@ -69,7 +69,9 @@
 #define DBG						\
   do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
 #define DBGF(...)							\
-  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; }while(0)
+  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
+#define ENTER						\
+  do { DBG_PRTBUF; DBG_PRNT(">>>>"); } DBG_OUTPUT; } while(0)
 #define RETURN(X)						\
   do { DBG_PRTBUF; int __xxx=(X); DBG_TAG; if(__xxx) {		\
       DBG_PRNT("ERROR RETURN (%d)",__xxx);				\
@@ -89,6 +91,7 @@
 
 #define DBG
 #define DBGF(...)
+#define ENTER
 #define RETURN(X)	return (X)
 #define ASSERT(X)
 

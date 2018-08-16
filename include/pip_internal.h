@@ -97,13 +97,14 @@ typedef struct {
   /* functions */
   main_func_t		main;	      /* main function address */
   start_func_t		start;	      /* strat function instead of main */
-  pthread_init_t	pthread_init; /* __pthread_init_minimum() */
   ctype_init_t		ctype_init;   /* to call __ctype_init() */
-  glibc_init_t		glibc_init;   /* only in patched Glibc */
   fflush_t		libc_fflush;  /* to call fflush() at the end */
   mallopt_t		mallopt;      /* to call mallopt() */
-  free_t		free;	      /* to override free() - EXPERIMENTAL*/
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
+  /* Unused functions */
+  free_t		free;	      /* to override free() - EXPERIMENTAL*/
+  glibc_init_t		glibc_init;   /* only in patched Glibc */
+  pthread_init_t	pthread_init; /* __pthread_init_minimum() */
   /* variables */
   char			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */

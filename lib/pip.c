@@ -237,7 +237,6 @@ int pip_count_awake_tasks( void ) {
 
 static void pip_reset_task_struct( pip_task_t *task ) {
   memset( (void*) task, 0, sizeof( pip_task_t ) );
-  task->type = PIP_TYPE_NONE;
   task->pid  = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_ULP_INIT( &task->queue  );
   PIP_ULP_INIT( &task->schedq );
@@ -246,6 +245,7 @@ static void pip_reset_task_struct( pip_task_t *task ) {
   pip_blocking_init( &task->sleep );
   pip_blocking_init( &task->wait  );
   pip_memory_barrier();
+  task->type  = PIP_TYPE_NONE;
   task->pipid = PIP_PIPID_NONE;
 }
 
@@ -1337,15 +1337,26 @@ static void *pip_do_spawn( void *thargs )  {
     DBG;
     /* free() must be called in the task's context */
   }
-  while( !PIP_ULP_ISEMPTY( &self->schedq ) ) {
-    pip_ulp_yield_( self );
-  }
-  pip_task_terminated( self, extval );
-  if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
-    pip_force_exit( self, extval );
-    /* never reach here */
-  } else {
+  if( self->type & PIP_TYPE_ULP ) {
+    /* ULP */
+    /* note: task_sched might be changed due to migration */
+    pip_task_t *sched = self->task_sched;
+    pip_task_terminated( self, extval );
     pip_task_notify( self );
+    /* beyond this point, do not touch self, since it might be reset by root */
+    (void) pip_ulp_sched_next( sched );
+  } else {
+    /* PiP task */
+    while( !PIP_ULP_ISEMPTY( &self->schedq ) ) {
+      pip_ulp_yield_( self );
+    }
+    pip_task_terminated( self, extval );
+    if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
+      pip_force_exit( self, extval );
+      /* never reach here */
+    } else {
+      pip_task_notify( self );
+    }
   }
   return NULL;
 }
@@ -2063,8 +2074,6 @@ int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags ) {
 
   pip_spin_lock( &queue->lock );
   {
-    pip_enqueue_with_policy( &queue->queue, ulp, flags );
-    DBG;
     flag_jump = 0;
     (void) pip_save_context( task->context );
     IF_LIKELY( !flag_jump ) {
@@ -2074,13 +2083,10 @@ int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags ) {
       task->type |= PIP_TYPE_ULP;
 
       pip_enqueue_with_policy( &queue->queue, ulp, flags );
-      /* UNLOCK */
       pip_spin_unlock( &queue->lock );
-      DBGF( "type:0x%x", task->type );
       /* sleep */
       pip_block( &task->sleep );
       /* wakeup */
-      DBGF( "type:0x%x", task->type );
       pip_load_context( task->ctx_suspend );
     }
   }
@@ -2097,32 +2103,23 @@ int pip_dequeue_and_wakeup( pip_locked_queue_t *queue ) {
 
   pip_spin_lock( &queue->lock );
   {
-    DBG;
-    DBGF( "queue:%p queue-next:%p", &queue->queue, PIP_ULP_NEXT(&queue->queue) );
     IF_LIKELY( !PIP_ULP_ISEMPTY( &queue->queue ) ) {
       next = PIP_ULP_NEXT( &queue->queue );
       task = PIP_TASK( next );
-      DBGF( "[pipid:%d]", task->pipid );
       if( task->type & PIP_TYPE_ULP ) {
-	DBGF( "next:%p next-next:%p", next, PIP_ULP_NEXT(&queue->queue) );
+	PIP_ULP_QUEUE_DESCRIBE( &queue->queue );
 	PIP_ULP_DEQ( next );
-	DBGF( "[pipid:%d] pip_unblock()", task->pipid );
 	task->type &= ~PIP_TYPE_ULP;
-	DBGF( "type:0x%x", task->type );
-	DBGF( "next:%p next-next:%p", next, PIP_ULP_NEXT(&queue->queue) );
+	PIP_ULP_QUEUE_DESCRIBE( &queue->queue );
 	pip_unblock( &task->sleep );
-	DBG;
       } else {
-	DBGF( "[pipid:%d] type:0x%x", task->pipid, task->type );
 	err = EPERM;
       }
     } else {
-      DBG;
       err = ENOENT;
     }
   }
   pip_spin_unlock( &queue->lock );
-    DBG;
   RETURN( err );
 }
 
@@ -2130,7 +2127,6 @@ static inline int pip_ulp_yield_( pip_task_t *task ) {
   pip_ulp_t	*queue, *next;
   pip_task_t	*sched = task->task_sched;
 
-  DBG;
   queue = &sched->schedq;
   PIP_ULP_SCHED_LOCK( sched );
   {
@@ -2178,10 +2174,9 @@ int pip_ulp_suspend( void ) {
 int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   pip_task_t	*task, *sched;
 
-  DBG;
   IF_UNLIKELY( ulp == NULL ) RETURN( EINVAL );
   task = PIP_TASK( ulp );
-  IF_UNLIKELY( task->flag_exit ) RETURN( ESRCH ); /* already terminated */
+  //IF_UNLIKELY( task->flag_exit ) RETURN( ESRCH ); /* already terminated */
   /* check if already being scheduled */
   IF_UNLIKELY( task->task_sched != NULL ) RETURN( EBUSY );
   sched = pip_task->task_sched;
@@ -2235,8 +2230,7 @@ int pip_ulp_dequeue_and_migrate( pip_locked_queue_t *queue,
     IF_UNLIKELY( task->flag_exit ) {
       ERRJ_ERR( EPERM );	/* already terminated */
     }
-    IF_UNLIKELY( task->type & PIP_TYPE_TASK ||
-		 task->type & PIP_TYPE_ROOT ) {
+    IF_UNLIKELY( !( task->type & PIP_TYPE_ULP ) ) {
       ERRJ_ERR( EPERM  );	/* task is not migratable */
     }
     IF_UNLIKELY( task->task_sched != NULL ) ERRJ_ERR( EBUSY );
