@@ -158,6 +158,8 @@ pip_clone_t *pip_get_cloneinfo_( void ) {
 
 int pip_page_alloc( size_t sz, void **allocp ) {
   size_t pgsz;
+
+  ENTER;
   if( pip_root == NULL ) {	/* no pip_root yet */
     pgsz = sysconf( _SC_PAGESIZE );
   } else if( pip_root->page_size == 0 ) {
@@ -216,12 +218,44 @@ static inline int pip_block( pip_blocking_t *blocking ) {
   return err;
 }
 
-static void pip_unblock( pip_blocking_t *blocking ) {
-#ifdef PIP_USE_MUTEX
-  (void) pthread_mutex_unlock( &blocking->mutex );
+static int pip_is_threaded_( void ) {
+  return (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_THREAD : 0;
+}
+
+static int pip_raise_signal( pip_task_t *task, int sig ) {
+  int err = 0;
+
+  ENTER;
+  if( !pip_is_threaded_() ) {
+    if( kill( task->pid, sig ) != 0 ) err = errno;
+  } else {
+#ifndef PIP_USE_SIGQUEUE
+    if( pthread_kill( task->thread, sig ) == ESRCH ) {
+      if( kill( task->pid, sig ) != 0 ) err = errno;
+    }
 #else
-  (void) sem_post( &blocking->semaphore );
+    if( pthread_sigqueue( task->thread,
+			  sig,
+			  (const union sigval)0 ) == ESRCH ) {
+      if( sigqueue( task->pid,
+		    sig,
+		    (const union sigval) 0 ) != 0 ) {
+	err = errno;
+      }
+    }
 #endif
+  }
+  RETURN( err );
+}
+
+static int pip_raise_sigchld( void ) {
+  ENTER;
+  RETURN( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
+}
+
+static int pip_unblock( pip_task_t *task ) {
+  ENTER;
+  RETURN( pip_raise_signal( task, PIP_UNBLOCK_SIG ) );
 }
 
 int pip_count_awake_tasks( void ) {
@@ -229,9 +263,7 @@ int pip_count_awake_tasks( void ) {
 
   if( pip_root == NULL ) return 0;
   for( i=0, c=0; i<pip_root->ntasks; i++ ) {
-    if( pip_root->tasks[i].type & PIP_TYPE_TASK &&
-     !( pip_root->tasks[i].type & PIP_TYPE_ULP ) ) continue;
-    c ++;
+    if( pip_root->tasks[i].pipid != PIP_PIPID_NONE ) c ++;
   }
   return c;
 }
@@ -505,10 +537,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_task               = pip_root->task_root;
     pip_task->pipid        = pipid;
     pip_task->type         = PIP_TYPE_ROOT;
-    pip_task->symbols.free = (free_t)pip_dlsym(RTLD_DEFAULT,"free");
     pip_task->loaded       = dlopen( NULL, RTLD_NOW );
     pip_task->thread       = pthread_self();
     pip_task->pid          = getpid();
+    pip_task->pid_actual   = pip_task->pid;
     if( rt_expp != NULL ) {
       pip_task->export     = *rt_expp;
     }
@@ -558,15 +590,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   RETURN( err );
 }
 
-static int pip_is_threaded_( void ) {
-  return (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_THREAD : 0;
-}
-
 /* The following functions;
    pip_is_threaded(),
    pip_is_shared_fd_(),
    pip_is_shared_fd(), and
-   pip_is_shared_sighand()
    can be called from any context
 */
 
@@ -587,17 +614,6 @@ int pip_is_shared_fd( int *flagp ) {
   if( pip_root == NULL ) RETURN( EPERM  );
   if( flagp    == NULL ) RETURN( EINVAL );
   *flagp = pip_is_shared_fd_();
-  RETURN( 0 );
-}
-
-int pip_is_shared_sighand( int *flagp ) {
-  if( pip_root == NULL ) RETURN( EPERM  );
-  if( flagp    == NULL ) RETURN( EINVAL );
-  if( pip_root->cloneinfo == NULL ) {
-    *flagp = (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_SIGHAND : 0;
-  } else {
-    *flagp = pip_root->cloneinfo->flag_clone & CLONE_SIGHAND;
-  }
   RETURN( 0 );
 }
 
@@ -933,12 +949,13 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   symp->pthread_init     = dlsym( handle, "__pthread_initialize_minimal" );
 #endif
   symp->ctype_init       = dlsym( handle, "__ctype_init"                 );
-  symp->glibc_init       = dlsym( handle, "glibc_init"                   );
-  symp->mallopt          = dlsym( handle, "mallopt"                      );
   symp->libc_fflush      = dlsym( handle, "fflush"                       );
-  symp->free             = dlsym( handle, "free"                         );
+  symp->mallopt          = dlsym( handle, "mallopt"                      );
   symp->named_export_fin = dlsym( handle, "pip_named_export_fin"         );
-  DBGF( "named_export_fin@%p", symp->named_export_fin );
+  symp->continuation     = dlsym( handle, "pip_continuation_handler"     );
+  /* unused */
+  symp->free             = dlsym( handle, "free"                         );
+  symp->glibc_init       = dlsym( handle, "glibc_init"                   );
     /* pip_named_export_fin symbol may not be found when the task
        program is not linked with the PiP lib. (due to not calling
        any PiP functions) */
@@ -1000,6 +1017,7 @@ static int pip_load_prog( pip_spawn_program_t *progp, pip_task_t *task ) {
 static int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
   int err = 0;
 
+  ENTER;
   if( coreno != PIP_CPUCORE_ASIS ) {
     cpu_set_t cpuset;
 
@@ -1028,6 +1046,7 @@ static int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
 static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
   int err = 0;
 
+  ENTER;
   if( coreno != PIP_CPUCORE_ASIS ) {
     if( pip_is_threaded_() ) {
       err = pthread_setaffinity_np( pthread_self(),
@@ -1045,6 +1064,7 @@ static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
 static int pip_corebind( int coreno ) {
   cpu_set_t cpuset;
 
+  ENTER;
   if( coreno != PIP_CPUCORE_ASIS &&
       coreno >= 0                &&
       coreno <  sizeof(cpuset) * 8 ) {
@@ -1066,6 +1086,7 @@ static int pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
 #endif
   int		err = 0;
 
+  ENTER;
   DBGF( "Next-PIPID:%d (0x%x)", new_task->pipid, new_task->type );
   if( old_task == new_task ) return 0;
 
@@ -1077,45 +1098,14 @@ static int pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
 #endif
   new_task->ctx_suspend = newctxp;
   DBGF( "old:%p  new:%p", old_task->ctx_suspend, newctxp );
+  pip_load_tls( new_task->tls );
   err = pip_swap_context( old_task->ctx_suspend, newctxp );
   RETURN( err );
 }
 
-static int pip_raise_signal( pip_task_t *task, int sig ) {
-  int err = 0;
-
-  ENTER;
-  if( pip_is_threaded_() ) {
-#ifndef PIP_USE_SIGQUEUE
-    if( pthread_kill( task->thread, sig ) == ESRCH ) {
-      if( kill( task->pid, sig ) != 0 ) err = errno;
-    }
-#else
-    if( pthread_sigqueue( task->thread,
-			  sig,
-			  (const union sigval)0 ) == ESRCH ) {
-      DBG;
-      if( sigqueue( task->pid,
-		    sig,
-		    (const union sigval) 0 ) != 0 ) {
-	err = errno;
-      }
-    }
-#endif
-  }
-  RETURN( err );
-}
-
-static int pip_raise_sigchld( void ) {
-  RETURN( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
-}
-
-static int pip_raise_ulp_sigterm( pip_task_t *task ) {
-  RETURN( pip_raise_signal( task, PIP_ULP_TERMSIG ) );
-}
-
 static void pip_task_terminated( pip_task_t *task, int extval ) {
   /* call fflush() in the target context to flush out messages */
+  ENTER;
   if( task->symbols.libc_fflush != NULL ) {
     DBGF( ">> [%d] fflush@%p()", task->pipid, task->symbols.libc_fflush );
     task->symbols.libc_fflush( NULL );
@@ -1144,7 +1134,7 @@ static void pip_task_terminated( pip_task_t *task, int extval ) {
 static void pip_task_notify( pip_task_t *task ) {
   ENTER;
   if( task->type & PIP_TYPE_ULP ) {
-    (void) pip_raise_ulp_sigterm( task );
+    (void) pip_unblock( task );
   } else if( !( task->type & PIP_TYPE_ROOT ) ) {
     if( pip_is_threaded_() ) {
       (void) pip_raise_sigchld();
@@ -1153,7 +1143,7 @@ static void pip_task_notify( pip_task_t *task ) {
   RETURNV;
 }
 
-static void pip_force_exit( pip_task_t *task, int extval ) {
+static void pip_force_exit( pip_task_t *task ) {
   ENTER;
   if( pip_is_threaded_() ) {	/* thread mode */
     if( !( task->type & PIP_TYPE_ROOT ) ) {
@@ -1163,7 +1153,7 @@ static void pip_force_exit( pip_task_t *task, int extval ) {
     }
     pthread_exit( NULL );
   } else {			/* process mode */
-    exit( extval );
+    exit( task->extval );
   }
 }
 
@@ -1191,6 +1181,7 @@ static int pip_ulp_sched_next( pip_task_t *sched ) {
   DBGF( "next:%p (pipid:%d)", nxt_task, nxt_task->pipid );
   nxt_ctxp = nxt_task->ctx_suspend;
   DBGF( "nxt_ctxp:%p  Next-PIPID:%d", nxt_ctxp, nxt_task->pipid );
+  pip_load_tls( nxt_task->tls );
   err = pip_load_context( nxt_ctxp );
   /* never reach here */
   return err;
@@ -1292,18 +1283,26 @@ static int pip_jump_into( pip_spawn_args_t *args, pip_task_t *self ) {
   return extval;
 }
 
+void pip_continuation_handler( int sig ) {
+  ENTER;
+#ifdef DEBUG
+  int x; DBGF( "&x:%p", &x );	/* to check if signal stack grows or not */
+#endif
 
-static int pip_ulp_termination_handler( void ) {
-  void pip_ulp_sigterm( int sig ) {
-    int pip_exit( int );
-    ENTER;
-    if( pip_task->flag_exit ) {
-      pip_exit( pip_task->extval );
-    } else {
-      pip_load_context( pip_task->ctx_suspend );
-    }
+  pip_task->type &= ~PIP_TYPE_ULP; /* now this becomes task again */
+
+  if( pip_task->flag_exit ) {
+    pip_force_exit( pip_task );
     /* never reach here */
+  } else {
+    pip_load_tls( pip_task->tls );
+    pip_load_context( pip_task->ctx_suspend );
   }
+  /* never reach here */
+  RETURNV;
+}
+
+static int pip_continuation_init( pip_task_t *task ) {
   struct sigaction sigact;
   stack_t ss;
   size_t sz = ROUNDUP( MINSIGSTKSZ, pip_root->page_size );
@@ -1311,7 +1310,7 @@ static int pip_ulp_termination_handler( void ) {
   int err;
 
   ENTER;
-  if( ( err = pip_page_alloc( sz, &sigstack ) ) ==0 ) {
+  if( ( err = pip_page_alloc( sz, &sigstack ) ) == 0 ) {
     memset( (void*) &ss, 0, sizeof( ss ) );
     ss.ss_sp   = sigstack;
     ss.ss_size = sz;
@@ -1319,10 +1318,12 @@ static int pip_ulp_termination_handler( void ) {
       err = errno;
     } else {
       memset( (void*) &sigact, 0, sizeof( sigact ) );
-      sigact.sa_handler = pip_ulp_sigterm;
-      sigact.sa_flags   = SA_ONSTACK | SA_RESETHAND | SA_RESTART;
-      if( sigaction( PIP_ULP_TERMSIG, &sigact, NULL ) != 0 ) {
+      sigact.sa_handler = task->symbols.continuation;
+      sigact.sa_flags   = SA_ONSTACK | SA_RESTART;
+      if( sigaction( PIP_UNBLOCK_SIG, &sigact, NULL ) != 0 ) {
 	err = errno;
+      } else {
+	task->sigstack = sigstack;
       }
     }
   }
@@ -1348,6 +1349,7 @@ static void *pip_do_spawn( void *thargs )  {
     pip_warn_mesg( "failed to bund CPU core (%d)", err );
   }
   self->thread = pthread_self();
+  pip_save_tls( &self->tls );	/* save tls register */
 
 #ifdef DEBUG
   if( pip_is_threaded_() ) {
@@ -1369,7 +1371,7 @@ static void *pip_do_spawn( void *thargs )  {
   if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "[%s] before-hook returns %d", argv[0], before, err );
     extval = err;
-  } else if( ( err = pip_ulp_termination_handler() ) != 0 ) {
+  } else if( ( err = pip_continuation_init( self ) ) != 0 ) {
     extval = err;
   } else {
     if( ( pip_root->opts & PIP_OPT_PGRP ) && !pip_is_threaded_() ) {
@@ -1387,7 +1389,7 @@ static void *pip_do_spawn( void *thargs )  {
     /* note: task_sched might be changed due to migration */
     pip_task_t *sched = self->task_sched;
     pip_task_terminated( self, extval );
-    pip_raise_ulp_sigterm( self );
+    pip_unblock( self );
     /* beyond this point, do not touch self, since it might be reset by root */
     (void) pip_ulp_sched_next( sched );
   } else {
@@ -1398,7 +1400,7 @@ static void *pip_do_spawn( void *thargs )  {
     pip_task_terminated( self, extval );
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       DBG;
-      pip_force_exit( self, extval );
+      pip_force_exit( self );
       /* never reach here */
     } else {
       pip_task_notify( self );
@@ -1599,7 +1601,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
       if( args->funcname != NULL ) free( args->funcname );
     }
     if( task != NULL ) {
-      if( task->loaded != NULL ) (void) pip_dlclose( task->loaded );
+      if( task->loaded   != NULL ) (void) pip_dlclose( task->loaded );
+      if( task->sigstack != NULL ) free( task->sigstack );
       pip_reset_task_struct( task );
     }
   }
@@ -1765,7 +1768,7 @@ int pip_exit( int extval ) {
   sched = pip_task->task_sched;
   if( pip_isa_ulp() ) {
     pip_task_terminated( pip_task, extval );
-    pip_raise_ulp_sigterm( pip_task );
+    err = pip_unblock( pip_task );
     (void) pip_ulp_sched_next( sched );
 
   } else if( pip_isa_task() ) {
@@ -1775,8 +1778,7 @@ int pip_exit( int extval ) {
     }
     /* if there is no other ULP eligible to run, then terminate itself */
     pip_task_terminated( pip_task, extval );
-    DBG;
-    pip_force_exit( pip_task, extval );
+    pip_force_exit( pip_task );
     /* never reach here */
   } else {
     if( ( err = pip_fin() ) == 0 ) {
@@ -1795,15 +1797,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   if( task->type == PIP_TYPE_NONE ) RETURN( ESRCH );
 
   DBGF( "pipid=%d  type=0x%x", pipid, task->type );
-  if( task->type & PIP_TYPE_ULP ) {
-    /* ULP */
-    DBG;
-    if( flag_try ) {
-      err = pip_tryblock( &task->wait );
-    } else {
-      err = pip_block( &task->wait );
-    }
-  } else if( pip_is_threaded_() ) {
+  if( pip_is_threaded_() ) {
     /* thread mode */
     if( flag_try ) {
       err = pthread_tryjoin_np( task->thread, NULL );
@@ -1907,7 +1901,7 @@ static int pip_find_terminated( int *pipidp ) {
   return( count );
 }
 
-static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
+static int pip_set_sigchld_handler( sigset_t *sigset_oldp ) {
   void pip_sighand_sigchld( int sig, siginfo_t *siginfo, void *null ) {
     ENTER;
     if( pip_root != NULL ) {
@@ -1924,10 +1918,39 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
     RETURNV;
   }
   struct sigaction 	sigact;
-  struct sigaction	*sigact_old = &pip_root->sigact_chain;
-  sigset_t		sigset_old;
-  int	pipid, count;
-  int	err = 0;
+  struct sigaction	*sigact_oldp = &pip_root->sigact_chain;
+  int err = 0;
+
+  memset( &sigact, 0, sizeof( sigact ) );
+  if( sigemptyset( &sigact.sa_mask )        != 0 ) RETURN( errno );
+  if( sigaddset( &sigact.sa_mask, SIGCHLD ) != 0 ) RETURN( errno );
+  sigact.sa_flags = SA_SIGINFO;
+  if( pthread_sigmask( SIG_SETMASK,
+		       &sigact.sa_mask,
+		       sigset_oldp ) != 0 ) RETURN( errno );
+  sigact.sa_sigaction = (void(*)()) pip_sighand_sigchld;
+  if( sigaction( SIGCHLD, &sigact, sigact_oldp ) != 0 ) {
+    err = errno;
+  }
+  RETURN( err );
+}
+
+static int pip_unset_sigchld_handler( void ) {
+  struct sigaction	*sigact_oldp = &pip_root->sigact_chain;
+  int 	err = 0;
+
+  if( sigaction( SIGCHLD, sigact_oldp, NULL ) == 0 ) {
+    memset( &pip_root->sigact_chain, 0, sizeof( struct sigaction ) );
+  } else {
+    err = errno;
+  }
+  RETURN( err );
+}
+
+static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
+  sigset_t	sigset_old;
+  int		pipid, count;
+  int		err = 0;
 
   if( !pip_isa_root() ) RETURN( EPERM );
 
@@ -1940,15 +1963,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
     RETURN( ECHILD );
   }
   /* try again, due to the race condition */
-  memset( &sigact, 0, sizeof( sigact ) );
-  if( sigemptyset( &sigact.sa_mask )        != 0 ) RETURN( errno );
-  if( sigaddset( &sigact.sa_mask, SIGCHLD ) != 0 ) RETURN( errno );
-  sigact.sa_flags = SA_SIGINFO;
-  if( pthread_sigmask( SIG_SETMASK,
-		       &sigact.sa_mask,
-		       &sigset_old ) != 0 ) RETURN( errno );
-  sigact.sa_sigaction = (void(*)()) pip_sighand_sigchld;
-  if( sigaction( SIGCHLD, &sigact, sigact_old ) != 0 ) {
+  if( ( err = pip_set_sigchld_handler( &sigset_old ) ) != 0 ) {
     err = errno;
     goto error;
   } else {
@@ -1977,8 +1992,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
     }
   }
   /* undo signal setting */
-  if( sigaction( SIGCHLD, sigact_old, NULL ) < 0 ) RETURN( errno );
-  memset( &pip_root->sigact_chain, 0, sizeof( struct sigaction ) );
+  err = pip_unset_sigchld_handler();
  error:
   if( pthread_sigmask( SIG_SETMASK,
 		       &sigset_old,
@@ -1996,7 +2010,7 @@ int pip_trywait_any( int *pipidp, int *extvalp ) {
   RETURN( pip_do_waitany( 1, pipidp, extvalp ) );
 }
 
-int pip_get_pid_( int pipid, pid_t *pidp ) {
+int pip_get_pid( int pipid, pid_t *pidp ) {
   int err = 0;
 
   if( pidp == NULL ) RETURN( EINVAL );
@@ -2006,7 +2020,7 @@ int pip_get_pid_( int pipid, pid_t *pidp ) {
       if( pipid == PIP_PIPID_ROOT ) {
 	err = EPERM;
       } else {
-	*pidp = pip_root->tasks[pipid].pid;
+	*pidp = pip_root->tasks[pipid].pid_actual;
       }
     }
   } else {
@@ -2120,6 +2134,7 @@ int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags ) {
       flag_jump = 1;
       task->ctx_suspend = task->context;
       task->task_sched  = NULL;
+      task->pid_actual  = 0;
       task->type |= PIP_TYPE_ULP;
 
       pip_enqueue_with_policy( &queue->queue, ulp, flags );
@@ -2151,7 +2166,7 @@ int pip_dequeue_and_wakeup( pip_locked_queue_t *queue ) {
       if( task->type & PIP_TYPE_ULP ) {
 	PIP_ULP_DEQ( next );
 	task->type &= ~PIP_TYPE_ULP;
-	pip_raise_ulp_sigterm( pip_task );
+	err = pip_unblock( task );
       } else {
 	err = EPERM;
       }
@@ -2255,7 +2270,7 @@ int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue, int flags ) {
   RETURN( err );
 }
 
-int pip_ulp_dequeue_and_migrate( pip_locked_queue_t *queue,
+int pip_ulp_dequeue_and_involve( pip_locked_queue_t *queue,
 				 pip_ulp_t **ulpp,
 				 int flags ) {
   pip_task_t	*task, *sched;
@@ -2283,6 +2298,7 @@ int pip_ulp_dequeue_and_migrate( pip_locked_queue_t *queue,
 
   sched = pip_task->task_sched;
   task->task_sched = sched;
+  task->pid_actual = pip_task->pid;
   DBGF( "enqueue PIPID:%d", task->pipid );
   PIP_ULP_SCHED_LOCK( sched );
   pip_enqueue_with_policy( &sched->schedq, next, flags );

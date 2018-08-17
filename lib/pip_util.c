@@ -137,16 +137,16 @@ int pip_idstr( char *buf, size_t sz ) {
   int	n = 0;
 
   if( pip_task == NULL ) {
-    n = snprintf( buf, sz, "%snotask:(%d)%s", pre, pid, post );
+    n = snprintf( buf, sz, "%s---:(%d)%s", pre, pid, post );
   } else {
     if( pip_task->type & PIP_TYPE_ROOT ) {
       n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
-    } else if( pip_task->type & PIP_TYPE_TASK ) {
-      idstr = pip_pipidstr( idnum );
-      n = snprintf( buf, sz, "%sTSK:%s(%d)%s", pre, idstr, pid, post );
     } else if( pip_task->type & PIP_TYPE_ULP ) {
       idstr = pip_pipidstr( idnum );
       n = snprintf( buf, sz, "%sULP:%s(%d)%s", pre, idstr, pid, post );
+    } else if( pip_task->type & PIP_TYPE_TASK ) {
+      idstr = pip_pipidstr( idnum );
+      n = snprintf( buf, sz, "%sTSK:%s(%d)%s", pre, idstr, pid, post );
     } else if( pip_task->type == PIP_TYPE_NONE ) {
       n = snprintf( buf, sz, "%s\?\?\?\?(%d)%s", pre, pid, post );
     } else {

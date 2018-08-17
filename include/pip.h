@@ -77,7 +77,7 @@
  * run with different programs. Due to the GLIBC constraints, ULPs can
  * be created by the PiP root process. The created ULPs are associated
  * with a PiP task by specifying ULPs when the task is created by
- * calling \b pip_spawn(). A ULP can yield, suspend, and resume its
+ * calling \b pip_task_spawn(). A ULP can yield, suspend, and resume its
  * execution by calling PiP ULP functions. A PiP task will be
  * terminated only when all ULPs scheduled by the task terminate.
  *
@@ -435,7 +435,7 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \retval EPERM PiP task tries to spawn child task
    * \retval EBUSY Specified PiP ID is alredy occupied
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3), pip_ulp_new(3)
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
    *
    */
 int pip_task_spawn( pip_spawn_program_t *progp,
@@ -816,9 +816,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c barrp is \c NULL or \c n is invalid
    *
-   * \note This barrier works on only PiP tasks.
+   * \note This barrier works on PiP tasks only.
    *
-   * \sa pip_task_barrier_wait(3), pip_ulp_barrier_init(3),
+   * \sa pip_task_barrier_wait(3),
+   * pip_ulp_barrier_init(3),
    * pip_ulp_barrier_wait(3),
    * pip_universal_barrier_init(3),
    * pip_universal_barrier_wait(3)
@@ -988,7 +989,6 @@ extern "C" {
   int    pip_get_thread( int pipid, pthread_t *threadp );
   int    pip_is_threaded( int *flagp );
   int    pip_is_shared_fd( int *flagp );
-  int    pip_is_shared_sighand( int *flagp );
 #ifdef __cplusplus
 }
 #endif

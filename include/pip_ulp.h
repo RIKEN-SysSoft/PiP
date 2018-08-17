@@ -365,7 +365,7 @@ extern "C" {
    * \retval EINAVL \c queue is \c NULL
    *
    * \sa pip_ulp_suspend_and_enqueue(3),
-   * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
+   * pip_ulp_dequeue_and_involve(3), pip_ulp_enqueue_with_lock(3),
    * pip_ulp_dequeue_with_lock(3)
    */
   int pip_locked_queue_init( pip_locked_queue_t *queue );
@@ -380,10 +380,10 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
-   * \retval EPERM a PiP task cannot be migrated
+   * \retval EPERM a PiP task cannot be involved
    *
    * \sa pip_locked_queue_init(3),
-   * pip_ulp_dequeue_and_migrate(3), pip_ulp_enqueue_with_lock(3),
+   * pip_ulp_dequeue_and_involve(3), pip_ulp_enqueue_with_lock(3),
    * pip_ulp_dequeue_with_lock(3)
    */
   int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
@@ -407,7 +407,7 @@ extern "C" {
    * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3),
    * pip_ulp_dequeue_with_lock(3)
    */
-  int pip_ulp_dequeue_and_migrate( pip_locked_queue_t *queue,
+  int pip_ulp_dequeue_and_involve( pip_locked_queue_t *queue,
 				   pip_ulp_t **ulpp,
 				   int flag );
   /** @}*/
@@ -422,7 +422,7 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    *
-   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
+   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_involve(3),
    * pip_ulp_suspend_and_enqueue(3),
    * pip_ulp_dequeue_with_lock(3)
    */
@@ -443,7 +443,7 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    *
-   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_migrate(3),
+   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_involve(3),
    * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3)
    */
   int pip_dequeue_with_lock( pip_locked_queue_t *queue,

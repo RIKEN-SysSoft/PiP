@@ -33,63 +33,96 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <signal.h>
+#define PIP_INTERNAL_FUNCS
+
+#define NULPS		(NTASKS-10)
+//#define NULPS	(10)
+//#define NULPS	(3)
 
 //#define DEBUG
+
+#define _GNU_SOURCE
+#include <link.h>
+#include <dlfcn.h>
+
+#define PIP_PRINT_FSREG
 #include <test.h>
-#include <time.h>
+#include <pip_ulp.h>
 
-void my_sleep( int n ) {
-  struct timespec tm, tr;
-  tm.tv_sec = 0;
-  tm.tv_nsec = n * 1000 * 1000;
-#ifdef DEBUG
-  tm.tv_sec  = 1 * n;
-  tm.tv_nsec = 0;
-#endif
-  (void) nanosleep( &tm, &tr );
-}
+pip_locked_queue_t	queue;
 
-int count_sigchld = 0;;
+int 		var_static;
+__thread int 	var_tls;
 
-void sigchld_handler( int sig ) {
-#ifdef DEBUG
-#endif
-  fprintf( stderr, "SIGCHLD\n" );
-  count_sigchld ++;
+void print_tls( int pipid ) {
+  char *type = pip_type_str();
+  intptr_t fsreg;
+  int var_stack;
+
+  if( 0 ) {
+    int pip_get_dso( int, void** );
+    void *loaded;
+    void *tlsp;
+    size_t sz;
+
+    tlsp = NULL;
+    TESTINT( pip_get_dso( pipid, &loaded ) );
+    TESTINT( dlinfo( loaded, RTLD_DI_TLS_MODID, &sz) );
+    TESTINT( dlinfo( loaded, RTLD_DI_TLS_DATA, &tlsp) );
+    fprintf( stderr, "MODID:%ld  TLS:%p\n", sz, tlsp );
+  }
+
+  TESTINT( pip_get_fsreg( &fsreg ) );
+  fprintf( stderr,
+	   "<%4s:%3d> Hello  var_static@%p  var_stack@%p  var_tls@%p  "
+	   "fsreg:%lx\n",
+	   type, pipid, &var_static, &var_stack, &var_tls, fsreg );
 }
 
 int main( int argc, char **argv ) {
-  int pipid = 999;
-  int ntasks = 0;
-  int i;
+  pip_locked_queue_t *qp = &queue;
+  int ntasks;
+  int i, pipid;
 
-  if( argc   > 1 ) ntasks = atoi( argv[1] );
-  if( ntasks < 1 ) ntasks = NTASKS;
-  ntasks = ( ntasks > 256 ) ? 256 : ntasks;
+  set_sigsegv_watcher();
 
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
+  if( argc   > 1 ) {
+    ntasks = atoi( argv[1] );
+  } else {
+    ntasks = NTASKS;
+  }
+  if( ntasks < 2 ) {
+    fprintf( stderr,
+	     "Too small number of PiP tasks (must be latrger than 1)\n" );
+    exit( 1 );
+  }
+
+  TESTINT( pip_init( &pipid, NULL, (void*) &qp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    struct sigaction 	sigact;
-
-    memset( &sigact, 0, sizeof( sigact ) );
-    TESTINT( sigemptyset( &sigact.sa_mask ) );
-    TESTINT( sigaddset( &sigact.sa_mask, SIGCHLD ) );
-    //sigact.sa_flags = SA_SIGINFO;
-    sigact.sa_sigaction = (void(*)()) sigchld_handler;
-    TESTINT( sigaction( SIGCHLD, &sigact, NULL ) );
+    pip_spawn_program_t prog;
+    pip_spawn_from_main( &prog, argv[0], argv, NULL );
+    TESTINT( pip_locked_queue_init( &queue ) );
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			  NULL, NULL, NULL ) );
-      TESTINT( pip_wait_any( NULL, NULL ) );
+      TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL ) );
     }
-    if( count_sigchld == ntasks ) {
-      printf( "SUCCEEDED\n" );
+    for( i=0; i<ntasks; i++ ) {
+      TESTINT( pip_wait( i, NULL ) );
+    }
+  } else {
+    if( pipid < ntasks - 1 ) {
+      TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
     } else {
-      printf( "FAILED (%d!=%d)\n", count_sigchld, ntasks );
+      for( i=0; i<ntasks-1; i++ ) {
+	while( 1 ) {
+	  int err = pip_ulp_dequeue_and_involve( qp, NULL, 0 );
+	  if( err != ENOENT ) break;
+	}
+      }
+      pip_ulp_yield();
     }
-    TESTINT( pip_fin() );
+    print_tls( pipid );
   }
-  return pipid;
+  TESTINT( pip_fin() );
+  return 0;
 }

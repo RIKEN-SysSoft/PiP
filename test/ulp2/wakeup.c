@@ -33,63 +33,60 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <signal.h>
+#define PIP_INTERNAL_FUNCS
+
+#define NITERS	(100*1000)
+//#define NITERS	(10)
 
 //#define DEBUG
+
 #include <test.h>
-#include <time.h>
 
-void my_sleep( int n ) {
-  struct timespec tm, tr;
-  tm.tv_sec = 0;
-  tm.tv_nsec = n * 1000 * 1000;
-#ifdef DEBUG
-  tm.tv_sec  = 1 * n;
-  tm.tv_nsec = 0;
-#endif
-  (void) nanosleep( &tm, &tr );
-}
-
-int count_sigchld = 0;;
-
-void sigchld_handler( int sig ) {
-#ifdef DEBUG
-#endif
-  fprintf( stderr, "SIGCHLD\n" );
-  count_sigchld ++;
-}
+pip_locked_queue_t	queue;
 
 int main( int argc, char **argv ) {
-  int pipid = 999;
-  int ntasks = 0;
-  int i;
+  pip_locked_queue_t	*qp = &queue;
+  int i, pipid;
+  int ntasks = 2;
 
-  if( argc   > 1 ) ntasks = atoi( argv[1] );
-  if( ntasks < 1 ) ntasks = NTASKS;
-  ntasks = ( ntasks > 256 ) ? 256 : ntasks;
+  set_sigsegv_watcher();
 
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
+  TESTINT( pip_init( &pipid, &ntasks, (void**) &qp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
-    struct sigaction 	sigact;
+    pip_spawn_program_t prog;
 
-    memset( &sigact, 0, sizeof( sigact ) );
-    TESTINT( sigemptyset( &sigact.sa_mask ) );
-    TESTINT( sigaddset( &sigact.sa_mask, SIGCHLD ) );
-    //sigact.sa_flags = SA_SIGINFO;
-    sigact.sa_sigaction = (void(*)()) sigchld_handler;
-    TESTINT( sigaction( SIGCHLD, &sigact, NULL ) );
-    for( i=0; i<ntasks; i++ ) {
-      pipid = i;
-      TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			  NULL, NULL, NULL ) );
-      TESTINT( pip_wait_any( NULL, NULL ) );
+    pip_spawn_from_main( &prog, argv[0], argv, NULL );
+    TESTINT( pip_locked_queue_init( qp ) );
+
+    pipid = 0;
+    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL ) );
+    pipid = 1;
+    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL ) );
+
+    TESTINT( pip_wait( 0, NULL ) );
+    TESTINT( pip_wait( 1, NULL ) );
+  } else {
+    double tm = -pip_gettime();
+    for( i=0; i<NITERS; i++ ) {
+      if( pipid == 0 ) {
+	TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
+      } else {
+	while( 1 ) {
+	  int err = pip_dequeue_and_wakeup( qp );
+	  if( err != ENOENT ) {
+	    if( err != 0 ) {
+	      fprintf( stderr, "pip_dequeue_and_wakeup():%d\n", err );
+	    }
+	    break;
+	  }
+	  pip_pause();
+	}
+      }
     }
-    if( count_sigchld == ntasks ) {
-      printf( "SUCCEEDED\n" );
-    } else {
-      printf( "FAILED (%d!=%d)\n", count_sigchld, ntasks );
-    }
-    TESTINT( pip_fin() );
+    tm += pip_gettime();
+    fprintf( stderr, "[%d] %g [S*%d]  %g [usec]\n",
+	     pipid, tm, NITERS, tm / (double) NITERS * 1e6 );
   }
-  return pipid;
+  TESTINT( pip_fin() );
+  return 0;
 }

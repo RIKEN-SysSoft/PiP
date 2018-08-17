@@ -67,23 +67,23 @@ inline static void pip_memory_barrier(void) {
 
 int arch_prctl( int, unsigned long* );
 
-inline static int pip_get_tls( intptr_t *tlsp ) {
+inline static int pip_save_tls( intptr_t *tlsp ) {
   return arch_prctl(ARCH_GET_FS, (unsigned long*) tlsp ) ? errno : 0;
 }
-#define PIP_GET_TLS
+#define PIP_SAVE_TLS
 
 inline static int pip_get_fsreg( intptr_t *tlsp ) {
-  return pip_get_tls( tlsp );
+  return pip_save_tls( tlsp );
 }
 #define PIP_GET_FSREG
 
-inline static int pip_set_tls( intptr_t tls ) {
+inline static int pip_load_tls( intptr_t tls ) {
   return arch_prctl(ARCH_SET_FS, (unsigned long*) tls) ? errno : 0;
 }
-#define PIP_SET_TLS
+#define PIP_LOAD_TLS
 
 inline static int pip_set_fsreg( intptr_t tls ) {
-  return pip_set_tls( tls );
+  return pip_load_tls( tls );
 }
 #define PIP_SET_FSREG
 
@@ -97,10 +97,8 @@ inline static void pip_print_fs_segreg( void ) {
 }
 #define PIP_PRINT_FSREG
 
-#define PIP_CTX_WITH_TLS
 #ifdef PIP_CTX_WITH_TLS
 #include <ucontext.h>
-
 typedef struct {
   intptr_t	tls;
   ucontext_t	ctx;
@@ -109,34 +107,33 @@ typedef struct {
 
 #define pip_make_context(CTX,F,C,...)	 \
   do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__);	\
-    pip_get_tls(&(CTX)->tls); } while(0)
+    pip_save_tls(&(CTX)->tls); } while(0)
 #define PIP_MAKE_CONTEXT
 
 inline static int pip_save_context( pip_ctx_t *ctxp ) {
-#ifdef PIP_CTX_WITH_TLS
-  pip_get_tls( &ctxp->tls );
+#ifndef PIP_SAVE_TLS_CTX
+  pip_save_tls( &ctxp->tls );
 #endif
   return ( getcontext( &ctxp->ctx ) ) ? errno : 0;
 }
 #define PIP_SAVE_CONTEXT
 
 inline static int pip_load_context( const pip_ctx_t *ctxp ) {
-#ifndef PIP_CTX_WITH_TLS
-  pip_set_tls( ctxp->tls );
-#endif
+  pip_load_tls( ctxp->tls );
   return ( setcontext( &ctxp->ctx ) ) ? errno : 0;
 }
 #define PIP_LOAD_CONTEXT
 
 inline static int pip_swap_context( pip_ctx_t *oldp, pip_ctx_t *newp ) {
-#ifndef PIP_CTX_WITH_TLS
-  pip_get_tls( &oldp->tls );
-  pip_set_tls( newp->tls );
+#ifndef PIP_SAVE_TLS_CTX
+  pip_save_tls( &oldp->tls );
 #endif
+  pip_load_tls( newp->tls );
   return ( swapcontext( &oldp->ctx, &newp->ctx ) ) ? errno : 0;
 }
 #define PIP_SWAP_CONTEXT
-#endif
+
+#endif /* PIP_CTX_WITH_TLS */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

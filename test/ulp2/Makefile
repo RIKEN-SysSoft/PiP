@@ -35,9 +35,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS      = ulp.c migrate.c
+SRCS      = ulp.c tls.c yield.c wakeup.c migrate.c varvars.c
 
-PROGRAMS  = ulp migrate
+PROGRAMS  = ulp   tls   yield   wakeup   migrate   varvars
 
 PROGRAMS_TO_INSTALL = # nothing
 

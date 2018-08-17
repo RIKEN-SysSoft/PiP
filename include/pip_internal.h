@@ -82,7 +82,7 @@
 #define PIP_EXIT_FINALIZE	(2)
 
 //#define PIP_ULP_TERMSIG		(SIGRTMIN+10) /* a real-time signal */
-#define PIP_ULP_TERMSIG		(SIGUSR1) /* a real-time signal */
+#define PIP_UNBLOCK_SIG		SIGUSR1
 
 struct pip_task;
 
@@ -95,6 +95,7 @@ typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
 typedef	void(*fflush_t)(FILE*);
 typedef int(*named_export_fin_t)(struct pip_task*);
+typedef void(*continuation_t)(int);
 
 typedef struct {
   /* functions */
@@ -104,6 +105,7 @@ typedef struct {
   fflush_t		libc_fflush;  /* to call fflush() at the end */
   mallopt_t		mallopt;      /* to call mallopt() */
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
+  continuation_t	continuation; /* ULP continuation */
   /* Unused functions */
   free_t		free;	      /* to override free() - EXPERIMENTAL*/
   glibc_init_t		glibc_init;   /* only in patched Glibc */
@@ -146,28 +148,30 @@ typedef struct pip_task {
     struct {
       pip_ulp_t		queue;	     /* !!! DO NOT MOVE THIS AROUND !!! */
       pip_ulp_t		schedq;	     /* ULP scheduling queue */
-      pip_spinlock_t	lock_schedq; /* lock of scheduling queue (no need ?) */
       struct pip_task	*task_sched; /* scheduling task */
-      struct pip_task	*task_resume; /* scheduling task when resumed */
       int32_t		pipid;	     /* PiP ID */
-      int32_t		type;	/* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
+      int32_t		type; /* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
+      intptr_t		tls;  /* TLS register */
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
   };
   /* PiP ULP (type&PIP_TYPE_ULP) */
-  void 			*ulp_stack; /* OBS */
   union {
     struct {
+      struct pip_task	*task_resume; /* scheduling task before suspend */
       pip_ctx_t		*ctx_suspend; /* context to resume */
       pip_blocking_t	sleep;
       pip_blocking_t	wait;
+      pip_spinlock_t	lock_schedq; /* lock of scheduling queue (UNUSED) */
+      void		*sigstack;
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };
   /* PiP task (type&PIP_TYPE_TASK) */
   union {
     struct {
-      pid_t		pid;	/* PID in process mode */
+      pid_t		pid;	/* PID in process mode at beginning */
+      pid_t		pid_actual; /* PID in process mode (actual) */
       pthread_t		thread;	/* thread */
       pip_spawnhook_t	hook_before; /* before spawning hook */
       pip_spawnhook_t	hook_after;  /* after spawning hook */

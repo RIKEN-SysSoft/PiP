@@ -43,8 +43,8 @@
 //#define DEBUG
 
 #ifndef DEBUG
-//#define ULP_COUNT 	(1000)
-#define ULP_COUNT 	(10)
+#define ULP_COUNT 	(1000)
+//#define ULP_COUNT 	(10)
 #else
 #define ULP_COUNT 	(10)
 #endif
@@ -76,28 +76,37 @@ struct expo {
   pip_locked_queue_t	queue;
 } expo;
 
+extern int pip_get_pid( int, pid_t* );
+
 int ulp_main( void* null ) {
   struct expo *expop;
   int pipid, pipid_sched0, pipid_sched1;
-  int ulp_count = 0, mgrt_count = 0;
-  pid_t pid = getpid();
+  int ulp_count = 0, mgrt_count = 0, mgrt_pid = 0;
+  pid_t pid0, pid1;
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
+  fprintf( stderr, "[%d] pid:%d\n", pipid, getpid() );
   PIP_BARRIER_WAIT_F( &expop->barr_ulps );
-  TESTINT( pip_sleep_and_enqueue( &expop->queue, pipid & 1 ) );
 
+  TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid0 ) );
+  TESTINT( pip_sleep_and_enqueue( &expop->queue, pipid & 1 ) );
   TESTINT( pip_ulp_get_sched_task( &pipid_sched0 ) );
+
   while( ulp_count++ < ULP_COUNT ) {
-    if( isatty( 1 ) ) {
-      fprintf( stderr, "[%d] %d -> %d\n", pipid, pid, getpid() );
-    }
-    pid = getpid();
     TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, 0 ) );
     TESTINT( pip_ulp_get_sched_task( &pipid_sched1 ) );
-    if( pipid_sched0 != pipid_sched1 ) mgrt_count ++;
+    TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid1 ) );
+    if( pid0 != pid1 ) mgrt_pid ++;
+    if( pipid_sched0 != pipid_sched1 ) {
+      fprintf( stderr, "[%d] %d->%d (pid:%d->%d)\n",
+	       pipid, pipid_sched0, pipid_sched1, pid0, pid1 );
+      mgrt_count ++;
+    }
     pipid_sched0 = pipid_sched1;
+    pid0 = pid1;
   }
-  if( isatty( 1 ) ) fprintf( stderr, "[%d] mgrt:%d\n", pipid, mgrt_count );
+  if( isatty( 1 ) ) fprintf( stderr, "[%d] mgrt:%d/%d\n",
+			     pipid, mgrt_count, mgrt_pid );
   TESTINT( pip_fin() );
   return 0;
 }
@@ -105,22 +114,28 @@ int ulp_main( void* null ) {
 int task_main( void* null ) {
   struct expo *expop;
   int pipid, flag = 0, err;
+  int count;
 
   set_sigsegv_watcher();
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
+  fprintf( stderr, "[%d] pid:%d\n", pipid, getpid() );
   PIP_BARRIER_WAIT_F( &expop->barr_tsks );
 
+  count = 0;
   while( 1 ) {
-    err = pip_ulp_dequeue_and_migrate( &expop->queue, NULL, 0 );
+    err = pip_ulp_dequeue_and_involve( &expop->queue, NULL, 0 );
     if( err == 0 ) {
+      count = 0;
       TESTINT( pip_ulp_yield() );
       continue;
-    } else if( err != ENOENT ) {
+    } else if( err == ENOENT ) {
+      if( count++ > 1000 ) break;
+      pip_pause();
+      continue;
+    } else {
       fprintf( stderr, "[%d] pip_ulp_dequeue_and_migrate():%d\n", pipid, err );
       flag = 9;
-      break;
-    } else {      /* exit loop when no ulp to schedule (ENOENT) */
       break;
     }
   }
@@ -197,7 +212,7 @@ int main( int argc, char **argv ) {
   for( i=0; i<nt; i++ ) {
     TESTINT( pip_wait_any( &pipid, &status ) );
     if( status == 0 ) {
-      if( isatty( 1 ) ) {
+      if( 0 && isatty( 1 ) ) {
 	if( pipid >= ntasks ) {
 	  ulpc ++;
 	  fprintf( stderr, "ULP:%d terminated (%d/%d)\n", pipid, ulpc, nulps );

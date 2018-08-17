@@ -175,6 +175,6 @@ inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
 }
 #endif
 
-#endif
+#endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 
-#endif
+#endif	/* _pip_machdep_h_ */

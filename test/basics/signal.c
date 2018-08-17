@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 
 pip_task_barrier_t barr;
@@ -69,11 +69,14 @@ int main( int argc, char **argv ) {
       printf( "NG\n" );
     }
   } else {
-    void sigusr1_handler( int sig ) { fprintf( stderr, "SIGUSR1\n" ); }
-    void sigusr2_handler( int sig ) { fprintf( stderr, "SIGUSR2\n" ); }
+    void sigusr01_handler( int sig ) { fprintf( stderr, "[0] SIGUSR1\n" ); }
+    void sigusr02_handler( int sig ) { fprintf( stderr, "[0] SIGUSR2\n" ); }
+    void sigusr11_handler( int sig ) { fprintf( stderr, "[1] SIGUSR1\n" ); }
+    void sigusr12_handler( int sig ) { fprintf( stderr, "[1] SIGUSR2\n" ); }
     sigset_t sigset;
     if( pipid == 0 ) {
-      set_signal_handler( SIGUSR1, sigusr1_handler );
+      set_signal_handler( SIGUSR1, sigusr01_handler );
+      set_signal_handler( SIGUSR2, sigusr02_handler );
       (void) sigfillset( &sigset );
       sigprocmask( SIG_BLOCK, &sigset, NULL );
       (void) sigfillset( &sigset );
@@ -82,7 +85,8 @@ int main( int argc, char **argv ) {
       (void) sigsuspend( &sigset );
       extval = SIGUSR1;
     } else {
-      set_signal_handler( SIGUSR2, sigusr2_handler );
+      set_signal_handler( SIGUSR1, sigusr11_handler );
+      set_signal_handler( SIGUSR2, sigusr12_handler );
       (void) sigfillset( &sigset );
       sigprocmask( SIG_BLOCK, &sigset, NULL );
       (void) sigfillset( &sigset );
