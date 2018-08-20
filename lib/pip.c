@@ -1641,39 +1641,23 @@ int pip_fin( void ) {
   if( pip_isa_root() ) {		/* root */
     ntasks = pip_root->ntasks;
     for( i=0; i<ntasks; i++ ) {
-      if( !pip_root->tasks[i].pipid == PIP_PIPID_NONE &&
+      if( pip_root->tasks[i].pipid != PIP_PIPID_NONE ||
 	  !pip_root->tasks[i].flag_exit ) {
-	if( pip_is_threaded_() ) {
-	  if( pthread_kill( pip_root->tasks[i].thread, 0 ) != 0 &&
-	      errno == ESRCH ) {
-	    pip_finalize_task( &pip_root->tasks[i], NULL );
-	    continue;
-	  }
-	} else {
-	  if( kill( pip_root->tasks[i].pid, 0 ) != 0 &&
-	      errno == ESRCH ) {
-	    pip_finalize_task( &pip_root->tasks[i], NULL );
-	    continue;
-	  }
-	}
 	DBGF( "%d/%d [pipid=%d (type=%d)] -- BUSY",
 	      i, ntasks, pip_root->tasks[i].pipid, pip_root->tasks[i].type );
-	err = EBUSY;
-	//break;
+	RETURN( EBUSY );
       }
     }
-    if( err == 0 ) {
-      pip_named_export_fin_all();
-      /* report accumulated timer values, if set */
-      PIP_REPORT( time_load_dso  );
-      PIP_REPORT( time_load_prog );
-      PIP_REPORT( time_dlmopen   );
-      /* after this point DBG(F) macros cannot be used */
-      memset( pip_root, 0, pip_root->size );
-      free( pip_root );
-      pip_root = NULL;
-      pip_task = NULL;
-    }
+    pip_named_export_fin_all();
+    /* report accumulated timer values, if set */
+    PIP_REPORT( time_load_dso  );
+    PIP_REPORT( time_load_prog );
+    PIP_REPORT( time_dlmopen   );
+    /* after this point DBG(F) macros cannot be used */
+    memset( pip_root, 0, pip_root->size );
+    free( pip_root );
+    pip_root = NULL;
+    pip_task = NULL;
   } else {			/* tasks and ULPs */
     err = pip_named_export_fin( pip_task );
   }
