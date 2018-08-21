@@ -85,7 +85,9 @@ int ulp_main( void* null ) {
   pid_t pid0, pid1;
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
+#ifdef AH
   fprintf( stderr, "[%d] pid:%d\n", pipid, getpid() );
+#endif
   PIP_BARRIER_WAIT_F( &expop->barr_ulps );
 
   TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid0 ) );
@@ -98,8 +100,10 @@ int ulp_main( void* null ) {
     TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid1 ) );
     if( pid0 != pid1 ) mgrt_pid ++;
     if( pipid_sched0 != pipid_sched1 ) {
+#ifdef AH
       fprintf( stderr, "[%d] %d->%d (pid:%d->%d)\n",
 	       pipid, pipid_sched0, pipid_sched1, pid0, pid1 );
+#endif
       mgrt_count ++;
     }
     pipid_sched0 = pipid_sched1;
@@ -119,7 +123,9 @@ int task_main( void* null ) {
   set_sigsegv_watcher();
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
+#ifdef AH
   fprintf( stderr, "[%d] pid:%d\n", pipid, getpid() );
+#endif
   PIP_BARRIER_WAIT_F( &expop->barr_tsks );
 
   count = 0;

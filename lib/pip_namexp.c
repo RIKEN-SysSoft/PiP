@@ -115,7 +115,7 @@ int pip_named_export_fin( pip_task_t *task ) {
   pip_list_t		*list, *next;
   int 			i;
 
-  DBGF( "PIPID:%d", task->pipid );
+  DBGF( ">> PIPID:%d", task->pipid );
   if( namexp != NULL ) {
     if( namexp->pipid != task->pipid ) {
       pip_err_mesg( "%s is called by PIPID:%d, but it was created by PIPID:%d",
