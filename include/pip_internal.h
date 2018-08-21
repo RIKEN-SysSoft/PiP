@@ -68,8 +68,6 @@
 #define PIP_MAGIC_WORD		"PrcInPrc"
 #define PIP_MAGIC_LEN		(8)
 
-#define PIP_PIPID_NONE		(-9999)
-
 #define PIP_LD_SOLIBS		{ NULL }
 
 #define PIP_STACK_SIZE		(8*1024*1024) /* 8 MiB */
@@ -80,9 +78,6 @@
 
 #define PIP_EXITED		(1)
 #define PIP_EXIT_FINALIZE	(2)
-
-//#define PIP_ULP_TERMSIG		(SIGRTMIN+10) /* a real-time signal */
-#define PIP_UNBLOCK_SIG		SIGUSR1
 
 struct pip_task;
 
@@ -105,7 +100,6 @@ typedef struct {
   fflush_t		libc_fflush;  /* to call fflush() at the end */
   mallopt_t		mallopt;      /* to call mallopt() */
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
-  continuation_t	continuation; /* ULP continuation */
   /* Unused functions */
   free_t		free;	      /* to override free() - EXPERIMENTAL*/
   glibc_init_t		glibc_init;   /* only in patched Glibc */
@@ -163,7 +157,7 @@ typedef struct pip_task {
       pip_blocking_t	sleep;
       pip_blocking_t	wait;
       pip_spinlock_t	lock_schedq; /* lock of scheduling queue (UNUSED) */
-      void		*sigstack;
+      void		*stack_sleep;
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };

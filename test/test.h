@@ -75,17 +75,19 @@
 
 #include <pip_debug.h>
 
+void pip_abort( void );
+
 #define PRINT_FL(FSTR,V)	\
   fprintf(stderr,"%s:%d (%s)=%d\n",__FILE__,__LINE__,FSTR,V)
 
 #ifndef DEBUG
 
 #define TESTINT(F)		\
-  do{int __xyz=(F); if(__xyz){PRINT_FL(#F,__xyz);exit(9);}} while(0)
+  do{int __xyz=(F); if(__xyz){PRINT_FL(#F,__xyz);pip_abort();}} while(0)
 #define TESTSYSERR(F)		\
-  do{int __xyz=(F); if(__xyz == -1){PRINT_FL(#F,__xyz);exit(9);}} while(0)
+  do{int __xyz=(F); if(__xyz == -1){PRINT_FL(#F,__xyz);pip_abort();}} while(0)
 #define TEST_EXPECT(F, X)	\
-  do{int __xyz=(F); if(__xyz != X){PRINT_FL(#F,__xyz);exit(9);}} while(0)
+  do{int __xyz=(F); if(__xyz != X){PRINT_FL(#F,__xyz);pip_abort();}} while(0)
 
 #else
 
@@ -99,21 +101,21 @@
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
     TPRT( "<< (%s)=%d", #F, __xyz );			\
-    if( __xyz != 0 ) exit( 9 );				\
+    if( __xyz != 0 ) pip_abort();			\
   } while(0)
 #define TESTSYSERR(F)		\
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
     TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz == -1 ) exit( 9 );			\
+    if( __xyz == -1 ) pip_abort();			\
   } while(0)
 #define TEST_EXPECT(F, X)				\
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
     TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz != X ) exit( 9 );				\
+    if( __xyz != X ) pip_abort();			\
   } while(0)
 #endif
 
@@ -337,6 +339,7 @@ inline static void ignore_anysignal( void ) {
 }
 
 inline static void set_sigsegv_watcher( void ) {
+  pid_t pip_gettid( void );
   void sigsegv_watcher( int sig, siginfo_t *siginfo, void *context ) {
 #ifdef REG_RIP
     ucontext_t *ctx = (ucontext_t*) context;
@@ -345,6 +348,7 @@ inline static void set_sigsegv_watcher( void ) {
     intptr_t pc = 0;
 #endif
     char *sigcode;
+
     if( siginfo->si_code == SEGV_MAPERR ) {
       sigcode = "SEGV_MAPERR";
     } else if( siginfo->si_code == SEGV_ACCERR ) {
@@ -358,12 +362,13 @@ inline static void set_sigsegv_watcher( void ) {
 	     "[PIPID:%d,PID:%d] SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n"
 	     "\n",
 	     pip_get_pipid_(),
-	     getpid(),
+	     pip_gettid(),
 	     (void*) pc,
 	     siginfo->si_pid,
 	     siginfo->si_addr,
 	     sigcode );
     //print_maps();
+    pip_abort();
   }
 
   struct sigaction sigact;

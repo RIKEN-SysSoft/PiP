@@ -152,6 +152,18 @@ typedef struct {
 } pip_ctx_t;
 #endif
 
+#ifndef PIP_SAVE_TLS
+inline static int pip_save_tls( intptr_t *tlsp ) {
+  return 0;
+}
+#endif
+
+#ifndef PIP_LOAD_TLS
+inline static int pip_load_tls( intptr_t tls ) {
+  return 0;
+}
+#endif
+
 #ifndef PIP_MAKE_CONTEXT
 #define pip_make_context(CTX,F,C,...)	 \
   do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)

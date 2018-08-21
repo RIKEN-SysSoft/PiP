@@ -35,13 +35,13 @@
 
 #define PIP_INTERNAL_FUNCS
 
-#define NULPS	(NTASKS-10)
+//#define NULPS	(NTASKS-10)
 //#define NULPS	(10)
-//#define NULPS	(3)
+#define NULPS	(3)
 
 //#define NYIELDS	(5*1000)
 //#define NYIELDS	(1*1000)
-#define NYIELDS	(10)
+#define NYIELDS		(10)
 
 //#define DEBUG
 #define PIP_EVAL
@@ -64,11 +64,13 @@ void test_yield( int pipid, struct expo *expop ) {
     TESTINT( pip_ulp_yield() );
   }
 
+#ifdef AH
   pip_ulp_barrier_wait( &expop->barr );
   for( i=0; i<NYIELDS; i++ ) {
     PIP_ACCUM( time_yield, pip_ulp_yield()==0 );
   }
   pip_ulp_barrier_wait( &expop->barr );
+#endif
 
   one_yield = time_yield;
   one_yield /= ((double) NYIELDS ) * ((double)ntasks);
@@ -127,7 +129,10 @@ int main( int argc, char **argv ) {
       for( i=0; i<nulps; i++ ) {
 	while( 1 ) {
 	  int err = pip_ulp_dequeue_and_involve( &expop->queue, NULL, 0 );
-	  if( err != ENOENT ) break;
+	  if( err != ENOENT ) {
+	    TESTINT( err );
+	    break;
+	  }
 	}
       }
     }
