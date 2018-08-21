@@ -35,35 +35,18 @@
 
 #define PIP_INTERNAL_FUNCS
 
-//#define NITERS	(100*1000)
-#define NITERS	(10)
-//#define NITERS	(2)
+#define NITERS	(100*1000)
+//#define NITERS	(10)
 
 //#define DEBUG
 
-#include <sched.h>
 #include <test.h>
 
-struct expo {
-  pip_task_barrier_t	barr;
-  pip_locked_queue_t	queue;
-} expo;
-
-void  __attribute__ ((noinline))
-sleep_and_enqueue( int n, pip_locked_queue_t *qp ) {
-  /* grow stack intentionally */
-  if( n == 0 ) {
-    TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
-  } else {
-    sleep_and_enqueue( n-1, qp );
-  }
-}
+pip_locked_queue_t	queue;
 
 int main( int argc, char **argv ) {
-  struct expo		*expop = &expo;
-  pip_task_barrier_t	*barrp = &expop->barr;
-  pip_locked_queue_t	*qp    = &expop->queue;
-  int i, pipid, core;
+  pip_locked_queue_t	*qp = &queue;
+  int i, pipid;
   int ntasks = 2;
 
   set_sigsegv_watcher();
@@ -73,40 +56,33 @@ int main( int argc, char **argv ) {
     pip_spawn_program_t prog;
 
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
-    TESTINT( pip_task_barrier_init( barrp, 2 ) );
     TESTINT( pip_locked_queue_init( qp ) );
 
-    pipid = core =0;
-    TESTINT( pip_task_spawn( &prog, core, &pipid, NULL ) );
-    pipid = core = 1;
-    TESTINT( pip_task_spawn( &prog, core, &pipid, NULL ) );
+    pipid = 0;
+    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL ) );
+    pipid = 1;
+    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL ) );
 
     TESTINT( pip_wait( 0, NULL ) );
     TESTINT( pip_wait( 1, NULL ) );
   } else {
-    pip_task_barrier_wait( barrp );
     double tm = -pip_gettime();
-    if( pipid == 0 ) {
-      for( i=0; i<NITERS; i++ ) {
-	//TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
-	sleep_and_enqueue( i, qp );
-	fprintf( stderr, "sleep_and_enqueue(%d)\n", i );
-      }
-    } else {
-      for( i=0; i<NITERS; i++ ) {
+    for( i=0; i<NITERS; i++ ) {
+      if( pipid == 0 ) {
+	TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
+      } else {
 	while( 1 ) {
 	  int err = pip_dequeue_and_wakeup( qp );
-	  if( err == ENOENT ) {
-	    continue;
-	  } else {
-	    TESTINT( err );
+	  if( err != ENOENT ) {
+	    if( err != 0 ) {
+	      fprintf( stderr, "pip_dequeue_and_wakeup():%d\n", err );
+	    }
 	    break;
 	  }
+	  pip_pause();
 	}
-	fprintf( stderr, "dequeue_and_wakeup(%d)\n", i );
       }
     }
-    pip_task_barrier_wait( barrp );
     tm += pip_gettime();
     fprintf( stderr, "[%d] %g [S*%d]  %g [usec]\n",
 	     pipid, tm, NITERS, tm / (double) NITERS * 1e6 );

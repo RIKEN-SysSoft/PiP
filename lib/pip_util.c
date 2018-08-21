@@ -131,27 +131,27 @@ pid_t pip_gettid( void ) {
 
 int pip_idstr( char *buf, size_t sz ) {
   pid_t	pid = pip_gettid();
-  char *opn = "<";
-  char *cls = ">";
+  char *pre  = "<";
+  char *post = ">";
   char *idstr, idnum[64];
   int	n = 0;
 
   if( pip_task == NULL ) {
-    n = snprintf( buf, sz, "%s---:(%d)%s", opn, pid, cls );
+    n = snprintf( buf, sz, "%s---:(%d)%s", pre, pid, post );
   } else {
     if( pip_task->type & PIP_TYPE_ROOT ) {
-      n = snprintf( buf, sz, "%sROOT:(%d)%s", opn, pid, cls );
+      n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
     } else if( pip_task->type & PIP_TYPE_ULP ) {
       idstr = pip_pipidstr( idnum );
-      n = snprintf( buf, sz, "%sULP:%s(%d)%s", opn, idstr, pid, cls );
+      n = snprintf( buf, sz, "%sULP:%s(%d)%s", pre, idstr, pid, post );
     } else if( pip_task->type & PIP_TYPE_TASK ) {
       idstr = pip_pipidstr( idnum );
-      n = snprintf( buf, sz, "%sTSK:%s(%d)%s", opn, idstr, pid, cls );
+      n = snprintf( buf, sz, "%sTSK:%s(%d)%s", pre, idstr, pid, post );
     } else if( pip_task->type == PIP_TYPE_NONE ) {
-      n = snprintf( buf, sz, "%s\?\?\?\?(%d)%s", opn, pid, cls );
+      n = snprintf( buf, sz, "%s\?\?\?\?(%d)%s", pre, pid, post );
     } else {
       n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
-		    opn, pip_task->type, pid, cls );
+		    pre, pip_task->type, pid, post );
     }
   }
   return n;

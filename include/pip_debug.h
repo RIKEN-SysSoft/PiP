@@ -64,7 +64,7 @@
 #define DBG_TAG							\
   do { char __tag[64]; pip_idstr(__tag,64);			\
     DBG_PRNT("%s %s:%d %s(): ",__tag,				\
-	     __FILE__, __LINE__, __func__ ); } while(0)
+	     __FILE__, __LINE__, __func__ );	} while(0)
 
 #define DBG						\
   do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
