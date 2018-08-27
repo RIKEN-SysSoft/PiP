@@ -35,8 +35,8 @@
 
 #define PIP_INTERNAL_FUNCS
 
-//#define NITERS	(100*1000)
-#define NITERS	(10)
+#define NITERS	(1000*1000)
+//#define NITERS	(10)
 //#define NITERS	(2)
 
 //#define DEBUG
@@ -53,7 +53,7 @@ void  __attribute__ ((noinline))
 sleep_and_enqueue( int n, pip_locked_queue_t *qp ) {
   /* grow stack intentionally */
   if( n == 0 ) {
-    TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
+    TESTINT( pip_sleep_and_enqueue( qp, NULL, 0 ) );
   } else {
     sleep_and_enqueue( n-1, qp );
   }
@@ -88,9 +88,8 @@ int main( int argc, char **argv ) {
     double tm = -pip_gettime();
     if( pipid == 0 ) {
       for( i=0; i<NITERS; i++ ) {
-	//TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
 	sleep_and_enqueue( i, qp );
-	fprintf( stderr, "sleep_and_enqueue(%d)\n", i );
+//fprintf( stderr, "sleep_and_enqueue(%d)\n", i );
       }
     } else {
       for( i=0; i<NITERS; i++ ) {
@@ -103,7 +102,7 @@ int main( int argc, char **argv ) {
 	    break;
 	  }
 	}
-	fprintf( stderr, "dequeue_and_wakeup(%d)\n", i );
+//fprintf( stderr, "dequeue_and_wakeup(%d)\n", i );
       }
     }
     pip_task_barrier_wait( barrp );

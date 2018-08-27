@@ -47,7 +47,7 @@
 //#define PIP_NO_MALLOPT
 //#define PIP_USE_MUTEX
 //#define PIP_USE_SIGQUEUE
-//#define PIP_USE_STATIC_CTX
+//#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
 
 //#define DEBUG
 //#define PRINT_MAPS
@@ -61,14 +61,6 @@
 #include <pip_internal.h>
 #include <pip_util.h>
 #include <pip_gdbif_func.h>
-
-#ifdef PIP_ULP_NEED_SCHED_LOCK
-#define PIP_ULP_SCHED_LOCK(S)	pip_spin_lock(   &(S)->lock_schedq );
-#define PIP_ULP_SCHED_UNLOCK(S)	pip_spin_unlock( &(S)->lock_schedq );
-#else
-#define PIP_ULP_SCHED_LOCK(S)
-#define PIP_ULP_SCHED_UNLOCK(S)
-#endif
 
 #define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
 
@@ -1108,16 +1100,9 @@ static int pip_ulp_sched_next( pip_task_t *sched ) {
   int		err;
 
   queue = &sched->schedq;
-  PIP_ULP_SCHED_LOCK( sched );
-  {
-    if( PIP_ULP_ISEMPTY( &sched->schedq ) ) {
-      PIP_ULP_SCHED_UNLOCK( sched );
-      RETURN( EDEADLK );
-    }
-    next = PIP_ULP_NEXT( queue );
-    PIP_ULP_DEQ( next );
-  }
-  PIP_ULP_SCHED_UNLOCK( sched );
+  if( PIP_ULP_ISEMPTY( &sched->schedq ) ) RETURN( EDEADLK );
+  next = PIP_ULP_NEXT( queue );
+  PIP_ULP_DEQ( next );
 
   nxt_task = PIP_TASK( next );
   ASSERT( nxt_task->task_sched == sched );
@@ -1159,12 +1144,8 @@ static void pip_task_terminated( pip_task_t *task, int extval ) {
 
 static void pip_task_notify( pip_task_t *task ) {
   ENTER;
-  if( task->type & PIP_TYPE_ULP ) {
-    (void) pip_wakeup( task );
-  } else if( !( task->type & PIP_TYPE_ROOT ) ) {
-    if( pip_is_threaded_() ) {
-      (void) pip_raise_sigchld();
-    }
+  if( !( task->type & PIP_TYPE_ROOT ) && pip_is_threaded_() ) {
+    (void) pip_raise_sigchld();
   }
   RETURNV;
 }
@@ -1348,6 +1329,7 @@ static void *pip_do_spawn( void *thargs )  {
     /* PiP task */
     DBGF( "TASK" );
     while( !PIP_ULP_ISEMPTY( &self->schedq ) ) {
+      /* waiting for the ULP terminations */
       pip_ulp_yield_( self );
     }
     pip_task_terminated( self, extval );
@@ -2076,7 +2058,6 @@ static void pip_sleep( intptr_t task_H,  intptr_t task_L,
     DBG;
     task->task_sched = NULL;
     task->pid_actual = task->pid;
-    task->type      &= ~PIP_TYPE_ULP;
     (void) pip_load_tls( task->tls );
     (void) pip_load_context( task->ctx_suspend );
     /* never reach here */
@@ -2095,11 +2076,11 @@ pip_switch_stack_and_sleep( pip_task_t *task, pip_locked_queue_t *queue ) {
   int 		err;
 
   ENTER;
-  if( task->stack_sleep == NULL ) {
+  if( ( stack = task->stack_sleep ) == NULL ) {
     if( ( err = pip_page_alloc( STACK_SIZE, &stack ) ) != 0 ) RETURN( err );
+    task->stack_sleep = stack;	/* stack address is kept to free it */
   }
-  task->stack_sleep = stack;
-
+  /* creating new context to siwtch stack */
   if( ( err = pip_save_context( &ctx ) ) != 0 ) RETURN( err );
   ctx.ctx.uc_link = NULL;
   stk->ss_sp      = stack;
@@ -2121,7 +2102,9 @@ pip_switch_stack_and_sleep( pip_task_t *task, pip_locked_queue_t *queue ) {
   RETURN( err );
 }
 
-int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags ) {
+int pip_sleep_and_enqueue( pip_locked_queue_t *queue,
+			   pip_enqueuehook_t hook,
+			   int flags ) {
   pip_task_t 	*task = pip_task;
   pip_ulp_t  	*ulp  = PIP_ULP( task );
 #ifndef PIP_USE_STATIC_CTX
@@ -2149,17 +2132,17 @@ int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags ) {
   pip_spin_lock( &queue->lock );
   {
     pip_save_context( ctxp );
-    DBG;
     flag_jump = 0;
     IF_LIKELY( !flag_jump ) {
       flag_jump = 1;
       pip_enqueue_with_policy( &queue->queue, ulp, flags );
+      /* the hook, if any, must be called when enqueued */
+      if( hook != NULL ) hook( task );
       /* unlock is postponed until stack is switched */
       pip_switch_stack_and_sleep( task, queue );
       RETURN( 0 );
     }
   }
-  pip_spin_unlock( &queue->lock );
   RETURN( err );
 }
 
@@ -2198,13 +2181,9 @@ static inline int pip_ulp_yield_( pip_task_t *task ) {
 
   ENTER;
   queue = &sched->schedq;
-  PIP_ULP_SCHED_LOCK( sched );
-  {
-    PIP_ULP_ENQ_LAST( queue, PIP_ULP( task ) );
-    next = PIP_ULP_NEXT( queue );
-    PIP_ULP_DEQ( next );
-  }
-  PIP_ULP_SCHED_UNLOCK( sched );
+  PIP_ULP_ENQ_LAST( queue, PIP_ULP( task ) );
+  next = PIP_ULP_NEXT( queue );
+  PIP_ULP_DEQ( next );
 
   RETURN( pip_ulp_switch_( task, next ) );
 }
@@ -2252,15 +2231,14 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   IF_UNLIKELY( task->task_sched != NULL ) RETURN( EBUSY );
   sched = pip_task->task_sched;
   task->task_sched = sched;
-
-  PIP_ULP_SCHED_LOCK( sched );
   pip_enqueue_with_policy( &sched->schedq, ulp, flags );
-  PIP_ULP_SCHED_UNLOCK( sched );
 
   RETURN( 0 );
 }
 
-int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue, int flags ) {
+int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
+				 pip_enqueuehook_t hook,
+				 int flags ) {
   pip_task_t 	*sched = pip_task->task_sched;
   volatile int	flag_jump;	/* must be volatile */
   int 		err = 0;
@@ -2279,6 +2257,8 @@ int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue, int flags ) {
     pip_task->task_sched  = NULL;
     pip_task->pid_actual  = 0;
     pip_enqueue_with_policy( &queue->queue, PIP_ULP(pip_task), flags );
+    /* the hook, if any, must be called when enqueued */
+    if( hook != NULL ) hook( pip_task );
     pip_spin_unlock( &queue->lock ); /* UNLOCK */
     err = pip_ulp_sched_next( sched );
   }
@@ -2315,9 +2295,7 @@ int pip_ulp_dequeue_and_involve( pip_locked_queue_t *queue,
   task->task_sched = sched;
   task->pid_actual = pip_task->pid;
   DBGF( "enqueue PIPID:%d", task->pipid );
-  PIP_ULP_SCHED_LOCK( sched );
   pip_enqueue_with_policy( &sched->schedq, next, flags );
-  PIP_ULP_SCHED_UNLOCK( sched );
 
   if( ulpp != NULL ) *ulpp = next;
   RETURN( err );
@@ -2338,12 +2316,8 @@ int pip_ulp_yield_to( pip_ulp_t *ulp ) {
   /* the target ulp must be in the same scheduling domain */
   IF_UNLIKELY( task->task_sched != sched ) RETURN( EPERM );
 
-  PIP_ULP_SCHED_LOCK( sched );
-  {
-    PIP_ULP_DEQ( ulp );
-    PIP_ULP_ENQ_LAST( queue, PIP_ULP( pip_task ) );
-  }
-  PIP_ULP_SCHED_UNLOCK( sched );
+  PIP_ULP_DEQ( ulp );
+  PIP_ULP_ENQ_LAST( queue, PIP_ULP( pip_task ) );
 
   RETURN( pip_ulp_switch_( pip_task, ulp ) );
 }

@@ -59,19 +59,6 @@ void print_tls( int pipid ) {
   intptr_t fsreg;
   int var_stack;
 
-  if( 0 ) {
-    int pip_get_dso( int, void** );
-    void *loaded;
-    void *tlsp;
-    size_t sz;
-
-    tlsp = NULL;
-    TESTINT( pip_get_dso( pipid, &loaded ) );
-    TESTINT( dlinfo( loaded, RTLD_DI_TLS_MODID, &sz) );
-    TESTINT( dlinfo( loaded, RTLD_DI_TLS_DATA, &tlsp) );
-    fprintf( stderr, "MODID:%ld  TLS:%p\n", sz, tlsp );
-  }
-
   TESTINT( pip_get_fsreg( &fsreg ) );
   fprintf( stderr,
 	   "<%4s:%3d> Hello  var_static@%p  var_stack@%p  var_tls@%p  "
@@ -111,7 +98,7 @@ int main( int argc, char **argv ) {
     }
   } else {
     if( pipid < ntasks - 1 ) {
-      TESTINT( pip_sleep_and_enqueue( qp, 0 ) );
+      TESTINT( pip_sleep_and_enqueue( qp, NULL, 0 ) );
     } else {
       for( i=0; i<ntasks-1; i++ ) {
 	while( 1 ) {

@@ -89,11 +89,11 @@ int ulp_main( void* null ) {
   PIP_BARRIER_WAIT_F( &expop->barr_ulps );
 
   TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid0 ) );
-  TESTINT( pip_sleep_and_enqueue( &expop->queue, pipid & 1 ) );
+  TESTINT( pip_sleep_and_enqueue( &expop->queue, NULL, pipid & 1 ) );
   TESTINT( pip_ulp_get_sched_task( &pipid_sched0 ) );
 
   while( ulp_count++ < ULP_COUNT ) {
-    TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, 0 ) );
+    TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, NULL, 0 ) );
     TESTINT( pip_ulp_get_sched_task( &pipid_sched1 ) );
     TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid1 ) );
     if( pid0 != pid1 ) mgrt_pid ++;

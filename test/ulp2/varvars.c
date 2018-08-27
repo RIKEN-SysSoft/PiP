@@ -33,8 +33,9 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#define PIP_INTERNAL_FUNCS
+#include <semaphore.h>
 
+#define PIP_INTERNAL_FUNCS
 //#define DEBUG
 #include <test.h>
 
@@ -113,9 +114,17 @@ int check_vars( int pipid ) {
 }
 
 struct expo {
+  sem_t		     semaphore;
   pip_ulp_barrier_t  barr;
   pip_locked_queue_t queue;
 } expo;
+
+void wakeup_task( pip_task_t *task ) {
+  struct expo *expop;
+
+  TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &expop ) );
+  TESTINT( sem_post( &expop->semaphore ) );
+}
 
 int main( int argc, char **argv ) {
   struct expo	*expop = &expo;
@@ -162,15 +171,12 @@ int main( int argc, char **argv ) {
     int error;
     if( pipid == ntasks - 1 ) {
       for( i=0; i<nulps; i++ ) {
-	while( 1 ) {
-	  int err = pip_ulp_dequeue_and_involve( &expop->queue, NULL, 0 );
-	  if( err != ENOENT ) break;
-	  pip_pause();
-	}
+	TESTINT( sem_wait( &expop->semaphore ) );
+	TESTINT( pip_ulp_dequeue_and_involve( &expop->queue, NULL, 0 ) );
       }
     } else {
       /* become ULP */
-      TESTINT( pip_sleep_and_enqueue( &expop->queue, 0 ) );
+      TESTINT( pip_sleep_and_enqueue( &expop->queue, wakeup_task, 0 ) );
     }
     pip_idstr( tag, 64 );
     if( !print_vars( pipid ) ) error = 1;
@@ -186,5 +192,5 @@ int main( int argc, char **argv ) {
     fflush( NULL );
   }
   TESTINT( pip_fin() );
-  return ext;
+  return ext;	       /* this results in scheduling the other ULPs */
 }

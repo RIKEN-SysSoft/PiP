@@ -118,6 +118,9 @@ typedef struct pip_ulp_barrier {
   int			count;
 } pip_ulp_barrier_t;
 
+struct pip_task;
+typedef void (*pip_enqueuehook_t)(struct pip_task*);
+
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 #ifdef __cplusplus
@@ -134,12 +137,16 @@ extern "C" {
    * \brief sleep the curren PiP task and enqueue it as a ULP
    *  @{
    * \param[in] queue A locked queue
+   * \param[in] hook The callback function address to be called when
+   *  the task is enqueued
    * \param[in] flags Enqueue policy
    *
    * \return Return true if the specified PiP task or ULP is alive
    * (i.e., not yet terminated) and running
    */
-  int pip_sleep_and_enqueue( pip_locked_queue_t *queue, int flags );
+  int pip_sleep_and_enqueue( pip_locked_queue_t *queue,
+			     pip_enqueuehook_t hook,
+			     int flags );
   /** @}*/
 
   /**
@@ -376,6 +383,8 @@ extern "C" {
    *  specified locked queue for possible migration
    *  @{
    * \param[in] queue pointer to a locked ULP queue
+   * \param[in] hook The callback function address to be called when
+   *  the task is enqueued
    * \param[in] flag Specifying scheduling policy
    *
    * \return Return 0 on success. Return an error code on error.
@@ -387,6 +396,7 @@ extern "C" {
    * pip_ulp_dequeue_with_lock(3)
    */
   int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
+				   pip_enqueuehook_t hook,
 				   int flag );
   /** @}*/
 

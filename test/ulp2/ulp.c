@@ -86,7 +86,7 @@ int main( int argc, char **argv ) {
     pip_task_barrier_wait( &expop->barrier0 );
     if( pipid < nulps ) {
       fprintf( stderr, "[%d] going to sleep\n", pipid );
-      TESTINT( pip_sleep_and_enqueue( &expop->queue, 0 ) );
+      TESTINT( pip_sleep_and_enqueue( &expop->queue, NULL, 0 ) );
       fprintf( stderr, "[%d] wakeup\n", pipid );
     } else {
       pip_task_barrier_wait( &expop->barrier1 );
