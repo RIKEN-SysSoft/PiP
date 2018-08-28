@@ -59,7 +59,8 @@ pip_mode_name_L=$pip_mode_name_P:preload
 pip_mode_name_C=$pip_mode_name_P:pipclone
 pip_mode_name_T=pthread
 
-function print_mode_list() {
+print_mode_list()
+{
     echo "List of PiP execution modes:"
     echo "  " $pip_mode_name_T "(T)";
     echo "  " $pip_mode_name_P "(P)";
@@ -68,7 +69,8 @@ function print_mode_list() {
     exit 1;
 }
 
-function print_usage() {
+print_usage()
+{
     echo >&2 "Usage: `basename $cmd` [-APCLT] [-thread] [-process[:preload|:pipclone]] [<test_list_file>]";
     exit 2;
 }
