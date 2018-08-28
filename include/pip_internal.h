@@ -146,6 +146,7 @@ typedef struct pip_task {
       int32_t		pipid;	     /* PiP ID */
       int32_t		type; /* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
       intptr_t		tls;  /* TLS register */
+      pip_locked_queue_t *queue_unlock; /* locked queue to be unlocked */
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
   };

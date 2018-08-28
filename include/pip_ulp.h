@@ -95,16 +95,6 @@
 #define PIP_LIST_FOREACH(L,E)	PIP_ULP_FOREACH(L,E)
 #define PIP_LIST_FOREACH_SAFE(L,E,F)	PIP_ULP_FOREACH_SAFE(L,E,F)
 
-typedef struct pip_locked_queue {
-  union {
-    struct {
-      pip_spinlock_t	lock;
-      pip_ulp_queue_t	queue;
-    };
-    char		__gap0__[PIP_CACHEBLK_SZ];
-  };
-} pip_locked_queue_t;
-
 typedef struct pip_ulp_mutex {
   void			*sched;
   void			*holder;

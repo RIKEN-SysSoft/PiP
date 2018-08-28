@@ -72,7 +72,7 @@ void wakeup_task( pip_task_t *task ) {
 int main( int argc, char **argv ) {
   struct expo *expop = &expo;
   int ntasks = 0;
-  int i, pipid, nulps, extval;
+  int i, j, pipid, nulps, extval;
 
   if( argc   > 1 ) {
     ntasks = atoi( argv[1] );
@@ -121,11 +121,12 @@ int main( int argc, char **argv ) {
       /* become ULP */
       TESTINT( pip_sleep_and_enqueue( &expop->queue, wakeup_task, 0 ) );
     }
+    TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
     extval = 0;
     for( i=0; i<nulps; i++ ) {
       /* Disturbances */
-      //int nyields = rand() % pipid;
-      //for( i=0; i<nyields; i++ ) TESTINT( pip_ulp_yield() );
+      int nyields = rand() % ( pipid + i + 13 );
+      for( j=0; j<nyields; j++ ) TESTINT( pip_ulp_yield() );
 
       TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
       if( i == pipid ) {

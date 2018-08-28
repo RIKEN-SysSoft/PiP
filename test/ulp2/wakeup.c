@@ -35,8 +35,8 @@
 
 #define PIP_INTERNAL_FUNCS
 
-#define NITERS	(1000*1000)
-//#define NITERS	(10)
+//#define NITERS	(1000*1000)
+#define NITERS	(1000)
 //#define NITERS	(2)
 
 //#define DEBUG

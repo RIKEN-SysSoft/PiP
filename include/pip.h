@@ -245,6 +245,16 @@ typedef struct {
   void 			*hookarg;
 } pip_spawn_hook_t;
 
+typedef struct pip_locked_queue {
+  union {
+    struct {
+      pip_spinlock_t	lock;
+      pip_ulp_queue_t	queue;
+    };
+    char		__gap0__[PIP_CACHEBLK_SZ];
+  };
+} pip_locked_queue_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif

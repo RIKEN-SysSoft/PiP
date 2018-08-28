@@ -42,12 +42,8 @@
 
 //#define DEBUG
 
-#ifndef DEBUG
 #define ULP_COUNT 	(1000)
 //#define ULP_COUNT 	(10)
-#else
-#define ULP_COUNT 	(10)
-#endif
 
 #ifdef DEBUG
 # define MTASKS	(10)
@@ -59,8 +55,8 @@
 
 #define NULPS		(NTASKS-MTASKS)
 
-#define OLD_BARRIER
-#ifdef OLD_BARRIER
+#define TASK_BARRIER
+#ifdef TASK_BARRIER
 #define PIP_BARRIER_T		pip_task_barrier_t
 #define PIP_BARRIER_INIT_F	pip_task_barrier_init
 #define PIP_BARRIER_WAIT_F	pip_task_barrier_wait
@@ -84,8 +80,12 @@ int ulp_main( void* null ) {
   int ulp_count = 0, mgrt_count = 0, mgrt_pid = 0;
   pid_t pid0, pid1;
 
+  set_sigsegv_watcher();
+
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
+#ifdef DEBUG
   fprintf( stderr, "[%d] pid:%d\n", pipid, getpid() );
+#endif
   PIP_BARRIER_WAIT_F( &expop->barr_ulps );
 
   TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid0 ) );
@@ -94,19 +94,23 @@ int ulp_main( void* null ) {
 
   while( ulp_count++ < ULP_COUNT ) {
     TESTINT( pip_ulp_suspend_and_enqueue( &expop->queue, NULL, 0 ) );
+    PIP_BARRIER_WAIT_F( &expop->barr_ulps );
     TESTINT( pip_ulp_get_sched_task( &pipid_sched1 ) );
     TESTINT( pip_get_pid( PIP_PIPID_SELF, &pid1 ) );
     if( pid0 != pid1 ) mgrt_pid ++;
     if( pipid_sched0 != pipid_sched1 ) {
+#ifdef DEBUG
       fprintf( stderr, "[%d] %d->%d (pid:%d->%d)\n",
 	       pipid, pipid_sched0, pipid_sched1, pid0, pid1 );
+#endif
       mgrt_count ++;
     }
     pipid_sched0 = pipid_sched1;
     pid0 = pid1;
   }
-  if( isatty( 1 ) ) fprintf( stderr, "[%d] mgrt:%d/%d\n",
-			     pipid, mgrt_count, mgrt_pid );
+  PIP_BARRIER_WAIT_F( &expop->barr_ulps );
+  if( isatty( 1 ) ) fprintf( stderr, "[%d] mgrt:%d/%d/%d\n",
+			     pipid, mgrt_count, mgrt_pid, ULP_COUNT );
   TESTINT( pip_fin() );
   return 0;
 }
@@ -119,7 +123,9 @@ int task_main( void* null ) {
   set_sigsegv_watcher();
 
   TESTINT( pip_init( &pipid, NULL, (void**) &expop, 0 ) );
+#ifdef DEBUG
   fprintf( stderr, "[%d] pid:%d\n", pipid, getpid() );
+#endif
   PIP_BARRIER_WAIT_F( &expop->barr_tsks );
 
   count = 0;
@@ -134,8 +140,10 @@ int task_main( void* null ) {
       pip_pause();
       continue;
     } else {
-      fprintf( stderr, "[%d] pip_ulp_dequeue_and_migrate():%d\n", pipid, err );
+      fprintf( stderr, "[%d] pip_ulp_dequeue_and_involve():%d\n", pipid, err );
       flag = 9;
+      sleep( 3 );
+      pip_abort();
       break;
     }
   }
@@ -177,7 +185,7 @@ int main( int argc, char **argv ) {
     nulps = ( ntasks + 1 ) / 2;
     ntasks -= nulps;
   }
-  DBGF( "ntasks:%d  nulps:%d", ntasks, nulps );
+  if( isatty( 1 ) ) fprintf( stderr, "ntasks:%d  nulps:%d\n", ntasks, nulps );
 
   int nt = ntasks + nulps;
   if( nt > NTASKS ) {
@@ -190,8 +198,8 @@ int main( int argc, char **argv ) {
   expop = &expo;
   TESTINT( pip_init( &pipid, &nt, (void**) &expop, 0 ) );
 
-  PIP_BARRIER_INIT_F( &expop->barr_ulps, nulps + 1 );
-  PIP_BARRIER_INIT_F( &expop->barr_tsks, ntasks    );
+  PIP_BARRIER_INIT_F( &expop->barr_ulps, nulps  );
+  PIP_BARRIER_INIT_F( &expop->barr_tsks, ntasks );
   TESTINT( pip_locked_queue_init( &expop->queue ) );
 
   pip_spawn_from_func( &ulpp, argv[0], "ulp_main",  NULL, NULL );
@@ -200,7 +208,6 @@ int main( int argc, char **argv ) {
     pipid = j++;
     TESTINT( pip_task_spawn( &ulpp, PIP_CPUCORE_ASIS, &pipid, NULL ) );
   }
-  PIP_BARRIER_WAIT_F( &expop->barr_ulps );
 
   pip_spawn_from_func( &task, argv[0], "task_main", NULL, NULL );
   j = 0;

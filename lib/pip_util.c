@@ -86,13 +86,20 @@ char *pip_pipidstr( char *buf ) {
     idstr = "?myself?";
     break;
   case PIP_PIPID_ANY:
-    idstr = "?myself?";
+    idstr = "?any?";
     break;
   case PIP_PIPID_NULL:
     idstr = "?null?";
     break;
   default:
-    (void) sprintf( buf, "%d", pip_task->pipid );
+    if( !pip_isa_ulp() ) {
+      (void) sprintf( buf, "%d", pip_task->pipid );
+    } else if( pip_task->task_sched != NULL ) {
+      (void) sprintf( buf, "%d/%d",
+		      pip_task->pipid, pip_task->task_sched->pipid );
+    } else {
+      (void) sprintf( buf, "%d/-", pip_task->pipid );
+    }
     idstr = buf;
     break;
   }
