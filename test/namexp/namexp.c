@@ -52,7 +52,7 @@ int main( int argc, char **argv, char **envv ) {
   int *ap;
   int pipid;
   int ntasks=0, nulps=0, niters=0, ntest, total;
-  int i, j, k, flag;
+  int i, flag;
 
   set_signal_watcher( SIGSEGV );
   if( argc > 2 ) {
@@ -88,14 +88,12 @@ int main( int argc, char **argv, char **envv ) {
   TESTINT( pip_init( &pipid, &total, (void**) &barrp, 0 ) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
-    pip_ulp_queue_t 	ulps;
 
     pip_spawn_from_main( &prog, argv[0], argv, NULL );
     TESTINT( pip_universal_barrier_init( barrp, total ) );
 
     k = 0;
     for( i=0; i<ntasks; i++ ) {
-      PIP_LIST_INIT( &ulps );
       for( j=0; j<nulps; j++ ) {
 	pipid = k++;
 	TESTINT( pip_ulp_new( &prog, &pipid, &ulps, NULL ) );

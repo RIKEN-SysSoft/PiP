@@ -109,7 +109,7 @@ typedef struct pip_ulp_barrier {
 } pip_ulp_barrier_t;
 
 struct pip_task;
-typedef void (*pip_enqueuehook_t)(struct pip_task*);
+typedef void (*pip_enqueuehook_t)(int);
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

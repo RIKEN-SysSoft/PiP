@@ -47,5 +47,5 @@ pthread/cthread.sh
 ##ulp/mutex.sh
 ##ulp/barrier.sh
 ##ulp/waitany.sh
-##universal/barrier.sh
+universal/barrier.sh
 ##namexp/namexp.sh

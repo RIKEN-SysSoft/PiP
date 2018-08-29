@@ -89,7 +89,7 @@ void test_yield( int pipid, struct expo *expop ) {
   }
 }
 
-void wakeup_task( pip_task_t *task ) {
+void wakeup_task( int pipid ) {
   struct expo *expop;
 
   TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &expop ) );

@@ -41,10 +41,10 @@ SUBDIRS = lib include bin preload util sample \
 	test/compat \
 	test/openmp \
 	test/pthread \
-	test/fortran
+	test/fortran \
+	test/ulp2 \
+	test/universal
 
-#	test/ulp
-#	test/universal
 #	test/namexp
 
 include $(top_srcdir)/build/rule.mk

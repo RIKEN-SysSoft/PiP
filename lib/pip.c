@@ -67,6 +67,8 @@
 #define IF_LIKELY(C)		if( pip_likely( C ) )
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
 
+#define NOINLINE		__attribute__ ((noinline))
+
 extern char 		**environ;
 
 /*** note that the following static variables are   ***/
@@ -278,7 +280,6 @@ static void pip_reset_task_struct( pip_task_t *task ) {
   task->pid  = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_ULP_INIT( &task->queue  );
   PIP_ULP_INIT( &task->schedq );
-  pip_spin_init( &task->lock_schedq );
   pip_spin_init( &task->lock_malloc );
   pip_blocking_init( &task->sleep );
   pip_memory_barrier();
@@ -1082,7 +1083,7 @@ static int pip_corebind( int coreno ) {
   RETURN( 0 );
 }
 
-static int __attribute__ ((noinline)) /* THIS FUNC MUST NOT BE INLINED */
+static int
 pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
   pip_task_t	*new_task = PIP_TASK( ulp );
   pip_ctx_t	*newctxp;
@@ -1158,14 +1159,6 @@ static void pip_task_terminated( pip_task_t *task, int extval ) {
     task->flag_exit = PIP_EXITED;
     task->extval    = extval;
     pip_gdbif_exit( task, extval );
-  }
-  RETURNV;
-}
-
-static void pip_task_notify( pip_task_t *task ) {
-  ENTER;
-  if( !( task->type & PIP_TYPE_ROOT ) && pip_is_threaded_() ) {
-    (void) pip_raise_sigchld();
   }
   RETURNV;
 }
@@ -1280,7 +1273,7 @@ static int pip_jump_into( pip_spawn_args_t *args, pip_task_t *self ) {
   return extval;
 }
 
-static void* __attribute__ ((noinline)) /* THIS FUNC MUST NOT BE INLINED */
+static void* NOINLINE /* THIS FUNC MUST NOT BE INLINED */
 pip_do_spawn( void *thargs )  {
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
@@ -1357,8 +1350,8 @@ pip_do_spawn( void *thargs )  {
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
       pip_force_exit( self );
       /* never reach here */
-    } else {
-      pip_task_notify( self );
+    } else if( pip_is_threaded_() ) {
+      (void) pip_raise_sigchld(); /* to simulate SIGCHLD */
     }
   }
   return NULL;
@@ -1580,7 +1573,7 @@ static void pip_finalize_task( pip_task_t *task, int *extvalp ) {
   if( task->args.prog   != NULL ) free( task->args.prog );
   if( task->args.argv   != NULL ) free( task->args.argv );
   if( task->args.envv   != NULL ) free( task->args.envv );
-  if( task->stack_sleep != NULL ) free( task->stack_sleep );
+  if( task->sleep_stack != NULL ) free( task->sleep_stack );
   if( *task->symbols.progname_full != NULL ) {
     free( *task->symbols.progname_full );
   }
@@ -2098,7 +2091,7 @@ static void pip_sleep( intptr_t task_H,  intptr_t task_L,
 
 #define STACK_SIZE	(4096*16)
 
-static int __attribute__ ((noinline)) /* THIS FUNC MUST NOT BE INLINED */
+static int NOINLINE /* THIS FUNC MUST NOT BE INLINED */
 pip_switch_stack_and_sleep( pip_task_t *task, pip_locked_queue_t *queue ) {
   pip_ctx_t	ctx;
   stack_t	*stk = &(ctx.ctx.uc_stack);
@@ -2107,9 +2100,9 @@ pip_switch_stack_and_sleep( pip_task_t *task, pip_locked_queue_t *queue ) {
   int 		err;
 
   ENTER;
-  if( ( stack = task->stack_sleep ) == NULL ) {
+  if( ( stack = task->sleep_stack ) == NULL ) {
     if( ( err = pip_page_alloc( STACK_SIZE, &stack ) ) != 0 ) RETURN( err );
-    task->stack_sleep = stack;	/* stack address is kept to free it */
+    task->sleep_stack = stack;	/* stack address is kept to free it */
   }
   /* creating new context to siwtch stack */
   if( ( err = pip_save_context( &ctx ) ) != 0 ) RETURN( err );
@@ -2133,7 +2126,7 @@ pip_switch_stack_and_sleep( pip_task_t *task, pip_locked_queue_t *queue ) {
   RETURN( err );
 }
 
-int __attribute__ ((noinline)) /* THIS FUNC MUST NOT BE INLINED */
+int  /* THIS FUNC MUST NOT BE INLINED */
 pip_sleep_and_enqueue( pip_locked_queue_t *queue,
 		       pip_enqueuehook_t hook,
 		       int flags ) {
@@ -2171,7 +2164,7 @@ pip_sleep_and_enqueue( pip_locked_queue_t *queue,
       flag_jump = 1;
       pip_enqueue_with_policy( &queue->queue, ulp, flags );
       /* the hook, if any, must be called when enqueued */
-      if( hook != NULL ) hook( task );
+      if( hook != NULL ) hook( task->pipid );
       /* unlock is postponed until stack is switched */
       err = pip_switch_stack_and_sleep( task, queue );
       RETURN( err );
@@ -2234,7 +2227,7 @@ int pip_ulp_yield( void ) {
   return( pip_ulp_yield_( pip_task ) );
 }
 
-int __attribute__ ((noinline)) /* THIS FUNC MUST NOT BE INLINED */
+int NOINLINE /* THIS FUNC MUST NOT BE INLINED */
 pip_ulp_suspend( void ) {
   pip_task_t 	*sched = pip_task->task_sched;
 #ifndef PIP_USE_STATIC_CTX
@@ -2290,7 +2283,7 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   RETURN( 0 );
 }
 
-int  __attribute__ ((noinline)) /* THIS FUNC MUST NOT BE INLINED */
+int NOINLINE /* THIS FUNC MUST NOT BE INLINED */
 pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
 			     pip_enqueuehook_t hook,
 			     int flags ) {
@@ -2325,8 +2318,7 @@ pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
   IF_LIKELY( !flag_jump ) {
     flag_jump = 1;
     pip_enqueue_with_policy( &queue->queue, PIP_ULP(pip_task), flags );
-    /* the hook, if any, must be called when enqueued */
-    if( hook != NULL ) hook( pip_task );
+    if( hook != NULL ) hook( pip_task->pipid );
     err = pip_ulp_sched_next( sched, queue );
   } else {
     if( pip_task->queue_unlock != NULL ) {

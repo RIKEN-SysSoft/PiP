@@ -143,9 +143,8 @@ typedef struct pip_task {
       pip_ulp_t		queue;	     /* !!! DO NOT MOVE THIS AROUND !!! */
       pip_ulp_t		schedq;	     /* ULP scheduling queue */
       struct pip_task	*task_sched; /* scheduling task */
-      int32_t		pipid;	     /* PiP ID */
-      int32_t		type; /* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
       intptr_t		tls;  /* TLS register */
+      pip_ctx_t		*ctx_suspend; /* context to resume */
       pip_locked_queue_t *queue_unlock; /* locked queue to be unlocked */
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
@@ -153,12 +152,11 @@ typedef struct pip_task {
   /* PiP ULP (type&PIP_TYPE_ULP) */
   union {
     struct {
+      int32_t		pipid;	     /* PiP ID */
+      int32_t		type; /* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
       struct pip_task	*task_resume; /* scheduling task before suspend */
-      pip_ctx_t		*ctx_suspend; /* context to resume */
       pip_blocking_t	sleep;
-      pip_blocking_t	wait;
-      pip_spinlock_t	lock_schedq; /* lock of scheduling queue (UNUSED) */
-      void		*stack_sleep;
+      void		*sleep_stack;
     };
     char		__gap1__[PIP_CACHEBLK_SZ];
   };
