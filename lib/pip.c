@@ -68,6 +68,7 @@
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
 
 #define NOINLINE		__attribute__ ((noinline))
+//#define NOINLINE
 
 extern char 		**environ;
 
@@ -259,12 +260,6 @@ static int pip_raise_sigchld( void ) {
   RETURN( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
 }
 
-static int pip_wakeup( pip_task_t *task ) {
-  ENTER;
-  if( sem_post( &task->sleep.semaphore ) == 0 ) RETURN( 0 );
-  RETURN( errno );
-}
-
 int pip_count_awake_tasks( void ) {
   int i, c;
 
@@ -280,6 +275,7 @@ static void pip_reset_task_struct( pip_task_t *task ) {
   task->pid  = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_ULP_INIT( &task->queue  );
   PIP_ULP_INIT( &task->schedq );
+  pip_spin_init( &task->lock_wakeup );
   pip_spin_init( &task->lock_malloc );
   pip_blocking_init( &task->sleep );
   pip_memory_barrier();
@@ -961,9 +957,9 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   /* unused */
   symp->free             = dlsym( handle, "free"                         );
   symp->glibc_init       = dlsym( handle, "glibc_init"                   );
-    /* pip_named_export_fin symbol may not be found when the task
-       program is not linked with the PiP lib. (due to not calling
-       any PiP functions) */
+  /* pip_named_export_fin symbol may not be found when the task
+     program is not linked with the PiP lib. (due to not calling
+     any PiP functions) */
   /* variables */
   symp->environ          = dlsym( handle, "environ"                      );
   symp->libc_argvp       = dlsym( handle, "__libc_argv"                  );
@@ -1083,6 +1079,52 @@ static int pip_corebind( int coreno ) {
   RETURN( 0 );
 }
 
+static void pip_task_terminated( pip_task_t *task, int extval ) {
+  /* call fflush() in the target context to flush out messages */
+  ENTER;
+  if( task->symbols.libc_fflush != NULL ) {
+    // DBGF( "[%d] fflush@%p() >>", task->pipid, task->symbols.libc_fflush );
+    task->symbols.libc_fflush( NULL );
+    //DBGF( "[%d] fflush@%p() <<", task->pipid, task->symbols.libc_fflush );
+  }
+  if( task->symbols.named_export_fin != NULL ) {
+    /* pip_named_export_fin symbol may not be found when the task
+       program is not linked with the PiP lib. (due to not calling
+       any PiP functions) */
+    /* In this case, the PiP task never calls pip_named_* functions
+       and no need of free() */
+    (void) task->symbols.named_export_fin( task );
+  }
+  if( !task->flag_exit ) {
+    //DBGF( "[%d] extval=%d", task->pipid, extval );
+    task->flag_exit = PIP_EXITED;
+    task->extval    = extval;
+    pip_gdbif_exit( task, extval );
+  }
+  RETURNV;
+}
+
+static void pip_force_exit( pip_task_t *task ) {
+  ENTER;
+  if( pip_is_threaded_() ) {
+    (void) pip_raise_sigchld();
+    pthread_exit( NULL );
+  } else {			/* process mode */
+    DBGF( "about to call exit()" );
+    exit( task->extval );
+  }
+}
+
+static void pip_let_prev_task_go( pip_task_t *task ) {
+  ENTER;
+  if( task->lock_unlock != NULL ) {
+    DBGF( "UNLCKD:%p", task->lock_unlock );
+    pip_spin_unlock( task->lock_unlock ); /* UNLOCK */
+    task->lock_unlock = NULL;
+  }
+  RETURNV;
+}
+
 static int
 pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
   pip_task_t	*new_task = PIP_TASK( ulp );
@@ -1106,75 +1148,76 @@ pip_ulp_switch_( pip_task_t *old_task, pip_ulp_t *ulp ) {
 	newctxp, new_task->pipid );
   (void) pip_load_tls( new_task->tls );
   err = pip_swap_context( old_task->ctx_suspend, newctxp );
-  if( old_task->queue_unlock != NULL ) {
-    DBGF( "UNLOCKED" );
-    pip_spin_unlock( &old_task->queue_unlock->lock ); /* UNLOCK */
-    old_task->queue_unlock = NULL;
-  }
+  pip_let_prev_task_go( old_task );
   RETURN( err );
 }
 
-static int pip_ulp_sched_next( pip_task_t *sched, pip_locked_queue_t *lqp ) {
+static int pip_ulp_sched_next( pip_task_t *sched, pip_spinlock_t *lockp ) {
   pip_ulp_t 	*queue, *next;
   pip_task_t 	*nxt_task;
   pip_ctx_t 	*nxt_ctxp;
   int		err;
 
   queue = &sched->schedq;
-  if( PIP_ULP_ISEMPTY( &sched->schedq ) ) RETURN( EDEADLK );
   next = PIP_ULP_NEXT( queue );
   PIP_ULP_DEQ( next );
 
   nxt_task = PIP_TASK( next );
-  nxt_task->queue_unlock = lqp;	/* to unlock as soon as it is scheduled */
+  nxt_task->lock_unlock = lockp; /* to unlock as soon as it is switched */
   nxt_ctxp = nxt_task->ctx_suspend;
-  DBGF( "sched-pipid:%d  next:%p  nxt_ctxp:%p  Next-PIPID:%d",
-	sched->pipid, nxt_task, nxt_ctxp, nxt_task->pipid );
-  (void) pip_load_tls( nxt_task->tls );
-  err = pip_load_context( nxt_ctxp );
-  /* never reach here */
+  DBGF( "sched-pipid:%d  next:%p  nxt_ctxp:%p  Next-PIPID:%d  lock:%p",
+	sched->pipid, nxt_task, nxt_ctxp, nxt_task->pipid, lockp );
+  if( ( err = pip_load_tls( nxt_task->tls ) ) == 0 ) {
+    if( ( err = pip_load_context( nxt_ctxp ) ) != 0 ) {
+      (void) pip_load_tls( pip_task->tls );
+    }
+    /* never reach here, hopefully */
+  }
   return err;
 }
 
-static void pip_task_terminated( pip_task_t *task, int extval ) {
-  /* call fflush() in the target context to flush out messages */
+static int pip_wakeup_( pip_task_t *task ) {
   ENTER;
-  if( task->symbols.libc_fflush != NULL ) {
-    DBGF( "[%d] fflush@%p() >>", task->pipid, task->symbols.libc_fflush );
-    task->symbols.libc_fflush( NULL );
-    DBGF( "[%d] fflush@%p() <<", task->pipid, task->symbols.libc_fflush );
-  }
-  if( task == pip_task ) {
-    pip_named_export_fin( task );
-  } else if( task->symbols.named_export_fin != NULL ) {
-    /* pip_named_export_fin symbol may not be found when the task
-       program is not linked with the PiP lib. (due to not calling
-       any PiP functions) */
-    /* In this case, the PiP task never calls pip_named_* functions
-       and no need of free() */
-    (void) task->symbols.named_export_fin( task );
-  }
-  if( !task->flag_exit ) {
-    DBGF( "[%d] extval=%d", task->pipid, extval );
-    task->flag_exit = PIP_EXITED;
-    task->extval    = extval;
-    pip_gdbif_exit( task, extval );
-  }
-  RETURNV;
+  if( sem_post( &task->sleep.semaphore ) == 0 ) RETURN( 0 );
+  RETURN( errno );
 }
 
-static void pip_force_exit( pip_task_t *task ) {
+static int pip_wakeup_and_sched_next( pip_task_t *task ) {
+  pip_task_t     *sched = task->task_sched;
+  pip_spinlock_t *lockp = &task->lock_wakeup;
+  int err = 0;
+
   ENTER;
-  if( pip_is_threaded_() ) {	/* thread mode */
-    if( !( task->type & PIP_TYPE_ROOT ) ) {
-      if( pip_is_threaded_() ) {
-	(void) pip_raise_sigchld();
-      }
+  pip_spin_lock( lockp );
+  if( ( err = pip_wakeup_( task ) ) == 0 ) {
+    if( !PIP_ULP_ISEMPTY( &sched->schedq ) ) {
+      err = pip_ulp_sched_next( sched, lockp );
+    } else {
+      /* the lock must be unlocked because there is       */
+      /* no task or ULP to switch to and  unlock the lock */
+      pip_spin_unlock( lockp );
     }
-    pthread_exit( NULL );
-  } else {			/* process mode */
-    exit( task->extval );
   }
+  RETURN( err );
+}
+
+static int pip_wakeup_to_terminate( pip_task_t *task, int extval ) {
+  /* race condition!!! */
+  /* when pip_task_terminated() is called and the ULP is wakeup to  */
+  /* terminate then the task structure might be cleared by the root */
+  /* and the task->task_sched will be lost. So its value must be    */
+  /* obtained before tehn  */
+  pip_task_t *sched = task->task_sched;
+  int 	     err = 0;
+
+  ENTER;
+  pip_task_terminated( task, extval );
+  if( ( err = pip_wakeup_( task ) ) == 0 ) {
+    if( !PIP_ULP_ISEMPTY( &sched->schedq ) ) {
+      err = pip_ulp_sched_next( sched, NULL );
+    }
+  }
+  RETURN( err );
 }
 
 static int pip_glibc_init( pip_symbols_t *symbols,
@@ -1329,22 +1372,14 @@ pip_do_spawn( void *thargs )  {
   if( self->type & PIP_TYPE_ULP ) {
     /* ULP */
     DBGF( "ULP" );
-    /* note: task_sched might be changed due to migration */
-    pip_task_t *sched = self->task_sched;
-    pip_task_terminated( self, extval );
-
-    if( self->type & PIP_TYPE_ULP ) {
-      pip_wakeup( self );
-    }
-    /* beyond this point, do not touch self, since it might be reset by root */
-    (void) pip_ulp_sched_next( sched, NULL );
+    (void) pip_wakeup_to_terminate( self, extval );
     /* never reach here */
   } else {
     /* PiP task */
     DBGF( "TASK" );
     while( !PIP_ULP_ISEMPTY( &self->schedq ) ) {
       /* waiting for the ULP terminations */
-      pip_ulp_yield_( self );
+      (void) pip_ulp_yield_( self );
     }
     pip_task_terminated( self, extval );
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
@@ -1702,13 +1737,16 @@ int pip_exit( int extval ) {
     exit( extval );
   }
   /* PiP task or ULP */
-  sched = pip_task->task_sched;
   if( pip_isa_ulp() ) {
     pip_task_terminated( pip_task, extval );
-    err = pip_wakeup( pip_task );
-    (void) pip_ulp_sched_next( sched, NULL );
-    /* never reach here */
+    if( PIP_ULP_ISEMPTY( &pip_task->schedq ) ) {
+      err = EDEADLK;
+    } else {
+      err = pip_wakeup_and_sched_next( pip_task );
+    }
+    /* never reach here, hopefully */
   } else if( pip_isa_task() ) {
+    sched = pip_task->task_sched;
     while( !PIP_ULP_ISEMPTY( &sched->schedq ) ) {
       /* task_sched of PiP task is never changed */
       (void) pip_ulp_yield_( pip_task );
@@ -1757,8 +1795,8 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 #endif
     if( flag_try ) options |= WNOHANG;
 
-    DBGF( "task:%p  task->pid:%d  pipid:%d", task, task->pid, task->pipid );
-    DBGF( "pid:%d", getpid() );
+    DBGF( "calling waitpid()   task:%p  task->pid:%d  pipid:%d",
+	  task, task->pid, task->pipid );
     if( ( pid = waitpid( task->pid, &status, options ) ) < 0 ) {
       err = errno;
     } else {
@@ -2033,9 +2071,9 @@ int pip_enqueue_with_lock( pip_locked_queue_t *queue,
   IF_UNLIKELY( PIP_TASK(ulp)->task_sched != NULL ) RETURN( EPERM  );
 
   pip_spin_lock( &queue->lock );
-  DBGF( "LOCKED" );
+  DBGF( "LOCKED: %p", &queue->lock );
   pip_enqueue_with_policy( &queue->queue, ulp, flags );
-  DBGF( "UNLOCKED" );
+  DBGF( "UNLCKD:%p", &queue->lock );
   pip_spin_unlock( &queue->lock );
   return 0;
 }
@@ -2047,7 +2085,7 @@ int pip_dequeue_with_lock( pip_locked_queue_t *queue, pip_ulp_t **ulpp ) {
   IF_UNLIKELY( queue == NULL ) RETURN( EINVAL );
 
   pip_spin_lock( &queue->lock );
-  DBGF( "LOCKED" );
+  DBGF( "LOCKED:%p", &queue->lock );
   IF_UNLIKELY( PIP_ULP_ISEMPTY( &queue->queue ) ) {
     err = ENOENT;
   } else {
@@ -2055,48 +2093,50 @@ int pip_dequeue_with_lock( pip_locked_queue_t *queue, pip_ulp_t **ulpp ) {
     PIP_ULP_DEQ( ulp );
     IF_LIKELY( ulpp != NULL ) *ulpp = ulp;
   }
-  DBGF( "UNLOCKED" );
+  DBGF( "UNLCKD:%p", &queue->lock );
   pip_spin_unlock( &queue->lock );
   RETURN( err );
 }
 
-static void pip_sleep( intptr_t task_H,  intptr_t task_L,
-		       intptr_t queue_H, intptr_t queue_L ) {
+static void pip_sleep_( intptr_t task_H, intptr_t task_L,
+			intptr_t lock_H, intptr_t lock_L ) {
   pip_task_t *task = (pip_task_t*)
     ( ( ((intptr_t) task_H)  << 32 ) | ( ((intptr_t) task_L)  & PIP_MASK32 ) );
-  pip_locked_queue_t *queue = (pip_locked_queue_t*)
-    ( ( ((intptr_t) queue_H) << 32 ) | ( ((intptr_t) queue_L) & PIP_MASK32 ) );
+  pip_spinlock_t *lockp = (pip_spinlock_t*)
+    ( ( ((intptr_t) lock_H) << 32 ) | ( ((intptr_t) lock_L) & PIP_MASK32 ) );
 
   ENTER;
   /* stack is switched and now we can unlock */
-  pip_spin_unlock( &queue->lock );
-  DBGF( "SLEEPING (and UNLOCKED)" );
+  pip_spin_unlock( lockp );
+  DBGF( "SLEEPING (and UNLOCK)" );
   (void) sem_wait( &task->sleep.semaphore );
-  DBGF( "WAKEUP" );
+  DBGF( "WOKEUP !!" );
   task->type      &= ~PIP_TYPE_ULP; /* now this becomes task again */
   task->task_sched = NULL;
   task->pid_actual = task->pid;
   if( task->flag_exit ) {
     DBG;
     pip_force_exit( task );
-    /* never reach here */
   } else {
     DBG;
+    pip_spin_lock(   &task->lock_wakeup ); /* wait for ctx switch */
+    pip_spin_unlock( &task->lock_wakeup );
+    DBGF( "lock-unlock" );
     (void) pip_load_tls( task->tls );
     (void) pip_load_context( task->ctx_suspend );
-    /* never reach here */
   }
+  /* never reach here */
   RETURNV;
 }
 
 #define STACK_SIZE	(4096*16)
 
 static int NOINLINE /* THIS FUNC MUST NOT BE INLINED */
-pip_switch_stack_and_sleep( pip_task_t *task, pip_locked_queue_t *queue ) {
+pip_switch_stack_and_sleep( pip_task_t *task, pip_spinlock_t *lockp ) {
   pip_ctx_t	ctx;
   stack_t	*stk = &(ctx.ctx.uc_stack);
   void		*stack;
-  int 		task_H, task_L, queue_H, queue_L;
+  int 		task_H, task_L, lock_H, lock_L;
   int 		err;
 
   ENTER;
@@ -2110,26 +2150,25 @@ pip_switch_stack_and_sleep( pip_task_t *task, pip_locked_queue_t *queue ) {
   stk->ss_sp      = stack;
   stk->ss_flags   = 0;
   stk->ss_size    = STACK_SIZE;
-  task_H  = ( ((intptr_t) pip_task) >> 32 ) & PIP_MASK32;
-  task_L  = (  (intptr_t) pip_task)         & PIP_MASK32;
-  queue_H = ( ((intptr_t) queue)    >> 32 ) & PIP_MASK32;
-  queue_L = (  (intptr_t) queue)	    & PIP_MASK32;
+  task_H = ( ((intptr_t) pip_task) >> 32 ) & PIP_MASK32;
+  task_L = (  (intptr_t) pip_task)         & PIP_MASK32;
+  lock_H = ( ((intptr_t) lockp)    >> 32 ) & PIP_MASK32;
+  lock_L = (  (intptr_t) lockp)	    & PIP_MASK32;
   pip_make_context( &ctx,
-		    pip_sleep,
+		    pip_sleep_,
 		    4,
 		    task_H,
 		    task_L,
-		    queue_H,
-		    queue_L );
+		    lock_H,
+		    lock_L );
   err = pip_load_context( &ctx );
   /* never reach here, hopefully */
   RETURN( err );
 }
 
-int  /* THIS FUNC MUST NOT BE INLINED */
-pip_sleep_and_enqueue( pip_locked_queue_t *queue,
-		       pip_enqueuehook_t hook,
-		       int flags ) {
+int NOINLINE pip_sleep_and_enqueue( pip_locked_queue_t *queue,
+				    pip_enqueuehook_t hook,
+				    int flags ) {
   pip_task_t 	*task = pip_task;
   pip_ulp_t  	*ulp  = PIP_ULP( task );
 #ifndef PIP_USE_STATIC_CTX
@@ -2146,7 +2185,7 @@ pip_sleep_and_enqueue( pip_locked_queue_t *queue,
   if( pip_isa_ulp()    ) RETURN( EPERM  );
 
   pip_spin_lock( &queue->lock );
-  DBGF( "LOCKED" );
+  DBGF( "LOCKED:%p", &queue->lock );
   {
     task->type      |= PIP_TYPE_ULP;
     task->task_sched = NULL;
@@ -2160,24 +2199,49 @@ pip_sleep_and_enqueue( pip_locked_queue_t *queue,
     flag_jump = 0;
     pip_save_context( ctxp );
     DBGF( "ctxp:%p", ctxp );
-    IF_LIKELY( !flag_jump ) {
+    if( !flag_jump ) {
       flag_jump = 1;
       pip_enqueue_with_policy( &queue->queue, ulp, flags );
       /* the hook, if any, must be called when enqueued */
       if( hook != NULL ) hook( task->pipid );
       /* unlock is postponed until stack is switched */
-      err = pip_switch_stack_and_sleep( task, queue );
+      err = pip_switch_stack_and_sleep( task, &queue->lock );
       RETURN( err );
-    } else {
-      if( task->queue_unlock != NULL ) {
-	DBGF( "UNLOCKED" );
-	pip_spin_unlock( &task->queue_unlock->lock ); /* UNLOCK */
-	task->queue_unlock = NULL;
-      }
     }
+    pip_let_prev_task_go( task );
   }
   STACK_CHECK;
   RETURN( err );
+}
+
+int NOINLINE pip_wakeup( void ) {
+  pip_task_t	*sched = pip_task->task_sched;
+#ifndef PIP_USE_STATIC_CTX
+  pip_ctx_t	ctx;
+#endif
+  pip_ctx_t	*ctxp;
+  volatile int	flag_jump;	/* must be volatile */
+
+  ENTER;
+  if( !pip_isa_ulp() ) RETURN( 0 );
+  if( sched == NULL                     ) RETURN( EPERM   );
+  if( PIP_ULP_ISEMPTY( &sched->schedq ) ) RETURN( EDEADLK );
+
+#ifdef PIP_USE_STATIC_CTX
+  ctxp = pip_task->context;
+#else
+  ctxp = &ctx;
+#endif
+  pip_task->ctx_suspend = ctxp;
+  flag_jump = 0;
+  (void) pip_save_context( ctxp );
+  DBGF( "ctxp:%p", ctxp );
+  if( !flag_jump ) {
+    flag_jump = 1;
+    RETURN( pip_wakeup_and_sched_next( pip_task ) );
+  }
+  pip_let_prev_task_go( pip_task );
+  RETURN( 0 );
 }
 
 int pip_dequeue_and_wakeup( pip_locked_queue_t *queue ) {
@@ -2190,14 +2254,14 @@ int pip_dequeue_and_wakeup( pip_locked_queue_t *queue ) {
   if( pip_task == NULL ) RETURN( EPERM );
 
   pip_spin_lock( &queue->lock );
-  DBGF( "LOCKED" );
+  DBGF( "LOCKED:%p", &queue->lock );
   {
     IF_LIKELY( !PIP_ULP_ISEMPTY( &queue->queue ) ) {
       next = PIP_ULP_NEXT( &queue->queue );
       task = PIP_TASK( next );
       if( task->type & PIP_TYPE_ULP ) {
 	PIP_ULP_DEQ( next );
-	err = pip_wakeup( task );
+	err = pip_wakeup_( task );
       } else {
 	err = EPERM;
       }
@@ -2205,7 +2269,7 @@ int pip_dequeue_and_wakeup( pip_locked_queue_t *queue ) {
       err = ENOENT;
     }
   }
-  DBGF( "UNLOCKED" );
+  DBGF( "UNLCKD:%p", &queue->lock );
   pip_spin_unlock( &queue->lock );
   RETURN( err );
 }
@@ -2253,16 +2317,12 @@ pip_ulp_suspend( void ) {
   flag_jump = 0;
   (void) pip_save_context( ctxp );
   DBGF( "ctxp:%p", ctxp );
-  IF_LIKELY( !flag_jump ) {
+  if( !flag_jump ) {
     flag_jump = 1;
     err = pip_ulp_sched_next( sched, NULL );
-  } else {
-    if( pip_task->queue_unlock != NULL ) {
-      DBGF( "UNLOCKED" );
-      pip_spin_unlock( &pip_task->queue_unlock->lock ); /* UNLOCK */
-      pip_task->queue_unlock = NULL;
-    }
+    RETURN( err );
   }
+  pip_let_prev_task_go( pip_task );
   STACK_CHECK;
   RETURN( err );
 }
@@ -2273,7 +2333,6 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   ENTER;
   IF_UNLIKELY( ulp == NULL ) RETURN( EINVAL );
   task = PIP_TASK( ulp );
-  //IF_UNLIKELY( task->flag_exit ) RETURN( ESRCH ); /* already terminated */
   /* check if already being scheduled */
   IF_UNLIKELY( task->task_sched != NULL ) RETURN( EBUSY );
   sched = pip_task->task_sched;
@@ -2311,22 +2370,17 @@ pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
   pip_task->pid_actual  = 0;
 
   pip_spin_lock( &queue->lock ); /* LOCK */
-  DBGF( "LOCKED" );
+  DBGF( "LOCKED:%p", &queue->lock );
   flag_jump = 0;
   (void) pip_save_context( ctxp );
   DBGF( "ctxp:%p", ctxp );
-  IF_LIKELY( !flag_jump ) {
+  if( !flag_jump ) {
     flag_jump = 1;
     pip_enqueue_with_policy( &queue->queue, PIP_ULP(pip_task), flags );
     if( hook != NULL ) hook( pip_task->pipid );
-    err = pip_ulp_sched_next( sched, queue );
-  } else {
-    if( pip_task->queue_unlock != NULL ) {
-      DBGF( "UNLOCKED" );
-      pip_spin_unlock( &pip_task->queue_unlock->lock ); /* UNLOCK */
-      pip_task->queue_unlock = NULL;
-    }
+    RETURN( pip_ulp_sched_next( sched, &queue->lock ) );
   }
+  pip_let_prev_task_go( pip_task );
   STACK_CHECK;
   RETURN( err );
 }
@@ -2342,7 +2396,7 @@ int pip_ulp_dequeue_and_involve( pip_locked_queue_t *queue,
   if( queue == NULL) RETURN( EINVAL );
 
   pip_spin_lock( &queue->lock );
-  DBGF( "LOCKED" );
+  DBGF( "LOCKED:%p", &queue->lock );
   {
     IF_UNLIKELY( PIP_ULP_ISEMPTY( &queue->queue ) ) ERRJ_ERR( ENOENT );
     next = PIP_ULP_NEXT( &queue->queue );
@@ -2355,7 +2409,7 @@ int pip_ulp_dequeue_and_involve( pip_locked_queue_t *queue,
     PIP_ULP_DEQ( next );
   }
  error:
-  DBGF( "UNLOCKED" );
+  DBGF( "UNLCKD:%p", &queue->lock );
   pip_spin_unlock( &queue->lock );
 
   if( !err ) {

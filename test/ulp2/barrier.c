@@ -131,7 +131,7 @@ int main( int argc, char **argv ) {
       TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
       if( i == pipid ) {
 	if( expop->c == ( pipid + BIAS ) ) {
-	  fprintf( stderr, "<%d> Looks good !!\n", pipid );
+	  if( isatty( 1 ) ) fprintf( stderr, "<%d> Looks good !!\n", pipid );
 	} else {
 	  fprintf( stderr, "<%d> Bad ULP (%d!=%d) !!\n",
 		   pipid, expop->c, pipid + BIAS );

@@ -35,8 +35,8 @@
 
 #define PIP_INTERNAL_FUNCS
 
-//#define NITERS	(1000*1000)
-#define NITERS	(1000)
+#define NITERS	(1000*1000)
+//#define NITERS	(1000)
 //#define NITERS	(2)
 
 //#define DEBUG
@@ -65,6 +65,7 @@ int main( int argc, char **argv ) {
   pip_locked_queue_t	*qp    = &expop->queue;
   int i, pipid, core;
   int ntasks = 2;
+  int status, extval = 0;
 
   set_sigsegv_watcher();
 
@@ -81,9 +82,44 @@ int main( int argc, char **argv ) {
     pipid = core = 1;
     TESTINT( pip_task_spawn( &prog, core, &pipid, NULL ) );
 
-    TESTINT( pip_wait( 0, NULL ) );
-    TESTINT( pip_wait( 1, NULL ) );
+    TESTINT( pip_wait( 0, &status ) );
+    if( status != 0 ) {
+      fprintf( stderr, "[0] error - %d\n", status );
+      extval = status;
+    }
+    TESTINT( pip_wait( 1, &status ) );
+    if( status != 0 ) {
+      fprintf( stderr, "[0] error - %d\n", status );
+      extval = status;
+    }
+    if( extval == 0 ) {
+      printf( "OK\n" );
+    } else {
+      printf( "NG\n" );
+    }
   } else {
+    /* warming up */
+    pip_task_barrier_wait( barrp );
+    if( pipid == 0 ) {
+      for( i=0; i<10; i++ ) {
+	sleep_and_enqueue( i, qp );
+//fprintf( stderr, "sleep_and_enqueue(%d)\n", i );
+      }
+    } else {
+      for( i=0; i<10; i++ ) {
+	while( 1 ) {
+	  int err = pip_dequeue_and_wakeup( qp );
+	  if( err == ENOENT ) {
+	    //pip_pause();
+	    continue;
+	  } else {
+	    TESTINT( err );
+	    break;
+	  }
+	}
+//fprintf( stderr, "dequeue_and_wakeup(%d)\n", i );
+      }
+    }
     pip_task_barrier_wait( barrp );
     double tm = -pip_gettime();
     if( pipid == 0 ) {
@@ -96,6 +132,7 @@ int main( int argc, char **argv ) {
 	while( 1 ) {
 	  int err = pip_dequeue_and_wakeup( qp );
 	  if( err == ENOENT ) {
+	    //pip_pause();
 	    continue;
 	  } else {
 	    TESTINT( err );
@@ -107,9 +144,11 @@ int main( int argc, char **argv ) {
     }
     pip_task_barrier_wait( barrp );
     tm += pip_gettime();
-    fprintf( stderr, "[%d] %g [S*%d]  %g [usec]\n",
-	     pipid, tm, NITERS, tm / (double) NITERS * 1e6 );
+    if( isatty( 1 ) ) {
+      fprintf( stderr, "[%d] %g [S*%d]  %g [usec]\n",
+	       pipid, tm, NITERS, tm / (double) NITERS * 1e6 );
+    }
   }
   TESTINT( pip_fin() );
-  return 0;
+  return extval;
 }

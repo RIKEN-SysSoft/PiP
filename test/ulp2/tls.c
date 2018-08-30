@@ -59,17 +59,18 @@ void print_tls( int pipid ) {
   intptr_t fsreg;
   int var_stack;
 
-  TESTINT( pip_get_fsreg( &fsreg ) );
-  fprintf( stderr,
-	   "<%4s:%3d> Hello  var_static@%p  var_stack@%p  var_tls@%p  "
-	   "fsreg:%lx\n",
-	   type, pipid, &var_static, &var_stack, &var_tls, fsreg );
+  if( isatty( 1 ) ) {
+    TESTINT( pip_get_fsreg( &fsreg ) );
+    printf( "<%4s:%3d> Hello  var_static@%p  var_stack@%p  var_tls@%p  "
+	    "fsreg:%lx\n",
+	    type, pipid, &var_static, &var_stack, &var_tls, fsreg );
+  }
 }
 
 int main( int argc, char **argv ) {
   pip_locked_queue_t *qp = &queue;
   int ntasks;
-  int i, pipid;
+  int i, pipid, extval=0;
 
   set_sigsegv_watcher();
 
@@ -94,7 +95,17 @@ int main( int argc, char **argv ) {
       TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL ) );
     }
     for( i=0; i<ntasks; i++ ) {
-      TESTINT( pip_wait( i, NULL ) );
+      int status;
+      TESTINT( pip_wait( i, &status ) );
+      if( status != 0 ) {
+	fprintf( stderr, "[%d] error - %d \n", i, status );
+	extval = ( status > extval ) ? status : extval;
+      }
+    }
+    if( extval == 0 ) {
+      printf( "OK\n" );
+    } else {
+      printf( "NG\n" );
     }
   } else {
     if( pipid < ntasks - 1 ) {
@@ -111,5 +122,5 @@ int main( int argc, char **argv ) {
     print_tls( pipid );
   }
   TESTINT( pip_fin() );
-  return 0;
+  return extval;
 }

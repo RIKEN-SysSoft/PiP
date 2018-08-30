@@ -66,7 +66,9 @@ int main( int argc, char **argv ) {
   nt = ntasks;
 
   TESTINT( pip_init( &pipid, &nt, (void**) &expop, 0 ) );
-  printf( "[%d] ntasks:%d  nulps:%d\n", pipid, ntasks, nulps );
+  if( isatty( 1 ) ) {
+    fprintf( stderr, "[%d] ntasks:%d  nulps:%d\n", pipid, ntasks, nulps );
+  }
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_program_t prog;
 
@@ -82,12 +84,17 @@ int main( int argc, char **argv ) {
     for( i=0; i<ntasks; i++ ) {
       TESTINT( pip_wait( i, NULL ) );
     }
+    printf( "OK\n" );
   } else {
     pip_task_barrier_wait( &expop->barrier0 );
     if( pipid < nulps ) {
-      fprintf( stderr, "[%d] going to sleep\n", pipid );
+      if( isatty( 1 ) ) {
+	fprintf( stderr, "[%d] going to sleep\n", pipid );
+      }
       TESTINT( pip_sleep_and_enqueue( &expop->queue, NULL, 0 ) );
-      fprintf( stderr, "[%d] wakeup\n", pipid );
+      if( isatty( 1 ) ) {
+	fprintf( stderr, "[%d] wakeup\n", pipid );
+      }
     } else {
       pip_task_barrier_wait( &expop->barrier1 );
       while( 1 ) {
@@ -107,7 +114,9 @@ int main( int argc, char **argv ) {
 	}
       }
     }
-    fprintf( stderr, "[%d] reching the final barrier\n", pipid );
+    if( isatty( 1 ) ) {
+      fprintf( stderr, "[%d] reching the final barrier\n", pipid );
+    }
     pip_task_barrier_wait( &expop->barrier0 );
   }
   TESTINT( pip_fin() );

@@ -35,7 +35,7 @@
 
 #include <semaphore.h>
 
-#define PIP_INTERNAL_FUNCS
+//#define PIP_INTERNAL_FUNCS
 //#define DEBUG
 #include <test.h>
 
@@ -43,9 +43,9 @@ char tag[64];
 
 void set_and_print( char *name, int *intp, int val ) {
   *intp = val;
-  fprintf( stderr, "%20s %32s: %p\n", tag, name, intp );
+  if( isatty( 1 ) ) fprintf( stderr, "%20s %32s: %p\n", tag, name, intp );
 }
-#define SET_AND_PRINT( VAR, VAL ) set_and_print( #VAR, &VAR, VAL );
+#define SET_AND_PRINT( VAR, VAL )	 set_and_print( #VAR, &VAR, VAL )
 
 int check_var( char *name, int *intp, int val ) {
   if( *intp != val ) {
@@ -59,7 +59,7 @@ int check_var( char *name, int *intp, int val ) {
 #define CONST_VAL	(12345)
 
 int print_only( char *name, const int *intp ) {
-  fprintf( stderr, "%20s %32s: %p\n", tag, name, intp );
+  if( isatty( 1 ) ) fprintf( stderr, "%20s %32s: %p\n", tag, name, intp );
   if( *intp != CONST_VAL ) {
     fprintf( stderr, "%20s ??????\n", tag );
     return 0;
@@ -132,6 +132,8 @@ int main( int argc, char **argv ) {
   int 	ntasks, nulps;
   int 	st, ext = 0, i, err;
 
+  set_sigsegv_watcher();
+
   if( argc > 1 ) {
     ntasks = atoi( argv[1] );
   } else {
@@ -165,7 +167,11 @@ int main( int argc, char **argv ) {
       TESTINT( pip_wait( i, &st ) );
       if( st != 0 ) ext = 1;
     }
-    if( !ext ) printf( "OK\n" );
+    if( !ext ) {
+      printf( "OK\n" );
+    } else {
+      printf( "NG\n" );
+    }
 
   } else {
     int error;
@@ -178,18 +184,21 @@ int main( int argc, char **argv ) {
       /* become ULP */
       TESTINT( pip_sleep_and_enqueue( &expop->queue, wakeup_task, 0 ) );
     }
-    pip_idstr( tag, 64 );
     if( !print_vars( pipid ) ) error = 1;
     TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
     if( !check_vars( pipid ) ) error = 1;
     TESTINT( pip_ulp_barrier_wait( &expop->barr ) );
-    if( error ) {
-      fprintf( stderr, "%s Hello, I am just fine !!\n", tag );
-    } else {
-      fprintf( stderr, "%s Hello, I am NOT fine !!\n", tag );
-      ext = 1;
+
+    pip_idstr( tag, 64 );
+    if( isatty( 1 ) ) {
+      if( error ) {
+	fprintf( stderr, "%s Hello, I am just fine !!\n", tag );
+      } else {
+	fprintf( stderr, "%s Hello, I am NOT fine !!\n", tag );
+	ext = 1;
+      }
+      fflush( NULL );
     }
-    fflush( NULL );
   }
   TESTINT( pip_fin() );
   return ext;	       /* this results in scheduling the other ULPs */

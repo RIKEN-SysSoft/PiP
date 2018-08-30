@@ -42,7 +42,7 @@
 
 //#define DEBUG
 
-#define ULP_COUNT 	(1000)
+#define ULP_COUNT 	(500)
 //#define ULP_COUNT 	(10)
 
 #ifdef DEBUG
@@ -100,8 +100,10 @@ int ulp_main( void* null ) {
     if( pid0 != pid1 ) mgrt_pid ++;
     if( pipid_sched0 != pipid_sched1 ) {
 #ifdef DEBUG
-      fprintf( stderr, "[%d] %d->%d (pid:%d->%d)\n",
-	       pipid, pipid_sched0, pipid_sched1, pid0, pid1 );
+      if( isatty( 1 ) ) {
+	fprintf( stderr, "[%d] %d->%d (pid:%d->%d)\n",
+		 pipid, pipid_sched0, pipid_sched1, pid0, pid1 );
+      }
 #endif
       mgrt_count ++;
     }
@@ -109,8 +111,10 @@ int ulp_main( void* null ) {
     pid0 = pid1;
   }
   PIP_BARRIER_WAIT_F( &expop->barr_ulps );
-  if( isatty( 1 ) ) fprintf( stderr, "[%d] mgrt:%d/%d/%d\n",
-			     pipid, mgrt_count, mgrt_pid, ULP_COUNT );
+  if( isatty( 1 ) ) {
+    fprintf( stderr, "[%d] mgrt:%d/%d/%d\n",
+	     pipid, mgrt_count, mgrt_pid, ULP_COUNT );
+  }
   TESTINT( pip_fin() );
   return 0;
 }
@@ -142,7 +146,6 @@ int task_main( void* null ) {
     } else {
       fprintf( stderr, "[%d] pip_ulp_dequeue_and_involve():%d\n", pipid, err );
       flag = 9;
-      sleep( 3 );
       pip_abort();
       break;
     }
@@ -185,8 +188,9 @@ int main( int argc, char **argv ) {
     nulps = ( ntasks + 1 ) / 2;
     ntasks -= nulps;
   }
-  if( isatty( 1 ) ) fprintf( stderr, "ntasks:%d  nulps:%d\n", ntasks, nulps );
-
+  if( isatty( 1 ) ) {
+    fprintf( stderr, "ntasks:%d  nulps:%d\n", ntasks, nulps );
+  }
   int nt = ntasks + nulps;
   if( nt > NTASKS ) {
     fprintf( stderr,

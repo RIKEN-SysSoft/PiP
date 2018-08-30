@@ -145,13 +145,14 @@ typedef struct pip_task {
       struct pip_task	*task_sched; /* scheduling task */
       intptr_t		tls;  /* TLS register */
       pip_ctx_t		*ctx_suspend; /* context to resume */
-      pip_locked_queue_t *queue_unlock; /* locked queue to be unlocked */
+      pip_spinlock_t	*lock_unlock; /* lock to be unlocked after ctx sw. */
     };
     char		__gap0__[PIP_CACHEBLK_SZ];
   };
   /* PiP ULP (type&PIP_TYPE_ULP) */
   union {
     struct {
+      pip_spinlock_t	lock_wakeup; /* lock for wakeup race */
       int32_t		pipid;	     /* PiP ID */
       int32_t		type; /* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
       struct pip_task	*task_resume; /* scheduling task before suspend */

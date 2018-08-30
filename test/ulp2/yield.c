@@ -74,18 +74,20 @@ void test_yield( int pipid, struct expo *expop ) {
 
   one_yield = time_yield;
   one_yield /= ((double) NYIELDS ) * ((double)ntasks);
-  if( pip_isa_task() ) {
-    fprintf( stderr,
-	     "Hello, this is TASK (%d)  "
-	     "[one yield() call takes %g usec / %g sec]\n",
-	     pipid,
-	     one_yield*1e6, time_yield );
-  } else if( pip_isa_ulp() ) {
-    fprintf( stderr,
-	     "Hello, this is ULP (%d)  "
-	     "[one yield() call takes %g usec / %g sec]\n",
-	     pipid,
-	     one_yield*1e6, time_yield );
+  if( isatty( 1 ) ) {
+    if( pip_isa_task() ) {
+      fprintf( stderr,
+	       "Hello, this is TASK (%d)  "
+	       "[one yield() call takes %g usec / %g sec]\n",
+	       pipid,
+	       one_yield*1e6, time_yield );
+    } else if( pip_isa_ulp() ) {
+      fprintf( stderr,
+	       "Hello, this is ULP (%d)  "
+	       "[one yield() call takes %g usec / %g sec]\n",
+	       pipid,
+	       one_yield*1e6, time_yield );
+    }
   }
 }
 
@@ -98,7 +100,7 @@ void wakeup_task( int pipid ) {
 
 int main( int argc, char **argv ) {
   struct expo *expop = &expo;
-  int i, pipid;
+  int i, pipid, extval = 0;
 
   set_sigsegv_watcher();
 
@@ -128,9 +130,19 @@ int main( int argc, char **argv ) {
       TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, &pipid, NULL ) );
     }
     for( i=0; i<nulps+1; i++ ) {
-      TESTINT( pip_wait( i, NULL ) );
+      int status;
+      TESTINT( pip_wait( i, &status ) );
+      if( status != 0 ) {
+	fprintf( stderr, "[%d] error - %d \n", i, status );
+	extval = ( status > extval ) ? status : extval;
+      }
     }
     TESTINT( sem_destroy( &expop->semaphore ) );
+    if( extval == 0 ) {
+      printf( "OK\n" );
+    } else {
+      printf( "NG\n" );
+    }
   } else {
     if( pipid == 0 ) {
       for( i=0; i<nulps; i++ ) {
@@ -144,5 +156,5 @@ int main( int argc, char **argv ) {
     test_yield( pipid, expop );
   }
   TESTINT( pip_fin() );
-  return 0;
+  return extval;
 }
