@@ -46,7 +46,6 @@
 
 //#define PIP_NO_MALLOPT
 //#define PIP_USE_MUTEX
-//#define PIP_USE_SIGQUEUE
 //#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
 
 //#define DEBUG
@@ -233,24 +232,13 @@ static int pip_raise_signal( pip_task_t *task, int sig ) {
   int err = 0;
 
   ENTER;
-  if( !pip_is_threaded_() ) {
-    if( kill( task->pid, sig ) != 0 ) err = errno;
-  } else {
-#ifndef PIP_USE_SIGQUEUE
+  if( pip_is_threaded_() ) {
     if( pthread_kill( task->thread, sig ) == ESRCH ) {
+      DBGF( "[%d] task->thread:%p", task->pipid, (void*) task->thread );
       if( kill( task->pid, sig ) != 0 ) err = errno;
     }
-#else
-    if( pthread_sigqueue( task->thread,
-			  sig,
-			  (const union sigval)0 ) == ESRCH ) {
-      if( sigqueue( task->pid,
-		    sig,
-		    (const union sigval) 0 ) != 0 ) {
-	err = errno;
-      }
-    }
-#endif
+  } else {
+    if( kill( task->pid, sig ) != 0 ) err = errno;
   }
   RETURN( err );
 }
@@ -1177,7 +1165,7 @@ static int pip_ulp_sched_next( pip_task_t *sched, pip_spinlock_t *lockp ) {
 }
 
 static int pip_wakeup_( pip_task_t *task ) {
-  ENTER;
+  DBGF( "WAKEUP pipid:%d", task->pipid );
   if( sem_post( &task->sleep.semaphore ) == 0 ) RETURN( 0 );
   RETURN( errno );
 }
@@ -1211,12 +1199,16 @@ static int pip_wakeup_to_terminate( pip_task_t *task, int extval ) {
   int 	     err = 0;
 
   ENTER;
+  pip_spin_lock( &task->lock_wakeup );
   pip_task_terminated( task, extval );
   if( ( err = pip_wakeup_( task ) ) == 0 ) {
     if( !PIP_ULP_ISEMPTY( &sched->schedq ) ) {
-      err = pip_ulp_sched_next( sched, NULL );
+      /* the lock is unlocked when next task is scheduled to run */
+      err = pip_ulp_sched_next( sched, &task->lock_wakeup );
+      /* not reach here, hopefully */
     }
   }
+  pip_spin_unlock( &task->lock_wakeup );
   RETURN( err );
 }
 
@@ -1339,6 +1331,12 @@ pip_do_spawn( void *thargs )  {
   self->thread = pthread_self();
   pip_save_tls( &self->tls );	/* save tls register */
 
+  if( pip_is_threaded_() ) {
+    sigset_t sigmask;
+    (void) sigemptyset( &sigmask );
+    (void) sigaddset( &sigmask, SIGCHLD );
+    (void) pthread_sigmask( SIG_BLOCK, &sigmask, NULL );
+  }
 #ifdef DEBUG
   if( pip_is_threaded_() ) {
     pthread_attr_t attr;
@@ -1599,6 +1597,9 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 static void pip_finalize_task( pip_task_t *task, int *extvalp ) {
   DBGF( "pipid=%d  extval=%d", task->pipid, task->extval );
 
+  pip_spin_lock(   &pip_task->lock_wakeup );
+  pip_spin_unlock( &pip_task->lock_wakeup );
+
   pip_gdbif_finalize_task( task );
   if( extvalp != NULL ) *extvalp = ( task->extval & 0xFF );
 
@@ -1714,13 +1715,7 @@ int pip_kill( int pipid, int signal ) {
   task = pip_get_task_( pipid );
   if( task->type & PIP_TYPE_ROOT ||
       task->type & PIP_TYPE_TASK ) {
-    if( pip_is_threaded_() ) {
-      err = pthread_kill( task->thread, signal );
-      DBGF( "pthread_kill(sig=%d)=%d", signal, err );
-    } else {
-      if( kill( task->pid, signal ) != 0 ) err = errno;
-      DBGF( "kill(sig=%d)=%d", signal, err );
-    }
+    err = pip_raise_signal( task, signal );
   } else {			/* signal cannot be sent to ULPs */
     err = EPERM;
   }
@@ -1738,12 +1733,11 @@ int pip_exit( int extval ) {
   }
   /* PiP task or ULP */
   if( pip_isa_ulp() ) {
+    (void) pip_wakeup_to_terminate( pip_task, extval );
+    /* AHAH
     pip_task_terminated( pip_task, extval );
-    if( PIP_ULP_ISEMPTY( &pip_task->schedq ) ) {
-      err = EDEADLK;
-    } else {
-      err = pip_wakeup_and_sched_next( pip_task );
-    }
+    (void) pip_wakeup_and_sched_next( pip_task );
+    */
     /* never reach here, hopefully */
   } else if( pip_isa_task() ) {
     sched = pip_task->task_sched;
@@ -2118,12 +2112,14 @@ static void pip_sleep_( intptr_t task_H, intptr_t task_L,
     DBG;
     pip_force_exit( task );
   } else {
+    intptr_t 	 tls  = task->tls;
+    pip_ctx_t	*ctxp = task->ctx_suspend;
     DBG;
-    pip_spin_lock(   &task->lock_wakeup ); /* wait for ctx switch */
+    pip_spin_lock(   &task->lock_wakeup ); /* wait for ctx switch is done */
     pip_spin_unlock( &task->lock_wakeup );
     DBGF( "lock-unlock" );
-    (void) pip_load_tls( task->tls );
-    (void) pip_load_context( task->ctx_suspend );
+    (void) pip_load_tls( tls );
+    (void) pip_load_context( ctxp );
   }
   /* never reach here */
   RETURNV;
@@ -2153,7 +2149,7 @@ pip_switch_stack_and_sleep( pip_task_t *task, pip_spinlock_t *lockp ) {
   task_H = ( ((intptr_t) pip_task) >> 32 ) & PIP_MASK32;
   task_L = (  (intptr_t) pip_task)         & PIP_MASK32;
   lock_H = ( ((intptr_t) lockp)    >> 32 ) & PIP_MASK32;
-  lock_L = (  (intptr_t) lockp)	    & PIP_MASK32;
+  lock_L = (  (intptr_t) lockp)            & PIP_MASK32;
   pip_make_context( &ctx,
 		    pip_sleep_,
 		    4,

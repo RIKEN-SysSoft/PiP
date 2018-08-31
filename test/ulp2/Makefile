@@ -35,10 +35,10 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS      = ulp.c tls.c yield.c wakeup.c migrate.c varvars.c \
+SRCS      = ulp.c exit.c tls.c yield.c wakeup.c migrate.c varvars.c \
 	barrier.c blocking.c
 
-PROGRAMS  = ulp   tls   yield   wakeup   varvars   migrate \
+PROGRAMS  = ulp   exit   tls   yield   wakeup   varvars   migrate \
 	barrier blocking
 
 PROGRAMS_TO_INSTALL = # nothing
@@ -54,4 +54,4 @@ post-clean-hook:
 check: test
 
 test:
-	( cd ../; ./test.sh -A ulp/test.list )
+	( cd ../; ./test.sh -A ulp2/test.list )

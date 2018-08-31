@@ -37,6 +37,7 @@
 
 //#define DEBUG
 
+#include <sched.h>
 #include <test.h>
 #include <pip_universal.h>
 
@@ -141,7 +142,7 @@ int task_main( void* null ) {
       continue;
     } else if( err == ENOENT ) {
       if( count++ > 1000 ) break;
-      pip_pause();
+      sched_yield();
       continue;
     } else {
       fprintf( stderr, "[%d] pip_ulp_dequeue_and_involve():%d\n", pipid, err );
