@@ -206,20 +206,26 @@ static inline int pip_tryblock( pip_blocking_t *blocking ) {
   RETURN( err );
 }
 
+static int pip_sem_wait( sem_t *semp ) {
+  int err = 0;
+  while( 1 ) {
+    if( sem_wait( semp ) == 0      ) break;
+    if( errno            == EAGAIN ) break;
+    if( errno            == EINTR  ) continue;
+    err = errno;
+    break;
+  }
+  return err;
+}
+
 static inline int pip_block( pip_blocking_t *blocking ) {
   int err = 0;
 
 #ifdef PIP_USE_MUTEX
-  if( ( err = pthread_mutex_lock(    &blocking->mutex ) ) == 0 &&
-      ( err = pthread_mutex_unlock(  &blocking->mutex ) ) == 0 );
+  if( ( err = pthread_mutex_lock(   &blocking->mutex ) ) == 0 &&
+      ( err = pthread_mutex_unlock( &blocking->mutex ) ) == 0 );
 #else
-  while( 1 ) {
-    if( sem_wait( &blocking->semaphore ) == 0 ) break;
-    if( errno != EINTR ) {
-      err = errno;
-      break;
-    }
-  }
+  err = pip_sem_wait( &blocking->semaphore );
 #endif
   return err;
 }
@@ -2102,7 +2108,7 @@ static void pip_sleep_( intptr_t task_H, intptr_t task_L,
   /* stack is switched and now we can unlock */
   pip_spin_unlock( lockp );
   DBGF( "SLEEPING (and UNLOCK)" );
-  (void) sem_wait( &task->sleep.semaphore );
+  (void) pip_sem_wait( &task->sleep.semaphore );
   DBGF( "WOKEUP !!" );
   task->type      &= ~PIP_TYPE_ULP; /* now this becomes task again */
   task->task_sched = NULL;

@@ -36,10 +36,10 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
 SRCS      = ulp.c exit.c tls.c yield.c wakeup.c migrate.c varvars.c \
-	barrier.c blocking.c
+	barrier.c blocking.c waitany.c
 
 PROGRAMS  = ulp   exit   tls   yield   wakeup   varvars   migrate \
-	barrier blocking
+	barrier   blocking   waitany
 
 PROGRAMS_TO_INSTALL = # nothing
 

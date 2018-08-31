@@ -1,5 +1,6 @@
 ulp2/ulp.sh
 ulp2/exit.sh
+ulp2/waitany.sh
 ulp2/yield.sh
 ulp2/varvars.sh
 ulp2/tls.sh
