@@ -66,8 +66,8 @@
 #define IF_LIKELY(C)		if( pip_likely( C ) )
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
 
-//#define NOINLINE		__attribute__ ((noinline))
-#define NOINLINE
+//#define ATTR_NOINLINE		__attribute__ ((noinline))
+#define ATTR_NOINLINE
 
 extern char 		**environ;
 
@@ -1314,7 +1314,7 @@ static int pip_jump_into( pip_spawn_args_t *args, pip_task_t *self ) {
   return extval;
 }
 
-static void* NOINLINE pip_do_spawn( void *thargs )  {
+static void* ATTR_NOINLINE pip_do_spawn( void *thargs )  {
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
   pip_spawn_args_t *args   = (pip_spawn_args_t*) thargs;
@@ -2132,7 +2132,7 @@ static void pip_sleep_( intptr_t task_H, intptr_t task_L,
 
 #define STACK_SIZE	(4096*16)
 
-static int NOINLINE
+static int ATTR_NOINLINE
 pip_switch_stack_and_sleep( pip_task_t *task, pip_spinlock_t *lockp ) {
   pip_ctx_t	ctx;
   stack_t	*stk = &(ctx.ctx.uc_stack);
@@ -2167,9 +2167,9 @@ pip_switch_stack_and_sleep( pip_task_t *task, pip_spinlock_t *lockp ) {
   RETURN( err );
 }
 
-int NOINLINE pip_sleep_and_enqueue( pip_locked_queue_t *queue,
-				    pip_enqueuehook_t hook,
-				    int flags ) {
+int ATTR_NOINLINE pip_sleep_and_enqueue( pip_locked_queue_t *queue,
+					 pip_enqueuehook_t hook,
+					 int flags ) {
   pip_task_t 	*task = pip_task;
   pip_ulp_t  	*ulp  = PIP_ULP( task );
 #ifndef PIP_USE_STATIC_CTX
@@ -2215,7 +2215,7 @@ int NOINLINE pip_sleep_and_enqueue( pip_locked_queue_t *queue,
   RETURN( err );
 }
 
-int NOINLINE pip_wakeup( void ) {
+int ATTR_NOINLINE pip_wakeup( void ) {
   pip_task_t	*sched = pip_task->task_sched;
 #ifndef PIP_USE_STATIC_CTX
   pip_ctx_t	ctx;
@@ -2292,7 +2292,7 @@ int pip_ulp_yield( void ) {
   return( pip_ulp_yield_( pip_task ) );
 }
 
-int NOINLINE pip_ulp_suspend( void ) {
+int ATTR_NOINLINE pip_ulp_suspend( void ) {
   pip_task_t 	*sched = pip_task->task_sched;
 #ifndef PIP_USE_STATIC_CTX
   pip_ctx_t	ctx;
@@ -2342,9 +2342,10 @@ int pip_ulp_resume( pip_ulp_t *ulp, int flags ) {
   RETURN( 0 );
 }
 
-int NOINLINE pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
-					  pip_enqueuehook_t hook,
-					  int flags ) {
+int ATTR_NOINLINE
+pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
+			     pip_enqueuehook_t hook,
+			     int flags ) {
   pip_task_t 	*sched = pip_task->task_sched;
 #ifndef PIP_USE_STATIC_CTX
   pip_ctx_t 	ctx;

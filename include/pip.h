@@ -228,12 +228,12 @@ typedef pip_ulp_queue_t		pip_list_t;
 typedef pip_ulp_queue_t		pip_ulp_t;
 
 typedef struct {
-  char		*prog;
-  char		**argv;
-  char		**envv;
-  char		*funcname;
-  void		*arg;
-  void 		*reserved[3];
+  char			*prog;
+  char			**argv;
+  char			**envv;
+  char			*funcname;
+  void			*arg;
+  void 			*reserved[3];
 } pip_spawn_program_t;
 
 typedef int (*pip_spawnhook_t)( void* );
@@ -243,15 +243,17 @@ typedef struct {
   pip_spawnhook_t	before;
   pip_spawnhook_t	after;
   void 			*hookarg;
+  void 			*reserved[5];
 } pip_spawn_hook_t;
 
 typedef struct pip_locked_queue {
   union {
     struct {
-      pip_spinlock_t	lock;
       pip_ulp_queue_t	queue;
+      pip_spinlock_t	lock;
+      char		__gap0__[PIP_CACHEBLK_SZ]; /* reserved for future */
     };
-    char		__gap0__[PIP_CACHEBLK_SZ];
+    char		__gap1__[PIP_CACHEBLK_SZ*2];
   };
 } pip_locked_queue_t;
 
