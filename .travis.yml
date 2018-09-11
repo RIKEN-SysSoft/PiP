@@ -1,0 +1,23 @@
+sudo: required
+dist: precise
+language: c
+compiler:
+  - gcc
+install:
+  - sudo apt-get install dc gfortran doxygen
+  - curl --output /tmp/PIP-glibc.2018-08-28.tar.gz http://www.netbsd.org/~soda/PIP-glibc.2018-08-28.tar.gz
+  - sudo mkdir -p /usr/pip 
+  - ( cd /usr/pip && sudo tar pxf /tmp/PIP-glibc.2018-08-28.tar.gz )
+before_script:
+  - echo $TRAVIS_COMMIT
+  - echo $TRAVIS_TAG
+  - echo $TRAVIS_BRANCH
+  - echo $TRAVIS_BUILD_NUMBER
+  - echo $TRAVIS_REPO_SLUG
+  - pwd
+script:
+  - ./configure --prefix=/usr/pip --with-glibc-libdir=/usr/pip/lib &&
+    make &&
+    sudo make install &&
+    sudo /usr/pip/bin/piplnlibs -r &&
+    make check
