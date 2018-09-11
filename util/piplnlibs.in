@@ -60,7 +60,7 @@
 ### If PIP_LIBRARY_PATH is not set, LD_LIBRARY_PATH is used instead.
 
 glibc_libdir=@glibc_libdir@
-glibc_default_libdir=/lib64
+glibc_default_libdirs="/lib64 /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu"
 
 exit_status=0
 opt_silent=false
@@ -95,11 +95,14 @@ do
 	esac
 done
 
-if [ x"$glibc_libdir" = x"$glibc_default_libdir" ]; then
-	echo >&2 "$program_name: warning:" \
-		"nothing to do, because glibc_libdir = ${glibc_default_libdir}"
-	exit $exit_status
-fi
+for d in $glibc_default_libdirs
+do
+	if [ x"$glibc_libdir" = x"$d" ]; then
+		echo >&2 "$program_name: warning:" \
+			"nothing to do, because glibc_libdir is a default libdir ${d}"
+		exit $exit_status
+	fi
+done
 
 if $opt_remove; then
 	find ${glibc_libdir} -maxdepth 1 -type l -name 'lib*.so*' |
@@ -143,7 +146,7 @@ else
 	extra_libdirs=
 fi
 
-for libdir in ${extra_libdirs} ${glibc_default_libdir}
+for libdir in ${extra_libdirs} ${glibc_default_libdirs}
 do
 	ls ${libdir} | grep '^lib.*\.so\(\.[0-9a-z]*\)*$' |
 	while read lib
