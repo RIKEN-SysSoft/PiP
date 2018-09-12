@@ -6,7 +6,7 @@ compiler:
 install:
   - sudo apt-get install dc gfortran doxygen
   - curl --output /tmp/PIP-glibc.2018-08-28.tar.gz http://www.netbsd.org/~soda/PIP-glibc.2018-08-28.tar.gz
-  - sudo mkdir -p /usr/pip 
+  - sudo mkdir -p /usr/pip
   - ( cd /usr/pip && sudo tar pxf /tmp/PIP-glibc.2018-08-28.tar.gz )
 before_script:
   - echo $TRAVIS_COMMIT
