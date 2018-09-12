@@ -1,4 +1,4 @@
-# PiP
+# PiP [![Build Status](https://travis-ci.org/RIKEN-SysSoft/PiP.svg?branch=pip-1)](https://travis-ci.org/RIKEN-SysSoft/PiP)
 
 Process-in-Process
 
