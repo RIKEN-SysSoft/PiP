@@ -27,5 +27,5 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 
 ## Presentation Slides
 
-* [HPDC18-PiP.key.pdf]HPDC'18
-* [Ross-2018-PiP.key.pdf]ROSS'18
+* [presentation/HPDC18-PiP.key.pdf]HPDC'18
+* [presentation/Ross-2018-PiP.key.pdf]ROSS'18
