@@ -11,10 +11,10 @@ space where the parent process runs. The parent process and
 sub-processes share the same address space, however, each process has
 its own variable set. So, each process runs independently from the
 other process. If some or all processes agree, then data own by a
-process can be accessed by the other processes.  
-Those processes share the same address space, just like pthreads, and
-each process has its own variables like a process. The parent process
-is called PiP process and a sub-process are called a PiP task.
+process can be accessed by the other processes. Those processes share
+the same address space, just like pthreads, and each process has its
+own variables like a process. The parent process is called PiP process
+and a sub-process are called a PiP task. 
 
 ## Installation
 
