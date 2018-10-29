@@ -41,7 +41,6 @@ SRCS  = initfin.c \
 	environ.c \
 	file.c \
 	wait.c \
-	signal.c \
 	exit.c \
 	mutex.c \
 	barrier.c \
@@ -52,15 +51,16 @@ SRCS  = initfin.c \
 	null.c \
 	recursive.c \
 	varvars.c \
-	getaddr.c \
-	waitany.c \
-	waitany2.c \
-	sigchld.c
+	getaddr.c
+
+##	waitany.c \
+##	waitany2.c \
+##	sigchld.c
 
 PROGRAMS  = initfin stack export environ file \
-            wait signal exit mutex barrier core numa hook \
-	    spawn null recursive varvars getaddr waitany waitany2 \
-	    sigchld
+            wait exit mutex barrier core numa hook \
+	    spawn null recursive varvars getaddr
+##waitany waitany2 sigchld
 
 PROGRAMS_TO_INSTALL = # nothing
 

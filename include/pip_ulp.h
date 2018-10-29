@@ -40,73 +40,75 @@
 
 #include <pip_machdep.h>
 
-#define PIP_ULP_INIT(L)					\
-  do { PIP_ULP_NEXT(L) = (L); PIP_ULP_PREV(L) = (L); } while(0)
+#define PIP_TASKQ_INIT(L)					\
+  do { PIP_TASKQ_NEXT(L) = (L); PIP_TASKQ_PREV(L) = (L); } while(0)
 
-#define PIP_ULP_NEXT(L)		((L)->next)
-#define PIP_ULP_PREV(L)		((L)->prev)
-#define PIP_ULP_PREV_NEXT(L)	((L)->prev->next)
-#define PIP_ULP_NEXT_PREV(L)	((L)->next->prev)
+#define PIP_TASKQ_NEXT(L)	((L)->next)
+#define PIP_TASKQ_PREV(L)	((L)->prev)
+#define PIP_TASKQ_PREV_NEXT(L)	((L)->prev->next)
+#define PIP_TASKQ_NEXT_PREV(L)	((L)->next->prev)
 
-#define PIP_ULP_ENQ_FIRST(L,E)				\
-  do { PIP_ULP_NEXT(E)   = PIP_ULP_NEXT(L);		\
-    PIP_ULP_PREV(E)      = (L);				\
-    PIP_ULP_NEXT_PREV(L) = (E);				\
-    PIP_ULP_NEXT(L)      = (E); } while(0)
+#define PIP_TASKQ_ENQ_FIRST(L,E)				\
+  do { PIP_TASKQ_NEXT(E)   = PIP_TASKQ_NEXT(L);			\
+    PIP_TASKQ_PREV(E)      = (L);				\
+    PIP_TASKQ_NEXT_PREV(L) = (E);				\
+    PIP_TASKQ_NEXT(L)      = (E); } while(0)
 
-#define PIP_ULP_ENQ_LAST(L,E)				\
-  do { PIP_ULP_NEXT(E)   = (L);				\
-    PIP_ULP_PREV(E)      = PIP_ULP_PREV(L);		\
-    PIP_ULP_PREV_NEXT(L) = (E);				\
-    PIP_ULP_PREV(L)      = (E); } while(0)
+#define PIP_TASKQ_ENQ_LAST(L,E)					\
+  do { PIP_TASKQ_NEXT(E)   = (L);				\
+    PIP_TASKQ_PREV(E)      = PIP_TASKQ_PREV(L);			\
+    PIP_TASKQ_PREV_NEXT(L) = (E);				\
+    PIP_TASKQ_PREV(L)      = (E); } while(0)
 
-#define PIP_ULP_DEQ(L)					\
-  do { PIP_ULP_NEXT_PREV(L) = PIP_ULP_PREV(L);		\
-    PIP_ULP_PREV_NEXT(L) = PIP_ULP_NEXT(L); 		\
-    PIP_ULP_INIT(L); } while(0)
+#define PIP_TASKQ_DEQ(L)					\
+  do { PIP_TASKQ_NEXT_PREV(L) = PIP_TASKQ_PREV(L);		\
+    PIP_TASKQ_PREV_NEXT(L) = PIP_TASKQ_NEXT(L); 		\
+    PIP_TASKQ_INIT(L); } while(0)
 
-#define PIP_ULP_MOVE_QUEUE(P,Q)				\
-  do { if( !PIP_ULP_ISEMPTY(Q) ) {			\
-    PIP_ULP_NEXT_PREV(Q) = (P);				\
-    PIP_ULP_PREV_NEXT(Q) = (P);				\
-    PIP_ULP_NEXT(P) = PIP_ULP_NEXT(Q);			\
-    PIP_ULP_PREV(P) = PIP_ULP_PREV(Q);			\
-    PIP_ULP_INIT(Q); } } while(0)
+#define PIP_TASKQ_MOVE_QUEUE(P,Q)				\
+  do { if( !PIP_TASKQ_ISEMPTY(Q) ) {				\
+      PIP_TASKQ_NEXT_PREV(Q) = (P);				\
+      PIP_TASKQ_PREV_NEXT(Q) = (P);				\
+      PIP_TASKQ_NEXT(P) = PIP_TASKQ_NEXT(Q);			\
+      PIP_TASKQ_PREV(P) = PIP_TASKQ_PREV(Q);			\
+      PIP_TASKQ_INIT(Q); } } while(0)
 
-#define PIP_ULP_ISEMPTY(L)				\
-  ( PIP_ULP_NEXT(L) == (L) && PIP_ULP_PREV(L) == (L) )
+#define PIP_TASKQ_ISEMPTY(L)					\
+  ( PIP_TASKQ_NEXT(L) == (L) && PIP_TASKQ_PREV(L) == (L) )
 
-#define PIP_ULP_FOREACH(L,E)				\
-  for( (E)=(L)->next; (L)!=(E); (E)=PIP_ULP_NEXT(E) )
+#define PIP_TASKQ_FOREACH(L,E)					\
+  for( (E)=(L)->next; (L)!=(E); (E)=PIP_TASKQ_NEXT(E) )
 
-#define PIP_ULP_FOREACH_SAFE(L,E,TV)				\
-  for( (E)=(L)->next, (TV)=PIP_ULP_NEXT(E);			\
+#define PIP_TASKQ_FOREACH_SAFE(L,E,TV)				\
+  for( (E)=(L)->next, (TV)=PIP_TASKQ_NEXT(E);			\
        (L)!=(E);						\
-       (E)=(TV), (TV)=PIP_ULP_NEXT(TV) )
+       (E)=(TV), (TV)=PIP_TASKQ_NEXT(TV) )
 
-#define PIP_ULP_FOREACH_SAFE_XXX(L,E,TV)			\
-  for( (E)=(L), (TV)=PIP_ULP_NEXT(E); (L)!=(E); (E)=(TV) )
+#define PIP_TASKQ_FOREACH_SAFE_XXX(L,E,TV)			\
+  for( (E)=(L), (TV)=PIP_TASKQ_NEXT(E); (L)!=(E); (E)=(TV) )
 
-#define PIP_LIST_INIT(L)	PIP_ULP_INIT(L)
-#define PIP_LIST_ISEMPTY(L)	PIP_ULP_ISEMPTY(L)
-#define PIP_LIST_ADD(L,E)	PIP_ULP_ENQ_LAST(L,E)
-#define PIP_LIST_DEL(E)		PIP_ULP_DEQ(E)
-#define PIP_LIST_MOVE(P,Q)	PIP_ULP_MOVE_QUEUE(P,Q)
-#define PIP_LIST_FOREACH(L,E)	PIP_ULP_FOREACH(L,E)
-#define PIP_LIST_FOREACH_SAFE(L,E,F)	PIP_ULP_FOREACH_SAFE(L,E,F)
+#define PIP_LIST_INIT(L)		PIP_TASKQ_INIT(L)
+#define PIP_LIST_ISEMPTY(L)		PIP_TASKQ_ISEMPTY(L)
+#define PIP_LIST_ADD(L,E)		PIP_TASKQ_ENQ_LAST(L,E)
+#define PIP_LIST_DEL(E)			PIP_TASKQ_DEQ(E)
+#define PIP_LIST_MOVE(P,Q)		PIP_TASKQ_MOVE_QUEUE(P,Q)
+#define PIP_LIST_FOREACH(L,E)		PIP_TASKQ_FOREACH(L,E)
+#define PIP_LIST_FOREACH_SAFE(L,E,F)	PIP_TASKQ_FOREACH_SAFE(L,E,F)
 
-typedef struct pip_ulp_mutex {
+typedef struct pip_mutex {
   void			*sched;
   void			*holder;
-  pip_ulp_queue_t	waiting;
-} pip_ulp_mutex_t;
+  pip_task_t		waiting;
+} pip_mutex_t;
 
-typedef struct pip_ulp_barrier {
+#ifdef AHAH
+typedef struct pip_barrier {
   void			*sched;
-  pip_ulp_queue_t	waiting;
+  pip_task_t		waiting;
   int			count_init;
   int			count;
-} pip_ulp_barrier_t;
+} pip_barrier_t;
+#endif
 
 struct pip_task;
 typedef void (*pip_enqueuehook_t)(int);
@@ -118,8 +120,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup libpip_ulp libpip_ulp
- * \brief the PiP/ULP library
+ * \brief the PiP library
  * @{
  */
 
@@ -156,101 +157,101 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \sa pip_ulp_suspend(3), pip_ulp_resume(3)
+   * \sa pip_suspend(3), pip_resume(3)
    */
-  int pip_ulp_yield( void );
+  int pip_yield( void );
   /** @}*/
 
   /**
-   * \brief Suspend the current ULP and schedule the next ULP eligible
+   * \brief Suspend the current PiP task and schedule the next taskeligible
    *  to run.
    *  @{
    *
-   * The suspended ULP can be eligible to run when \b pip_ulp_resume()
-   * is called. If there is no ULPs eligible to run as the result of
+   * The suspended task can be eligible to run when \b pip_resume()
+   * is called. If there is no tasks eligible to run as the result of
    * calling this function, it returns \a EDEADLK.
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EDEADLK There is no other ULP eligible to run
+   * \retval EDEADLK There is no other task eligible to run
    *
-   * \sa pip_ulp_resume(3), pip_ulp_yield(3)
+   * \sa pip_resume(3), pip_yield(3)
    */
-  int pip_ulp_suspend( void );
+  int pip_suspend( void );
   /** @}*/
 
   /**
-   * \brief Resume PiP ULP to be eligible to run
+   * \brief Resume PiP task to be eligible to run
    *  @{
-   * \param[in] ulp ULP to resume
+   * \param[in] task passive taskto resume
    * \param[in] flags Specifying scheduling policy
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c ulp is \c NULL
-   * \retval EBUSY The specified ULP is already eligible to run
+   * \retval EINAVL \c task is \c NULL
+   * \retval EBUSY The specified PiP task is already eligible to run
    *
    */
-  int pip_ulp_resume( pip_ulp_t *ulp, int flags );
+  int pip_resume( pip_task_t *task, int flags );
   /** @}*/
 
   /**
-   * \brief Yield to the specified PiP ULP
+   * \brief Yield to the specified PiP task
    *  @{
-   * \param[in] ulp Target PiP ULP to be scheduled
+   * \param[in] task Target PiP task to be scheduled
    *
-   * Context-switch to the specified ULP. If \c ulp is \c NULL, then
-   * this works the same as \c pip_ulp_yield() does.
+   * Context-switch to the specified PiP task. If \c task is \c NULL, then
+   * this works the same as \c pip_yield() does.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The specified ULP is being scheduled by the other
    * PiP task
    *
    */
-  int pip_ulp_yield_to( pip_ulp_t *ulp );
+  int pip_yield_to( pip_task_t *task );
   /** @}*/
 
   /**
-   * \brief Get the current PiP ULP
+   * \brief Get the current PiP task
    *  @{
-   * \param[out] ulpp The current PiP ULP
+   * \param[out] taskp The current PiP task
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c ulpp is \c NULL
    * \retval EPERM PiP library is not yet initialized
    *
    */
-  int pip_ulp_myself( pip_ulp_t **ulpp );
+  int pip_myself( pip_task_t **taskp );
   /** @}*/
 
   /**
-   * \brief Get the PiP ULP having the specified PiP ID
+   * \brief Get the PiP task having the specified PiP ID
    *  @{
    * \param[in] pipid PiP ID
-   * \param[out] ulpp Returned PiP ULP
+   * \param[out] taskp Returned PiP task
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL Invalid PiP ID is specified
    * \retval EPERM PiP library is not yet initialized
    */
-  int pip_ulp_get( int pipid, pip_ulp_t **ulpp );
+  int pip_get( int pipid, pip_task_t **taskp );
   /** @}*/
 
   /**
-   * \brief Get the PiP ID of the specified PiP ULP
+   * \brief Get the PiP ID of the specified PiP task
    *  @{
-   * \param[in] ulp PiP ULP
+   * \param[in] task a PiP task
    * \param[out] pipidp PiP ID pointer
    *
-   * \note If \c ulp is \c NULL, then the PiP id of the current ULP is
+   * \note If \c task is \c NULL, then the PiP id of the current task is
    * returned.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
    */
-  int pip_ulp_get_pipid( pip_ulp_t *ulp, int *pipidp );
+  int pip_get_pipid( pip_task_t *task, int *pipidp );
   /** @}*/
 
   /**
-   * \brief Get the PiP ID of the scheduling PiP task of the current ULP
+   * \brief Get the PiP ID of the scheduling PiP task of the current task
    *  @{
    * \param[out] pipidp PiP ID pointer of the scheduling task
    *
@@ -258,31 +259,31 @@ extern "C" {
    * \retval EINAVL \c pipidp is \c NULL
    * \retval The target is not eligible to run
    */
-  int pip_ulp_get_sched_task( int *pipidp );
+  int pip_get_sched_task( int *pipidp );
   /** @}*/
 
   /**
-   * \brief Initialize PiP ULP mutex
+   * \brief Initialize PiP task mutex
    *  @{
-   * \param[in,out] mutex pointer to the PiP ULP mutex
+   * \param[in,out] mutex pointer to the PiP task mutex
    *
-   * \note This PiP ULP mutex can only be used to lock ULPs and a PiP
+   * \note This PiP task mutex can only be used to lock tasks and a PiP
    * task having the same scheduling domain.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c mutex is \c NULL
    *
-   * \sa pip_ulp_mutex_lock(3), pip_ulp_mutex_unlock(3)
+   * \sa pip_mutex_lock(3), pip_mutex_unlock(3)
    */
-  int pip_ulp_mutex_init( pip_ulp_mutex_t *mutex );
+  int pip_mutex_init( pip_mutex_t *mutex );
   /** @}*/
 
   /**
-   * \brief Lock PiP ULP mutex
+   * \brief Lock PiP task mutex
    *  @{
-   * \param[in] mutex pointer to the PiP ULP mutex
+   * \param[in] mutex pointer to the PiP task mutex
    *
-   * \note This PiP ULP mutex can only be used to lock ULPs and a PiP
+   * \note This PiP task mutex can only be used to lock tasks and a PiP
    * task having the same scheduling domain.
    *
    * \return Return 0 on success. Return an error code on error.
@@ -291,31 +292,29 @@ extern "C" {
    * \retval EPERM The lock is owned by the other PiP task
    * (i.e. different scheduling domain)
    *
-   * \sa pip_ulp_mutex_init(3), pip_ulp_mutex_unlock(3)
+   * \sa pip_mutex_init(3), pip_mutex_unlock(3)
    */
-  int pip_ulp_mutex_lock( pip_ulp_mutex_t *mutex );
+  int pip_mutex_lock( pip_mutex_t *mutex );
   /** @}*/
 
   /**
-   * \brief Unlock PiP ULP mutex
+   * \brief Unlock PiP task mutex
    *  @{
-   * \param[in] mutex pointer to the PiP ULP mutex
-   *
-   * \note This PiP ULP mutex can only be used to lock ULPs and a PiP
-   * task having the same scheduling domain.
+   * \param[in] mutex pointer to the PiP task mutex
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c mutex is \c NULL
    * \retval EPERM The lock is owned by the other PiP task
    * (i.e. different scheduling domain)
    *
-   * \sa pip_ulp_mutex_init(3), pip_ulp_mutex_lock(3)
+   * \sa pip_mutex_init(3), pip_mutex_lock(3)
    */
-  int pip_ulp_mutex_unlock( pip_ulp_mutex_t *mutex );
+  int pip_mutex_unlock( pip_mutex_t *mutex );
   /** @}*/
 
+#ifdef AH
   /**
-   * \brief Initialize PiP ULP barrier
+   * \brief Initialize PiP task barrier
    *  @{
    * \param[in] barrp pointer to the PiP ULP barrier
    * \param[in] n Number of participants of the barrier
@@ -326,11 +325,11 @@ extern "C" {
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c barrier is \c NULL or \c n is invalid
    *
-   * \sa pip_ulp_barrier_wait(3), pip_task_barrier_init(3),
+   * \sa pip_barrier_wait(3), pip_task_barrier_init(3),
    * pip_task_barrier_wait(3), pip_universal_barrier_init(3),
    * pip_universal_barrier_wait(3)
    */
-  int pip_ulp_barrier_init( pip_ulp_barrier_t *barrp, int n );
+  int pip_barrier_init( pip_barrier_t *barrp, int n );
   /** @}*/
 
   /**
@@ -346,33 +345,34 @@ extern "C" {
    * \retval EPERM The barrier has different scheduling domain
    * \retval EDEADLK There is no other PiP task or ULP eligible to run
    *
-   * \sa pip_ulp_barrier_init(3), pip_task_barrier_init(3),
+   * \sa pip_barrier_init(3), pip_task_barrier_init(3),
    * pip_task_barrier_wait(3), pip_universal_barrier_init(3),
    * pip_universal_barrier_wait(3)
    */
-  int pip_ulp_barrier_wait( pip_ulp_barrier_t *barrp );
+  int pip_barrier_wait( pip_barrier_t *barrp );
   /** @}*/
+#endif
 
   /**
-   * \brief Initialize alocked ULP queue
+   * \brief Initialize alocked task queue
    *  @{
    * \param[in] queue pointer to the locked queue to be initialized
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    *
-   * \sa pip_ulp_suspend_and_enqueue(3),
-   * pip_ulp_dequeue_and_involve(3), pip_ulp_enqueue_with_lock(3),
-   * pip_ulp_dequeue_with_lock(3)
+   * \sa pip_suspend_and_enqueue(3),
+   * pip_dequeue_and_involve(3), pip_enqueue_with_lock(3),
+   * pip_dequeue_with_lock(3)
    */
   int pip_locked_queue_init( pip_locked_queue_t *queue );
   /** @}*/
 
   /**
-   * \brief Suspend the current PiP ULP and enqueue it to the
+   * \brief Suspend the current PiP task and enqueue it to the
    *  specified locked queue for possible migration
    *  @{
-   * \param[in] queue pointer to a locked ULP queue
+   * \param[in] queue pointer to a locked task queue
    * \param[in] hook The callback function address to be called when
    *  the task is enqueued
    * \param[in] flag Specifying scheduling policy
@@ -382,72 +382,68 @@ extern "C" {
    * \retval EPERM a PiP task cannot be involved
    *
    * \sa pip_locked_queue_init(3),
-   * pip_ulp_dequeue_and_involve(3), pip_ulp_enqueue_with_lock(3),
-   * pip_ulp_dequeue_with_lock(3)
+   * pip_dequeue_and_involve(3), pip_enqueue_with_lock(3),
+   * pip_dequeue_with_lock(3)
    */
-  int pip_ulp_suspend_and_enqueue( pip_locked_queue_t *queue,
-				   pip_enqueuehook_t hook,
-				   int flag );
+  int pip_suspend( pip_locked_queue_t *queue,
+		   pip_enqueuehook_t hook,
+		   int flag );
   /** @}*/
 
   /**
-   * \brief Dequeue a PiP ULP from the locked queue and make it
+   * \brief Dequeue a PiP task from the locked queue and make it
    *  eligible to run
    *  @{
-   * \param[in] queue pointer to a locked ULP queue
-   * \param[out] ulpp Dequeued PiP ULP
+   * \param[in] queue pointer to a locked task queue
+   * \param[out] taskp Dequeued PiP task
    * \param[in] flag Specifying scheduling policy
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    * \retval ENOENT The specified queue is empty
-   * \retval EPERM The ULP in the queue to be scheduled is a PiP task
    *
    * \sa pip_locked_queue_init(3),
-   * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3),
-   * pip_ulp_dequeue_with_lock(3)
+   * pip_suspend(3), pip_enqueue_with_lock(3),
+   * pip_dequeue_with_lock(3)
    */
-  int pip_ulp_dequeue_and_involve( pip_locked_queue_t *queue,
-				   pip_ulp_t **ulpp,
-				   int flag );
+  int pip_dequeue( pip_locked_queue_t *queue,
+		   pip_task_t **taskp,
+		   int flag );
   /** @}*/
 
   /**
-   * \brief Put a PiP ULP into the specified locked queue
+   * \brief Put a PiP task into the specified locked queue
    *  @{
-   * \param[in] queue pointer to a locked ULP queue
-   * \param[out] ulp PiP ULP to be enqueued
+   * \param[in] queue pointer to a locked task queue
+   * \param[out] task PiP task to be enqueued
    * \param[in] flag Specifying scheduling policy
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    *
-   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_involve(3),
-   * pip_ulp_suspend_and_enqueue(3),
-   * pip_ulp_dequeue_with_lock(3)
+   * \sa pip_locked_queue_init(3), pip_dequeue_and_involve(3),
+   * pip_suspend_and_enqueue(3),
+   * pip_dequeue_with_lock(3)
    */
   int pip_enqueue_with_lock( pip_locked_queue_t *queue,
-			     pip_ulp_t *ulp,
+			     pip_task_t *task,
 			     int flag );
   /** @}*/
 
   /**
-   * \brief Dequeue the first PiP ULP in the locked queue
+   * \brief Dequeue the first PiP task in the locked queue
    *  @{
-   * \param[in] queue pointer to a locked ULP queue
-   * \param[out] ulpp pointer to the dequeued PiP ULP
-   *
-   * \note This PiP ULP barrier can only be used to synchronize ULPs
-   * and a PiP task having the same scheduling domain.
+   * \param[in] queue pointer to a locked task queue
+   * \param[out] taskp pointer to the dequeued PiP task
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c queue is \c NULL
    *
-   * \sa pip_locked_queue_init(3), pip_ulp_dequeue_and_involve(3),
-   * pip_ulp_suspend_and_enqueue(3), pip_ulp_enqueue_with_lock(3)
+   * \sa pip_locked_queue_init(3), pip_dequeue_and_involve(3),
+   * pip_suspend_and_enqueue(3), pip_enqueue_with_lock(3)
    */
   int pip_dequeue_with_lock( pip_locked_queue_t *queue,
-			     pip_ulp_t **ulpp );
+			     pip_task_t **taskp );
   /** @}*/
 
 #ifdef __cplusplus

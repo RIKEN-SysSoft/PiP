@@ -45,6 +45,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <pip.h>
 #include <pip_clone.h>
 #include <pip_machdep.h>
 #include <pip_debug.h>
@@ -79,7 +80,7 @@
 #define PIP_EXITED		(1)
 #define PIP_EXIT_FINALIZE	(2)
 
-struct pip_task;
+struct pip_task_internal;
 
 typedef	int(*main_func_t)(int,char**,char**);
 typedef	int(*start_func_t)(void*);
@@ -89,7 +90,7 @@ typedef void(*pthread_init_t)(int,char**,char**);
 typedef	void(*ctype_init_t)(void);
 typedef void(*glibc_init_t)(int,char**,char**);
 typedef	void(*fflush_t)(FILE*);
-typedef int(*named_export_fin_t)(struct pip_task*);
+typedef int(*named_export_fin_t)(struct pip_task_internal*);
 typedef void(*continuation_t)(int);
 
 typedef struct {
@@ -122,11 +123,6 @@ typedef struct {
   char			**envv;
 } pip_spawn_args_t;
 
-#define PIP_TYPE_NONE		(0x000)
-#define PIP_TYPE_ROOT		(0x100)
-#define PIP_TYPE_TASK		(0x080)
-#define PIP_TYPE_ULP		(0x040)
-
 struct pip_gdbif_task;
 
 typedef struct pip_blocking {
@@ -136,57 +132,73 @@ typedef struct pip_blocking {
   };
 } pip_blocking_t;
 
-typedef struct pip_task {
+typedef struct pip_task_internal {
   /* Frequently accessing part (packed into a cache block */
   union {
     struct {
-      pip_ulp_t		queue;	     /* !!! DO NOT MOVE THIS AROUND !!! */
-      pip_ulp_t		schedq;	     /* ULP scheduling queue */
-      struct pip_task	*task_sched; /* scheduling task */
-      intptr_t		tls;  /* TLS register */
-      pip_ctx_t		*ctx_suspend; /* context to resume */
-      pip_spinlock_t	*lock_unlock; /* lock to be unlocked after ctx sw. */
+      pip_task_t		queue; /* !!! DO NOT MOVE THIS AROUND !!! */
+      pip_task_t		schedq;	/* ULP scheduling queue */
+      struct pip_task_internal	*task_sched; /* scheduling task */
+      intptr_t			tls;  /* TLS register */
+      pip_ctx_t			*ctx_suspend; /* context to resume */
+      pip_spinlock_t		*lock_unlock; /* lock for ctx sw. */
     };
-    char		__gap0__[PIP_CACHEBLK_SZ];
+    char	__gap0__[PIP_CACHEBLK_SZ];
   };
   /* PiP ULP (type&PIP_TYPE_ULP) */
   union {
     struct {
-      pip_spinlock_t	lock_wakeup; /* lock for wakeup race */
-      int32_t		pipid;	     /* PiP ID */
-      int32_t		type; /* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
-      struct pip_task	*task_resume; /* scheduling task before suspend */
-      pip_blocking_t	sleep;
-      void		*sleep_stack;
+      pip_spinlock_t		lock_wakeup; /* lock for wakeup race */
+      int32_t			pipid;	     /* PiP ID */
+      int32_t			type; /* PIP_TYPE_TASK, PIP_TYPE_ULP, or ... */
+      struct pip_task_internal	*task_resume; /* scheduling task before suspend */
+      pip_blocking_t		sleep;
+      void			*sleep_stack;
     };
-    char		__gap1__[PIP_CACHEBLK_SZ];
+    char	__gap1__[PIP_CACHEBLK_SZ];
   };
   /* PiP task (type&PIP_TYPE_TASK) */
   union {
     struct {
-      pid_t		pid;	/* PID in process mode at beginning */
-      pid_t		pid_actual; /* PID in process mode (actual) */
-      pthread_t		thread;	/* thread */
-      pip_spawnhook_t	hook_before; /* before spawning hook */
-      pip_spawnhook_t	hook_after;  /* after spawning hook */
-      void		*hook_arg;   /* hook arg */
-      pip_spinlock_t	lock_malloc; /* lock for pip_malloc and pip_free */
+      pid_t			pid; /* PID in process mode at beginning */
+      pid_t			pid_actual; /* PID in process mode (actual) */
+      pthread_t			thread;	/* thread */
+      pip_spawnhook_t		hook_before; /* before spawning hook */
+      pip_spawnhook_t		hook_after;  /* after spawning hook */
+      void			*hook_arg;   /* hook arg */
     };
-    char		__gap2__[PIP_CACHEBLK_SZ];
+    char	__gap2__[PIP_CACHEBLK_SZ];
   };
   /* common part */
-  void			*loaded; /* loaded DSO handle */
-  pip_symbols_t		symbols; /* symbols */
-  pip_spawn_args_t	args;	 /* arguments for a PiP task */
-  void *volatile	export;
-  void			*named_exptab;
-  pip_ctx_t		*context;
-  volatile int		flag_exit; /* if this task is terminated or not */
-  int			extval;	   /* exit value */
+  void				*loaded; /* loaded DSO handle */
+  pip_symbols_t			symbols; /* symbols */
+  pip_spawn_args_t		args;	 /* arguments for a PiP task */
+  void *volatile		export;
+  void				*named_exptab;
+  pip_ctx_t			*context;
+  volatile int			flag_exit; /* if this task is terminated */
+  int				extval;	   /* exit value */
   /* GDB interface */
-  struct pip_gdbif_task	*gdbif_task; /* GDB interface */
+  struct 			pip_gdbif_task	*gdbif_task; /* GDB if */
 
-} pip_task_t;
+} pip_task_internal_t;
+
+#define PIP_TYPE_PASSIVE_FLAG	(0x040)
+
+#define PIP_TYPE_NONE		(0x000)
+#define PIP_TYPE_ROOT		(0x100)
+#define PIP_TYPE_TASK		(0x080)
+
+#define PIP_TYPE_TASK_ACTIVE	PIP_TYPE_TASK
+#define PIP_TYPE_TASK_PASSIVE	(PIP_TYPE_TASK|PIP_TYPE_PASSIVE_FLAG)
+
+#define PIP_IS_ROOT(T)		( (T)->type == PIP_TYPE_ROOT )
+#define PIP_IS_TASK(T)		( ((T)->type&PIP_TYPE_TASK) == PIP_TYPE_TASK )
+#define PIP_IS_ACTIVE(T)	( (T)->type == PIP_TYPE_TASK_ACTIVE  )
+#define PIP_IS_PASSIVE(T)	( (T)->type == PIP_TYPE_TASK_PASSIVE )
+
+#define PIP_TYPE_DEACTIVATE(T)	( (T)->type |=  PIP_TYPE_PASSIVE_FLAG )
+#define PIP_TYPE_ACTIVATE(T)	( (T)->type &= ~PIP_TYPE_PASSIVE_FLAG )
 
 typedef struct {
   /* sanity check info */
@@ -203,7 +215,7 @@ typedef struct {
   int			ntasks_accum;
   int			pipid_curr;
   pip_clone_t		*cloneinfo;   /* only valid with process:preload */
-  pip_task_t		*task_root; /* points to tasks[ntasks] */
+  pip_task_internal_t	*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   /* ULP related info */
   pip_spinlock_t	lock_stack_flist; /* ULP: lock for stack free list */
@@ -212,21 +224,20 @@ typedef struct {
   /* for chaining SIGCHLD */
   struct sigaction	sigact_chain;
   /* PiP tasks array */
-  pip_task_t		tasks[];
+  pip_task_internal_t	tasks[];
 
 } pip_root_t;
 
-extern pip_root_t	*pip_root;
-extern pip_task_t	*pip_task;
+extern pip_root_t		*pip_root;
+extern pip_task_internal_t	*pip_task;
 
-#define pip_likely(x)	__builtin_expect((x),1)
-#define pip_unlikely(x)	__builtin_expect((x),0)
+#define PIP_TASKI(TASKQ)	((pip_task_internal_t*)(TASKQ))
+#define PIP_TASKQ(TASK)		((pip_task_t*)(TASK))
 
-#define PIP_TASK(ULP)	((pip_task_t*)(ULP))
-#define PIP_ULP(TASK)	((pip_ulp_t*)(TASK))
-#define PIP_ULP_CTX(U)	(PIP_TASK(U)->ctx_suspend)
+#define PIP_MIDLEN		(64)
 
-#define PIP_MIDLEN	(64)
+#define pip_likely(x)		__builtin_expect((x),1)
+#define pip_unlikely(x)		__builtin_expect((x),0)
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

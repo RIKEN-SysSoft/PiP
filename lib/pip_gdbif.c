@@ -72,7 +72,7 @@ static int pipid_to_gdbif( int pipid ) {
  * this does not return any error, but warn.
  */
 
-void pip_gdbif_load( pip_task_t *task ) {
+void pip_gdbif_load( pip_task_internal_t *task ) {
   struct pip_gdbif_task *gdbif_task = task->gdbif_task;
   Dl_info dli;
   char buf[PATH_MAX];
@@ -110,14 +110,14 @@ void pip_gdbif_load( pip_task_t *task ) {
   RETURNV;
 }
 
-void pip_gdbif_exit( pip_task_t *task, int extval ) {
+void pip_gdbif_exit( pip_task_internal_t *task, int extval ) {
   if( task->gdbif_task != NULL ) {
     task->gdbif_task->status    = PIP_GDBIF_STATUS_TERMINATED;
     task->gdbif_task->exit_code = extval;
   }
 }
 
-void pip_gdbif_task_commit( pip_task_t *task ) {
+void pip_gdbif_task_commit( pip_task_internal_t *task ) {
   struct pip_gdbif_task *gdbif_task =
     &pip_gdbif_root->tasks[task->pipid];
 
@@ -131,7 +131,7 @@ void pip_gdbif_task_commit( pip_task_t *task ) {
  */
 
 static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
-					pip_task_t *task ) {
+					pip_task_internal_t *task ) {
   ENTER;
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
   gdbif_task->pathname     = task->args.prog;
@@ -169,7 +169,7 @@ static void pip_gdbif_link_task_struct( struct pip_gdbif_task *gdbif_task ) {
   pip_spin_unlock( &pip_gdbif_root->lock_root );
 }
 
-void pip_gdbif_task_new( pip_task_t *task ) {
+void pip_gdbif_task_new( pip_task_internal_t *task ) {
   struct pip_gdbif_task *gdbif_task =
     &pip_gdbif_root->tasks[task->pipid];
   pip_gdbif_init_task_struct( gdbif_task, task );
@@ -223,7 +223,7 @@ static void pip_gdbif_finalize_tasks( void ) {
   RETURNV;
 }
 
-void pip_gdbif_finalize_task( pip_task_t *task ) {
+void pip_gdbif_finalize_task( pip_task_internal_t *task ) {
   struct pip_gdbif_task *gdbif_task = task->gdbif_task;
 
   ENTER;

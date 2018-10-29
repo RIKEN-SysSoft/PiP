@@ -53,8 +53,6 @@
 #include <errno.h>
 
 #include <pip.h>
-#include <pip_ulp.h>
-#include <pip_universal.h>
 #include <pip_util.h>
 #include <pip_machdep.h>
 

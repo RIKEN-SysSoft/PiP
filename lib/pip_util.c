@@ -42,7 +42,6 @@
 #include <elf.h>
 
 #include <pip.h>
-#include <pip_ulp.h>
 #include <pip_internal.h>
 #include <pip_util.h>
 
@@ -92,7 +91,7 @@ char *pip_pipidstr( char *buf ) {
     idstr = "?null?";
     break;
   default:
-    if( !pip_isa_ulp() ) {
+    if( PIP_IS_ACTIVE(pip_task) ) {
       (void) sprintf( buf, "%d", pip_task->pipid );
     } else if( pip_task->task_sched != NULL ) {
       (void) sprintf( buf, "%d/%d",
@@ -109,10 +108,10 @@ char *pip_pipidstr( char *buf ) {
 static char *pip_type_str_( int type ) {
   char *typestr;
 
-  if( type & PIP_TYPE_ULP ) {
-    typestr = "ulp";
-  } else if( type & PIP_TYPE_TASK ) {
-    typestr = "task";
+  if( type == PIP_TYPE_TASK_PASSIVE ) {
+    typestr = "tskP";
+  } else if( type == PIP_TYPE_TASK_ACTIVE ) {
+    typestr = "tskA";
   } else if( type & PIP_TYPE_ROOT ) {
     typestr= "root";
   } else {
@@ -146,14 +145,14 @@ int pip_idstr( char *buf, size_t sz ) {
   if( pip_task == NULL ) {
     n = snprintf( buf, sz, "%s---:(%d)%s", pre, pid, post );
   } else {
-    if( pip_task->type & PIP_TYPE_ROOT ) {
+    if( PIP_IS_ROOT( pip_task ) ) {
       n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
-    } else if( pip_task->type & PIP_TYPE_ULP ) {
+    } else if( PIP_IS_PASSIVE( pip_task ) ) {
       idstr = pip_pipidstr( idnum );
-      n = snprintf( buf, sz, "%sULP:%s(%d)%s", pre, idstr, pid, post );
-    } else if( pip_task->type & PIP_TYPE_TASK ) {
+      n = snprintf( buf, sz, "%sTskP:%s(%d)%s", pre, idstr, pid, post );
+    } else if( PIP_IS_ACTIVE( pip_task ) ) {
       idstr = pip_pipidstr( idnum );
-      n = snprintf( buf, sz, "%sTSK:%s(%d)%s", pre, idstr, pid, post );
+      n = snprintf( buf, sz, "%sTskA:%s(%d)%s", pre, idstr, pid, post );
     } else if( pip_task->type == PIP_TYPE_NONE ) {
       n = snprintf( buf, sz, "%s\?\?\?\?(%d)%s", pre, pid, post );
     } else {
@@ -202,29 +201,30 @@ void pip_err_mesg( char *format, ... ) {
 }
 
 int pip_check_pipid( int* );
-pip_task_t *pip_get_task_( int );
+pip_task_internal_t *pip_get_task_( int );
 
-void pip_ulp_describe( FILE *fp, const char *tag, pip_ulp_t *ulp ) {
-  if( ulp != NULL ) {
-    pip_task_t *task = PIP_TASK( ulp );
-    char *typestr = pip_type_str_( task->type );
+#ifdef AHAH
+void pip_ulp_describe( FILE *fp, const char *tag, pip_task_t *task ) {
+  if( task != NULL ) {
+    pip_task_internal_t *taski = PIP_TASKI( task );
+    char *typestr = pip_type_str_( taski->type );
     if( tag == NULL ) {
       pip_info_fmesg( fp,
 		      "%s[%d](sched:%p,ctx=%p)@%p",
 		      typestr,
-		      task->pipid,
-		      task->task_sched,
-		      task->ctx_suspend,
-		      task );
+		      taski->pipid,
+		      taski->task_sched,
+		      taski->ctx_suspend,
+		      taski );
     } else {
       pip_info_fmesg( fp,
 		      "%s: %s[%d](sched:%p,ctx=%p)@%p",
 		      tag,
 		      typestr,
-		      task->pipid,
-		      task->task_sched,
-		      task->ctx_suspend,
-		      task );
+		      taski->pipid,
+		      taski->task_sched,
+		      taski->ctx_suspend,
+		      taski );
     }
   } else {
     if( tag == NULL ) {
@@ -234,10 +234,11 @@ void pip_ulp_describe( FILE *fp, const char *tag, pip_ulp_t *ulp ) {
     }
   }
 }
+#endif
 
 void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
   if( pip_check_pipid( &pipid ) == 0 ) {
-    pip_task_t *task = pip_get_task_( pipid );
+    pip_task_internal_t *task = pip_get_task_( pipid );
     char *typestr = pip_type_str_( task->type );
     if( tag == NULL ) {
       pip_info_fmesg( fp,
@@ -266,23 +267,23 @@ void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
   }
 }
 
-void pip_ulp_queue_describe( FILE *fp, const char *tag, pip_ulp_t *queue ) {
+void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue ) {
   if( queue == NULL ) {
     if( tag == NULL ) {
       pip_info_fmesg( fp, "QUEUE:(nil)" );
     } else {
       pip_info_fmesg( fp, "%s: QUEUE:(nil)", tag );
     }
-  } else if( PIP_ULP_ISEMPTY( queue ) ) {
+  } else if( PIP_TASKQ_ISEMPTY( queue ) ) {
     if( tag == NULL ) {
       pip_info_fmesg( fp, "QHEAD:%p  EMPTY", queue );
     } else {
       pip_info_fmesg( fp, "%s: QHEAD:%p  EMPTY", tag, queue );
     }
   } else {
-    pip_task_t 	*t;
-    pip_ulp_t 	*u;
-    int 	i = 0;
+    pip_task_internal_t 	*t;
+    pip_task_t 			*u;
+    int 			i = 0;
 
     if( tag == NULL ) {
       pip_info_fmesg( fp, "QHEAD:%p (next:%p prev:%p)",
@@ -291,8 +292,8 @@ void pip_ulp_queue_describe( FILE *fp, const char *tag, pip_ulp_t *queue ) {
       pip_info_fmesg( fp, "%s: QHEAD:%p (next:%p prev:%p)",
 		      tag, queue, queue->next, queue->prev );
     }
-    PIP_ULP_FOREACH( queue, u ) {
-      t = PIP_TASK( u );
+    PIP_TASKQ_FOREACH( queue, u ) {
+      t = PIP_TASKI( u );
       if( tag == NULL ) {
 	pip_info_fmesg( fp,
 			"QUEUE[%d] pipid:%d "

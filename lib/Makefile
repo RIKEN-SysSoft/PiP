@@ -39,9 +39,9 @@ CFLAGS += $(PICFLAG)
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
 LIBRARY  = libpip.so
-SRCS     = pip.c pip_namexp.c pip_universal.c pip_util.c pip_gdbif.c
+SRCS     = pip.c pip_util.c pip_gdbif.c
 
-OBJS	 = pip.o pip_namexp.o pip_universal.o pip_util.o pip_gdbif.o
+OBJS	 = pip.o pip_util.o pip_gdbif.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_clone.h		\

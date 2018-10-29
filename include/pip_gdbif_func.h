@@ -36,11 +36,11 @@
 #ifndef _pip_gdbif_func_h_
 #define _pip_gdbif_func_h_
 
-void pip_gdbif_load( pip_task_t* );
-void pip_gdbif_exit( pip_task_t*, int );
-void pip_gdbif_task_commit( pip_task_t* );
-void pip_gdbif_task_new( pip_task_t* );
+void pip_gdbif_load( pip_task_internal_t* );
+void pip_gdbif_exit( pip_task_internal_t*, int );
+void pip_gdbif_task_commit( pip_task_internal_t* );
+void pip_gdbif_task_new( pip_task_internal_t* );
 int  pip_gdbif_initialize_root( int );
-void pip_gdbif_finalize_task( pip_task_t* );
+void pip_gdbif_finalize_task( pip_task_internal_t* );
 
 #endif /* _pip_gdbif_func_h_ */
