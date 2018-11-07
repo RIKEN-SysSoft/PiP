@@ -63,7 +63,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Groups</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -74,7 +74,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div class="header">
   <div class="summary">
-<a href="#files">Files</a>  </div>
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">libpip</div>  </div>
 </div><!--header-->
@@ -83,30 +83,37 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>the PiP library  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="files"></a>
-Files</h2></td></tr>
-<tr class="memitem:pip_8h"><td class="memItemLeft" align="right" valign="top">file &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="pip_8h.html">pip.h</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ga7c8ad53192b379f9ed5de13d336b8240"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga7c8ad53192b379f9ed5de13d336b8240"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *buf, size_t sz)</td></tr>
+<tr class="separator:ga7c8ad53192b379f9ed5de13d336b8240"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad4e0db6c69792b3fa014e3310892a0eb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gad4e0db6c69792b3fa014e3310892a0eb">pip_init</a> (int *pipidp, int *ntasks, void **root_expp, int opts)</td></tr>
 <tr class="memdesc:gad4e0db6c69792b3fa014e3310892a0eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the PiP library.  <a href="#gad4e0db6c69792b3fa014e3310892a0eb">More...</a><br/></td></tr>
 <tr class="separator:gad4e0db6c69792b3fa014e3310892a0eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac4654282785abb9434ce81573fdf16ed"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a> (void)</td></tr>
 <tr class="memdesc:gac4654282785abb9434ce81573fdf16ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">finalize the PiP library.  <a href="#gac4654282785abb9434ce81573fdf16ed">More...</a><br/></td></tr>
 <tr class="separator:gac4654282785abb9434ce81573fdf16ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d">pip_spawn</a> (char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</td></tr>
-<tr class="memdesc:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP task  <a href="#gae9187ea22ecf0623fa3ecfba5337f52d">More...</a><br/></td></tr>
-<tr class="separator:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad06585ee5975368dd4a3c5014dac1cbb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gad06585ee5975368dd4a3c5014dac1cbb">pip_task_spawn</a> (pip_spawn_program_t *progp, int coreno, int *pipidp, pip_spawn_hook_t *hookp)</td></tr>
+<tr class="memdesc:gad06585ee5975368dd4a3c5014dac1cbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP task (PiP API Version 2)  <a href="#gad06585ee5975368dd4a3c5014dac1cbb">More...</a><br/></td></tr>
+<tr class="separator:gad06585ee5975368dd4a3c5014dac1cbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab7a5ca6c80e876ef1ea7b42cb2008faa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gab7a5ca6c80e876ef1ea7b42cb2008faa">pip_named_export</a> (void *exp, const char *format,...)</td></tr>
+<tr class="memdesc:gab7a5ca6c80e876ef1ea7b42cb2008faa"><td class="mdescLeft">&#160;</td><td class="mdescRight">export an address of the calling PiP root or a PiP task to the others.  <a href="#gab7a5ca6c80e876ef1ea7b42cb2008faa">More...</a><br/></td></tr>
+<tr class="separator:gab7a5ca6c80e876ef1ea7b42cb2008faa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga37fed4773558ccab6911785c872bc057"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga37fed4773558ccab6911785c872bc057">pip_named_import</a> (int pipid, void **expp, const char *format,...)</td></tr>
+<tr class="memdesc:ga37fed4773558ccab6911785c872bc057"><td class="mdescLeft">&#160;</td><td class="mdescRight">import the exposed memory region of the other.  <a href="#ga37fed4773558ccab6911785c872bc057">More...</a><br/></td></tr>
+<tr class="separator:ga37fed4773558ccab6911785c872bc057"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa4b5ad0f8227ba1010648718dae04730"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaa4b5ad0f8227ba1010648718dae04730">pip_named_tryimport</a> (int pipid, void **expp, const char *format,...)</td></tr>
+<tr class="memdesc:gaa4b5ad0f8227ba1010648718dae04730"><td class="mdescLeft">&#160;</td><td class="mdescRight">non-blocking version of <code>pip_named_import</code>  <a href="#gaa4b5ad0f8227ba1010648718dae04730">More...</a><br/></td></tr>
+<tr class="separator:gaa4b5ad0f8227ba1010648718dae04730"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga76ef9337bec7dd836168f22247d4c64c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga76ef9337bec7dd836168f22247d4c64c">pip_export</a> (void *exp)</td></tr>
 <tr class="memdesc:ga76ef9337bec7dd836168f22247d4c64c"><td class="mdescLeft">&#160;</td><td class="mdescRight">export a memory region of the calling PiP root or a PiP task to the others.  <a href="#ga76ef9337bec7dd836168f22247d4c64c">More...</a><br/></td></tr>
 <tr class="separator:ga76ef9337bec7dd836168f22247d4c64c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6d7ac596a9da824e40d7c06528f42e5f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a> (int pipid, void **expp)</td></tr>
 <tr class="memdesc:ga6d7ac596a9da824e40d7c06528f42e5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">import the exposed memory region of the other.  <a href="#ga6d7ac596a9da824e40d7c06528f42e5f">More...</a><br/></td></tr>
 <tr class="separator:ga6d7ac596a9da824e40d7c06528f42e5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaa0f8ce0138a1abb22ee5cb4d2230abc5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5">pip_get_addr</a> (int pipid, const char *symnam, void **addrp)</td></tr>
-<tr class="memdesc:gaa0f8ce0138a1abb22ee5cb4d2230abc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">import the exposed memory region of the other.  <a href="#gaa0f8ce0138a1abb22ee5cb4d2230abc5">More...</a><br/></td></tr>
-<tr class="separator:gaa0f8ce0138a1abb22ee5cb4d2230abc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4e715bb8c325e9acc81af0745908dc0e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a> (int *pipidp)</td></tr>
-<tr class="memdesc:ga4e715bb8c325e9acc81af0745908dc0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get PIPID  <a href="#ga4e715bb8c325e9acc81af0745908dc0e">More...</a><br/></td></tr>
+<tr class="memdesc:ga4e715bb8c325e9acc81af0745908dc0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get PiP ID  <a href="#ga4e715bb8c325e9acc81af0745908dc0e">More...</a><br/></td></tr>
 <tr class="separator:ga4e715bb8c325e9acc81af0745908dc0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9786d5aafa2a3882714c35ecc9f39a5a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a> (int *ntasksp)</td></tr>
 <tr class="memdesc:ga9786d5aafa2a3882714c35ecc9f39a5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the maximum number of the PiP tasks  <a href="#ga9786d5aafa2a3882714c35ecc9f39a5a">More...</a><br/></td></tr>
@@ -114,11 +121,14 @@ Files</h2></td></tr>
 <tr class="memitem:ga4b6905e1eb5ffa6427d72d7e73408639"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga4b6905e1eb5ffa6427d72d7e73408639">pip_isa_piptask</a> (void)</td></tr>
 <tr class="memdesc:ga4b6905e1eb5ffa6427d72d7e73408639"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the calling task is a PiP task or not  <a href="#ga4b6905e1eb5ffa6427d72d7e73408639">More...</a><br/></td></tr>
 <tr class="separator:ga4b6905e1eb5ffa6427d72d7e73408639"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac45cbabfd20fa2f8f4e9004474922137"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gac45cbabfd20fa2f8f4e9004474922137">pip_count_active_tasks</a> (void)</td></tr>
+<tr class="memdesc:gac45cbabfd20fa2f8f4e9004474922137"><td class="mdescLeft">&#160;</td><td class="mdescRight">return the number of active tasks  <a href="#gac45cbabfd20fa2f8f4e9004474922137">More...</a><br/></td></tr>
+<tr class="separator:gac45cbabfd20fa2f8f4e9004474922137"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab603f68c1ce972a5f3bfb8c95fcfb555"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a> (int *modep)</td></tr>
 <tr class="memdesc:gab603f68c1ce972a5f3bfb8c95fcfb555"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the PiP execution mode  <a href="#gab603f68c1ce972a5f3bfb8c95fcfb555">More...</a><br/></td></tr>
 <tr class="separator:gab603f68c1ce972a5f3bfb8c95fcfb555"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf9be37d927121b9327b5fca2417ccec2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaf9be37d927121b9327b5fca2417ccec2">pip_exit</a> (int retval)</td></tr>
-<tr class="memdesc:gaf9be37d927121b9327b5fca2417ccec2"><td class="mdescLeft">&#160;</td><td class="mdescRight">terminate PiP task  <a href="#gaf9be37d927121b9327b5fca2417ccec2">More...</a><br/></td></tr>
+<tr class="memdesc:gaf9be37d927121b9327b5fca2417ccec2"><td class="mdescLeft">&#160;</td><td class="mdescRight">terminate PiP task or ULP  <a href="#gaf9be37d927121b9327b5fca2417ccec2">More...</a><br/></td></tr>
 <tr class="separator:gaf9be37d927121b9327b5fca2417ccec2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3adad6a3e2311a46b2bfdd9d9062811b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b">pip_wait</a> (int pipid, int *retval)</td></tr>
 <tr class="memdesc:ga3adad6a3e2311a46b2bfdd9d9062811b"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait for the termination of a PiP task  <a href="#ga3adad6a3e2311a46b2bfdd9d9062811b">More...</a><br/></td></tr>
@@ -126,21 +136,39 @@ Files</h2></td></tr>
 <tr class="memitem:ga02cab8b77b62ffcd98bd1bbb1e32b7e7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga02cab8b77b62ffcd98bd1bbb1e32b7e7">pip_trywait</a> (int pipid, int *retval)</td></tr>
 <tr class="memdesc:ga02cab8b77b62ffcd98bd1bbb1e32b7e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait for the termination of a PiP task in a non-blocking way  <a href="#ga02cab8b77b62ffcd98bd1bbb1e32b7e7">More...</a><br/></td></tr>
 <tr class="separator:ga02cab8b77b62ffcd98bd1bbb1e32b7e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gade2b18ac0e11ec827ad68656591c7518"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gade2b18ac0e11ec827ad68656591c7518">pip_wait_any</a> (int *pipid, int *retval)</td></tr>
+<tr class="memdesc:gade2b18ac0e11ec827ad68656591c7518"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait for the termination of any PiP task  <a href="#gade2b18ac0e11ec827ad68656591c7518">More...</a><br/></td></tr>
+<tr class="separator:gade2b18ac0e11ec827ad68656591c7518"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga65731447fedb85cbe4d5c38093383a20"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga65731447fedb85cbe4d5c38093383a20">pip_trywait_any</a> (int *pipid, int *retval)</td></tr>
+<tr class="memdesc:ga65731447fedb85cbe4d5c38093383a20"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait for the termination of any PiP task  <a href="#ga65731447fedb85cbe4d5c38093383a20">More...</a><br/></td></tr>
+<tr class="separator:ga65731447fedb85cbe4d5c38093383a20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4a396f38920d94b71dcfd3c898fbb82b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a> (int pipid, int signal)</td></tr>
 <tr class="memdesc:ga4a396f38920d94b71dcfd3c898fbb82b"><td class="mdescLeft">&#160;</td><td class="mdescRight">deliver a signal to a PiP task  <a href="#ga4a396f38920d94b71dcfd3c898fbb82b">More...</a><br/></td></tr>
 <tr class="separator:ga4a396f38920d94b71dcfd3c898fbb82b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8ed1ba448edbc0f2e0af78abdcc62b7c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga8ed1ba448edbc0f2e0af78abdcc62b7c">pip_get_id</a> (int pipid, intptr_t *idp)</td></tr>
-<tr class="memdesc:ga8ed1ba448edbc0f2e0af78abdcc62b7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">deliver a process or thread ID  <a href="#ga8ed1ba448edbc0f2e0af78abdcc62b7c">More...</a><br/></td></tr>
+<tr class="memdesc:ga8ed1ba448edbc0f2e0af78abdcc62b7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">deliver a process or thread ID defined by the system  <a href="#ga8ed1ba448edbc0f2e0af78abdcc62b7c">More...</a><br/></td></tr>
 <tr class="separator:ga8ed1ba448edbc0f2e0af78abdcc62b7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0e12c95fe7abc5c356acfd45a89ad5d8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a> (void)</td></tr>
 <tr class="memdesc:ga0e12c95fe7abc5c356acfd45a89ad5d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a string of the current execution mode  <a href="#ga0e12c95fe7abc5c356acfd45a89ad5d8">More...</a><br/></td></tr>
 <tr class="separator:ga0e12c95fe7abc5c356acfd45a89ad5d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga29d3dd9e65abc2106c5d0bbbd69e4c10"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga29d3dd9e65abc2106c5d0bbbd69e4c10">pip_barrier_init</a> (pip_barrier_t *barrp, int n)</td></tr>
-<tr class="memdesc:ga29d3dd9e65abc2106c5d0bbbd69e4c10"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize barrier synchronization structure  <a href="#ga29d3dd9e65abc2106c5d0bbbd69e4c10">More...</a><br/></td></tr>
-<tr class="separator:ga29d3dd9e65abc2106c5d0bbbd69e4c10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac80e7da03f81dfb87b7f3e4c45176fc2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gac80e7da03f81dfb87b7f3e4c45176fc2">pip_barrier_wait</a> (pip_barrier_t *barrp)</td></tr>
-<tr class="memdesc:gac80e7da03f81dfb87b7f3e4c45176fc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait on barrier synchronization in a busy-wait way  <a href="#gac80e7da03f81dfb87b7f3e4c45176fc2">More...</a><br/></td></tr>
-<tr class="separator:gac80e7da03f81dfb87b7f3e4c45176fc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga84022f9c64f431e7d513342aeed0b61e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga84022f9c64f431e7d513342aeed0b61e">pip_barrier_init</a> (pip_barrier_t *barrp, int n)</td></tr>
+<tr class="memdesc:ga84022f9c64f431e7d513342aeed0b61e"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize barrier synchronization structure  <a href="#ga84022f9c64f431e7d513342aeed0b61e">More...</a><br/></td></tr>
+<tr class="separator:ga84022f9c64f431e7d513342aeed0b61e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaca103c9732a8e28ee8faf79ef4a69e4f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaca103c9732a8e28ee8faf79ef4a69e4f">pip_barrier_wait</a> (pip_barrier_t *barrp)</td></tr>
+<tr class="memdesc:gaca103c9732a8e28ee8faf79ef4a69e4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait on barrier synchronization in a busy-wait way  <a href="#gaca103c9732a8e28ee8faf79ef4a69e4f">More...</a><br/></td></tr>
+<tr class="separator:gaca103c9732a8e28ee8faf79ef4a69e4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6f1045bdbf682cb2ac504f09b57b73e9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a> (void)</td></tr>
+<tr class="memdesc:ga6f1045bdbf682cb2ac504f09b57b73e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if calling PiP task is PiP root or not  <a href="#ga6f1045bdbf682cb2ac504f09b57b73e9">More...</a><br/></td></tr>
+<tr class="separator:ga6f1045bdbf682cb2ac504f09b57b73e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf0283e47ad2d415206d6a3fa61e8a0a9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a> (void)</td></tr>
+<tr class="memdesc:gaf0283e47ad2d415206d6a3fa61e8a0a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if calling PiP task is a PiP task or not  <a href="#gaf0283e47ad2d415206d6a3fa61e8a0a9">More...</a><br/></td></tr>
+<tr class="separator:gaf0283e47ad2d415206d6a3fa61e8a0a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafc11d79f0f63c4c57ccb5c3bb2803241"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gafc11d79f0f63c4c57ccb5c3bb2803241">pip_isa_ulp</a> (void)</td></tr>
+<tr class="memdesc:gafc11d79f0f63c4c57ccb5c3bb2803241"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if calling PiP task is a PiP ULP or not  <a href="#gafc11d79f0f63c4c57ccb5c3bb2803241">More...</a><br/></td></tr>
+<tr class="separator:gafc11d79f0f63c4c57ccb5c3bb2803241"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a> (int pipid)</td></tr>
+<tr class="memdesc:gacefb1f29e5f5d9b21309a1d041e78790"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the specified PiP task is alive or not  <a href="#gacefb1f29e5f5d9b21309a1d041e78790">More...</a><br/></td></tr>
+<tr class="separator:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>the PiP library </p>
@@ -184,14 +212,22 @@ Files</h2></td></tr>
 <p>Initialize the PiP library. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">pipidp</td><td>When this is called by the PiP root process, then this returns PIP_PIPID_ROOT, otherwise it returns the PIPID of the calling PiP task. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pipidp</td><td>When this is called by the PiP root process, then this returns <code>PIP_PIPID_ROOT</code>, otherwise it returns the PiP ID of the calling PiP task. </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">ntasks</td><td>When called by the PiP root, it specifies the maximum number of PiP tasks. When called by a PiP task, then it returns the number specified by the PiP root. </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">root_expp</td><td>If the root PiP is ready to export a memory region to any PiP task(s), then this parameter points to the variable holding the exporting address of the root PiP. If the PiP root is not ready to export or has nothing to export then this variable can be NULL. When called by a PiP task, it returns the exporting address of the PiP root, if any. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">opts</td><td>This must be zero at the point of this writing.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>zero is returned if this function succeeds. On error, an error number is returned. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><em>notasks</em> is a negative number, or the option combination is ivalid </td></tr>
+    <tr><td class="paramname">EOVERFLOW</td><td><code>notasks</code> is too latrge </td></tr>
+    <tr><td class="paramname">ENOMEM</td><td>unable to allocate memory</td></tr>
+  </table>
+  </dd>
+</dl>
 <p>This function initializes the PiP library. The PiP root process must call this. A PiP task is not required to call this function unless the PiP task calls any PiP functions.</p>
 <p>Is is NOT guaranteed that users can spawn tasks up to the number specified by the <em>ntasks</em> argument. There are some limitations come from outside of the PiP library (GLIBC).</p>
 <dl class="section see"><dt>See Also</dt><dd>pip_export(3), pip_fin(3) </dd></dl>
@@ -213,33 +249,27 @@ Files</h2></td></tr>
 </div><div class="memdoc">
 
 <p>finalize the PiP library. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>zero is returned if this function succeeds. On error, error number is returned. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EBUSY</td><td><code>one</code> or more PiP tasks is yet running</td></tr>
+  </table>
+  </dd>
+</dl>
 <p>This function finalize the PiP library.</p>
 <dl class="section see"><dt>See Also</dt><dd>pip_init(3) </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="gae9187ea22ecf0623fa3ecfba5337f52d"></a>
+<a class="anchor" id="gad06585ee5975368dd4a3c5014dac1cbb"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int pip_spawn </td>
+          <td class="memname">int pip_task_spawn </td>
           <td>(</td>
-          <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>filename</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char **&#160;</td>
-          <td class="paramname"><em>argv</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">char **&#160;</td>
-          <td class="paramname"><em>envv</em>, </td>
+          <td class="paramtype">pip_spawn_program_t *&#160;</td>
+          <td class="paramname"><em>progp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -256,20 +286,8 @@ Files</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">pip_spawnhook_t&#160;</td>
-          <td class="paramname"><em>before</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">pip_spawnhook_t&#160;</td>
-          <td class="paramname"><em>after</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>hookarg</em>&#160;</td>
+          <td class="paramtype">pip_spawn_hook_t *&#160;</td>
+          <td class="paramname"><em>hookp</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -279,23 +297,213 @@ Files</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>spawn a PiP task </p>
+<p>spawn a PiP task (PiP API Version 2) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>The executable to run as a PiP task </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">argv</td><td>Argument(s) for the spawned PiP task </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">envv</td><td>Environment variables for the spawned PiP task </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">progp</td><td>Program information to spawn as a PiP task </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">coreno</td><td>Core number for the PiP task to be bound to. If <code>PIP_CPUCORE_ASIS</code> is specified, then the core binding will not take place. </td></tr>
-    <tr><td class="paramdir">[in,out]</td><td class="paramname">pipidp</td><td>Specify PIPID of the spawned PiP task. If <code>PIP_PIPID_ANY</code> is specified, then the PIPID of the spawned PiP task is up to the PiP library and the assigned PIPID will be returned. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">before</td><td>Just before the executing of the spawned PiP task, this function is called so that file descriptors inherited from the PiP root, for example, can deal with. This is only effective with the PiP process mode. This function is called with the argument <em>hookarg</em> described below. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">after</td><td>This function is called when the PiP task terminates for the cleanup purpose. This function is called with the argument <em>hookarg</em> described below. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">hookarg</td><td>The argument for the <em>before</em> and <em>after</em> function call.</td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pipidp</td><td>Specify PiP ID of the spawned PiP task. If <code>PIP_PIPID_ANY</code> is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hookp</td><td>Hook information to be invoked before and after the program invokation.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>In theory, there is no reason to restrict for a PiP task to spawn another PiP task. However, the current implementation fails to do so. If the root process is multithreaded, only the main thread can call this function. </dd>
+<dd>
+In the process mode, the file descriptors set the close-on-exec flag will be closed on the created child task.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>zero is returned if this function succeeds. On error, an error number is returned. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>PiP task tries to spawn child task </td></tr>
+    <tr><td class="paramname">EBUSY</td><td>Specified PiP ID is alredy occupied</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_task_spawn(3), pip_spawn_from_main(3) </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gab7a5ca6c80e876ef1ea7b42cb2008faa"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_named_export </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>exp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>export an address of the calling PiP root or a PiP task to the others. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">exp</td><td>Starting address of a memory region of the calling process or task so that the other tasks can access. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>a <code>printf</code> format to give the exported address a name</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
-<p>This function is to spawn a PiP task. These functions are introduced to follow the programming style of conventional <code>fork</code> and <code>exec</code>. <em>before</em> function does the prologue found between the <code>fork</code> and <code>exec</code>. <em>after</em> function is to free the argument if it is <code>malloc()ed</code>. Note that the <em>before</em> and <em>after</em> functions are called in the different <em>context</em> from the spawned PiP task. More specifically, any variables defined in the spawned PiP task cannot be accessible from the <em>before</em> and <em>after</em> functions.</p>
-<dl class="section note"><dt>Note</dt><dd>In theory, there is no reason to restrict for a PiP task to spawn another PiP task. However, the current implementation fails to do so. </dd></dl>
+<p>The PiP root or a PiP task can export a memory region only once.</p>
+<dl class="section note"><dt>Note</dt><dd>The exported address can only be retrieved by <b>pip_named_import(3)</b>. </dd>
+<dd>
+There is no size parameter to specify the length of the exported region because there is no way to restrict the access outside of the exported region. </dd>
+<dd>
+The design of this function is prioritized for ease of use and this function works not in an efficient way. So, do not use this in a time critical path.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>zero is returned if this function succeeds. On error, an error number is returned. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>format</code> is <code>NULL</code> </td></tr>
+    <tr><td class="paramname">ENOMEM</td><td>not enough memory available </td></tr>
+    <tr><td class="paramname">EBUSY</td><td>the specified name is already in use</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_named_import(3) </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga37fed4773558ccab6911785c872bc057"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_named_import </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>pipid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>expp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>import the exposed memory region of the other. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>The PiP ID to import the exposed address </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">expp</td><td>The starting address of the exposed region of the PiP task specified by the <em>pipid</em>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>a <code>printf</code> format to give the exported address a name</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>To avoid deadlock, the corresponding <b>pip_named_export(3)</b> must be called beofre calling <b>pip_named_import(3)</b>; </dd>
+<dd>
+Unlike <b>pip_import(3)</b>, this function might be blocked until the target address is exported by the target task. Once a name is associated by an address, the address associated with the name cannot be changed. </dd>
+<dd>
+If this function is called by a task having passive task(s), then this call may result in context switching to the other passive task. </dd>
+<dd>
+The design of this function is prioritized for ease of use and this function works not in a efficient way. So, do not use this in a time critical path.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>zero is returned if this function succeeds. On error, an error number is returned. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>format</code> is <code>NULL</code> </td></tr>
+    <tr><td class="paramname">ENOMEM</td><td>not enough memory available </td></tr>
+    <tr><td class="paramname">ECANCELED</td><td>the target task is terminated during the query</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_named_export(3), pip_export(3), pip_import(3) </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaa4b5ad0f8227ba1010648718dae04730"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_named_tryimport </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>pipid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>expp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>format</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>non-blocking version of <code>pip_named_import</code> </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>The PiP ID to import the exposed address </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">expp</td><td>The starting address of the exposed region of the PiP task specified by the <em>pipid</em>. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>a <code>printf</code> format to give the exported address a name</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>The imported address must be exported by <b>pip_named_export(3)</b>. </dd>
+<dd>
+When the named export cannot be found at the specified task, then this function returns immediately. It is guaranteed that the will be no task context switching take place in this function call.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>zero is returned if this function succeeds. On error, an error number is returned. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>format</code> is <code>NULL</code> </td></tr>
+    <tr><td class="paramname">ENOMEM</td><td>not enough memory available </td></tr>
+    <tr><td class="paramname">ECANCELED</td><td>the target task is terminated during the query </td></tr>
+    <tr><td class="paramname">ENOENT</td><td>there is no export having the specified name</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_named_export(3), pip_export(3), pip_import(3) </dd></dl>
 
 </div>
 </div>
@@ -320,10 +528,10 @@ Files</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
 <p>The PiP root or a PiP task can export a memory region only once.</p>
 <dl class="section note"><dt>Note</dt><dd>There is no size parameter to specify the length of the exported region because there is no way to restrict the access outside of the exported region.</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_import(3) </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_import(3), pip_named_export(3), pip_named_import(3) </dd></dl>
 
 </div>
 </div>
@@ -354,62 +562,20 @@ Files</h2></td></tr>
 <p>import the exposed memory region of the other. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>The PIPID to import the exposed address </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>The PiP ID to import the exposed address </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">expp</td><td>The starting address of the exposed region of the PiP task specified by the <em>pipid</em>.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>It is the users' responsibility to synchronize. When the target region is not exported yet , then this function returns NULL. If the root exports its region by the <code>pip_init</code> function call, then it is guaranteed to be imported by PiP tasks at any time.</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_export(3) </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="gaa0f8ce0138a1abb22ee5cb4d2230abc5"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_get_addr </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>pipid</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const char *&#160;</td>
-          <td class="paramname"><em>symnam</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">void **&#160;</td>
-          <td class="paramname"><em>addrp</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>import the exposed memory region of the other. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>The PIPID to import the exposed address </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">symnam</td><td>The name of a symbol existing in the specified PiP task </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">addrp</td><td>The address of the variable of the PiP task specified by the <em>pipid</em>.</td></tr>
+<dl class="section note"><dt>Note</dt><dd>It is the users' responsibility to synchronize. When the target region is not exported yet , then this function returns NULL. If the root exports its region by the <b><a class="el" href="group__libpip.html#gad4e0db6c69792b3fa014e3310892a0eb" title="Initialize the PiP library. ">pip_init()</a></b> function call, then it is guaranteed to be imported by PiP tasks at any time.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>expp</code> is <code>NULL</code> </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
-<dl class="section note"><dt>Note</dt><dd><a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5" title="import the exposed memory region of the other. ">pip_get_addr()</a> function is unable to get proper addresses for local (static) or TLS variables.</dd>
-<dd>
-Although the <a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5" title="import the exposed memory region of the other. ">pip_get_addr()</a> fucntion can be used to get a function address, calling the function of the other PiP task by its address is very tricky and it may result in an unexpected bahavior.</dd>
-<dd>
-By definition of the dlsym() Glibc function, this may return NULL even if the variable having the specified name exists. </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_export(3), pip_named_export(3), pip_named_import(3) </dd></dl>
 
 </div>
 </div>
@@ -427,14 +593,20 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
       </table>
 </div><div class="memdoc">
 
-<p>get PIPID </p>
+<p>get PiP ID </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">pipidp</td><td>This parameter points to the variable which will be set to the PIPID of the calling process.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pipidp</td><td>This parameter points to the variable which will be set to the PiP ID of the calling process.</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>pipidp</code> is <code>NULL</code> </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -460,6 +632,13 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>ntasksp</code> is <code>NULL</code> </td></tr>
+    <tr><td class="paramname">EPERM</td><td>PiP library is not yet initialized </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -478,8 +657,27 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
 </div><div class="memdoc">
 
 <p>check if the calling task is a PiP task or not </p>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
-<dl class="section note"><dt>Note</dt><dd>Unlike most of the other PiP functions, this can be called BEFORE calling the <code><a class="el" href="group__libpip.html#gad4e0db6c69792b3fa014e3310892a0eb" title="Initialize the PiP library. ">pip_init()</a></code> function. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return an boolean value.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Unlike most of the other PiP functions, this can be called BEFORE calling the <b><a class="el" href="group__libpip.html#gad4e0db6c69792b3fa014e3310892a0eb" title="Initialize the PiP library. ">pip_init()</a></b> function. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gac45cbabfd20fa2f8f4e9004474922137"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_count_active_tasks </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>return the number of active tasks </p>
+<dl class="section return"><dt>Returns</dt><dd>Return the number of awake tasks </dd></dl>
 
 </div>
 </div>
@@ -505,6 +703,13 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>modep</code> is <code>NULL</code> </td></tr>
+    <tr><td class="paramname">EPERM</td><td>PiP library is not yet initialized </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -522,15 +727,18 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
       </table>
 </div><div class="memdoc">
 
-<p>terminate PiP task </p>
+<p>terminate PiP task or ULP </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">retval</td><td>Terminate PiP task with the exit number specified with this parameter.</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">retval</td><td>Terminate PiP task or ULP with the exit number specified with this parameter.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode.</dd></dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode. </dd>
+<dd>
+If this function is called by a PiP task having one or more ULPs then the actual termination of the PiP task is postponed until all the associated (scheduling) ULP(s) terminate(s).</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>This function does not return if it succeeds. It return an error code on error.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3) </dd></dl>
 
 </div>
 </div>
@@ -561,15 +769,26 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
 <p>wait for the termination of a PiP task </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>PIPID to wait for. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>PiP ID to wait for. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">retval</td><td>Exit value of the terminated PiP task</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function never returns when it succeeds. </dd>
+<dl class="section note"><dt>Note</dt><dd>This function blocks until the specified PiP task or ULP terminates. </dd>
 <dd>
-This function can be used regardless to the PiP execution mode. However, only the least significant 2 bytes are effective. This is because of the compatibility with the <code>exit</code> glibc function.</dd></dl>
+This function can be used regardless to the PiP execution mode. </dd>
+<dd>
+Only the least significant 2 bytes of the exit value are effective. This is because of the compatibility with the <code>exit</code> glibc function.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>The caller is not the PiP root </td></tr>
+    <tr><td class="paramname">EDEADLK</td><td>The specified <code>pipid</code> is the PiP root </td></tr>
+    <tr><td class="paramname">EINTR</td><td>The call was interrupted by a signal</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3) </dd></dl>
 
 </div>
 </div>
@@ -600,13 +819,116 @@ This function can be used regardless to the PiP execution mode. However, only th
 <p>wait for the termination of a PiP task in a non-blocking way </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>PIPID to wait for. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>PiP ID to wait for. </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">retval</td><td>Exit value of the terminated PiP task</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>The caller is not the PiP root </td></tr>
+    <tr><td class="paramname">EDEADLK</td><td>The specified <code>pipid</code> is the PiP root </td></tr>
+    <tr><td class="paramname">ESRCH</td><td>There is no running PiP task having the specified PiP ID</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3) </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gade2b18ac0e11ec827ad68656591c7518"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_wait_any </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>pipid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>retval</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>wait for the termination of any PiP task </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">pipid</td><td>PiP ID of terminated PiP task. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">retval</td><td>Exit value of the terminated PiP task</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>This function blocks until one of PiP tasks or ULPs terminates. </dd>
+<dd>
+This function can be used regardless to the PiP execution mode. However, only the least significant 2 bytes are effective. This is because of the compatibility with the <code>exit</code> glibc function.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>The caller is not the PiP root </td></tr>
+    <tr><td class="paramname">ESRCH</td><td>There is no running PiP task</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3) </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga65731447fedb85cbe4d5c38093383a20"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_trywait_any </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>pipid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>retval</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>wait for the termination of any PiP task </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">pipid</td><td>PiP ID of terminated PiP task. </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">retval</td><td>Exit value of the terminated PiP task</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>This function never blocks. </dd>
+<dd>
+This function can be used regardless to the PiP execution mode. However, only the least significant 2 bytes are effective. This is because of the compatibility with the <code>exit</code> glibc function.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>The caller is not the PiP root </td></tr>
+    <tr><td class="paramname">ESRCH</td><td>There is no running PiP task</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3) </dd></dl>
 
 </div>
 </div>
@@ -637,13 +959,22 @@ This function can be used regardless to the PiP execution mode. However, only th
 <p>deliver a signal to a PiP task </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">pipid</td><td>PIPID of a target PiP task </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pipid</td><td>PiP ID of a target PiP task </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">signal</td><td>signal number to be delivered</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Only the PiP task can be the target of the signal delivery. </dd>
+<dd>
+This function can be used regardless to the PiP execution mode.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>PiP library is not yet initialized </td></tr>
+    <tr><td class="paramname">EINVAL</td><td>An invalid signal number or invalid PiP ID is specified </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -671,15 +1002,17 @@ This function can be used regardless to the PiP execution mode. However, only th
       </table>
 </div><div class="memdoc">
 
-<p>deliver a process or thread ID </p>
+<p>deliver a process or thread ID defined by the system </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">pipid</td><td>PIPID of a target PiP task </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pipid</td><td>PiP ID of a target PiP task </td></tr>
     <tr><td class="paramdir">[out]</td><td class="paramname">idp</td><td>a pointer to store the ID value</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The returned object depends on the PiP mode. In the process mode it returns PID, in the thread mode it returns thread (<code>pthread_t</code>) associated with the PiP task </dd>
+<dd>
+This function can be used regardless to the PiP execution mode.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
 
 </div>
@@ -704,12 +1037,12 @@ This function can be used regardless to the PiP execution mode. However, only th
 
 </div>
 </div>
-<a class="anchor" id="ga29d3dd9e65abc2106c5d0bbbd69e4c10"></a>
+<a class="anchor" id="ga84022f9c64f431e7d513342aeed0b61e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void pip_barrier_init </td>
+          <td class="memname">int pip_barrier_init </td>
           <td>(</td>
           <td class="paramtype">pip_barrier_t *&#160;</td>
           <td class="paramname"><em>barrp</em>, </td>
@@ -732,19 +1065,28 @@ This function can be used regardless to the PiP execution mode. However, only th
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">barrp</td><td>pointer to a PiP barrier structure </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>number of participants of this barrier synchronization </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>number of participants of this barrier synchronization</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINAVL</td><td><code>barrp</code> is <code>NULL</code> or <code>n</code> is invalid</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section note"><dt>Note</dt><dd>This barrier works on PiP tasks only.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_barrier_wait(3), pip_barrier_init(3), pip_barrier_wait(3), </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="gac80e7da03f81dfb87b7f3e4c45176fc2"></a>
+<a class="anchor" id="gaca103c9732a8e28ee8faf79ef4a69e4f"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void pip_barrier_wait </td>
+          <td class="memname">int pip_barrier_wait </td>
           <td>(</td>
           <td class="paramtype">pip_barrier_t *&#160;</td>
           <td class="paramname"><em>barrp</em></td><td>)</td>
@@ -760,7 +1102,96 @@ This function can be used regardless to the PiP execution mode. However, only th
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This barrier synchronization never blocks. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINAVL</td><td><code>barrp</code> is <code>NULL</code> </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_barrier_init(3), pip_barrier_init(3), </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga6f1045bdbf682cb2ac504f09b57b73e9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_isa_root </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>check if calling PiP task is PiP root or not </p>
+<dl class="section return"><dt>Returns</dt><dd>Return true if the caller is the PiP root </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaf0283e47ad2d415206d6a3fa61e8a0a9"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_isa_task </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>check if calling PiP task is a PiP task or not </p>
+<dl class="section return"><dt>Returns</dt><dd>Return true if the caller is a PiP task </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gafc11d79f0f63c4c57ccb5c3bb2803241"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_isa_ulp </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>check if calling PiP task is a PiP ULP or not </p>
+<dl class="section return"><dt>Returns</dt><dd>Return true if the caller is a PiP ULP </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gacefb1f29e5f5d9b21309a1d041e78790"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_is_alive </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>pipid</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>check if the specified PiP task is alive or not </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>PiP ID to check</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Return true if the specified PiP task or ULP is alive (i.e., not yet terminated) and running </dd></dl>
 
 </div>
 </div>
