@@ -45,7 +45,10 @@ SUBDIRS = lib include bin preload util sample \
 
 include $(top_srcdir)/build/rule.mk
 
-install: doxygen doxygen-install
+doc: doxygen
+.PHONY: doc
+
+install: doxygen-install
 .PHONY: install
 
 debug:
@@ -88,10 +91,10 @@ doxygen:
 .PHONY: doxygen
 
 doxygen-install:
-	@$(MKDIR_P) $(DESTDIR)/$(mandir);
-	@(cd ./man  && tar cf - . ) | (cd $(DESTDIR)/$(mandir)  && tar xf -)
-	@$(MKDIR_P) $(DESTDIR)/$(htmldir);
-	@(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
+	$(MKDIR_P) $(DESTDIR)/$(mandir);
+	(cd ./man  && tar cf - . ) | (cd $(DESTDIR)/$(mandir)  && tar xf -)
+	$(MKDIR_P) $(DESTDIR)/$(htmldir);
+	(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
 .PHONY: doxygen-install
 
 post-distclean-hook:
