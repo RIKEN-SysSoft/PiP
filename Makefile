@@ -57,7 +57,7 @@ debug:
 ### doxygen
 
 doxygen:
-	-@$(RM) -r man html
+	-@$(RM) -r man html latex
 	@doxy_dirs=$$(find . -name .doxygen_html | while read file; do \
 		dir=$$(dirname $$file); \
 		while read src; do \
@@ -74,6 +74,7 @@ doxygen:
 		cat $(top_srcdir)/build/common.doxy; \
 		echo "REPEAT_BRIEF = $$repeat_brief"; \
 		echo "STRIP_FROM_PATH = $$doxy_dirs"; \
+		echo "GENERATE_LATEX = $$html"; \
 		echo "GENERATE_HTML = $$html"; \
 		echo "GENERATE_MAN = $$man"; \
 		echo "MAN_EXTENSION = $$man_ext"; \
