@@ -1,0 +1,528 @@
+.TH "libpip" 3 "Wed Nov 7 2018" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+libpip \- 
+.PP
+the PiP library  
+
+.SS "Files"
+
+.in +1c
+.ti -1c
+.RI "file \fBpip\&.h\fP"
+.br
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_init\fP (int *pipidp, int *ntasks, void **root_expp, int opts)"
+.br
+.RI "\fIInitialize the PiP library\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_fin\fP (void)"
+.br
+.RI "\fIfinalize the PiP library\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_spawn\fP (char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)"
+.br
+.RI "\fIspawn a PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_export\fP (void *exp)"
+.br
+.RI "\fIexport a memory region of the calling PiP root or a PiP task to the others\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_import\fP (int pipid, void **expp)"
+.br
+.RI "\fIimport the exposed memory region of the other\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_addr\fP (int pipid, const char *symnam, void **addrp)"
+.br
+.RI "\fIimport the exposed memory region of the other\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_pipid\fP (int *pipidp)"
+.br
+.RI "\fIget PIPID \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_ntasks\fP (int *ntasksp)"
+.br
+.RI "\fIget the maximum number of the PiP tasks \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_isa_piptask\fP (void)"
+.br
+.RI "\fIcheck if the calling task is a PiP task or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_mode\fP (int *modep)"
+.br
+.RI "\fIget the PiP execution mode \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_exit\fP (int retval)"
+.br
+.RI "\fIterminate PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_wait\fP (int pipid, int *retval)"
+.br
+.RI "\fIwait for the termination of a PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_trywait\fP (int pipid, int *retval)"
+.br
+.RI "\fIwait for the termination of a PiP task in a non-blocking way \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_kill\fP (int pipid, int signal)"
+.br
+.RI "\fIdeliver a signal to a PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_id\fP (int pipid, intptr_t *idp)"
+.br
+.RI "\fIdeliver a process or thread ID \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "const char * \fBpip_get_mode_str\fP (void)"
+.br
+.RI "\fIget a string of the current execution mode \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_barrier_init\fP (pip_barrier_t *barrp, int n)"
+.br
+.RI "\fIinitialize barrier synchronization structure \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_barrier_wait\fP (pip_barrier_t *barrp)"
+.br
+.RI "\fIwait on barrier synchronization in a busy-wait way \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+the PiP library 
+
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_init (int *pipidp, int *ntasks, void **root_expp, intopts)"
+
+.PP
+Initialize the PiP library\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipidp\fP When this is called by the PiP root process, then this returns PIP_PIPID_ROOT, otherwise it returns the PIPID of the calling PiP task\&. 
+.br
+\fIntasks\fP When called by the PiP root, it specifies the maximum number of PiP tasks\&. When called by a PiP task, then it returns the number specified by the PiP root\&. 
+.br
+\fIroot_expp\fP If the root PiP is ready to export a memory region to any PiP task(s), then this parameter points to the variable holding the exporting address of the root PiP\&. If the PiP root is not ready to export or has nothing to export then this variable can be NULL\&. When called by a PiP task, it returns the exporting address of the PiP root, if any\&. 
+.br
+\fIopts\fP This must be zero at the point of this writing\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+This function initializes the PiP library\&. The PiP root process must call this\&. A PiP task is not required to call this function unless the PiP task calls any PiP functions\&.
+.PP
+Is is NOT guaranteed that users can spawn tasks up to the number specified by the \fIntasks\fP argument\&. There are some limitations come from outside of the PiP library (GLIBC)\&.
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_export(3), pip_fin(3) 
+.RE
+.PP
+
+.SS "int pip_fin (void)"
+
+.PP
+finalize the PiP library\&. 
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+This function finalize the PiP library\&.
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_init(3) 
+.RE
+.PP
+
+.SS "int pip_spawn (char *filename, char **argv, char **envv, intcoreno, int *pipidp, pip_spawnhook_tbefore, pip_spawnhook_tafter, void *hookarg)"
+
+.PP
+spawn a PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIfilename\fP The executable to run as a PiP task 
+.br
+\fIargv\fP Argument(s) for the spawned PiP task 
+.br
+\fIenvv\fP Environment variables for the spawned PiP task 
+.br
+\fIcoreno\fP Core number for the PiP task to be bound to\&. If \fCPIP_CPUCORE_ASIS\fP is specified, then the core binding will not take place\&. 
+.br
+\fIpipidp\fP Specify PIPID of the spawned PiP task\&. If \fCPIP_PIPID_ANY\fP is specified, then the PIPID of the spawned PiP task is up to the PiP library and the assigned PIPID will be returned\&. 
+.br
+\fIbefore\fP Just before the executing of the spawned PiP task, this function is called so that file descriptors inherited from the PiP root, for example, can deal with\&. This is only effective with the PiP process mode\&. This function is called with the argument \fIhookarg\fP described below\&. 
+.br
+\fIafter\fP This function is called when the PiP task terminates for the cleanup purpose\&. This function is called with the argument \fIhookarg\fP described below\&. 
+.br
+\fIhookarg\fP The argument for the \fIbefore\fP and \fIafter\fP function call\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+This function is to spawn a PiP task\&. These functions are introduced to follow the programming style of conventional \fCfork\fP and \fCexec\fP\&. \fIbefore\fP function does the prologue found between the \fCfork\fP and \fCexec\fP\&. \fIafter\fP function is to free the argument if it is \fCmalloc()ed\fP\&. Note that the \fIbefore\fP and \fIafter\fP functions are called in the different \fIcontext\fP from the spawned PiP task\&. More specifically, any variables defined in the spawned PiP task cannot be accessible from the \fIbefore\fP and \fIafter\fP functions\&.
+.PP
+\fBNote:\fP
+.RS 4
+In theory, there is no reason to restrict for a PiP task to spawn another PiP task\&. However, the current implementation fails to do so\&. 
+.RE
+.PP
+
+.SS "int pip_export (void *exp)"
+
+.PP
+export a memory region of the calling PiP root or a PiP task to the others\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIexp\fP Starting address of a memory region of the calling process or task to the others\&. function call\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+The PiP root or a PiP task can export a memory region only once\&.
+.PP
+\fBNote:\fP
+.RS 4
+There is no size parameter to specify the length of the exported region because there is no way to restrict the access outside of the exported region\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_import(3) 
+.RE
+.PP
+
+.SS "int pip_import (intpipid, void **expp)"
+
+.PP
+import the exposed memory region of the other\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PIPID to import the exposed address 
+.br
+\fIexpp\fP The starting address of the exposed region of the PiP task specified by the \fIpipid\fP\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+It is the users' responsibility to synchronize\&. When the target region is not exported yet , then this function returns NULL\&. If the root exports its region by the \fCpip_init\fP function call, then it is guaranteed to be imported by PiP tasks at any time\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_export(3) 
+.RE
+.PP
+
+.SS "int pip_get_addr (intpipid, const char *symnam, void **addrp)"
+
+.PP
+import the exposed memory region of the other\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PIPID to import the exposed address 
+.br
+\fIsymnam\fP The name of a symbol existing in the specified PiP task 
+.br
+\fIaddrp\fP The address of the variable of the PiP task specified by the \fIpipid\fP\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+\fBpip_get_addr()\fP function is unable to get proper addresses for local (static) or TLS variables\&.
+.PP
+Although the \fBpip_get_addr()\fP fucntion can be used to get a function address, calling the function of the other PiP task by its address is very tricky and it may result in an unexpected bahavior\&.
+.PP
+By definition of the dlsym() Glibc function, this may return NULL even if the variable having the specified name exists\&. 
+.RE
+.PP
+
+.SS "int pip_get_pipid (int *pipidp)"
+
+.PP
+get PIPID 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipidp\fP This parameter points to the variable which will be set to the PIPID of the calling process\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "int pip_get_ntasks (int *ntasksp)"
+
+.PP
+get the maximum number of the PiP tasks 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIntasksp\fP This parameter points to the variable which will be set to the maximum number of the PiP tasks\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "int pip_isa_piptask (void)"
+
+.PP
+check if the calling task is a PiP task or not 
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+Unlike most of the other PiP functions, this can be called BEFORE calling the \fC\fBpip_init()\fP\fP function\&. 
+.RE
+.PP
+
+.SS "int pip_get_mode (int *modep)"
+
+.PP
+get the PiP execution mode 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImodep\fP This parameter points to the variable which will be set to the PiP execution mode
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "int pip_exit (intretval)"
+
+.PP
+terminate PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIretval\fP Terminate PiP task with the exit number specified with this parameter\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "int pip_wait (intpipid, int *retval)"
+
+.PP
+wait for the termination of a PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PIPID to wait for\&. 
+.br
+\fIretval\fP Exit value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function never returns when it succeeds\&. 
+.PP
+This function can be used regardless to the PiP execution mode\&. However, only the least significant 2 bytes are effective\&. This is because of the compatibility with the \fCexit\fP glibc function\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "int pip_trywait (intpipid, int *retval)"
+
+.PP
+wait for the termination of a PiP task in a non-blocking way 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PIPID to wait for\&. 
+.br
+\fIretval\fP Exit value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "int pip_kill (intpipid, intsignal)"
+
+.PP
+deliver a signal to a PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PIPID of a target PiP task 
+.br
+\fIsignal\fP signal number to be delivered
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "int pip_get_id (intpipid, intptr_t *idp)"
+
+.PP
+deliver a process or thread ID 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PIPID of a target PiP task 
+.br
+\fIidp\fP a pointer to store the ID value
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "const char* pip_get_mode_str (void)"
+
+.PP
+get a string of the current execution mode 
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return the name string of the current execution mode 
+.RE
+.PP
+
+.SS "void pip_barrier_init (pip_barrier_t *barrp, intn)"
+
+.PP
+initialize barrier synchronization structure 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIbarrp\fP pointer to a PiP barrier structure 
+.br
+\fIn\fP number of participants of this barrier synchronization 
+.RE
+.PP
+
+.SS "void pip_barrier_wait (pip_barrier_t *barrp)"
+
+.PP
+wait on barrier synchronization in a busy-wait way 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIbarrp\fP pointer to a PiP barrier structure
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This barrier synchronization never blocks\&. 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for PiP - Process-in-Process from the source code\&.
