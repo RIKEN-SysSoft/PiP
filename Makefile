@@ -49,7 +49,10 @@ SUBDIRS = lib include bin preload util sample \
 
 include $(top_srcdir)/build/rule.mk
 
-install: doxygen doxygen-install
+doc: doxygen
+.PHONY: doc
+
+install: doxygen-install
 .PHONY: install
 
 debug:
@@ -58,7 +61,7 @@ debug:
 ### doxygen
 
 doxygen:
-	-@$(RM) -r man html
+	-@$(RM) -r man html latex
 	@doxy_dirs=$$(find . -name .doxygen_html | while read file; do \
 		dir=$$(dirname $$file); \
 		while read src; do \
@@ -75,6 +78,7 @@ doxygen:
 		cat $(top_srcdir)/build/common.doxy; \
 		echo "REPEAT_BRIEF = $$repeat_brief"; \
 		echo "STRIP_FROM_PATH = $$doxy_dirs"; \
+		echo "GENERATE_LATEX = $$html"; \
 		echo "GENERATE_HTML = $$html"; \
 		echo "GENERATE_MAN = $$man"; \
 		echo "MAN_EXTENSION = $$man_ext"; \
@@ -92,10 +96,10 @@ doxygen:
 .PHONY: doxygen
 
 doxygen-install:
-	@$(MKDIR_P) $(DESTDIR)/$(mandir);
-	@(cd ./man  && tar cf - . ) | (cd $(DESTDIR)/$(mandir)  && tar xf -)
-	@$(MKDIR_P) $(DESTDIR)/$(htmldir);
-	@(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
+	$(MKDIR_P) $(DESTDIR)/$(mandir);
+	(cd ./man  && tar cf - . ) | (cd $(DESTDIR)/$(mandir)  && tar xf -)
+	$(MKDIR_P) $(DESTDIR)/$(htmldir);
+	(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
 .PHONY: doxygen-install
 
 post-distclean-hook:
