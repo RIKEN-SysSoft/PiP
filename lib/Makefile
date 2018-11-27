@@ -34,11 +34,14 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+
 CPPFLAGS += -I$(PIPINCDIR)
 CFLAGS += $(PICFLAG)
-LDFLAGS  = -shared -L$(glibc_libdir) -ldl
+LDFLAGS  = -shared  -Wl,-soname -Wl,$(LIBRARY) -L$(glibc_libdir) -ldl
 
-LIBRARY  = libpip.so
+LIBNAME  = libpip.so
+SO_MAJOR = 0
+LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 SRCS     = pip.c pip_util.c
 
 OBJS	 = pip.o pip_util.o
@@ -61,6 +64,15 @@ $(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
+	rm -f $(LIBNAME)
+	ln -s $(LIBRARY) $(LIBNAME)
+
+install:
+	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
+	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
+
+very-clean:
+	rm -f $(LIBNAME)
 
 debug:
 	CPPFLAGS="-DDEBUG" make all;
