@@ -67,7 +67,9 @@ $(LIBRARY): $(OBJS) Makefile
 	rm -f $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
+# chmod is to make rpmbuild happy
 install:
+	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY)
 	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
 	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
 
