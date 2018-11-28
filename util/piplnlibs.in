@@ -122,7 +122,7 @@ if $opt_remove; then
 fi
 
 if $opt_add; then
-	ls ${add_libdir} | grep '^lib.*\.so\(\.[0-9a-z]*\)*$' |
+	ls ${add_libdir} 2>/dev/null | grep '^lib.*\.so\(\.[0-9a-z]*\)*$' |
 	while read lib
 	do
 		if [ -f ${glibc_libdir}/$lib ]; then
@@ -148,7 +148,7 @@ fi
 
 for libdir in ${extra_libdirs} ${glibc_default_libdirs}
 do
-	ls ${libdir} | grep '^lib.*\.so\(\.[0-9a-z]*\)*$' |
+	ls ${libdir} 2>/dev/null | grep '^lib.*\.so\(\.[0-9a-z]*\)*$' |
 	while read lib
 	do
 		if [ -f ${glibc_libdir}/$lib ]; then
