@@ -36,13 +36,16 @@
 ###
 ### \section synopsis SYNOPSIS
 ###
-###	\c \b piplnlibs [<b>-rs</b>]
+###	\c \b piplnlibs [<b>-rs</b>] [<b>-a</b> DIR]
 ###
 ### \section description DESCRIPTION
 ### This command creates a number of symbolic links to the SOLIBs which
 ### are not installed by the patched GLIBC installation.
 ###
 ### \section options OPTIONS
+###
+### \subsection add -a
+### Add DIR to directories to search SOLIBS to create symbolic links.
 ###
 ### \subsection remove -r
 ### Remove symbolic links to SOLIBs in @glibc_libdir@ before creating.
@@ -63,10 +66,9 @@ glibc_libdir=@glibc_libdir@
 glibc_default_libdirs="/lib64 /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu"
 
 exit_status=0
-opt_silent=false
-opt_remove=false
 opt_add=
-add_libdir=
+opt_remove=false
+opt_silent=false
 program_name=`basename $0`
 
 usage()
@@ -88,7 +90,10 @@ do
 	shift
 done
 
-case $# in 0) :;; *) usage;; esac
+case $# in
+0)	:;;
+*)	usage;;
+esac
 
 for d in $glibc_default_libdirs
 do
