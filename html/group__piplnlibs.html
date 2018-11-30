@@ -83,15 +83,21 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>command to create symbolic links to the SOLIBs in the patched GLIBC. </p>
 <h1><a class="anchor" id="synopsis"></a>
 SYNOPSIS</h1>
-<p><code><b>piplnlibs</b> </code>[<b>-rs</b>]</p>
+<p><code><b>piplnlibs</b> </code>[<b>-Rrs</b>] [<b>-a</b> DIR]</p>
 <h1><a class="anchor" id="description"></a>
 DESCRIPTION</h1>
 <p>This command creates a number of symbolic links to the SOLIBs which are not installed by the patched GLIBC installation.</p>
 <h1><a class="anchor" id="options"></a>
 OPTIONS</h1>
+<h2><a class="anchor" id="add"></a>
+-a</h2>
+<p>Add DIR to directories to search SOLIBS to create symbolic links.</p>
+<h2><a class="anchor" id="remove_only"></a>
+-R</h2>
+<p>Remove symbolic links to SOLIBs in libdir of patched GLIBC, and do not create symbolic links.</p>
 <h2><a class="anchor" id="remove"></a>
 -r</h2>
-<p>Remove symbolic links to SOLIBs in /home/soda/work/pip/PIP-glibc.x86_64/lib before creating.</p>
+<p>Remove symbolic links to SOLIBs in libdir of patched GLIBC before creating.</p>
 <h2><a class="anchor" id="silent"></a>
 -s</h2>
 <p>Silent mode.</p>

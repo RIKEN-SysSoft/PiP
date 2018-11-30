@@ -1,4 +1,4 @@
-.TH "piplnlibs" 1 "Wed Nov 7 2018" "PiP - Process-in-Process" \" -*- nroff -*-
+.TH "piplnlibs" 1 "Fri Nov 30 2018" "PiP - Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -8,14 +8,18 @@ command to create symbolic links to the SOLIBs in the patched GLIBC\&.
 
 .SH "SYNOPSIS"
 .PP
-\fC\fBpiplnlibs\fP \fP[\fB-rs\fP]
+\fC\fBpiplnlibs\fP \fP[\fB-Rrs\fP] [\fB-a\fP DIR]
 .SH "DESCRIPTION"
 .PP
 This command creates a number of symbolic links to the SOLIBs which are not installed by the patched GLIBC installation\&.
 .SH "OPTIONS"
 .PP
+.SS "-a"
+Add DIR to directories to search SOLIBS to create symbolic links\&.
+.SS "-R"
+Remove symbolic links to SOLIBs in libdir of patched GLIBC, and do not create symbolic links\&.
 .SS "-r"
-Remove symbolic links to SOLIBs in /home/soda/work/pip/PIP-glibc\&.x86_64/lib before creating\&.
+Remove symbolic links to SOLIBs in libdir of patched GLIBC before creating\&.
 .SS "-s"
 Silent mode\&.
 .SH "ENVIRONMENT"
