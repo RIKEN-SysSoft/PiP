@@ -1,6 +1,6 @@
 # default target is "all"
 
-all: subdir-all header-all lib-all prog-all doxygen-all post-all-hook
+all: subdir-all header-all lib-all prog-all post-all-hook
 .PHONY: all
 
 install: all \
@@ -23,6 +23,9 @@ distclean: veryclean \
 	doxygen-distclean distclean-here post-distclean-hook
 .PHONY: distclean
 
+doxygen: subdir-doxygen doxygen-here
+.PHONY: doxygen
+
 misc-clean:
 	@echo \
 	$(RM) *~ .nfs*; \
@@ -39,7 +42,8 @@ distclean-here:
 
 ### subdir rules
 
-subdir-all subdir-install subdir-clean subdir-veryclean subdir-distclean:
+subdir-all subdir-install subdir-clean subdir-veryclean subdir-distclean \
+subdir-doxygen:
 	@target=`expr $@ : 'subdir-\(.*\)'`; \
 	for dir in -- $(SUBDIRS); do \
 		case $${dir} in --) continue;; esac; \
@@ -175,7 +179,7 @@ prog-distclean:
 
 ### doxygen rules
 
-doxygen-all:
+doxygen-here:
 	-@$(RM) .doxygen_html;
 	-@case "$(MAN1_SRCS)" in \
 	'')	;; \
