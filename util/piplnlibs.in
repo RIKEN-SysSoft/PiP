@@ -84,7 +84,7 @@ do
 		case $option in -a)
 			opt_add=true
 			shift
-			add_dir=$option
+			add_libdir=$option;;
 		esac
 		case $option in -*[!rs]*)
 			echo >&2 "$program_name: error: invalid option $option"
