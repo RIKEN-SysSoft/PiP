@@ -35,7 +35,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAMS_TO_INSTALL = piplnlibs
-MAN1_SRCS = piplnlibs
+MAN1_SRCS = piplnlibs.in
 PROGRAMS = pip_gdbif_offsets
 SRCS = pip_gdbif_offsets.c
 OBJS = pip_gdbif_offsets.o
