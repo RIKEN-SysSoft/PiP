@@ -48,11 +48,11 @@
 ### Add DIR to directories to search SOLIBS to create symbolic links.
 ###
 ### \subsection remove_only -R
-### Remove symbolic links to SOLIBs in @glibc_libdir@,
+### Remove symbolic links to SOLIBs in libdir of patched GLIBC,
 ### and do not create symbolic links.
 ###
 ### \subsection remove -r
-### Remove symbolic links to SOLIBs in @glibc_libdir@ before creating.
+### Remove symbolic links to SOLIBs in libdir of patched GLIBC before creating.
 ###
 ### \subsection silent -s
 ### Silent mode.
