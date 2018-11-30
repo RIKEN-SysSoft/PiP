@@ -36,7 +36,7 @@
 ###
 ### \section synopsis SYNOPSIS
 ###
-###	\c \b piplnlibs [<b>-rs</b>] [<b>-a</b> DIR]
+###	\c \b piplnlibs [<b>-Rrs</b>] [<b>-a</b> DIR]
 ###
 ### \section description DESCRIPTION
 ### This command creates a number of symbolic links to the SOLIBs which
@@ -46,6 +46,10 @@
 ###
 ### \subsection add -a
 ### Add DIR to directories to search SOLIBS to create symbolic links.
+###
+### \subsection remove_only -R
+### Remove symbolic links to SOLIBs in @glibc_libdir@,
+### and do not create symbolic links.
 ###
 ### \subsection remove -r
 ### Remove symbolic links to SOLIBs in @glibc_libdir@ before creating.
@@ -67,20 +71,22 @@ glibc_default_libdirs="/lib64 /lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu"
 
 exit_status=0
 opt_add=
+opt_remove_only=false
 opt_remove=false
 opt_silent=false
 program_name=`basename $0`
 
 usage()
 {
-	echo >&2 "Usage: $program_name [-rs] [-a DIR]"
+	echo >&2 "Usage: $program_name [-Rrs] [-a DIR]"
 	exit 2
 }
 
-set -- `getopt a:rs "$@"` || usage
+set -- `getopt a:Rrs "$@"` || usage
 
 while	case "$1" in
 	-a)	opt_add="$opt_add $2"; shift; true;;
+	-R)	opt_remove=true; opt_remove_only=true; true;;
 	-r)	opt_remove=true; true;;
 	-s)	opt_silent=true; true;;
 	--)	shift; false;;
@@ -127,6 +133,8 @@ if [ -n "${PIP_LIBRARY_PATH:-$LD_LIBRARY_PATH}" ]; then
 else
 	extra_libdirs=
 fi
+
+$opt_remove_only && exit $exit_status
 
 for libdir in ${opt_add} ${extra_libdirs} ${glibc_default_libdirs}
 do
