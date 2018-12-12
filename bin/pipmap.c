@@ -33,13 +33,13 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-/** \addtogroup pmap pmap
+/** \addtogroup pipmap pipmap
  *
  * \brief command to print PiP memory map
  *
  * \section synopsis SYNOPSIS
  *
- *	\b pmap
+ *	\b pipmap
  *
  *
  * \section description DESCRIPTION

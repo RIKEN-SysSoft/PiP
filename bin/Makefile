@@ -35,9 +35,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) pmap
+PROGRAMS_TO_INSTALL = $(PROGRAM) pipmap
 PROGRAMS = $(PROGRAMS_TO_INSTALL) hello
-MAN1_SRCS = piprun.c pmap.c hello.c
+MAN1_SRCS = piprun.c pipmap.c hello.c
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
@@ -51,7 +51,7 @@ piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
 	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@ $(LDLIBS)
 
-pmap: pmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+pipmap: pipmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
 	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
 
