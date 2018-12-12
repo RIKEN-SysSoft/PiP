@@ -9,6 +9,12 @@
 %define	pip_glibc_dir		/opt/pip
 %define	pip_glibc_release	pip0
 
+# disable strip, otherwise the pip-gdb shows the following error:
+#	warning: Unable to find libthread_db matching inferior's thread library, thread debugging will not be available.
+%define __spec_install_post /usr/lib/rpm/brp-compress
+%define __os_install_post /usr/lib/rpm/brp-compress
+%define debug_package %{nil}
+
 %define glibcsrcdir glibc-2.17-c758a686
 %define glibcversion 2.17
 %define glibcrelease 106%{?dist}.8.%{pip_glibc_release}
