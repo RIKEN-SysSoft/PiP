@@ -34,26 +34,6 @@ Those processes share the same address space, just like pthreads, and
 each process has its own variables like a process. The parent process
 is called PiP process and a sub-process are called a PiP task.
 
-%package libs
-Summary: Runtime libraries for %{name}
-Group: System Environment/Libraries
-Requires: pip-glibc
-
-%description libs
-PiP allows a process to create sub-processes into the same virtual
-address space where the parent process runs.
-The pip-libs package contains the libraries that are used by
-a PiP process and PiP tasks.
-
-%package devel
-Summary: Header files, libraries for development of %{name}
-Group: Development/Libraries
-
-%description devel
-This package contains the header files, static libraries and development
-documentation for %{name}. If you like to develop programs using %{name},
-you will need to install %{name}-devel.
-
 %prep
 
 %setup -n %{name}-%{version}
@@ -80,19 +60,17 @@ make DESTDIR="$RPM_BUILD_ROOT" \
 %attr(0644,root,root) %{_mandir}/man1*/[ABD-Zabcd-z]*
 %attr(0644,root,root) %{_mandir}/man3*/[ABD-Zabcd-z]*
 %attr(0644,root,root) %{docdir}/*
-
-%files libs
+# libs
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/piplnlibs
 %attr(0755,root,root) %{_libdir}/libpip.so.%{libpip_version}
 %attr(0755,root,root) %{_libdir}/pip_preload.so
-
-%files devel
+# devel
 %{_prefix}/include
 %{_libdir}/libpip.so
 
-%post libs
+%post
 %{_bindir}/piplnlibs -rs
 
-%preun libs
+%preun
 %{_bindir}/piplnlibs -Rs
