@@ -46,8 +46,10 @@ includedir=@includedir@
 libdir=@libdir@
 dynamic_linker=@dynamic_linker@
 
-PIP_CFLAGS="-fPIC -I${includedir} -pthread"
-PIP_LDFLAGS="-fPIE -pie -L${libdir} -Wl,-rpath=${libdir} -rdynamic -Wl,--dynamic-linker=${dynamic_linker}"
+: ${CC:=cc}
+
+PIP_CFLAGS="-fPIE -I${includedir} -pthread"
+PIP_LDFLAGS="-pie -L${libdir} -Wl,-rpath=${libdir} -rdynamic -Wl,--dynamic-linker=${dynamic_linker}"
 PIP_LDLIBS="-lpip -ldl"
 
 is_linking=true
@@ -55,12 +57,12 @@ is_linking=true
 for i
 do
 	case $i in
-	-c)	is_linking=false;;
+	-c|-E)	is_linking=false;;
 	esac
 done
 
 if ${is_linking}; then
-	cc ${PIP_CFLAGS} ${PIP_LDFLAGS} "$@" ${PIP_LDLIBS}
+	${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} "$@" ${PIP_LDLIBS}
 else
-	cc ${PIP_CFLAGS} "$@"
+	${CC} ${PIP_CFLAGS} "$@"
 fi
