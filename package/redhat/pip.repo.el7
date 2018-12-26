@@ -1,0 +1,14 @@
+[pip]
+name=PiP: Process in Process - $basearch
+baseurl=file:///tmp/pip/package/el/7/$basearch/pip-1/
+enabled=1
+gpgcheck=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PiP
+
+[pip-source]
+name=PiP: Process in Process - $basearch - Source
+baseurl=file:///tmp/pip/package/el/SRPMS/pip-1/
+enabled=1
+gpgcheck=0
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-PiP
+
