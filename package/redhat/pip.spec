@@ -55,6 +55,7 @@ make DESTDIR="$RPM_BUILD_ROOT" \
 
 %files
 %defattr(-,root,root)
+%attr(0755,root,root) %{_bindir}/pipcc
 %attr(0755,root,root) %{_bindir}/piprun
 %attr(0755,root,root) %{_bindir}/pipmap
 %attr(0644,root,root) %{_mandir}/man1*/[ABD-Zabcd-z]*

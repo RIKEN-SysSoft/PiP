@@ -1,3 +1,7 @@
+#!/bin/sh
+
+# $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+# 	  System Software Devlopment Team. All rights researved$
 # $PIP_VERSION: Version 1.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
@@ -25,39 +29,38 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
-# 	  System Software Devlopment Team. All rights researved$
 
-top_builddir = ..
-top_srcdir = $(top_builddir)
-srcdir = .
+### \addtogroup pipcc pipcc
+###
+### \brief C compiler driver for PiP
+###
+### \section synopsis SYNOPSIS
+###
+###	\c \b pipcc [<b>cc-command-options</b>]
+###
 
-include $(top_srcdir)/build/var.mk
+prefix=@prefix@
+exec_prefix=@exec_prefix@
 
-PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) pipmap pipcc
-PROGRAMS = $(PROGRAMS_TO_INSTALL) hello
-MAN1_SRCS = piprun.c pipmap.c pipcc.in hello.c
+includedir=@includedir@
+libdir=@libdir@
+dynamic_linker=@dynamic_linker@
 
-CFLAGS += -pthread
-CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
-LDLIBS += $(PIPLDLIB) -ldl
+PIP_CFLAGS="-fPIC -I${includedir} -pthread"
+PIP_LDFLAGS="-fPIE -pie -L${libdir} -Wl,-rpath=${libdir} -rdynamic -Wl,--dynamic-linker=${dynamic_linker}"
+PIP_LDLIBS="-lpip -ldl"
 
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
+is_linking=true
 
-include $(top_srcdir)/build/rule.mk
+for i
+do
+	case $i in
+	-c)	is_linking=false;;
+	esac
+done
 
-piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
-	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@ $(LDLIBS)
-
-pipmap: pipmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
-
-hello: hello.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
-
-post-clean-hook:
-	$(RM) *.E *.log
+if ${is_linking}; then
+	cc ${PIP_CFLAGS} ${PIP_LDFLAGS} "$@" ${PIP_LDLIBS}
+else
+	cc ${PIP_CFLAGS} "$@"
+fi
