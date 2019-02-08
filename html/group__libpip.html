@@ -103,7 +103,7 @@ Files</h2></td></tr>
 <tr class="memdesc:ga6d7ac596a9da824e40d7c06528f42e5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">import the exposed memory region of the other.  <a href="#ga6d7ac596a9da824e40d7c06528f42e5f">More...</a><br/></td></tr>
 <tr class="separator:ga6d7ac596a9da824e40d7c06528f42e5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaa0f8ce0138a1abb22ee5cb4d2230abc5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5">pip_get_addr</a> (int pipid, const char *symnam, void **addrp)</td></tr>
-<tr class="memdesc:gaa0f8ce0138a1abb22ee5cb4d2230abc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">import the exposed memory region of the other.  <a href="#gaa0f8ce0138a1abb22ee5cb4d2230abc5">More...</a><br/></td></tr>
+<tr class="memdesc:gaa0f8ce0138a1abb22ee5cb4d2230abc5"><td class="mdescLeft">&#160;</td><td class="mdescRight">resolve a symbol and return its address.  <a href="#gaa0f8ce0138a1abb22ee5cb4d2230abc5">More...</a><br/></td></tr>
 <tr class="separator:gaa0f8ce0138a1abb22ee5cb4d2230abc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga4e715bb8c325e9acc81af0745908dc0e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a> (int *pipidp)</td></tr>
 <tr class="memdesc:ga4e715bb8c325e9acc81af0745908dc0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get PIPID  <a href="#ga4e715bb8c325e9acc81af0745908dc0e">More...</a><br/></td></tr>
@@ -395,7 +395,7 @@ Files</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>import the exposed memory region of the other. </p>
+<p>resolve a symbol and return its address. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>The PIPID to import the exposed address </td></tr>
@@ -405,9 +405,9 @@ Files</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
-<dl class="section note"><dt>Note</dt><dd><a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5" title="import the exposed memory region of the other. ">pip_get_addr()</a> function is unable to get proper addresses for local (static) or TLS variables.</dd>
+<dl class="section note"><dt>Note</dt><dd><a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5" title="resolve a symbol and return its address. ">pip_get_addr()</a> function is unable to get proper addresses for local (static) or TLS variables.</dd>
 <dd>
-Although the <a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5" title="import the exposed memory region of the other. ">pip_get_addr()</a> fucntion can be used to get a function address, calling the function of the other PiP task by its address is very tricky and it may result in an unexpected bahavior.</dd>
+Although the <a class="el" href="group__libpip.html#gaa0f8ce0138a1abb22ee5cb4d2230abc5" title="resolve a symbol and return its address. ">pip_get_addr()</a> fucntion can be used to get a function address, calling the function of the other PiP task by its address is very tricky and it may result in an unexpected bahavior.</dd>
 <dd>
 By definition of the dlsym() Glibc function, this may return NULL even if the variable having the specified name exists. </dd></dl>
 
@@ -529,7 +529,9 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode. </dd>
+<dd>
+This function never returns when it succeeds.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
 
 </div>
@@ -566,9 +568,7 @@ By definition of the dlsym() Glibc function, this may return NULL even if the va
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>This function never returns when it succeeds. </dd>
-<dd>
-This function can be used regardless to the PiP execution mode. However, only the least significant 2 bytes are effective. This is because of the compatibility with the <code>exit</code> glibc function.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>This function can be used regardless to the PiP execution mode. However, only the least significant 2 bytes are effective. This is because of the compatibility with the <code>exit</code> glibc function.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
 
 </div>
