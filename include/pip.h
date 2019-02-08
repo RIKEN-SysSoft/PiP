@@ -342,7 +342,7 @@ extern "C" {
   /** @}*/
 
   /**
-   * \brief import the exposed memory region of the other.
+   * \brief resolve a symbol and return its address.
    *  @{
    * \param[in] pipid The PIPID to import the exposed address
    * \param[in] symnam The name of a symbol existing in the specified PiP task
@@ -421,6 +421,7 @@ extern "C" {
    *
    * \note This function can be used regardless to the PiP execution
    * mode.
+   * \note This function never returns when it succeeds.
    *
    * \return Return 0 on success. Return an error code on error.
    *
@@ -434,7 +435,6 @@ extern "C" {
    * \param[in] pipid PIPID to wait for.
    * \param[out] retval Exit value of the terminated PiP task
    *
-   * \note This function never returns when it succeeds.
    * \note This function can be used regardless to the PiP execution
    * mode. However, only the least significant 2 bytes are
    * effective. This is because of the compatibility with the
