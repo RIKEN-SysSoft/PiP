@@ -34,7 +34,7 @@ int \hyperlink{group__libpip_ga6d7ac596a9da824e40d7c06528f42e5f}{pip\-\_\-import
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_gaa0f8ce0138a1abb22ee5cb4d2230abc5}{pip\-\_\-get\-\_\-addr} (int pipid, const char $\ast$symnam, void $\ast$$\ast$addrp)
-\begin{DoxyCompactList}\small\item\em import the exposed memory region of the other. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em resolve a symbol and return its address. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_ga4e715bb8c325e9acc81af0745908dc0e}{pip\-\_\-get\-\_\-pipid} (int $\ast$pipidp)
@@ -254,7 +254,7 @@ pip\-\_\-export(3)
 )}}\label{group__libpip_gaa0f8ce0138a1abb22ee5cb4d2230abc5}
 
 
-import the exposed memory region of the other. 
+resolve a symbol and return its address. 
 
 
 \begin{DoxyParams}[1]{Parameters}
@@ -366,7 +366,9 @@ terminate Pi\-P task
 \hline
 \end{DoxyParams}
 \begin{DoxyNote}{Note}
-This function can be used regardless to the Pi\-P execution mode.
+This function can be used regardless to the Pi\-P execution mode. 
+
+This function never returns when it succeeds.
 \end{DoxyNote}
 \begin{DoxyReturn}{Returns}
 Return 0 on success. Return an error code on error. 
@@ -391,8 +393,6 @@ wait for the termination of a Pi\-P task
 \hline
 \end{DoxyParams}
 \begin{DoxyNote}{Note}
-This function never returns when it succeeds. 
-
 This function can be used regardless to the Pi\-P execution mode. However, only the least significant 2 bytes are effective. This is because of the compatibility with the {\ttfamily exit} glibc function.
 \end{DoxyNote}
 \begin{DoxyReturn}{Returns}

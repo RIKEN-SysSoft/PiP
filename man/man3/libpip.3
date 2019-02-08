@@ -1,4 +1,4 @@
-.TH "libpip" 3 "Wed Dec 26 2018" "PiP - Process-in-Process" \" -*- nroff -*-
+.TH "libpip" 3 "Fri Feb 8 2019" "PiP - Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -47,7 +47,7 @@ the PiP library
 .ti -1c
 .RI "int \fBpip_get_addr\fP (int pipid, const char *symnam, void **addrp)"
 .br
-.RI "\fIimport the exposed memory region of the other\&. \fP"
+.RI "\fIresolve a symbol and return its address\&. \fP"
 .in -1c
 .in +1c
 .ti -1c
@@ -273,7 +273,7 @@ pip_export(3)
 .SS "int pip_get_addr (intpipid, const char *symnam, void **addrp)"
 
 .PP
-import the exposed memory region of the other\&. 
+resolve a symbol and return its address\&. 
 .PP
 \fBParameters:\fP
 .RS 4
@@ -375,7 +375,9 @@ terminate PiP task
 .PP
 \fBNote:\fP
 .RS 4
-This function can be used regardless to the PiP execution mode\&.
+This function can be used regardless to the PiP execution mode\&. 
+.PP
+This function never returns when it succeeds\&.
 .RE
 .PP
 \fBReturns:\fP
@@ -398,8 +400,6 @@ wait for the termination of a PiP task
 .PP
 \fBNote:\fP
 .RS 4
-This function never returns when it succeeds\&. 
-.PP
 This function can be used regardless to the PiP execution mode\&. However, only the least significant 2 bytes are effective\&. This is because of the compatibility with the \fCexit\fP glibc function\&.
 .RE
 .PP
