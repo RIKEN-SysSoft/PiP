@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
+ * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018, 2019
  */
 
 #define _GNU_SOURCE
@@ -41,11 +41,10 @@
 #include <dlfcn.h>
 #include <elf.h>
 
-#include <pip.h>
 #include <pip_internal.h>
 #include <pip_util.h>
 
-extern int pip_is_coefd( int );
+extern int pip_is_coefd_( int );
 extern int pip_get_dso( int pipid, void **loaded );
 
 int pip_check_pie( char *path ) {
@@ -91,13 +90,15 @@ char *pip_pipidstr( char *buf ) {
     idstr = "?null?";
     break;
   default:
-    if( PIP_IS_ACTIVE(pip_task) ) {
-      (void) sprintf( buf, "%d", pip_task->pipid );
+    if( pip_task->task_sched == NULL ) {
+      (void) sprintf( buf, "%d[-]", pip_task->pipid );
+    } else if( pip_task->task_sched == pip_task ) {
+      (void) sprintf( buf, "%d[*]", pip_task->pipid );
     } else if( pip_task->task_sched != NULL ) {
-      (void) sprintf( buf, "%d/%d",
+      (void) sprintf( buf, "%d[%d]",
 		      pip_task->pipid, pip_task->task_sched->pipid );
     } else {
-      (void) sprintf( buf, "%d/-", pip_task->pipid );
+      (void) sprintf( buf, "%d/?", pip_task->pipid );
     }
     idstr = buf;
     break;
@@ -105,17 +106,25 @@ char *pip_pipidstr( char *buf ) {
   return idstr;
 }
 
-static char *pip_type_str_( int type ) {
+static char *pip_type_str_( pip_task_internal_t *taski ) {
   char *typestr;
 
-  if( type == PIP_TYPE_TASK_PASSIVE ) {
-    typestr = "tskP";
-  } else if( type == PIP_TYPE_TASK_ACTIVE ) {
-    typestr = "tskA";
-  } else if( type & PIP_TYPE_ROOT ) {
-    typestr= "root";
+  if( taski->type == PIP_TYPE_NONE ) {
+    typestr = "none";
+  } else if( PIP_ISA_ROOT( taski ) ) {
+    if( PIP_IS_SUSPENDED( taski ) ) {
+      typestr = "root";
+    } else {
+      typestr = "ROOT";
+    }
+  } else if( PIP_ISA_TASK( taski ) ) {
+    if( PIP_IS_SUSPENDED( taski ) ) {
+      typestr = "task";
+    } else {
+      typestr = "TASK";
+    }
   } else {
-    typestr = "(?)";
+    typestr = "(**)";
   }
   return typestr;
 }
@@ -126,7 +135,7 @@ char * pip_type_str( void ) {
   if( pip_task == NULL ) {
     typestr = "(NULL)";
   } else {
-    typestr = pip_type_str_( pip_task->type );
+    typestr = pip_type_str_( pip_task );
   }
   return typestr;
 }
@@ -139,26 +148,28 @@ int pip_idstr( char *buf, size_t sz ) {
   pid_t	pid = pip_gettid();
   char *pre  = "<";
   char *post = ">";
-  char *idstr, idnum[64];
   int	n = 0;
 
   if( pip_task == NULL ) {
-    n = snprintf( buf, sz, "%s---:(%d)%s", pre, pid, post );
-  } else {
-    if( PIP_IS_ROOT( pip_task ) ) {
-      n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
-    } else if( PIP_IS_PASSIVE( pip_task ) ) {
-      idstr = pip_pipidstr( idnum );
-      n = snprintf( buf, sz, "%sTskP:%s(%d)%s", pre, idstr, pid, post );
-    } else if( PIP_IS_ACTIVE( pip_task ) ) {
-      idstr = pip_pipidstr( idnum );
-      n = snprintf( buf, sz, "%sTskA:%s(%d)%s", pre, idstr, pid, post );
-    } else if( pip_task->type == PIP_TYPE_NONE ) {
-      n = snprintf( buf, sz, "%s\?\?\?\?(%d)%s", pre, pid, post );
+    n = snprintf( buf, sz, "%s----:(%d)%s", pre, pid, post );
+  } else if( PIP_ISA_ROOT( pip_task ) ) {
+    if( PIP_IS_SUSPENDED( pip_task ) ) {
+      n = snprintf( buf, sz, "%sroot:(%d)%s", pre, pid, post );
     } else {
-      n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
-		    pre, pip_task->type, pid, post );
+      n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
     }
+  } else if( PIP_ISA_TASK( pip_task ) ) {
+    char *idstr, idnum[64];
+
+    idstr = pip_pipidstr( idnum );
+    if( PIP_IS_SUSPENDED( pip_task ) ) {
+      n = snprintf( buf, sz, "%stask:%s(%d)%s", pre, idstr, pid, post );
+    } else {
+      n = snprintf( buf, sz, "%sTASK:%s(%d)%s", pre, idstr, pid, post );
+    }
+  } else {
+    n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
+		  pre, pip_task->type, pid, post );
   }
   return n;
 }
@@ -200,46 +211,10 @@ void pip_err_mesg( char *format, ... ) {
   pip_message( stderr, "PiP-ERROR%s ", format, ap );
 }
 
-int pip_check_pipid( int* );
-pip_task_internal_t *pip_get_task_( int );
-
-#ifdef AHAH
-void pip_ulp_describe( FILE *fp, const char *tag, pip_task_t *task ) {
-  if( task != NULL ) {
-    pip_task_internal_t *taski = PIP_TASKI( task );
-    char *typestr = pip_type_str_( taski->type );
-    if( tag == NULL ) {
-      pip_info_fmesg( fp,
-		      "%s[%d](sched:%p,ctx=%p)@%p",
-		      typestr,
-		      taski->pipid,
-		      taski->task_sched,
-		      taski->ctx_suspend,
-		      taski );
-    } else {
-      pip_info_fmesg( fp,
-		      "%s: %s[%d](sched:%p,ctx=%p)@%p",
-		      tag,
-		      typestr,
-		      taski->pipid,
-		      taski->task_sched,
-		      taski->ctx_suspend,
-		      taski );
-    }
-  } else {
-    if( tag == NULL ) {
-      pip_info_fmesg( fp, "ULP:(nil)" );
-    } else {
-      pip_info_fmesg( fp, "%s: ULP:(nil)", tag );
-    }
-  }
-}
-#endif
-
 void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
-  if( pip_check_pipid( &pipid ) == 0 ) {
+  if( pip_check_pipid_( &pipid ) == 0 ) {
     pip_task_internal_t *task = pip_get_task_( pipid );
-    char *typestr = pip_type_str_( task->type );
+    char *typestr = pip_type_str_( task );
     if( tag == NULL ) {
       pip_info_fmesg( fp,
 		      "%s[%d]@%p (sched:%p,ctx:%p)",
@@ -268,6 +243,7 @@ void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
 }
 
 void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue ) {
+  if( fp == NULL ) fp = stderr;
   if( queue == NULL ) {
     if( tag == NULL ) {
       pip_info_fmesg( fp, "QUEUE:(nil)" );
@@ -276,55 +252,89 @@ void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue ) {
     }
   } else if( PIP_TASKQ_ISEMPTY( queue ) ) {
     if( tag == NULL ) {
-      pip_info_fmesg( fp, "QHEAD:%p  EMPTY", queue );
+      pip_info_fmesg( fp, "QUEUE:%p[%d]  EMPTY",
+		      queue, (int) PIP_TASKI(queue)->pipid );
     } else {
-      pip_info_fmesg( fp, "%s: QHEAD:%p  EMPTY", tag, queue );
+      pip_info_fmesg( fp, "%s: QUEUE:%p[%d]  EMPTY",
+		      tag, queue, (int) PIP_TASKI(queue)->pipid );
     }
   } else {
-    pip_task_internal_t 	*t;
-    pip_task_t 			*u;
-    int 			i = 0;
+    pip_task_t 		*u, *next, *prev;
+    pip_task_internal_t *t;
+    int 		i, pn, pp;
+
+    next = queue->next;
+    prev = queue->next;
+    if( prev == queue ) {
+      prev = (void*) 0x8888;
+      pp = -1;
+    } else {
+      pp = PIP_TASKI(prev)->pipid;
+    }
+    if( next == queue ) {
+      next = (void*) 0x8888;
+      pn = -1;
+    } else {
+      pn = PIP_TASKI(next)->pipid;
+    }
+
+    t = PIP_TASKI( queue );
 
     if( tag == NULL ) {
-      pip_info_fmesg( fp, "QHEAD:%p (next:%p prev:%p)",
-		      queue, queue->next, queue->prev );
+      pip_info_fmesg( fp,
+		      "QUEUE:%p next:%p[%d] prev:%p[%d]",
+		      queue, next, (int) pn, prev, (int) pp );
     } else {
-      pip_info_fmesg( fp, "%s: QHEAD:%p (next:%p prev:%p)",
-		      tag, queue, queue->next, queue->prev );
+      pip_info_fmesg( fp,
+		      "%s: QUEUE:%p next:%p[%d] prev:%p[%d]",
+		      tag, queue, next, pn, prev, pp );
     }
+    i = 0;
     PIP_TASKQ_FOREACH( queue, u ) {
+      next = u->next;
+      prev = u->next;
+      if( prev == queue ) {
+	prev = (void*) 0x8888; /* prev == root */
+	pp   = -1;
+      } else {
+	pp = PIP_TASKI(prev)->pipid;
+      }
+      if( next == queue ) {
+	next = (void*) 0x8888; /* next == root */
+	pn = -1;
+      } else {
+	pn = PIP_TASKI(next)->pipid;
+      }
       t = PIP_TASKI( u );
       if( tag == NULL ) {
 	pip_info_fmesg( fp,
-			"QUEUE[%d] pipid:%d "
-			"(sched:%p,resume:%p,ctx=%p)@%p next:%p prev=%p",
+			"QUEUE[%d]:%p "
+			"(sched:%p[%d],ctx=%p) next:%p[%d] prev=%p[%d]",
 			i,
-			t->pipid,
-			t->task_sched,
-			t->task_resume,
-			t->ctx_suspend,
 			t,
-			u->next,
-			u->prev );
+			t->task_sched,
+			(int) (t->task_sched!=NULL)?t->task_sched->pipid:-1,
+			t->ctx_suspend,
+			next, pn,
+			prev, pp );
       } else {
 	pip_info_fmesg( fp,
-			"%s: QUEUE[%d] pipid:%d "
-			"(sched:%p,resume:%p,ctx=%p)@%p next:%p prev=%p",
+			"%s: QUEUE[%d]:%p "
+			"(sched:%p[%d],ctx=%p) next:%p[%d] prev=%p[%d]",
 			tag,
 			i,
-			t->pipid,
-			t->task_sched,
-			t->task_resume,
-			t->ctx_suspend,
 			t,
-			u->next,
-			u->prev );
+			t->task_sched,
+			(int) (t->task_sched!=NULL)?t->task_sched->pipid:-1,
+			t->ctx_suspend,
+			next, pn,
+			prev, pp );
       }
       if( u->next == u->prev && u->next != queue ) {
 	if( tag == NULL ) {
-	  pip_info_fmesg( fp, "QUEUE looped list !!!!!!!!!!!!!" );
+	  pip_info_fmesg( fp, "BROKEN !!!!!!!!!!!!!" );
 	} else {
-	  pip_info_fmesg( fp, "%s: QUEUE looped list !!!!!!!!!!!!!", tag );
+	  pip_info_fmesg( fp, "%s: BROKEN !!!!!!!!!!!!!", tag );
 	}
 	break;
       }
@@ -394,7 +404,7 @@ void pip_fprint_fds( FILE *fp ) {
       if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( ( fd = atoi( de->d_name ) ) != fd_dir ) {
-	  if( pip_is_coefd ( fd ) ) coe = '*';
+	  if( pip_is_coefd_ ( fd ) ) coe = '*';
 	  fprintf( fp, "%s %s -> %s %c", idstr, fdpath, fdname, coe );
 	} else {
 	  fprintf( fp, "%s %s -> %s  opendir(\"/proc/self/fd\")",

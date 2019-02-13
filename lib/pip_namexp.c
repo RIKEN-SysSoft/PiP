@@ -42,7 +42,7 @@
 //#define DEBUG
 
 #include <pip.h>
-#include <pip_ulp.h>
+#include <pip_blt.h>
 #include <pip_internal.h>
 #include <pip_util.h>
 
@@ -51,13 +51,13 @@
 typedef uint64_t 	pip_hash_t;
 
 typedef struct {
-  pip_list_t			list;
+  pip_list_t			list; /* hash collision list */
   pip_hash_t			hashval;
   char				*name;
   void				*address;
   int				flag_exported;
   volatile  int			flag_canceled;
-  pip_atomic_t			count_import;
+  pip_task_queue_t		queue;
 } pip_namexp_entry_t;
 
 typedef struct {
@@ -70,8 +70,6 @@ typedef struct {
   pip_namexp_list_t		hash_table[PIP_HASHTAB_SZ];
 } pip_named_exptab_t;
 
-pip_task_t *pip_get_task_( int );
-int pip_check_pipid( int *pipidp );
 
 static void pip_namexp_lock( pip_spinlock_t *lock ) {
   DBGF( "LOCK %p", lock );
@@ -83,7 +81,8 @@ static void pip_namexp_unlock( pip_spinlock_t *lock ) {
   pip_spin_unlock( lock );
 }
 
-static void pip_add_namexp( pip_namexp_list_t *head, pip_namexp_entry_t *entry ) {
+static void
+pip_add_namexp( pip_namexp_list_t *head, pip_namexp_entry_t *entry ) {
   PIP_LIST_ADD( (pip_list_t*) &head->list, (pip_list_t*) entry );
 }
 
@@ -91,7 +90,7 @@ static void pip_del_namexp( pip_namexp_entry_t *entry ) {
   PIP_LIST_DEL( (pip_list_t*) entry );
 }
 
-int pip_named_export_init( pip_task_t *task ) {
+int pip_named_export_init_( pip_task_internal_t *taski ) {
   pip_named_exptab_t *namexp;
   int	i;
 
@@ -99,82 +98,25 @@ int pip_named_export_init( pip_task_t *task ) {
   if( namexp == NULL ) RETURN( ENOMEM );
   memset( namexp, 0, sizeof( pip_named_exptab_t ) );
 
-  namexp->pipid = task->pipid;
+  namexp->pipid = taski->pipid;
   for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
     pip_spin_init( &namexp->hash_table[i].lock );
     PIP_LIST_INIT( &namexp->hash_table[i].list );
   }
-  task->named_exptab = (void*) namexp;
+  taski->annex->named_exptab = (void*) namexp;
   return 0;
 }
 
-int pip_named_export_fin( pip_task_t *task ) {
-  pip_named_exptab_t	*namexp = (pip_named_exptab_t*) task->named_exptab;
-  pip_namexp_list_t	*head;
-  pip_namexp_entry_t	*entry;
-  pip_list_t		*list, *next;
-  int 			i;
-
-  DBGF( ">> PIPID:%d", task->pipid );
-  if( namexp != NULL ) {
-    if( namexp->pipid != task->pipid ) {
-      pip_err_mesg( "%s is called by PIPID:%d, but it was created by PIPID:%d",
-		    __func__, task->pipid, namexp->pipid );
-    }
-    for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
-      head = &namexp->hash_table[i];
-      pip_spin_lock( &head->lock );
-      PIP_LIST_FOREACH_SAFE( (pip_list_t*) &head->list, list, next ) {
-	entry = (pip_namexp_entry_t*) list;
-	if( entry->flag_exported ) {
-	  pip_del_namexp( entry );
-	  free( entry->name );
-	  free( entry );
-	} else {
-	  /* the is a query entry, it must be */
-	  /* free()ed by the query task or ulp */
-	  entry->flag_canceled = 1;
-	}
-      }
-      pip_spin_unlock( &head->lock );
-    }
-  }
-  DBG;
-  RETURN( 0 );
-}
-
-void pip_named_export_fin_all( void ) {
-  int i;
-
-  DBGF( "pip_root->ntasks:%d", pip_root->ntasks );
-  for( i=0; i<pip_root->ntasks; i++ ) {
-    DBGF( "PiP task: %d", i );
-    free( pip_root->tasks[i].named_exptab );
-    pip_root->tasks[i].named_exptab = NULL;
-  }
-  DBGF( "PiP root" );
-  (void) pip_named_export_fin( pip_root->task_root );
-  free( pip_root->task_root->named_exptab );
-  pip_root->task_root->named_exptab = NULL;
-  DBG;
-}
-
-static void pip_lock_hashtab_head( pip_namexp_list_t *head ) {
+static pip_namexp_list_t*
+pip_lock_hashtab_head( pip_named_exptab_t *hashtab, pip_hash_t hash ) {
+  int			idx = hash & ( PIP_HASHTAB_SZ - 1 );
+  pip_namexp_list_t	*head = &hashtab->hash_table[idx];
   pip_namexp_lock( &head->lock );
+  return head;
 }
 
 static void pip_unlock_hashtab_head( pip_namexp_list_t *head ) {
   pip_namexp_unlock( &head->lock );
-}
-
-static pip_namexp_list_t*
-pip_lock_hashtab_list( pip_named_exptab_t *hashtab, pip_hash_t hash ) {
-  int			idx = hash & ( PIP_HASHTAB_SZ - 1 );
-  pip_namexp_list_t	*list = &hashtab->hash_table[idx];
-  pip_spinlock_t	*lock = &list->lock;
-
-  pip_namexp_lock( lock );
-  return list;
 }
 
 static pip_hash_t pip_name_hash( const char *name ) {
@@ -222,7 +164,7 @@ static pip_namexp_entry_t *pip_new_entry( char *name, pip_hash_t hash ) {
     entry->address       = NULL;
     entry->flag_exported = 0;
     entry->flag_canceled = 0;
-    entry->count_import  = 0;
+    pip_task_queue_init( &entry->queue, NULL, NULL );
 
     if( entry->name == NULL ) {
       free( entry );
@@ -243,14 +185,15 @@ pip_new_export_entry( void *address, char *name, pip_hash_t hash ) {
 }
 
 int pip_named_export( void *exp, const char *format, ... ) {
-  pip_named_exptab_t *namexp = (pip_named_exptab_t*) pip_task->named_exptab;
+  pip_named_exptab_t *namexp;
   pip_namexp_entry_t *entry, *new;
   pip_namexp_list_t  *head;
   va_list 	ap;
   pip_hash_t 	hash;
   char 		*name = NULL;
-  int 		err = 0;
+  int 		n, err = 0;
 
+  ENTER;
   va_start( ap, format );
   if( format == NULL ) {
     err = EINVAL;
@@ -263,24 +206,29 @@ int pip_named_export( void *exp, const char *format, ... ) {
   hash = pip_name_hash( name );
   DBGF( "pipid:%d  name:%s", pip_task->pipid, name );
 
-  head = pip_lock_hashtab_list( namexp, hash );
+  namexp = (pip_named_exptab_t*) pip_task->annex->named_exptab;
+  head = pip_lock_hashtab_head( namexp, hash );
   {
     if( ( entry = pip_find_namexp( head, hash, name ) ) == NULL ) {
+      /* no entry yet */
       if( ( entry = pip_new_export_entry( exp, name, hash ) ) == NULL ) {
 	err = ENOMEM;
       } else {
 	pip_add_namexp( head, entry );
       }
     } else if( !entry->flag_exported ) {
-      /* the entry is query */
+      /* the entry is for query (i.e. this is the first export) */
       entry->address = exp;
       if( ( new = pip_new_export_entry( exp, name, hash ) ) == NULL ) {
 	err = ENOMEM;
-      } else {			/* and somebody exported already, signal all */
+      } else {
+	n = PIP_TASK_ALL;
+	err = pip_dequeue_and_resume_N_nolock( &new->queue, NULL, &n );
+	if( err ) goto error;
 	pip_del_namexp( entry );
 	pip_add_namexp( head, new );
-	/* note: we cannot free this entry since it was created by the */
-	/* other PiP task and in this case that PiP task must free it  */
+	/* note: we cannot free this entry since it might be created by */
+	/* another PiP task and this PiP task must free it in this case */
       }
     } else {
       /* already exists */
@@ -288,116 +236,88 @@ int pip_named_export( void *exp, const char *format, ... ) {
     }
   }
   pip_unlock_hashtab_head( head );
-  pip_ulp_yield();
+  pip_yield();
   free( name );
  error:
   va_end( ap );
   RETURN( err );
 }
 
-static int pip_named_do_import( int pipid,
-				void **expp,
-				int flag_nblk,
-				const char *format,
-				va_list ap ) {
-  pip_task_t	     *task;
-  pip_named_exptab_t *namexp;
-  pip_namexp_entry_t *entry, *new = NULL;
-  pip_namexp_list_t  *head;
-  pip_hash_t 	hash;
-  void		*address = NULL;
-  char 		*name = NULL;
-  int		flag_canceled = 0;
-  int 		err = 0;
+static int pip_named_import_( int pipid,
+			      void **expp,
+			      int flag_nblk,
+			      const char *format,
+			      va_list ap ) {
+  void unlock_hashtab( void *arg ) {
+    pip_namexp_list_t  	*head = (pip_namexp_list_t*) arg;
+    pip_unlock_hashtab_head( head );
+  }
+  pip_task_internal_t	*taski;
+  pip_named_exptab_t 	*namexp;
+  pip_namexp_entry_t 	*entry, *new = NULL;
+  pip_namexp_list_t  	*head;
+  pip_hash_t 		hash;
+  void			*address = NULL;
+  char 			*name = NULL;
+  int 			err = 0;
 
+  ENTER;
   if( format == NULL ) RETURN( EINVAL );
-  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( ( err = pip_check_pipid_( &pipid ) ) != 0 ) RETURN( err );
   if( !pip_is_alive( pipid ) ) RETURN( EACCES );
-  task = pip_get_task_( pipid );
+  taski = pip_get_task_( pipid );
 
-  namexp = (pip_named_exptab_t*) task->named_exptab;
+  namexp = (pip_named_exptab_t*) taski->annex->named_exptab;
   if( namexp == NULL ) RETURN( EACCES );
   if( vasprintf( &name, format, ap ) < 0 || name == NULL ) RETURN( ENOMEM );
   hash = pip_name_hash( name );
 
   DBGF( ">> pipid:%d  name:%s", pipid, name );
-  head = pip_lock_hashtab_list( namexp, hash );
+ retry:
+  head = pip_lock_hashtab_head( namexp, hash );
   {
     if( ( entry = pip_find_namexp( head, hash, name ) ) != NULL ) {
       if( entry->flag_exported ) { /* exported already */
 	address = entry->address;
-      } else {			/* somebody asked already */
+      } else {
+	/* already queried, but not yet exported */
 	if( flag_nblk ) {
-	  pip_unlock_hashtab_head( head );
 	  err = ENOENT;
-	  goto error;
-	}
-	while( 1 ) {
-	  pip_unlock_hashtab_head( head );
-	  if( ( err = pip_ulp_yield() ) != 0 ) goto error;
-	  if( !pip_is_alive( pipid ) ) {
-	    err = ECANCELED;
-	    goto error;
-	  }
-	  (void) pip_lock_hashtab_head( head );
-	  if( ( entry = pip_find_namexp( head, hash, name ) ) != NULL ) {
-	    if( entry->flag_canceled ) {
-	      err = ECANCELED;
-	      break;
-	    } else if( entry->flag_exported ) {
-	      address       = entry->address;
-	      flag_canceled = entry->flag_canceled;
-	      break;
-	    }
-	  }
+	} else {
+	  pip_suspend_and_enqueue_nolock( &entry->queue,
+					  (void*) unlock_hashtab,
+					  (void*) head );
+	  /* we must retry because the query entry was replaced */
+	  if( !new->flag_canceled ) goto retry;
+	  err = ECANCELED;
+	  goto nounlock;
 	}
       }
-    } else if( flag_nblk ) {
-      pip_unlock_hashtab_head( head );
-      err = ENOENT;
-      goto error;
-    } else {			/* not yet expoerted nor nobody has asked, then add a query */
-      if( ( new = pip_new_entry( name, hash ) ) == NULL ) {
+    } else {			/* not yet exported */
+      if( flag_nblk ) {
+	err = ENOENT;
+      } else if( ( new = pip_new_entry( name, hash ) ) == NULL ) {
 	err = ENOMEM;
       } else {
 	pip_add_namexp( head, new );
-	while( 1 ) {
-	  pip_unlock_hashtab_head( head );
-	  if( ( err = pip_ulp_yield() ) != 0 ) goto error;
-	  if( !pip_is_alive( pipid ) ) {
-	    err = ECANCELED;
-	    goto error;
-	  }
-	  (void) pip_lock_hashtab_head( head );
-	  if( ( entry = pip_find_namexp( head, hash, name ) ) != NULL ) {
-	    if( entry->flag_canceled ) {
-	      err = ECANCELED;
-	      break;
-	    } else if( entry->flag_exported ) {
-	      address       = entry->address;
-	      flag_canceled = entry->flag_canceled;
-	      break;
-	    }
-	  }
-	}
+	pip_suspend_and_enqueue_nolock( &new->queue,
+					(void*) unlock_hashtab,
+					(void*) head );
+	/* this entry was created by myself and it can be freed by myself */
+	free( new->name );
+	free( new );
+	/* we must retry because the query entry was replaced */
+	if( !new->flag_canceled ) goto retry;
+	err = ECANCELED;
+	goto nounlock;
       }
     }
   }
   pip_unlock_hashtab_head( head );
-
-  if( flag_canceled ) {
-    err = ECANCELED;
-  } if( err == 0 && expp != NULL ) {
-    *expp = address;
-  }
+ nounlock:
   DBGF( "<< pipid:%d  name:%s", pipid, name );
   free( name );
-  if( new != NULL && !new->flag_canceled ) {
-    pip_del_namexp( new );
-    free( new->name );
-    free( new );
-  }
- error:
+  if( !err ) *expp = address;
   RETURN( err );
 }
 
@@ -405,7 +325,7 @@ int pip_named_import( int pipid, void **expp, const char *format, ... ) {
   va_list ap;
   int err;
   va_start( ap, format );
-  err = pip_named_do_import( pipid, expp, 0, format, ap );
+  err = pip_named_import_( pipid, expp, 0, format, ap );
   va_end( ap );
   RETURN( err );
 }
@@ -414,7 +334,60 @@ int pip_named_tryimport( int pipid, void **expp, const char *format, ... ) {
   va_list ap;
   int err;
   va_start( ap, format );
-  err = pip_named_do_import( pipid, expp, 1, format, ap );
+  err = pip_named_import_( pipid, expp, 1, format, ap );
   va_end( ap );
   RETURN( err );
+}
+
+void pip_named_export_fin_( pip_task_internal_t *taski ) {
+  pip_named_exptab_t	*namexp;
+  pip_namexp_list_t	*head;
+  pip_namexp_entry_t	*entry;
+  pip_list_t		*list, *next;
+  int 			n, i;
+
+  ENTER;
+  DBGF( "PIPID:%d", taski->pipid );
+  namexp = (pip_named_exptab_t*) taski->annex->named_exptab;
+  if( namexp != NULL ) {
+    ASSERT( namexp->pipid != taski->pipid );
+    for( i=0; i<PIP_HASHTAB_SZ; i++ ) {
+      head = &namexp->hash_table[i];
+      pip_spin_lock( &head->lock );
+      PIP_LIST_FOREACH_SAFE( (pip_list_t*) &head->list, list, next ) {
+	PIP_LIST_DEL( list );
+	entry = (pip_namexp_entry_t*) list;
+	pip_del_namexp( entry );
+	if( entry->flag_exported ) {
+	  free( entry->name );
+	  free( entry );
+	} else {
+	  int err;
+	  /* the is a query entry, it must be free()ed by the query task */
+	  entry->flag_canceled = 1;
+	  n = PIP_TASK_ALL;
+	  err = pip_dequeue_and_resume_N_nolock(&entry->queue, NULL, &n);
+	  ASSERT( err );
+	}
+      }
+      pip_spin_unlock( &head->lock );
+    }
+  }
+  RETURNV;
+}
+
+void pip_named_export_fin_all_( void ) {
+  int i;
+
+  DBGF( "pip_root->ntasks:%d", pip_root->ntasks );
+  for( i=0; i<pip_root->ntasks; i++ ) {
+    DBGF( "PiP task: %d", i );
+    free( pip_root->tasks[i].annex->named_exptab );
+    pip_root->tasks[i].annex->named_exptab = NULL;
+  }
+  DBGF( "PiP root" );
+  (void) pip_named_export_fin_( pip_root->task_root );
+  free( pip_root->task_root->annex->named_exptab );
+  pip_root->task_root->annex->named_exptab = NULL;
+  DBG;
 }
