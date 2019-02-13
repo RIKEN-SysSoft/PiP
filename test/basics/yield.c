@@ -39,5 +39,9 @@
 #include <test.h>
 
 int task_main( int argc, char **arg ) {
+  int i;
+  for( i=0; i<niters; i++ ) {
+    TESTINT( pip_yield() );
+  }
   return 0;
 }

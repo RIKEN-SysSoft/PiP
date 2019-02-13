@@ -28,59 +28,24 @@
 # $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-top_builddir = ../..
+top_builddir = ..
 top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
+include ./Test.common
 
-LDLIBS += ../main.o
-
-DEPLIBS += ../main.o
-
-SRCS  = initfin.c yield.c barrier.c
-
-##	stack.c \
-##	export.c \
-##	environ.c \
-##	file.c \
-##	wait.c \
-##	exit.c \
-##	core.c \
-##	numa.c \
-##	hook.c \
-##	spawn.c \
-##	null.c \
-##	recursive.c \
-##	varvars.c \
-##	activate.c \
-##	mutex.c \
-##	barrier.c
-
-##	waitany.c \
-##	waitany2.c \
-##	sigchld.c
-
-PROGRAMS  = initfin yield barrier
-
-##stack export environ file \
-##            wait exit core numa hook \
-##	    spawn null recursive varvars \
-##	    activate mutex barrier
-##	waitany waitany2 sigchld
+SRCS = main.c
+OBJS = main.o
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-test-file:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )
+CPPFLAGS += -I.
+CFLAGS += -fPIE -pie
 
-post-clean-hook:
-	$(RM) -f *.E *.log
+all : main.o
 
-check: test
-
-test:
-	( cd ../; ./test.sh -A basics/test.list )
+clean:
+	rm -f $(OBJS)

@@ -8,6 +8,8 @@ unset LANG LC_ALL
 
 : ${TEST_PIP_TASKS:=$(./util/dlmopen_count -p)}
 
+export NTASKS=${TEST_PIP_TASKS}
+
 if [ -n "$MCEXEC" ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
 	TEST_PIP_TASKS=$OMP_NUM_THREADS;
