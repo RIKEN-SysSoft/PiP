@@ -53,10 +53,14 @@
 #include <errno.h>
 
 #include <pip.h>
+#include <pip_blt.h>
+#include <pip_internal.h>
 #include <pip_util.h>
 #include <pip_machdep.h>
+#include <pip_debug.h>
 
 #define NTASKS		PIP_NTASKS_MAX
+#define NITERS		(100)
 
 #define EXIT_PASS	0
 #define EXIT_FAIL	1
@@ -67,11 +71,61 @@
 #define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
 #define EXIT_KILLED	7  /* killed by Control-C or something               */
 
-#ifndef DEBUG
-//#define DEBUG
-#endif
+int	pipid,ntasks, npass, niters;
 
-#include <pip_debug.h>
+typedef struct naive_barrier {
+  struct {
+    int			count_init;
+    pip_atomic_t        count;
+    volatile int        gsense;
+  };
+} naive_barrier_t;
+
+struct comm {
+  naive_barrier_t	nbarr[2];
+  pip_task_queue_t 	queue;
+  pip_atomic_t		npass;
+  pip_barrier_t		pbarr;
+  pip_mutex_t		pmutex;
+  volatile int		tmp;
+} comm;
+
+inline static int naive_barrier_init( naive_barrier_t *barrp, int n ) {
+  if( n < 1 ) RETURN( EINVAL );
+  barrp->count      = n;
+  barrp->count_init = n;
+  barrp->gsense     = 0;
+  return( 0 );
+}
+
+inline static int naive_barrier_wait( naive_barrier_t *barrp ) {
+  if( barrp->count_init > 1 ) {
+    int lsense = !barrp->gsense;
+    if( pip_atomic_sub_and_fetch( &barrp->count, 1 ) == 0 ) {
+      barrp->count  = barrp->count_init;
+      pip_memory_barrier();
+      barrp->gsense = lsense;
+    } else {
+      while( barrp->gsense != lsense ) sched_yield();
+    }
+  }
+  return 0;
+}
+
+typedef pip_spinlock_t		naive_lock_t;
+
+inline static void naive_lock( naive_lock_t *lock ) {
+  while( !pip_spin_trylock( lock ) ) sched_yield();
+}
+
+inline static void naive_unlock( naive_lock_t *lock ) {
+  *lock = 0;
+}
+
+inline static void naive_lock_init( naive_lock_t *lock ) {
+  naive_unlock( lock );
+}
+
 
 void pip_abort( void );
 
@@ -98,7 +152,7 @@ void pip_abort( void );
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
-    TPRT( "<< (%s)=%d", #F, __xyz );			\
+    TPRT( "<< %s=%d", #F, __xyz );			\
     if( __xyz != 0 ) pip_abort();			\
   } while(0)
 #define TESTSYSERR(F)		\
@@ -139,7 +193,6 @@ inline static int cpu_num_limit( void ) {
 
 inline static void pause_and_yield( int usec ) {
   if( usec > 0 ) usleep( usec );
-  pip_pause();
   sched_yield();
 }
 
@@ -447,7 +500,7 @@ inline static void set_sigint_watcher( void ) {
 
 #endif
 
-unsigned long get_total_memory( void ) {
+inline static unsigned long get_total_memory( void ) {
   FILE *fp;
   int ns = 0;
   unsigned long memtotal = 0;
