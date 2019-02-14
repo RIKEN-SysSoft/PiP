@@ -38,6 +38,7 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#include <stdint.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -52,9 +53,11 @@
 #endif
 
 #ifndef PIP_LOCK_TYPE
-#include <stdint.h>
 typedef volatile uint32_t	pip_spinlock_t;
 #endif
+
+#ifndef PIP_ATOMIC_TYPE
+typedef volatile intptr_t	pip_atomic_t;
 
 #ifndef PIP_PAUSE
 inline static void pip_pause( void ) {
@@ -65,13 +68,17 @@ inline static void pip_pause( void ) {
 #endif
 
 #ifndef PIP_WRITE_BARRIER
-inline static void pip_write_barrier(void) {
+inline static void pip_write_barrier( void )
+  __attribute__((always_inline)); /* this function must be inlined ALWAYS!! */
+inline static void pip_write_barrier( void ) {
   __sync_synchronize ();
 }
 #endif
 
 #ifndef PIP_MEMORY_BARRIER
-inline static void pip_memory_barrier(void) {
+inline static void pip_memory_barrier( void )
+  __attribute__((always_inline)); /* this function must be inlined ALWAYS!! */
+inline static void pip_memory_barrier( void ) {
   __sync_synchronize ();
 }
 #endif
@@ -118,25 +125,38 @@ inline static int pip_spin_init (pip_spinlock_t *lock) {
 #endif
 
 #ifndef PIP_SPIN_DESTROY
-inline static int pip_spin_destroy (pip_spinlock_t *lock) {
+inline static int pip_spin_destroy( pip_spinlock_t *lock ) {
   /* Nothing to do.  */
   return 0;
 }
 #endif
 
-#ifndef PIP_ATOMIC_TYPE
-#include <stdint.h>
-typedef volatile uint32_t	pip_atomic_t;
+#ifndef PIP_COMP_AND_SWAP
+inline static int
+pip_comp_and_swap( pip_atomic_t *lock, pip_atomic_t oldv, pip_atomic_t newv ) {
+  return (int) __sync_bool_compare_and_swap( lock, oldv, newv );
+}
+#endif
 
-#ifndef PIP_ATOMIC_ADD_AND_FETCH
-inline static pip_atomic_t pip_atomic_add_and_fetch( pip_atomic_t *p, int v ) {
-  return __sync_add_and_fetch( p, v );
+#ifndef PIP_COMP2_AND_SWAP
+inline static int
+pip_comp2_and_swap( pip_atomic_t *lock, pip_atomic_t oldv, pip_atomic_t newv ){
+  return ( ( *lock ) != oldv ) ? 0 :
+     __sync_bool_compare_and_swap( lock, oldv, newv );
+}
+#endif
+
+#ifndef PIP_ATOMIC_FETCH_AND_ADD
+inline static pip_atomic_t
+pip_atomic_fetch_and_add( pip_atomic_t *p,  pip_atomic_t v ) {
+  return __sync_fetch_and_add( p, v );
 }
 #endif
 
 #ifndef PIP_ATOMIC_SUB_AND_FETCH
-inline static pip_atomic_t pip_atomic_sub_and_fetch( pip_atomic_t *p, int v ) {
-  return  __sync_sub_and_fetch( p, v );
+inline static pip_atomic_t
+pip_atomic_sub_and_fetch( pip_atomic_t *p, pip_atomic_t v ) {
+  return __sync_sub_and_fetch( p, v );
 }
 #endif
 #endif
@@ -152,38 +172,29 @@ typedef struct {
 } pip_ctx_t;
 #endif
 
-#ifndef PIP_SAVE_TLS
-inline static int pip_save_tls( intptr_t *tlsp ) {
-  return 0;
-}
-#endif
-
-#ifndef PIP_LOAD_TLS
-inline static int pip_load_tls( intptr_t tls ) {
-  return 0;
-}
-#endif
-
 #ifndef PIP_MAKE_CONTEXT
 #define pip_make_context(CTX,F,C,...)	 \
   do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)
 #endif
 
+/* I cannot call getcontext() in a function but       */
+/* gcc (4.8.5 20150623) complains if it is attributed */
+/* as always_inline. so I ake it as a mcro            */
 #ifndef PIP_SAVE_CONTEXT
-inline static int pip_save_context( pip_ctx_t *ctxp ) {
-  return ( getcontext(&ctxp->ctx) ? errno : 0 );
+#define pip_save_context(ctxp)	 ( getcontext(&(ctxp)->ctx) ? errno : 0 );
+#endif
+
+#ifndef PIP_SWAP_CONTEXT
+inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new )
+  __attribute__((always_inline));
+inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
+    return ( swapcontext( &old->ctx, &new->ctx ) ? errno : 0 );
 }
 #endif
 
 #ifndef PIP_LOAD_CONTEXT
 inline static int pip_load_context( const pip_ctx_t *ctxp ) {
     return ( setcontext(&ctxp->ctx) ? errno : 0 );
-}
-#endif
-
-#ifndef PIP_SWAP_CONTEXT
-inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
-    return ( swapcontext( &old->ctx, &new->ctx ) ? errno : 0 );
 }
 #endif
 

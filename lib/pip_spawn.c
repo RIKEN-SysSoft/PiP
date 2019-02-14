@@ -53,9 +53,7 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
-#include <pip.h>
 #include <pip_internal.h>
-#include <pip_util.h>
 #include <pip_gdbif_func.h>
 
 extern void pip_named_export_fin_(  pip_task_internal_t* );
@@ -865,7 +863,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
       pip_reset_task_struct_( task );
     }
   }
-  DBGF( "pip_spawn_(pipid=%d)", *pipidp );
+  DBGF( "pip_task_spawn_(pipid=%d)", *pipidp );
   RETURN( err );
 }
 

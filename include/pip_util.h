@@ -43,6 +43,7 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <pip.h>
+#include <pip_blt.h>
 #include <stdio.h>
 
 #ifdef PIP_EVAL
@@ -61,9 +62,14 @@ extern "C" {
   pid_t pip_gettid( void );
   int  pip_check_pie( char *path );
 
-  void pip_info_mesg( char *format, ... );
-  void pip_warn_mesg( char *format, ... );
-  void pip_err_mesg(  char *format, ... );
+  void pip_info_fmesg( FILE *fp, char *format, ... )
+    __attribute__((format (printf, 2, 3)));
+  void pip_info_mesg( char *format, ... )
+    __attribute__((format (printf, 1, 2)));
+  void pip_err_mesg( char *format, ... )
+    __attribute__((format (printf, 1, 2)));
+  void pip_warn_mesg( char *format, ... )
+    __attribute__((format (printf, 1, 2)));
 
   /* the following pip_pring_*() functions will be deprecated */
   void pip_print_maps( void );

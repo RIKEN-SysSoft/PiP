@@ -35,18 +35,7 @@
 
 #define _GNU_SOURCE
 
-#include <sys/mman.h>
-#include <sys/wait.h>
-#include <sys/syscall.h>
 #include <dlfcn.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <sched.h>
-#include <malloc.h>
-#include <signal.h>
-
-//#define PIP_NO_MALLOPT
-//#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
 
 //#define DEBUG
 //#define PRINT_MAPS
@@ -56,7 +45,6 @@
 //#define EVAL
 
 #include <pip_internal.h>
-#include <pip_util.h>
 #include <pip_gdbif_func.h>
 
 #define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
@@ -72,41 +60,6 @@ pip_root_t		*pip_root = NULL;
 pip_task_internal_t	*pip_task = NULL;
 
 static pip_clone_t*	pip_cloneinfo = NULL;
-
-int pip_is_initialized( void ) {
-  return pip_task != NULL;
-}
-
-int pip_isa_root( void ) {
-  return pip_is_initialized() && PIP_ISA_ROOT( pip_task );
-}
-
-int pip_isa_task( void ) {
-  return
-    pip_is_initialized() &&
-    PIP_ISA_TASK( pip_task ) &&
-    !PIP_ISA_ROOT( pip_task );
-}
-
-int pip_is_alive( int pipid ) {
-  if( pip_check_pipid_( &pipid ) == 0 ) {
-    return pip_is_alive_( pip_get_task_( pipid ) );
-  }
-  return 0;
-}
-
-int pip_get_pipid( int *pipidp ) {
-  if( pipidp == NULL ) RETURN( EINVAL );
-  *pipidp = pip_get_pipid_();
-  RETURN( 0 );
-}
-
-int pip_get_ntasks( int *ntasksp ) {
-  if( ntasksp  == NULL ) RETURN( EINVAL );
-  if( pip_root == NULL ) return( EPERM  ); /* intentionally using small return */
-  *ntasksp = pip_root->ntasks_curr;
-  RETURN( 0 );
-}
 
 static void pip_set_magic( pip_root_t *root ) {
   memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN );
@@ -138,7 +91,7 @@ static int pip_set_root( char *env ) {
     pip_err_mesg( "Invalid PiP root" );
     ERRJ;
   }
-  if( !pip_is_magic_ok(   pip_root ) ) {
+  if( !pip_is_magic_ok( pip_root ) ) {
     pip_err_mesg( "%s environment not found", PIP_ROOT_ENV );
     ERRJ;
   }
@@ -153,43 +106,9 @@ static int pip_set_root( char *env ) {
   RETURN( EPERM );
 }
 
-void pip_page_alloc_( size_t sz, void **allocp ) {
-  size_t pgsz;
-  int err;
-
-  if( pip_root == NULL ) {	/* no pip_root yet */
-    pgsz = sysconf( _SC_PAGESIZE );
-  } else if( pip_root->page_size == 0 ) {
-    pip_root->page_size = pgsz = sysconf( _SC_PAGESIZE );
-  } else {
-    pgsz = pip_root->page_size;
-  }
-  sz = ROUNDUP( sz, pgsz );
-  ASSERT( ( err = posix_memalign( allocp, pgsz, sz ) ) != 0 &&
-	  *allocp == NULL );
-}
-
 static void pip_blocking_init( pip_blocking_t *blocking ) {
   //(void) sem_init( &blocking->semaphore, 1, 0 );
   (void) sem_init( blocking, 1, 0 );
-}
-
-void pip_reset_task_struct_( pip_task_internal_t *taski ) {
-  pip_task_annex_t *annex = taski->annex;
-
-  memset( (void*) taski, 0, sizeof( pip_task_internal_t ) );
-  PIP_TASKQ_INIT( &taski->queue  );
-  PIP_TASKQ_INIT( &taski->schedq );
-  taski->type  = PIP_TYPE_NONE;
-  taski->pipid = PIP_PIPID_NULL;
-
-  memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
-  taski->annex = annex;
-  taski->annex->pid = -1; /* pip_gdbif_init_task_struct() refers this */
-  PIP_TASKQ_INIT(    &taski->annex->exitq );
-  PIP_TASKQ_INIT(    &taski->annex->oodq );
-  pip_spin_init(     &taski->annex->lock_oodq );
-  pip_blocking_init( &taski->annex->sleep );
 }
 
 const char *pip_get_mode_str( void ) {
@@ -357,6 +276,52 @@ static int pip_check_opt_and_env( int *optsp ) {
   RETURN( 0 );
 }
 
+static pip_task_internal_t *pip_get_myself_( void ) {
+  pip_task_internal_t *taski;
+  if( pip_isa_root() ) {
+    taski = pip_root->task_root;
+  } else {
+    taski = pip_task;
+  }
+  return taski;
+}
+
+/* internal funcs */
+
+void pip_page_alloc_( size_t sz, void **allocp ) {
+  size_t pgsz;
+  int err;
+
+  if( pip_root == NULL ) {	/* no pip_root yet */
+    pgsz = sysconf( _SC_PAGESIZE );
+  } else if( pip_root->page_size == 0 ) {
+    pip_root->page_size = pgsz = sysconf( _SC_PAGESIZE );
+  } else {
+    pgsz = pip_root->page_size;
+  }
+  sz = ROUNDUP( sz, pgsz );
+  ASSERT( ( err = posix_memalign( allocp, pgsz, sz ) ) != 0 &&
+	  *allocp == NULL );
+}
+
+void pip_reset_task_struct_( pip_task_internal_t *taski ) {
+  pip_task_annex_t *annex = taski->annex;
+
+  memset( (void*) taski, 0, sizeof( pip_task_internal_t ) );
+  PIP_TASKQ_INIT( &taski->queue  );
+  PIP_TASKQ_INIT( &taski->schedq );
+  taski->type  = PIP_TYPE_NONE;
+  taski->pipid = PIP_PIPID_NULL;
+
+  memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
+  taski->annex = annex;
+  taski->annex->pid = -1; /* pip_gdbif_init_task_struct() refers this */
+  PIP_TASKQ_INIT(    &taski->annex->exitq );
+  PIP_TASKQ_INIT(    &taski->annex->oodq );
+  pip_spin_init(     &taski->annex->lock_oodq );
+  pip_blocking_init( &taski->annex->sleep );
+}
+
 uint32_t pip_check_sync_flag_( uint32_t flags ) {
   if( flags & PIP_SYNC_MASK ) {
     if( ( flags & ~PIP_SYNC_AUTO     ) != ~PIP_SYNC_AUTO     ) return 0;
@@ -381,6 +346,8 @@ uint32_t pip_check_sync_flag_( uint32_t flags ) {
   }
   return flags;
 }
+
+/* API */
 
 #define PIP_CACHE_ALIGN(X) \
   ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
@@ -468,62 +435,29 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
     /* child task */
-    DBG;
     if( ( err = pip_set_root( envroot ) ) != 0 ) RETURN( err );
-    DBG;
     pipid = (int) strtoll( envtask, NULL, 10 );
-    DBG;
     if( pipid < 0 || pipid >= pip_root->ntasks ) {
       pip_err_mesg( "PiP-ID is too large (pipid=%d)", pipid );
       RETURN( EPERM );
     }
-    DBG;
     pip_task = &pip_root->tasks[pipid];
-    ntasks   = pip_root->ntasks;
+    ntasks    = pip_root->ntasks;
     if( ntasksp != NULL ) *ntasksp = ntasks;
     if( rt_expp != NULL ) {
       *rt_expp = (void*) pip_root->task_root->annex->export;
     }
-    DBG;
     if( ( err = pip_named_export_init_( pip_task ) ) != 0 ) RETURN( err );
     unsetenv( PIP_ROOT_ENV );
     unsetenv( PIP_TASK_ENV );
 
   } else {
-    DBG;
     RETURN( EPERM );
   }
   DBGF( "pip_root=%p  pip_task=%p", pip_root, pip_task );
   /* root and child */
   if( pipidp != NULL ) *pipidp = pipid;
   RETURN( err );
-}
-
-int pip_exit( int extval ) {
-  extern void pip_do_exit( pip_task_internal_t*, int );
-  int err = 0;
-
-  DBGF( "extval:%d", extval );
-  if( !pip_is_initialized() ) RETURN( EPERM  );
-  if( PIP_ISA_ROOT( pip_task ) ) {
-    if( ( err = pip_fin() ) == 0 ) {
-      exit( extval );
-      /* never reach here */
-    }
-  } else {
-    pip_do_exit( pip_task, extval );
-  }
-  RETURN( err );
-}
-
-static pip_task_internal_t *pip_get_myself_( void ) {
-  pip_task_internal_t *taski;
-  if( pip_isa_root() ) {
-    taski = pip_root->task_root;
-  } else {
-    taski = pip_task;
-  }
-  return taski;
 }
 
 int pip_export( void *export ) {
@@ -541,4 +475,56 @@ int pip_import( int pipid, void **exportp  ) {
   taski = pip_get_task_( pipid );
   *exportp = (void*) taski->annex->export;
   RETURN( 0 );
+}
+
+int pip_is_initialized( void ) {
+  return pip_task != NULL;
+}
+
+int pip_isa_root( void ) {
+  return pip_is_initialized() && PIP_ISA_ROOT( pip_task );
+}
+
+int pip_isa_task( void ) {
+  return
+    pip_is_initialized() &&
+    PIP_ISA_TASK( pip_task ) &&
+    !PIP_ISA_ROOT( pip_task );
+}
+
+int pip_is_alive( int pipid ) {
+  if( pip_check_pipid_( &pipid ) == 0 ) {
+    return pip_is_alive_( pip_get_task_( pipid ) );
+  }
+  return 0;
+}
+
+int pip_get_pipid( int *pipidp ) {
+  if( pipidp == NULL ) RETURN( EINVAL );
+  *pipidp = pip_get_pipid_();
+  RETURN( 0 );
+}
+
+int pip_get_ntasks( int *ntasksp ) {
+  if( ntasksp  == NULL ) RETURN( EINVAL );
+  if( pip_root == NULL ) return( EPERM  ); /* intentionally using small return */
+  *ntasksp = pip_root->ntasks_curr;
+  RETURN( 0 );
+}
+
+int pip_exit( int extval ) {
+  extern void pip_do_exit( pip_task_internal_t*, int );
+  int err = 0;
+
+  DBGF( "extval:%d", extval );
+  if( !pip_is_initialized() ) RETURN( EPERM  );
+  if( PIP_ISA_ROOT( pip_task ) ) {
+    if( ( err = pip_fin() ) == 0 ) {
+      exit( extval );
+      /* never reach here */
+    }
+  } else {
+    pip_do_exit( pip_task, extval );
+  }
+  RETURN( err );
 }

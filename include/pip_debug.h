@@ -40,8 +40,6 @@
 
 /**** debug macros ****/
 
-#ifdef DEBUG
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -65,29 +63,49 @@
   do { char __tag[64]; pip_idstr(__tag,64);			\
     DBG_PRNT("%s %s:%d %s(): ",__tag,				\
 	     __FILE__, __LINE__, __func__ );	} while(0)
+#define DBG_TAG_ENTER						\
+  do { char __tag[64]; pip_idstr(__tag,64);			\
+    DBG_PRNT("%s %s:%d >> %s(): ",__tag,			\
+	     __FILE__, __LINE__, __func__ );	} while(0)
+#define DBG_TAG_LEAVE						\
+  do { char __tag[64]; pip_idstr(__tag,64);			\
+    DBG_PRNT("%s %s:%d << %s(): ",__tag,			\
+	     __FILE__, __LINE__, __func__ );	} while(0)
+
+extern void pip_abort( void );
+
+#ifdef DEBUG
 
 #define DBG						\
   do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
 #define DBGF(...)							\
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
 #define ENTER						\
-  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(">>"); DBG_OUTPUT; } while(0)
+  do { DBG_PRTBUF; DBG_TAG_ENTER; DBG_OUTPUT; } while(0)
 #define RETURN(X)						\
-  do { DBG_PRTBUF; int __xxx=(X); DBG_TAG; if(__xxx) {		\
-      DBG_PRNT("<< ERROR RETURN (%d)",__xxx);				\
-    } else { DBG_PRNT("<<"); } DBG_OUTPUT; return(__xxx); } while(0)
+  do { DBG_PRTBUF; int __xxx=(X); DBG_TAG_LEAVE; if(__xxx) {		\
+      DBG_PRNT("ERROR RETURN (%d)",__xxx);				\
+    } DBG_OUTPUT; return(__xxx); } while(0)
 #define RETURNV								\
-  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT("<<"); DBG_OUTPUT; return; } while(0)
+  do { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; return; } while(0)
 
-#define ASSERT(X)	\
-  do { if( !(X) ) DBGF( "\n%s Assertion FAILED !!!\n", #X ); } while(0)
+#ifdef DEBUG_ASSERT
+#define ASSERT(X)							\
+  do { if(X) { DBGF( "Assertion FAILED '%s' = %d !!!!!!", #X, X );	\
+      pip_abort(); } else { DBGF( "Assertion OK '(%s)' = %d", #X, X ); } } \
+  while(0)
+#else
+#define ASSERT(X)							\
+  do { if(X) { DBGF( "Assertion FAILED '%s' = %d !!!!!!", #X, X );	\
+      pip_abort(); } } while(0)
+#endif
+#define NEVER_REACH_HERE						\
+  do { DBGF( "Never Reach Here !!!!!!" );  pip_abort(); } while(0)
 
-#define PIP_TASK_DESCRIBE( ID )				\
+#define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );
-#define PIP_ULP_DESCRIBE( ULP )				\
-  pip_ulp_describe( stderr, __func__, (ULP) );
-#define PIP_ULP_QUEUE_DESCRIBE( Q )			\
-  pip_ulp_queue_describe( stderr, __func__, (Q) );
+#define QUEUE_DESCRIBE( Q )				\
+  pip_queue_describe( stderr, __func__, PIP_TASKQ(Q) );
 
 #else
 
@@ -96,11 +114,15 @@
 #define ENTER
 #define RETURN(X)	return (X)
 #define RETURNV
-#define ASSERT(X)
+#define ASSERT(X)	    \
+    do { if( X ) { DBG_PRTBUF; DBG_TAG;			  \
+    DBG_PRNT("Assertion FAILED '%s' = %d !!!!!!", #X, X); \
+    DBG_OUTPUT; } } while(0)
 
-#define PIP_TASK_DESCRIBE( ID )
-#define PIP_ULP_DESCRIBE( ULP )
-#define PIP_ULP_QUEUE_DESCRIBE( Q )
+#define NEVER_REACH_HERE
+
+#define TASK_DESCRIBE( ID )
+#define QUEUE_DESCRIBE( Q )
 
 #endif
 

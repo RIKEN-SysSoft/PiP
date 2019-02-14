@@ -61,31 +61,25 @@ inline static void pip_memory_barrier(void) {
 }
 #define PIP_MEMORY_BARRIER
 
+
+typedef intptr_t		pip_tls_t;
+#define PIP_TYPE_TLS
+
 #include <asm/prctl.h>
 #include <sys/prctl.h>
 #include <errno.h>
 
 int arch_prctl( int, unsigned long* );
 
-inline static int pip_save_tls( intptr_t *tlsp ) {
-  return arch_prctl(ARCH_GET_FS, (unsigned long*) tlsp ) ? errno : 0;
+inline static int pip_save_tls( pip_tls_t *tlsp ) {
+  return arch_prctl( ARCH_GET_FS, (unsigned long*) tlsp ) ? errno : 0;
 }
 #define PIP_SAVE_TLS
 
-inline static int pip_get_fsreg( intptr_t *tlsp ) {
-  return pip_save_tls( tlsp );
-}
-#define PIP_GET_FSREG
-
-inline static int pip_load_tls( intptr_t tls ) {
-  return arch_prctl(ARCH_SET_FS, (unsigned long*) tls) ? errno : 0;
+inline static int pip_load_tls( pip_tls_t tls ) {
+  return arch_prctl( ARCH_SET_FS, (unsigned long*) tls) ? errno : 0;
 }
 #define PIP_LOAD_TLS
-
-inline static int pip_set_fsreg( intptr_t tls ) {
-  return pip_load_tls( tls );
-}
-#define PIP_SET_FSREG
 
 inline static void pip_print_fs_segreg( void ) {
   intptr_t fsreg;
@@ -97,43 +91,8 @@ inline static void pip_print_fs_segreg( void ) {
 }
 #define PIP_PRINT_FSREG
 
-#ifdef PIP_CTX_WITH_TLS
-#include <ucontext.h>
-typedef struct {
-  intptr_t	tls;
-  ucontext_t	ctx;
-} pip_ctx_t;
-#define PIP_CTX_T
-
-#define pip_make_context(CTX,F,C,...)	 \
-  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__);	\
-    pip_save_tls(&(CTX)->tls); } while(0)
-#define PIP_MAKE_CONTEXT
-
-inline static int pip_save_context( pip_ctx_t *ctxp ) {
-#ifndef PIP_SAVE_TLS_CTX
-  pip_save_tls( &ctxp->tls );
-#endif
-  return ( getcontext( &ctxp->ctx ) ) ? errno : 0;
-}
-#define PIP_SAVE_CONTEXT
-
-inline static int pip_load_context( const pip_ctx_t *ctxp ) {
-  pip_load_tls( ctxp->tls );
-  return ( setcontext( &ctxp->ctx ) ) ? errno : 0;
-}
-#define PIP_LOAD_CONTEXT
-
-inline static int pip_swap_context( pip_ctx_t *oldp, pip_ctx_t *newp ) {
-#ifndef PIP_SAVE_TLS_CTX
-  pip_save_tls( &oldp->tls );
-#endif
-  pip_load_tls( newp->tls );
-  return ( swapcontext( &oldp->ctx, &newp->ctx ) ) ? errno : 0;
-}
-#define PIP_SWAP_CONTEXT
-
-#endif /* PIP_CTX_WITH_TLS */
+typedef volatile uint32_t	pip_spinlock_t;
+#define PIP_LOCK_TYPE
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

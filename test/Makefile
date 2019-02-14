@@ -45,7 +45,7 @@ include $(top_srcdir)/build/rule.mk
 CPPFLAGS += -I.
 CFLAGS += -fPIE -pie
 
-all : main.o
+all : main.o test.h
 
 clean:
 	rm -f $(OBJS)
