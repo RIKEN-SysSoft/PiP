@@ -204,9 +204,9 @@ int pip_named_export( void *exp, const char *format, ... ) {
     goto error;
   }
   hash = pip_name_hash( name );
-  DBGF( "pipid:%d  name:%s", pip_task->pipid, name );
+  DBGF( "pipid:%d  name:%s", pip_task_->pipid, name );
 
-  namexp = (pip_named_exptab_t*) pip_task->annex->named_exptab;
+  namexp = (pip_named_exptab_t*) pip_task_->annex->named_exptab;
   head = pip_lock_hashtab_head( namexp, hash );
   {
     if( ( entry = pip_find_namexp( head, hash, name ) ) == NULL ) {
@@ -379,15 +379,15 @@ void pip_named_export_fin_( pip_task_internal_t *taski ) {
 void pip_named_export_fin_all_( void ) {
   int i;
 
-  DBGF( "pip_root->ntasks:%d", pip_root->ntasks );
-  for( i=0; i<pip_root->ntasks; i++ ) {
+  DBGF( "pip_root->ntasks:%d", pip_root_->ntasks );
+  for( i=0; i<pip_root_->ntasks; i++ ) {
     DBGF( "PiP task: %d", i );
-    free( pip_root->tasks[i].annex->named_exptab );
-    pip_root->tasks[i].annex->named_exptab = NULL;
+    free( pip_root_->tasks[i].annex->named_exptab );
+    pip_root_->tasks[i].annex->named_exptab = NULL;
   }
   DBGF( "PiP root" );
-  (void) pip_named_export_fin_( pip_root->task_root );
-  free( pip_root->task_root->annex->named_exptab );
-  pip_root->task_root->annex->named_exptab = NULL;
+  (void) pip_named_export_fin_( pip_root_->task_root );
+  free( pip_root_->task_root->annex->named_exptab );
+  pip_root_->task_root->annex->named_exptab = NULL;
   DBG;
 }

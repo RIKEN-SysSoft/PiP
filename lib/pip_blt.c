@@ -54,7 +54,7 @@
 
 static int pip_raise_sigchld( void ) {
   extern int pip_raise_signal_( pip_task_internal_t*, int );
-  RETURN( pip_raise_signal_( pip_root->task_root, SIGCHLD ) );
+  RETURN( pip_raise_signal_( pip_root_->task_root, SIGCHLD ) );
 }
 
 static void pip_force_exit( pip_task_internal_t *taski ) {
@@ -342,7 +342,7 @@ static void pip_switch_stack_and_sleep( pip_task_internal_t *taski,
 					void *cbarg ) {
   extern void pip_page_alloc_( size_t, void** );
   pip_sleep_args_t	args;
-  size_t	pgsz  = pip_root->page_size;
+  size_t	pgsz  = pip_root_->page_size;
   size_t	stksz = STACK_PG_NUM * pgsz;
   pip_ctx_t	ctx;
   stack_t	*stk = &(ctx.ctx.uc_stack);
@@ -400,7 +400,6 @@ static void pip_task_switch( pip_task_internal_t *old_task,
     ASSERT( pip_swap_context( old_task->ctx_suspend,
 			      new_task->ctx_suspend ) );
     pip_stack_unprotect( old_task );
-    DBG;
   }
 }
 
@@ -413,7 +412,6 @@ static void pip_sched_next( pip_task_internal_t *taski,
   ENTER;
   if( nexti == NULL ) {
     /* block the scheduing task since it has no tasks to be scheduled */
-    DBG;
     pip_switch_stack_and_sleep( taski->task_sched,
 				queue, flag_lock, callback, cbarg );
     NEVER_REACH_HERE;
@@ -467,7 +465,6 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
       PIP_TASKQ_DEQ( next );
       nexti = PIP_TASKI( next );
     }
-    //pip_task_sched_with_tls( nexti );
     pip_task_switch( taski, nexti );
 
   } else {
@@ -513,7 +510,7 @@ static void pip_do_suspend( pip_task_internal_t *taski,
   volatile int	flag_jump = 0;	/* must be volatile */
   pip_ctx_t	*ctxp;
 #ifdef PIP_USE_STATIC_CTX
-  ctxp = pip_task->ctx_static;
+  ctxp = pip_task_->ctx_static;
 #else
   pip_ctx_t 	ctx;
   ctxp = &ctx;
@@ -549,7 +546,7 @@ static int pip_do_resume( pip_task_internal_t *taski,
 	schedi->pipid, schedi->annex->pid, taski->pipid, taski->annex->pid );
 
   PIP_RUN( taski );
-  if( schedi == pip_task->task_sched ) {
+  if( schedi == pip_task_->task_sched ) {
     /* same scheduling domain with the current task */
     PIP_TASKQ_ENQ_LAST( &schedi->schedq, PIP_TASKQ(taski) );
     schedi->schedq_len ++;
@@ -563,24 +560,24 @@ static int pip_do_resume( pip_task_internal_t *taski,
 /* API */
 
 int pip_get_sched_task_id( int *pipidp ) {
-  if( pipidp               == NULL ) RETURN( EINVAL );
-  if( pip_task             == NULL ) RETURN( EPERM  );
-  if( pip_task->task_sched == NULL ) RETURN( ENOENT );
-  *pipidp = pip_task->task_sched->pipid;
+  if( pipidp                == NULL ) RETURN( EINVAL );
+  if( pip_task_             == NULL ) RETURN( EPERM  );
+  if( pip_task_->task_sched == NULL ) RETURN( ENOENT );
+  *pipidp = pip_task_->task_sched->pipid;
   RETURN( 0 );
 }
 
 int pip_get_sched_task( pip_task_t **taskp ) {
-  if( taskp                == NULL ) RETURN( EINVAL );
-  if( pip_task             == NULL ) RETURN( EPERM  );
-  if( pip_task->task_sched == NULL ) RETURN( ENOENT );
-  *taskp = PIP_TASKQ( pip_task->task_sched );
+  if( taskp                 == NULL ) RETURN( EINVAL );
+  if( pip_task_             == NULL ) RETURN( EPERM  );
+  if( pip_task_->task_sched == NULL ) RETURN( ENOENT );
+  *taskp = PIP_TASKQ( pip_task_->task_sched );
   RETURN( 0 );
 }
 
 int pip_count_runnable_tasks( int *countp ) {
   if( countp == NULL ) RETURN( EINVAL );
-  *countp = pip_task->schedq_len;
+  *countp = pip_task_->schedq_len;
   RETURN( 0 );
 }
 
@@ -592,7 +589,7 @@ int pip_enqueue_runnable_N( pip_task_queue_t *queue, int *np ) {
 
   ENTER;
   if( np == NULL ) RETURN( EINVAL );
-  schedi = pip_task->task_sched;
+  schedi = pip_task_->task_sched;
   ASSERT( schedi == NULL );
   schedq = &schedi->schedq;
   n = *np;
@@ -627,10 +624,10 @@ int pip_suspend_and_enqueue( pip_task_queue_t *queue,
   pip_task_internal_t	*nexti;
 
   ENTER;
-  PIP_SUSPEND( pip_task );
-  nexti = pip_schedq_next( pip_task );
+  PIP_SUSPEND( pip_task_ );
+  nexti = pip_schedq_next( pip_task_ );
   /* pip_scheq_next() protected current stack. and now we can enqueue myself */
-  pip_do_suspend( pip_task, nexti, queue, 1, callback, cbarg );
+  pip_do_suspend( pip_task_, nexti, queue, 1, callback, cbarg );
   RETURN( 0 );
 }
 
@@ -645,12 +642,12 @@ int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
   pip_task_queue_unlock( queue );
 #endif
 
-  PIP_SUSPEND( pip_task );
-  nexti = pip_schedq_next( pip_task );
+  PIP_SUSPEND( pip_task_ );
+  nexti = pip_schedq_next( pip_task_ );
   /* pip_scheq_next() protected current stack. and now we can enqueue myself */
-  pip_task_queue_enqueue( queue, PIP_TASKQ( pip_task ) );
+  pip_task_queue_enqueue( queue, PIP_TASKQ( pip_task_ ) );
   if( callback != NULL ) callback( cbarg );
-  pip_do_suspend( pip_task, nexti, queue, 0, callback, cbarg );
+  pip_do_suspend( pip_task_, nexti, queue, 0, callback, cbarg );
   RETURN( 0 );
 }
 
@@ -750,18 +747,18 @@ int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue,
   RETURN( err );
 }
 
-pip_task_t *pip_task_self( void ) { return PIP_TASKQ(pip_task); }
+pip_task_t *pip_task_self( void ) { return PIP_TASKQ(pip_task_); }
 
 int pip_yield( void ) {
   pip_task_t		*queue, *next;
-  pip_task_internal_t	*sched = pip_task->task_sched;
+  pip_task_internal_t	*sched = pip_task_->task_sched;
 
   ENTER;
   queue = &sched->schedq;
-  PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ( pip_task ) );
+  PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ( pip_task_ ) );
   next = PIP_TASKQ_NEXT( queue );
   PIP_TASKQ_DEQ( next );
-  pip_task_switch( pip_task, PIP_TASKI( next ) );
+  pip_task_switch( pip_task_, PIP_TASKI( next ) );
   RETURN( 0 );
 }
 
@@ -771,26 +768,26 @@ int pip_yield_to( pip_task_t *task ) {
   pip_task_t		*queue;
 
   IF_UNLIKELY( task  == NULL ) RETURN( pip_yield() );
-  sched = pip_task->task_sched;
+  sched = pip_task_->task_sched;
   /* the target task must be in the same scheduling domain */
   IF_UNLIKELY( taski->task_sched != sched ) RETURN( EPERM );
 
   queue = &sched->schedq;
   PIP_TASKQ_DEQ( PIP_TASKQ(task) );
-  PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ(pip_task) );
+  PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ(pip_task_) );
 
-  pip_task_switch( pip_task, taski );
+  pip_task_switch( pip_task_, taski );
   RETURN( 0 );
 }
 
 void pip_set_aux( pip_task_t *task, void *aux ) {
   pip_task_internal_t 	*taski= PIP_TASKI( task );
-  if( task == NULL ) taski = pip_task;
+  if( task == NULL ) taski = pip_task_;
   taski->annex->aux = aux;
 }
 
 void pip_get_aux( pip_task_t *task, void **auxp ) {
   pip_task_internal_t 	*taski= PIP_TASKI( task );
-  if( task == NULL ) taski = pip_task;
+  if( task == NULL ) taski = pip_task_;
   *auxp = taski->annex->aux;
 }

@@ -147,8 +147,8 @@ static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
   gdbif_task->pid          = task->annex->pid;
   gdbif_task->pipid        = pipid_to_gdbif( task->pipid );
   gdbif_task->exec_mode =
-    (pip_root->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
-    (pip_root->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
+    (pip_root_->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
+    (pip_root_->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
     PIP_GDBIF_EXMODE_NULL;
   gdbif_task->status     = PIP_GDBIF_STATUS_NULL;
   gdbif_task->gdb_status = PIP_GDBIF_GDB_DETACHED;
@@ -186,7 +186,7 @@ void pip_gdbif_initialize_root_( int ntasks ) {
   pip_spin_init( &gdbif_root->lock_free );
   PIP_SLIST_INIT(&gdbif_root->task_free);
   pip_spin_init( &gdbif_root->lock_root );
-  pip_gdbif_init_task_struct( &gdbif_root->task_root, pip_root->task_root );
+  pip_gdbif_init_task_struct( &gdbif_root->task_root, pip_root_->task_root );
   pip_gdbif_init_root_task_link( &gdbif_root->task_root );
   pip_memory_barrier();
   gdbif_root->task_root.status = PIP_GDBIF_STATUS_CREATED;

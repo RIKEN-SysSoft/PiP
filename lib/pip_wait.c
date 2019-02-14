@@ -72,17 +72,17 @@
 #include <pip_gdbif_func.h>
 
 void pip_deadlock_inc_( void ) {
-  pip_atomic_fetch_and_add( &pip_root->ntasks_blocking, 1 );
+  pip_atomic_fetch_and_add( &pip_root_->ntasks_blocking, 1 );
   DBGF( "blocking:%d / ntasks:%d",
-	(int)pip_root->ntasks_blocking, (int)pip_root->ntasks_count+1 );
-  if( pip_root->ntasks_blocking == pip_root->ntasks_count+1 ) {
+	(int)pip_root_->ntasks_blocking, (int)pip_root_->ntasks_count+1 );
+  if( pip_root_->ntasks_blocking == pip_root_->ntasks_count+1 ) {
     pip_err_mesg( "All PiP tasks are blocked and deadlocked !!" );
     pip_abort();
   }
 }
 
 void pip_deadlock_dec_( void ) {
-  pip_atomic_sub_and_fetch( &pip_root->ntasks_blocking, 1 );
+  pip_atomic_sub_and_fetch( &pip_root_->ntasks_blocking, 1 );
 }
 
 static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
@@ -140,7 +140,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	extval = sig + 128;
 	pip_task_terminated_( taski, extval );
       }
-      pip_root->ntasks_count --;
+      pip_root_->ntasks_count --;
       DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
     }
   }
@@ -173,15 +173,15 @@ static int pip_find_terminated( int *pipidp ) {
   static int	sidx = 0;
   int		count, i;
 
-  pip_spin_lock( &pip_root->lock_tasks );
+  pip_spin_lock( &pip_root_->lock_tasks );
   /*** start lock region ***/
   {
     count = 0;
-    for( i=sidx; i<pip_root->ntasks; i++ ) {
-      if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
-      if( pip_root->tasks[i].flag_exit == PIP_EXITED ) {
+    for( i=sidx; i<pip_root_->ntasks; i++ ) {
+      if( pip_root_->tasks[i].type != PIP_TYPE_NONE ) count ++;
+      if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
 	/* terminated task found */
-	pip_root->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
+	pip_root_->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
 	pip_memory_barrier();
 	*pipidp = i;
 	sidx = i + 1;
@@ -189,10 +189,10 @@ static int pip_find_terminated( int *pipidp ) {
       }
     }
     for( i=0; i<sidx; i++ ) {
-      if( pip_root->tasks[i].type != PIP_TYPE_NONE ) count ++;
-      if( pip_root->tasks[i].flag_exit == PIP_EXITED ) {
+      if( pip_root_->tasks[i].type != PIP_TYPE_NONE ) count ++;
+      if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
 	/* terminated task found */
-	pip_root->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
+	pip_root_->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
 	pip_memory_barrier();
 	*pipidp = i;
 	sidx = i + 1;
@@ -203,7 +203,7 @@ static int pip_find_terminated( int *pipidp ) {
   }
  done:
   /*** end lock region ***/
-  pip_spin_unlock( &pip_root->lock_tasks );
+  pip_spin_unlock( &pip_root_->lock_tasks );
 
   DBGF( "PIPID=%d  count=%d", *pipidp, count );
   return( count );
@@ -213,8 +213,8 @@ static int pip_set_sigchld_handler( sigset_t *sigset_oldp ) {
   /* must only be called from the root */
   void pip_sighand_sigchld( int sig, siginfo_t *siginfo, void *null ) {
     ENTER;
-    if( pip_root != NULL ) {
-      struct sigaction *sigact = &pip_root->sigact_chain;
+    if( pip_root_ != NULL ) {
+      struct sigaction *sigact = &pip_root_->sigact_chain;
       if( sigact->sa_sigaction != NULL ) {
 	/* if user sets a signal handler, then it must be called */
 	if( sigact->sa_sigaction != (void*) SIG_DFL &&  /* SIG_DFL==0 */
@@ -227,7 +227,7 @@ static int pip_set_sigchld_handler( sigset_t *sigset_oldp ) {
     RETURNV;
   }
   struct sigaction 	sigact;
-  struct sigaction	*sigact_oldp = &pip_root->sigact_chain;
+  struct sigaction	*sigact_oldp = &pip_root_->sigact_chain;
   int err = 0;
 
   memset( &sigact, 0, sizeof( sigact ) );
@@ -243,7 +243,7 @@ static int pip_set_sigchld_handler( sigset_t *sigset_oldp ) {
 }
 
 static int pip_unset_sigchld_handler( sigset_t *sigset_oldp ) {
-  struct sigaction	*sigact_oldp = &pip_root->sigact_chain;
+  struct sigaction	*sigact_oldp = &pip_root_->sigact_chain;
   int 	err = 0;
 
   if( sigaction( SIGCHLD, sigact_oldp, NULL ) != 0 ) {
@@ -251,7 +251,7 @@ static int pip_unset_sigchld_handler( sigset_t *sigset_oldp ) {
   } else {
     err = pthread_sigmask( SIG_SETMASK, sigset_oldp, NULL );
     if( !err ) {
-      memset( &pip_root->sigact_chain, 0, sizeof( struct sigaction ) );
+      memset( &pip_root_->sigact_chain, 0, sizeof( struct sigaction ) );
     }
   }
   RETURN( err );

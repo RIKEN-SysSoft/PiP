@@ -62,13 +62,13 @@ extern void pip_named_export_fin_all_( void );
 extern void pip_reset_task_struct_( pip_task_internal_t* );
 
 int pip_is_threaded_( void ) {
-  return ( pip_root->opts & PIP_MODE_PTHREAD ) != 0 ? CLONE_THREAD : 0;
+  return ( pip_root_->opts & PIP_MODE_PTHREAD ) != 0 ? CLONE_THREAD : 0;
 }
 
 static int pip_is_shared_fd_( void ) {
-  if( pip_root->cloneinfo == NULL )
-    return (pip_root->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_FILES : 0;
-  return pip_root->cloneinfo->flag_clone & CLONE_FILES;
+  if( pip_root_->cloneinfo == NULL )
+    return (pip_root_->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_FILES : 0;
+  return pip_root_->cloneinfo->flag_clone & CLONE_FILES;
 }
 
 int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
@@ -176,7 +176,7 @@ static char **pip_copy_env( char **envsrc, int pipid ) {
   char taskenv[128];
   char *preload_env = getenv( "LD_PRELOAD" );
 
-  if( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 ||
+  if( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root_ ) <= 0 ||
       sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 ) {
     return NULL;
   }
@@ -188,7 +188,7 @@ size_t pip_stack_size( void ) {
   size_t 	sz, scale;
   int 		i;
 
-  if( ( sz = pip_root->stack_size ) == 0 ) {
+  if( ( sz = pip_root_->stack_size ) == 0 ) {
     if( ( env = getenv( PIP_ENV_STACKSZ ) ) == NULL &&
 	( env = getenv( "KMP_STACKSIZE" ) ) == NULL &&
 	( env = getenv( "OMP_STACKSIZE" ) ) == NULL ) {
@@ -227,7 +227,7 @@ size_t pip_stack_size( void ) {
 	sz = ( sz < PIP_STACK_SIZE_MIN ) ? PIP_STACK_SIZE_MIN : sz;
       }
     }
-    pip_root->stack_size = sz;
+    pip_root_->stack_size = sz;
   }
   return sz;
 }
@@ -297,11 +297,11 @@ static int pip_load_dso( void **handlep, char *path ) {
 
 void pip_dlclose_( void *handle ) {
 #ifdef AH
-  pip_spin_lock( &pip_root->lock_ldlinux );
+  pip_spin_lock( &pip_root_->lock_ldlinux );
   do {
     dlclose( handle );
   } while( 0 );
-  pip_spin_unlock( &pip_root->lock_ldlinux );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
 #endif
 }
 
@@ -584,7 +584,7 @@ static void* pip_do_spawn( void *thargs )  {
   int	 		pipid  = args->pipid;
   char 			**argv = args->argv;
   int 			coreno = args->coreno;
-  pip_task_internal_t 	*self  = &pip_root->tasks[pipid];
+  pip_task_internal_t 	*self  = &pip_root_->tasks[pipid];
   int			extval = 0;
   int			err    = 0;
 
@@ -636,7 +636,7 @@ static void* pip_do_spawn( void *thargs )  {
     goto error;
   }
   if( !pip_is_threaded_() ) {
-    (void) setpgid( 0, pip_root->task_root->annex->pid );
+    (void) setpgid( 0, pip_root_->task_root->annex->pid );
   }
   extval = pip_jump_into( args, self );
   /* the after hook is supposed to free the hook_arg being malloc()ed */
@@ -657,31 +657,31 @@ static int pip_find_a_free_task( int *pipidp ) {
   int pipid = *pipidp;
   int i, err = 0;
 
-  if( pip_root->ntasks_accum >= PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
-  if( pipid < PIP_PIPID_ANY || pipid >= pip_root->ntasks ) {
+  if( pip_root_->ntasks_accum >= PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
+  if( pipid < PIP_PIPID_ANY || pipid >= pip_root_->ntasks ) {
     DBGF( "pipid=%d", pipid );
     RETURN( EINVAL );
   }
 
-  pip_spin_lock( &pip_root->lock_tasks );
+  pip_spin_lock( &pip_root_->lock_tasks );
   /*** begin lock region ***/
   do {
     DBGF( "pipid:%d  ntasks:%d  pipid_curr:%d",
-	  pipid, pip_root->ntasks, pip_root->pipid_curr );
+	  pipid, pip_root_->ntasks, pip_root_->pipid_curr );
     if( pipid != PIP_PIPID_ANY ) {
-      if( pip_root->tasks[pipid].pipid != PIP_PIPID_NULL ) {
+      if( pip_root_->tasks[pipid].pipid != PIP_PIPID_NULL ) {
 	err = EAGAIN;
 	goto unlock;
       }
     } else {
-      for( i=pip_root->pipid_curr; i<pip_root->ntasks; i++ ) {
-	if( pip_root->tasks[i].pipid == PIP_PIPID_NULL ) {
+      for( i=pip_root_->pipid_curr; i<pip_root_->ntasks; i++ ) {
+	if( pip_root_->tasks[i].pipid == PIP_PIPID_NULL ) {
 	  pipid = i;
 	  goto found;
 	}
       }
-      for( i=0; i<=pip_root->pipid_curr; i++ ) {
-	if( pip_root->tasks[i].pipid == PIP_PIPID_NULL ) {
+      for( i=0; i<=pip_root_->pipid_curr; i++ ) {
+	if( pip_root_->tasks[i].pipid == PIP_PIPID_NULL ) {
 	  pipid = i;
 	  goto found;
 	}
@@ -690,14 +690,14 @@ static int pip_find_a_free_task( int *pipidp ) {
       goto unlock;
     }
   found:
-    pip_root->tasks[pipid].pipid = pipid;	/* mark it as occupied */
-    pip_root->pipid_curr = pipid + 1;
+    pip_root_->tasks[pipid].pipid = pipid;	/* mark it as occupied */
+    pip_root_->pipid_curr = pipid + 1;
     *pipidp = pipid;
 
   } while( 0 );
  unlock:
   /*** end lock region ***/
-  pip_spin_unlock( &pip_root->lock_tasks );
+  pip_spin_unlock( &pip_root_->lock_tasks );
 
   RETURN( err );
 }
@@ -722,7 +722,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int 			err = 0;
 
   ENTER;
-  if( pip_root        == NULL ) RETURN( EPERM  );
+  if( pip_root_       == NULL ) RETURN( EPERM  );
   if( pipidp          == NULL ) RETURN( EINVAL );
   if( !pip_isa_root()         ) RETURN( EPERM  );
   if( progp           == NULL ) RETURN( EINVAL );
@@ -731,7 +731,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   if( progp->funcname == NULL &&
       progp->argv     == NULL ) RETURN( EINVAL );
   if( ( opts & PIP_SYNC_MASK ) == 0 ) {
-    opts |= pip_root->opts & PIP_SYNC_MASK;
+    opts |= pip_root_->opts & PIP_SYNC_MASK;
   } else {
     if( ( opts = pip_check_sync_flag_( opts ) ) == 0 ) RETURN( EINVAL );
   }
@@ -740,7 +740,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 
   pipid = *pipidp;
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) ERRJ;
-  task = &pip_root->tasks[pipid];
+  task = &pip_root_->tasks[pipid];
   pip_reset_task_struct_( task );
   task->pipid      = pipid;	/* mark it as occupied */
   task->type       = PIP_TYPE_TASK;
@@ -771,7 +771,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     }
   }
 
-  pip_spin_lock( &pip_root->lock_ldlinux );
+  pip_spin_lock( &pip_root_->lock_ldlinux );
   /*** begin lock region ***/
   do {
     if( ( err = pip_do_corebind( coreno, &cpuset ) ) == 0 ) {
@@ -784,12 +784,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     }
   } while( 0 );
   /*** end lock region ***/
-  pip_spin_unlock( &pip_root->lock_ldlinux );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
   ERRJ_CHK(err);
 
   pip_gdbif_task_new_( task );
 
-  if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
+  if( ( pip_root_->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
     int flags =
       CLONE_VM |
@@ -821,11 +821,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
       }
     }
     if( err == 0 ) {
-      DBGF( "tid=%d  cloneinfo@%p", tid, pip_root->cloneinfo );
-      if( pip_root->cloneinfo != NULL ) {
+      DBGF( "tid=%d  cloneinfo@%p", tid, pip_root_->cloneinfo );
+      if( pip_root_->cloneinfo != NULL ) {
 	/* lock is needed, because the preloaded clone()
 	   might also be called from outside of PiP lib. */
-	pip_spin_lock_wv( &pip_root->cloneinfo->lock, tid );
+	pip_spin_lock_wv( &pip_root_->cloneinfo->lock, tid );
       }
       do {
 	err = pthread_create( &task->annex->thread,
@@ -835,17 +835,17 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 	DBGF( "pthread_create()=%d", errno );
       } while( 0 );
       /* unlock is done in the wrapper function */
-      if( pip_root->cloneinfo != NULL ) {
-	pid = pip_root->cloneinfo->pid_clone;
-	pip_root->cloneinfo->pid_clone = 0;
+      if( pip_root_->cloneinfo != NULL ) {
+	pid = pip_root_->cloneinfo->pid_clone;
+	pip_root_->cloneinfo->pid_clone = 0;
       }
     }
   }
   if( err == 0 ) {
     task->annex->pid = pid;
-    pip_root->ntasks_count ++;
-    pip_root->ntasks_accum ++;
-    pip_root->ntasks_curr  ++;
+    pip_root_->ntasks_count ++;
+    pip_root_->ntasks_accum ++;
+    pip_root_->ntasks_curr  ++;
     pip_gdbif_task_commit_( task );
     *pipidp = pipid;
 
@@ -895,11 +895,11 @@ int pip_fin( void ) {
   int ntasks, i;
 
   ENTER;
-  if( pip_root == NULL ) RETURN( EPERM );
+  if( pip_root_ == NULL ) RETURN( EPERM );
   if( pip_isa_root() ) {		/* root */
-    ntasks = pip_root->ntasks;
+    ntasks = pip_root_->ntasks;
     for( i=0; i<ntasks; i++ ) {
-      pip_task_internal_t *taski = &pip_root->tasks[i];
+      pip_task_internal_t *taski = &pip_root_->tasks[i];
       if( taski->pipid != PIP_PIPID_NULL ) {
 	if( !taski->flag_exit ) {
 	  DBGF( "%d/%d [pipid=%d (type=0x%x)] -- BUSY",
@@ -917,12 +917,12 @@ int pip_fin( void ) {
     PIP_REPORT( time_load_prog );
     PIP_REPORT( time_dlmopen   );
     /* after this point DBG(F) macros cannot be used */
-    memset( pip_root, 0, pip_root->size_whole );
-    free( pip_root );
-    pip_root = NULL;
-    pip_task = NULL;
+    memset( pip_root_, 0, pip_root_->size_whole );
+    free( pip_root_ );
+    pip_root_ = NULL;
+    pip_task_ = NULL;
   } else {			/* tasks */
-    pip_named_export_fin_( pip_task );
+    pip_named_export_fin_( pip_task_ );
   }
   RETURN( 0 );
 }
@@ -945,9 +945,9 @@ int pip_spawn( char *prog,
 }
 
 int pip_get_mode( int *mode ) {
-  if( pip_root == NULL ) RETURN( EPERM  );
-  if( mode     == NULL ) RETURN( EINVAL );
-  *mode = ( pip_root->opts & PIP_MODE_MASK );
+  if( pip_root_ == NULL ) RETURN( EPERM  );
+  if( mode      == NULL ) RETURN( EINVAL );
+  *mode = ( pip_root_->opts & PIP_MODE_MASK );
   RETURN( 0 );
 }
 
@@ -975,18 +975,18 @@ void pip_abort( void ) {
   ENTER;
 
   fflush( NULL );
-  if(pip_root == NULL ) kill( 0, SIGKILL );
-  (void) killpg( pip_root->task_root->annex->pid, SIGKILL );
+  if(pip_root_ == NULL ) kill( 0, SIGKILL );
+  (void) killpg( pip_root_->task_root->annex->pid, SIGKILL );
 }
 
 void pip_abort_all_tasks( void ) {
   int	i, pipid;
 
   if( pip_isa_root() ) {
-    for( i=0; i<pip_root->ntasks; i++ ) {
+    for( i=0; i<pip_root_->ntasks; i++ ) {
       pipid = i;
       if( pip_check_pipid_( &pipid ) == 0 ) {
-	(void) pip_raise_signal_( &pip_root->tasks[i], SIGKILL );
+	(void) pip_raise_signal_( &pip_root_->tasks[i], SIGKILL );
       }
     }
   }

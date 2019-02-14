@@ -76,7 +76,7 @@ int pip_check_pie( char *path ) {
 char *pip_pipidstr( char *buf ) {
   char *idstr;
 
-  switch( pip_task->pipid ) {
+  switch( pip_task_->pipid ) {
   case PIP_PIPID_ROOT:
     idstr = "?root?";
     break;
@@ -90,15 +90,15 @@ char *pip_pipidstr( char *buf ) {
     idstr = "?null?";
     break;
   default:
-    if( pip_task->task_sched == NULL ) {
-      (void) sprintf( buf, "%d[-]", pip_task->pipid );
-    } else if( pip_task->task_sched == pip_task ) {
-      (void) sprintf( buf, "%d[*]", pip_task->pipid );
-    } else if( pip_task->task_sched != NULL ) {
+    if( pip_task_->task_sched == NULL ) {
+      (void) sprintf( buf, "%d[-]", pip_task_->pipid );
+    } else if( pip_task_->task_sched == pip_task_ ) {
+      (void) sprintf( buf, "%d[*]", pip_task_->pipid );
+    } else if( pip_task_->task_sched != NULL ) {
       (void) sprintf( buf, "%d[%d]",
-		      pip_task->pipid, pip_task->task_sched->pipid );
+		      pip_task_->pipid, pip_task_->task_sched->pipid );
     } else {
-      (void) sprintf( buf, "%d/?", pip_task->pipid );
+      (void) sprintf( buf, "%d/?", pip_task_->pipid );
     }
     idstr = buf;
     break;
@@ -132,10 +132,10 @@ static char *pip_type_str_( pip_task_internal_t *taski ) {
 char * pip_type_str( void ) {
   char *typestr;
 
-  if( pip_task == NULL ) {
+  if( pip_task_ == NULL ) {
     typestr = "(NULL)";
   } else {
-    typestr = pip_type_str_( pip_task );
+    typestr = pip_type_str_( pip_task_ );
   }
   return typestr;
 }
@@ -150,26 +150,26 @@ int pip_idstr( char *buf, size_t sz ) {
   char *post = ">";
   int	n = 0;
 
-  if( pip_task == NULL ) {
+  if( pip_task_ == NULL ) {
     n = snprintf( buf, sz, "%s----:(%d)%s", pre, pid, post );
-  } else if( PIP_ISA_ROOT( pip_task ) ) {
-    if( PIP_IS_SUSPENDED( pip_task ) ) {
+  } else if( PIP_ISA_ROOT( pip_task_ ) ) {
+    if( PIP_IS_SUSPENDED( pip_task_ ) ) {
       n = snprintf( buf, sz, "%sroot:(%d)%s", pre, pid, post );
     } else {
       n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
     }
-  } else if( PIP_ISA_TASK( pip_task ) ) {
+  } else if( PIP_ISA_TASK( pip_task_ ) ) {
     char *idstr, idnum[64];
 
     idstr = pip_pipidstr( idnum );
-    if( PIP_IS_SUSPENDED( pip_task ) ) {
+    if( PIP_IS_SUSPENDED( pip_task_ ) ) {
       n = snprintf( buf, sz, "%stask:%s(%d)%s", pre, idstr, pid, post );
     } else {
       n = snprintf( buf, sz, "%sTASK:%s(%d)%s", pre, idstr, pid, post );
     }
   } else {
     n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
-		  pre, pip_task->type, pid, post );
+		  pre, pip_task_->type, pid, post );
   }
   return n;
 }

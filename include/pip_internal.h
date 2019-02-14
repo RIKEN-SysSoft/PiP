@@ -277,25 +277,25 @@ extern pip_clone_mostly_pthread_t 	pip_clone_mostly_pthread_ptr;
 #define IF_LIKELY(C)		if( pip_likely( C ) )
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
 
-extern pip_root_t		*pip_root;
-extern pip_task_internal_t	*pip_task;
+extern pip_root_t		*pip_root_;
+extern pip_task_internal_t	*pip_task_;
 
 inline static int pip_is_alive_( pip_task_internal_t *taski ) {
   return taski->pipid != PIP_TYPE_NONE && !taski->flag_exit;
 }
 
 inline static int pip_get_pipid_( void ) {
-  if( pip_task == NULL ) return PIP_PIPID_NULL;
-  return pip_task->pipid;
+  if( pip_task_ == NULL ) return PIP_PIPID_NULL;
+  return pip_task_->pipid;
 }
 
 inline static int pip_check_pipid_( int *pipidp ) {
   int pipid = *pipidp;
 
-  if( pip_root == NULL          ) RETURN( EPERM  );
-  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
+  if( pip_root_ == NULL          ) RETURN( EPERM  );
+  if( pipid >= pip_root_->ntasks ) RETURN( EINVAL );
   if( pipid != PIP_PIPID_MYSELF &&
-      pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
+      pipid <  PIP_PIPID_ROOT    ) RETURN( EINVAL );
 
   switch( pipid ) {
   case PIP_PIPID_ROOT:
@@ -306,7 +306,7 @@ inline static int pip_check_pipid_( int *pipidp ) {
     if( pip_isa_root() ) {
       *pipidp = PIP_PIPID_ROOT;
     } else if( pip_isa_task() ) {
-      *pipidp = pip_task->pipid;
+      *pipidp = pip_task_->pipid;
     } else {
       RETURN( ENXIO );
     }
@@ -320,17 +320,17 @@ inline static pip_task_internal_t *pip_get_task_( int pipid ) {
 
   switch( pipid ) {
   case PIP_PIPID_ROOT:
-    taski = pip_root->task_root;
+    taski = pip_root_->task_root;
     break;
   default:
-    taski = &pip_root->tasks[pipid];
+    taski = &pip_root_->tasks[pipid];
     break;
   }
   return taski;
 }
 
 inline static pip_clone_t *pip_get_cloneinfo_( void ) {
-  return pip_root->cloneinfo;
+  return pip_root_->cloneinfo;
 }
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
