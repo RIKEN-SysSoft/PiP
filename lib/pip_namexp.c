@@ -164,7 +164,7 @@ static pip_namexp_entry_t *pip_new_entry( char *name, pip_hash_t hash ) {
     entry->address       = NULL;
     entry->flag_exported = 0;
     entry->flag_canceled = 0;
-    pip_task_queue_init( &entry->queue, NULL, NULL );
+    pip_task_queue_init( &entry->queue, NULL );
 
     if( entry->name == NULL ) {
       free( entry );

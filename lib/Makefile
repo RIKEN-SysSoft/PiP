@@ -35,7 +35,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 CPPFLAGS += -I$(PIPINCDIR)
-CFLAGS += $(PICFLAG)
+CFLAGS += $(PICCFLAG)
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
 LIBRARY  = libpip.so
@@ -46,9 +46,9 @@ OBJS	 = pip.o pip_spawn.o pip_wait.o pip_blt.o pip_sync.o \
 	pip_util.o pip_gdbif.o pip_namexp.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
+	   $(PIPINCDIR)/pip_blt.h		\
 	   $(PIPINCDIR)/pip_clone.h		\
 	   $(PIPINCDIR)/pip_internal.h 		\
-	   $(PIPINCDIR)/pip_queue.h 		\
 	   $(PIPINCDIR)/pip_util.h		\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\

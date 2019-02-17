@@ -34,14 +34,13 @@
  */
 
 #include <pip_internal.h>
-#include <pip_util.h>
 
 /* BARRIER */
 
 int pip_barrier_init_( pip_barrier_t *barrp, int n ) {
   if( barrp == NULL || n < 1 ) RETURN( EINVAL );
   memset( (void*) barrp, 0, sizeof(pip_barrier_t) );
-  pip_task_queue_init( &barrp->queue, NULL, NULL );
+  pip_task_queue_init( &barrp->queue, NULL );
   barrp->head.count      = n;
   barrp->head.count_init = n;
   RETURN( 0 );
@@ -90,7 +89,7 @@ int pip_barrier_fin_( pip_barrier_t *barrp ) {
 int pip_mutex_init_( pip_mutex_t *mutex ) {
   ENTER;
   memset( (void*) mutex, 0, sizeof(pip_mutex_t) );
-  RETURN( pip_task_queue_init( &mutex->queue, NULL, NULL ) );
+  RETURN( pip_task_queue_init( &mutex->queue, NULL ) );
 }
 
 int pip_mutex_lock_( pip_mutex_t *mutex ) {

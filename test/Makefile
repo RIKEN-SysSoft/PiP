@@ -35,6 +35,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include ./Test.common
 
+PIPCPPFLAGS = -I$(PIPINCDIR) $(PIPINCFLAGS)
+PIPCFLAGS  = $(CFLAGS) $(PICCFLAG)
+
 SRCS = main.c
 OBJS = main.o
 
@@ -42,8 +45,9 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-CPPFLAGS += -I.
-CFLAGS += -fPIE -pie
+%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) $(PIPCPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) \
+	-c $< -o $@
 
 all : main.o test.h
 

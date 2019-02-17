@@ -84,7 +84,7 @@ extern void pip_abort( void );
   do { DBG_PRTBUF; DBG_TAG_ENTER; DBG_OUTPUT; } while(0)
 #define RETURN(X)						\
   do { DBG_PRTBUF; int __xxx=(X); DBG_TAG_LEAVE; if(__xxx) {		\
-      DBG_PRNT("ERROR RETURN (%d)",__xxx);				\
+      DBG_PRNT("ERROR RETURN '%s'",strerror(__xxx));			\
     } DBG_OUTPUT; return(__xxx); } while(0)
 #define RETURNV								\
   do { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; return; } while(0)

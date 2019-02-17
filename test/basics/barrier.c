@@ -40,16 +40,16 @@
 #define BARRIER		TESTINT( pip_barrier_wait( &exp->pbarr ) )
 //#define BARRIER		TESTINT( npass == 0 && naive_barrier_wait( &exp->nbarr[1] ) == 0 );
 
-int task_main( int argc, char **argv ) {
-  void		*ex;
-  struct comm	*exp;
+int pipid;
+
+int test_main( void *arg ) {
+  exp_t	*exp = (exp_t*) arg;
   int i, j;
 
+  TESTINT( pip_get_pipid( &pipid ) );
   DBGF( "ntasks:%d", ntasks );
-  TESTINT( pip_import( PIP_PIPID_ROOT, (void**) &ex ) );
-  exp = (struct comm*) ex;
-  for( i=0; i<niters; i++ ) {
-    for( j=0; j<ntasks; j++ ) {
+  for( i=0; i<exp->args.niters; i++ ) {
+    for( j=0; j<exp->args.ntasks; j++ ) {
       DBGF( "BARRIER >> A" );
       BARRIER;
       DBGF( "BARRIER << A" );

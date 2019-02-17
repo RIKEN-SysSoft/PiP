@@ -33,20 +33,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018
  */
 
-/* State Transition of Bi-Level Tasks */
-/* ACTIVE task (its PID task is running) */
-/* - active (running without having scheduling tasks */
-/* - running (actually running) */
-/* - runnable (waiting to be scheduled) */
-/* PASSIVE task (its PID task is suspended by OS) */
-/* - passive (possibly in a waiting queue) */
-/* - running (actually running but with the scheduling task's PID */
-/* - runnable (waiting to be scheduled by the scheduling task) */
-
-/* Scheduling Rules */
-/* - runnable tasks cannot be changed its state by the other tasks */
-/* - ACTIVE-running/runnable tasks cannot be deactivated */
-
 #define _GNU_SOURCE
 
 #include <sys/mman.h>

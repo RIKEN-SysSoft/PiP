@@ -57,7 +57,7 @@ install: doxygen-install
 .PHONY: install
 
 debug:
-	export CPPFLAGS+=" -DDEBUG"; make all;
+	CPPFLAGS="-DDEBUG" make all;
 
 ### doxygen
 
@@ -102,6 +102,10 @@ doxygen-install:
 	$(MKDIR_P) $(DESTDIR)/$(htmldir);
 	(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
 .PHONY: doxygen-install
+
+# clean generated documents before "git commit"
+docclean:
+	git checkout html latex man
 
 post-distclean-hook:
 	$(RM) -r man html

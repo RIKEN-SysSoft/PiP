@@ -37,27 +37,8 @@
 #define _GNU_SOURCE
 #endif
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <ucontext.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <signal.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdbool.h>
-#include <string.h>
-#include <errno.h>
-
-#include <pip.h>
-#include <pip_blt.h>
 #include <pip_internal.h>
-#include <pip_util.h>
-#include <pip_machdep.h>
-#include <pip_debug.h>
 
 #define NTASKS		PIP_NTASKS_MAX
 #define NITERS		(100)
@@ -71,8 +52,6 @@
 #define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
 #define EXIT_KILLED	7  /* killed by Control-C or something               */
 
-int	pipid,ntasks, npass, niters;
-
 typedef struct naive_barrier {
   struct {
     int			count_init;
@@ -81,14 +60,24 @@ typedef struct naive_barrier {
   };
 } naive_barrier_t;
 
-struct comm {
+typedef struct test_args {
+  int 	argc;
+  char 	**argv;
+  int	ntasks;
+  int	nact;
+  int	npass;
+  int 	niters;
+} test_args_t;
+
+typedef struct exp {
+  test_args_t		args;
   naive_barrier_t	nbarr[2];
   pip_task_queue_t 	queue;
   pip_atomic_t		npass;
   pip_barrier_t		pbarr;
   pip_mutex_t		pmutex;
   volatile int		tmp;
-} comm;
+} exp_t;
 
 inline static int naive_barrier_init( naive_barrier_t *barrp, int n ) {
   if( n < 1 ) RETURN( EINVAL );
@@ -272,14 +261,14 @@ inline static char *signal_name( int sig ) {
   return signam_tab[sig];
 }
 
-int pip_get_pipid_( void );
-
 inline static void set_signal_watcher( int signal ) {
   void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
+    char idstr[64];
+
+    pip_idstr( idstr, 64 );
     fprintf( stderr,
-	     "[PIPID:%d,PID:%d] SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
-	     pip_get_pipid_(),
-	     getpid(),
+	     "%s SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
+	     idstr,
 	     signal_name( siginfo->si_signo ),
 	     siginfo->si_signo,
 	     siginfo->si_addr,
@@ -333,40 +322,6 @@ inline static void set_signal_handler( int signal, void(*handler)() ) {
   TESTINT( sigaction( signal, &sigact, NULL ) );
 }
 
-static void signal_echo( int sig, siginfo_t *siginfo, void *dummy ) {
-  fprintf( stderr, "!!!!!! ECHO SIGNAL: %s(%d) (pid=%d) !!!!!!\n",
-	   signal_name( siginfo->si_signo ),
-	   siginfo->si_signo,
-	   siginfo->si_pid  );
-  TESTINT( pip_kill( PIP_PIPID_ROOT, siginfo->si_signo ) );
-}
-
-inline static void set_signal_echo( int signal ) {
-  set_signal_handler( signal, signal_echo );
-}
-
-inline static void echo_anysignal( void ) {
-  set_signal_echo( SIGHUP  );
-  set_signal_echo( SIGINT  );
-  set_signal_echo( SIGQUIT );
-  set_signal_echo( SIGILL  );
-  set_signal_echo( SIGABRT );
-  set_signal_echo( SIGFPE  );
-  //set_signal_echo( SIGKILL );
-  set_signal_echo( SIGSEGV );
-  set_signal_echo( SIGPIPE );
-  set_signal_echo( SIGALRM );
-  set_signal_echo( SIGTERM );
-  set_signal_echo( SIGUSR1 );
-  set_signal_echo( SIGUSR2 );
-  set_signal_echo( SIGCHLD );
-  set_signal_echo( SIGCONT );
-  //set_signal_echo( SIGSTOP );
-  set_signal_echo( SIGTSTP );
-  set_signal_echo( SIGTTIN );
-  set_signal_echo( SIGTTOU );
-}
-
 inline static void ignore_anysignal( void ) {
   ignore_signal( SIGHUP  );
   ignore_signal( SIGINT  );
@@ -399,7 +354,9 @@ inline static void set_sigsegv_watcher( void ) {
     intptr_t pc = 0;
 #endif
     char *sigcode;
+    char idstr[64];
 
+    pip_idstr( idstr, 64 );
     if( siginfo->si_code == SEGV_MAPERR ) {
       sigcode = "SEGV_MAPERR";
     } else if( siginfo->si_code == SEGV_ACCERR ) {
@@ -410,10 +367,9 @@ inline static void set_sigsegv_watcher( void ) {
     fflush( NULL );
     fprintf( stderr,
 	     "\n"
-	     "[PIPID:%d,PID:%d] SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n"
+	     "%s SIGSEGV  pc:%p  pid:%d  segvaddr:%p  '%s' !!!!!!\n"
 	     "\n",
-	     pip_get_pipid_(),
-	     pip_gettid(),
+	     idstr,
 	     (void*) pc,
 	     siginfo->si_pid,
 	     siginfo->si_addr,

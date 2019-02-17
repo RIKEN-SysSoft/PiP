@@ -30,69 +30,51 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2019
 */
 
-#ifndef _pip_util_h_
-#define _pip_util_h_
-
-/************************************************************/
-/* The following functions are just utilities for debugging */
-/************************************************************/
-
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef _pip_queue_h_
+#define _pip_queue_h_
 
 #include <pip.h>
-#include <stdio.h>
 
-#ifdef PIP_EVAL
-#define PIP_ACCUM(V,F)		\
-  do { double __st=pip_gettime(); if(F) (V) += pip_gettime() - __st; } while(0)
-#define PIP_REPORT(V)	 printf( "%s: %g\n", #V, V );
-#else
-#define PIP_ACCUM(V,F)		if(F)
-#define PIP_REPORT(V)
-#endif
+#define PIP_TASK_QUEUE_SETUP(Q)					\
+  do { memset((Q),0,sizeof(pip_task_queue_t));				\
+    PIP_LIST_INIT(((pip_task_t*)(Q))->queue);				\
+  } while(0)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define PIP_TASKQ_QUEUE(Q)	(((pip_task_queue_head_t*)(Q))->queue)
+#define PIP_TASKQ_METHODS(Q)	(((pip_task_queue_head_t*)(Q))->methods)
 
-  pid_t pip_gettid( void );
-  int  pip_check_pie( char *path );
+#define PIP_ISEMPTY(Q)						\
+  ( PIP_TASKQ_METHODS(Q) == NULL ) ?				\
+  PIP_TASKQ_ISEMPTY( &PIP_TASKQ_QUEUE(Q) ) :			\
+  PIP_TASKQ_METHODS(Q)->is_empty((Q))
 
-  void pip_info_fmesg( FILE *fp, char *format, ... )
-    __attribute__((format (printf, 2, 3)));
-  void pip_info_mesg( char *format, ... )
-    __attribute__((format (printf, 1, 2)));
-  void pip_err_mesg( char *format, ... )
-    __attribute__((format (printf, 1, 2)));
-  void pip_warn_mesg( char *format, ... )
-    __attribute__((format (printf, 1, 2)));
+#define PIP_ENQUEUE(Q,T)						\
+  ( PIP_TASKQ_METHODS(Q) == NULL ) ?					\
+  PIP_TASKQ_ENQ_LAST( &PIP_TASKQ_QUEUE(Q), (pip_task_t*)(T) ) :		\
+  PIP_TASKQ_METHODS(Q)->enqueue( (Q), (T) )
 
-  /* the following pip_pring_*() functions will be deprecated */
-  void pip_print_maps( void );
-  void pip_print_fd( int fd );
-  void pip_print_fds( void );
-  void pip_print_loaded_solibs( FILE *file );
-  void pip_print_dsos( void );
+#define PIP_DEQUEUE(Q,T)					\
+  ( PIP_TASKQ_METHODS(Q) == NULL ) ?				\
+  PIP_TASKQ_DEQ( &PIP_TASKQ_QUEUE(Q), (pip_task_t*)(T) ) :	\
+  PIP_TASKQ_METHODS(Q)->dequeue( (Q), (T) )
 
-  void pip_fprint_maps( FILE *fp );
-  void pip_fprint_fd( FILE *fp, int fd );
-  void pip_fprint_fds( FILE *fp );
-  void pip_fprint_loaded_solibs( FILE *file );
-  void pip_fprint_dsos( FILE *fp );
+#define PIP_DESTROY(Q)				\
+  ( PIP_TASKQ_METHODS(Q) == NULL ) ?			 \
+  PIP_TASKQ_ISEMPTY( &PIP_TASKQ_QUEUE(Q) ) ? 0 : EBUSY	 \
+  PIP_TASKQ_MEHODS->destroy( (Q) )
 
-  void pip_check_addr( char *tag, void *addr );
-  double pip_gettime( void );
+#define PIP_LOCKED_QUEUE_SETUP(Q)				\
+  do { PIP_TASK_QUEUE_SETUP(Q);					\
+    pip_spin_init( &((pip_locked_queue_t*)(Q))->lock );		\
+  } while(0)
 
-  void pip_task_describe(  FILE *fp, const char *tag, int pipid );
-  void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue);
+#define PIP_LOCK_LOCKED_QUEUE(Q)		\
+  pip_spin_lock( &((pip_locked_queue_t*)(Q))->lock )
 
-#ifdef __cplusplus
-}
-#endif
+#define PIP_UNLOCK_LOCKED_QUEUE(Q)		\
+  pip_spin_unlock( &((pip_locked_queue_t*)(Q))->lock )
 
-#endif
-
-#endif
+#endif /* _pip_queue_h */

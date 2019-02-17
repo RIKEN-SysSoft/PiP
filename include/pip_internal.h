@@ -50,8 +50,8 @@
 #include <pip_blt.h>
 #include <pip_clone.h>
 #include <pip_machdep.h>
-#include <pip_util.h>
 #include <pip_debug.h>
+#include <pip_util.h>
 
 //#define PIP_USE_STATIC_CTX
 
@@ -158,12 +158,16 @@ typedef struct pip_task_internal {
       /* less frequently accessed part follows */
       struct {
 	int16_t			pipid;	    /* PiP ID */
+#ifdef DEBUG
+	int16_t			schedq_len; /* length of schedq */
+#else
 	uint16_t		schedq_len; /* length of schedq */
+#endif
 	volatile uint16_t	oodq_len; /* indictaes ood task is added */
 	pip_stack_protect_t	flag_ctxsw; /* stack protection (ctxsw) */
 	pip_stack_protect_t	flag_sleep; /* stack protection (sleep) */
 	uint8_t			type; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
-	uint8_t			state;	       /* BLT state */
+	char			state;	       /* BLT state */
 	volatile uint8_t	flag_exit; /* if this task is terminated */
 	volatile uint8_t	flag_semwait; /* if sem_wait() is called */
       };
@@ -219,14 +223,14 @@ typedef struct pip_task_annex {
 #define PIP_TYPE_ROOT		(0x01)
 #define PIP_TYPE_TASK		(0x02)
 
-#define PIP_TASK_ACTIVE		(0x01)
-#define PIP_TASK_RUNNING	(0x02)
+#define PIP_TASK_RUNNING	('R')
+#define PIP_TASK_SUSPENDED	('S')
 
-#define PIP_RUN(T)		( PIP_TASKI(T)->state |=  PIP_TASK_RUNNING )
-#define PIP_SUSPEND(T)		( PIP_TASKI(T)->state &= ~PIP_TASK_RUNNING )
+#define PIP_RUN(T)		( PIP_TASKI(T)->state = PIP_TASK_RUNNING   )
+#define PIP_SUSPEND(T)		( PIP_TASKI(T)->state = PIP_TASK_SUSPENDED )
 
-#define PIP_IS_RUNNING(T)	( PIP_TASKI(T)->state & PIP_TASK_RUNNING )
-#define PIP_IS_SUSPENDED(T)	( !PIP_IS_RUNNING(T) )
+#define PIP_IS_RUNNING(T)	( PIP_TASKI(T)->state == PIP_TASK_RUNNING   )
+#define PIP_IS_SUSPENDED(T)	( PIP_TASKI(T)->state == PIP_TASK_SUSPENDED )
 
 #define PIP_ISA_ROOT(T)		( PIP_TASKI(T)->type & PIP_TYPE_ROOT )
 #define PIP_ISA_TASK(T)		\

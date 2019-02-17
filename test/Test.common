@@ -28,12 +28,12 @@
 # $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += -g
-LDLIBS += $(PIPLDLIB) -ldl
+CPPFLAGS = -I$(srcdir)/.. -I$(srcdir) -I$(PIPINCDIR)
+CFLAGS += -g $(PIECFLAG)
+LDLIBS += $(PIPLDLIB) -ldl $(PIELDFLAG)
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h \
-	$(PIPINCDIR)/pip_ulp.h $(PIPINCDIR)/pip_internal.h \
+	$(PIPINCDIR)/pip_blt.h $(PIPINCDIR)/pip_internal.h \
 	$(PIPINCDIR)/pip_machdep.h $(PIPINCDIR)/pip_debug.h
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile

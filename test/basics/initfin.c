@@ -38,6 +38,6 @@
 //#define DEBUG
 #include <test.h>
 
-int task_main( int argc, char **arg ) {
+int test_main( void *dummy ) {
   return 0;
 }

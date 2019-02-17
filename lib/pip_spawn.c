@@ -975,8 +975,11 @@ void pip_abort( void ) {
   ENTER;
 
   fflush( NULL );
-  if(pip_root_ == NULL ) kill( 0, SIGKILL );
-  (void) killpg( pip_root_->task_root->annex->pid, SIGKILL );
+  if( pip_root_ == NULL ) {
+    kill( 0, SIGKILL );
+  } else {
+    (void) killpg( pip_root_->task_root->annex->pid, SIGKILL );
+  }
 }
 
 void pip_abort_all_tasks( void ) {

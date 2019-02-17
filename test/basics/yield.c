@@ -38,9 +38,10 @@
 //#define DEBUG
 #include <test.h>
 
-int task_main( int argc, char **arg ) {
+int test_main( void *arg ) {
+  exp_t	*exp = (exp_t*) arg;
   int i;
-  for( i=0; i<niters; i++ ) {
+  for( i=0; i<exp->args.niters; i++ ) {
     TESTINT( pip_yield() );
   }
   return 0;
