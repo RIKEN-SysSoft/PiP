@@ -42,4 +42,4 @@ errno/pip_init.pip_task_unset
 errno/pip_init.invalid_PIP_ROOT.sh
 errno/pip_init.invalid_PIP_MODE.sh
 errno/pip_fin
-#errno/pip_spawn			# XXX segmentation fault
+errno/pip_spawn			# XXX segmentation fault

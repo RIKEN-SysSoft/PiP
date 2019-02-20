@@ -697,10 +697,10 @@ static int pip_task_p_( void ) {
 static int pip_check_pipid( int *pipidp ) {
   int pipid = *pipidp;
 
+  if( pip_root == NULL          ) RETURN( EPERM  );
   if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
   if( pipid != PIP_PIPID_MYSELF &&
       pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
-  if( pip_root == NULL          ) RETURN( EPERM  );
   switch( pipid ) {
   case PIP_PIPID_ROOT:
     break;
@@ -1397,7 +1397,7 @@ int pip_spawn( char *prog,
   pip_spawn_args_t	*args = NULL;
   pip_task_t		*task = NULL;
   struct pip_gdbif_task *gdbif_task = NULL;
-  size_t		stack_size = pip_stack_size();
+  size_t		stack_size;
   int 			pipid;
   pid_t			pid = 0;
   int 			err = 0;
@@ -1409,6 +1409,7 @@ int pip_spawn( char *prog,
   if( argv     == NULL ) RETURN( EINVAL );
   if( prog     == NULL ) prog = argv[0];
 
+  stack_size = pip_stack_size();
   pipid = *pipidp;
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) goto error;
   task = &pip_root->tasks[pipid];
