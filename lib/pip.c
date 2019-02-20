@@ -219,8 +219,7 @@ static int pip_page_alloc( size_t sz, void **allocp ) {
     pgsz = pip_root->page_size;
   }
   sz = ( ( sz + pgsz - 1 ) / pgsz ) * pgsz;
-  if( posix_memalign( allocp, pgsz, sz ) != 0 ) RETURN( errno );
-  RETURN( 0 );
+  RETURN( posix_memalign( allocp, pgsz, sz ) );
 }
 
 static void pip_init_task_struct( pip_task_t *taskp ) {
