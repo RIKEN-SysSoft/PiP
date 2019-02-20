@@ -32,3 +32,14 @@ compat/system.sh
 #openmp/openmp.sh
 fortran/fort.sh
 pthread/pthread.sh
+errno/pip_init.twice
+errno/pip_init.ntask_is_zero
+errno/pip_init.ntask_too_big
+errno/pip_init.invalid_opts
+errno/pip_init.both_pthread_process
+errno/pip_init.both_preload_clone
+errno/pip_init.pip_task_unset
+errno/pip_init.invalid_PIP_ROOT.sh
+errno/pip_init.invalid_PIP_MODE.sh
+errno/pip_fin
+#errno/pip_spawn			# XXX segmentation fault
