@@ -41,7 +41,8 @@ SUBDIRS = lib include bin preload util sample \
 	test/compat \
 	test/openmp \
 	test/pthread \
-	test/fortran
+	test/fortran \
+	test/errno
 
 include $(top_srcdir)/build/rule.mk
 
