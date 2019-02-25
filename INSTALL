@@ -44,7 +44,7 @@ make -j1 install PARALLELMFLAGS=
 git clone git@git.sys.aics.riken.jp:software/PIP
 cd PIP
 ./configure --prefix=<PIP_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
-make doc install
+make install
 
   After the successful PiP installation, you must do the following,
 
