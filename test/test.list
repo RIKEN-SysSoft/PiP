@@ -41,5 +41,9 @@ errno/pip_init.both_preload_clone
 errno/pip_init.pip_task_unset
 errno/pip_init.invalid_PIP_ROOT.sh
 errno/pip_init.invalid_PIP_MODE.sh
+errno/pip_init.no_preload_symbol.sh
 errno/pip_fin
-errno/pip_spawn			# XXX segmentation fault
+errno/pip_spawn
+errno/pip_get_ntasks
+errno/pip_get_mode
+errno/pip_get_mode_str
