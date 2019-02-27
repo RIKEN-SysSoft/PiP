@@ -26,6 +26,21 @@ static int test_pip_init( char **argv, char *base )
   return EXIT_PASS;
 }
 
+static int test_pip_init_preload( char **argv, char *base )
+{
+  int pipid, ntasks, rv;
+  void *exp;
+
+  ntasks = NTASKS;
+  exp = NULL;
+  rv = pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS_PRELOAD );
+  if ( rv != 0 ) {
+    fprintf( stderr, "pip_init: %s", strerror( rv ) );
+    return EXIT_FAIL;
+  }
+  
+  return EXIT_PASS;
+}
 
 static int test_twice( char **argv, char *base )
 {
@@ -200,6 +215,7 @@ int main( int argc, char **argv ) {
     int (*func)( char **argv, char *base );
   } tab[] = {
     { "pip_init", test_pip_init },
+    { "pip_init.preload", test_pip_init_preload },
     { "pip_init.twice", test_twice },
     { "pip_init.ntask_is_zero", test_ntask_is_zero },
     { "pip_init.ntask_too_big", test_ntask_too_big },
