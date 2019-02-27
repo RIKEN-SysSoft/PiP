@@ -1,4 +1,4 @@
-# $PIP_VERSION: Version 1.0$
+# $PIP_VERSION: Version 1.0.1$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,8 +25,8 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
-# 	  System Software Devlopment Team. All rights researved$
+# $RIKEN_copyright: Riken Center for Computational Sceience,
+# System Software Development Team, 2016, 2017, 2018, 2019$
 
 top_builddir = .
 top_srcdir = .
