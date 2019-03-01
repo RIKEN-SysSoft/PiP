@@ -8,10 +8,14 @@ Process-in-Process (PiP) Installation
   create sub-processes. To fix this issue, you have to install our
   patched GLIBC before building the PiP library.
 
+NOTE: the following is the procedure to install PiP from the source code.
+If you are using CentOS 7 or RHEL 7, RPM packages and their yum repository
+are available.
+
 * Patched GLIBC
   You can download the patched GLIBC from the following URL.
 
-git clone https://github.com/RIKEN-SysSoft/PiP-glibc.git
+$ git clone https://github.com/RIKEN-SysSoft/PiP-glibc.git
 
   With the GLIB which Linux distribution provides, the number of PiP
   tasks (see below) is limited to 15 or so. This limitation comes from
@@ -20,35 +24,27 @@ git clone https://github.com/RIKEN-SysSoft/PiP-glibc.git
   libraries. To avoid these issues, we recommend you to have our
   patched GLIBC.
 
-  Here is the recommended configure and other options for the patched
-  GLIBC based on CentOS 7.2,
+  Here is the way to build the patched GLIBC.  Note that you do not
+  have to use sudo below, if you already have enough privilege
+  to write <GLIBC_INSTALL_DIR>.  Also, you should NOT specify "/", "/usr"
+  or "/usr/local" as <GLIBC_INSTALL_DIR>.
 
-  +++ on x86_64
-
-mkdir PiP-glibc.build
-cd PiP-glibc.build
-../PiP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ CFLAGS="-mtune=generic -fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" --enable-add-ons --with-headers=/usr/include --enable-kernel=2.6.32 --enable-bind-now --build=x86_64-redhat-linux --enable-multi-arch --enable-obsolete-rpc --disable-profile --enable-nss-crypt --enable-systemtap
-make -j3 && make install
-
-  +++ on Aarch64 (ARM64)
-
-mkdir PiP-glibc.build
-cd PiP-glibc.build
-../PiP-glibc/configure --prefix=<GLIBC_INSTALL_DIR> CC=gcc CXX=g++ CFLAGS="-fasynchronous-unwind-tables -DNDEBUG -g -O3 -fno-asynchronous-unwind-tables" --enable-add-ons --with-headers=/usr/include --enable-kernel=2.6.32 --enable-bind-now --build=aarch64-redhat-linux --enable-obsolete-rpc --enable-systemtap --disable-profile --enable-nss-crypt
-make -j3 -r CFLAGS=" -fasynchronous-unwind-tables -DNDEBUG -g -O3" PARALLELMFLAGS=
-make -j1 install PARALLELMFLAGS=
+$ mkdir PiP-glibc.build
+$ cd PiP-glibc.build
+$ ../PiP-glibc/build.sh -b <GLIBC_INSTALL_DIR>
+$ sudo ../PiP-glibc/build.sh -i
 
 * Building PiP
   At the PiP configuration, you must specify the installed GLIBC.
 
-git clone https://github.com/RIKEN-SysSoft/PiP.git
-cd PiP
-./configure --prefix=<PIP_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
-make install
+$ git clone https://github.com/RIKEN-SysSoft/PiP.git
+$ cd PiP
+$ ./configure --prefix=<PIP_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
+$ sudo make install
 
   After the successful PiP installation, you must do the following,
 
-<PIP_INSTALL_DIR>/bin/piplnlibs
+$ <PIP_INSTALL_DIR>/bin/piplnlibs
 
   This command creates a number of symbolic links to the SOLIBs which
   are not installed by the patched GLIBC installation.
@@ -57,9 +53,10 @@ make install
   The following procedure installs the pip-gdb(1) command
   as <PIP_GDB_INSTALL_DIR>/bin/pip-gdb :
 
-git clone https://github.com/RIKEN-SysSoft/PiP-gdb
-cd PiP-gdb
-./build.sh --prefix=<PIP_GDB_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib --with-pip=<PIP_INSTALL_DIR>
+$ git clone https://github.com/RIKEN-SysSoft/PiP-gdb
+$ cd PiP-gdb
+$ ./build.sh -b --prefix=<PIP_GDB_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib --with-pip=<PIP_INSTALL_DIR>
+$ sudo ./build.sh -i
 
 * Test programs
   A number of test programs can be found in the PIP/test directory.
