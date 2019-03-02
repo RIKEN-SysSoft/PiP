@@ -2,7 +2,7 @@
 #
 #	$ rpm -Uvh glibc-2.17-106.el7_2.8.src.rpm 
 #	$ cd .../$SOMEWHERE/.../PiP-glibc
-#	$ git diff origin/centos/2.17/master pip-centos7 >~/rpmbuild/SOURCES/glibc-pip.patch
+#	$ git diff origin/centos/glibc-2.17-260.el7.branch centos/glibc-2.17-260.el7.pip.branch >~/rpmbuild/SOURCES/glibc-pip.patch
 #	$ rpmbuild -bb ~/rpmbuild/SPECS/pip-glibc.spec
 #
 
@@ -17,76 +17,7 @@
 
 %define glibcsrcdir glibc-2.17-c758a686
 %define glibcversion 2.17
-%define glibcrelease 106%{?dist}.8.%{pip_glibc_release}
-##############################################################################
-# If run_glibc_tests is zero then tests are not run for the build.
-# You must always set run_glibc_tests to one for production builds.
-%define run_glibc_tests 0
-##############################################################################
-# Auxiliary arches are those arches that can be built in addition
-# to the core supported arches. You either install an auxarch or
-# you install the base arch, not both. You would do this in order
-# to provide a more optimized version of the package for your arch.
-%define auxarches athlon alphaev6
-%define xenarches i686 athlon
-##############################################################################
-# We build a special package for Xen that includes TLS support with
-# no negative segment offsets for use with Xen guests. This is
-# purely an optimization for increased performance on those arches.
-%ifarch %{xenarches}
-%define buildxen 1
-%define xenpackage 0
-%else
-%define buildxen 0
-%define xenpackage 0
-%endif
-##############################################################################
-# In RHEL7 for 32-bit and 64-bit POWER the following runtimes are provided:
-# - POWER7 (-mcpu=power7 -mtune=power7)
-# - POWER8 (-mcpu=power7 -mtune=power8)
-#
-# We will eventually make the POWER8-tuned runtime into a POWER8 runtime when
-# there is enough POWER8 hardware in the build farm to ensure that all
-# builds are done on POWER8.
-#
-# The POWER5 and POWER6 runtimes are now deprecated and no longer provided
-# or supported. This means that RHEL7 will only run on POWER7 or newer
-# hardware.
-#
-%ifarch ppc %{power64}
-%define buildpower6 0
-%define buildpower8 1
-%else
-%define buildpower6 0
-%define buildpower8 0
-%endif
-##############################################################################
-# We build librtkaio for all rtkaioarches. The library is installed into
-# a distinct subdirectory in the lib dir. This define enables the rtkaio
-# add-on during the build. Upstream does not have rtkaio and it is provided
-# strictly as part of our builds.
-%define rtkaioarches %{ix86} x86_64 ppc %{power64} s390 s390x
-##############################################################################
-# Any architecture/kernel combination that supports running 32-bit and 64-bit
-# code in userspace is considered a biarch arch.
-%define biarcharches %{ix86} x86_64 ppc %{power64} s390 s390x
-##############################################################################
-# If the debug information is split into two packages, the core debuginfo
-# pacakge and the common debuginfo package then the arch should be listed
-# here. If the arch is not listed here then a single core debuginfo package
-# will be created for the architecture.
-%define debuginfocommonarches %{biarcharches} alpha alphaev6
-##############################################################################
-# If the architecture has multiarch support in glibc then it should be listed
-# here to enable support in the build. Multiarch support is a single library
-# with implementations of certain functions for multiple architectures. The
-# most optimal function is selected at runtime based on the hardware that is
-# detected by glibc. The underlying support for function selection and
-# execution is provided by STT_GNU_IFUNC.
-%define multiarcharches ppc %{power64} %{ix86} x86_64 %{sparc} s390 s390x
-##############################################################################
-# Add -s for a less verbose build output.
-%define silentrules PARALLELMFLAGS=
+%define glibcrelease 260%{?dist}.%{pip_glibc_release}
 ##############################################################################
 # %%package glibc - The GNU C Library (glibc) core package.
 ##############################################################################
@@ -114,6 +45,7 @@ URL: http://www.gnu.org/software/glibc/
 # changes should then be a very very small patch set.
 Source0: %{?glibc_release_url}%{glibcsrcdir}.tar.gz
 Source1: %{glibcsrcdir}-releng.tar.gz
+Source2: verify.md5
 
 ##############################################################################
 # Start of glibc patches
@@ -182,7 +114,6 @@ Patch0028: glibc-fedora-localedata-rh61908.patch
 Patch0030: glibc-fedora-uname-getrlimit.patch
 Patch0031: glibc-fedora-__libc_multiple_libcs.patch
 Patch0032: glibc-fedora-elf-rh737223.patch
-Patch0033: glibc-fedora-elf-ORIGIN.patch
 Patch0034: glibc-fedora-elf-init-hidden_undef.patch
 
 # Needs to be sent upstream
@@ -221,6 +152,11 @@ Patch0066: glibc-rh1227699.patch
 # CVE-2015-7547
 Patch0067: glibc-rh1296031.patch
 
+# releng patch from Fedora
+Patch0068: glibc-rh1349982.patch
+
+# These changes were brought forward from RHEL 6 for compatibility
+Patch0069: glibc-rh1448107.patch
 ##############################################################################
 #
 # Patches from upstream
@@ -673,39 +609,713 @@ Patch1610: glibc-rh1234622.patch
 # Fix 32-bit POWER assembly to use only 32-bit instructions.
 Patch1611: glibc-rh1240796.patch
 
+# Fix for RHBZ #1213267 as a prerequisite for the patches below.
+Patch1612: glibc-rh1240351-1.patch
+
+# Backport of POWER8 glibc optimizations for RHEL7.3: math functions
+Patch1613: glibc-rh1240351-2.patch
+Patch1614: glibc-rh1240351-3.patch
+
+# Backport of POWER8 glibc optimizations for RHEL7.3: string functions
+Patch1615: glibc-rh1240351-4.patch
+Patch1616: glibc-rh1240351-5.patch
+Patch1617: glibc-rh1240351-6.patch
+Patch1618: glibc-rh1240351-7.patch
+Patch1619: glibc-rh1240351-8.patch
+Patch1620: glibc-rh1240351-9.patch
+Patch1621: glibc-rh1240351-10.patch
+Patch1622: glibc-rh1240351-11.patch
+Patch1623: glibc-rh1240351-12.patch
+
+# Backport of upstream IBM z13 patches for RHEL 7.3
+Patch1624: glibc-rh1268008-1.patch
+Patch1625: glibc-rh1268008-2.patch
+Patch1626: glibc-rh1268008-3.patch
+Patch1627: glibc-rh1268008-4.patch
+Patch1628: glibc-rh1268008-5.patch
+Patch1629: glibc-rh1268008-6.patch
+Patch1630: glibc-rh1268008-7.patch
+Patch1631: glibc-rh1268008-8.patch
+Patch1632: glibc-rh1268008-9.patch
+Patch1633: glibc-rh1268008-10.patch
+Patch1634: glibc-rh1268008-11.patch
+Patch1635: glibc-rh1268008-12.patch
+Patch1636: glibc-rh1268008-13.patch
+Patch1637: glibc-rh1268008-14.patch
+Patch1638: glibc-rh1268008-15.patch
+Patch1639: glibc-rh1268008-16.patch
+Patch1640: glibc-rh1268008-17.patch
+Patch1641: glibc-rh1268008-18.patch
+Patch1642: glibc-rh1268008-19.patch
+Patch1643: glibc-rh1268008-20.patch
+Patch1644: glibc-rh1268008-21.patch
+Patch1645: glibc-rh1268008-22.patch
+Patch1646: glibc-rh1268008-23.patch
+Patch1647: glibc-rh1268008-24.patch
+Patch1648: glibc-rh1268008-25.patch
+Patch1649: glibc-rh1268008-26.patch
+Patch1650: glibc-rh1268008-27.patch
+Patch1651: glibc-rh1268008-28.patch
+Patch1652: glibc-rh1268008-29.patch
+Patch1653: glibc-rh1268008-30.patch
+
+Patch1654: glibc-rh1249102.patch
+
 # CVE-2015-5229 and regression test.
-Patch1612: glibc-rh1293976.patch
-Patch1613: glibc-rh1293976-2.patch
+Patch1656: glibc-rh1293976.patch
+Patch1657: glibc-rh1293976-2.patch
 
 # BZ #16574
-Patch1614: glibc-rh1296031-0.patch
+Patch1658: glibc-rh1296031-0.patch
 # BZ #13928
-Patch1616: glibc-rh1296031-2.patch
+Patch1660: glibc-rh1296031-2.patch
 
 # Malloc trim fixes: #17195, #18502.
-Patch1617: glibc-rh1284959-1.patch
-Patch1618: glibc-rh1284959-2.patch
-Patch1619: glibc-rh1284959-3.patch
+Patch1661: glibc-rh1284959-1.patch
+Patch1662: glibc-rh1284959-2.patch
+Patch1663: glibc-rh1284959-3.patch
 
-# ppc64le monstartup fix:
-Patch1620: glibc-rh1249102.patch
+# RHBZ #1293916 - iconv appears to be adding a duplicate "SI"
+#                 to the output for certain inputs 
+Patch1664: glibc-rh1293916.patch
 
-# Fix race in free() of fastbin chunk: BZ #15073.
-Patch1621: glibc-rh1027101.patch
+# Race condition in _int_free involving fastbins: #15073
+Patch1665: glibc-rh1027101.patch
 
 # BZ #17370: Memory leak in wide-oriented ftell.
-Patch1622: glibc-rh1310530.patch 
+Patch1666: glibc-rh1310530.patch
 
 # BZ #19791: NULL pointer dereference in stub resolver with unconnectable
 # name server addresses
-Patch1623: glibc-rh1320596.patch
+Patch1667: glibc-rh1320596.patch
 
-# RHBZ #1331283 - Backport "Coordinate IPv6 definitions for Linux and glibc"
-Patch1624: glibc-rh1331283.patch
-Patch1625: glibc-rh1331283-1.patch
-Patch1626: glibc-rh1331283-2.patch
-Patch1627: glibc-rh1331283-3.patch
-Patch1628: glibc-rh1331283-4.patch
+# RHBZ #1298349 - Backport tst-getpw enhancements
+Patch1668: glibc-rh1298349.patch
+
+# RHBZ #1293433 - Test suite failure: Fix bug17079
+Patch1669: glibc-rh1293433.patch
+
+# RHBZ #1298354 - Backport test-skeleton.c conversions
+Patch1670: glibc-rh1298354.patch
+
+# RHBZ #1288613 - gethostbyname_r hangs forever
+Patch1671: glibc-rh1288613.patch
+
+# RHBZ #1064063 - Test suite failure: tst-mqueue5
+Patch1672: glibc-rh1064063.patch
+
+# RHBZ #140250 - Unexpected results from using posix_fallocate
+#                with nfs target 
+Patch1675: glibc-rh1140250.patch
+
+# RHBZ #1324427 - RHEL7.3 - S390: fprs/vrs are not saved/restored while
+#                 resolving symbols
+Patch1676: glibc-rh1324427-1.patch
+Patch1677: glibc-rh1324427-2.patch
+Patch1678: glibc-rh1324427-3.patch
+
+# RHBZ #1234449 - glibc: backport upstream hardening patches
+Patch1679: glibc-rh1234449-1.patch
+Patch1680: glibc-rh1234449-2.patch
+Patch1681: glibc-rh1234449-3.patch
+Patch1682: glibc-rh1234449-4.patch
+
+# RHBZ #1221046 - make bits/stat.h FTM guards consistent on all arches
+Patch1683: glibc-rh1221046.patch
+
+# RHBZ #971416 - Locale alias no_NO.ISO-8859-1 not working
+Patch1684: glibc-rh971416-1.patch
+Patch1685: glibc-rh971416-2.patch
+Patch1686: glibc-rh971416-3.patch
+
+# RHBZ 1302086 -  Improve libm performance AArch64
+Patch1687: glibc-rh1302086-1.patch
+Patch1688: glibc-rh1302086-2.patch
+Patch1689: glibc-rh1302086-3.patch
+Patch1690: glibc-rh1302086-4.patch
+Patch1691: glibc-rh1302086-5.patch
+Patch1692: glibc-rh1302086-6.patch
+Patch1693: glibc-rh1302086-7.patch
+Patch1694: glibc-rh1302086-8.patch
+Patch1695: glibc-rh1302086-9.patch
+Patch1696: glibc-rh1302086-10.patch
+Patch1697: glibc-rh1302086-11.patch
+
+# RHBZ 1346397 debug/tst-longjump_chk2 calls printf from a signal handler
+Patch1698: glibc-rh1346397.patch
+
+# RHBZ #1211823 Update BIG5-HKSCS charmap to HKSCS-2008
+Patch1699: glibc-rh1211823.patch
+
+# RHBZ #1268050 Backport "Coordinate IPv6 definitions for Linux and glibc"
+Patch1700: glibc-rh1331283.patch
+Patch1701: glibc-rh1331283-1.patch
+Patch1702: glibc-rh1331283-2.patch
+Patch1703: glibc-rh1331283-3.patch
+Patch1704: glibc-rh1331283-4.patch
+
+# RHBZ #1296297 enable (backport) instLangs in RHEL glibc
+Patch1705: glibc-rh1296297.patch
+Patch1706: glibc-rh1296297-1.patch
+
+# RHBZ #1027348 sem_post/sem_wait race causing sem_post to return EINVAL
+Patch1707: glibc-rh1027348.patch
+Patch1708: glibc-rh1027348-1.patch
+Patch1709: glibc-rh1027348-2.patch
+Patch1710: glibc-rh1027348-3.patch
+Patch1711: glibc-rh1027348-4.patch
+
+# RHBZ #1308728 Fix __times() handling of EFAULT when buf is NULL
+Patch1712: glibc-rh1308728.patch
+
+# RHBZ #1249114 [s390] setcontext/swapcontext does not restore signal mask
+Patch1713: glibc-rh1249114.patch
+# RHBZ #1249115 S390: backtrace() returns infinitely deep stack ...
+Patch1714: glibc-rh1249115.patch
+
+# RHBZ #1321993: CVE-2016-3075: Stack overflow in nss_dns_getnetbyname_r
+Patch1715: glibc-rh1321993.patch
+
+# RHBZ #1256317 - IS_IN backports.
+Patch1716: glibc-rh1256317-21.patch
+Patch1717: glibc-rh1256317-20.patch
+Patch1718: glibc-rh1256317-19.patch
+Patch1719: glibc-rh1256317-18.patch
+Patch1720: glibc-rh1256317-17.patch
+Patch1721: glibc-rh1256317-16.patch
+Patch1722: glibc-rh1256317-15.patch
+Patch1723: glibc-rh1256317-14.patch
+Patch1724: glibc-rh1256317-13.patch
+Patch1725: glibc-rh1256317-12.patch
+Patch1726: glibc-rh1256317-11.patch
+Patch1727: glibc-rh1256317-10.patch
+Patch1728: glibc-rh1256317-9.patch
+Patch1729: glibc-rh1256317-8.patch
+Patch1730: glibc-rh1256317-7.patch
+Patch1731: glibc-rh1256317-6.patch
+Patch1732: glibc-rh1256317-5.patch
+Patch1733: glibc-rh1256317-4.patch
+Patch1734: glibc-rh1256317-3.patch
+Patch1735: glibc-rh1256317-2.patch
+Patch1736: glibc-rh1256317-1.patch
+Patch1737: glibc-rh1256317-0.patch
+
+# RHBZ #1335286 [Intel 7.3 Bug] (Purley) Backport 64-bit memset from glibc 2.18
+Patch1738: glibc-rh1335286-0.patch
+Patch1739: glibc-rh1335286.patch
+
+# RHBZ #1292018 [Intel 7.3 Bug] Improve branch prediction on Knights Landing/Silvermont
+Patch1740: glibc-rh1292018-0.patch
+Patch1741: glibc-rh1292018-0a.patch
+Patch1742: glibc-rh1292018-0b.patch
+Patch1743: glibc-rh1292018-1.patch
+Patch1744: glibc-rh1292018-2.patch
+Patch1745: glibc-rh1292018-3.patch
+Patch1746: glibc-rh1292018-4.patch
+Patch1747: glibc-rh1292018-5.patch
+Patch1748: glibc-rh1292018-6.patch
+Patch1749: glibc-rh1292018-7.patch
+
+# RHBZ #1255822 glibc: malloc may fall back to calling mmap prematurely if arenas are contended
+Patch1750: glibc-rh1255822.patch
+
+# RHBZ #1298526 [Intel 7.3 FEAT] glibc: AVX-512 optimized memcpy
+Patch1751: glibc-rh1298526-0.patch
+Patch1752: glibc-rh1298526-1.patch
+Patch1753: glibc-rh1298526-2.patch
+Patch1754: glibc-rh1298526-3.patch
+Patch1755: glibc-rh1298526-4.patch
+
+# RHBZ #1350733 locale-archive.tmpl cannot be processed by build-locale-archive
+Patch1756: glibc-rh1350733-1.patch
+
+# Fix tst-cancel17/tst-cancelx17, which sometimes segfaults while exiting.
+Patch1757: glibc-rh1337242.patch
+
+# RHBZ #1418978: backport upstream support/ directory
+Patch17580: glibc-rh1418978-max_align_t.patch
+Patch1758: glibc-rh1418978-0.patch
+Patch1759: glibc-rh1418978-1.patch
+Patch1760: glibc-rh1418978-2-1.patch
+Patch1761: glibc-rh1418978-2-2.patch
+Patch1762: glibc-rh1418978-2-3.patch
+Patch1763: glibc-rh1418978-2-4.patch
+Patch1764: glibc-rh1418978-2-5.patch
+Patch1765: glibc-rh1418978-2-6.patch
+Patch1766: glibc-rh1418978-3-1.patch
+Patch1767: glibc-rh1418978-3-2.patch
+
+# RHBZ #906468: Fix deadlock between fork, malloc, flush (NULL)
+Patch1768: glibc-rh906468-1.patch
+Patch1769: glibc-rh906468-2.patch
+
+# RHBZ #988869: stdio buffer auto-tuning should reject large buffer sizes
+Patch1770: glibc-rh988869.patch
+
+# RHBZ #1398244 - RHEL7.3 - glibc: Fix TOC stub on powerpc64 clone()
+Patch1771: glibc-rh1398244.patch
+
+# RHBZ #1228114: Fix sunrpc UDP client timeout handling
+Patch1772: glibc-rh1228114-1.patch
+Patch1773: glibc-rh1228114-2.patch
+
+# RHBZ #1298975 - [RFE] Backport the groups merging feature
+Patch1774: glibc-rh1298975.patch
+
+# RHBZ #1318877 - Per C11 and C++11, <stdint.h> should not look at
+# __STDC_LIMIT_MACROS or __STDC_CONSTANT_MACROS
+Patch1775: glibc-rh1318877.patch
+
+# RHBZ #1417205: Add AF_VSOCK/PF_VSOCK, TCP_TIMESTAMP
+Patch1776: glibc-rh1417205.patch
+
+# RHBZ #1338672: GCC 6 enablement for struct sockaddr_storage
+Patch1777: glibc-rh1338672.patch
+
+# RHBZ #1325138 - glibc: Corrupted aux-cache causes ldconfig to segfault
+Patch1778: glibc-rh1325138.patch
+
+# RHBZ #1374652: Unbounded stack allocation in nan* functions
+Patch1779: glibc-rh1374652.patch
+
+# RHBZ #1374654: Unbounded stack allocation in nan* functions
+Patch1780: glibc-rh1374654.patch
+
+# RHBZ #1322544: Segmentation violation can occur within glibc if fork()
+# is used in a multi-threaded application
+Patch1781: glibc-rh1322544.patch
+
+# RHBZ #1418997: does not build with binutils 2.27 due to misuse of the cmpli instruction on ppc64
+Patch1782: glibc-rh1418997.patch
+
+# RHBZ #1383951: LD_POINTER_GUARD in the environment is not sanitized
+Patch1783: glibc-rh1383951.patch
+
+# RHBZ #1385004: [7.4 FEAT] POWER8 IFUNC update from upstream
+Patch1784: glibc-rh1385004-1.patch
+Patch1785: glibc-rh1385004-2.patch
+Patch1786: glibc-rh1385004-3.patch
+Patch1787: glibc-rh1385004-4.patch
+Patch1788: glibc-rh1385004-5.patch
+Patch1789: glibc-rh1385004-6.patch
+Patch1790: glibc-rh1385004-7.patch
+Patch1791: glibc-rh1385004-8.patch
+Patch1792: glibc-rh1385004-9.patch
+Patch1793: glibc-rh1385004-10.patch
+Patch1794: glibc-rh1385004-11.patch
+Patch1795: glibc-rh1385004-12.patch
+Patch1796: glibc-rh1385004-13.patch
+Patch1797: glibc-rh1385004-14.patch
+Patch1798: glibc-rh1385004-15.patch
+Patch1799: glibc-rh1385004-16.patch
+Patch1800: glibc-rh1385004-17.patch
+Patch1801: glibc-rh1385004-18.patch
+Patch1802: glibc-rh1385004-19.patch
+Patch1803: glibc-rh1385004-20.patch
+Patch1804: glibc-rh1385004-21.patch
+Patch1805: glibc-rh1385004-22.patch
+Patch1806: glibc-rh1385004-23.patch
+Patch1807: glibc-rh1385004-24.patch
+
+# RHBZ 1380680 - [7.4 FEAT] z13 exploitation in glibc - stage 2
+Patch1808: glibc-rh1380680-1.patch
+Patch1809: glibc-rh1380680-2.patch
+Patch1810: glibc-rh1380680-3.patch
+Patch1811: glibc-rh1380680-4.patch
+Patch1812: glibc-rh1380680-5.patch
+Patch1813: glibc-rh1380680-6.patch
+Patch1814: glibc-rh1380680-7.patch
+Patch1815: glibc-rh1380680-8.patch
+Patch1816: glibc-rh1380680-9.patch
+Patch1817: glibc-rh1380680-10.patch
+Patch1818: glibc-rh1380680-11.patch
+Patch1819: glibc-rh1380680-12.patch
+Patch1820: glibc-rh1380680-13.patch
+Patch1821: glibc-rh1380680-14.patch
+Patch1822: glibc-rh1380680-15.patch
+Patch1823: glibc-rh1380680-16.patch
+Patch1824: glibc-rh1380680-17.patch
+
+# RHBZ #1326739: malloc: additional unlink hardening for non-small bins
+Patch1825: glibc-rh1326739.patch
+
+# RHBZ #1374657: CVE-2015-8778: Integer overflow in hcreate and hcreate_r
+Patch1826: glibc-rh1374657.patch
+
+# RHBZ #1374658 - CVE-2015-8776: Segmentation fault caused by passing
+# out-of-range data to strftime()
+Patch1827: glibc-rh1374658.patch
+
+# RHBZ #1385003 - SIZE_MAX evaluates to an expression of the wrong type
+# on s390
+Patch1828: glibc-rh1385003.patch
+
+# RHBZ #1387874 - MSG_FASTOPEN definition missing
+Patch1829: glibc-rh1387874.patch
+
+# RHBZ #1409611 - poor performance with exp()
+Patch1830: glibc-rh1409611.patch
+
+# RHBZ #1421155 - Update dynamic loader trampoline for Intel SSE, AVX, and AVX512 usage.
+Patch1831: glibc-rh1421155.patch
+
+# RHBZ #841653 - [Intel 7.0 FEAT] [RFE] TSX-baed lock elision enabled in glibc.
+Patch1832: glibc-rh841653-0.patch
+Patch1833: glibc-rh841653-1.patch
+Patch1834: glibc-rh841653-2.patch
+Patch1835: glibc-rh841653-3.patch
+Patch1836: glibc-rh841653-4.patch
+Patch1837: glibc-rh841653-5.patch
+Patch1838: glibc-rh841653-6.patch
+Patch1839: glibc-rh841653-7.patch
+Patch1840: glibc-rh841653-8.patch
+Patch1841: glibc-rh841653-9.patch
+Patch1842: glibc-rh841653-10.patch
+Patch1843: glibc-rh841653-11.patch
+Patch1844: glibc-rh841653-12.patch
+Patch1845: glibc-rh841653-13.patch
+Patch1846: glibc-rh841653-14.patch
+Patch1847: glibc-rh841653-15.patch
+Patch1848: glibc-rh841653-16.patch
+Patch1849: glibc-rh841653-17.patch
+
+# RHBZ #731835 - [RFE] [7.4 FEAT] Hardware Transactional Memory in GLIBC
+Patch1850: glibc-rh731835-0.patch
+Patch1851: glibc-rh731835-1.patch
+Patch1852: glibc-rh731835-2.patch
+
+# RHBZ #1413638: Inhibit FMA while compiling sqrt, pow
+Patch1853: glibc-rh1413638-1.patch
+Patch1854: glibc-rh1413638-2.patch
+
+# RHBZ #1439165: Use a built-in list of known syscalls for <bits/syscall.h>
+Patch1855: glibc-rh1439165.patch
+Patch1856: glibc-rh1439165-syscall-names.patch
+
+# RHBZ #1457177: Rounding issues on POWER
+Patch1857: glibc-rh1457177-1.patch
+Patch1858: glibc-rh1457177-2.patch
+Patch1859: glibc-rh1457177-3.patch
+Patch1860: glibc-rh1457177-4.patch
+
+Patch1861: glibc-rh1348000.patch
+Patch1862: glibc-rh1443236.patch
+Patch1863: glibc-rh1447556.patch
+Patch1864: glibc-rh1463692-1.patch
+Patch1865: glibc-rh1463692-2.patch
+Patch1866: glibc-rh1347277.patch
+
+# RHBZ #1375235: Add new s390x instruction support
+Patch1867: glibc-rh1375235-1.patch
+Patch1868: glibc-rh1375235-2.patch
+Patch1869: glibc-rh1375235-3.patch
+Patch1870: glibc-rh1375235-4.patch
+Patch1871: glibc-rh1375235-5.patch
+Patch1872: glibc-rh1375235-6.patch
+Patch1873: glibc-rh1375235-7.patch
+Patch1874: glibc-rh1375235-8.patch
+Patch1875: glibc-rh1375235-9.patch
+Patch1876: glibc-rh1375235-10.patch
+
+# RHBZ #1435615: nscd cache thread hangs
+Patch1877: glibc-rh1435615.patch
+
+# RHBZ #1398413: libio: Implement vtable verification
+Patch1878: glibc-rh1398413.patch
+
+# RHBZ #1445781:  elf/tst-audit set of tests fails with "no PLTREL"
+Patch1879: glibc-rh1445781-1.patch
+Patch1880: glibc-rh1445781-2.patch
+
+Patch1881: glibc-rh1500908.patch
+Patch1882: glibc-rh1448822.patch
+Patch1883: glibc-rh1468807.patch
+Patch1884: glibc-rh1372305.patch
+Patch1885: glibc-rh1349962.patch
+Patch1886: glibc-rh1349964.patch
+Patch1887: glibc-rh1440250.patch
+Patch1888: glibc-rh1504809-1.patch
+Patch1889: glibc-rh1504809-2.patch
+Patch1890: glibc-rh1504969.patch
+Patch1891: glibc-rh1498925-1.patch
+Patch1892: glibc-rh1498925-2.patch
+
+# RHBZ #1503854: Pegas1.0 - Update HWCAP bits for POWER9 DD2.1
+Patch1893: glibc-rh1503854-1.patch
+Patch1894: glibc-rh1503854-2.patch
+Patch1895: glibc-rh1503854-3.patch
+
+# RHBZ #1527904: PTHREAD_STACK_MIN is too small on x86_64
+Patch1896: glibc-rh1527904-1.patch
+Patch1897: glibc-rh1527904-2.patch
+Patch1898: glibc-rh1527904-3.patch
+Patch1899: glibc-rh1527904-4.patch
+
+# RHBZ #1534635: CVE-2018-1000001 glibc: realpath() buffer underflow.
+Patch1900: glibc-rh1534635.patch
+
+# RHBZ #1529982: recompile glibc to fix incorrect CFI information on i386.
+Patch1901: glibc-rh1529982.patch
+
+Patch1902: glibc-rh1523119-compat-symbols.patch
+Patch2500: glibc-rh1505492-nscd_stat.patch
+Patch2501: glibc-rh1564638.patch
+Patch2502: glibc-rh1566623.patch
+Patch2503: glibc-rh1349967.patch
+Patch2504: glibc-rh1505492-undef-malloc.patch
+Patch2505: glibc-rh1505492-undef-elf-dtv-resize.patch
+Patch2506: glibc-rh1505492-undef-elision.patch
+Patch2507: glibc-rh1505492-undef-max_align_t.patch
+Patch2508: glibc-rh1505492-unused-tst-default-attr.patch
+Patch2509: glibc-rh1505492-prototypes-rtkaio.patch
+Patch2510: glibc-rh1505492-zerodiv-log.patch
+Patch2511: glibc-rh1505492-selinux.patch
+Patch2512: glibc-rh1505492-undef-abi.patch
+Patch2513: glibc-rh1505492-unused-math.patch
+Patch2514: glibc-rh1505492-prototypes-1.patch
+Patch2515: glibc-rh1505492-uninit-intl-plural.patch
+Patch2516: glibc-rh1505492-undef-1.patch
+Patch2517: glibc-rh1505492-undef-2.patch
+Patch2518: glibc-rh1505492-bounded-1.patch
+Patch2519: glibc-rh1505492-bounded-2.patch
+Patch2520: glibc-rh1505492-bounded-3.patch
+Patch2521: glibc-rh1505492-bounded-4.patch
+Patch2522: glibc-rh1505492-undef-3.patch
+Patch2523: glibc-rh1505492-bounded-5.patch
+Patch2524: glibc-rh1505492-bounded-6.patch
+Patch2525: glibc-rh1505492-bounded-7.patch
+Patch2526: glibc-rh1505492-bounded-8.patch
+Patch2527: glibc-rh1505492-unused-1.patch
+Patch2528: glibc-rh1505492-bounded-9.patch
+Patch2529: glibc-rh1505492-bounded-10.patch
+Patch2530: glibc-rh1505492-bounded-11.patch
+Patch2531: glibc-rh1505492-bounded-12.patch
+Patch2532: glibc-rh1505492-bounded-13.patch
+Patch2533: glibc-rh1505492-unused-2.patch
+Patch2534: glibc-rh1505492-bounded-14.patch
+Patch2535: glibc-rh1505492-bounded-15.patch
+Patch2536: glibc-rh1505492-bounded-16.patch
+Patch2537: glibc-rh1505492-bounded-17.patch
+Patch2538: glibc-rh1505492-malloc_size_t.patch
+Patch2539: glibc-rh1505492-malloc_ptrdiff_t.patch
+Patch2540: glibc-rh1505492-prototypes-2.patch
+Patch2541: glibc-rh1505492-prototypes-libc_fatal.patch
+Patch2542: glibc-rh1505492-getlogin.patch
+Patch2543: glibc-rh1505492-undef-4.patch
+Patch2544: glibc-rh1505492-register.patch
+Patch2545: glibc-rh1505492-prototypes-3.patch
+Patch2546: glibc-rh1505492-unused-3.patch
+Patch2547: glibc-rh1505492-ports-move-powerpc.patch
+Patch2548: glibc-rh1505492-unused-4.patch
+Patch2549: glibc-rh1505492-systemtap.patch
+Patch2550: glibc-rh1505492-prototypes-wcschr-1.patch
+Patch2551: glibc-rh1505492-prototypes-wcsrchr.patch
+Patch2552: glibc-rh1505492-prototypes-powerpc-wcscpy.patch
+Patch2553: glibc-rh1505492-prototypes-powerpc-wordcopy.patch
+Patch2554: glibc-rh1505492-bsd-flatten.patch
+Patch2555: glibc-rh1505492-unused-5.patch
+Patch2556: glibc-rh1505492-types-1.patch
+Patch2557: glibc-rh1505492-powerpc-sotruss.patch
+Patch2558: glibc-rh1505492-s390x-sotruss.patch
+Patch2559: glibc-rh1505492-ports-am33.patch
+Patch2560: glibc-rh1505492-ports-move-arm.patch
+Patch2561: glibc-rh1505492-undef-5.patch
+Patch2562: glibc-rh1505492-prototypes-4.patch
+Patch2563: glibc-rh1505492-ports-move-tile.patch
+Patch2564: glibc-rh1505492-ports-move-m68k.patch
+Patch2565: glibc-rh1505492-ports-move-mips.patch
+Patch2566: glibc-rh1505492-ports-move-aarch64.patch
+Patch2567: glibc-rh1505492-ports-move-alpha.patch
+Patch2568: glibc-rh1505492-ports-move-ia64.patch
+Patch2569: glibc-rh1505492-undef-6.patch
+Patch2570: glibc-rh1505492-undef-7.patch
+Patch2571: glibc-rh1505492-undef-intl.patch
+Patch2572: glibc-rh1505492-undef-obstack.patch
+Patch2573: glibc-rh1505492-undef-error.patch
+Patch2574: glibc-rh1505492-undef-string.patch
+Patch2575: glibc-rh1505492-undef-tempname.patch
+Patch2576: glibc-rh1505492-undef-8.patch
+Patch2577: glibc-rh1505492-undef-mktime.patch
+Patch2578: glibc-rh1505492-undef-sysconf.patch
+Patch2579: glibc-rh1505492-prototypes-Xat.patch
+Patch2580: glibc-rh1505492-undef-ipc64.patch
+Patch2581: glibc-rh1505492-undef-xfs-chown.patch
+Patch2582: glibc-rh1505492-undef-9.patch
+Patch2583: glibc-rh1505492-undef-10.patch
+Patch2584: glibc-rh1505492-undef-11.patch
+Patch2585: glibc-rh1505492-undef-12.patch
+Patch2586: glibc-rh1505492-prototypes-5.patch
+Patch2587: glibc-rh1505492-undef-13.patch
+Patch2588: glibc-rh1505492-undef-14.patch
+Patch2589: glibc-rh1505492-undef-15.patch
+Patch2590: glibc-rh1505492-ports-move-hppa.patch
+Patch2591: glibc-rh1505492-undef-16.patch
+Patch2592: glibc-rh1505492-undef-17.patch
+Patch2593: glibc-rh1505492-undef-18.patch
+Patch2594: glibc-rh1505492-undef-19.patch
+Patch2595: glibc-rh1505492-undef-20.patch
+Patch2596: glibc-rh1505492-undef-21.patch
+Patch2597: glibc-rh1505492-undef-22.patch
+Patch2598: glibc-rh1505492-undef-23.patch
+Patch2599: glibc-rh1505492-undef-24.patch
+Patch2600: glibc-rh1505492-prototypes-rwlock.patch
+Patch2601: glibc-rh1505492-undef-25.patch
+Patch2602: glibc-rh1505492-undef-26.patch
+Patch2603: glibc-rh1505492-undef-27.patch
+Patch2604: glibc-rh1505492-undef-28.patch
+Patch2605: glibc-rh1505492-undef-29.patch
+Patch2606: glibc-rh1505492-undef-30.patch
+Patch2607: glibc-rh1505492-undef-31.patch
+Patch2608: glibc-rh1505492-undef-32.patch
+Patch2609: glibc-rh1505492-undef-33.patch
+Patch2610: glibc-rh1505492-prototypes-memchr.patch
+Patch2611: glibc-rh1505492-undef-34.patch
+Patch2612: glibc-rh1505492-prototypes-powerpc-memmove.patch
+Patch2613: glibc-rh1505492-undef-35.patch
+Patch2614: glibc-rh1505492-undef-36.patch
+Patch2615: glibc-rh1505492-undef-37.patch
+Patch2616: glibc-rh1505492-uninit-1.patch
+Patch2617: glibc-rh1505492-undef-38.patch
+Patch2618: glibc-rh1505492-uninit-2.patch
+Patch2619: glibc-rh1505492-undef-39.patch
+Patch2620: glibc-rh1505492-undef-40.patch
+Patch2621: glibc-rh1505492-undef-41.patch
+Patch2622: glibc-rh1505492-undef-42.patch
+Patch2623: glibc-rh1505492-undef-43.patch
+Patch2624: glibc-rh1505492-undef-44.patch
+Patch2625: glibc-rh1505492-undef-45.patch
+Patch2626: glibc-rh1505492-undef-46.patch
+Patch2627: glibc-rh1505492-undef-47.patch
+Patch2628: glibc-rh1505492-prototypes-6.patch
+Patch2629: glibc-rh1505492-undef-48.patch
+Patch2630: glibc-rh1505492-prototypes-execve.patch
+Patch2631: glibc-rh1505492-prototypes-readv-writev.patch
+Patch2632: glibc-rh1505492-prototypes-7.patch
+Patch2633: glibc-rh1505492-prototypes-powerpc-pread-pwrite.patch
+Patch2634: glibc-rh1505492-s390-backtrace.patch
+Patch2635: glibc-rh1505492-unused-6.patch
+Patch2636: glibc-rh1505492-prototypes-8.patch
+Patch2637: glibc-rh1505492-prototypes-ctermid.patch
+Patch2638: glibc-rh1505492-unused-7.patch
+Patch2639: glibc-rh1505492-uninit-3.patch
+Patch2640: glibc-rh1505492-types-2.patch
+Patch2641: glibc-rh1505492-unused-8.patch
+Patch2642: glibc-rh1505492-unused-9.patch
+Patch2643: glibc-rh1505492-types-3.patch
+Patch2644: glibc-rh1505492-unused-10.patch
+Patch2645: glibc-rh1505492-types-5.patch
+Patch2646: glibc-rh1505492-unused-11.patch
+Patch2647: glibc-rh1505492-unused-12.patch
+Patch2648: glibc-rh1505492-unused-13.patch
+Patch2649: glibc-rh1505492-deprecated-1.patch
+Patch2650: glibc-rh1505492-unused-14.patch
+Patch2651: glibc-rh1505492-types-6.patch
+Patch2652: glibc-rh1505492-address.patch
+Patch2653: glibc-rh1505492-types-7.patch
+Patch2654: glibc-rh1505492-prototypes-9.patch
+Patch2655: glibc-rh1505492-diag.patch
+Patch2656: glibc-rh1505492-zerodiv-1.patch
+Patch2657: glibc-rh1505492-deprecated-2.patch
+Patch2658: glibc-rh1505492-unused-15.patch
+Patch2659: glibc-rh1505492-prototypes-sigvec.patch
+Patch2660: glibc-rh1505492-werror-activate.patch
+Patch2661: glibc-rh1505492-types-8.patch
+Patch2662: glibc-rh1505492-prototypes-intl.patch
+Patch2663: glibc-rh1505492-types-9.patch
+Patch2664: glibc-rh1505492-types-10.patch
+Patch2665: glibc-rh1505492-prototypes-sem_unlink.patch
+Patch2666: glibc-rh1505492-prototypes-s390-pthread_once.patch
+Patch2667: glibc-rh1505492-types-11.patch
+Patch2668: glibc-rh1505492-types-12.patch
+Patch2669: glibc-rh1505492-types-13.patch
+Patch2670: glibc-rh1505492-undef-49.patch
+Patch2671: glibc-rh1505492-undef-50.patch
+Patch2672: glibc-rh1505492-undef-51.patch
+Patch2673: glibc-rh1505492-undef-52.patch
+Patch2674: glibc-rh1505492-types-14.patch
+Patch2675: glibc-rh1505492-prototypes-10.patch
+Patch2676: glibc-rh1505492-prototypes-wcschr-2.patch
+Patch2677: glibc-rh1505492-prototypes-bzero.patch
+Patch2678: glibc-rh1505492-winline.patch
+Patch2679: glibc-rh1505492-prototypes-scandir.patch
+Patch2680: glibc-rh1505492-prototypes-timespec_get.patch
+Patch2681: glibc-rh1505492-prototypes-gettimeofday.patch
+Patch2682: glibc-rh1505492-prototypes-no_cancellation.patch
+Patch2683: glibc-rh1505492-prototypes-getttynam.patch
+Patch2684: glibc-rh1505492-undef-53.patch
+Patch2685: glibc-rh1505492-prototypes-stpcpy.patch
+Patch2686: glibc-rh1505492-undef-54.patch
+Patch2687: glibc-rh1505492-undef-55.patch
+Patch2688: glibc-rh1505492-undef-activate.patch
+Patch2689: glibc-rh1505492-prototypes-debug.patch
+Patch2690: glibc-rh1505492-prototypes-putXent.patch
+Patch2691: glibc-rh1505492-prototypes-11.patch
+Patch2692: glibc-rh1505492-prototypes-12.patch
+Patch2693: glibc-rh1505492-prototypes-13.patch
+Patch2694: glibc-rh1505492-prototypes-14.patch
+Patch2695: glibc-rh1505492-prototypes-15.patch
+Patch2696: glibc-rh1505492-prototypes-16.patch
+Patch2697: glibc-rh1505492-prototypes-17.patch
+Patch2698: glibc-rh1505492-prototypes-18.patch
+Patch2699: glibc-rh1505492-prototypes-activate.patch
+Patch2700: glibc-rh1505492-unused-16.patch
+Patch2701: glibc-rh1505492-unused-17.patch
+Patch2702: glibc-rh1505492-undef-56.patch
+Patch2703: glibc-rh1548002.patch
+Patch2704: glibc-rh1307241-1.patch
+Patch2705: glibc-rh1307241-2.patch
+
+Patch2706: glibc-rh1563747.patch
+Patch2707: glibc-rh1476120.patch
+Patch2708: glibc-rh1505647.patch
+
+Patch2709: glibc-rh1457479-1.patch
+Patch2710: glibc-rh1457479-2.patch
+Patch2711: glibc-rh1457479-3.patch
+Patch2712: glibc-rh1457479-4.patch
+Patch2713: glibc-rh1461231.patch
+
+Patch2714: glibc-rh1577333.patch
+Patch2715: glibc-rh1531168-1.patch
+Patch2716: glibc-rh1531168-2.patch
+Patch2717: glibc-rh1531168-3.patch
+Patch2718: glibc-rh1579742.patch
+Patch2719: glibc-rh1579727-1.patch
+Patch2720: glibc-rh1579727-2.patch
+Patch2721: glibc-rh1579809-1.patch
+Patch2722: glibc-rh1579809-2.patch
+Patch2723: glibc-rh1505451.patch
+Patch2724: glibc-rh1505477.patch
+Patch2725: glibc-rh1505500.patch
+Patch2726: glibc-rh1563046.patch
+
+# RHBZ 1560641 - backport of upstream sem_open patch
+Patch2727: glibc-rh1560641.patch
+
+Patch2728: glibc-rh1550080.patch
+Patch2729: glibc-rh1526193.patch
+Patch2730: glibc-rh1372304-1.patch
+Patch2731: glibc-rh1372304-2.patch
+Patch2732: glibc-rh1540480-0.patch
+Patch2733: glibc-rh1540480-1.patch
+Patch2734: glibc-rh1540480-2.patch
+Patch2735: glibc-rh1540480-3.patch
+Patch2736: glibc-rh1540480-4.patch
+Patch2737: glibc-rh1540480-5.patch
+Patch2738: glibc-rh1540480-6.patch
+Patch2739: glibc-rh1540480-7.patch
+Patch2740: glibc-rh1540480-8.patch
+Patch2741: glibc-rh1447808-0.patch
+Patch2742: glibc-rh1447808-1.patch
+Patch2743: glibc-rh1447808-2.patch
+Patch2744: glibc-rh1401665-0.patch
+Patch2745: glibc-rh1401665-1a.patch
+Patch2746: glibc-rh1401665-1b.patch
+Patch2747: glibc-rh1401665-1c.patch
+Patch2748: glibc-rh1401665-2.patch
+Patch2749: glibc-rh1401665-3.patch
+Patch2750: glibc-rh1401665-4.patch
+Patch2751: glibc-rh1401665-5.patch
 
 ##############################################################################
 #
@@ -764,6 +1374,82 @@ Patch2065: glibc-rh1156331.patch
 # Upstream BZ 18557: Fix ruserok scalability issues.
 Patch2066: glibc-rh1216246.patch
 
+# Backport of fix for malloc arena free list management (upstream bug 19048)
+# The preparatory patch removes !PER_THREAD conditional code.
+Patch20670: glibc-rh1276753-0.patch
+Patch2067: glibc-rh1276753.patch
+
+# Backport to fix ld.so crash when audit modules provide path (upstream bug 18251)
+Patch2068: glibc-rh1211100.patch
+
+# aarch64 MINSIGSTKSZ/SIGSTKSZ fix
+Patch2069: glibc-rh1335629.patch
+Patch2070: glibc-rh1335925-1.patch
+Patch2071: glibc-rh1335925-2.patch
+Patch2072: glibc-rh1335925-3.patch
+Patch2073: glibc-rh1335925-4.patch
+
+# Do not set initgroups in default nsswitch.conf
+Patch2074: glibc-rh1366569.patch
+
+# Various nss_db fixes
+Patch2075: glibc-rh1318890.patch
+Patch2076: glibc-rh1213603.patch
+Patch2077: glibc-rh1370630.patch
+
+# Add internal-only support for O_TMPFILE.
+Patch2078: glibc-rh1330705-1.patch
+Patch2079: glibc-rh1330705-2.patch
+Patch2080: glibc-rh1330705-3.patch
+Patch2081: glibc-rh1330705-4.patch
+Patch2082: glibc-rh1330705-5.patch
+# The following patch *removes* the public definition of O_TMPFILE.
+Patch2083: glibc-rh1330705-6.patch
+
+# getaddrinfo with nscd fixes
+Patch2084: glibc-rh1324568.patch
+
+# RHBZ #1404435 - Remove power8 platform directory
+Patch2085: glibc-rh1404435.patch
+
+# RHBZ #1144516 - aarch64 profil fix
+Patch2086: glibc-rh1144516.patch
+
+# RHBZ #1392540 - Add "sss" service to the automount database in nsswitch.conf
+Patch2087: glibc-rh1392540.patch
+
+# RHBZ #1452721: Avoid large allocas in the dynamic linker
+Patch2088: glibc-rh1452721-1.patch
+Patch2089: glibc-rh1452721-2.patch
+Patch2090: glibc-rh1452721-3.patch
+Patch2091: glibc-rh1452721-4.patch
+
+Patch2092: glibc-rh677316-libc-pointer-arith.patch
+Patch2093: glibc-rh677316-libc-lock.patch
+Patch2094: glibc-rh677316-libc-diag.patch
+Patch2095: glibc-rh677316-check_mul_overflow_size_t.patch
+Patch2096: glibc-rh677316-res_state.patch
+Patch2097: glibc-rh677316-qsort_r.patch
+Patch2098: glibc-rh677316-fgets_unlocked.patch
+Patch2099: glibc-rh677316-in6addr_any.patch
+Patch2100: glibc-rh677316-netdb-reentrant.patch
+Patch2101: glibc-rh677316-h_errno.patch
+Patch2102: glibc-rh677316-scratch_buffer.patch
+Patch2103: glibc-rh677316-mtrace.patch
+Patch2104: glibc-rh677316-dynarray.patch
+Patch2105: glibc-rh677316-alloc_buffer.patch
+Patch2106: glibc-rh677316-RES_USE_INET6.patch
+Patch2107: glibc-rh677316-inet_pton.patch
+Patch2108: glibc-rh677316-inet_pton-zeros.patch
+Patch2109: glibc-rh677316-hesiod.patch
+Patch2110: glibc-rh677316-resolv.patch
+Patch2111: glibc-rh677316-legacy.patch
+
+Patch2112: glibc-rh1498566.patch
+Patch2113: glibc-rh1445644.patch
+
+Patch2114: glibc-rh1471405.patch
+
 # PiP
 Patch9999: glibc-pip.patch
 
@@ -781,6 +1467,7 @@ Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 # Prepare for the build.
 ##############################################################################
 %prep
+
 %setup -q -n %{glibcsrcdir} -b1
 
 # Patch order is important as some patches depend on other patches and
@@ -815,7 +1502,6 @@ Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %patch0030 -p1
 %patch0031 -p1
 %patch0032 -p1
-%patch0033 -p1
 %patch0034 -p1
 %patch1051 -p1
 %patch0035 -p1
@@ -1065,18 +1751,45 @@ Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %patch1605 -p1
 %patch1606 -p1
 %patch2066 -p1
+%patch20670 -p1
+%patch2067 -p1
+%patch2068 -p1
+%patch2069 -p1
+%patch2070 -p1
+%patch2071 -p1
+%patch2072 -p1
+%patch2073 -p1
+%patch2074 -p1
+%patch2075 -p1
+%patch2076 -p1
+%patch2077 -p1
+%patch2078 -p1
+%patch2079 -p1
+%patch2080 -p1
+%patch2081 -p1
+%patch2082 -p1
+%patch2083 -p1
+%patch2084 -p1
+%patch2085 -p1
+%patch2086 -p1
+%patch2087 -p1
+%patch2088 -p1
+%patch2089 -p1
+%patch2090 -p1
+%patch2091 -p1
+
 # Rebase of microbenchmarks.
 %patch1607 -p1
 %patch1609 -p1
 %patch1610 -p1
 %patch1611 -p1
-%patch1123 -p1
-%patch1124 -p1
+
+# Backport of POWER8 glibc optimizations for RHEL7.3
 %patch1612 -p1
 %patch1613 -p1
 %patch1614 -p1
+%patch1615 -p1
 %patch1616 -p1
-%patch0067 -p1
 %patch1617 -p1
 %patch1618 -p1
 %patch1619 -p1
@@ -1085,12 +1798,614 @@ Buildroot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 %patch1622 -p1
 %patch1623 -p1
 
-# RHBZ #1331283 - Backport "Coordinate IPv6 definitions for Linux and glibc"
+# Backport of upstream IBM z13 patches for RHEL 7.3
 %patch1624 -p1
 %patch1625 -p1
 %patch1626 -p1
 %patch1627 -p1
 %patch1628 -p1
+%patch1629 -p1
+%patch1630 -p1
+%patch1631 -p1
+%patch1632 -p1
+%patch1633 -p1
+%patch1634 -p1
+%patch1635 -p1
+%patch1636 -p1
+%patch1637 -p1
+%patch1638 -p1
+%patch1639 -p1
+%patch1640 -p1
+%patch1641 -p1
+%patch1642 -p1
+%patch1643 -p1
+%patch1644 -p1
+%patch1645 -p1
+%patch1646 -p1
+%patch1647 -p1
+%patch1648 -p1
+%patch1649 -p1
+%patch1650 -p1
+%patch1651 -p1
+%patch1652 -p1
+%patch1653 -p1
+%patch1654 -p1
+
+%patch1123 -p1
+%patch1124 -p1
+
+%patch1656 -p1
+%patch1657 -p1
+%patch1658 -p1
+%patch1660 -p1
+%patch0067 -p1
+%patch1661 -p1
+%patch1662 -p1
+%patch1663 -p1
+
+%patch1664 -p1
+%patch1665 -p1
+%patch1666 -p1
+%patch1667 -p1
+%patch1668 -p1
+%patch1669 -p1
+%patch1670 -p1
+%patch1671 -p1
+%patch1672 -p1
+
+%patch1675 -p1
+
+# RHBZ #1324427, parts 1 through 3
+%patch1676 -p1
+%patch1677 -p1
+%patch1678 -p1
+
+# RHBZ #1234449, parts 1 through 4
+%patch1679 -p1
+%patch1680 -p1
+%patch1681 -p1
+%patch1682 -p1
+
+# RHBZ #1221046
+%patch1683 -p1
+
+# RHBZ #971416
+%patch1684 -p1
+%patch1685 -p1
+%patch1686 -p1
+
+# RHBZ #1302086
+%patch1687 -p1
+%patch1688 -p1
+%patch1689 -p1
+%patch1690 -p1
+%patch1691 -p1
+%patch1692 -p1
+%patch1693 -p1
+%patch1694 -p1
+%patch1695 -p1
+%patch1696 -p1
+%patch1697 -p1
+
+# RHBZ #1346397
+%patch1698 -p1
+
+# RHBZ #1211823
+%patch1699 -p1
+
+# RHBZ #1268050, parts 1 through 5
+%patch1700 -p1
+%patch1701 -p1
+%patch1702 -p1
+%patch1703 -p1
+%patch1704 -p1
+
+# RHBz #1296297, part 1 and 2.
+%patch1705 -p1
+%patch1706 -p1
+
+# RHBZ #1027348, part 1 through 5.
+%patch1707 -p1
+%patch1708 -p1
+%patch1709 -p1
+%patch1710 -p1
+%patch1711 -p1
+
+%patch1712 -p1
+%patch1713 -p1
+%patch1714 -p1
+
+%patch1715 -p1
+
+# RHBZ #1256317, IS_IN backports, parts 1 through 22.
+%patch1716 -p1
+%patch1717 -p1
+%patch1718 -p1
+%patch1719 -p1
+%patch1720 -p1
+%patch1721 -p1
+%patch1722 -p1
+%patch1723 -p1
+%patch1724 -p1
+%patch1725 -p1
+%patch1726 -p1
+%patch1727 -p1
+%patch1728 -p1
+%patch1729 -p1
+%patch1730 -p1
+%patch1731 -p1
+%patch1732 -p1
+%patch1733 -p1
+%patch1734 -p1
+%patch1735 -p1
+%patch1736 -p1
+%patch1737 -p1
+
+%patch1738 -p1
+%patch1739 -p1
+
+# RHBZ #1292018, patches 1 through 10.
+%patch1740 -p1
+%patch1741 -p1
+%patch1742 -p1
+%patch1743 -p1
+%patch1744 -p1
+%patch1745 -p1
+%patch1746 -p1
+%patch1747 -p1
+%patch1748 -p1
+%patch1749 -p1
+
+%patch1750 -p1
+
+# RHBZ #1298526, patch 1 of 5.
+%patch1751 -p1
+%patch1752 -p1
+%patch1753 -p1
+%patch1754 -p1
+%patch1755 -p1
+%patch1756 -p1
+%patch0068 -p1
+%patch1757 -p1
+%patch17580 -p1
+%patch1758 -p1
+%patch1759 -p1
+%patch1760 -p1
+%patch1761 -p1
+%patch1762 -p1
+%patch1763 -p1
+%patch1764 -p1
+%patch1765 -p1
+%patch1766 -p1
+%patch1767 -p1
+%patch1768 -p1
+%patch1769 -p1
+%patch1770 -p1
+%patch1771 -p1
+%patch1772 -p1
+%patch1773 -p1
+%patch1774 -p1
+%patch1775 -p1
+%patch1776 -p1
+%patch1777 -p1
+%patch1778 -p1
+%patch1779 -p1
+%patch1780 -p1
+%patch1781 -p1
+%patch1782 -p1
+%patch1783 -p1
+%patch1784 -p1
+%patch1785 -p1
+%patch1786 -p1
+%patch1787 -p1
+%patch1788 -p1
+%patch1789 -p1
+%patch1790 -p1
+%patch1791 -p1
+%patch1792 -p1
+%patch1793 -p1
+%patch1794 -p1
+%patch1795 -p1
+%patch1796 -p1
+%patch1797 -p1
+%patch1798 -p1
+%patch1799 -p1
+%patch1800 -p1
+%patch1801 -p1
+%patch1802 -p1
+%patch1803 -p1
+%patch1804 -p1
+%patch1805 -p1
+%patch1806 -p1
+%patch1807 -p1
+%patch1808 -p1
+%patch1809 -p1
+%patch1810 -p1
+%patch1811 -p1
+%patch1812 -p1
+%patch1813 -p1
+%patch1814 -p1
+%patch1815 -p1
+%patch1816 -p1
+%patch1817 -p1
+%patch1818 -p1
+%patch1819 -p1
+%patch1820 -p1
+%patch1821 -p1
+%patch1822 -p1
+%patch1823 -p1
+%patch1824 -p1
+%patch1825 -p1
+%patch1826 -p1
+%patch1827 -p1
+%patch1828 -p1
+%patch1829 -p1
+%patch1830 -p1
+%patch1831 -p1
+# RHBZ #841653 - Intel lock elision patch set.
+%patch1832 -p1
+%patch1833 -p1
+%patch1834 -p1
+%patch1835 -p1
+%patch1836 -p1
+%patch1837 -p1
+%patch1838 -p1
+%patch1839 -p1
+%patch1840 -p1
+%patch1841 -p1
+%patch1842 -p1
+%patch1843 -p1
+%patch1844 -p1
+%patch1845 -p1
+%patch1846 -p1
+%patch1847 -p1
+%patch1848 -p1
+%patch1849 -p1
+# End of Intel lock elision patch set.
+# RHBZ #731835 - IBM POWER lock elision patch set.
+%patch1850 -p1
+%patch1851 -p1
+%patch1852 -p1
+# End of IBM POWER lock elision patch set.
+
+%patch1853 -p1
+%patch1854 -p1
+
+# Built-in list of syscall names.
+%patch1855 -p1
+%patch1856 -p1
+
+%patch1857 -p1
+%patch1858 -p1
+%patch1859 -p1
+%patch1860 -p1
+
+%patch1861 -p1
+%patch1862 -p1
+%patch1863 -p1
+%patch1864 -p1
+%patch1865 -p1
+%patch1866 -p1
+
+%patch1867 -p1
+%patch1868 -p1
+%patch1869 -p1
+%patch1870 -p1
+%patch1871 -p1
+%patch1872 -p1
+%patch1873 -p1
+%patch1874 -p1
+%patch1875 -p1
+%patch1876 -p1
+
+%patch1877 -p1
+%patch2092 -p1
+%patch2093 -p1
+%patch2094 -p1
+%patch2095 -p1
+%patch2096 -p1
+%patch2097 -p1
+%patch2098 -p1
+%patch2099 -p1
+%patch2100 -p1
+%patch2101 -p1
+%patch2102 -p1
+%patch2103 -p1
+%patch2104 -p1
+%patch2105 -p1
+%patch2106 -p1
+%patch2107 -p1
+%patch2108 -p1
+%patch2109 -p1
+%patch2110 -p1
+%patch2111 -p1
+%patch2112 -p1
+%patch2113 -p1
+%patch2114 -p1
+
+%patch1878 -p1
+%patch1879 -p1
+%patch1880 -p1
+
+%patch1881 -p1
+%patch1882 -p1
+%patch1883 -p1
+%patch1884 -p1
+%patch1885 -p1
+%patch1886 -p1
+%patch1887 -p1
+%patch1888 -p1
+%patch1889 -p1
+%patch1890 -p1
+%patch1891 -p1
+%patch1892 -p1
+
+%patch1893 -p1
+%patch1894 -p1
+%patch1895 -p1
+%patch1896 -p1
+%patch1897 -p1
+%patch1898 -p1
+%patch1899 -p1
+%patch1900 -p1
+%patch1901 -p1
+%patch1902 -p1
+%patch2500 -p1
+%patch2501 -p1
+%patch2502 -p1
+%patch2503 -p1
+%patch2504 -p1
+%patch2505 -p1
+%patch2506 -p1
+%patch2507 -p1
+%patch2508 -p1
+%patch2509 -p1
+%patch2510 -p1
+%patch2511 -p1
+%patch2512 -p1
+%patch2513 -p1
+%patch2514 -p1
+%patch2515 -p1
+%patch2516 -p1
+%patch2517 -p1
+%patch2518 -p1
+%patch2519 -p1
+%patch2520 -p1
+%patch2521 -p1
+%patch2522 -p1
+%patch2523 -p1
+%patch2524 -p1
+%patch2525 -p1
+%patch2526 -p1
+%patch2527 -p1
+%patch2528 -p1
+%patch2529 -p1
+%patch2530 -p1
+%patch2531 -p1
+%patch2532 -p1
+%patch2533 -p1
+%patch2534 -p1
+%patch2535 -p1
+%patch2536 -p1
+%patch2537 -p1
+%patch2538 -p1
+%patch2539 -p1
+%patch2540 -p1
+%patch2541 -p1
+%patch2542 -p1
+%patch2543 -p1
+%patch0069 -p1
+%patch2544 -p1
+%patch2545 -p1
+%patch2546 -p1
+%patch2547 -p1
+%patch2548 -p1
+%patch2549 -p1
+%patch2550 -p1
+%patch2551 -p1
+%patch2552 -p1
+%patch2553 -p1
+%patch2554 -p1
+%patch2555 -p1
+%patch2556 -p1
+%patch2557 -p1
+%patch2558 -p1
+%patch2559 -p1
+%patch2560 -p1
+%patch2561 -p1
+%patch2562 -p1
+%patch2563 -p1
+%patch2564 -p1
+%patch2565 -p1
+%patch2566 -p1
+%patch2567 -p1
+%patch2568 -p1
+%patch2569 -p1
+%patch2570 -p1
+%patch2571 -p1
+%patch2572 -p1
+%patch2573 -p1
+%patch2574 -p1
+%patch2575 -p1
+%patch2576 -p1
+%patch2577 -p1
+%patch2578 -p1
+%patch2579 -p1
+%patch2580 -p1
+%patch2581 -p1
+%patch2582 -p1
+%patch2583 -p1
+%patch2584 -p1
+%patch2585 -p1
+%patch2586 -p1
+%patch2587 -p1
+%patch2588 -p1
+%patch2589 -p1
+%patch2590 -p1
+%patch2591 -p1
+%patch2592 -p1
+%patch2593 -p1
+%patch2594 -p1
+%patch2595 -p1
+%patch2596 -p1
+%patch2597 -p1
+%patch2598 -p1
+%patch2599 -p1
+%patch2600 -p1
+%patch2601 -p1
+%patch2602 -p1
+%patch2603 -p1
+%patch2604 -p1
+%patch2605 -p1
+%patch2606 -p1
+%patch2607 -p1
+%patch2608 -p1
+%patch2609 -p1
+%patch2610 -p1
+%patch2611 -p1
+%patch2612 -p1
+%patch2613 -p1
+%patch2614 -p1
+%patch2615 -p1
+%patch2616 -p1
+%patch2617 -p1
+%patch2618 -p1
+%patch2619 -p1
+%patch2620 -p1
+%patch2621 -p1
+%patch2622 -p1
+%patch2623 -p1
+%patch2624 -p1
+%patch2625 -p1
+%patch2626 -p1
+%patch2627 -p1
+%patch2628 -p1
+%patch2629 -p1
+%patch2630 -p1
+%patch2631 -p1
+%patch2632 -p1
+%patch2633 -p1
+%patch2634 -p1
+%patch2635 -p1
+%patch2636 -p1
+%patch2637 -p1
+%patch2638 -p1
+%patch2639 -p1
+%patch2640 -p1
+%patch2641 -p1
+%patch2642 -p1
+%patch2643 -p1
+%patch2644 -p1
+%patch2645 -p1
+%patch2646 -p1
+%patch2647 -p1
+%patch2648 -p1
+%patch2649 -p1
+%patch2650 -p1
+%patch2651 -p1
+%patch2652 -p1
+%patch2653 -p1
+%patch2654 -p1
+%patch2655 -p1
+%patch2656 -p1
+%patch2657 -p1
+%patch2658 -p1
+%patch2659 -p1
+%patch2660 -p1
+%patch2661 -p1
+%patch2662 -p1
+%patch2663 -p1
+%patch2664 -p1
+%patch2665 -p1
+%patch2666 -p1
+%patch2667 -p1
+%patch2668 -p1
+%patch2669 -p1
+%patch2670 -p1
+%patch2671 -p1
+%patch2672 -p1
+%patch2673 -p1
+%patch2674 -p1
+%patch2675 -p1
+%patch2676 -p1
+%patch2677 -p1
+%patch2678 -p1
+%patch2679 -p1
+%patch2680 -p1
+%patch2681 -p1
+%patch2682 -p1
+%patch2683 -p1
+%patch2684 -p1
+%patch2685 -p1
+%patch2686 -p1
+%patch2687 -p1
+%patch2688 -p1
+%patch2689 -p1
+%patch2690 -p1
+%patch2691 -p1
+%patch2692 -p1
+%patch2693 -p1
+%patch2694 -p1
+%patch2695 -p1
+%patch2696 -p1
+%patch2697 -p1
+%patch2698 -p1
+%patch2699 -p1
+%patch2700 -p1
+%patch2701 -p1
+%patch2702 -p1
+%patch2703 -p1
+%patch2704 -p1
+%patch2705 -p1
+
+%patch2706 -p1
+%patch2707 -p1
+%patch2708 -p1
+
+%patch2709 -p1
+%patch2710 -p1
+%patch2711 -p1
+%patch2712 -p1
+%patch2713 -p1
+
+%patch2714 -p1
+%patch2715 -p1
+%patch2716 -p1
+%patch2717 -p1
+%patch2718 -p1
+%patch2719 -p1
+%patch2720 -p1
+%patch2721 -p1
+%patch2722 -p1
+%patch2723 -p1
+%patch2724 -p1
+%patch2725 -p1
+%patch2726 -p1
+%patch2727 -p1
+%patch2728 -p1
+%patch2729 -p1
+%patch2730 -p1
+%patch2731 -p1
+%patch2732 -p1
+%patch2733 -p1
+%patch2734 -p1
+%patch2735 -p1
+%patch2736 -p1
+%patch2737 -p1
+%patch2738 -p1
+%patch2739 -p1
+%patch2740 -p1
+%patch2741 -p1
+%patch2742 -p1
+%patch2743 -p1
+%patch2744 -p1
+%patch2745 -p1
+%patch2746 -p1
+%patch2747 -p1
+%patch2748 -p1
+%patch2749 -p1
+%patch2750 -p1
+%patch2751 -p1
 
 # PiP
 %patch9999 -p1
@@ -1104,19 +2419,17 @@ glibc with patches for PiP
 %build
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf "$RPM_BUILD_ROOT"
 
-d=`pwd`
 mkdir build &&
 (
 	cd build &&
-	DESTDIR="$RPM_BUILD_ROOT" sh ../build.sh -b $d %{pip_glibc_dir}
+	DESTDIR="$RPM_BUILD_ROOT" sh ../build.sh -b %{pip_glibc_dir}
 )
 
 %install
 
-d=`pwd`
 (
 	cd build &&
-	DESTDIR="$RPM_BUILD_ROOT" sh ../build.sh -i $d %{pip_glibc_dir}
+	DESTDIR="$RPM_BUILD_ROOT" sh ../build.sh -i
 )
 
 %clean
