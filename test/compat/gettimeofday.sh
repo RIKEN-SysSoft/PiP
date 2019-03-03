@@ -16,6 +16,10 @@ if [ $(egrep "Hello, I am fine \(($expected0|$expected1|$expected2|$expected3|$e
 	<$TEST_TMP | wc -l) -eq $TEST_PIP_TASKS ]
 then
 	test_exit_status=$EXIT_PASS
+elif [ -f /etc/debian_version ]; then
+	# redmine #515:
+	# number of the output lines is fewer than expected on Ubuntu 12.04
+	test_exit_status=$EXIT_XFAIL
 fi
 rm -f $TEST_TMP
 exit $test_exit_status
