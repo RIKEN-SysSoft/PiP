@@ -6,4 +6,4 @@ if test -z $1; then
 fi
 
 keyword=$1
-$keyword -config keywords -tag copyright,version,bsd2 ../
+$keyword -config keywords,version -tag copyright,version,bsd2 ../
