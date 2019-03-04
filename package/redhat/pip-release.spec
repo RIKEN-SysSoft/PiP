@@ -1,4 +1,4 @@
-%define gpgcheck	0
+%define gpgcheck	1
 
 Name: pip-release
 Version: 1
