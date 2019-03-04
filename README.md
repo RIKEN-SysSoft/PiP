@@ -41,6 +41,11 @@ After installing PiP, PiP-gdb can be installed too.
 
 RPM packages and their yum repository are also available for CentOS 7 / RHEL7.
 
+    $ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-1-0.noarch.rpm
+    $ sudo yum install pip-glibc
+    $ sudo yum install pip pip-debuginfo
+    $ sudo yum install pip-gdb
+
 ### Installation test
 
 A number of test programs can be found in the "test" directory
