@@ -1,6 +1,6 @@
 # $RIKEN_copyright: Riken Center for Computational Sceience,
 # System Software Development Team, 2016, 2017, 2018, 2019$
-# $PIP_VERSION: Version 1.0.1$
+# $PIP_VERSION: Version 1.0.0$
 # $PIP_license$
 
 top_builddir = ../..
