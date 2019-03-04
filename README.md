@@ -69,7 +69,8 @@ at the top of the source directory after "make install".
     the <GLIBC_INSTALL_DIR>/lib directory by the "piplnlibs" command.
     The piplnlibs command is automatically invoked by the RPM pakcage
     installation, or should be manually invoked in the case of
-    source installation.
+    source installation.  
+    (In case of the RPM binary distribution, <PIP_INSTALL_DIR> is "/opt/pip")
 
 * PiP task (spawned by PiP root process)  
     must be compiled with "-pie -pthread", must be linked with "-fpie
@@ -177,8 +178,9 @@ In that case, you can attach all relevant PiP tasks by:
 * After installation, any commands aborted with SIGSEGV  
     This can happen when you specify LD_PRELOAD to include the installed
     PiP library. The LD_PRELOAD environment must be specified only when
-    running PiP program with the "process:preload" running mode. Please
-    consult the EXECMODE file at the same directory with this file.
+    running PiP program with the "process:preload" running mode.
+    Please consult the [EXECMODE](EXECMODE) file at the same directory
+    with this file.
 
 ### Man pages
 
