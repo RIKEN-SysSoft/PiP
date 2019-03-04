@@ -73,7 +73,7 @@ at the top of the source directory after "make install".
     (In case of the RPM binary distribution, <PIP_INSTALL_DIR> is "/opt/pip")
 
 * PiP task (spawned by PiP root process)  
-    must be compiled with "-pie -pthread", must be linked with "-fpie
+    must be compiled with "-fPIE -pthread", must be linked with "-pie
     -rdynamic -pthread" options. PiP task programs are not required to be
     linked with the PiP library. Thus programs to be ran as PiP tasks
     are not required to modify their source code. Since PiP root and
