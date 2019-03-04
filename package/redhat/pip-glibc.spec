@@ -1,6 +1,6 @@
 # How to build this RPM:
 #
-#	$ rpm -Uvh glibc-2.17-106.el7_2.8.src.rpm 
+#	$ rpm -Uvh glibc-2.17-260.el7.src.rpm
 #	$ cd .../$SOMEWHERE/.../PiP-glibc
 #	$ git diff origin/centos/glibc-2.17-260.el7.branch centos/glibc-2.17-260.el7.pip.branch >~/rpmbuild/SOURCES/glibc-pip.patch
 #	$ rpmbuild -bb ~/rpmbuild/SPECS/pip-glibc.spec
