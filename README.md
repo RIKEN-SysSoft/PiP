@@ -70,7 +70,7 @@ at the top of the source directory after "make install".
     The piplnlibs command is automatically invoked by the RPM pakcage
     installation, or should be manually invoked in the case of
     source installation.  
-    (In case of the RPM binary distribution, <PIP_INSTALL_DIR> is "/opt/pip")
+    (In case of the RPM binary distribution, <GLIBC_INSTALL_DIR> is "/opt/pip")
 
 * PiP task (spawned by PiP root process)  
     must be compiled with "-fPIE -pthread", must be linked with "-pie
