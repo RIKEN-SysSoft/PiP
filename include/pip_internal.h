@@ -70,7 +70,7 @@
 #define PIP_BASE_VERSION	(0x1000U)
 **/
 
-#define PIP_VERSION		PIP_BASE_VERSION
+#define PIP_API_VERSION		PIP_BASE_VERSION
 
 #define PIP_ROOT_ENV		"PIP_ROOT_ADDR"
 #define PIP_TASK_ENV		"PIP_TASK_PIPID"
@@ -132,8 +132,6 @@ typedef struct {
   char			**envv;
 } pip_spawn_args_t;
 
-typedef sem_t		pip_blocking_t;
-
 typedef struct pip_cacheblk {
   char		cacheblk[PIP_CACHEBLK_SZ];
 } pip_cacheblk_t;
@@ -153,22 +151,19 @@ typedef struct pip_task_internal {
       pip_tls_t			tls;
 #endif
       pip_ctx_t			*ctx_suspend; /* context to resume */
-      pip_stack_protect_t	*flag_ctxswp; /* to unprotect stack (ctxsw) */
+      pip_stack_protect_t	*flag_stackpp; /* to unprotect stack (ctxsw) */
       /* end of one cache block (64 bytes) */
       /* less frequently accessed part follows */
+      pip_atomic_t		ntakecare; /* tasks must be taken care */
       struct {
 	int16_t			pipid;	    /* PiP ID */
-#ifdef DEBUG
-	int16_t			schedq_len; /* length of schedq */
-#else
 	uint16_t		schedq_len; /* length of schedq */
-#endif
 	volatile uint16_t	oodq_len; /* indictaes ood task is added */
-	pip_stack_protect_t	flag_ctxsw; /* stack protection (ctxsw) */
-	pip_stack_protect_t	flag_sleep; /* stack protection (sleep) */
+	pip_stack_protect_t	flag_stackp; /* stack protection (ctxsw) */
 	uint8_t			type; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
 	char			state;	       /* BLT state */
 	volatile uint8_t	flag_exit; /* if this task is terminated */
+	volatile uint8_t	flag_wakeup; /* flag to wakeup */
 	volatile uint8_t	flag_semwait; /* if sem_wait() is called */
       };
       struct pip_task_annex	*annex;
@@ -182,6 +177,8 @@ typedef struct pip_task_internal {
 } pip_task_internal_t;
 
 struct pip_gdbif_task;
+
+typedef sem_t			pip_blocking_t;
 
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
@@ -251,7 +248,7 @@ typedef struct {
   /* actual root info */
   pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
   pip_atomic_t		ntasks_blocking;
-  volatile int		ntasks_count;
+  int			ntasks_count;
   int			ntasks_curr;
   int			ntasks_accum;
   int			ntasks;

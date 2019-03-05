@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-//#define DEBUG
+#define DEBUG
 
 #include <test.h>
 
@@ -42,12 +42,11 @@
 
 int pipid;
 
-int test_main( void *arg ) {
-  exp_t	*exp = (exp_t*) arg;
+int test_main( exp_t *exp ) {
   int i, j;
 
   TESTINT( pip_get_pipid( &pipid ) );
-  DBGF( "ntasks:%d", ntasks );
+  DBGF( "ntasks:%d", exp->args.ntasks );
   for( i=0; i<exp->args.niters; i++ ) {
     for( j=0; j<exp->args.ntasks; j++ ) {
       DBGF( "BARRIER >> A" );
@@ -65,5 +64,6 @@ int test_main( void *arg ) {
       TESTINT( exp->tmp != j ) ;
     }
   }
+  DBGF( "TEST DONE !!!!" );
   return 0;
 }

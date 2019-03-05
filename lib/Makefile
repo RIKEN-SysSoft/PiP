@@ -67,3 +67,6 @@ $(LIBRARY): $(OBJS) Makefile
 
 debug:
 	CPPFLAGS="-DDEBUG" make all;
+
+TAGS:
+	ctags -Re

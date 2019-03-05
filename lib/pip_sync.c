@@ -47,10 +47,11 @@ int pip_barrier_init_( pip_barrier_t *barrp, int n ) {
 }
 
 int pip_barrier_wait_( pip_barrier_t *barrp ) {
+  int init = barrp->head.count_init;
   int n, c, err = 0;
 
   ENTER;
-  IF_UNLIKELY( barrp->head.count_init == 1 ) RETURN( 0 );
+  IF_UNLIKELY( init == 1 ) RETURN( 0 );
   c = pip_atomic_sub_and_fetch( &barrp->head.count, 1 );
   DBGF( "c:%d", c );
   IF_UNLIKELY( c > 0 ) {
@@ -63,11 +64,11 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     do {
       pip_task_queue_count( &barrp->queue, &c );
       pip_pause();
-    } while ( c < barrp->head.count_init - 1 );
-    barrp->head.count = barrp->head.count_init;
+    } while ( c < init - 1 );
+    barrp->head.count = init;
     DBG;
 
-    c = barrp->head.count_init - 1; /* the last one is not in the queue */
+    c = init - 1; /* the last one is not in the queue */
     do {
       n = c;			/* number of rests to go */
       DBGF( "n:%d", n );

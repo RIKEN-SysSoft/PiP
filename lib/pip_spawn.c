@@ -45,13 +45,13 @@
 
 //#define PIP_NO_MALLOPT
 //#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
-
-//#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
+
+//#define DEBUG
 
 #include <pip_internal.h>
 #include <pip_gdbif_func.h>
@@ -449,20 +449,6 @@ static int pip_corebind( int coreno ) {
   RETURN( 0 );
 }
 
-void pip_task_terminated_( pip_task_internal_t *taski, int extval ) {
-  /* call fflush() in the target context to flush out std* messages */
-  if( taski->annex->symbols.libc_fflush != NULL ) {
-    taski->annex->symbols.libc_fflush( NULL );
-  }
-  if( !taski->flag_exit ) {
-    /* mark myself as exited */
-    DBGF( "PIPID:%d", taski->pipid );
-    taski->flag_exit   = PIP_EXITED;
-    taski->annex->extval = extval;
-    pip_gdbif_exit_( taski, extval );
-  }
-}
-
 int pip_get_dso( int pipid, void **loaded ) {
   pip_task_internal_t *task;
   int err;
@@ -742,10 +728,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) ERRJ;
   task = &pip_root_->tasks[pipid];
   pip_reset_task_struct_( task );
-  task->pipid      = pipid;	/* mark it as occupied */
-  task->type       = PIP_TYPE_TASK;
-  task->task_sched = task;
-  task->annex->opts  = opts;
+  task->pipid       = pipid;	/* mark it as occupied */
+  task->type        = PIP_TYPE_TASK;
+  task->task_sched  = task;
+  task->ntakecare   = 1;
+  task->annex->opts = opts;
   if( hookp != NULL ) {
     task->annex->hook_before = hookp->before;
     task->annex->hook_after  = hookp->after;
@@ -871,12 +858,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
  * The following functions must be called at root process
  */
 
-void pip_finalize_task_( pip_task_internal_t *taski, int *extvalp ) {
-  DBGF( "pipid=%d  extval=%d", taski->pipid, taski->annex->extval );
+void pip_finalize_task_( pip_task_internal_t *taski ) {
+  DBGF( "pipid=%d  extval=0x%x", taski->pipid, taski->annex->extval );
 
   pip_gdbif_finalize_task_( taski );
-  if( extvalp != NULL ) *extvalp = ( taski->annex->extval & 0xFF );
-
   /* dlclose() and free() must be called only from the root process since */
   /* corresponding dlmopen() and malloc() is called by the root process   */
   if( taski->annex->loaded      != NULL ) pip_dlclose_( taski->annex->loaded );
@@ -907,7 +892,7 @@ int pip_fin( void ) {
 	  RETURN( EBUSY );
 	} else {
 	  /* pip_wait*() was not called */
-	  pip_finalize_task_( taski, NULL );
+	  pip_finalize_task_( taski );
 	}
       }
     }

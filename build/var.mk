@@ -37,8 +37,8 @@ PROGRAMS = $(PROGRAM)
 PROGRAMS_TO_INSTALL = $(PROGRAMS)
 LIBRARIES = $(LIBRARY)
 
-PICCFLAG   = -fPIC
-PIECFLAG  = -fpie
+PICCFLAG  = -fPIC
+PIECFLAG  = -fPIE
 PIELDFLAG = -pie
 
 PIPINCDIR = $(top_srcdir)/include
@@ -47,5 +47,5 @@ PIPLIB = $(top_builddir)/lib/libpip.so
 
 PIPLDLIB = -L$(top_builddir)/lib -Wl,-rpath=$(libdir) -lpip
 
-PIPLDFLAGS = -pthread -pie -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
+PIPLDFLAGS = -pthread -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
 	$(PIPLDLIB) -ldl $(PIELDFLAG)

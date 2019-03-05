@@ -635,7 +635,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \sa pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
    *
    */
-  int pip_exit( int retval );
+  void pip_exit( int retval );
   /** @}*/
 
   /**

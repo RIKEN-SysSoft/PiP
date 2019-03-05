@@ -42,6 +42,7 @@
 
 #define NTASKS		PIP_NTASKS_MAX
 #define NITERS		(100)
+#define EXTVAL_MASK	(0x5)
 
 #define EXIT_PASS	0
 #define EXIT_FAIL	1
@@ -364,7 +365,6 @@ inline static void set_sigsegv_watcher( void ) {
     } else {
       sigcode = "(unknown)";
     }
-    fflush( NULL );
     fprintf( stderr,
 	     "\n"
 	     "%s SIGSEGV  pc:%p  pid:%d  segvaddr:%p  '%s' !!!!!!\n"
@@ -374,8 +374,8 @@ inline static void set_sigsegv_watcher( void ) {
 	     siginfo->si_pid,
 	     siginfo->si_addr,
 	     sigcode );
-    //print_maps();
-    pip_abort();
+    fflush( NULL );
+    ignore_signal( SIGSEGV );
   }
 
   struct sigaction sigact;

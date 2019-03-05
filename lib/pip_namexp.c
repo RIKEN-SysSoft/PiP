@@ -39,6 +39,9 @@
 #include <sched.h>
 #include <stdio.h>
 
+#ifdef DEBUG
+#undef DEBUG
+#endif
 //#define DEBUG
 
 #include <pip.h>

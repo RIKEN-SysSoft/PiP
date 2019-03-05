@@ -36,20 +36,20 @@
 #include <sys/wait.h>
 #include <ctype.h>
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 
-extern int test_main( void );
+extern int test_main( exp_t *exp );
 
 int check_args( void )  __attribute__((weak));
 int check_args( void ) { return 0; }
 
-#define EXTVAL_MASK	(0xF)
+static pid_t pid_root;
 
 static void print_usage( void ) {
   fprintf( stderr, "  -- USAGE --\n" );
   fprintf( stderr, "    prog <Nsec> <Nactives> <Npassives> <Niterations>\n" );
-  fprintf( stderr, "    ENV: PIPTEST_WAIT: to select wait method\n" );
+  fprintf( stderr, "    ENV: PIPTEST_WAITANY: is set, pip_wait_any() is used\n" );
   fprintf( stderr, "    ENV: %s: to select PiP execution mode\n",
 	   PIP_ENV_MODE );
   fprintf( stderr, "    ENV: %s: to select PiP-BLT synchronization method\n",
@@ -82,7 +82,8 @@ static void set_timer( int timer ) {
   struct sigaction sigact;
   void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
     fprintf( stderr, "Timer expired !!!! (%d Sec)\n", timer );
-    killpg( getpid(), SIGKILL );
+    system( "ps uxw" );
+    killpg( pid_root, SIGKILL );
     exit( EXIT_UNRESOLVED );
   }
   struct itimerval tv;
@@ -100,11 +101,9 @@ static void set_timer( int timer ) {
 }
 
 int task_start( void *args ) {
-  exp_t *exp = (exp_t*) args;
+  exp_t 		*exp = (exp_t*) args;
   pip_task_queue_t 	*queue = &exp->queue;
   int			pipid;
-
-  set_sigsegv_watcher();
 
   TESTINT( pip_init( &pipid, NULL, NULL, 0 ) );
   naive_barrier_wait( &exp->nbarr[0] );
@@ -114,7 +113,8 @@ int task_start( void *args ) {
 
   if( pipid < exp->args.npass ) {
     TESTINT( pip_suspend_and_enqueue( queue, NULL, NULL ) );
-    TESTINT( test_main() );
+    TESTINT( test_main( exp ) );
+
   } else {
     do {
       int err = pip_dequeue_and_resume( queue, pip_task_self() );
@@ -129,7 +129,7 @@ int task_start( void *args ) {
 #ifdef DEBUG
     fprintf( stderr, "[%d] barrier (1)!!\n", pipid );
 #endif
-    TESTINT( test_main() );
+    TESTINT( test_main( exp ) );
   }
   TESTINT( pip_fin() );
 
@@ -215,11 +215,33 @@ void *set_export( int argc, char **argv, int *timerp ) {
   return (void*) &exp;
 }
 
-int root_proc( int argc, char **argv ) {
+static int check_status( int id, int st, char *wait ) {
+  if( WIFEXITED( st ) ) {
+    if( WEXITSTATUS( st ) != ( id & EXTVAL_MASK ) ) {
+      fprintf( stderr, "[%d] exited 0x%x (%d!=%d) -- %s\n",
+	       id, st, st, id & EXTVAL_MASK, wait );
+      return -1;
+    }
+  } else if( WIFSIGNALED( st ) ) {
+    int sig = WTERMSIG( st );
+    fprintf( stderr, "[%d] (signal '%s':%d) -- %s\n",
+	     id, strsignal(sig), sig, wait );
+    return sig;
+  }
+  return 0;
+}
+
+static void kill_all_tasks( int ntasks ) {
+  int i;
+  for( i=0; i<ntasks; i++ ) pip_kill( i, SIGKILL );
+}
+
+static int root_proc( int argc, char **argv ) {
   pip_spawn_program_t prog;
   char	*env_wait = getenv( "PIPTEST_WAITANY" );
   exp_t	*exp;
   int 	timer, pipid, ntasks, i, err=0;
+  int 	id, st;
 
   set_sigsegv_watcher();
 
@@ -236,30 +258,25 @@ int root_proc( int argc, char **argv ) {
   }
   if( env_wait ) {
     for( i=0; i<ntasks; i++ ) {
-      int id, st;
       TESTINT( pip_wait_any( &id, &st ) );
-      if( st != ( id & EXTVAL_MASK ) ) {
-	err = 1;
-	fprintf( stderr, "[%d] exited 0x%x (%d!=%d) -- waitany\n",
-		 id, st, st, id & EXTVAL_MASK );
-      }
+      if( ( err = check_status( id, st, "waitany" ) ) != 0 ) break;
     }
   } else {
     for( i=0; i<ntasks; i++ ) {
-      int st;
       TESTINT( pip_wait( i, &st ) );
-      if( st != ( i & EXTVAL_MASK ) ) {
-	err = 1;
-	fprintf( stderr, "[%d] exited 0x%x (%d!=%d) -- wait\n",
-		 i, st, st, i & EXTVAL_MASK );
-      }
+      if( ( err = check_status( i, st, "wait" ) ) != 0 ) break;
     }
   }
+  fprintf( stderr, "ERR:%d\n", err );
+  if( err ) kill_all_tasks( ntasks );
   TESTINT( pip_fin() );
 
   print_conditions( &exp->args, timer, env_wait );
-  if( err ) {
+  if( err < 0 ) {
     printf( "FAILED!!\n" );
+    exit( EXIT_FAIL );
+  } else if( err > 0 ) {
+    printf( "FAILED!! (signal '%s':%d)\n", strsignal( err ), err );
     exit( EXIT_FAIL );
   } else {
     printf( "Success\n" );
@@ -268,23 +285,44 @@ int root_proc( int argc, char **argv ) {
 }
 
 int main( int argc, char **argv ) {
-  pid_t pid;
+  void sigint_handler( int sig, siginfo_t *siginfo, void *dummy ) {
+    int status;
+    fprintf( stderr, "Interrupted by SIGINT !!!!!\n" );
+    (void) killpg( pid_root, SIGINT );
+    (void) wait( &status );
+    exit( EXIT_KILLED );
+  }
+  struct sigaction sigact;
   int status, sig, extval = 0;
 
-  if( ( pid = fork() ) == 0 ) {
-    (void) setpgid( 0, getppid() );
+  if( ( pid_root = fork() ) == 0 ) {
+    (void) setpgid( 0, 0 );
     extval = root_proc( argc, argv );
     exit( extval );
-  } else if( pid > 0 ) {
+
+  } else if( pid_root > 0 ) {
+    memset( (void*) &sigact, 0, sizeof( sigact ) );
+    sigact.sa_sigaction = sigint_handler;
+    sigact.sa_flags     = SA_RESETHAND;
+    TESTINT( sigaction( SIGINT, &sigact, NULL ) );
+
     (void) wait( &status );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
     } else if( WIFSIGNALED( status ) ) {
       sig = WTERMSIG( status );
-      extval = EXIT_XFAIL;
+      if( sig == SIGKILL ) { /* time out*/
+	extval = EXIT_UNRESOLVED;
+      } else if( sig == SIGHUP ) { /* timed out */
+	extval = EXIT_XFAIL;
+      } else if( sig == SIGINT ) { /* ^C */
+	extval = EXIT_KILLED;
+      } else {
+	extval = EXIT_XFAIL;
+      }
       fprintf( stderr,
-	       "!!!! Test program terminated with '%s' !!!!\n",
-	       strsignal( sig ) );
+	       "!!!! Test program terminated with '%s' (%d) !!!!\n",
+	       strsignal( sig ), sig );
     }
   } else {
     fprintf( stderr, "Fork failed (%d)\n", errno );

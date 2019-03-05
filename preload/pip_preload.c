@@ -44,8 +44,9 @@
 #include <errno.h>
 
 //#define DEBUG
-#include <pip_clone.h>
 #include <pip.h>
+#include <pip_blt.h>
+#include <pip_clone.h>
 #include <pip_debug.h>
 
 //#define CHECK_TLS

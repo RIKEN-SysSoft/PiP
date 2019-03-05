@@ -71,8 +71,8 @@ static int pip_is_magic_ok( pip_root_t *root ) {
 }
 
 static int pip_is_version_ok( pip_root_t *root ) {
-  if( root            != NULL                          &&
-      root->version    == PIP_VERSION                   &&
+  if( root            != NULL                           &&
+      root->version    == PIP_API_VERSION               &&
       root->size_root  == sizeof( pip_root_t )          &&
       root->size_task  == sizeof( pip_task_internal_t ) &&
       root->size_annex == sizeof( pip_task_annex_t ) ) {
@@ -96,14 +96,14 @@ static int pip_set_root( char *env ) {
     ERRJ;
   }
   if( !pip_is_version_ok( pip_root_ ) ) {
-    pip_err_mesg( "Version miss-match between root and child" );
+    pip_err_mesg( "Version miss-match between PiP root and task" );
     ERRJ;
   }
   return 0;
 
  error:
   pip_root_ = NULL;
-  RETURN( EPERM );
+  RETURN( EPROTO );
 }
 
 static void pip_blocking_init( pip_blocking_t *blocking ) {
@@ -182,7 +182,7 @@ static int pip_check_opt_and_env( int *optsp ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
       pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
-      RETURN( EPERM );
+      RETURN( EOPNOTSUPP );
     }
     break;
   case PIP_MODE_PTHREAD:
@@ -240,7 +240,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 		       "LD_PRELOAD='%s'",
 		       env );
       }
-      RETURN( EPERM );
+      RETURN( EOPNOTSUPP );
     }
   }
   if( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) {
@@ -252,15 +252,15 @@ static int pip_check_opt_and_env( int *optsp ) {
       goto done;
     } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
       if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
-	pip_warn_mesg("process mode is requested but pip_clone_info symbol "
-		      "is not found in $LD_PRELOAD and "
-		      "pip_clone_mostly_pthread() symbol is not found in "
-		      "glibc" );
+	pip_warn_mesg( "process mode is requested but pip_clone_info symbol "
+		       "is not found in $LD_PRELOAD and "
+		       "pip_clone_mostly_pthread() symbol is not found in "
+		       "glibc" );
       } else {
 	pip_warn_mesg( "process:pipclone mode is requested but "
 		       "pip_clone_mostly_pthread() is not found in glibc" );
       }
-      RETURN( EPERM );
+      RETURN( EOPNOTSUPP );
     }
   }
   if( desired & PIP_MODE_PTHREAD_BIT ) {
@@ -269,7 +269,7 @@ static int pip_check_opt_and_env( int *optsp ) {
   }
   if( newmod == 0 ) {
     pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x", desired );
-    RETURN( EPERM );
+    RETURN( EOPNOTSUPP );
   }
  done:
   *optsp = ( opts & ~PIP_MODE_MASK ) | newmod;
@@ -290,7 +290,6 @@ static pip_task_internal_t *pip_get_myself_( void ) {
 
 void pip_page_alloc_( size_t sz, void **allocp ) {
   size_t pgsz;
-  int err;
 
   if( pip_root_ == NULL ) {	/* no pip_root yet */
     pgsz = sysconf( _SC_PAGESIZE );
@@ -300,7 +299,7 @@ void pip_page_alloc_( size_t sz, void **allocp ) {
     pgsz = pip_root_->page_size;
   }
   sz = ROUNDUP( sz, pgsz );
-  ASSERT( ( err = posix_memalign( allocp, pgsz, sz ) ) != 0 &&
+  ASSERT( posix_memalign( allocp, pgsz, sz ) != 0 &&
 	  *allocp == NULL );
 }
 
@@ -403,10 +402,11 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     pipid = PIP_PIPID_ROOT;
     pip_set_magic( pip_root_ );
-    pip_root_->version   = PIP_VERSION;
-    pip_root_->ntasks    = ntasks;
-    pip_root_->cloneinfo = pip_cloneinfo;
-    pip_root_->opts      = opts;
+    pip_root_->version      = PIP_API_VERSION;
+    pip_root_->ntasks       = ntasks;
+    pip_root_->ntasks_count = 1;
+    pip_root_->cloneinfo    = pip_cloneinfo;
+    pip_root_->opts         = opts;
     for( i=0; i<ntasks+1; i++ ) {
       pip_root_->tasks[i].annex = &pip_root_->annex[i];
       pip_reset_task_struct_( &pip_root_->tasks[i] );
@@ -512,19 +512,14 @@ int pip_get_ntasks( int *ntasksp ) {
   RETURN( 0 );
 }
 
-int pip_exit( int extval ) {
+void pip_exit( int extval ) {
   extern void pip_do_exit( pip_task_internal_t*, int );
-  int err = 0;
 
   DBGF( "extval:%d", extval );
-  if( !pip_is_initialized() ) RETURN( EPERM  );
   if( PIP_ISA_ROOT( pip_task_ ) ) {
-    if( ( err = pip_fin() ) == 0 ) {
-      exit( extval );
-      /* never reach here */
-    }
+    exit( extval );
   } else {
     pip_do_exit( pip_task_, extval );
   }
-  RETURN( err );
+  NEVER_REACH_HERE;
 }

@@ -1,4 +1,4 @@
-.TH "libpip" 3 "Wed Nov 7 2018" "PiP - Process-in-Process" \" -*- nroff -*-
+.TH "libpip" 3 "Sat Feb 16 2019" "PiP - Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -6,13 +6,6 @@ libpip \-
 .PP
 the PiP library  
 
-.SS "Functions"
-
-.in +1c
-.ti -1c
-.RI "int \fBpip_idstr\fP (char *buf, size_t sz)"
-.br
-.in -1c
 .in +1c
 .ti -1c
 .RI "int \fBpip_init\fP (int *pipidp, int *ntasks, void **root_expp, int opts)"
@@ -27,7 +20,7 @@ the PiP library
 .in -1c
 .in +1c
 .ti -1c
-.RI "int \fBpip_task_spawn\fP (pip_spawn_program_t *progp, int coreno, int *pipidp, pip_spawn_hook_t *hookp)"
+.RI "int \fBpip_task_spawn\fP (pip_spawn_program_t *progp, int coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp)"
 .br
 .RI "\fIspawn a PiP task (PiP API Version 2) \fP"
 .in -1c
@@ -68,6 +61,10 @@ the PiP library
 .RI "\fIget PiP ID \fP"
 .in -1c
 .in +1c
+.ti -1c
+.RI "int \fBpip_is_initialized\fP (void)"
+.br
+.RI "\fIQuery is PiP library is already initialized\&. \fP"
 .ti -1c
 .RI "int \fBpip_get_ntasks\fP (int *ntasksp)"
 .br
@@ -141,18 +138,6 @@ the PiP library
 .in -1c
 .in +1c
 .ti -1c
-.RI "int \fBpip_barrier_init\fP (pip_barrier_t *barrp, int n)"
-.br
-.RI "\fIinitialize barrier synchronization structure \fP"
-.in -1c
-.in +1c
-.ti -1c
-.RI "int \fBpip_barrier_wait\fP (pip_barrier_t *barrp)"
-.br
-.RI "\fIwait on barrier synchronization in a busy-wait way \fP"
-.in -1c
-.in +1c
-.ti -1c
 .RI "int \fBpip_isa_root\fP (void)"
 .br
 .RI "\fIcheck if calling PiP task is PiP root or not \fP"
@@ -174,6 +159,12 @@ the PiP library
 .RI "int \fBpip_is_alive\fP (int pipid)"
 .br
 .RI "\fIcheck if the specified PiP task is alive or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_spawn\fP (char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)"
+.br
+.RI "\fIspawn a PiP task (ULP API Version 1) \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -245,7 +236,7 @@ pip_init(3)
 .RE
 .PP
 
-.SS "int pip_task_spawn (pip_spawn_program_t *progp, intcoreno, int *pipidp, pip_spawn_hook_t *hookp)"
+.SS "int pip_task_spawn (pip_spawn_program_t *progp, intcoreno, uint32_topts, int *pipidp, pip_spawn_hook_t *hookp)"
 
 .PP
 spawn a PiP task (PiP API Version 2) 
@@ -255,6 +246,8 @@ spawn a PiP task (PiP API Version 2)
 \fIprogp\fP Program information to spawn as a PiP task 
 .br
 \fIcoreno\fP Core number for the PiP task to be bound to\&. If \fCPIP_CPUCORE_ASIS\fP is specified, then the core binding will not take place\&. 
+.br
+\fIopts\fP option flags 
 .br
 \fIpipidp\fP Specify PiP ID of the spawned PiP task\&. If \fCPIP_PIPID_ANY\fP is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned\&. 
 .br
@@ -501,6 +494,22 @@ Return 0 on success\&. Return an error code on error\&.
 \fBReturn values:\fP
 .RS 4
 \fIEINVAL\fP \fCpipidp\fP is \fCNULL\fP 
+.RE
+.PP
+
+.SS "int pip_is_initialized (void)"
+
+.PP
+Query is PiP library is already initialized\&. 
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fI\\c\fP true if it is already initialized 
 .RE
 .PP
 
@@ -830,65 +839,6 @@ Return the name string of the current execution mode
 .RE
 .PP
 
-.SS "int pip_barrier_init (pip_barrier_t *barrp, intn)"
-
-.PP
-initialize barrier synchronization structure 
-.PP
-\fBParameters:\fP
-.RS 4
-\fIbarrp\fP pointer to a PiP barrier structure 
-.br
-\fIn\fP number of participants of this barrier synchronization
-.RE
-.PP
-\fBReturns:\fP
-.RS 4
-Return 0 on success\&. Return an error code on error\&. 
-.RE
-.PP
-\fBReturn values:\fP
-.RS 4
-\fIEINAVL\fP \fCbarrp\fP is \fCNULL\fP or \fCn\fP is invalid
-.RE
-.PP
-\fBNote:\fP
-.RS 4
-This barrier works on PiP tasks only\&.
-.RE
-.PP
-\fBSee Also:\fP
-.RS 4
-pip_barrier_wait(3), pip_barrier_init(3), pip_barrier_wait(3), 
-.RE
-.PP
-
-.SS "int pip_barrier_wait (pip_barrier_t *barrp)"
-
-.PP
-wait on barrier synchronization in a busy-wait way 
-.PP
-\fBParameters:\fP
-.RS 4
-\fIbarrp\fP pointer to a PiP barrier structure
-.RE
-.PP
-\fBReturns:\fP
-.RS 4
-Return 0 on success\&. Return an error code on error\&. 
-.RE
-.PP
-\fBReturn values:\fP
-.RS 4
-\fIEINAVL\fP \fCbarrp\fP is \fCNULL\fP 
-.RE
-.PP
-\fBSee Also:\fP
-.RS 4
-pip_barrier_init(3), pip_barrier_init(3), 
-.RE
-.PP
-
 .SS "int pip_isa_root (void)"
 
 .PP
@@ -935,6 +885,43 @@ check if the specified PiP task is alive or not
 \fBReturns:\fP
 .RS 4
 Return true if the specified PiP task or ULP is alive (i\&.e\&., not yet terminated) and running 
+.RE
+.PP
+
+.SS "int pip_spawn (char *filename, char **argv, char **envv, intcoreno, int *pipidp, pip_spawnhook_tbefore, pip_spawnhook_tafter, void *hookarg)"
+
+.PP
+spawn a PiP task (ULP API Version 1) 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIfilename\fP The executable to run as a PiP task 
+.br
+\fIargv\fP Argument(s) for the spawned PiP task 
+.br
+\fIenvv\fP Environment variables for the spawned PiP task 
+.br
+\fIcoreno\fP Core number for the PiP task to be bound to\&. If \fCPIP_CPUCORE_ASIS\fP is specified, then the core binding will not take place\&. 
+.br
+\fIpipidp\fP Specify PiP ID of the spawned PiP task\&. If \fCPIP_PIPID_ANY\fP is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned\&. 
+.br
+\fIbefore\fP Just before the executing of the spawned PiP task, this function is called so that file descriptors inherited from the PiP root, for example, can deal with\&. This is only effective with the PiP process mode\&. This function is called with the argument \fIhookarg\fP described below\&. 
+.br
+\fIafter\fP This function is called when the PiP task terminates for the cleanup purpose\&. This function is called with the argument \fIhookarg\fP described below\&. 
+.br
+\fIhookarg\fP The argument for the \fIbefore\fP and \fIafter\fP function call\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+This function is to spawn a PiP task\&. These functions are introduced to follow the programming style of conventional \fCfork\fP and \fCexec\fP\&. \fIbefore\fP function does the prologue found between the \fCfork\fP and \fCexec\fP\&. \fIafter\fP function is to free the argument if it is \fCmalloc()ed\fP\&. Note that the \fIbefore\fP and \fIafter\fP functions are called in the different \fIcontext\fP from the spawned PiP task\&. More specifically, any variables defined in the spawned PiP task cannot be accessible from the \fIbefore\fP and \fIafter\fP functions\&.
+.PP
+\fBNote:\fP
+.RS 4
+In theory, there is no reason to restrict for a PiP task to spawn another PiP task\&. However, the current implementation fails to do so\&. 
 .RE
 .PP
 

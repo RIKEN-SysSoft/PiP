@@ -114,7 +114,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">  * official policies, either expressed or implied, of the PiP project.$</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="comment">*/</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">  * Written by Atsushi HORI &lt;ahori@riken.jp&gt;, 2016-2018</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">  * Written by Atsushi HORI &lt;ahori@riken.jp&gt;, 2016-2019</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="comment">*/</span></div>
 <div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#ifndef _pip_h_</span></div>
@@ -122,351 +122,189 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_SHOULD_SKIP_THIS</span></div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="preprocessor">#define PIP_OPTS_NONE           (0x0)</span></div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="preprocessor">#define PIP_MODE_PTHREAD        (0x1000)</span></div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_MODE_PROCESS        (0x2000)</span></div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<span class="preprocessor"></span><span class="comment">/* the following two modes are a submode of PIP_MODE_PROCESS */</span></div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="preprocessor">#define PIP_MODE_PROCESS_PRELOAD    (0x2100)</span></div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_MODE_PROCESS_PIPCLONE   (0x2200)</span></div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_MODE_MASK           (0xFF00)</span></div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="preprocessor">#define PIP_ENV_MODE            &quot;PIP_MODE&quot;</span></div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_THREAD     &quot;thread&quot;</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PTHREAD        &quot;pthread&quot;</span></div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PROCESS        &quot;process&quot;</span></div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PROCESS_PRELOAD    &quot;process:preload&quot;</span></div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PROCESS_PIPCLONE   &quot;process:pipclone&quot;</span></div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<span class="preprocessor">#define PIP_OPT_MASK            (0xFF)</span></div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_OPT_FORCEEXIT       (0x01)</span></div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_OPT_PGRP            (0x02)</span></div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;<span class="preprocessor">#define PIP_ENV_OPTS            &quot;PIP_OPTS&quot;</span></div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_OPTS_FORCEEXIT      &quot;forceexit&quot;</span></div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_OPTS_PGRP       &quot;pgrp&quot;</span></div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<span class="preprocessor">#define PIP_VALID_OPTS  \</span></div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;<span class="preprocessor">  ( PIP_MODE_PTHREAD | PIP_MODE_PROCESS_PRELOAD | PIP_MODE_PROCESS_PIPCLONE | \</span></div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;<span class="preprocessor">    PIP_OPT_FORCEEXIT | PIP_OPT_PGRP )</span></div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="preprocessor">#define PIP_ENV_STACKSZ     &quot;PIP_STACKSZ&quot;</span></div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="preprocessor">#define PIP_PIPID_ROOT      (-1)</span></div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_MYSELF    (-2)</span></div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_SELF      (-2)</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_ANY       (-3)</span></div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_NULL      (-4)</span></div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="preprocessor">#include &lt;sys/types.h&gt;</span></div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;<span class="preprocessor">#include &lt;sys/stat.h&gt;</span></div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="preprocessor">#include &lt;sys/time.h&gt;</span></div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;<span class="preprocessor">#include &lt;pthread.h&gt;</span></div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<span class="preprocessor">#include &lt;link.h&gt;</span></div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;<span class="preprocessor">#include &lt;dlfcn.h&gt;</span></div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;<span class="preprocessor">#include &lt;dirent.h&gt;</span></div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<span class="preprocessor">#include &lt;fcntl.h&gt;</span></div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="preprocessor">#include &lt;string.h&gt;</span></div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<span class="preprocessor">#include &lt;errno.h&gt;</span></div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;</div>
+<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;<span class="preprocessor">#include &lt;pip_machdep.h&gt;</span></div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;<span class="preprocessor">#define PIP_OPTS_NONE           (0x0)</span></div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;<span class="preprocessor">#define PIP_MODE_PTHREAD        (0x1000)</span></div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_MODE_PROCESS        (0x2000)</span></div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<span class="preprocessor"></span><span class="comment">/* the following two modes are a submode of PIP_MODE_PROCESS */</span></div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;<span class="preprocessor">#define PIP_MODE_PROCESS_PRELOAD    (0x2100)</span></div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_MODE_PROCESS_PIPCLONE   (0x2200)</span></div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_MODE_MASK           (0xFF00)</span></div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;<span class="preprocessor">#define PIP_ENV_MODE            &quot;PIP_MODE&quot;</span></div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_THREAD     &quot;thread&quot;</span></div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PTHREAD        &quot;pthread&quot;</span></div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PROCESS        &quot;process&quot;</span></div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PROCESS_PRELOAD    &quot;process:preload&quot;</span></div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_ENV_MODE_PROCESS_PIPCLONE   &quot;process:pipclone&quot;</span></div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;<span class="preprocessor">#define PIP_VALID_ROPTS \</span></div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<span class="preprocessor">  ( PIP_MODE_PTHREAD | PIP_MODE_PROCESS_PRELOAD | PIP_MODE_PROCESS_PIPCLONE )</span></div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="preprocessor">#define PIP_NTASKS_MAX      (300)</span></div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="preprocessor">#define PIP_ENV_STACKSZ         &quot;PIP_STACKSZ&quot;</span></div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="preprocessor">#define PIP_CPUCORE_ASIS    (-1)</span></div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="preprocessor">#define PIP_SCHED_FIFO  (0x0)</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_SCHED_LIFO  (0x1)</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="preprocessor">#include &lt;sys/types.h&gt;</span></div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="preprocessor">#include &lt;sys/stat.h&gt;</span></div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="preprocessor">#include &lt;sys/time.h&gt;</span></div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="preprocessor">#include &lt;pthread.h&gt;</span></div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="preprocessor">#include &lt;link.h&gt;</span></div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="preprocessor">#include &lt;dlfcn.h&gt;</span></div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="preprocessor">#include &lt;dirent.h&gt;</span></div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="preprocessor">#include &lt;fcntl.h&gt;</span></div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;<span class="preprocessor">#include &lt;stdlib.h&gt;</span></div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;<span class="preprocessor">#include &lt;unistd.h&gt;</span></div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="preprocessor">#include &lt;stdio.h&gt;</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="preprocessor">#include &lt;string.h&gt;</span></div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="preprocessor">#include &lt;errno.h&gt;</span></div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="preprocessor">#include &lt;pip_machdep.h&gt;</span></div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>pip_task_queue {</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  <span class="keyword">struct </span>pip_task_queue     *next;</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  <span class="keyword">struct </span>pip_task_queue     *prev;</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;} pip_task_t;</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;<span class="keyword">typedef</span> pip_task_t  pip_list_t;</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>{</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  <span class="keywordtype">char</span>          *prog;</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;  <span class="keywordtype">char</span>          **argv;</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;  <span class="keywordtype">char</span>          **envv;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;  <span class="keywordtype">char</span>          *funcname;</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;  <span class="keywordtype">void</span>          *arg;</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;  <span class="keywordtype">void</span>          *reserved[3];</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;} pip_spawn_program_t;</div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;</div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;<span class="keyword">typedef</span> int (*pip_spawnhook_t)( <span class="keywordtype">void</span>* );</div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;<span class="keyword">typedef</span> int (*pip_startfunc_t)( <span class="keywordtype">void</span>* );</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>{</div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;  pip_spawnhook_t   before;</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  pip_spawnhook_t   after;</div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;  <span class="keywordtype">void</span>          *hookarg;</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;  <span class="keywordtype">void</span>          *reserved[5];</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;} pip_spawn_hook_t;</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>pip_locked_queue {</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;  <span class="keyword">union </span>{</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    <span class="keyword">struct </span>{</div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;      pip_task_t    queue;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;      pip_spinlock_t    lock;</div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;      <span class="keywordtype">char</span>      __gap0__[PIP_CACHEBLK_SZ]; <span class="comment">/* reserved for future */</span></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    };</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <span class="keywordtype">char</span>        __gap1__[PIP_CACHEBLK_SZ*2];</div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  };</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;} pip_locked_queue_t;</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="preprocessor">#define PIP_TASKQ_INIT(L)                   \</span></div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="preprocessor">  do { PIP_TASKQ_NEXT(L) = (L); PIP_TASKQ_PREV(L) = (L); } while(0)</span></div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="preprocessor">#define PIP_TASKQ_NEXT(L)   ((L)-&gt;next)</span></div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_TASKQ_PREV(L)   ((L)-&gt;prev)</span></div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_TASKQ_PREV_NEXT(L)  ((L)-&gt;prev-&gt;next)</span></div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_TASKQ_NEXT_PREV(L)  ((L)-&gt;next-&gt;prev)</span></div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;<span class="preprocessor">#define PIP_TASKQ_ENQ_FIRST(L,E)                \</span></div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="preprocessor">  do { PIP_TASKQ_NEXT(E)   = PIP_TASKQ_NEXT(L);         \</span></div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="preprocessor">    PIP_TASKQ_PREV(E)      = (L);               \</span></div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="preprocessor">    PIP_TASKQ_NEXT_PREV(L) = (E);               \</span></div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="preprocessor">    PIP_TASKQ_NEXT(L)      = (E); } while(0)</span></div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="preprocessor">#define PIP_TASKQ_ENQ_LAST(L,E)                 \</span></div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;<span class="preprocessor">  do { PIP_TASKQ_NEXT(E)   = (L);               \</span></div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor">    PIP_TASKQ_PREV(E)      = PIP_TASKQ_PREV(L);         \</span></div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;<span class="preprocessor">    PIP_TASKQ_PREV_NEXT(L) = (E);               \</span></div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="preprocessor">    PIP_TASKQ_PREV(L)      = (E); } while(0)</span></div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;<span class="preprocessor">#define PIP_TASKQ_DEQ(L)                    \</span></div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<span class="preprocessor">  do { PIP_TASKQ_NEXT_PREV(L) = PIP_TASKQ_PREV(L);      \</span></div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;<span class="preprocessor">    PIP_TASKQ_PREV_NEXT(L) = PIP_TASKQ_NEXT(L);         \</span></div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;<span class="preprocessor">    PIP_TASKQ_INIT(L); } while(0)</span></div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;<span class="preprocessor">#define PIP_TASKQ_MOVE_QUEUE(P,Q)               \</span></div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;<span class="preprocessor">  do { if( !PIP_TASKQ_ISEMPTY(Q) ) {                \</span></div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;<span class="preprocessor">      PIP_TASKQ_NEXT_PREV(Q) = (P);             \</span></div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;<span class="preprocessor">      PIP_TASKQ_PREV_NEXT(Q) = (P);             \</span></div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;<span class="preprocessor">      PIP_TASKQ_NEXT(P) = PIP_TASKQ_NEXT(Q);            \</span></div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;<span class="preprocessor">      PIP_TASKQ_PREV(P) = PIP_TASKQ_PREV(Q);            \</span></div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;<span class="preprocessor">      PIP_TASKQ_INIT(Q); } } while(0)</span></div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;<span class="preprocessor">#define PIP_TASKQ_ISEMPTY(L)                    \</span></div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;<span class="preprocessor">  ( PIP_TASKQ_NEXT(L) == (L) &amp;&amp; PIP_TASKQ_PREV(L) == (L) )</span></div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;<span class="preprocessor">#define PIP_TASKQ_FOREACH(L,E)                  \</span></div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;<span class="preprocessor">  for( (E)=(L)-&gt;next; (L)!=(E); (E)=PIP_TASKQ_NEXT(E) )</span></div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;<span class="preprocessor">#define PIP_TASKQ_FOREACH_SAFE(L,E,TV)              \</span></div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;<span class="preprocessor">  for( (E)=(L)-&gt;next, (TV)=PIP_TASKQ_NEXT(E);           \</span></div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;<span class="preprocessor">       (L)!=(E);                        \</span></div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;<span class="preprocessor">       (E)=(TV), (TV)=PIP_TASKQ_NEXT(TV) )</span></div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;<span class="preprocessor">#define PIP_TASKQ_FOREACH_SAFE_XXX(L,E,TV)          \</span></div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;<span class="preprocessor">  for( (E)=(L), (TV)=PIP_TASKQ_NEXT(E); (L)!=(E); (E)=(TV) )</span></div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;<span class="preprocessor">#define PIP_LIST_INIT(L)        PIP_TASKQ_INIT(L)</span></div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_LIST_ISEMPTY(L)     PIP_TASKQ_ISEMPTY(L)</span></div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_LIST_ADD(L,E)       PIP_TASKQ_ENQ_LAST(L,E)</span></div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_LIST_DEL(E)         PIP_TASKQ_DEQ(E)</span></div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_LIST_MOVE(P,Q)      PIP_TASKQ_MOVE_QUEUE(P,Q)</span></div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_LIST_FOREACH(L,E)       PIP_TASKQ_FOREACH(L,E)</span></div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_LIST_FOREACH_SAFE(L,E,F)    PIP_TASKQ_FOREACH_SAFE(L,E,F)</span></div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>pip_mutex {</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  pip_task_t        *holder;</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;  pip_task_t        *hash;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  <span class="keywordtype">int</span>           hash_size;</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  <span class="keywordtype">int</span>           first_idx;</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;} pip_mutex_t;</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>pip_barrier {</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;  <span class="keyword">union </span>{</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;    <span class="keyword">struct </span>{</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;      <span class="keywordtype">int</span>       count_init;</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;      pip_atomic_t  count;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;      <span class="keyword">volatile</span> <span class="keywordtype">int</span>  gsense;</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;    };</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="keywordtype">char</span>        __gap__[PIP_CACHEBLK_SZ];</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;  };</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;} pip_barrier_t;</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;<span class="preprocessor">#ifdef AHAH</span></div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="preprocessor"></span><span class="keyword">typedef</span> <span class="keyword">struct </span>pip_barrier {</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;  <span class="keywordtype">void</span>          *sched;</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;  pip_task_t        waiting;</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;  <span class="keywordtype">int</span>           count_init;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;  <span class="keywordtype">int</span>           count;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;} pip_barrier_t;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="keyword">struct </span>pip_task;</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="keyword">typedef</span> void (*pip_enqueuehook_t)(int);</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN_SHOULD_SKIP_THIS */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> pip_spawn_from_main( pip_spawn_program_t *progp,</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;                    <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv ) {</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  <span class="keywordflow">if</span>( prog != NULL ) {</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    progp-&gt;prog   = prog;</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    progp-&gt;prog   = argv[0];</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;  }</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  progp-&gt;argv     = argv;</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  progp-&gt;envv     = envv;</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  progp-&gt;funcname = NULL;</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  progp-&gt;arg      = NULL;</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;}</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span></div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;pip_spawn_from_func( pip_spawn_program_t *progp,</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;             <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> *funcname, <span class="keywordtype">void</span> *arg, <span class="keywordtype">char</span> **envv ) {</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  progp-&gt;prog     = prog;</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  progp-&gt;argv     = NULL;</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  progp-&gt;envv     = envv;</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;  progp-&gt;funcname = funcname;</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;  progp-&gt;arg      = arg;</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;}</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> pip_spawn_hook( pip_spawn_hook_t *hook,</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;                   pip_spawnhook_t before,</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;                   pip_spawnhook_t after,</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;                   <span class="keywordtype">void</span> *hookarg ) {</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  hook-&gt;before  = before;</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;  hook-&gt;after   = after;</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;  hook-&gt;hookarg = hookarg;</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;}</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_SHOULD_SKIP_THIS</span></div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gad4e0db6c69792b3fa014e3310892a0eb">pip_init</a>( <span class="keywordtype">int</span> *pipidp, <span class="keywordtype">int</span> *ntasks, <span class="keywordtype">void</span> **root_expp, <span class="keywordtype">int</span> opts );</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gad06585ee5975368dd4a3c5014dac1cbb">pip_task_spawn</a>( pip_spawn_program_t *progp,</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;            <span class="keywordtype">int</span> coreno,</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;            <span class="keywordtype">int</span> *pipidp,</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;            pip_spawn_hook_t *hookp );</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gab7a5ca6c80e876ef1ea7b42cb2008faa">pip_named_export</a>( <span class="keywordtype">void</span> *exp, <span class="keyword">const</span> <span class="keywordtype">char</span> *format, ... )</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;    __attribute__ ((format (printf, 2, 3)));</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga37fed4773558ccab6911785c872bc057">pip_named_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gaa4b5ad0f8227ba1010648718dae04730">pip_named_tryimport</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga76ef9337bec7dd836168f22247d4c64c">pip_export</a>( <span class="keywordtype">void</span> *exp );</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp );</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a>( <span class="keywordtype">int</span> *pipidp );</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a>( <span class="keywordtype">int</span> *ntasksp );</div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga4b6905e1eb5ffa6427d72d7e73408639">pip_isa_piptask</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gac45cbabfd20fa2f8f4e9004474922137">pip_count_active_tasks</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a>( <span class="keywordtype">int</span> *modep );</div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gaf9be37d927121b9327b5fca2417ccec2">pip_exit</a>( <span class="keywordtype">int</span> retval );</div>
-<div class="line"><a name="l00772"></a><span class="lineno">  772</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b">pip_wait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *retval );</div>
-<div class="line"><a name="l00793"></a><span class="lineno">  793</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga02cab8b77b62ffcd98bd1bbb1e32b7e7">pip_trywait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *retval );</div>
-<div class="line"><a name="l00816"></a><span class="lineno">  816</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gade2b18ac0e11ec827ad68656591c7518">pip_wait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *retval );</div>
-<div class="line"><a name="l00838"></a><span class="lineno">  838</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga65731447fedb85cbe4d5c38093383a20">pip_trywait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *retval );</div>
-<div class="line"><a name="l00857"></a><span class="lineno">  857</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> signal );</div>
-<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga8ed1ba448edbc0f2e0af78abdcc62b7c">pip_get_id</a>( <span class="keywordtype">int</span> pipid, intptr_t *idp );</div>
-<div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;  const <span class="keywordtype">char</span> *<a class="code" href="group__libpip.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00908"></a><span class="lineno">  908</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga84022f9c64f431e7d513342aeed0b61e">pip_barrier_init</a>( pip_barrier_t *barrp, <span class="keywordtype">int</span> n );</div>
-<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gaca103c9732a8e28ee8faf79ef4a69e4f">pip_barrier_wait</a>( pip_barrier_t *barrp );</div>
-<div class="line"><a name="l00932"></a><span class="lineno">  932</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00941"></a><span class="lineno">  941</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00950"></a><span class="lineno">  950</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#gafc11d79f0f63c4c57ccb5c3bb2803241">pip_isa_ulp</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00961"></a><span class="lineno">  961</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a>( <span class="keywordtype">int</span> pipid );</div>
-<div class="line"><a name="l00964"></a><span class="lineno">  964</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00965"></a><span class="lineno">  965</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00966"></a><span class="lineno">  966</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00967"></a><span class="lineno">  967</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00968"></a><span class="lineno">  968</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_SHOULD_SKIP_THIS</span></div>
-<div class="line"><a name="l00969"></a><span class="lineno">  969</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00970"></a><span class="lineno">  970</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00971"></a><span class="lineno">  971</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l00972"></a><span class="lineno">  972</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00973"></a><span class="lineno">  973</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01015"></a><span class="lineno"> 1015</span>&#160;  <span class="keywordtype">int</span> pip_spawn( <span class="keywordtype">char</span> *filename, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv,</div>
-<div class="line"><a name="l01016"></a><span class="lineno"> 1016</span>&#160;         <span class="keywordtype">int</span> coreno, <span class="keywordtype">int</span> *pipidp,</div>
-<div class="line"><a name="l01017"></a><span class="lineno"> 1017</span>&#160;         pip_spawnhook_t before, pip_spawnhook_t after, <span class="keywordtype">void</span> *hookarg);</div>
-<div class="line"><a name="l01041"></a><span class="lineno"> 1041</span>&#160;  <span class="keywordtype">int</span> pip_get_addr( <span class="keywordtype">int</span> pipid, <span class="keyword">const</span> <span class="keywordtype">char</span> *symnam, <span class="keywordtype">void</span> **addrp );</div>
-<div class="line"><a name="l01055"></a><span class="lineno"> 1055</span>&#160;  <span class="keywordtype">int</span> pip_sleep_and_enqueue( pip_locked_queue_t *queue,</div>
-<div class="line"><a name="l01056"></a><span class="lineno"> 1056</span>&#160;                 pip_enqueuehook_t hook,</div>
-<div class="line"><a name="l01057"></a><span class="lineno"> 1057</span>&#160;                 <span class="keywordtype">int</span> policy );</div>
-<div class="line"><a name="l01068"></a><span class="lineno"> 1068</span>&#160;  <span class="keywordtype">int</span> pip_dequeue_and_activate( pip_locked_queue_t *queue );</div>
-<div class="line"><a name="l01079"></a><span class="lineno"> 1079</span>&#160;  <span class="keywordtype">int</span> pip_yield( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01095"></a><span class="lineno"> 1095</span>&#160;  <span class="keywordtype">int</span> pip_yield_to( pip_task_t *task );</div>
-<div class="line"><a name="l01108"></a><span class="lineno"> 1108</span>&#160;  <span class="keywordtype">int</span> pip_myself( pip_task_t **taskp );</div>
-<div class="line"><a name="l01121"></a><span class="lineno"> 1121</span>&#160;  <span class="keywordtype">int</span> pip_get( <span class="keywordtype">int</span> pipid, pip_task_t **taskp );</div>
-<div class="line"><a name="l01133"></a><span class="lineno"> 1133</span>&#160;  <span class="keywordtype">int</span> pip_get_sched_task( <span class="keywordtype">int</span> *pipidp );</div>
-<div class="line"><a name="l01149"></a><span class="lineno"> 1149</span>&#160;  <span class="keywordtype">int</span> pip_mutex_init( pip_mutex_t *mutex );</div>
-<div class="line"><a name="l01168"></a><span class="lineno"> 1168</span>&#160;  <span class="keywordtype">int</span> pip_mutex_lock( pip_mutex_t *mutex );</div>
-<div class="line"><a name="l01183"></a><span class="lineno"> 1183</span>&#160;  <span class="keywordtype">int</span> pip_mutex_unlock( pip_mutex_t *mutex );</div>
-<div class="line"><a name="l01186"></a><span class="lineno"> 1186</span>&#160;<span class="preprocessor">#ifdef AH</span></div>
-<div class="line"><a name="l01187"></a><span class="lineno"> 1187</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga84022f9c64f431e7d513342aeed0b61e">pip_barrier_init</a>( pip_barrier_t *barrp, <span class="keywordtype">int</span> n );</div>
-<div class="line"><a name="l01221"></a><span class="lineno"> 1221</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gaca103c9732a8e28ee8faf79ef4a69e4f">pip_barrier_wait</a>( pip_barrier_t *barrp );</div>
-<div class="line"><a name="l01223"></a><span class="lineno"> 1223</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l01224"></a><span class="lineno"> 1224</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01237"></a><span class="lineno"> 1237</span>&#160;  <span class="keywordtype">int</span> pip_locked_queue_init( pip_locked_queue_t *queue );</div>
-<div class="line"><a name="l01257"></a><span class="lineno"> 1257</span>&#160;  <span class="keywordtype">int</span> pip_suspend( pip_locked_queue_t *queue,</div>
-<div class="line"><a name="l01258"></a><span class="lineno"> 1258</span>&#160;           pip_enqueuehook_t hook,</div>
-<div class="line"><a name="l01259"></a><span class="lineno"> 1259</span>&#160;           <span class="keywordtype">int</span> policy );</div>
-<div class="line"><a name="l01278"></a><span class="lineno"> 1278</span>&#160;  <span class="keywordtype">int</span> pip_dequeue_and_resume( pip_locked_queue_t *queue,</div>
-<div class="line"><a name="l01279"></a><span class="lineno"> 1279</span>&#160;                  pip_task_t **taskp,</div>
-<div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;                  <span class="keywordtype">int</span> policy );</div>
-<div class="line"><a name="l01297"></a><span class="lineno"> 1297</span>&#160;  <span class="keywordtype">int</span> pip_enqueue_with_lock( pip_locked_queue_t *queue,</div>
-<div class="line"><a name="l01298"></a><span class="lineno"> 1298</span>&#160;                 pip_task_t *task,</div>
-<div class="line"><a name="l01299"></a><span class="lineno"> 1299</span>&#160;                 <span class="keywordtype">int</span> policy );</div>
-<div class="line"><a name="l01314"></a><span class="lineno"> 1314</span>&#160;  <span class="keywordtype">int</span> pip_dequeue_with_lock( pip_locked_queue_t *queue,</div>
-<div class="line"><a name="l01315"></a><span class="lineno"> 1315</span>&#160;                 pip_task_t **taskp );</div>
-<div class="line"><a name="l01318"></a><span class="lineno"> 1318</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN_SHOULD_SKIP_THIS */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l01319"></a><span class="lineno"> 1319</span>&#160;<span class="preprocessor"></span>  <span class="keywordtype">int</span>    pip_idstr( <span class="keywordtype">char</span> *buf, <span class="keywordtype">size_t</span> sz );</div>
-<div class="line"><a name="l01320"></a><span class="lineno"> 1320</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_SHOULD_SKIP_THIS</span></div>
-<div class="line"><a name="l01321"></a><span class="lineno"> 1321</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01322"></a><span class="lineno"> 1322</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l01323"></a><span class="lineno"> 1323</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l01324"></a><span class="lineno"> 1324</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l01325"></a><span class="lineno"> 1325</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01326"></a><span class="lineno"> 1326</span>&#160;<span class="preprocessor">#ifdef PIP_INTERNAL_FUNCS</span></div>
-<div class="line"><a name="l01327"></a><span class="lineno"> 1327</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;<span class="preprocessor">#include &lt;pip_internal.h&gt;</span></div>
-<div class="line"><a name="l01329"></a><span class="lineno"> 1329</span>&#160;</div>
-<div class="line"><a name="l01330"></a><span class="lineno"> 1330</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l01331"></a><span class="lineno"> 1331</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
-<div class="line"><a name="l01332"></a><span class="lineno"> 1332</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l01333"></a><span class="lineno"> 1333</span>&#160;<span class="preprocessor"></span>  <span class="comment">/* the following functions deeply depends on PiP execution mode */</span></div>
-<div class="line"><a name="l01334"></a><span class="lineno"> 1334</span>&#160;  <span class="keywordtype">char</span>  *pip_type_str( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01335"></a><span class="lineno"> 1335</span>&#160;  <span class="keywordtype">int</span>    pip_get_thread( <span class="keywordtype">int</span> pipid, pthread_t *threadp );</div>
-<div class="line"><a name="l01336"></a><span class="lineno"> 1336</span>&#160;  <span class="keywordtype">int</span>    pip_is_threaded( <span class="keywordtype">int</span> *flagp );</div>
-<div class="line"><a name="l01337"></a><span class="lineno"> 1337</span>&#160;  <span class="keywordtype">int</span>    pip_is_shared_fd( <span class="keywordtype">int</span> *flagp );</div>
-<div class="line"><a name="l01338"></a><span class="lineno"> 1338</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l01339"></a><span class="lineno"> 1339</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l01340"></a><span class="lineno"> 1340</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l01341"></a><span class="lineno"> 1341</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* PIP_INTERNAL_FUNCS */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l01342"></a><span class="lineno"> 1342</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01343"></a><span class="lineno"> 1343</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN_SHOULD_SKIP_THIS */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l01344"></a><span class="lineno"> 1344</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01349"></a><span class="lineno"> 1349</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">/* _pip_h_ */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__libpip_html_gad06585ee5975368dd4a3c5014dac1cbb"><div class="ttname"><a href="group__libpip.html#gad06585ee5975368dd4a3c5014dac1cbb">pip_task_spawn</a></div><div class="ttdeci">int pip_task_spawn(pip_spawn_program_t *progp, int coreno, int *pipidp, pip_spawn_hook_t *hookp)</div><div class="ttdoc">spawn a PiP task (PiP API Version 2) </div></div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="preprocessor">#define PIP_PIPID_ROOT          (-1)</span></div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_MYSELF        (-2)</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_SELF          (-2)</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_ANY           (-3)</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define PIP_PIPID_NULL          (-4)</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="preprocessor">#define PIP_NTASKS_MAX          (300)</span></div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="preprocessor">#define PIP_CPUCORE_ASIS        (-1)</span></div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>{</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;  <span class="keywordtype">char</span>          *prog;</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  <span class="keywordtype">char</span>          **argv;</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;  <span class="keywordtype">char</span>          **envv;</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;  <span class="keywordtype">char</span>          *funcname;</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  <span class="keywordtype">void</span>          *arg;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;  <span class="keywordtype">void</span>          *reserved[3];</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;} pip_spawn_program_t;</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="keyword">typedef</span> int (*pip_spawnhook_t)( <span class="keywordtype">void</span>* );</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;<span class="keyword">typedef</span> <span class="keyword">struct </span>{</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;  pip_spawnhook_t   before;</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  pip_spawnhook_t   after;</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  <span class="keywordtype">void</span>          *hookarg;</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;  <span class="keywordtype">void</span>          *reserved[5];</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;} pip_spawn_hook_t;</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN_SHOULD_SKIP_THIS */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> pip_spawn_from_main( pip_spawn_program_t *progp,</div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;                    <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv ) {</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  <span class="keywordflow">if</span>( prog != NULL ) {</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;    progp-&gt;prog   = prog;</div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;    progp-&gt;prog   = argv[0];</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;  }</div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;  progp-&gt;argv     = argv;</div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  progp-&gt;envv     = envv;</div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  progp-&gt;funcname = NULL;</div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  progp-&gt;arg      = NULL;</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;}</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span></div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;pip_spawn_from_func( pip_spawn_program_t *progp,</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;             <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> *funcname, <span class="keywordtype">void</span> *arg, <span class="keywordtype">char</span> **envv ) {</div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;  progp-&gt;prog     = prog;</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  progp-&gt;argv     = NULL;</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;  progp-&gt;envv     = envv;</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;  progp-&gt;funcname = funcname;</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;  progp-&gt;arg      = arg;</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;}</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="keyword">static</span> <span class="keyword">inline</span> <span class="keywordtype">void</span> pip_spawn_hook( pip_spawn_hook_t *hook,</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;                   pip_spawnhook_t before,</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;                   pip_spawnhook_t after,</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;                   <span class="keywordtype">void</span> *hookarg ) {</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  hook-&gt;before  = before;</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  hook-&gt;after   = after;</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;  hook-&gt;hookarg = hookarg;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;}</div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gad4e0db6c69792b3fa014e3310892a0eb">pip_init</a>( <span class="keywordtype">int</span> *pipidp, <span class="keywordtype">int</span> *ntasks, <span class="keywordtype">void</span> **root_expp, <span class="keywordtype">int</span> opts );</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga8055012fb65183ce17ad8cd8da292d54">pip_task_spawn</a>( pip_spawn_program_t *progp,</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;            <span class="keywordtype">int</span> coreno,</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;            uint32_t opts,</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;            <span class="keywordtype">int</span> *pipidp,</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;            pip_spawn_hook_t *hookp );</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gab7a5ca6c80e876ef1ea7b42cb2008faa">pip_named_export</a>( <span class="keywordtype">void</span> *exp, <span class="keyword">const</span> <span class="keywordtype">char</span> *format, ... )</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;    __attribute__ ((format (printf, 2, 3)));</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga37fed4773558ccab6911785c872bc057">pip_named_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gaa4b5ad0f8227ba1010648718dae04730">pip_named_tryimport</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga76ef9337bec7dd836168f22247d4c64c">pip_export</a>( <span class="keywordtype">void</span> *exp );</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp );</div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a>( <span class="keywordtype">int</span> *pipidp );</div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gabbec4ae2f820b13400f63cba55a53399">pip_is_initialized</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a>( <span class="keywordtype">int</span> *ntasksp );</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga4b6905e1eb5ffa6427d72d7e73408639">pip_isa_piptask</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gac45cbabfd20fa2f8f4e9004474922137">pip_count_active_tasks</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a>( <span class="keywordtype">int</span> *modep );</div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gaf9be37d927121b9327b5fca2417ccec2">pip_exit</a>( <span class="keywordtype">int</span> retval );</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b">pip_wait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *retval );</div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga02cab8b77b62ffcd98bd1bbb1e32b7e7">pip_trywait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *retval );</div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gade2b18ac0e11ec827ad68656591c7518">pip_wait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *retval );</div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga65731447fedb85cbe4d5c38093383a20">pip_trywait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *retval );</div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> signal );</div>
+<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#ga8ed1ba448edbc0f2e0af78abdcc62b7c">pip_get_id</a>( <span class="keywordtype">int</span> pipid, intptr_t *idp );</div>
+<div class="line"><a name="l00779"></a><span class="lineno">  779</span>&#160;  const <span class="keywordtype">char</span> *<a class="code" href="group__libpip.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00788"></a><span class="lineno">  788</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00797"></a><span class="lineno">  797</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00806"></a><span class="lineno">  806</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#gafc11d79f0f63c4c57ccb5c3bb2803241">pip_isa_ulp</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00817"></a><span class="lineno">  817</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a>( <span class="keywordtype">int</span> pipid );</div>
+<div class="line"><a name="l00861"></a><span class="lineno">  861</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d">pip_spawn</a>( <span class="keywordtype">char</span> *filename, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv,</div>
+<div class="line"><a name="l00862"></a><span class="lineno">  862</span>&#160;         <span class="keywordtype">int</span> coreno, <span class="keywordtype">int</span> *pipidp,</div>
+<div class="line"><a name="l00863"></a><span class="lineno">  863</span>&#160;         pip_spawnhook_t before, pip_spawnhook_t after, <span class="keywordtype">void</span> *hookarg);</div>
+<div class="line"><a name="l00866"></a><span class="lineno">  866</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_SHOULD_SKIP_THIS</span></div>
+<div class="line"><a name="l00867"></a><span class="lineno">  867</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00868"></a><span class="lineno">  868</span>&#160;  <span class="keywordtype">int</span>    pip_idstr( <span class="keywordtype">char</span> *buf, <span class="keywordtype">size_t</span> sz );</div>
+<div class="line"><a name="l00869"></a><span class="lineno">  869</span>&#160;</div>
+<div class="line"><a name="l00870"></a><span class="lineno">  870</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00871"></a><span class="lineno">  871</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00872"></a><span class="lineno">  872</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;<span class="preprocessor">#ifdef PIP_INTERNAL_FUNCS</span></div>
+<div class="line"><a name="l00875"></a><span class="lineno">  875</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &lt;pip_internal.h&gt;</span></div>
+<div class="line"><a name="l00876"></a><span class="lineno">  876</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00877"></a><span class="lineno">  877</span>&#160;<span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {</div>
+<div class="line"><a name="l00878"></a><span class="lineno">  878</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00879"></a><span class="lineno">  879</span>&#160;<span class="preprocessor"></span>  <span class="comment">/* the following functions deeply depends on PiP execution mode */</span></div>
+<div class="line"><a name="l00880"></a><span class="lineno">  880</span>&#160;  <span class="keywordtype">char</span>  *pip_type_str( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00881"></a><span class="lineno">  881</span>&#160;  <span class="keywordtype">int</span>    pip_get_thread( <span class="keywordtype">int</span> pipid, pthread_t *threadp );</div>
+<div class="line"><a name="l00882"></a><span class="lineno">  882</span>&#160;  <span class="keywordtype">int</span>    pip_is_threaded( <span class="keywordtype">int</span> *flagp );</div>
+<div class="line"><a name="l00883"></a><span class="lineno">  883</span>&#160;  <span class="keywordtype">int</span>    pip_is_shared_fd( <span class="keywordtype">int</span> *flagp );</div>
+<div class="line"><a name="l00884"></a><span class="lineno">  884</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00885"></a><span class="lineno">  885</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00886"></a><span class="lineno">  886</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00887"></a><span class="lineno">  887</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* PIP_INTERNAL_FUNCS */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00889"></a><span class="lineno">  889</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN_SHOULD_SKIP_THIS */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00890"></a><span class="lineno">  890</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">/* _pip_h_ */</span><span class="preprocessor"></span></div>
 <div class="ttc" id="group__libpip_html_ga3adad6a3e2311a46b2bfdd9d9062811b"><div class="ttname"><a href="group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b">pip_wait</a></div><div class="ttdeci">int pip_wait(int pipid, int *retval)</div><div class="ttdoc">wait for the termination of a PiP task </div></div>
 <div class="ttc" id="group__libpip_html_ga6f1045bdbf682cb2ac504f09b57b73e9"><div class="ttname"><a href="group__libpip.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a></div><div class="ttdeci">int pip_isa_root(void)</div><div class="ttdoc">check if calling PiP task is PiP root or not </div></div>
 <div class="ttc" id="group__libpip_html_ga02cab8b77b62ffcd98bd1bbb1e32b7e7"><div class="ttname"><a href="group__libpip.html#ga02cab8b77b62ffcd98bd1bbb1e32b7e7">pip_trywait</a></div><div class="ttdeci">int pip_trywait(int pipid, int *retval)</div><div class="ttdoc">wait for the termination of a PiP task in a non-blocking way </div></div>
 <div class="ttc" id="group__libpip_html_gade2b18ac0e11ec827ad68656591c7518"><div class="ttname"><a href="group__libpip.html#gade2b18ac0e11ec827ad68656591c7518">pip_wait_any</a></div><div class="ttdeci">int pip_wait_any(int *pipid, int *retval)</div><div class="ttdoc">wait for the termination of any PiP task </div></div>
 <div class="ttc" id="group__libpip_html_gaf0283e47ad2d415206d6a3fa61e8a0a9"><div class="ttname"><a href="group__libpip.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a></div><div class="ttdeci">int pip_isa_task(void)</div><div class="ttdoc">check if calling PiP task is a PiP task or not </div></div>
 <div class="ttc" id="group__libpip_html_gacefb1f29e5f5d9b21309a1d041e78790"><div class="ttname"><a href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a></div><div class="ttdeci">int pip_is_alive(int pipid)</div><div class="ttdoc">check if the specified PiP task is alive or not </div></div>
+<div class="ttc" id="group__libpip_html_gabbec4ae2f820b13400f63cba55a53399"><div class="ttname"><a href="group__libpip.html#gabbec4ae2f820b13400f63cba55a53399">pip_is_initialized</a></div><div class="ttdeci">int pip_is_initialized(void)</div><div class="ttdoc">Query is PiP library is already initialized. </div></div>
 <div class="ttc" id="group__libpip_html_ga4a396f38920d94b71dcfd3c898fbb82b"><div class="ttname"><a href="group__libpip.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a></div><div class="ttdeci">int pip_kill(int pipid, int signal)</div><div class="ttdoc">deliver a signal to a PiP task </div></div>
 <div class="ttc" id="group__libpip_html_ga6d7ac596a9da824e40d7c06528f42e5f"><div class="ttname"><a href="group__libpip.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a></div><div class="ttdeci">int pip_import(int pipid, void **expp)</div><div class="ttdoc">import the exposed memory region of the other. </div></div>
 <div class="ttc" id="group__libpip_html_ga65731447fedb85cbe4d5c38093383a20"><div class="ttname"><a href="group__libpip.html#ga65731447fedb85cbe4d5c38093383a20">pip_trywait_any</a></div><div class="ttdeci">int pip_trywait_any(int *pipid, int *retval)</div><div class="ttdoc">wait for the termination of any PiP task </div></div>
-<div class="ttc" id="group__libpip_html_gaca103c9732a8e28ee8faf79ef4a69e4f"><div class="ttname"><a href="group__libpip.html#gaca103c9732a8e28ee8faf79ef4a69e4f">pip_barrier_wait</a></div><div class="ttdeci">int pip_barrier_wait(pip_barrier_t *barrp)</div><div class="ttdoc">wait on barrier synchronization in a busy-wait way </div></div>
 <div class="ttc" id="group__libpip_html_ga0e12c95fe7abc5c356acfd45a89ad5d8"><div class="ttname"><a href="group__libpip.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a></div><div class="ttdeci">const char * pip_get_mode_str(void)</div><div class="ttdoc">get a string of the current execution mode </div></div>
-<div class="ttc" id="group__libpip_html_ga84022f9c64f431e7d513342aeed0b61e"><div class="ttname"><a href="group__libpip.html#ga84022f9c64f431e7d513342aeed0b61e">pip_barrier_init</a></div><div class="ttdeci">int pip_barrier_init(pip_barrier_t *barrp, int n)</div><div class="ttdoc">initialize barrier synchronization structure </div></div>
 <div class="ttc" id="group__libpip_html_ga76ef9337bec7dd836168f22247d4c64c"><div class="ttname"><a href="group__libpip.html#ga76ef9337bec7dd836168f22247d4c64c">pip_export</a></div><div class="ttdeci">int pip_export(void *exp)</div><div class="ttdoc">export a memory region of the calling PiP root or a PiP task to the others. </div></div>
 <div class="ttc" id="group__libpip_html_ga4b6905e1eb5ffa6427d72d7e73408639"><div class="ttname"><a href="group__libpip.html#ga4b6905e1eb5ffa6427d72d7e73408639">pip_isa_piptask</a></div><div class="ttdeci">int pip_isa_piptask(void)</div><div class="ttdoc">check if the calling task is a PiP task or not </div></div>
 <div class="ttc" id="group__libpip_html_gac45cbabfd20fa2f8f4e9004474922137"><div class="ttname"><a href="group__libpip.html#gac45cbabfd20fa2f8f4e9004474922137">pip_count_active_tasks</a></div><div class="ttdeci">int pip_count_active_tasks(void)</div><div class="ttdoc">return the number of active tasks </div></div>
 <div class="ttc" id="group__libpip_html_gafc11d79f0f63c4c57ccb5c3bb2803241"><div class="ttname"><a href="group__libpip.html#gafc11d79f0f63c4c57ccb5c3bb2803241">pip_isa_ulp</a></div><div class="ttdeci">int pip_isa_ulp(void)</div><div class="ttdoc">check if calling PiP task is a PiP ULP or not </div></div>
 <div class="ttc" id="group__libpip_html_gab603f68c1ce972a5f3bfb8c95fcfb555"><div class="ttname"><a href="group__libpip.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a></div><div class="ttdeci">int pip_get_mode(int *modep)</div><div class="ttdoc">get the PiP execution mode </div></div>
 <div class="ttc" id="group__libpip_html_ga9786d5aafa2a3882714c35ecc9f39a5a"><div class="ttname"><a href="group__libpip.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a></div><div class="ttdeci">int pip_get_ntasks(int *ntasksp)</div><div class="ttdoc">get the maximum number of the PiP tasks </div></div>
+<div class="ttc" id="group__libpip_html_ga8055012fb65183ce17ad8cd8da292d54"><div class="ttname"><a href="group__libpip.html#ga8055012fb65183ce17ad8cd8da292d54">pip_task_spawn</a></div><div class="ttdeci">int pip_task_spawn(pip_spawn_program_t *progp, int coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp)</div><div class="ttdoc">spawn a PiP task (PiP API Version 2) </div></div>
+<div class="ttc" id="group__libpip_html_gae9187ea22ecf0623fa3ecfba5337f52d"><div class="ttname"><a href="group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d">pip_spawn</a></div><div class="ttdeci">int pip_spawn(char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</div><div class="ttdoc">spawn a PiP task (ULP API Version 1) </div></div>
 <div class="ttc" id="group__libpip_html_ga4e715bb8c325e9acc81af0745908dc0e"><div class="ttname"><a href="group__libpip.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a></div><div class="ttdeci">int pip_get_pipid(int *pipidp)</div><div class="ttdoc">get PiP ID </div></div>
 <div class="ttc" id="group__libpip_html_gab7a5ca6c80e876ef1ea7b42cb2008faa"><div class="ttname"><a href="group__libpip.html#gab7a5ca6c80e876ef1ea7b42cb2008faa">pip_named_export</a></div><div class="ttdeci">int pip_named_export(void *exp, const char *format,...)</div><div class="ttdoc">export an address of the calling PiP root or a PiP task to the others. </div></div>
 <div class="ttc" id="group__libpip_html_gaf9be37d927121b9327b5fca2417ccec2"><div class="ttname"><a href="group__libpip.html#gaf9be37d927121b9327b5fca2417ccec2">pip_exit</a></div><div class="ttdeci">int pip_exit(int retval)</div><div class="ttdoc">terminate PiP task or ULP </div></div>

@@ -90,13 +90,13 @@ extern void pip_abort( void );
   do { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; return; } while(0)
 
 #ifdef DEBUG_ASSERT
-#define ASSERT(X)							\
-  do { if(X) { DBGF( "Assertion FAILED '%s' = %d !!!!!!", #X, X );	\
+#define ASSERT(X)						\
+  do { if(X) { DBGF( "Assertion FAILED '%s' !!!!!!", #X );		\
       pip_abort(); } else { DBGF( "Assertion OK '(%s)' = %d", #X, X ); } } \
   while(0)
 #else
-#define ASSERT(X)							\
-  do { if(X) { DBGF( "Assertion FAILED '%s' = %d !!!!!!", #X, X );	\
+#define ASSERT(X)						\
+  do { if(X) { DBGF( "Assertion FAILED '%s' !!!!!!", #X );	\
       pip_abort(); } } while(0)
 #endif
 #define NEVER_REACH_HERE						\
@@ -114,10 +114,10 @@ extern void pip_abort( void );
 #define ENTER
 #define RETURN(X)	return (X)
 #define RETURNV
-#define ASSERT(X)	    \
-    do { if( X ) { DBG_PRTBUF; DBG_TAG;			  \
-    DBG_PRNT("Assertion FAILED '%s' = %d !!!!!!", #X, X); \
-    DBG_OUTPUT; } } while(0)
+#define ASSERT(X)					  \
+  do { if( X ) { DBG_PRTBUF; DBG_TAG;			  \
+      DBG_PRNT( "Assertion FAILED '%s' !!!!!!", #X );	\
+      DBG_OUTPUT; } } while(0)
 
 #define NEVER_REACH_HERE
 

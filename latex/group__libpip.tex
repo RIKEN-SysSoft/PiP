@@ -6,12 +6,6 @@
 the Pi\-P library  
 
 
-\subsection*{Functions}
-\begin{DoxyCompactItemize}
-\item 
-\hypertarget{group__libpip_ga7c8ad53192b379f9ed5de13d336b8240}{int {\bfseries pip\-\_\-idstr} (char $\ast$buf, size\-\_\-t sz)}\label{group__libpip_ga7c8ad53192b379f9ed5de13d336b8240}
-
-\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_gad4e0db6c69792b3fa014e3310892a0eb}{pip\-\_\-init} (int $\ast$pipidp, int $\ast$ntasks, void $\ast$$\ast$root\-\_\-expp, int opts)
@@ -22,7 +16,7 @@ int \hyperlink{group__libpip_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin} (
 \begin{DoxyCompactList}\small\item\em finalize the Pi\-P library. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{group__libpip_gad06585ee5975368dd4a3c5014dac1cbb}{pip\-\_\-task\-\_\-spawn} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, int coreno, int $\ast$pipidp, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp)
+int \hyperlink{group__libpip_ga8055012fb65183ce17ad8cd8da292d54}{pip\-\_\-task\-\_\-spawn} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, int coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp)
 \begin{DoxyCompactList}\small\item\em spawn a Pi\-P task (Pi\-P A\-P\-I Version 2) \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
@@ -50,6 +44,8 @@ int \hyperlink{group__libpip_ga4e715bb8c325e9acc81af0745908dc0e}{pip\-\_\-get\-\
 \begin{DoxyCompactList}\small\item\em get Pi\-P I\-D \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
+int \hyperlink{group__libpip_gabbec4ae2f820b13400f63cba55a53399}{pip\-\_\-is\-\_\-initialized} (void)
+\begin{DoxyCompactList}\small\item\em Query is Pi\-P library is already initialized. \end{DoxyCompactList}\item 
 int \hyperlink{group__libpip_ga9786d5aafa2a3882714c35ecc9f39a5a}{pip\-\_\-get\-\_\-ntasks} (int $\ast$ntasksp)
 \begin{DoxyCompactList}\small\item\em get the maximum number of the Pi\-P tasks \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
@@ -98,14 +94,6 @@ const char $\ast$ \hyperlink{group__libpip_ga0e12c95fe7abc5c356acfd45a89ad5d8}{p
 \begin{DoxyCompactList}\small\item\em get a string of the current execution mode \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{group__libpip_ga84022f9c64f431e7d513342aeed0b61e}{pip\-\_\-barrier\-\_\-init} (pip\-\_\-barrier\-\_\-t $\ast$barrp, int n)
-\begin{DoxyCompactList}\small\item\em initialize barrier synchronization structure \end{DoxyCompactList}\end{DoxyCompactItemize}
-\begin{DoxyCompactItemize}
-\item 
-int \hyperlink{group__libpip_gaca103c9732a8e28ee8faf79ef4a69e4f}{pip\-\_\-barrier\-\_\-wait} (pip\-\_\-barrier\-\_\-t $\ast$barrp)
-\begin{DoxyCompactList}\small\item\em wait on barrier synchronization in a busy-\/wait way \end{DoxyCompactList}\end{DoxyCompactItemize}
-\begin{DoxyCompactItemize}
-\item 
 int \hyperlink{group__libpip_ga6f1045bdbf682cb2ac504f09b57b73e9}{pip\-\_\-isa\-\_\-root} (void)
 \begin{DoxyCompactList}\small\item\em check if calling Pi\-P task is Pi\-P root or not \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
@@ -120,6 +108,10 @@ int \hyperlink{group__libpip_gafc11d79f0f63c4c57ccb5c3bb2803241}{pip\-\_\-isa\-\
 \item 
 int \hyperlink{group__libpip_gacefb1f29e5f5d9b21309a1d041e78790}{pip\-\_\-is\-\_\-alive} (int pipid)
 \begin{DoxyCompactList}\small\item\em check if the specified Pi\-P task is alive or not \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{group__libpip_gae9187ea22ecf0623fa3ecfba5337f52d}{pip\-\_\-spawn} (char $\ast$filename, char $\ast$$\ast$argv, char $\ast$$\ast$envv, int coreno, int $\ast$pipidp, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg)
+\begin{DoxyCompactList}\small\item\em spawn a Pi\-P task (U\-L\-P A\-P\-I Version 1) \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -194,16 +186,17 @@ This function finalize the Pi\-P library.
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-init(3) 
 \end{DoxySeeAlso}
-\hypertarget{group__libpip_gad06585ee5975368dd4a3c5014dac1cbb}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-spawn@{pip\-\_\-task\-\_\-spawn}}
+\hypertarget{group__libpip_ga8055012fb65183ce17ad8cd8da292d54}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-spawn@{pip\-\_\-task\-\_\-spawn}}
 \index{pip\-\_\-task\-\_\-spawn@{pip\-\_\-task\-\_\-spawn}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-task\-\_\-spawn}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-spawn (
 \begin{DoxyParamCaption}
 \item[{pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$}]{progp, }
 \item[{int}]{coreno, }
+\item[{uint32\-\_\-t}]{opts, }
 \item[{int $\ast$}]{pipidp, }
 \item[{pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$}]{hookp}
 \end{DoxyParamCaption}
-)}}\label{group__libpip_gad06585ee5975368dd4a3c5014dac1cbb}
+)}}\label{group__libpip_ga8055012fb65183ce17ad8cd8da292d54}
 
 
 spawn a Pi\-P task (Pi\-P A\-P\-I Version 2) 
@@ -213,6 +206,8 @@ spawn a Pi\-P task (Pi\-P A\-P\-I Version 2)
 \mbox{\tt in}  & {\em progp} & Program information to spawn as a Pi\-P task \\
 \hline
 \mbox{\tt in}  & {\em coreno} & Core number for the Pi\-P task to be bound to. If {\ttfamily P\-I\-P\-\_\-\-C\-P\-U\-C\-O\-R\-E\-\_\-\-A\-S\-I\-S} is specified, then the core binding will not take place. \\
+\hline
+\mbox{\tt in}  & {\em opts} & option flags \\
 \hline
 \mbox{\tt in,out}  & {\em pipidp} & Specify Pi\-P I\-D of the spawned Pi\-P task. If {\ttfamily P\-I\-P\-\_\-\-P\-I\-P\-I\-D\-\_\-\-A\-N\-Y} is specified, then the Pi\-P I\-D of the spawned Pi\-P task is up to the Pi\-P library and the assigned Pi\-P I\-D will be returned. \\
 \hline
@@ -458,6 +453,25 @@ Return 0 on success. Return an error code on error.
 
 \begin{DoxyRetVals}{Return values}
 {\em E\-I\-N\-V\-A\-L} & {\ttfamily pipidp} is {\ttfamily N\-U\-L\-L} \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{group__libpip_gabbec4ae2f820b13400f63cba55a53399}{\index{libpip@{libpip}!pip\-\_\-is\-\_\-initialized@{pip\-\_\-is\-\_\-initialized}}
+\index{pip\-\_\-is\-\_\-initialized@{pip\-\_\-is\-\_\-initialized}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-is\-\_\-initialized}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-is\-\_\-initialized (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__libpip_gabbec4ae2f820b13400f63cba55a53399}
+
+
+Query is Pi\-P library is already initialized. 
+
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em \textbackslash{}c} & true if it is already initialized \\
 \hline
 \end{DoxyRetVals}
 \hypertarget{group__libpip_ga9786d5aafa2a3882714c35ecc9f39a5a}{\index{libpip@{libpip}!pip\-\_\-get\-\_\-ntasks@{pip\-\_\-get\-\_\-ntasks}}
@@ -800,66 +814,6 @@ This function can be used regardless to the Pi\-P execution mode.
 \begin{DoxyReturn}{Returns}
 Return the name string of the current execution mode 
 \end{DoxyReturn}
-\hypertarget{group__libpip_ga84022f9c64f431e7d513342aeed0b61e}{\index{libpip@{libpip}!pip\-\_\-barrier\-\_\-init@{pip\-\_\-barrier\-\_\-init}}
-\index{pip\-\_\-barrier\-\_\-init@{pip\-\_\-barrier\-\_\-init}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-barrier\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-barrier\-\_\-init (
-\begin{DoxyParamCaption}
-\item[{pip\-\_\-barrier\-\_\-t $\ast$}]{barrp, }
-\item[{int}]{n}
-\end{DoxyParamCaption}
-)}}\label{group__libpip_ga84022f9c64f431e7d513342aeed0b61e}
-
-
-initialize barrier synchronization structure 
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em barrp} & pointer to a Pi\-P barrier structure \\
-\hline
-\mbox{\tt in}  & {\em n} & number of participants of this barrier synchronization\\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-Return 0 on success. Return an error code on error. 
-\end{DoxyReturn}
-
-\begin{DoxyRetVals}{Return values}
-{\em E\-I\-N\-A\-V\-L} & {\ttfamily barrp} is {\ttfamily N\-U\-L\-L} or {\ttfamily n} is invalid\\
-\hline
-\end{DoxyRetVals}
-\begin{DoxyNote}{Note}
-This barrier works on Pi\-P tasks only.
-\end{DoxyNote}
-\begin{DoxySeeAlso}{See Also}
-pip\-\_\-barrier\-\_\-wait(3), pip\-\_\-barrier\-\_\-init(3), pip\-\_\-barrier\-\_\-wait(3), 
-\end{DoxySeeAlso}
-\hypertarget{group__libpip_gaca103c9732a8e28ee8faf79ef4a69e4f}{\index{libpip@{libpip}!pip\-\_\-barrier\-\_\-wait@{pip\-\_\-barrier\-\_\-wait}}
-\index{pip\-\_\-barrier\-\_\-wait@{pip\-\_\-barrier\-\_\-wait}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-barrier\-\_\-wait}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-barrier\-\_\-wait (
-\begin{DoxyParamCaption}
-\item[{pip\-\_\-barrier\-\_\-t $\ast$}]{barrp}
-\end{DoxyParamCaption}
-)}}\label{group__libpip_gaca103c9732a8e28ee8faf79ef4a69e4f}
-
-
-wait on barrier synchronization in a busy-\/wait way 
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em barrp} & pointer to a Pi\-P barrier structure\\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-Return 0 on success. Return an error code on error. 
-\end{DoxyReturn}
-
-\begin{DoxyRetVals}{Return values}
-{\em E\-I\-N\-A\-V\-L} & {\ttfamily barrp} is {\ttfamily N\-U\-L\-L} \\
-\hline
-\end{DoxyRetVals}
-\begin{DoxySeeAlso}{See Also}
-pip\-\_\-barrier\-\_\-init(3), pip\-\_\-barrier\-\_\-init(3), 
-\end{DoxySeeAlso}
 \hypertarget{group__libpip_ga6f1045bdbf682cb2ac504f09b57b73e9}{\index{libpip@{libpip}!pip\-\_\-isa\-\_\-root@{pip\-\_\-isa\-\_\-root}}
 \index{pip\-\_\-isa\-\_\-root@{pip\-\_\-isa\-\_\-root}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-isa\-\_\-root}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-isa\-\_\-root (
@@ -921,3 +875,48 @@ check if the specified Pi\-P task is alive or not
 \begin{DoxyReturn}{Returns}
 Return true if the specified Pi\-P task or U\-L\-P is alive (i.\-e., not yet terminated) and running 
 \end{DoxyReturn}
+\hypertarget{group__libpip_gae9187ea22ecf0623fa3ecfba5337f52d}{\index{libpip@{libpip}!pip\-\_\-spawn@{pip\-\_\-spawn}}
+\index{pip\-\_\-spawn@{pip\-\_\-spawn}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-spawn}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-spawn (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{filename, }
+\item[{char $\ast$$\ast$}]{argv, }
+\item[{char $\ast$$\ast$}]{envv, }
+\item[{int}]{coreno, }
+\item[{int $\ast$}]{pipidp, }
+\item[{pip\-\_\-spawnhook\-\_\-t}]{before, }
+\item[{pip\-\_\-spawnhook\-\_\-t}]{after, }
+\item[{void $\ast$}]{hookarg}
+\end{DoxyParamCaption}
+)}}\label{group__libpip_gae9187ea22ecf0623fa3ecfba5337f52d}
+
+
+spawn a Pi\-P task (U\-L\-P A\-P\-I Version 1) 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em filename} & The executable to run as a Pi\-P task \\
+\hline
+\mbox{\tt in}  & {\em argv} & Argument(s) for the spawned Pi\-P task \\
+\hline
+\mbox{\tt in}  & {\em envv} & Environment variables for the spawned Pi\-P task \\
+\hline
+\mbox{\tt in}  & {\em coreno} & Core number for the Pi\-P task to be bound to. If {\ttfamily P\-I\-P\-\_\-\-C\-P\-U\-C\-O\-R\-E\-\_\-\-A\-S\-I\-S} is specified, then the core binding will not take place. \\
+\hline
+\mbox{\tt in,out}  & {\em pipidp} & Specify Pi\-P I\-D of the spawned Pi\-P task. If {\ttfamily P\-I\-P\-\_\-\-P\-I\-P\-I\-D\-\_\-\-A\-N\-Y} is specified, then the Pi\-P I\-D of the spawned Pi\-P task is up to the Pi\-P library and the assigned Pi\-P I\-D will be returned. \\
+\hline
+\mbox{\tt in}  & {\em before} & Just before the executing of the spawned Pi\-P task, this function is called so that file descriptors inherited from the Pi\-P root, for example, can deal with. This is only effective with the Pi\-P process mode. This function is called with the argument {\itshape hookarg} described below. \\
+\hline
+\mbox{\tt in}  & {\em after} & This function is called when the Pi\-P task terminates for the cleanup purpose. This function is called with the argument {\itshape hookarg} described below. \\
+\hline
+\mbox{\tt in}  & {\em hookarg} & The argument for the {\itshape before} and {\itshape after} function call.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error.
+\end{DoxyReturn}
+This function is to spawn a Pi\-P task. These functions are introduced to follow the programming style of conventional {\ttfamily fork} and {\ttfamily exec}. {\itshape before} function does the prologue found between the {\ttfamily fork} and {\ttfamily exec}. {\itshape after} function is to free the argument if it is {\ttfamily malloc()ed}. Note that the {\itshape before} and {\itshape after} functions are called in the different {\itshape context} from the spawned Pi\-P task. More specifically, any variables defined in the spawned Pi\-P task cannot be accessible from the {\itshape before} and {\itshape after} functions.
+
+\begin{DoxyNote}{Note}
+In theory, there is no reason to restrict for a Pi\-P task to spawn another Pi\-P task. However, the current implementation fails to do so. 
+\end{DoxyNote}

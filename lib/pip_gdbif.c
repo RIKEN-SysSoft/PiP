@@ -39,10 +39,14 @@
 #include <dlfcn.h>
 #include <elf.h>
 
+#ifdef DEBUG
+#undef DEBUG
+#endif
+//#define DEBUG
+
 #include <pip_internal.h>
 #include <pip_machdep.h>
 #include <pip_util.h>
-
 #include <pip_gdbif.h>
 
 struct pip_gdbif_root	*pip_gdbif_root = NULL;

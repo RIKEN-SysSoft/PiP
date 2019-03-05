@@ -60,21 +60,48 @@
 void pip_deadlock_inc_( void ) {
   pip_atomic_fetch_and_add( &pip_root_->ntasks_blocking, 1 );
   DBGF( "blocking:%d / ntasks:%d",
-	(int)pip_root_->ntasks_blocking, (int)pip_root_->ntasks_count+1 );
-  if( pip_root_->ntasks_blocking == pip_root_->ntasks_count+1 ) {
+	(int)pip_root_->ntasks_blocking, pip_root_->ntasks_count );
+  if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
     pip_err_mesg( "All PiP tasks are blocked and deadlocked !!" );
-    pip_abort();
+    fflush( NULL );
+    if( pip_root_ == NULL ) {
+      kill( 0, SIGHUP );
+    } else {
+      (void) killpg( pip_root_->task_root->annex->pid, SIGHUP );
+    }
   }
 }
 
 void pip_deadlock_dec_( void ) {
   pip_atomic_sub_and_fetch( &pip_root_->ntasks_blocking, 1 );
+  DBGF( "blocking:%d / ntasks:%d",
+	(int) pip_root_->ntasks_blocking, pip_root_->ntasks_count );
+}
+
+void pip_do_terminate_( pip_task_internal_t *taski, int extval ) {
+  /* call fflush() in the target context to flush out std* messages */
+  if( taski->annex->symbols.libc_fflush != NULL ) {
+    taski->annex->symbols.libc_fflush( NULL );
+  }
+  if( !taski->flag_exit ) {
+    /* mark myself as exited */
+    DBGF( "PIPID:%d[%d] extval:%d",
+	  taski->pipid, taski->task_sched->pipid, extval );
+#ifdef __W_EXITCODE
+    taski->annex->extval = __W_EXITCODE( extval, 0 );
+#else
+    taski->annex->extval = ( extval & 0xFF ) << 8;
+#endif
+    pip_gdbif_exit_( taski, extval );
+    pip_memory_barrier();
+    taski->flag_exit     = PIP_EXITED;
+  }
+  DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->extval );
 }
 
 static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   extern int pip_is_threaded_( void );
-  extern void pip_task_terminated_( pip_task_internal_t*, int );
-  extern void pip_finalize_task_( pip_task_internal_t*, int* );
+  extern void pip_finalize_task_( pip_task_internal_t* );
   pip_task_internal_t *taski;
   int err = 0;
 
@@ -109,29 +136,31 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     DBGF( "calling waitpid()   task:%p  pid:%d  pipid:%d",
 	  taski, taski->annex->pid, taski->pipid );
     pip_deadlock_inc_();
-    pid = waitpid( taski->annex->pid, &status, options );
+    while( 1 ) {
+      errno = 0;
+      pid = waitpid( taski->annex->pid, &status, options );
+      if( errno != EINTR ) break;
+    }
     pip_deadlock_dec_();
+    DBGF( "waitpid(status=0x%x)=%d (err=%d)", status, pid, errno );
 
     if( pid < 0 ) {
       err = errno;
     } else {
-      int extval;
-      if( WIFEXITED( status ) ) {
-	extval = WEXITSTATUS( status );
-	pip_task_terminated_( taski, extval );
-      } else if( WIFSIGNALED( status ) ) {
+      if( WIFSIGNALED( status ) ) {
   	int sig = WTERMSIG( status );
-	pip_warn_mesg( "PiP Task [%d] terminated by %s signal",
-		       taski->pipid, strsignal(sig) );
-	extval = sig + 128;
-	pip_task_terminated_( taski, extval );
+	pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
+		       taski->pipid, strsignal(sig), sig );
       }
+      pip_do_terminate_( taski, status );
       pip_root_->ntasks_count --;
-      DBGF( "wait(status=%x)=%d (errno=%d)", status, pid, err );
     }
   }
   DBG;
-  if( err == 0 ) pip_finalize_task_( taski, extvalp );
+  if( err == 0 ) {
+    if( extvalp != NULL ) *extvalp = taski->annex->extval;
+    pip_finalize_task_( taski );
+  }
   RETURN( err );
 }
 
@@ -166,28 +195,30 @@ static int pip_find_terminated( int *pipidp ) {
     for( i=sidx; i<pip_root_->ntasks; i++ ) {
       if( pip_root_->tasks[i].type != PIP_TYPE_NONE ) count ++;
       if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
+	DBGF( "%d terminated", pip_root_->tasks[i].pipid );
 	/* terminated task found */
 	pip_root_->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
 	pip_memory_barrier();
 	*pipidp = i;
 	sidx = i + 1;
-	goto done;
+	goto found;
       }
     }
     for( i=0; i<sidx; i++ ) {
       if( pip_root_->tasks[i].type != PIP_TYPE_NONE ) count ++;
       if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
+	DBGF( "%d terminated", pip_root_->tasks[i].pipid );
 	/* terminated task found */
 	pip_root_->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
 	pip_memory_barrier();
 	*pipidp = i;
 	sidx = i + 1;
-	goto done;
+	goto found;
       }
     }
     *pipidp = PIP_PIPID_NULL;
   }
- done:
+ found:
   /*** end lock region ***/
   pip_spin_unlock( &pip_root_->lock_tasks );
 

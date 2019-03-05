@@ -73,8 +73,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">libpip</div>  </div>
 </div><!--header-->
@@ -83,20 +81,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>the PiP library  
 <a href="#details">More...</a></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:ga7c8ad53192b379f9ed5de13d336b8240"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga7c8ad53192b379f9ed5de13d336b8240"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *buf, size_t sz)</td></tr>
-<tr class="separator:ga7c8ad53192b379f9ed5de13d336b8240"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad4e0db6c69792b3fa014e3310892a0eb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gad4e0db6c69792b3fa014e3310892a0eb">pip_init</a> (int *pipidp, int *ntasks, void **root_expp, int opts)</td></tr>
 <tr class="memdesc:gad4e0db6c69792b3fa014e3310892a0eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize the PiP library.  <a href="#gad4e0db6c69792b3fa014e3310892a0eb">More...</a><br/></td></tr>
 <tr class="separator:gad4e0db6c69792b3fa014e3310892a0eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac4654282785abb9434ce81573fdf16ed"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a> (void)</td></tr>
 <tr class="memdesc:gac4654282785abb9434ce81573fdf16ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">finalize the PiP library.  <a href="#gac4654282785abb9434ce81573fdf16ed">More...</a><br/></td></tr>
 <tr class="separator:gac4654282785abb9434ce81573fdf16ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad06585ee5975368dd4a3c5014dac1cbb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gad06585ee5975368dd4a3c5014dac1cbb">pip_task_spawn</a> (pip_spawn_program_t *progp, int coreno, int *pipidp, pip_spawn_hook_t *hookp)</td></tr>
-<tr class="memdesc:gad06585ee5975368dd4a3c5014dac1cbb"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP task (PiP API Version 2)  <a href="#gad06585ee5975368dd4a3c5014dac1cbb">More...</a><br/></td></tr>
-<tr class="separator:gad06585ee5975368dd4a3c5014dac1cbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8055012fb65183ce17ad8cd8da292d54"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga8055012fb65183ce17ad8cd8da292d54">pip_task_spawn</a> (pip_spawn_program_t *progp, int coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp)</td></tr>
+<tr class="memdesc:ga8055012fb65183ce17ad8cd8da292d54"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP task (PiP API Version 2)  <a href="#ga8055012fb65183ce17ad8cd8da292d54">More...</a><br/></td></tr>
+<tr class="separator:ga8055012fb65183ce17ad8cd8da292d54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab7a5ca6c80e876ef1ea7b42cb2008faa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gab7a5ca6c80e876ef1ea7b42cb2008faa">pip_named_export</a> (void *exp, const char *format,...)</td></tr>
 <tr class="memdesc:gab7a5ca6c80e876ef1ea7b42cb2008faa"><td class="mdescLeft">&#160;</td><td class="mdescRight">export an address of the calling PiP root or a PiP task to the others.  <a href="#gab7a5ca6c80e876ef1ea7b42cb2008faa">More...</a><br/></td></tr>
 <tr class="separator:gab7a5ca6c80e876ef1ea7b42cb2008faa"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -115,6 +108,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *b
 <tr class="memitem:ga4e715bb8c325e9acc81af0745908dc0e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a> (int *pipidp)</td></tr>
 <tr class="memdesc:ga4e715bb8c325e9acc81af0745908dc0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">get PiP ID  <a href="#ga4e715bb8c325e9acc81af0745908dc0e">More...</a><br/></td></tr>
 <tr class="separator:ga4e715bb8c325e9acc81af0745908dc0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gabbec4ae2f820b13400f63cba55a53399"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gabbec4ae2f820b13400f63cba55a53399">pip_is_initialized</a> (void)</td></tr>
+<tr class="memdesc:gabbec4ae2f820b13400f63cba55a53399"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query is PiP library is already initialized.  <a href="#gabbec4ae2f820b13400f63cba55a53399">More...</a><br/></td></tr>
+<tr class="separator:gabbec4ae2f820b13400f63cba55a53399"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9786d5aafa2a3882714c35ecc9f39a5a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a> (int *ntasksp)</td></tr>
 <tr class="memdesc:ga9786d5aafa2a3882714c35ecc9f39a5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the maximum number of the PiP tasks  <a href="#ga9786d5aafa2a3882714c35ecc9f39a5a">More...</a><br/></td></tr>
 <tr class="separator:ga9786d5aafa2a3882714c35ecc9f39a5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -151,12 +147,6 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *b
 <tr class="memitem:ga0e12c95fe7abc5c356acfd45a89ad5d8"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a> (void)</td></tr>
 <tr class="memdesc:ga0e12c95fe7abc5c356acfd45a89ad5d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">get a string of the current execution mode  <a href="#ga0e12c95fe7abc5c356acfd45a89ad5d8">More...</a><br/></td></tr>
 <tr class="separator:ga0e12c95fe7abc5c356acfd45a89ad5d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga84022f9c64f431e7d513342aeed0b61e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga84022f9c64f431e7d513342aeed0b61e">pip_barrier_init</a> (pip_barrier_t *barrp, int n)</td></tr>
-<tr class="memdesc:ga84022f9c64f431e7d513342aeed0b61e"><td class="mdescLeft">&#160;</td><td class="mdescRight">initialize barrier synchronization structure  <a href="#ga84022f9c64f431e7d513342aeed0b61e">More...</a><br/></td></tr>
-<tr class="separator:ga84022f9c64f431e7d513342aeed0b61e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaca103c9732a8e28ee8faf79ef4a69e4f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaca103c9732a8e28ee8faf79ef4a69e4f">pip_barrier_wait</a> (pip_barrier_t *barrp)</td></tr>
-<tr class="memdesc:gaca103c9732a8e28ee8faf79ef4a69e4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait on barrier synchronization in a busy-wait way  <a href="#gaca103c9732a8e28ee8faf79ef4a69e4f">More...</a><br/></td></tr>
-<tr class="separator:gaca103c9732a8e28ee8faf79ef4a69e4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6f1045bdbf682cb2ac504f09b57b73e9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a> (void)</td></tr>
 <tr class="memdesc:ga6f1045bdbf682cb2ac504f09b57b73e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if calling PiP task is PiP root or not  <a href="#ga6f1045bdbf682cb2ac504f09b57b73e9">More...</a><br/></td></tr>
 <tr class="separator:ga6f1045bdbf682cb2ac504f09b57b73e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,6 +159,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *b
 <tr class="memitem:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a> (int pipid)</td></tr>
 <tr class="memdesc:gacefb1f29e5f5d9b21309a1d041e78790"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the specified PiP task is alive or not  <a href="#gacefb1f29e5f5d9b21309a1d041e78790">More...</a><br/></td></tr>
 <tr class="separator:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d">pip_spawn</a> (char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</td></tr>
+<tr class="memdesc:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP task (ULP API Version 1)  <a href="#gae9187ea22ecf0623fa3ecfba5337f52d">More...</a><br/></td></tr>
+<tr class="separator:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <p>the PiP library </p>
@@ -261,7 +254,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *b
 
 </div>
 </div>
-<a class="anchor" id="gad06585ee5975368dd4a3c5014dac1cbb"></a>
+<a class="anchor" id="ga8055012fb65183ce17ad8cd8da292d54"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -276,6 +269,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *b
           <td></td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>coreno</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>opts</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -302,6 +301,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>pip_idstr</b> (char *b
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">progp</td><td>Program information to spawn as a PiP task </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">coreno</td><td>Core number for the PiP task to be bound to. If <code>PIP_CPUCORE_ASIS</code> is specified, then the core binding will not take place. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">opts</td><td>option flags </td></tr>
     <tr><td class="paramdir">[in,out]</td><td class="paramname">pipidp</td><td>Specify PiP ID of the spawned PiP task. If <code>PIP_PIPID_ANY</code> is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">hookp</td><td>Hook information to be invoked before and after the program invokation.</td></tr>
   </table>
@@ -604,6 +604,31 @@ When the named export cannot be found at the specified task, then this function 
 <dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
     <tr><td class="paramname">EINVAL</td><td><code>pipidp</code> is <code>NULL</code> </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="gabbec4ae2f820b13400f63cba55a53399"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_is_initialized </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Query is PiP library is already initialized. </p>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">\c</td><td>true if it is already initialized </td></tr>
   </table>
   </dd>
 </dl>
@@ -1037,82 +1062,6 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ga84022f9c64f431e7d513342aeed0b61e"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_barrier_init </td>
-          <td>(</td>
-          <td class="paramtype">pip_barrier_t *&#160;</td>
-          <td class="paramname"><em>barrp</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>n</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>initialize barrier synchronization structure </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">barrp</td><td>pointer to a PiP barrier structure </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>number of participants of this barrier synchronization</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">EINAVL</td><td><code>barrp</code> is <code>NULL</code> or <code>n</code> is invalid</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section note"><dt>Note</dt><dd>This barrier works on PiP tasks only.</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_barrier_wait(3), pip_barrier_init(3), pip_barrier_wait(3), </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="gaca103c9732a8e28ee8faf79ef4a69e4f"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_barrier_wait </td>
-          <td>(</td>
-          <td class="paramtype">pip_barrier_t *&#160;</td>
-          <td class="paramname"><em>barrp</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>wait on barrier synchronization in a busy-wait way </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">barrp</td><td>pointer to a PiP barrier structure</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">EINAVL</td><td><code>barrp</code> is <code>NULL</code> </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_barrier_init(3), pip_barrier_init(3), </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="ga6f1045bdbf682cb2ac504f09b57b73e9"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1192,6 +1141,86 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return true if the specified PiP task or ULP is alive (i.e., not yet terminated) and running </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gae9187ea22ecf0623fa3ecfba5337f52d"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_spawn </td>
+          <td>(</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>filename</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char **&#160;</td>
+          <td class="paramname"><em>argv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">char **&#160;</td>
+          <td class="paramname"><em>envv</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>coreno</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>pipidp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pip_spawnhook_t&#160;</td>
+          <td class="paramname"><em>before</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pip_spawnhook_t&#160;</td>
+          <td class="paramname"><em>after</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>hookarg</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>spawn a PiP task (ULP API Version 1) </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">filename</td><td>The executable to run as a PiP task </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">argv</td><td>Argument(s) for the spawned PiP task </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">envv</td><td>Environment variables for the spawned PiP task </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">coreno</td><td>Core number for the PiP task to be bound to. If <code>PIP_CPUCORE_ASIS</code> is specified, then the core binding will not take place. </td></tr>
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">pipidp</td><td>Specify PiP ID of the spawned PiP task. If <code>PIP_PIPID_ANY</code> is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">before</td><td>Just before the executing of the spawned PiP task, this function is called so that file descriptors inherited from the PiP root, for example, can deal with. This is only effective with the PiP process mode. This function is called with the argument <em>hookarg</em> described below. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">after</td><td>This function is called when the PiP task terminates for the cleanup purpose. This function is called with the argument <em>hookarg</em> described below. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hookarg</td><td>The argument for the <em>before</em> and <em>after</em> function call.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
+<p>This function is to spawn a PiP task. These functions are introduced to follow the programming style of conventional <code>fork</code> and <code>exec</code>. <em>before</em> function does the prologue found between the <code>fork</code> and <code>exec</code>. <em>after</em> function is to free the argument if it is <code>malloc()ed</code>. Note that the <em>before</em> and <em>after</em> functions are called in the different <em>context</em> from the spawned PiP task. More specifically, any variables defined in the spawned PiP task cannot be accessible from the <em>before</em> and <em>after</em> functions.</p>
+<dl class="section note"><dt>Note</dt><dd>In theory, there is no reason to restrict for a PiP task to spawn another PiP task. However, the current implementation fails to do so. </dd></dl>
 
 </div>
 </div>

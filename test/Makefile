@@ -46,7 +46,7 @@ PROGRAMS_TO_INSTALL = # nothing
 include $(top_srcdir)/build/rule.mk
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(PIPCPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) \
+	$(CC) $(CPPFLAGS) $(PIPCPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) \
 	-c $< -o $@
 
 all : main.o test.h

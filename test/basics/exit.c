@@ -36,49 +36,9 @@
 //#define DEBUG
 #include <test.h>
 
-int root_exp = 0;
-
-int main( int argc, char **argv ) {
-  int pipid, ntasks = 0;
-  int i;
-  int err;
-
-  if( argc > 1 ) ntasks = atoi( argv[1] );
-  if( ntasks == 0 ) ntasks = NTASKS;
-
-  set_sigsegv_watcher();
-
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
-  if( pipid == PIP_PIPID_ROOT ) {
-    for( i=0; i<ntasks; i++ ) {
-      int retval;
-
-      pipid = i;
-      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
-		       &pipid, NULL, NULL, NULL );
-      if( err ) {
-	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
-		 i, ntasks, strerror( err ) );
-	break;
-      }
-
-      if( i != pipid ) {
-	fprintf( stderr, "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
-	break;
-      }
-      DBGF( "calling pip_wait(%d)", i );
-      TESTINT( pip_wait( i, &retval ) );
-      if( retval != ( i & 0xFF ) ) {
-	fprintf( stderr, "[PIPID=%d] pip_wait() returns %d ???\n", i, retval );
-      } else {
-        fprintf( stderr, "[PIPID=%d] terminated. OK\n", i );
-      }
-    }
-    TESTINT( pip_fin() );
-
-  } else {
-    fprintf( stderr, "Hello, I am PIPID[%d/%d] ...", pipid, getpid() );
-    pip_exit( pipid );
-  }
-  return 0;
+int test_main( exp_t *exp ) {
+  int pipid;
+  TESTINT( pip_get_pipid( &pipid ) );
+  pip_exit( pipid & EXTVAL_MASK );
+  return 0;			/* dummy */
 }

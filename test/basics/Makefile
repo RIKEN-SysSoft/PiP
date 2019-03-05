@@ -39,43 +39,41 @@ LDLIBS += ../main.o
 
 DEPLIBS += ../main.o
 
-SRCS  = initfin.c yield.c barrier.c
+SRCS  = initfin.c exit.c yield.c barrier.c
 
 ##	stack.c \
 ##	export.c \
 ##	environ.c \
 ##	file.c \
-##	wait.c \
 ##	exit.c \
 ##	core.c \
 ##	numa.c \
 ##	hook.c \
-##	spawn.c \
 ##	null.c \
 ##	recursive.c \
 ##	varvars.c \
 ##	activate.c \
 ##	mutex.c \
 ##	barrier.c
-
-##	waitany.c \
-##	waitany2.c \
 ##	sigchld.c
 
-PROGRAMS  = initfin yield barrier
-
-##stack export environ file \
-##            wait exit core numa hook \
-##	    spawn null recursive varvars \
-##	    activate mutex barrier
-##	waitany waitany2 sigchld
+PROGRAMS  = initfin exit yield barrier
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-test-file:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )
+PIPCFLAGS  = -I$(PIPINCDIR) $(CFLAGS) $(PIECFLAG) $(PIPINCFLAGS)
+LDLIBS += $(PIPLDLIB) -ldl
+
+CPPFLAGS += -I..
+
+DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h ../test.h
+DEPLIBS = ../main.o
+
+%: %.c $(DEPINCS) $(DEPLIBS) $(PIPLIB) Makefile
+	$(CC) $(CPPFLAGS) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $(PIELDFLAG) \
+	$< -o $@ $(LDLIBS) -ldl
 
 post-clean-hook:
 	$(RM) -f *.E *.log

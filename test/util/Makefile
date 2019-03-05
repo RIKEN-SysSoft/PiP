@@ -41,11 +41,11 @@ SRCS	= dlmopen_count.c pip_mode.c ompnumthread.c
 
 all: $(PROGRAMS)
 
-pip_mode: pip_mode.c Makefile
+pip_mode: pip_mode.c
 
-dlmopen_count: dlmopen_count.c Makefile
+dlmopen_count: dlmopen_count.c
 
-ompnumthread: ompnumthread.c Makefile
+ompnumthread: ompnumthread.c
 	$(CC) -fopenmp -openmp -O2 $< -o$@
 
 include $(top_srcdir)/build/rule.mk
