@@ -47,3 +47,8 @@ rm -rf $RPM_BUILD_ROOT
 %if %{gpgcheck}
 /etc/pki/rpm-gpg/*
 %endif
+
+%if %{gpgcheck}
+%post
+rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-PiP
+%endif
