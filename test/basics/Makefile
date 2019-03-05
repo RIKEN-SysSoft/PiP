@@ -76,7 +76,7 @@ DEPLIBS = ../main.o
 	$< -o $@ $(LDLIBS) -ldl
 
 post-clean-hook:
-	$(RM) -f *.E *.log
+	$(RM) -f *.E
 
 check: test
 

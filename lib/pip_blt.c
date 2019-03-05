@@ -130,7 +130,7 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
 
 static void pip_change_sched( pip_task_internal_t *taski,
 			      pip_task_internal_t *schedi ) {
-
+  ASSERT( schedi == NULL );
   DBGF( "taski:%d[%d]-NTC:%d  schedi:%d[%d]-NTC:%d",
 	taski->pipid,
 	taski->task_sched->pipid,
@@ -303,7 +303,7 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
   int			i;
 
   ENTER;
-  //ASSERT( taski != schedi );
+  ASSERT( schedi->task_sched == NULL );
   DBGF( "taski:%d  schedi:%d",
 	(taski!=NULL)?taski->pipid:-1, schedi->pipid );
   /* now the stack has been switched and one may swicth to the prev. stack */
@@ -562,27 +562,19 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   DBGF( "TASKI: %d[%d]",  taski->pipid,  taski->task_sched->pipid );
   DBGF( "SCHEDI: %d[%d]", schedi->pipid, schedi->task_sched->pipid );
 
-  if( schedi != taski ) {
-    /* wake up to terminate */
-    pip_wakeup( taski );
-  }
-
-  if( ( nexti = pip_schedq_next( taski ) ) != NULL ) {
+  ASSERT( taski->task_sched == NULL );
+  nexti = pip_schedq_next( taski );
+  if( schedi != taski ) {	/* wake up to terminate */
+    pip_wakeup( taski );	/* taski will be reset by root */
+  }				/* do not touch taski after this */
+  if( nexti != NULL ) {
     DBGF( "NEXT %d[%d]", nexti->pipid, nexti->task_sched->pipid );
-    pip_sched_next( taski, nexti, NULL );
+    pip_task_sched_with_tls( nexti );
   } else {
     DBGF( "No sched task" );
     DBGF( "schedi->ntakecare:%d", (int) schedi->ntakecare );
-#ifdef AH
-    if( schedi->ntakecare > 0 ) {
-      pip_sched_next( schedi, NULL, NULL ); /* sleep */
-    }
-#else
     pip_switch_stack_and_sleep( schedi, NULL );
-#endif
   }
-  /* and termintae myself */
-  pip_force_exit( taski );
   NEVER_REACH_HERE;
 }
 
@@ -609,6 +601,7 @@ static int pip_do_resume( pip_task_internal_t *taski,
     schedi = schedi->task_sched;
   }
   ASSERT( schedi == NULL );
+  ASSERT( taski->task_sched == NULL );
   DBGF( "Sched PIPID:%d (PID:%d) takes in PIPID:%d (PID:%d)",
 	schedi->pipid, schedi->annex->pid, taski->pipid, taski->annex->pid );
 
@@ -699,6 +692,7 @@ int pip_suspend_and_enqueue( pip_task_queue_t *queue,
   pip_queue_info_t	qi;
 
   ENTER;
+  ASSERT( pip_task_->task_sched == NULL );
   nexti = pip_schedq_next( pip_task_ );
   qi.queue     = queue;
   qi.flag_lock = 1;
@@ -721,6 +715,7 @@ int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
   pip_task_queue_unlock( queue );
 #endif
 
+  ASSERT( pip_task_->task_sched == NULL );
   nexti = pip_schedq_next( pip_task_ );
   qi.queue     = queue;
   qi.flag_lock = 0;

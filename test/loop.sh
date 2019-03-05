@@ -1,6 +1,9 @@
 #!/bin/sh
 
 cmd=$0;
+PROGNAM=`basename $1`;
+FILE="loop-${PROGNAM}.log";
+TMP=.$FILE;
 
 function prt_ext() {
     case $1 in
@@ -44,10 +47,6 @@ case $# in
 	;;
 esac
 
-PROGNAM=`basename $1`;
-FILE="loop-${PROGNAM}.log";
-TMP=.$FILE;
-
 i=0;
 start=`date +%s`;
 
@@ -62,7 +61,7 @@ do
     ext=$?;
     if [ $ext != 0 ]
     then
-	killall $1 > /dev/null 2>&1;
+	#killall $1 > /dev/null 2>&1;
 	mv $TMP $FILE;
 	if [ $quiet -eq 0 ]
 	then
