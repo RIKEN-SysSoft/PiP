@@ -57,18 +57,59 @@
 #include <pip_util.h>
 #include <pip_gdbif_func.h>
 
+static void pip_dump_tasks( FILE *fp ) {
+  void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
+    char st;
+    if( taski->flag_exit ) {
+      st = 'E';
+    } else if( PIP_IS_RUNNING( taski ) ) {
+      st = 'R';
+    } else {
+      st = 'S';
+    }
+    fprintf( fp,
+	     "%d[%d] %c  SchedQL:%d  OODQ:%d  NTC:%d  StkP:%d[%d]  WU:%d  SM:%d\n",
+	     taski->pipid,
+	     (taski->task_sched!=NULL)?taski->task_sched->pipid:-1,
+	     st,
+	     (int) taski->schedq_len,
+	     (int) taski->oodq_len,
+	     (int) taski->ntakecare,
+	     (int) taski->flag_stackp,
+	     ( taski->flag_stackpp != NULL ) ?
+	     ( (pip_task_internal_t*)
+	       ( taski->flag_stackpp -
+		 offsetof(pip_task_internal_t,flag_stackpp) ) )->pipid : -1,
+	     (int) taski->flag_wakeup,
+	     (int) taski->flag_semwait );
+  }
+  int i;
+
+  fflush( NULL );
+  if( fp == NULL ) fp = stderr;
+  for( i=0; i<pip_root_->ntasks; i++ ) {
+    if( pip_root_->tasks[i].pipid != PIP_PIPID_NULL ) {
+      pip_dump_task( fp, &pip_root_->tasks[i] );
+    }
+  }
+  pip_dump_task( fp, pip_root_->task_root );
+}
+
 void pip_deadlock_inc_( void ) {
   pip_atomic_fetch_and_add( &pip_root_->ntasks_blocking, 1 );
   DBGF( "blocking:%d / ntasks:%d",
 	(int)pip_root_->ntasks_blocking, pip_root_->ntasks_count );
   if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
+    pip_dump_tasks( stderr );
     pip_err_mesg( "All PiP tasks are blocked and deadlocked !!" );
     fflush( NULL );
+#ifdef AH
     if( pip_root_ == NULL ) {
       kill( 0, SIGHUP );
     } else {
       (void) killpg( pip_root_->task_root->annex->pid, SIGHUP );
     }
+#endif
   }
 }
 

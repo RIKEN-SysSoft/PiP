@@ -81,6 +81,7 @@ static void set_timer( int timer ) {
   extern void pip_abort_all_tasks( void );
   struct sigaction sigact;
   void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
+    fflush( NULL );
     fprintf( stderr, "Timer expired !!!! (%d Sec)\n", timer );
     system( "ps uxw" );
     killpg( pid_root, SIGKILL );
@@ -311,13 +312,15 @@ int main( int argc, char **argv ) {
       extval = WEXITSTATUS( status );
     } else if( WIFSIGNALED( status ) ) {
       sig = WTERMSIG( status );
-      if( sig == SIGKILL ) { /* time out*/
-	extval = EXIT_UNRESOLVED;
-      } else if( sig == SIGHUP ) { /* timed out */
+      if( sig == SIGQUIT ) { /* an error was detected and aborted */
 	extval = EXIT_XFAIL;
-      } else if( sig == SIGINT ) { /* ^C */
+      } else if( sig == SIGKILL ) { /* timed out */
+	extval = EXIT_UNRESOLVED;
+      } else if( sig == SIGHUP ) { /* deadlock detected */
+	extval = EXIT_XFAIL;
+      } else if( sig == SIGINT ) { /* ^C was hit */
 	extval = EXIT_KILLED;
-      } else {
+      } else {			/* SEGV ? */
 	extval = EXIT_XFAIL;
       }
       fprintf( stderr,

@@ -636,7 +636,78 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * \return This function returns no error
    */
+
+  /**
+   * \brief Return the number of runnable tasks in the current
+   * scheduling domain
+   *  @{
+   *
+   * \param[out] countp pointer to the counter value returning
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c countp is \c NULL
+   */
   int pip_count_runnable_tasks( int *countp );
+  /** @}*/
+
+  /**
+   * \brief Return PIPID of a PiP task
+   *  @{
+   *
+   * \param[in] task a PiP task
+   * \param[out] countp pointer to the PIPID value returning
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c task is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   */
+  int pip_get_task_pipid( pip_task_t *task, int *pipidp );
+  /** @}*/
+
+  /**
+   * \brief Associate user data with a PiP task
+   *  @{
+   *
+   * \param[in] task PiP task. If \c NULL, then the data is associated
+   * with the current PiP task
+   * \param[in] aux Pointer to the user dat to assocate with
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   */
+  int pip_set_aux( pip_task_t *task, void *aux );
+  /** @}*/
+
+  /**
+   * \brief Retrive the user data associated with a PiP task
+   *  @{
+   *
+   * \param[in] task PiP task. If \c NULL, then the data is associated
+   * with the current PiP task
+   * \param[out] auxp The pointer to the usder data will be stored
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c domainp is \c NULL or \c auxp is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   */
+  int pip_get_aux( pip_task_t *task, void **auxp );
+  /** @}*/
+
+  /**
+   * \brief Return the task representing the scheduling domain
+   *  @{
+   *
+   * \param[out] domainp pointer to the domain task  returning
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c domainp is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   */
+  int pip_get_sched_domain( pip_task_t **domainp );
   /** @}*/
 
   /**

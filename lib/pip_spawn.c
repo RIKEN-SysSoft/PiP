@@ -961,9 +961,9 @@ void pip_abort( void ) {
 
   fflush( NULL );
   if( pip_root_ == NULL ) {
-    kill( 0, SIGKILL );
+    kill( 0, SIGQUIT );
   } else {
-    (void) killpg( pip_root_->task_root->annex->pid, SIGKILL );
+    (void) killpg( pip_root_->task_root->annex->pid, SIGQUIT );
   }
 }
 

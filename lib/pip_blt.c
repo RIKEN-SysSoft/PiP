@@ -41,9 +41,6 @@
 #include <pip_internal.h>
 #include <pip_blt.h>
 
-extern void pip_deadlock_inc_( void );
-extern void pip_deadlock_dec_( void );
-
 #ifdef DEBUG
 #define QUEUE_DUMP( queue, len )			\
   if( PIP_TASKQ_ISEMPTY( queue ) ) {			\
@@ -51,10 +48,10 @@ extern void pip_deadlock_dec_( void );
   } else {						\
     pip_task_t *task;					\
     char msg[128];					\
-    int i = 0;						\
+    int iii = 0;					\
     PIP_TASKQ_FOREACH( queue, task ) {			\
       pip_task_queue_brief( task, msg, sizeof(msg) );	\
-      DBGF( "Q(%d:%d): %s", i++, len, msg );		\
+      DBGF( "Q(%d:%d): %s", iii++, len, msg );		\
     }							\
   }
 
@@ -65,11 +62,11 @@ extern void pip_deadlock_dec_( void );
   } else {						\
     pip_task_t *task;					\
     char msg[128];					\
-    int i = 0, c;					\
+    int iii = 0, c;					\
     pip_task_queue_count( queue, &c );			\
     PIP_TASKQ_FOREACH( &queue->queue, task ) {		\
       pip_task_queue_brief( task, msg, sizeof(msg) );	\
-      DBGF( "TQ(%d:%d): %s", i++, c, msg );		\
+      DBGF( "TQ(%d:%d): %s", iii++, c, msg );		\
     }							\
   }
 
@@ -100,7 +97,9 @@ static void pip_force_exit( pip_task_internal_t *taski ) {
     pthread_exit( NULL );
   } else {			/* process mode */
     ASSERT( taski->annex->pid != pip_gettid() );
-    exit( taski->annex->extval );
+    /* there is something wrong in exit() */
+    /* must be investigate !!!!!! */
+    _exit( taski->annex->extval );
   }
   NEVER_REACH_HERE;
 }
@@ -118,6 +117,7 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
 	(int) taski->ntakecare, taski->flag_semwait,
 	taski->flag_exit );
   taski->flag_wakeup = 1;
+  pip_memory_barrier();
   if( taski->flag_semwait ) {
     taski->flag_semwait = 0;
     /* not to call sem_post() more than once per blocking */
@@ -287,14 +287,18 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
     DBGF( "flag_wakeup:%d  flag_exit:%d",
 	  taski->flag_wakeup, taski->flag_exit );
     taski->flag_semwait = 1;
+    pip_memory_barrier();
     while( !taski->flag_wakeup && !taski->flag_exit ) {
       errno = 0;
       if( sem_wait( &taski->annex->sleep ) == 0 ) continue;
-      if( errno != EINTR ) ASSERT( errno );
+      ASSERT( errno != EINTR );
     }
     taski->flag_semwait = 0;
+    pip_memory_barrier();
     RETURNV;
   }
+  extern void pip_deadlock_inc_( void );
+  extern void pip_deadlock_dec_( void );
 
   pip_sleep_args_t 	*args = (pip_sleep_args_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
@@ -359,6 +363,7 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
     }
     pip_deadlock_dec_();
     schedi->flag_wakeup = 0;
+    pip_memory_barrier();
   }
   pip_change_sched( schedi, schedi );
 
@@ -503,7 +508,6 @@ static void pip_sched_next( pip_task_internal_t *taski,
   volatile int 		flag_jump = 0;	/* must be volatile */
 
   ENTER;
-  PIP_SUSPEND( taski );
 
 #ifdef PIP_USE_STATIC_CTX
   ctxp = taski->ctx_static;
@@ -538,25 +542,19 @@ static void pip_sched_next( pip_task_internal_t *taski,
   pip_stack_unprotect_prevt( taski );
 }
 
-static void pip_task_terminate( pip_task_internal_t *taski, int extval ) {
-  extern void pip_do_terminate_( pip_task_internal_t*, int );
-  int ntc;
-
-  pip_do_terminate_( taski, extval );
-  ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
-  ASSERT( ntc < 0 );
-  if( ntc == 0 ) pip_wakeup( taski->task_sched );
-  DBGF( "%d[%d] - NTC:%d", taski->pipid, taski->task_sched->pipid, ntc );
-}
-
 void pip_do_exit( pip_task_internal_t *taski, int extval ) {
+  extern void pip_do_terminate_( pip_task_internal_t*, int );
   pip_task_internal_t	*schedi, *nexti;
+  int 			ntc;
   /* this is called when 1) return from main (or func) function */
   /*                     2) pip_exit() is explicitly called     */
   ENTER;
   DBGF( "PIPID:%d", taski->pipid );
 
-  pip_task_terminate( taski, extval );
+  pip_do_terminate_( taski, extval );
+  ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
+  ASSERT( ntc < 0 );
+
   schedi = taski->task_sched;
   ASSERT( schedi == NULL );
   DBGF( "TASKI: %d[%d]",  taski->pipid,  taski->task_sched->pipid );
@@ -570,10 +568,14 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   if( nexti != NULL ) {
     DBGF( "NEXT %d[%d]", nexti->pipid, nexti->task_sched->pipid );
     pip_task_sched_with_tls( nexti );
-  } else {
-    DBGF( "No sched task" );
+  } else if( schedi->ntakecare > 0 ||
+	     schedi != taski ) { /* schedi must not exit in this case */
+    DBGF( "No sched tas but there are some tasks to take carek" );
     DBGF( "schedi->ntakecare:%d", (int) schedi->ntakecare );
     pip_switch_stack_and_sleep( schedi, NULL );
+  } else {
+    DBGF( "No tasks to take care and terminate the scheduling task" );
+    pip_force_exit( schedi );
   }
   NEVER_REACH_HERE;
 }
@@ -581,6 +583,7 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
 static void pip_do_suspend( pip_task_internal_t *taski,
 			    pip_task_internal_t *nexti,
 			    pip_queue_info_t	*qip ) {
+  PIP_SUSPEND( taski );
   pip_sched_next( taski, nexti, qip );
 }
 
@@ -626,19 +629,17 @@ void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len ) {
 	    taski->pipid, taski->task_sched->pipid, taski->state );
 }
 
-int pip_get_sched_task_id( int *pipidp ) {
-  if( pipidp                == NULL ) RETURN( EINVAL );
-  if( pip_task_             == NULL ) RETURN( EPERM  );
-  if( pip_task_->task_sched == NULL ) RETURN( ENOENT );
-  *pipidp = pip_task_->task_sched->pipid;
+int pip_get_task_pipid( pip_task_t *task, int *pipidp ) {
+  if( task      == NULL ) RETURN( EINVAL );
+  if( pip_task_ == NULL ) RETURN( EPERM  );
+  if( pipidp != NULL ) *pipidp = PIP_TASKI(task)->pipid;
   RETURN( 0 );
 }
 
-int pip_get_sched_task( pip_task_t **taskp ) {
-  if( taskp                 == NULL ) RETURN( EINVAL );
-  if( pip_task_             == NULL ) RETURN( EPERM  );
-  if( pip_task_->task_sched == NULL ) RETURN( ENOENT );
-  *taskp = PIP_TASKQ( pip_task_->task_sched );
+int pip_get_sched_domain( pip_task_t **domainp ) {
+  if( domainp    == NULL ) RETURN( EINVAL );
+  if( pip_task_  == NULL ) RETURN( EPERM  );
+  *domainp = PIP_TASKQ( pip_task_->task_sched );
   RETURN( 0 );
 }
 
@@ -861,14 +862,29 @@ int pip_yield_to( pip_task_t *task ) {
   RETURN( 0 );
 }
 
-void pip_set_aux( pip_task_t *task, void *aux ) {
-  pip_task_internal_t 	*taski= PIP_TASKI( task );
-  if( task == NULL ) taski = pip_task_;
+int pip_set_aux( pip_task_t *task, void *aux ) {
+  pip_task_internal_t 	*taski;
+
+  if( pip_task_ == NULL ) RETURN( EPERM  );
+  if( task == NULL ) {
+    taski = pip_task_;
+  } else {
+    taski = PIP_TASKI( task );
+  }
   taski->annex->aux = aux;
+  RETURN( 0 );
 }
 
-void pip_get_aux( pip_task_t *task, void **auxp ) {
-  pip_task_internal_t 	*taski= PIP_TASKI( task );
-  if( task == NULL ) taski = pip_task_;
+int pip_get_aux( pip_task_t *task, void **auxp ) {
+  pip_task_internal_t 	*taski;
+
+  if( pip_task_ == NULL ) RETURN( EPERM  );
+  if( auxp      == NULL ) RETURN( EINVAL );
+  if( task == NULL ) {
+    taski = pip_task_;
+  } else {
+    taski = PIP_TASKI( task );
+  }
   *auxp = taski->annex->aux;
+  RETURN( 0 );
 }
