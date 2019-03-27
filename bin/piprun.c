@@ -35,21 +35,23 @@
 
 /** \addtogroup piprun piprun
  *
- * \brief command to run programs using PiP
+ * \brief run programs as PiP tasks
  *
  * \section synopsis SYNOPSIS
  *
- *	\c \b piprun [-n &lt;N&gt;] &lt;program&gt; ...
+ *	\c \b piprun [OPTIONS] &lt;program&gt; ... [ :: ... ]
  *
  * \section description DESCRIPTION
- * \b Run a program as a PiP task. If \b -n &lt;N&gt; is specified, then
- * \b N PiP tasks are created and run.
+ * \b Run a program as PiP task(s).  Mutiple programs can be specified
+ * by separating them with '::'.
  *
- *
- * \section environment ENVIRONMENT
- *
- * \subsection PIP_MODE PIP_MODE
+ * -n \b &lt;N&gt; number of tasks\n
+ * -f \b &lt;FUNC&gt; function name to start\n
+ * -c \b &lt;CORE&gt; specify the CPU core number to bind core(s)\n
+ * -r core binding in the round-robin fashion\n
  */
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #define _GNU_SOURCE
 #include <sched.h>
@@ -188,7 +190,8 @@ int main( int argc, char **argv ) {
 	  spawn->argc ++;
 	}
 	break;
-      } else if( strcmp( argv[i], "-h" ) == 0 ) {
+      } else if( strcmp( argv[i], "-h"     ) == 0 ||
+		 strcmp( argv[i], "--help" ) == 0  ) {
 	print_usage();
       } else if( strcmp( argv[i], "-n" ) == 0 ) {
 	if( argv[i+1] == NULL ||
@@ -197,7 +200,7 @@ int main( int argc, char **argv ) {
 	  print_usage();
 	}
 	i ++;
-      } else if( strcmp( argv[i], "-c" ) == 0 && ncores > 0 ) {
+      } else if( strcmp( argv[i], "-c" ) == 0 ) {
 	if( argv[i+1] == NULL || !isdigit( *argv[i+1] ) ) {
 	  print_usage();
 	}
@@ -280,3 +283,5 @@ int main( int argc, char **argv ) {
   free_spawn( head );
   return err;
 }
+
+#endif
