@@ -52,28 +52,85 @@
  */
 
 #define _GNU_SOURCE
-#include <sys/wait.h>
 #include <sched.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <errno.h>
 #include <pip.h>
 
+//#define DEBUG
+
+#define COREBIND_RR	(-100)
+
+typedef struct arg {
+  struct arg	*next;
+  char		*arg;
+} arg_t;
+
+typedef struct spawn {
+  struct spawn	*next;
+  int		coreno;
+  int		ntasks;
+  int		argc;
+  char		*func;
+  arg_t		*args;
+  arg_t		*tail;
+} spawn_t;
+
 static void print_usage( void ) {
-  fprintf( stderr, "%s [-e] [-n N] [-c C] <prog> ...\n", PROGRAM );
+  fprintf( stderr,
+	   "%s [-n N] [-c C] [-f F] A.OUT ... "
+	   "{ :: [-n N] [-c C] [-f F] B.OUT ... } \n",
+	   PROGRAM );
   exit( 1 );
 }
 
 static int count_cpu( void ) {
   cpu_set_t cpuset;
-  int i, c = -1;
+  int c = -1;
 
   if( sched_getaffinity( getpid(), sizeof(cpuset), &cpuset ) == 0 ) {
-    for( i=0, c=0; i<sizeof(cpuset)*8; i++ ) {
-      if( CPU_ISSET( i, &cpuset ) ) c++;
-    }
+    c = CPU_COUNT( &cpuset );
   }
   return c;
+}
+
+arg_t *new_arg( char *a ) {
+  arg_t	*arg = (arg_t*) malloc( sizeof( arg_t ) );
+  if( arg == NULL ) {
+    fprintf( stderr, "Not enough memory (arg)\n" );
+    exit( 9 );
+  }
+  memset( arg, 0, sizeof( arg_t ) );
+  arg->arg = a;
+  return arg;
+}
+
+spawn_t *new_spawn( void ) {
+  spawn_t *spawn = (spawn_t*) malloc( sizeof( spawn_t ) );
+  if( spawn == NULL ) {
+    fprintf( stderr, "Not enough memory (spawn)\n" );
+    exit( 9 );
+  }
+  memset( spawn, 0, sizeof( spawn_t ) );
+  spawn->ntasks = 1;
+  spawn->coreno = PIP_CPUCORE_ASIS;
+  return spawn;
+}
+
+void free_arg( arg_t *arg ) {
+  if( arg == NULL ) return;
+  free_arg( arg->next );
+  free( arg );
+}
+
+void free_spawn( spawn_t *spawn ) {
+  if( spawn == NULL ) return;
+  free_spawn( spawn->next );
+  free_arg( spawn->args->next );
+  free( spawn );
 }
 
 static int nth_core( int coreno ) {
@@ -92,80 +149,123 @@ static int nth_core( int coreno ) {
 }
 
 int main( int argc, char **argv ) {
+  spawn_t	*spawn, *head, *tail;
+  arg_t		*arg;
+  char		**nargv = NULL;
   int pipid  = 0;
-  int ntasks = 1;
   int opts   = 0;
+  int ntasks;
+  int argc_max;
   int ncores = count_cpu();
-  int coreno = PIP_CPUCORE_ASIS;
-  int i, k;
-  int err    = 0;
+  int i, err = 0;
 
   if( argc < 2 || argv[1] == NULL ) print_usage();
 
-  for( i=1; argv[i]!=NULL && *argv[i]=='-'; i++ ) {
-    if( strcmp( argv[i], "-h" ) == 0 ) {
-      print_usage();
-    } else if( strcmp( argv[i], "-n" ) == 0 ) {
-      if( argv[i+1] == NULL || ( ntasks = atoi( argv[++i] ) ) == 0 ) {
+  head = tail = NULL;
+  i = 1;
+  for( ; i<argc; i++ ) {
+    spawn = new_spawn();
+    if( head == NULL ) head = spawn;
+    if( tail != NULL ) tail->next = spawn;
+    tail = spawn;
+    for( ; i<argc; i++ ) {
+      if( strcmp( argv[i], "::" ) == 0 ) {
+	if( spawn->args == NULL ) print_usage();
+	break;
+      } else if( *argv[i] != '-' ) {
+	if( access( argv[i], X_OK ) ) {
+	  err = errno;
+	  fprintf( stderr, "Unable to execute '%s'\n", argv[i] );
+	  goto error;
+	}
+	spawn->args = spawn->tail = new_arg( argv[i++] );
+	spawn->argc = 1;
+	for( ; i<argc; i++ ) {
+	  if( strcmp( argv[i], "::" ) == 0 ) break;
+	  arg = new_arg( argv[i] );
+	  spawn->tail->next = arg;
+	  spawn->tail = arg;
+	  spawn->argc ++;
+	}
+	break;
+      } else if( strcmp( argv[i], "-h" ) == 0 ) {
+	print_usage();
+      } else if( strcmp( argv[i], "-n" ) == 0 ) {
+	if( argv[i+1] == NULL ||
+	    !isdigit( *argv[i+1] ) ||
+	    ( spawn->ntasks = atoi( argv[i+1] ) ) == 0 ) {
+	  print_usage();
+	}
+	i ++;
+      } else if( strcmp( argv[i], "-c" ) == 0 && ncores > 0 ) {
+	if( argv[i+1] == NULL || !isdigit( *argv[i+1] ) ) {
+	  print_usage();
+	}
+	spawn->coreno = atoi( argv[++i] ) % ncores;
+      } else if( strcmp( argv[i], "-b" ) == 0 || /* deprecated option */
+		 strcmp( argv[i], "-r" ) == 0 ) {
+	spawn->coreno = COREBIND_RR;
+      } else if( strcmp( argv[i], "-f" ) == 0 && argv[i+1] != NULL ) {
+	spawn->func = argv[++i];
+      } else {
 	print_usage();
       }
-    } else if( strcmp( argv[i], "-c" ) == 0 && ncores > 0 ) {
-      coreno = atoi( argv[++i] ) % ncores;
-    } else if( strcmp( argv[i], "-b" ) == 0 ) {
-      coreno = -100;
-    } else {
-      print_usage();
     }
   }
-  k = i;
-  if( ( err = pip_init( &pipid, &ntasks, NULL, opts ) ) != 0 ) {
+
+#ifdef DEBUG
+  for( spawn = head, i = 0; spawn != NULL; spawn = spawn->next ) {
+    printf( "[%d] ntasks:%d coreno:%d argc:%d func:'%s'\n",
+	    i++, spawn->ntasks, spawn->coreno, spawn->argc, spawn->func );
+    for( arg = spawn->args, j = 0; arg != NULL; arg = arg->next ) {
+      printf( "    (%d) '%s'\n", j++, arg->arg );
+    }
+  }
+#endif
+
+  ntasks   = 0;
+  argc_max = 0;
+  for( spawn = head; spawn != NULL; spawn = spawn->next ) {
+    ntasks += spawn->ntasks;
+    argc_max = ( spawn->argc > argc_max ) ? spawn->argc : argc_max;
+  }
+  argc_max ++;
+  nargv = (char**) malloc( sizeof( char* ) * argc_max );
+  if( nargv == NULL ) {
+    fprintf( stderr, "Not enough memory (nargv)\n" );
+    err = ENOMEM;
+    goto error;
+  }
+
+  if( ( err = pip_init( NULL, &ntasks, NULL, opts ) ) != 0 ) {
     fprintf( stderr, "pip_init()=%d\n", err );
-  } else {
+    return err;
+  }
+  for( spawn = head; spawn != NULL; spawn = spawn->next ) {
     int c;
-    for( i=0; i<ntasks; i++ ) {
-      if( coreno == -100 ) {
+
+    for( arg = spawn->args, i = 0; arg != NULL; arg = arg->next ) {
+      nargv[i++] = arg->arg;
+    }
+    for( i=0; i<spawn->ntasks; i++ ) {
+      if( spawn->coreno == COREBIND_RR ) {
 	c = i % ncores;
       } else {
-	c = coreno;
+	c = spawn->coreno;
       }
-      if( ( c = nth_core( c ) ) < 0 ) {
+      if( ( c = nth_core( spawn->coreno ) ) < 0 ) {
 	c = PIP_CPUCORE_ASIS;
       }
       pipid = i;
-      err = pip_spawn( argv[k],
-		       &argv[k],
+      err = pip_spawn( nargv[0],
+		       nargv,
 		       NULL,
 		       c,
 		       &pipid,
 		       NULL,
 		       NULL,
 		       NULL );
-      if( err ) {
-	int j;
-
-	if( err == ENOENT ) {
-	  fprintf( stderr, "'%s' not found\n", argv[k] );
-	} else {
-	  fprintf( stderr, "pip_spawn(%s)=%d\n", argv[1], err );
-	}
-	for( j=0; j<i; j++ ) {
-	  int status, mode, exst;
-	  pip_wait( i, &status );
-	  pip_get_mode( &mode );
-	  if( mode & PIP_MODE_PROCESS ) {
-	    if( WIFEXITED( status ) && ( exst = WEXITSTATUS( status ) ) > 0 ) {
-	      fprintf( stderr, "PIPID[%d] exited with %d\n", i, exst );
-	    } else if( WIFSIGNALED( status ) ) {
-	      int sig = WTERMSIG( status );
-	      fprintf( stderr,
-		       "PIPID[%d] signaled (%s)\n",
-		       i,
-		       strsignal(sig) );
-	    }
-	  }
-	}
-	goto error;
-      }
+      if( err ) pip_abort();
     }
     for( i=0; i<ntasks; i++ ) {
       int status;
@@ -175,5 +275,7 @@ int main( int argc, char **argv ) {
     }
   }
  error:
+  if( nargv != NULL ) free( nargv );
+  free_spawn( head );
   return err;
 }

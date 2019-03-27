@@ -818,6 +818,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
+   * \brief abort all PiP tasks and root
+   *  @{
+   * \return Return true nothing
+   */
+  void pip_abort( void );
+  /** @}*/
+
+  /**
    * \brief spawn a PiP task (ULP API Version 1)
    *  @{
    * \param[in] filename The executable to run as a PiP task
