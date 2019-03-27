@@ -156,7 +156,7 @@ int main( int argc, char **argv ) {
   int opts   = 0;
   int ntasks;
   int argc_max;
-  int ncores = count_cpu();
+  int cn, ncores = count_cpu();
   int i, err = 0;
 
   if( argc < 2 || argv[1] == NULL ) print_usage();
@@ -241,6 +241,7 @@ int main( int argc, char **argv ) {
     fprintf( stderr, "pip_init()=%d\n", err );
     return err;
   }
+  cn = 0;
   for( spawn = head; spawn != NULL; spawn = spawn->next ) {
     int c;
 
@@ -249,7 +250,7 @@ int main( int argc, char **argv ) {
     }
     for( i=0; i<spawn->ntasks; i++ ) {
       if( spawn->coreno == COREBIND_RR ) {
-	c = i % ncores;
+	c = ( cn++ ) % ncores;
       } else {
 	c = spawn->coreno;
       }
