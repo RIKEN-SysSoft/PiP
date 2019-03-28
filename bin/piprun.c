@@ -83,9 +83,13 @@ typedef struct spawn {
 
 static void print_usage( void ) {
   fprintf( stderr,
-	   "%s [-n N] [-c C] [-f F] A.OUT ... "
+	   "Usage: %s [-n N] [-c C] [-f F] A.OUT ... "
 	   "{ :: [-n N] [-c C] [-f F] B.OUT ... } \n",
 	   PROGRAM );
+  fprintf( stderr, "\t-n N\t: Number of PiP tasks (default is 1)\n" );
+  fprintf( stderr, "\t-f F\t: Function name in the program to start\n" );
+  fprintf( stderr, "\t-c C\t: CPU core number to bind PiP task(s), or\n" );
+  fprintf( stderr, "\t-r\t: CPU cores are bound in the round-robin fashion\n");
   exit( 1 );
 }
 
@@ -99,7 +103,7 @@ static int count_cpu( void ) {
   return c;
 }
 
-arg_t *new_arg( char *a ) {
+static arg_t *new_arg( char *a ) {
   arg_t	*arg = (arg_t*) malloc( sizeof( arg_t ) );
   if( arg == NULL ) {
     fprintf( stderr, "Not enough memory (arg)\n" );
@@ -110,7 +114,7 @@ arg_t *new_arg( char *a ) {
   return arg;
 }
 
-spawn_t *new_spawn( void ) {
+static spawn_t *new_spawn( void ) {
   spawn_t *spawn = (spawn_t*) malloc( sizeof( spawn_t ) );
   if( spawn == NULL ) {
     fprintf( stderr, "Not enough memory (spawn)\n" );
@@ -122,13 +126,12 @@ spawn_t *new_spawn( void ) {
   return spawn;
 }
 
-void free_arg( arg_t *arg ) {
-  if( arg == NULL ) return;
-  free_arg( arg->next );
-  free( arg );
-}
-
-void free_spawn( spawn_t *spawn ) {
+static void free_spawn( spawn_t *spawn ) {
+  void free_arg( arg_t *arg ) {
+    if( arg == NULL ) return;
+    free_arg( arg->next );
+    free( arg );
+  }
   if( spawn == NULL ) return;
   free_spawn( spawn->next );
   free_arg( spawn->args->next );
@@ -137,17 +140,14 @@ void free_spawn( spawn_t *spawn ) {
 
 static int nth_core( int coreno ) {
   cpu_set_t cpuset;
-  int i;
+  int i, c = 0;
 
   if( sched_getaffinity( getpid(), sizeof(cpuset), &cpuset ) == 0 ) {
-    for( i=0; i<sizeof(cpuset)*8; i++ ) {
-      if( CPU_ISSET( i, &cpuset ) ) {
-	if( coreno == 0 ) return i;
-	coreno --;
-      }
+    for( i=0; i<coreno+1; i++ ) {
+      if( CPU_ISSET( i, &cpuset ) ) c = i;
     }
   }
-  return -1;
+  return c;
 }
 
 int main( int argc, char **argv ) {
@@ -229,6 +229,9 @@ int main( int argc, char **argv ) {
   ntasks   = 0;
   argc_max = 0;
   for( spawn = head; spawn != NULL; spawn = spawn->next ) {
+    if( spawn->args == NULL || spawn->args->arg == NULL ) {
+      print_usage();
+    }
     ntasks += spawn->ntasks;
     argc_max = ( spawn->argc > argc_max ) ? spawn->argc : argc_max;
   }
@@ -251,14 +254,14 @@ int main( int argc, char **argv ) {
     for( arg = spawn->args, i = 0; arg != NULL; arg = arg->next ) {
       nargv[i++] = arg->arg;
     }
+    nargv[i] = NULL;
     for( i=0; i<spawn->ntasks; i++ ) {
-      if( spawn->coreno == COREBIND_RR ) {
-	c = ( cn++ ) % ncores;
-      } else {
+      if( spawn->coreno == PIP_CPUCORE_ASIS ) {
 	c = spawn->coreno;
-      }
-      if( ( c = nth_core( spawn->coreno ) ) < 0 ) {
-	c = PIP_CPUCORE_ASIS;
+      } else if( spawn->coreno == COREBIND_RR ) {
+	c = nth_core( ( cn++ ) % ncores );
+      } else {
+	c = nth_core( ( spawn->coreno + i ) % ncores );
       }
       pipid = i;
       err = pip_spawn( nargv[0],
