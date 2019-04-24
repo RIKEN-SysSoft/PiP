@@ -24,15 +24,14 @@ $ git clone https://github.com/RIKEN-SysSoft/PiP-glibc.git
   libraries. To avoid these issues, we recommend you to have our
   patched GLIBC.
 
-  Here is the way to build the patched GLIBC.  Note that you do not
-  have to use sudo below, if you already have enough privilege
-  to write <GLIBC_INSTALL_DIR>.  Also, you should NOT specify "/", "/usr"
-  or "/usr/local" as <GLIBC_INSTALL_DIR>.
+  Here is the way to build the patched GLIBC.
+  Note that You should NOT specify "/", "/usr" or "/usr/local"
+  as <GLIBC_INSTALL_DIR>.
 
 $ mkdir PiP-glibc.build
 $ cd PiP-glibc.build
 $ ../PiP-glibc/build.sh -b <GLIBC_INSTALL_DIR>
-$ sudo ../PiP-glibc/build.sh -i
+$ ../PiP-glibc/build.sh -i
 
 * Building PiP
   At the PiP configuration, you must specify the installed GLIBC.
@@ -40,7 +39,8 @@ $ sudo ../PiP-glibc/build.sh -i
 $ git clone https://github.com/RIKEN-SysSoft/PiP.git
 $ cd PiP
 $ ./configure --prefix=<PIP_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib
-$ sudo make install
+$ make
+$ make install
 
   After the successful PiP installation, you must do the following,
 
@@ -56,4 +56,4 @@ $ <PIP_INSTALL_DIR>/bin/piplnlibs
 $ git clone https://github.com/RIKEN-SysSoft/PiP-gdb
 $ cd PiP-gdb
 $ ./build.sh -b --prefix=<PIP_GDB_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib --with-pip=<PIP_INSTALL_DIR>
-$ sudo ./build.sh -i
+$ ./build.sh -i
