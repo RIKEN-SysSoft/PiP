@@ -35,7 +35,7 @@ After installing PiP, PiP-gdb can be installed too.
 
 ### Installation from the source code.
 
-* see the [INSTALL](INSTALL) file
+* see the [INSTALL.md](INSTALL.md) file
 
 ### Installation from the binary packages
 
