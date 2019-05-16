@@ -28,6 +28,7 @@ see the [LICENSE](LICENSE) file for details.
 * [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
 * [PiP](https://github.com/RIKEN-SysSoft/PiP) - Process in Process (this package)
 * [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
+* [MPICH over PIP environment](https://github.com/pmodels/mpich-pip/wiki) - patched MPICH for PiP
 
 Before installing PiP, we strongly recommend you to install PiP-glibc.
 
@@ -35,7 +36,8 @@ After installing PiP, PiP-gdb can be installed too.
 
 ### Installation from the source code.
 
-* see the [INSTALL.md](INSTALL.md) file
+* PiP-glibc, PiP and PiP-gdb - see the [INSTALL.md](INSTALL.md) file
+* MPICH over PIP environment - see the [mpich-pip official wiki](https://github.com/pmodels/mpich-pip/wiki)
 
 ### Installation from the binary packages
 
