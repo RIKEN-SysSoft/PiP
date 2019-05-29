@@ -1,19 +1,25 @@
-.TH "piprun" 1 "Sat Feb 16 2019" "PiP - Process-in-Process" \" -*- nroff -*-
+.TH "piprun" 1 "Thu May 30 2019" "PiP - Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
 piprun \- 
-command to run programs using PiP  
+run programs as PiP tasks  
 
 .SH "SYNOPSIS"
 .PP
-\fC\fBpiprun\fP \fP[-n <N>] <program> \&.\&.\&.
+\fC\fBpiprun\fP \fP[OPTIONS] <program> \&.\&.\&. [ :: \&.\&.\&. ]
 .SH "DESCRIPTION"
 .PP
-\fBRun\fP a program as a PiP task\&. If \fB-n\fP <N> is specified, then \fBN\fP PiP tasks are created and run\&.
-.SH "ENVIRONMENT"
+\fBRun\fP a program as PiP task(s)\&. Mutiple programs can be specified by separating them with '::'\&.
 .PP
-.SS "PIP_MODE"
+-n \fB<N>\fP number of tasks
+.br
+-f \fB<FUNC>\fP function name to start
+.br
+-c \fB<CORE>\fP specify the CPU core number to bind core(s)
+.br
+-r core binding in the round-robin fashion
+.br
 
 .SH "Author"
 .PP 

@@ -123,9 +123,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:gab603f68c1ce972a5f3bfb8c95fcfb555"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a> (int *modep)</td></tr>
 <tr class="memdesc:gab603f68c1ce972a5f3bfb8c95fcfb555"><td class="mdescLeft">&#160;</td><td class="mdescRight">get the PiP execution mode  <a href="#gab603f68c1ce972a5f3bfb8c95fcfb555">More...</a><br/></td></tr>
 <tr class="separator:gab603f68c1ce972a5f3bfb8c95fcfb555"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf9be37d927121b9327b5fca2417ccec2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaf9be37d927121b9327b5fca2417ccec2">pip_exit</a> (int retval)</td></tr>
-<tr class="memdesc:gaf9be37d927121b9327b5fca2417ccec2"><td class="mdescLeft">&#160;</td><td class="mdescRight">terminate PiP task or ULP  <a href="#gaf9be37d927121b9327b5fca2417ccec2">More...</a><br/></td></tr>
-<tr class="separator:gaf9be37d927121b9327b5fca2417ccec2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga839952b6edf6edc90d92c06c7cc6784b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga839952b6edf6edc90d92c06c7cc6784b">pip_exit</a> (int retval)</td></tr>
+<tr class="memdesc:ga839952b6edf6edc90d92c06c7cc6784b"><td class="mdescLeft">&#160;</td><td class="mdescRight">terminate PiP task or ULP  <a href="#ga839952b6edf6edc90d92c06c7cc6784b">More...</a><br/></td></tr>
+<tr class="separator:ga839952b6edf6edc90d92c06c7cc6784b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga3adad6a3e2311a46b2bfdd9d9062811b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b">pip_wait</a> (int pipid, int *retval)</td></tr>
 <tr class="memdesc:ga3adad6a3e2311a46b2bfdd9d9062811b"><td class="mdescLeft">&#160;</td><td class="mdescRight">wait for the termination of a PiP task  <a href="#ga3adad6a3e2311a46b2bfdd9d9062811b">More...</a><br/></td></tr>
 <tr class="separator:ga3adad6a3e2311a46b2bfdd9d9062811b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -159,6 +159,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a> (int pipid)</td></tr>
 <tr class="memdesc:gacefb1f29e5f5d9b21309a1d041e78790"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the specified PiP task is alive or not  <a href="#gacefb1f29e5f5d9b21309a1d041e78790">More...</a><br/></td></tr>
 <tr class="separator:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga49a4a9ee014ffdaf0c26df18adf965ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga49a4a9ee014ffdaf0c26df18adf965ad">pip_abort</a> (void)</td></tr>
+<tr class="memdesc:ga49a4a9ee014ffdaf0c26df18adf965ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">abort all PiP tasks and root  <a href="#ga49a4a9ee014ffdaf0c26df18adf965ad">More...</a><br/></td></tr>
+<tr class="separator:ga49a4a9ee014ffdaf0c26df18adf965ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d">pip_spawn</a> (char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</td></tr>
 <tr class="memdesc:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP task (ULP API Version 1)  <a href="#gae9187ea22ecf0623fa3ecfba5337f52d">More...</a><br/></td></tr>
 <tr class="separator:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -738,12 +741,12 @@ When the named export cannot be found at the specified task, then this function 
 
 </div>
 </div>
-<a class="anchor" id="gaf9be37d927121b9327b5fca2417ccec2"></a>
+<a class="anchor" id="ga839952b6edf6edc90d92c06c7cc6784b"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int pip_exit </td>
+          <td class="memname">void pip_exit </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>retval</em></td><td>)</td>
@@ -1141,6 +1144,25 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return true if the specified PiP task or ULP is alive (i.e., not yet terminated) and running </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga49a4a9ee014ffdaf0c26df18adf965ad"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void pip_abort </td>
+          <td>(</td>
+          <td class="paramtype">void&#160;</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>abort all PiP tasks and root </p>
+<dl class="section return"><dt>Returns</dt><dd>Return true nothing </dd></dl>
 
 </div>
 </div>

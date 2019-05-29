@@ -1,7 +1,8 @@
 var searchData=
 [
+  ['pip_5fabort',['pip_abort',['../group__libpip.html#ga49a4a9ee014ffdaf0c26df18adf965ad',1,'pip.h']]],
   ['pip_5fcount_5factive_5ftasks',['pip_count_active_tasks',['../group__libpip.html#gac45cbabfd20fa2f8f4e9004474922137',1,'pip.h']]],
-  ['pip_5fexit',['pip_exit',['../group__libpip.html#gaf9be37d927121b9327b5fca2417ccec2',1,'pip.h']]],
+  ['pip_5fexit',['pip_exit',['../group__libpip.html#ga839952b6edf6edc90d92c06c7cc6784b',1,'pip.h']]],
   ['pip_5fexport',['pip_export',['../group__libpip.html#ga76ef9337bec7dd836168f22247d4c64c',1,'pip.h']]],
   ['pip_5ffin',['pip_fin',['../group__libpip.html#gac4654282785abb9434ce81573fdf16ed',1,'pip.h']]],
   ['pip_5fget_5fid',['pip_get_id',['../group__libpip.html#ga8ed1ba448edbc0f2e0af78abdcc62b7c',1,'pip.h']]],

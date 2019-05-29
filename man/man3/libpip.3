@@ -1,4 +1,4 @@
-.TH "libpip" 3 "Sat Feb 16 2019" "PiP - Process-in-Process" \" -*- nroff -*-
+.TH "libpip" 3 "Thu May 30 2019" "PiP - Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -90,7 +90,7 @@ the PiP library
 .in -1c
 .in +1c
 .ti -1c
-.RI "int \fBpip_exit\fP (int retval)"
+.RI "void \fBpip_exit\fP (int retval)"
 .br
 .RI "\fIterminate PiP task or ULP \fP"
 .in -1c
@@ -159,6 +159,12 @@ the PiP library
 .RI "int \fBpip_is_alive\fP (int pipid)"
 .br
 .RI "\fIcheck if the specified PiP task is alive or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_abort\fP (void)"
+.br
+.RI "\fIabort all PiP tasks and root \fP"
 .in -1c
 .in +1c
 .ti -1c
@@ -586,7 +592,7 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "int pip_exit (intretval)"
+.SS "void pip_exit (intretval)"
 
 .PP
 terminate PiP task or ULP 
@@ -885,6 +891,17 @@ check if the specified PiP task is alive or not
 \fBReturns:\fP
 .RS 4
 Return true if the specified PiP task or ULP is alive (i\&.e\&., not yet terminated) and running 
+.RE
+.PP
+
+.SS "void pip_abort (void)"
+
+.PP
+abort all PiP tasks and root 
+.PP
+\fBReturns:\fP
+.RS 4
+Return true nothing 
 .RE
 .PP
 

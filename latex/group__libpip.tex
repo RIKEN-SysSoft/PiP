@@ -62,7 +62,7 @@ int \hyperlink{group__libpip_gab603f68c1ce972a5f3bfb8c95fcfb555}{pip\-\_\-get\-\
 \begin{DoxyCompactList}\small\item\em get the Pi\-P execution mode \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{group__libpip_gaf9be37d927121b9327b5fca2417ccec2}{pip\-\_\-exit} (int retval)
+void \hyperlink{group__libpip_ga839952b6edf6edc90d92c06c7cc6784b}{pip\-\_\-exit} (int retval)
 \begin{DoxyCompactList}\small\item\em terminate Pi\-P task or U\-L\-P \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
@@ -108,6 +108,10 @@ int \hyperlink{group__libpip_gafc11d79f0f63c4c57ccb5c3bb2803241}{pip\-\_\-isa\-\
 \item 
 int \hyperlink{group__libpip_gacefb1f29e5f5d9b21309a1d041e78790}{pip\-\_\-is\-\_\-alive} (int pipid)
 \begin{DoxyCompactList}\small\item\em check if the specified Pi\-P task is alive or not \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{group__libpip_ga49a4a9ee014ffdaf0c26df18adf965ad}{pip\-\_\-abort} (void)
+\begin{DoxyCompactList}\small\item\em abort all Pi\-P tasks and root \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_gae9187ea22ecf0623fa3ecfba5337f52d}{pip\-\_\-spawn} (char $\ast$filename, char $\ast$$\ast$argv, char $\ast$$\ast$envv, int coreno, int $\ast$pipidp, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg)
@@ -557,13 +561,13 @@ Return 0 on success. Return an error code on error.
 {\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{group__libpip_gaf9be37d927121b9327b5fca2417ccec2}{\index{libpip@{libpip}!pip\-\_\-exit@{pip\-\_\-exit}}
+\hypertarget{group__libpip_ga839952b6edf6edc90d92c06c7cc6784b}{\index{libpip@{libpip}!pip\-\_\-exit@{pip\-\_\-exit}}
 \index{pip\-\_\-exit@{pip\-\_\-exit}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-exit}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-exit (
+\subsubsection[{pip\-\_\-exit}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-exit (
 \begin{DoxyParamCaption}
 \item[{int}]{retval}
 \end{DoxyParamCaption}
-)}}\label{group__libpip_gaf9be37d927121b9327b5fca2417ccec2}
+)}}\label{group__libpip_ga839952b6edf6edc90d92c06c7cc6784b}
 
 
 terminate Pi\-P task or U\-L\-P 
@@ -874,6 +878,20 @@ check if the specified Pi\-P task is alive or not
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
 Return true if the specified Pi\-P task or U\-L\-P is alive (i.\-e., not yet terminated) and running 
+\end{DoxyReturn}
+\hypertarget{group__libpip_ga49a4a9ee014ffdaf0c26df18adf965ad}{\index{libpip@{libpip}!pip\-\_\-abort@{pip\-\_\-abort}}
+\index{pip\-\_\-abort@{pip\-\_\-abort}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-abort}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-abort (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__libpip_ga49a4a9ee014ffdaf0c26df18adf965ad}
+
+
+abort all Pi\-P tasks and root 
+
+\begin{DoxyReturn}{Returns}
+Return true nothing 
 \end{DoxyReturn}
 \hypertarget{group__libpip_gae9187ea22ecf0623fa3ecfba5337f52d}{\index{libpip@{libpip}!pip\-\_\-spawn@{pip\-\_\-spawn}}
 \index{pip\-\_\-spawn@{pip\-\_\-spawn}!libpip@{libpip}}
