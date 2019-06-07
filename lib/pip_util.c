@@ -62,10 +62,8 @@ int pip_check_pie( char *path ) {
 	       elfh.e_ident[EI_MAG1] != ELFMAG1 ||
 	       elfh.e_ident[EI_MAG2] != ELFMAG2 ||
 	       elfh.e_ident[EI_MAG3] != ELFMAG3 ) {
-      pip_warn_mesg( "'%s' is not an ELF file", path );
       err = EUNATCH;
     } else if( elfh.e_type != ET_DYN ) {
-      pip_warn_mesg( "'%s' is not DYNAMIC (PIE)", path );
       err = ELIBEXEC;
     }
     (void) close( fd );

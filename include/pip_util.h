@@ -42,17 +42,20 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <pip.h>
 #include <stdio.h>
+#include <pip.h>
 
 #ifdef PIP_EVAL
 #define PIP_ACCUM(V,F)		\
   do { double __st=pip_gettime(); if(F) (V) += pip_gettime() - __st; } while(0)
-#define PIP_REPORT(V)	 printf( "%s: %g\n", #V, V );
+#define PIP_REPORT(V)	 	printf( "%s: %g\n", #V, V );
 #else
 #define PIP_ACCUM(V,F)		if(F)
 #define PIP_REPORT(V)
 #endif
+
+#define PIP_MALLOC(S)		malloc(S)
+#define PIP_FREE(P)		do{ DBGF("FREE:%p",(P)); free(P); } while(0)
 
 #ifdef __cplusplus
 extern "C" {

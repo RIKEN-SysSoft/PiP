@@ -46,6 +46,12 @@
 #include <stdio.h>
 #include <stddef.h>
 
+#ifdef DEBUG
+#ifndef MCHECK
+//#define MCHECK
+#endif
+#endif
+
 #include <pip.h>
 #include <pip_blt.h>
 #include <pip_clone.h>
@@ -90,48 +96,6 @@
 
 struct pip_task_internal;
 
-typedef	int(*main_func_t)(int,char**,char**);
-typedef	int(*start_func_t)(void*);
-typedef int(*mallopt_t)(int,int);
-typedef void(*free_t)(void*);
-typedef void(*pthread_init_t)(int,char**,char**);
-typedef	void(*ctype_init_t)(void);
-typedef void(*glibc_init_t)(int,char**,char**);
-typedef	void(*fflush_t)(FILE*);
-typedef int(*named_export_fin_t)(struct pip_task_internal*);
-typedef int (*pip_clone_mostly_pthread_t)
-( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
-
-typedef struct {
-  /* functions */
-  main_func_t		main;	      /* main function address */
-  start_func_t		start;	      /* strat function instead of main */
-  ctype_init_t		ctype_init;   /* to call __ctype_init() */
-  fflush_t		libc_fflush;  /* to call fflush() at the end */
-  mallopt_t		mallopt;      /* to call mallopt() */
-  named_export_fin_t	named_export_fin; /* for free()ing hash entries */
-  /* Unused functions */
-  free_t		free;	      /* to override free() - EXPERIMENTAL*/
-  glibc_init_t		glibc_init;   /* only in patched Glibc */
-  pthread_init_t	pthread_init; /* __pthread_init_minimum() */
-  /* variables */
-  char			***libc_argvp; /* to set __libc_argv */
-  int			*libc_argcp;   /* to set __libc_argc */
-  char			**progname;
-  char			**progname_full;
-  char			***environ;    /* pointer to the environ variable */
-} pip_symbols_t;
-
-typedef struct {
-  int			pipid;
-  int			coreno;
-  char			*prog;
-  char			**argv;
-  char			*funcname;
-  void			*start_arg;
-  char			**envv;
-} pip_spawn_args_t;
-
 typedef struct pip_cacheblk {
   char		cacheblk[PIP_CACHEBLK_SZ];
 } pip_cacheblk_t;
@@ -175,6 +139,51 @@ typedef struct pip_task_internal {
     pip_cacheblk_t		__align__[2];
   };
 } pip_task_internal_t;
+
+typedef	int(*main_func_t)(int,char**,char**);
+typedef	int(*start_func_t)(void*);
+typedef int(*mallopt_t)(int,int);
+typedef void(*free_t)(void*);
+typedef void(*pthread_init_t)(int,char**,char**);
+typedef	void(*ctype_init_t)(void);
+typedef void(*glibc_init_t)(int,char**,char**);
+typedef	void(*fflush_t)(FILE*);
+typedef int(*named_export_fin_t)(struct pip_task_internal*);
+typedef int (*pip_clone_mostly_pthread_t)
+( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
+
+typedef struct {
+  /* functions */
+  main_func_t		main;	      /* main function address */
+  start_func_t		start;	      /* strat function instead of main */
+  ctype_init_t		ctype_init;   /* to call __ctype_init() */
+  fflush_t		libc_fflush;  /* to call fflush() at the end */
+  mallopt_t		mallopt;      /* to call mallopt() */
+  named_export_fin_t	named_export_fin; /* for free()ing hash entries */
+  /* Unused functions */
+  free_t		free;	      /* to override free() - EXPERIMENTAL*/
+  glibc_init_t		glibc_init;   /* only in patched Glibc */
+  pthread_init_t	pthread_init; /* __pthread_init_minimum() */
+  /* variables */
+  char			***libc_argvp; /* to set __libc_argv */
+  int			*libc_argcp;   /* to set __libc_argc */
+  char			**prog;
+  char			**prog_full;
+  char			***environ;    /* pointer to the environ variable */
+} pip_symbols_t;
+
+typedef struct {
+  int			pipid;
+  int			coreno;
+  char			*prog;
+  char			*prog_full;
+  char			**argv;
+  char			*funcname;
+  void			*start_arg;
+  char			**envv;
+  /* list of close-on-exec FDs */
+  int			*fd_list;
+} pip_spawn_args_t;
 
 struct pip_gdbif_task;
 
@@ -259,7 +268,8 @@ typedef struct {
   pip_task_internal_t	*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
   /* BLT related info */
-  size_t		stack_size; /* stacksize for the stack for blocking */
+  size_t		stack_size_blt; /* size for the stack for BLTs */
+  size_t		stack_size_sleep; /* size for the stack for sleeping */
   /* for chaining SIGCHLD */
   struct sigaction	sigact_chain;
   /* PiP tasks array */

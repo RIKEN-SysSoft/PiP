@@ -55,7 +55,6 @@
     }							\
   }
 
-
 #define TASK_QUEUE_DUMP( queue )			\
   if( pip_task_queue_isempty( queue ) ) {		\
     DBGF( "EMPTY" );					\
@@ -69,7 +68,6 @@
       DBGF( "TQ(%d:%d): %s", iii++, c, msg );		\
     }							\
   }
-
 #else
 #define QUEUE_DUMP( queue, len )
 #define TASK_QUEUE_DUMP( queue )
@@ -85,13 +83,6 @@ static void pip_force_exit( pip_task_internal_t *taski ) {
 
   DBGF( "PIPID:%d  pid:%d(%d)",
 	taski->pipid, taski->annex->pid, pip_gettid() );
-  if( 0 ) {
-    int i, sv = 0;
-    (void) sem_getvalue( &taski->annex->sleep, &sv );
-    DBGF( "SV: %d", sv );
-    for( i=0; i<sv; i++ ) (void) sem_post( &taski->annex->sleep );
-    (void) sem_destroy( &taski->annex->sleep );
-  }
   if( pip_is_threaded_() ) {
     (void) pip_raise_sigchld();
     pthread_exit( NULL );
@@ -388,24 +379,15 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
 
 static void pip_switch_stack_and_sleep( pip_task_internal_t *schedi,
 					pip_task_internal_t *taski ) {
-  extern void pip_page_alloc_( size_t, void** );
   pip_sleep_args_t	args;
-  size_t	pgsz  = pip_root_->page_size;
-  size_t	stksz = STACK_PG_NUM * pgsz;
+  size_t	stksz = pip_root_->stack_size_sleep;
   pip_ctx_t	ctx;
   stack_t	*stk;
-  void		*stack, *redzone;
   int 		args_H, args_L;
 
   ENTER;
   DBGF( "sched-PIPID:%d  taski-PIPID:%d",
 	schedi->pipid, (taski!=NULL)?taski->pipid:-1 );
-  if( ( stack = schedi->annex->sleep_stack ) == NULL ) {
-    pip_page_alloc_( stksz + pgsz, &stack );
-    redzone = stack + stksz;
-    ASSERT( mprotect( redzone, pgsz, PROT_NONE ) );
-    schedi->annex->sleep_stack = stack;
-  }
   /* pass taski, not schedi, so that stack can be unprotected in pip_sleep */
   args.schedi = schedi;
   args.taski  = taski;
@@ -414,9 +396,9 @@ static void pip_switch_stack_and_sleep( pip_task_internal_t *schedi,
 
   ctx.ctx.uc_link = NULL;
   stk = &(ctx.ctx.uc_stack);
-  stk->ss_sp      = stack;
-  stk->ss_flags   = 0;
-  stk->ss_size    = stksz;
+  stk->ss_sp    = schedi->annex->sleep_stack;
+  stk->ss_flags = 0;
+  stk->ss_size  = stksz;
   args_H = ( ((intptr_t) &args) >> 32 ) & PIP_MASK32;
   args_L = (  (intptr_t) &args)         & PIP_MASK32;
   pip_make_context( &ctx, pip_sleep, 4, args_H, args_L );
@@ -542,8 +524,8 @@ static void pip_sched_next( pip_task_internal_t *taski,
   pip_stack_unprotect_prevt( taski );
 }
 
-void pip_do_exit( pip_task_internal_t *taski, int extval ) {
-  extern void pip_do_terminate_( pip_task_internal_t*, int );
+void pip_do_exit_RC( pip_task_internal_t *taski, int extval ) {
+  extern void pip_do_terminate_RC( pip_task_internal_t*, int );
   pip_task_internal_t	*schedi, *nexti;
   int 			ntc;
   /* this is called when 1) return from main (or func) function */
@@ -551,7 +533,8 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   ENTER;
   DBGF( "PIPID:%d", taski->pipid );
 
-  pip_do_terminate_( taski, extval );
+  taski->annex->symbols.named_export_fin( taski );
+  pip_do_terminate_RC( taski, extval );
   ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
   ASSERT( ntc < 0 );
 
@@ -711,11 +694,6 @@ int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
   pip_queue_info_t	qi;
 
   ENTER;
-#ifdef DEBUG
-  ASSERT( pip_task_queue_trylock( queue ) );
-  pip_task_queue_unlock( queue );
-#endif
-
   ASSERT( pip_task_->task_sched == NULL );
   nexti = pip_schedq_next( pip_task_ );
   qi.queue     = queue;
@@ -744,10 +722,6 @@ int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched ) {
 int pip_dequeue_and_resume_nolock( pip_task_queue_t *queue,
 				   pip_task_t *sched ) {
   ENTER;
-#ifdef DEBUG
-  ASSERT( pip_task_queue_trylock( queue ) );
-  pip_task_queue_unlock( queue );
-#endif
   pip_task_t *task;
   task = pip_task_queue_dequeue( queue );
   if( task == NULL ) RETURN( ENOENT );
@@ -803,11 +777,6 @@ int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue,
   int		n, c = 0, err = 0;
 
   ENTER;
-#ifdef DEBUG
-  ASSERT( pip_task_queue_trylock( queue ) );
-  pip_task_queue_unlock( queue );
-#endif
-
   if( np == NULL ) RETURN( EINVAL );
   n = *np;
   if( n == PIP_TASK_ALL ) {

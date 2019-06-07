@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#define DEBUG
+//#define DEBUG
 
 #include <test.h>
 

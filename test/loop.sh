@@ -23,7 +23,7 @@ function prt_ext() {
 function print_usage() {
     echo >&2 "Usage: `basename $1` [-n <NITER>] [-t <SEC>] [-q] [<test_prog> ...]";
     echo >&2 "    -n <NITER>: Number of iterations";
-    echo >&2 "    -t <SEC>: Duration in seconds";
+    echo >&2 "    -t <SEC>: Duration limit of one loop [seconds]";
     echo >&2 "    -q: Quiet mode";
     exit 2;
 }

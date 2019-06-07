@@ -41,9 +41,6 @@
 
 extern int test_main( exp_t *exp );
 
-int check_args( void )  __attribute__((weak));
-int check_args( void ) { return 0; }
-
 static pid_t pid_root;
 
 static void print_usage( void ) {
@@ -186,7 +183,6 @@ static int set_params( test_args_t *args, int argc, char **argv ) {
   if( ntasks == 0 ) ntasks = nact = ntasks_max;
 
   if( argc > 4 ) niters = strtol( argv[4], NULL, 10 );
-  if( check_args() != 0 ) exit( 1 );
 
   args->argc   = argc;
   args->argv   = argv;
@@ -307,25 +303,40 @@ int main( int argc, char **argv ) {
     sigact.sa_flags     = SA_RESETHAND;
     TESTINT( sigaction( SIGINT, &sigact, NULL ) );
 
-    (void) wait( &status );
+    pid_t pid = wait( &status );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
     } else if( WIFSIGNALED( status ) ) {
+      char *msg = NULL;
       sig = WTERMSIG( status );
-      if( sig == SIGQUIT ) { /* an error was detected and aborted */
+      switch( sig ) {
+      case SIGQUIT: /* an error was detected and aborted */
 	extval = EXIT_XFAIL;
-      } else if( sig == SIGKILL ) { /* timed out */
+	msg = "Aborted due to an error";
+	break;
+      case SIGKILL: /* timed out */
 	extval = EXIT_UNRESOLVED;
-      } else if( sig == SIGHUP ) { /* deadlock detected */
+	msg = "Execution timed out";
+	break;
+      case SIGHUP: /* deadlock detected */
 	extval = EXIT_XFAIL;
-      } else if( sig == SIGINT ) { /* ^C was hit */
+	msg = "Deadlocked";
+	break;
+      case SIGINT: /* ^C was hit */
 	extval = EXIT_KILLED;
-      } else {			/* SEGV ? */
+	msg = "Killed by user";
+	break;
+      default:			/* SEGV ? */
 	extval = EXIT_XFAIL;
+	break;
       }
-      fprintf( stderr,
-	       "!!!! Test program terminated with '%s' (%d) !!!!\n",
-	       strsignal( sig ), sig );
+      if( msg == NULL ) {
+	fprintf( stderr,
+		 "<<PID:%d>> Test program terminated with '%s' (%d) !!!!\n",
+		 pid, strsignal( sig ), sig );
+      } else {
+	fprintf( stderr, "%s\n", msg );
+      }
     }
   } else {
     fprintf( stderr, "Fork failed (%d)\n", errno );

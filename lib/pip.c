@@ -44,6 +44,9 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
+#include <limits.h>		/* for PTHREAD_STACK_MIN */
+#define PIP_SLEEP_STACKSZ	PTHREAD_STACK_MIN
+
 #include <pip_internal.h>
 #include <pip_gdbif_func.h>
 
@@ -304,7 +307,8 @@ void pip_page_alloc_( size_t sz, void **allocp ) {
 }
 
 void pip_reset_task_struct_( pip_task_internal_t *taski ) {
-  pip_task_annex_t *annex = taski->annex;
+  pip_task_annex_t 	*annex = taski->annex;
+  void			*sleep_stack = annex->sleep_stack;
 
   memset( (void*) taski, 0, sizeof( pip_task_internal_t ) );
   PIP_TASKQ_INIT( &taski->queue  );
@@ -313,6 +317,7 @@ void pip_reset_task_struct_( pip_task_internal_t *taski ) {
   taski->pipid = PIP_PIPID_NULL;
 
   memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
+  annex->sleep_stack = sleep_stack;
   taski->annex = annex;
   taski->annex->pid = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_TASKQ_INIT(    &taski->annex->exitq );
@@ -352,12 +357,16 @@ uint32_t pip_check_sync_flag_( uint32_t flags ) {
   ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
-  extern int  pip_named_export_init_( pip_task_internal_t* );
-  size_t		sz;
-  char			*envroot = NULL;
-  char			*envtask = NULL;
-  int			ntasks, pipid;
-  int	 		i, err = 0;
+  extern int pip_named_export_init_( pip_task_internal_t* );
+  size_t	sz;
+  char		*envroot = NULL;
+  char		*envtask = NULL;
+  int		ntasks, pipid;
+  int		i, err = 0;
+
+#ifdef MCHECK
+  mcheck( NULL );
+#endif
 
   if( pip_root_ != NULL ) RETURN( EBUSY ); /* already initialized */
   if( ( envroot = getenv( PIP_ROOT_ENV ) ) == NULL ) {
@@ -376,8 +385,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ( opts = pip_check_sync_flag_(   opts ) ) == 0 ) RETURN( EINVAL );
 
     sz = PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
-      PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
-      PIP_CACHE_ALIGN( sizeof( pip_task_annex_t      ) * ( ntasks + 1 ) );
+         PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
+         PIP_CACHE_ALIGN( sizeof( pip_task_annex_t    ) * ( ntasks + 1 ) );
     pip_page_alloc_( sz, (void**) &pip_root_ );
     (void) memset( pip_root_, 0, sz );
 
@@ -397,8 +406,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     DBGF( "ROOTROOT (%p)", pip_root_ );
 
-    pip_spin_init( &pip_root_->lock_ldlinux     );
-    pip_spin_init( &pip_root_->lock_tasks       );
+    pip_spin_init( &pip_root_->lock_ldlinux );
+    pip_spin_init( &pip_root_->lock_tasks   );
 
     pipid = PIP_PIPID_ROOT;
     pip_set_magic( pip_root_ );
@@ -412,6 +421,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       pip_reset_task_struct_( &pip_root_->tasks[i] );
     }
     pip_root_->task_root = &pip_root_->tasks[ntasks];
+
     pip_task_ = pip_root_->task_root;
     pip_task_->pipid      = pipid;
     pip_task_->type       = PIP_TYPE_ROOT;
@@ -423,12 +433,20 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( rt_expp != NULL ) {
       pip_task_->annex->export = *rt_expp;
     }
-    if( ( err = pip_named_export_init_( pip_task_ ) ) != 0 ) {
+
+    pip_root_->stack_size_sleep = PIP_SLEEP_STACKSZ;
+    pip_page_alloc_( pip_root_->stack_size_sleep,
+		     &pip_task_->annex->sleep_stack );
+    if( pip_task_->annex->sleep_stack == NULL ) {
       free( pip_root_ );
       RETURN( err );
     }
     unsetenv( PIP_ROOT_ENV );
 
+    if( ( err = pip_named_export_init_( pip_task_ ) ) != 0 ) {
+      free( pip_root_ );
+      RETURN( err );
+    }
     pip_gdbif_initialize_root_( ntasks );
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
@@ -513,13 +531,13 @@ int pip_get_ntasks( int *ntasksp ) {
 }
 
 void pip_exit( int extval ) {
-  extern void pip_do_exit( pip_task_internal_t*, int );
+  extern void pip_do_exit_RC( pip_task_internal_t*, int );
 
   DBGF( "extval:%d", extval );
   if( PIP_ISA_ROOT( pip_task_ ) ) {
     exit( extval );
   } else {
-    pip_do_exit( pip_task_, extval );
+    pip_do_exit_RC( pip_task_, extval );
   }
   NEVER_REACH_HERE;
 }

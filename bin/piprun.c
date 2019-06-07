@@ -61,25 +61,18 @@
 #include <ctype.h>
 #include <errno.h>
 #include <pip.h>
+#include <pip_internal.h>
+#include <pip_util.h>
 
 //#define DEBUG
+//#define DBGCB
 
 #define COREBIND_RR	(-100)
 
-typedef struct arg {
-  struct arg	*next;
-  char		*arg;
-} arg_t;
-
-typedef struct spawn {
-  struct spawn	*next;
-  int		coreno;
-  int		ntasks;
-  int		argc;
-  char		*func;
-  arg_t		*args;
-  arg_t		*tail;
-} spawn_t;
+static void print_pusage( void ) {
+  fprintf( stderr, "pusage\n" );
+  exit( 1 );
+}
 
 static void print_usage( void ) {
   fprintf( stderr,
@@ -87,10 +80,9 @@ static void print_usage( void ) {
 	   "{ :: [-n N] [-c C] [-f F] B.OUT ... } \n",
 	   PROGRAM );
   fprintf( stderr, "\t-n N\t: Number of PiP tasks (default is 1)\n" );
+  fprintf( stderr, "\t-c C\t: CPU core binding pattern\n" );
   fprintf( stderr, "\t-f F\t: Function name in the program to start\n" );
-  fprintf( stderr, "\t-c C\t: CPU core number to bind PiP task(s), or\n" );
-  fprintf( stderr, "\t-r\t: CPU cores are bound in the round-robin fashion\n");
-  exit( 1 );
+  print_pusage();
 }
 
 static int count_cpu( void ) {
@@ -103,6 +95,90 @@ static int count_cpu( void ) {
   return c;
 }
 
+typedef struct corebind {
+  struct corebind	*next;
+  int 		n;
+  int		s;
+  int		r;
+} corebind_t;
+
+static corebind_t *new_corebind( char **p ) {
+  void parse_r( corebind_t *cb, char **q ) {
+    int r = 0;
+    while( isdigit( **q ) ) {
+      r += (**q) - '0';
+      (*q) ++;
+    }
+    if( r == 0 ) print_pusage();
+    cb->r = r;
+  };
+  void parse_s( corebind_t *cb, char **q ) {
+    int s = 0;
+    while( isdigit( **q ) ) {
+      s += (**q) - '0';
+      (*q) ++;
+    }
+    cb->s = s;
+    if( **q == 'x' ) {
+      (*q) ++;
+      parse_r( cb, q );
+    }
+  }
+  corebind_t	*cb = (corebind_t*) malloc( sizeof( corebind_t ) );
+  if( cb == NULL ) {
+    fprintf( stderr, "Not enough memory (corebind)\n" );
+    exit( 9 );
+  }
+  memset( cb, 0, sizeof( corebind_t ) );
+
+  while( **p != '\0' || **p != ',' ) {
+    if( isdigit( **p ) ) {
+      int n = 0;
+      while( isdigit( **p ) ) {
+	n += (**p) - '0';
+	(*p) ++;
+      }
+      cb->n = n;
+      if( **p == ':' ) {
+	(*p) ++;
+	parse_s( cb, p );
+      } else if( **p == 'x' ) {
+	(*p) ++;
+	parse_r( cb, p );
+      }
+      break;
+    } else if( **p == ':' ) {
+      (*p) ++;
+      parse_s( cb, p );
+      break;
+    } else if( **p == 'x' ) {
+      (*p) ++;
+      parse_r( cb, p );
+      break;
+    } else {
+      print_usage();
+    }
+  }
+  if( cb->r == 0 ) cb->r = 1;
+  return cb;
+}
+
+#ifdef DBGCB
+void cb_dump( corebind_t *cb ) {
+  int i = 0;
+  if( cb != NULL ) {
+    printf( "[%d] cb(%p) n:%d s:%d r:%d  (next:%p)\n",
+	    i++, cb, cb->n, cb->s, cb->r, cb->next );
+    cb_dump( cb->next );
+  }
+}
+#endif
+
+typedef struct arg {
+  struct arg		*next;
+  char			*arg;
+} arg_t;
+
 static arg_t *new_arg( char *a ) {
   arg_t	*arg = (arg_t*) malloc( sizeof( arg_t ) );
   if( arg == NULL ) {
@@ -114,6 +190,17 @@ static arg_t *new_arg( char *a ) {
   return arg;
 }
 
+typedef struct spawn {
+  struct spawn		*next;
+  corebind_t		*cb;
+  corebind_t		*cb_tail;
+  int			ntasks;
+  int			argc;
+  char			*func;
+  arg_t			*args;
+  arg_t			*tail;
+} spawn_t;
+
 static spawn_t *new_spawn( void ) {
   spawn_t *spawn = (spawn_t*) malloc( sizeof( spawn_t ) );
   if( spawn == NULL ) {
@@ -122,7 +209,6 @@ static spawn_t *new_spawn( void ) {
   }
   memset( spawn, 0, sizeof( spawn_t ) );
   spawn->ntasks = 1;
-  spawn->coreno = PIP_CPUCORE_ASIS;
   return spawn;
 }
 
@@ -132,34 +218,55 @@ static void free_spawn( spawn_t *spawn ) {
     free_arg( arg->next );
     free( arg );
   }
+  void free_corebind( corebind_t *cb ) {
+    if( cb == NULL ) return;
+    free_corebind( cb->next );
+    free( cb );
+  }
   if( spawn == NULL ) return;
   free_spawn( spawn->next );
-  free_arg( spawn->args->next );
+  free_arg( spawn->args );
+  free_corebind( spawn->cb );
   free( spawn );
 }
 
-static int nth_core( int coreno ) {
-  cpu_set_t cpuset;
-  int i, c = 0;
+static int nth_core( corebind_t *cb, int start, int *ithp ) {
+  int	ith = *ithp;
+  int	c = start;
 
-  if( sched_getaffinity( getpid(), sizeof(cpuset), &cpuset ) == 0 ) {
-    for( i=0; i<coreno+1; i++ ) {
-      if( CPU_ISSET( i, &cpuset ) ) c = i;
-    }
+  if( cb == NULL ) return 0;
+
+  printf( "cb->n:%d cb->s:%d cb->r:%d start:%d ith:%d\n",
+	  cb->n, cb->s, cb->r, start, ith );
+  if( ith == 0 ) {
+    c += cb->n;
+  } else if( ith > cb->r ) {
+    c += cb->n + cb->s * ith;
+    *ithp = ith - cb->r;
+  } else {
+    c += cb->n + cb->s * ith;
+    *ithp = 0;
+  }
+  if( cb->next != NULL ) {
+    c = nth_core( cb->next, c, &ith );
   }
   return c;
 }
 
 int main( int argc, char **argv ) {
+#ifndef DBGCB
+  pip_spawn_program_t prog;
+  int opts	=  0;
+#endif
   spawn_t	*spawn, *head, *tail;
   arg_t		*arg;
   char		**nargv = NULL;
-  int pipid  = 0;
-  int opts   = 0;
-  int ntasks;
+  int ntasks, nt_start;;
+  int ncores = count_cpu();
   int argc_max;
-  int cn, ncores = count_cpu();
-  int i, err = 0;
+  //  int flag_dryrun = 0;
+  int i, c, d;
+  int err = 0;
 
   if( argc < 2 || argv[1] == NULL ) print_usage();
 
@@ -175,18 +282,26 @@ int main( int argc, char **argv ) {
 	if( spawn->args == NULL ) print_usage();
 	break;
       } else if( *argv[i] != '-' ) {
+#ifndef DBGCB
 	if( access( argv[i], X_OK ) ) {
 	  err = errno;
 	  fprintf( stderr, "Unable to execute '%s'\n", argv[i] );
 	  goto error;
 	}
+	if( ( err = pip_check_pie( argv[i] ) ) != 0 ) {
+	  fprintf( stderr, "'%s' is not PIE "
+		   "(Position Independent Executable)\n",
+		   argv[i] );
+	  goto error;
+	}
+#endif
 	spawn->args = spawn->tail = new_arg( argv[i++] );
 	spawn->argc = 1;
 	for( ; i<argc; i++ ) {
-	  if( strcmp( argv[i], "::" ) == 0 ) break;
+	  if( argv[i] == NULL || strcmp( argv[i], "::" ) == 0 ) break;
 	  arg = new_arg( argv[i] );
 	  spawn->tail->next = arg;
-	  spawn->tail = arg;
+	  spawn->tail       = arg;
 	  spawn->argc ++;
 	}
 	break;
@@ -200,16 +315,21 @@ int main( int argc, char **argv ) {
 	  print_usage();
 	}
 	i ++;
-      } else if( strcmp( argv[i], "-c" ) == 0 ) {
-	if( argv[i+1] == NULL || !isdigit( *argv[i+1] ) ) {
-	  print_usage();
+      } else if( strcmp( argv[i], "-c" ) == 0 &&
+		 argv[++i] != NULL ) {
+	corebind_t 	*cb;
+	char 		*p = argv[i];
+	spawn->cb = spawn->cb_tail = new_corebind( &p );
+	while( *p == ',' ) {
+	  p ++;
+	  cb = new_corebind( &p );
+	  spawn->cb_tail->next = cb;
+	  spawn->cb_tail       = cb;
 	}
-	spawn->coreno = atoi( argv[++i] ) % ncores;
-      } else if( strcmp( argv[i], "-b" ) == 0 || /* deprecated option */
-		 strcmp( argv[i], "-r" ) == 0 ) {
-	spawn->coreno = COREBIND_RR;
       } else if( strcmp( argv[i], "-f" ) == 0 && argv[i+1] != NULL ) {
 	spawn->func = argv[++i];
+      } else if( strcmp( argv[i], "-d" ) == 0 ) {
+	//flag_dryrun = 1;
       } else {
 	print_usage();
       }
@@ -243,44 +363,58 @@ int main( int argc, char **argv ) {
     goto error;
   }
 
+#ifndef DBGCB
   if( ( err = pip_init( NULL, &ntasks, NULL, opts ) ) != 0 ) {
     fprintf( stderr, "pip_init()=%d\n", err );
     return err;
   }
-  cn = 0;
+#endif
+  nt_start = 0;
   for( spawn = head; spawn != NULL; spawn = spawn->next ) {
-    int c;
-
     for( arg = spawn->args, i = 0; arg != NULL; arg = arg->next ) {
       nargv[i++] = arg->arg;
     }
     nargv[i] = NULL;
-    for( i=0; i<spawn->ntasks; i++ ) {
-      if( spawn->coreno == PIP_CPUCORE_ASIS ) {
-	c = spawn->coreno;
-      } else if( spawn->coreno == COREBIND_RR ) {
-	c = nth_core( ( cn++ ) % ncores );
-      } else {
-	c = nth_core( ( spawn->coreno + i ) % ncores );
-      }
-      pipid = i;
-      err = pip_spawn( nargv[0],
-		       nargv,
-		       NULL,
-		       c,
-		       &pipid,
-		       NULL,
-		       NULL,
-		       NULL );
-      if( err ) pip_abort();
+#ifndef DBGCB
+    if( spawn->func != NULL ) {
+      pip_spawn_from_func( &prog, nargv[0], spawn->func, NULL, NULL );
+    } else {
+      pip_spawn_from_main( &prog, nargv[0], nargv, NULL );
     }
-    for( i=0; i<ntasks; i++ ) {
-      int status;
-      while( pip_wait( i, &status ) < 0 ) {
-	if( errno == ECHILD ) break;
+#else
+    cb_dump( spawn->cb );
+#endif
+    for( i=0; i<spawn->ntasks; i++ ) {
+      int j = i;
+      int s = nt_start;
+      if( j == 0 ) {
+	c = nth_core( spawn->cb, s, &j );
+	s = c;
+      } else {
+	while( j > 0 ) {
+	  c = nth_core( spawn->cb, s, &j );
+	  s = c;
+	}
       }
+      d = ( s + nt_start ) % ncores;
+#ifdef DBGCB
+      printf( "%s\t%3d  (%3d)\n", nargv[0], s, d );
+#else
+      int pipid = i;
+      err = pip_task_spawn( &prog, d, 0, &pipid, NULL );
+      if( err ) pip_abort();
+#endif
+    }
+    nt_start += spawn->ntasks;
+  }
+#ifndef DBGCB
+  for( i=0; i<ntasks; i++ ) {
+    int status;
+    while( pip_wait( i, &status ) < 0 ) {
+      if( errno == ECHILD ) break;
     }
   }
+#endif
  error:
   if( nargv != NULL ) free( nargv );
   free_spawn( head );

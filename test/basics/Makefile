@@ -39,7 +39,7 @@ LDLIBS += ../main.o
 
 DEPLIBS += ../main.o
 
-SRCS  = initfin.c exit.c yield.c barrier.c
+SRCS  = initfin.c exit.c yield.c barrier.c namexp.c
 
 ##	stack.c \
 ##	export.c \
@@ -57,7 +57,7 @@ SRCS  = initfin.c exit.c yield.c barrier.c
 ##	barrier.c
 ##	sigchld.c
 
-PROGRAMS  = initfin exit yield barrier
+PROGRAMS  = initfin exit yield barrier namexp
 
 PROGRAMS_TO_INSTALL = # nothing
 

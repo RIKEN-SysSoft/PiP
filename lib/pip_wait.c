@@ -103,13 +103,6 @@ void pip_deadlock_inc_( void ) {
     pip_dump_tasks( stderr );
     pip_err_mesg( "All PiP tasks are blocked and deadlocked !!" );
     fflush( NULL );
-#ifdef AH
-    if( pip_root_ == NULL ) {
-      kill( 0, SIGHUP );
-    } else {
-      (void) killpg( pip_root_->task_root->annex->pid, SIGHUP );
-    }
-#endif
   }
 }
 
@@ -119,7 +112,7 @@ void pip_deadlock_dec_( void ) {
 	(int) pip_root_->ntasks_blocking, pip_root_->ntasks_count );
 }
 
-void pip_do_terminate_( pip_task_internal_t *taski, int extval ) {
+void pip_do_terminate_RC( pip_task_internal_t *taski, int extval ) {
   /* call fflush() in the target context to flush out std* messages */
   if( taski->annex->symbols.libc_fflush != NULL ) {
     taski->annex->symbols.libc_fflush( NULL );
@@ -133,9 +126,9 @@ void pip_do_terminate_( pip_task_internal_t *taski, int extval ) {
 #else
     taski->annex->extval = ( extval & 0xFF ) << 8;
 #endif
-    pip_gdbif_exit_( taski, extval );
+    pip_gdbif_exit_RC( taski, extval );
     pip_memory_barrier();
-    taski->flag_exit     = PIP_EXITED;
+    taski->flag_exit = PIP_EXITED;
   }
   DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->extval );
 }
@@ -165,7 +158,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     /* process mode */
     int status  = 0;
     int options = 0;
-    pid_t pid;
+    pid_t pid = taski->annex->pid;
 
 #ifdef __WALL
     /* __WALL: Wait for all children, regardless of type */
@@ -174,12 +167,12 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 #endif
     if( flag_try ) options |= WNOHANG;
 
-    DBGF( "calling waitpid()   task:%p  pid:%d  pipid:%d",
-	  taski, taski->annex->pid, taski->pipid );
+    DBGF( "calling waitpid()  task:%p  pid:%d  pipid:%d",
+	  taski, pid, taski->pipid );
     pip_deadlock_inc_();
     while( 1 ) {
       errno = 0;
-      pid = waitpid( taski->annex->pid, &status, options );
+      pid = waitpid( pid, &status, options );
       if( errno != EINTR ) break;
     }
     pip_deadlock_dec_();
@@ -193,7 +186,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
 		       taski->pipid, strsignal(sig), sig );
       }
-      pip_do_terminate_( taski, status );
+      pip_do_terminate_RC( taski, status );
       pip_root_->ntasks_count --;
     }
   }

@@ -112,7 +112,7 @@ void pip_gdbif_load_( pip_task_internal_t *task ) {
   RETURNV;
 }
 
-void pip_gdbif_exit_( pip_task_internal_t *task, int extval ) {
+void pip_gdbif_exit_RC( pip_task_internal_t *task, int extval ) {
   if( task->annex->gdbif_task != NULL ) {
     task->annex->gdbif_task->status    = PIP_GDBIF_STATUS_TERMINATED;
     task->annex->gdbif_task->exit_code = extval;
