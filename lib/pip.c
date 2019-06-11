@@ -6,13 +6,13 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the 
+ *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * The views and conclusions contained in the software and documentation
  * are those of the authors and should not be interpreted as representing
  * official policies, either expressed or implied, of the PiP project.$
@@ -160,7 +160,7 @@ static int pip_count_vec( char **vecsrc ) {
   int n;
 
   for( n=0; vecsrc[n]!= NULL; n++ );
-	
+
   return( n );
 }
 
@@ -540,6 +540,14 @@ static int pip_check_opt_and_env( int *optsp ) {
   RETURN( 0 );
 }
 
+static void pip_gdb_hook_before( struct pip_gdbif_task *gdbif_task ) {
+  return;
+}
+
+static void pip_gdb_hook_after( struct pip_gdbif_task *gdbif_task ) {
+  return;
+}
+
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   size_t	sz;
   char		*envroot = NULL;
@@ -604,6 +612,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( rt_expp != NULL ) {
       pip_root->task_root->export          = *rt_expp;
     }
+    pip_gdbif_root->hook_before_main = pip_gdb_hook_before;
+    pip_gdbif_root->hook_after_main  = pip_gdb_hook_after;
     pip_spin_init( &pip_root->task_root->lock_malloc );
     unsetenv( PIP_ROOT_ENV );
 
@@ -611,8 +621,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ( err = pip_page_alloc( sz, (void**) &gdbif_root ) ) != 0 ) {
       RETURN( err );
     }
-    gdbif_root->hook_before_main = NULL; /* XXX */
-    gdbif_root->hook_after_main = NULL; /* XXX */
     pip_spin_init( &gdbif_root->lock_free );
     PIP_SLIST_INIT(&gdbif_root->task_free);
     pip_spin_init( &gdbif_root->lock_root );
@@ -1275,6 +1283,9 @@ static int pip_do_spawn( void *thargs )  {
   if( !pip_is_shared_fd_() ) pip_close_on_exec();
   DBG;
 
+  if( pip_gdbif_root->hook_before_main != NULL ) {
+    pip_gdbif_root->hook_before_main( self->gdbif_task );
+  }
   /* calling hook, if any */
   if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d",
@@ -1691,6 +1702,9 @@ static void pip_finalize_task( pip_task_t *task, int *retvalp ) {
   DBGF( "pipid=%d", task->pipid );
 
   gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+  if( pip_gdbif_root->hook_after_main != NULL ) {
+    pip_gdbif_root->hook_after_main( gdbif_task );
+  }
   gdbif_task->pathname = NULL;
   gdbif_task->argc = 0;
   gdbif_task->argv = NULL;
