@@ -44,5 +44,7 @@ void pip_gdbif_task_commit_( pip_task_internal_t* );
 void pip_gdbif_task_new_( pip_task_internal_t* );
 void pip_gdbif_initialize_root_( int );
 void pip_gdbif_finalize_task_( pip_task_internal_t* );
+void pip_gdbif_hook_before_( pip_task_internal_t* );
+void pip_gdbif_hook_after_( pip_task_internal_t* );
 
 #endif /* _pip_gdbif_func_h_ */

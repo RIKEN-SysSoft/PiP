@@ -54,7 +54,7 @@
 //#define DEBUG
 
 #include <pip_internal.h>
-#include <pip_gdbif_func.h>
+#include <pip_gdbif.h>
 
 extern void pip_page_alloc_( size_t, void** );
 extern void pip_named_export_fin_all_( void );
@@ -612,6 +612,8 @@ static void* pip_do_spawn( void *thargs )  {
     }
   }
   DBG;
+  /* calling PIP-GDB hook function */
+  pip_gdbif_hook_before_( self );
   /* calling hook function, if any */
   void	*hook_arg = self->annex->hook_arg;
   if( self->annex->hook_before != NULL &&
@@ -630,6 +632,8 @@ static void* pip_do_spawn( void *thargs )  {
     pip_warn_mesg( "[%s] after-hook returns %d", argv[0], err );
     extval = err;
   }
+  /* calling PIP-GDB hook function */
+  pip_gdbif_hook_after_( self );
   DBG;
  error:
   /* the main() or entry function returns here and terminate myself */

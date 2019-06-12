@@ -131,12 +131,15 @@ extern void pip_abort( void );
 #define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
 #define ERRJ_CHK(FUNC)	{ if( (FUNC) ) { DBG; goto error; } }
 
+#define DO_CHECK_CTYPE
+
 #if defined( DO_CHECK_CTYPE ) || defined( DEBUG )
 #include <ctype.h>
 #define PIP_CHECK_CTYPE					\
   do{ DBGF( "__ctype_b_loc()=%p", __ctype_b_loc() );			\
   DBGF( "__ctype_toupper_loc()=%p", __ctype_toupper_loc() );		\
-  DBGF( "__ctype_tolower_loc()=%p", __ctype_tolower_loc() ); } while( 0 )
+  DBGF( "__ctype_tolower_loc()=%p", __ctype_tolower_loc() );		\
+  isalnum('a'); isalnum('_'); } while( 0 )
 #else
 #define PIP_CHECK_CTYPE
 #endif

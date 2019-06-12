@@ -178,6 +178,14 @@ void pip_gdbif_task_new_( pip_task_internal_t *task ) {
   task->annex->gdbif_task = gdbif_task;
 }
 
+static void pip_gdb_hook_before( struct pip_gdbif_task *gdbif_task ) {
+  return;
+}
+
+static void pip_gdb_hook_after( struct pip_gdbif_task *gdbif_task ) {
+  return;
+}
+
 void pip_gdbif_initialize_root_( int ntasks ) {
   struct pip_gdbif_root *gdbif_root;
   size_t sz;
@@ -185,8 +193,8 @@ void pip_gdbif_initialize_root_( int ntasks ) {
   ENTER;
   sz = sizeof( *gdbif_root ) + sizeof( gdbif_root->tasks[0] ) * ntasks;
   pip_page_alloc_( sz, (void**) &gdbif_root );
-  gdbif_root->hook_before_main = NULL; /* XXX */
-  gdbif_root->hook_after_main  = NULL; /* XXX */
+  gdbif_root->hook_before_main = pip_gdb_hook_before;
+  gdbif_root->hook_after_main  = pip_gdb_hook_after;
   pip_spin_init( &gdbif_root->lock_free );
   PIP_SLIST_INIT(&gdbif_root->task_free);
   pip_spin_init( &gdbif_root->lock_root );
@@ -247,4 +255,18 @@ void pip_gdbif_finalize_task_( pip_task_internal_t *task ) {
     pip_spin_unlock( &pip_gdbif_root->lock_free );
   }
   RETURNV;
+}
+
+void pip_gdbif_hook_before_( pip_task_internal_t *task ) {
+  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  if( pip_gdbif_root->hook_before_main != NULL ) {
+    pip_gdbif_root->hook_before_main( gdbif_task );
+  }
+}
+
+void pip_gdbif_hook_after_( pip_task_internal_t *task ) {
+  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  if( pip_gdbif_root->hook_after_main != NULL ) {
+    pip_gdbif_root->hook_after_main( gdbif_task );
+  }
 }
