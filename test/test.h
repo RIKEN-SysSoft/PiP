@@ -33,16 +33,23 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
+#ifndef __test_h__
+#define __test_h__
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+
+#define PIP_INTERNAL_FUNCS
 
 #include <stdbool.h>
 #include <pip_internal.h>
 
 #define NTASKS		PIP_NTASKS_MAX
 #define NITERS		(100)
-#define EXTVAL_MASK	(0x5)
+#define EXTVAL_MASK	(127)
+
+#define PIPENV		"PIPENV"
 
 #define EXIT_PASS	0
 #define EXIT_FAIL	1
@@ -52,6 +59,8 @@
 #define EXIT_UNTESTED	5  /* not tested, this test haven't written yet      */
 #define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
 #define EXIT_KILLED	7  /* killed by Control-C or something               */
+
+extern int pip_id;
 
 typedef struct naive_barrier {
   struct {
@@ -96,7 +105,10 @@ inline static int naive_barrier_wait( naive_barrier_t *barrp ) {
       pip_memory_barrier();
       barrp->gsense = lsense;
     } else {
-      while( barrp->gsense != lsense ) sched_yield();
+      while( barrp->gsense != lsense ) {
+	pip_yield();
+	sched_yield();
+      }
     }
   }
   return 0;
@@ -105,7 +117,10 @@ inline static int naive_barrier_wait( naive_barrier_t *barrp ) {
 typedef pip_spinlock_t		naive_lock_t;
 
 inline static void naive_lock( naive_lock_t *lock ) {
-  while( !pip_spin_trylock( lock ) ) sched_yield();
+  while( !pip_spin_trylock( lock ) ) {
+    pip_yield();
+    sched_yield();
+  }
 }
 
 inline static void naive_unlock( naive_lock_t *lock ) {
@@ -161,28 +176,9 @@ void pip_abort( void );
   } while(0)
 #endif
 
-inline static int cpu_num_limit( void ) {
-  static bool initialized = false;
-  static long ncpu;
-
-  if( initialized ) {
-    return ncpu;
-  }
-
-  ncpu = sysconf( _SC_NPROCESSORS_ONLN );
-  if( ncpu == -1 ) {
-    fprintf( stderr, "sysconf( _SC_NPROCESSORS_ONLN ): %s\n",
-	     strerror(errno) );
-    exit( EXIT_FAILURE );
-  }
-  if( ncpu > 16 )
-    ncpu = 16;
-  initialized = true;
-  return ncpu;
-}
-
 inline static void pause_and_yield( int usec ) {
   if( usec > 0 ) usleep( usec );
+  pip_yield();
   sched_yield();
 }
 
@@ -468,3 +464,7 @@ inline static unsigned long get_total_memory( void ) {
   if ( ns > 0 ) return memtotal;
   return 0;
 }
+
+extern int pip_is_debug_build( void );
+
+#endif /* __test_h__ */

@@ -35,48 +35,11 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-LDLIBS += ../main.o
+SRCS  = initfin.c exit.c yield.c barrier.c namexp.c
 
-DEPLIBS += ../main.o
-
-SRCS  = initfin.c exit.c yield.c barrier.c namexp.c ctype.c
-
-##	stack.c \
-##	export.c \
-##	environ.c \
-##	file.c \
-##	exit.c \
-##	core.c \
-##	numa.c \
-##	hook.c \
-##	null.c \
-##	recursive.c \
-##	varvars.c \
-##	activate.c \
-##	mutex.c \
-##	barrier.c
-##	sigchld.c
-
-PROGRAMS  = initfin exit yield barrier namexp ctype
-
-PROGRAMS_TO_INSTALL = # nothing
+PROGRAMS  = initfin exit yield barrier namexp
 
 include $(top_srcdir)/build/rule.mk
-
-PIPCFLAGS  = -I$(PIPINCDIR) $(CFLAGS) $(PIECFLAG) $(PIPINCFLAGS)
-LDLIBS += $(PIPLDLIB) -ldl
-
-CPPFLAGS += -I..
-
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h ../test.h
-DEPLIBS = ../main.o
-
-%: %.c $(DEPINCS) $(DEPLIBS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $(PIELDFLAG) \
-	$< -o $@ $(LDLIBS) -ldl
-
-post-clean-hook:
-	$(RM) -f *.E
 
 check: test
 
