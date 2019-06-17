@@ -33,11 +33,14 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#define PIP_INTERNAL_FUNCS
-
-//#define DEBUG
 #include <test.h>
 
 int test_main( void *dummy ) {
+  int pipid;
+  char *env = getenv( PIPENV );
+
+  TESTINT( pip_get_pipid( &pipid ) );
+  if( env == NULL ) return 1;
+  if( strtol( env, NULL, 10 ) != pipid  ) return 2;
   return 0;
 }

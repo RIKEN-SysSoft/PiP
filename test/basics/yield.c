@@ -35,12 +35,17 @@
 
 #define PIP_INTERNAL_FUNCS
 
-//#define DEBUG
 #include <test.h>
 
 int test_main( exp_t *exp ) {
-  int i;
-  for( i=0; i<exp->args.niters; i++ ) {
+  int i, n;
+
+  if( pip_is_debug_build() ) {
+    n = 10;
+  } else {
+    n = 100;
+  }
+  for( i=0; i<n; i++ ) {
     TESTINT( pip_yield() );
   }
   return 0;

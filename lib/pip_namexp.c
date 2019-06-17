@@ -39,11 +39,6 @@
 #include <sched.h>
 #include <stdio.h>
 
-#ifdef DEBUG
-#undef DEBUG
-#endif
-#define DEBUG
-
 #include <pip.h>
 #include <pip_blt.h>
 #include <pip_internal.h>
@@ -85,16 +80,6 @@ typedef struct pip_named_exptab {
 } pip_named_exptab_t;
 
 
-static void pip_namexp_lock( pip_spinlock_t *lock ) {
-  DBGF( "LOCK %p", lock );
-  pip_spin_lock( lock );
-}
-
-static void pip_namexp_unlock( pip_spinlock_t *lock ) {
-  DBGF( "UNLOCK %p", lock );
-  pip_spin_unlock( lock );
-}
-
 static void pip_add_namexp_entry( pip_namexp_list_t *head,
 				  pip_namexp_entry_t *entry ) {
   PIP_LIST_ADD( (pip_list_t*) &head->list, (pip_list_t*) entry );
@@ -133,22 +118,16 @@ pip_lock_hashtab_head( pip_named_exptab_t *namexp, pip_hash_t hash ) {
   pip_namexp_list_t	*head = &(htab[idx]);
   //DBGF( "namexp:%p", namexp );
   //DBGF( "head:%p  hash:0x%lu  sz:%lu  idx:%d", head, hash, namexp->sz, idx );
-  pip_namexp_lock( &head->lock );
+  pip_spin_lock( &head->lock );
   return head;
 }
 
 static void pip_unlock_hashtab_head( pip_namexp_list_t *head ) {
-  pip_namexp_unlock( &head->lock );
+  pip_spin_unlock( &head->lock );
 }
 
 static pip_hash_t
 pip_name_hash( char **namep, const char *format, va_list ap ) {
-  int pip_my_isalnum( char c ) {
-    if( ( c >= 'a' && c <= 'z' ) ||
-	( c >= 'A' && c <= 'Z' ) ||
-	( c >= '0' && c <= '9' ) ) return 1;
-    return 0;
-  }
   pip_hash_t	hash = 0;
   char		*name = NULL;
   int 		i;
@@ -295,13 +274,10 @@ static int pip_named_import_( int pipid,
 
   ENTER;
   if( ( err = pip_check_pipid_( &pipid ) ) != 0 ) RETURN( err );
-  DBG;
   taski = pip_get_task_( pipid );
-  DBG;
   namexp = (pip_named_exptab_t*) taski->annex->named_exptab;
   ASSERT( namexp == NULL );
 
-  DBG;
   hash = pip_name_hash( &name, format, ap );
   if( name == NULL ) RETURN( ENOMEM );
 
@@ -312,7 +288,6 @@ static int pip_named_import_( int pipid,
       if( entry->flag_exported ) { /* exported already */
 	address = entry->address;
       } else {
-	DBG;
 	/* already queried, but not yet exported */
 	if( flag_nblk ) {
 	  err = EAGAIN;
@@ -342,19 +317,16 @@ static int pip_named_import_( int pipid,
 					(void*) head );
 	/* now, it is exported */
 	/* note that the lock is unlocked !! */
-	DBG;
 	if( entry->flag_canceled ) {
 	  err = ECANCELED;
 	} else {
 	  address = entry->address;
 	}
-	DBG;
 	PIP_LIST_FOREACH_SAFE( &entry->list_wait, list, next ) {
 	  waitp = (pip_namexp_wait_t*) list;
 	  waitp->err     = err;
 	  waitp->address = address;
 	}
-	DBG;
 	n = PIP_TASK_ALL;
 	err = pip_dequeue_and_resume_N_nolock( &entry->queue_others, NULL, &n);
 
@@ -367,7 +339,6 @@ static int pip_named_import_( int pipid,
   pip_unlock_hashtab_head( head );
  nounlock:
   PIP_FREE( name );
-  DBG;
   if( !err ) *expp = address;
   RETURN( err );
 }
@@ -429,12 +400,11 @@ void pip_named_export_fin_all_( void ) {
   for( i=0; i<pip_root_->ntasks; i++ ) {
     DBGF( "PiP task: %d", i );
     PIP_FREE( pip_root_->tasks[i].annex->named_exptab );
-    DBG;
     pip_root_->tasks[i].annex->named_exptab = NULL;
   }
   DBGF( "PiP root" );
   (void) pip_named_export_fin_( pip_root_->task_root );
   PIP_FREE( pip_root_->task_root->annex->named_exptab );
   pip_root_->task_root->annex->named_exptab = NULL;
-  DBG;
+  RETURNV;
 }

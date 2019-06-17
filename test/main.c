@@ -35,11 +35,15 @@
 
 #include <sys/wait.h>
 #include <ctype.h>
+#include <time.h>
 
 //#define DEBUG
+
 #include <test.h>
 
 extern int test_main( exp_t *exp );
+
+int pip_id;
 
 static pid_t pid_root;
 
@@ -54,15 +58,26 @@ static void print_usage( void ) {
   exit( 1 );
 }
 
-static void print_conditions( test_args_t *argsp, int timer, char *env_wait ) {
+static void print_conditions( char *prefix,
+			      test_args_t *argsp,
+			      int timer,
+			      char *env_wait ) {
+  time_t tm;
   char *waitstr;
+  char now[128];
+
+  time( &tm );
+  strftime( now, 128, "%m/%d %T", (const struct tm*) localtime( &tm ) );
 
   if( env_wait ) {
     waitstr = "WAIT_ANY";
   } else {
     waitstr = "WAIT";
   }
-  fprintf( stderr, "[%s] timer:%d  ntasks:%d(%d+%d)  niters:%d -- %s\n",
+  fprintf( stderr,
+	   "%s %s %s  timeout:%d[sec.]  ntasks:%d(%d+%d)  niters:%d -- %s\n",
+	   prefix,
+	   now,
 	   argsp->argv[0],
 	   timer,
 	   argsp->ntasks,
@@ -72,7 +87,7 @@ static void print_conditions( test_args_t *argsp, int timer, char *env_wait ) {
 	   waitstr );
 }
 
-#define TIMER_DEFAULT 	(1)	/* 1 sec */
+#define TIMER_DEFAULT 	(10)	/* 10 sec */
 
 static void set_timer( int timer ) {
   extern void pip_abort_all_tasks( void );
@@ -91,11 +106,17 @@ static void set_timer( int timer ) {
   sigact.sa_flags     = SA_RESETHAND;
   TESTINT( sigaction( SIGALRM, &sigact, NULL ) );
 
-  if( timer == 0 ) timer = TIMER_DEFAULT;
   memset( &tv, 0, sizeof(tv) );
   tv.it_interval.tv_sec = timer;
   tv.it_value.tv_sec    = timer;
   TESTINT( setitimer( ITIMER_REAL, &tv, NULL ) );
+}
+
+static void unset_timer( void ) {
+  struct sigaction sigact;
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_handler = SIG_IGN;
+  TESTINT( sigaction( SIGALRM, &sigact, NULL ) );
 }
 
 int task_start( void *args ) {
@@ -109,6 +130,7 @@ int task_start( void *args ) {
   fprintf( stderr, "[%d] barrier (0)!!\n", pipid );
 #endif
 
+  pip_id = pipid;
   if( pipid < exp->args.npass ) {
     TESTINT( pip_suspend_and_enqueue( queue, NULL, NULL ) );
     TESTINT( test_main( exp ) );
@@ -136,8 +158,9 @@ int task_start( void *args ) {
 
 static int set_params( test_args_t *args, int argc, char **argv ) {
   char	*env_ntasks = getenv( "NTASKS" );
-  int	ntasks = 0, nact = 0, npass = 0, niters = 1;
-  int	ntasks_max, timer = TIMER_DEFAULT;
+  int	ntasks = 0, nact = 0, npass = 0, niters = 0;
+  int	ntasks_max;
+  int	timer = TIMER_DEFAULT;
 
   if( env_ntasks != NULL ) {
     ntasks_max = strtol( env_ntasks, NULL, 10 );
@@ -147,6 +170,7 @@ static int set_params( test_args_t *args, int argc, char **argv ) {
   if( argc > 1 ) {
     if( !isdigit( *argv[1] ) ) print_usage();
     timer = strtol( argv[1], NULL, 10 );
+    if( timer == 0 ) timer = TIMER_DEFAULT;
   }
   if( argc > 2 ) {
     if( *argv[2] == '*' ) {
@@ -182,7 +206,14 @@ static int set_params( test_args_t *args, int argc, char **argv ) {
   ntasks = nact + npass;
   if( ntasks == 0 ) ntasks = nact = ntasks_max;
 
-  if( argc > 4 ) niters = strtol( argv[4], NULL, 10 );
+  if( argc > 4 ) {
+    niters = strtol( argv[4], NULL, 10 );
+  }
+  if( pip_is_debug_build() ) {
+    niters /= 10;
+    if( niters == 0 ) niters = 1;
+  }
+  if( niters == 0 ) niters = 10;
 
   args->argc   = argc;
   args->argv   = argv;
@@ -205,7 +236,6 @@ void *set_export( int argc, char **argv, int *timerp ) {
   exp.npass = 0;
   naive_barrier_init( &exp.nbarr[0], exp.args.ntasks );
   naive_barrier_init( &exp.nbarr[1], exp.args.ntasks - exp.args.npass );
-
   pip_barrier_init( &exp.pbarr, exp.args.ntasks );
   pip_mutex_init( &exp.pmutex );
 
@@ -246,10 +276,14 @@ static int root_proc( int argc, char **argv ) {
   set_timer( timer );
   ntasks = exp->args.ntasks;
   TESTINT( pip_init( NULL, &ntasks, (void**) &exp, 0 ) );
-  print_conditions( &exp->args, timer, env_wait );
+  print_conditions( ">>", &exp->args, timer, env_wait );
+
 
   pip_spawn_from_func( &prog, argv[0], "task_start", (void*) exp, NULL );
   for( i=0; i<ntasks; i++ ) {
+    char env[128];
+    sprintf( env, "%s=%d", PIPENV, i );
+    putenv( env );
     pipid = i;
     TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ) );
   }
@@ -264,20 +298,21 @@ static int root_proc( int argc, char **argv ) {
       if( ( err = check_status( i, st, "wait" ) ) != 0 ) break;
     }
   }
-  fprintf( stderr, "ERR:%d\n", err );
+  unset_timer();
+  //fprintf( stderr, "ERR:%d\n", err );
   if( err ) kill_all_tasks( ntasks );
   TESTINT( pip_fin() );
 
-  print_conditions( &exp->args, timer, env_wait );
+  print_conditions( "<<", &exp->args, timer, env_wait );
   if( err < 0 ) {
     printf( "FAILED!!\n" );
-    exit( EXIT_FAIL );
+    _exit( EXIT_FAIL );
   } else if( err > 0 ) {
     printf( "FAILED!! (signal '%s':%d)\n", strsignal( err ), err );
-    exit( EXIT_FAIL );
+    _exit( EXIT_FAIL );
   } else {
     printf( "Success\n" );
-    exit( EXIT_PASS );
+    _exit( EXIT_PASS );
   }
 }
 

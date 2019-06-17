@@ -1,23 +1,28 @@
 #!/bin/sh
 
 cmd=$0;
-PROGNAM=`basename $1`;
-FILE="loop-${PROGNAM}.log";
-TMP=.$FILE;
 
 function prt_ext() {
-    case $1 in
-	0) echo "EXIT_PASS";;
-	1) echo "EXIT_FAIL";;
-	2) echo "EXIT_XPASS";;
-	3) echo "EXIT_XFAIL";;
-	4) echo "EXIT_UNRESOLVED";;
-	5) echo "EXIT_UNTESTED";;
-	6) echo "EXIT_UNSUPPORTED";;
-	7) echo "EXIT_KILLED";;
-	*) echo "(unknown:" $1 ")";;
-    esac
-    exit $1;
+    exit=$1
+    if [ $quiet -eq 0 ]
+    then
+	tty > /dev/null 2>&1;
+	if [ $? ]
+	then
+	    case $exit in
+		0) echo "EXIT_PASS";;
+		1) echo "EXIT_FAIL";;
+		2) echo "EXIT_XPASS";;
+		3) echo "EXIT_XFAIL";;
+		4) echo "EXIT_UNRESOLVED";;
+		5) echo "EXIT_UNTESTED";;
+		6) echo "EXIT_UNSUPPORTED";;
+		7) echo "EXIT_KILLED";;
+		*) echo "(unknown:" $1 ")";;
+	    esac
+	fi
+    fi
+    exit $exit;
 }
 
 function print_usage() {
@@ -46,6 +51,10 @@ case $# in
         done
 	;;
 esac
+
+PROGNAM=`basename $1`;
+FILE="loop-${PROGNAM}.log";
+TMP=.$FILE;
 
 i=0;
 start=`date +%s`;
@@ -97,4 +106,5 @@ do
 done
 
 rm -f $TMP;
+
 prt_ext 0;

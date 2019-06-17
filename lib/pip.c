@@ -55,6 +55,8 @@
 //#define ATTR_NOINLINE		__attribute__ ((noinline))
 //#define ATTR_NOINLINE
 
+int pip_is_threaded_( void );
+
 extern char 		**environ;
 
 /*** note that the following static variables are   ***/
@@ -531,13 +533,21 @@ int pip_get_ntasks( int *ntasksp ) {
 }
 
 void pip_exit( int extval ) {
-  extern void pip_do_exit_RC( pip_task_internal_t*, int );
+  extern void pip_do_exit( pip_task_internal_t*, int );
 
   DBGF( "extval:%d", extval );
   if( PIP_ISA_ROOT( pip_task_ ) ) {
     exit( extval );
   } else {
-    pip_do_exit_RC( pip_task_, extval );
+    pip_do_exit( pip_task_, extval );
   }
   NEVER_REACH_HERE;
+}
+
+int pip_is_debug_build( void ) {
+#ifdef DEBUG
+  return 1;
+#else
+  return 0;
+#endif
 }

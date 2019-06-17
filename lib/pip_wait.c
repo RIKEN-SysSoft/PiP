@@ -151,7 +151,9 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
       err = pthread_tryjoin_np( taski->annex->thread, NULL );
       DBGF( "pthread_tryjoin_np(%d)=%d", taski->annex->extval, err );
     } else {
+      pip_deadlock_inc_();
       err = pthread_join( taski->annex->thread, NULL );
+      pip_deadlock_dec_();
       DBGF( "pthread_join(%d)=%d", taski->annex->extval, err );
     }
   } else {
@@ -162,7 +164,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 
 #ifdef __WALL
     /* __WALL: Wait for all children, regardless of type */
-    /* ("clone" or "non-clone") [from man page]          */
+    /* ("clone" or "non-clone") [from the man page]      */
     options |= __WALL;
 #endif
     if( flag_try ) options |= WNOHANG;
@@ -187,11 +189,11 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 		       taski->pipid, strsignal(sig), sig );
       }
       pip_do_terminate_RC( taski, status );
-      pip_root_->ntasks_count --;
     }
   }
   DBG;
   if( err == 0 ) {
+    pip_root_->ntasks_count --;
     if( extvalp != NULL ) *extvalp = taski->annex->extval;
     pip_finalize_task_( taski );
   }
@@ -343,9 +345,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
 	  err = errno;
 	  break;
 	}
-	DBG;
 	(void) sigsuspend( &sigset ); /* always returns EINTR */
-	DBG;
 	continue;
       }
     }

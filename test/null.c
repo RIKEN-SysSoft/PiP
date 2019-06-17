@@ -33,19 +33,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <netdb.h>
-#include <test.h>
-
-#define HOSTNAMELEN	(256)
-
-int test_main( exp_t *exp ) {
-  int i, err = 0;
-  for( i=0; i<1000; i++ ) {
-    char hostnam[HOSTNAMELEN];
-    if( gethostname( hostnam, HOSTNAMELEN ) != 0 ) {
-      err = errno;
-    }
-    //TESTINT( pip_barrier_wait( &exp->pbarr ) );
-  }
-  return err;
+void foo( void ) {
+  return;
 }

@@ -206,6 +206,7 @@ typedef struct pip_task_annex {
 
   int32_t			extval;	   /* exit value */
   pip_task_t			exitq;	   /* exit queue */
+  pip_ctx_t			*ctx_exit; /* context to exit */
 
   pid_t				pid; /* PID in process mode at beginning */
   pthread_t			thread;	/* thread */

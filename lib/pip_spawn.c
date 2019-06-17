@@ -448,7 +448,6 @@ static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
 }
 
 static int pip_corebind( int coreno ) {
-#ifdef AH
   cpu_set_t cpuset;
 
   ENTER;
@@ -462,7 +461,6 @@ static int pip_corebind( int coreno ) {
   } else {
     DBGF( "coreno=%d", coreno );
   }
-#endif
   RETURN( 0 );
 }
 
@@ -572,15 +570,15 @@ static void* pip_do_spawn( void *thargs )  {
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
   /* and do not call malloc() and free() in this contxt !!!!         */
-  extern void pip_do_exit_RC( pip_task_internal_t*, int );
+  extern void pip_do_exit( pip_task_internal_t*, int );
   pip_spawn_args_t *args = (pip_spawn_args_t*) thargs;
   int	 		pipid  = args->pipid;
   char 			**argv = args->argv;
   int 			coreno = args->coreno;
   pip_task_internal_t 	*self  = &pip_root_->tasks[pipid];
-  int			i;
   int			extval = 0;
   int			err    = 0;
+  int			i;
 
   ENTER;
 
@@ -612,6 +610,7 @@ static void* pip_do_spawn( void *thargs )  {
     }
   }
   DBG;
+
   /* calling PIP-GDB hook function */
   pip_gdbif_hook_before_( self );
   /* calling hook function, if any */
@@ -637,7 +636,7 @@ static void* pip_do_spawn( void *thargs )  {
   DBG;
  error:
   /* the main() or entry function returns here and terminate myself */
-  pip_do_exit_RC( self, extval );
+  pip_do_exit( self, extval );
   NEVER_REACH_HERE;
   return NULL;
 }

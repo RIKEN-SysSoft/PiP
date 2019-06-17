@@ -35,22 +35,13 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = gethostname.c gethostbyname.c initfini.c iftask.c gettimeofday.c \
-	ctype.c main.c exit.c exit1.c exit2.c exit3.c exit4.c abort.c \
-	brk.c pf.c fork.c sid.c system.c sigchld.c malloc.c
+SRCS  = ctype.c dlopen.c gettimeofday.c gethostbyname gethostname.c
 
-PROGRAMS = gethostname gethostbyname dlopen initfini iftask gettimeofday \
-	ctype main exit exit1 exit2 exit3 exit4 abort \
-	brk pf fork sid system sigchld malloc
-
-PROGRAMS_TO_INSTALL = # nothing
+PROGRAMS  = ctype dlopen gettimeofday gethostbyname gethostname
 
 include $(top_srcdir)/build/rule.mk
-
-post-clean-hook:
-	$(RM) *.E *.log
 
 check: test
 
 test:
-	( cd ../; ./test.sh -A compat/test.list )
+	( cd ../; ./test.sh -A basics/test.list )

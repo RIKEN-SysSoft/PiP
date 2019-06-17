@@ -375,8 +375,6 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
   NEVER_REACH_HERE;
 }
 
-#define STACK_PG_NUM	(16)
-
 static void pip_switch_stack_and_sleep( pip_task_internal_t *schedi,
 					pip_task_internal_t *taski ) {
   pip_sleep_args_t	args;
@@ -392,16 +390,20 @@ static void pip_switch_stack_and_sleep( pip_task_internal_t *schedi,
   args.schedi = schedi;
   args.taski  = taski;
   /* creating new context to switch stack */
+  DBG;
   pip_save_context( &ctx );
+  DBG;
 
-  ctx.ctx.uc_link = NULL;
   stk = &(ctx.ctx.uc_stack);
   stk->ss_sp    = schedi->annex->sleep_stack;
   stk->ss_flags = 0;
   stk->ss_size  = stksz;
   args_H = ( ((intptr_t) &args) >> 32 ) & PIP_MASK32;
   args_L = (  (intptr_t) &args)         & PIP_MASK32;
+  DBG;
   pip_make_context( &ctx, pip_sleep, 4, args_H, args_L );
+  ctx.ctx.uc_link = NULL;
+  DBG;
   /* no need of saving/restoring TLS */
   pip_load_context_( &ctx );
 }
@@ -524,7 +526,7 @@ static void pip_sched_next( pip_task_internal_t *taski,
   pip_stack_unprotect_prevt( taski );
 }
 
-void pip_do_exit_RC( pip_task_internal_t *taski, int extval ) {
+void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   extern void pip_do_terminate_RC( pip_task_internal_t*, int );
   pip_task_internal_t	*schedi, *nexti;
   int 			ntc;
@@ -543,21 +545,21 @@ void pip_do_exit_RC( pip_task_internal_t *taski, int extval ) {
   DBGF( "TASKI: %d[%d]",  taski->pipid,  taski->task_sched->pipid );
   DBGF( "SCHEDI: %d[%d]", schedi->pipid, schedi->task_sched->pipid );
 
-  ASSERT( taski->task_sched == NULL );
   nexti = pip_schedq_next( taski );
-  if( schedi != taski ) {	/* wake up to terminate */
-    pip_wakeup( taski );	/* taski will be reset by root */
+  if( schedi != taski ) {
+    /* wake up to terminate */
+    pip_wakeup( taski );	/* since taski will be reset by root */
   }				/* do not touch taski after this */
   if( nexti != NULL ) {
     DBGF( "NEXT %d[%d]", nexti->pipid, nexti->task_sched->pipid );
     pip_task_sched_with_tls( nexti );
   } else if( schedi->ntakecare > 0 ||
 	     schedi != taski ) { /* schedi must not exit in this case */
-    DBGF( "No sched tas but there are some tasks to take carek" );
     DBGF( "schedi->ntakecare:%d", (int) schedi->ntakecare );
+    /* No tasks to be scheduled but there are some tasks to take care */
     pip_switch_stack_and_sleep( schedi, NULL );
   } else {
-    DBGF( "No tasks to take care and terminate the scheduling task" );
+    /* no tasks to take care and (schedi == taski); terminate myself */
     pip_force_exit( schedi );
   }
   NEVER_REACH_HERE;

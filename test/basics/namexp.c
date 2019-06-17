@@ -33,42 +33,62 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
-#include <ctype.h>
+//#define DEBUG
 #include <test.h>
+#include <math.h>
 
-#ifdef DEBUG
-#define CTYPE(F,C)							\
-  if( pip_id == 0 ) { fprintf(stderr,"%s\n",#F); (void) F(C); } while(0)
-#else
-#define CTYPE(F,C)	(void) F((char)C)
-#endif
+
+#define BIAS	(1000)
+
+int *a;
 
 int test_main( exp_t *exp ) {
-  int i;
-  for( i=0; i<10000; i++ ) {
-    int c;
-#ifdef DEBUG
-    if( pip_id == 0 ) fprintf( stderr, "loop:%d\n", i );
-#endif
-    for( c=0; c<0x100; c++ ) {
-#ifdef DEBUG
-      if( pip_id == 0 ) fprintf( stderr, "[%d]  c=0x%x\n", i, c );
-#endif
-      CTYPE( isalnum, c );
-      CTYPE( isalpha, c );
-      CTYPE( isascii, c );
-      CTYPE( isblank, c );
-      CTYPE( iscntrl, c );
-      CTYPE( isdigit, c );
-      CTYPE( isgraph, c );
-      CTYPE( islower, c );
-      CTYPE( isprint, c );
-      CTYPE( ispunct, c );
-      CTYPE( isspace, c );
-      CTYPE( isupper, c );
-      CTYPE( isxdigit, c );
-    }
-    //TESTINT( pip_barrier_wait( &exp->pbarr ) );
+  int pipid, ntasks = exp->args.ntasks;
+  int *ap, flag, i, k, n;
+
+  if( ntasks < 2 ) return 1;
+
+  if( pip_is_debug_build() ) {
+    n = 20;
+  } else {
+    n = 5;
   }
-  return 0;
+  a = (int*) malloc( sizeof(int) * n );
+
+  flag = 0;
+  TESTINT( pip_get_pipid( &pipid ) );
+  srand( pipid );
+  for( i=0; i<n; i++ ) {
+    if( pipid & 0x1 ) {
+      a[i] = ( BIAS * pipid ) + i;
+    } else {
+      a[i] = -1;;
+    }
+  }
+
+  for( i=0; i<n; i++ ) {
+    if( pipid & 0x1 ) {
+      ap = &a[i];
+      fprintf( stderr, "[%d] export[%d]\n", pipid, i );
+      TESTINT( pip_named_export( (void*) ap, "a[%d]", i ) );
+    } else {
+      do {
+	k = rand() % ntasks;
+      } while( !( k & 0x1 ) );
+      fprintf( stderr, "[%d] import[%d]@%d\n", pipid, i, k );
+      TESTINT( pip_named_import( k, (void**) &ap, "a[%d]", i ) );
+      if( *ap != ( BIAS * k ) + i ) {
+	flag = 1;
+	fprintf( stderr, "[%d] i=%d  %d != %d\n", pipid, i, *ap, i+BIAS );
+      }
+    }
+    if( pipid == 0 && i % 10 == 0 ) {
+      fprintf( stderr, "ITER:%d\n", i );
+    }
+  }
+#ifdef DEBUG
+  fprintf( stderr, "\n[pipid:%d] DONE\n\n", pipid );
+#endif
+  TESTINT( pip_barrier_wait( &exp->pbarr ) );
+  return flag;
 }

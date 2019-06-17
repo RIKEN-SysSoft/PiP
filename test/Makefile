@@ -35,21 +35,23 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include ./Test.common
 
-PIPCPPFLAGS = -I$(PIPINCDIR) $(PIPINCFLAGS)
+PIPCPPFLAGS = -I. -I../include
 PIPCFLAGS  = $(CFLAGS) $(PICCFLAG)
 
-SRCS = main.c
-OBJS = main.o
+SRCS = main.c null.c
+OBJS = main.o libnull.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCPPFLAGS) $(PIPCFLAGS) $(PIPLDFLAGS) \
-	-c $< -o $@
+main.o: main.c ../include/pip.h ./test.h Makefile
+	$(CC) $(PIPCPPFLAGS) $(PIPCFLAGS) -c main.c -o main.o
 
-all : main.o test.h
+libnull.so: null.c Makefile
+	$(CC) -g -O3 -fPIC -shared null.c -o libnull.so
+
+all : $(OBJS)
 
 clean:
 	rm -f $(OBJS)

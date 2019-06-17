@@ -8,13 +8,13 @@ unset LANG LC_ALL
 
 : ${TEST_PIP_TASKS:=$(./util/dlmopen_count -p)}
 
-export NTASKS=${TEST_PIP_TASKS}
-
 if [ -n "$MCEXEC" ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
 	TEST_PIP_TASKS=$OMP_NUM_THREADS;
     fi
 fi
+
+export NTASKS=${TEST_PIP_TASKS}
 
 print_summary()
 {
@@ -121,9 +121,10 @@ else
     pip_mode_list_all='L C T';
 fi
 
-echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+#echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
 echo LD_PRELOAD=$LD_PRELOAD
-echo NTASKS: ${TEST_PIP_TASKS}
+echo 'NTASKS:  ' ${TEST_PIP_TASKS}
+echo 'NTHERADS:' ${OMP_NUM_THREADS}
 
 # check whether each $PIP_MODE is testable or not
 run_test_L=''

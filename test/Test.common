@@ -28,19 +28,34 @@
 # $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-CPPFLAGS = -I$(srcdir)/.. -I$(srcdir) -I$(PIPINCDIR)
-CFLAGS += -g $(PIECFLAG)
-LDLIBS += $(PIPLDLIB) -ldl $(PIELDFLAG)
+CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
+CFLAGS +=  $(PIECFLAG)
+PIPLIBDIR = $(top_builddir)/lib
 
-DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h \
-	$(PIPINCDIR)/pip_blt.h $(PIPINCDIR)/pip_internal.h \
-	$(PIPINCDIR)/pip_machdep.h $(PIPINCDIR)/pip_debug.h
+LDLIBS = -L$(PIPLIBDIR) -Wl,-rpath=$(PIPLIBDIR) -lpip ../main.o
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
+LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
+	$(LDLIBS) -ldl $(PIELDFLAG)
 
-%: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) -pie $< -o $@ $(LDLIBS)
+DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h  \
+	$(PIPINCDIR)/pip_internal.h $(PIPINCDIR)/pip_machdep.h \
+	$(PIPINCDIR)/pip_debug.h $(PIPINCDIR)/pip_util.h \
+	../test.h
 
-%: %.f $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(FC) $(CPPFLAGS) $(FFLAGS) $(PIPLDFLAGS) -fPIE $< -o $@ $(LDLIBS)
+DEPLIBS += $(PIPLIBDIR)/libpip.so ../main.o
+
+PROGRAMS_TO_INSTALL = # nothing
+
+%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+
+%: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+	$(CXX) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)$< -o $@
+
+%: %.f $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@
+
+all : $(PROGRAMS)
+
+post-clean-hook:
+	$(RM) -f *.E

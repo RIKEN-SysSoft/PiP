@@ -43,26 +43,18 @@
 int pipid;
 
 int test_main( exp_t *exp ) {
-  int i, j;
+  int i, n;
 
-  TESTINT( pip_get_pipid( &pipid ) );
-  DBGF( "ntasks:%d", exp->args.ntasks );
-  for( i=0; i<exp->args.niters; i++ ) {
-    for( j=0; j<exp->args.ntasks; j++ ) {
-      DBGF( "BARRIER >> A" );
-      BARRIER;
-      DBGF( "BARRIER << A" );
-      exp->tmp = -1;
-      pip_memory_barrier();
-      DBGF( "BARRIER >> B" );
-      BARRIER;
-      DBGF( "BARRIER << B" );
-      if( j == pipid ) exp->tmp = pipid;
-      DBGF( "BARRIER >> C" );
-      BARRIER;
-      DBGF( "BARRIER << C" );
-      TESTINT( exp->tmp != j ) ;
-    }
+  if( pip_is_debug_build() ) {
+    n = 10;
+  } else {
+    n = 50;
+  }
+  for( i=0; i<n; i++ ) {
+    TESTINT( exp->tmp != i );
+    BARRIER;
+    exp->tmp = i+1;
+    BARRIER;
   }
   DBGF( "TEST DONE !!!!" );
   return 0;
