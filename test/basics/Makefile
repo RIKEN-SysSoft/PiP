@@ -35,13 +35,20 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = initfin.c exit.c yield.c barrier.c namexp.c
+SRCS  = pip_init.c \
+	pip_fin.c \
+	pip_spawn.c \
+	pip_task_spawn.c \
+	pip_get_mode.c \
+	pip_get_mode_str.c \
+	pip_get_ntasks.c
 
-PROGRAMS  = initfin exit yield barrier namexp
+PROGRAMS  = pip_init \
+	pip_fin \
+	pip_spawn \
+	pip_task_spawn \
+	pip_get_mode \
+	pip_get_mode_str \
+	pip_get_ntasks
 
 include $(top_srcdir)/build/rule.mk
-
-check: test
-
-test:
-	( cd ../; ./test.sh -A basics/test.list )

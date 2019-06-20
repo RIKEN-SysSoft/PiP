@@ -45,9 +45,6 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-main.o: main.c ../include/pip.h ./test.h Makefile
-	$(CC) $(PIPCPPFLAGS) $(PIPCFLAGS) -c main.c -o main.o
-
 libnull.so: null.c Makefile
 	$(CC) -g -O3 -fPIC -shared null.c -o libnull.so
 

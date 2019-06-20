@@ -33,11 +33,12 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
-PROGRAMS = dlmopen_count pip_mode ompnumthread
+PROGRAMS = dlmopen_count ompnumthread timer pip_mode pip_task
 PROGRAMS_TO_INSTALL = # nothing
-SRCS	= dlmopen_count.c pip_mode.c ompnumthread.c
+SRCS	= dlmopen_count.c ompnumthread.c timer.c pip_mode.c pip_task.c
+
+include ../Test.common
 
 all: $(PROGRAMS)
 

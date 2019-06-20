@@ -30,19 +30,19 @@
 
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
 CFLAGS +=  $(PIECFLAG)
-PIPLIBDIR = $(top_builddir)/lib
+PIPLIBDIR = $(shell realpath $(top_builddir)/lib)
 
-LDLIBS = -L$(PIPLIBDIR) -Wl,-rpath=$(PIPLIBDIR) -lpip ../main.o
+LDLIBS = -L$(PIPLIBDIR) -Wl,-rpath=$(PIPLIBDIR) -lpip
 
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
-	$(LDLIBS) -ldl $(PIELDFLAG)
+	$(LDLIBS) -ldl -pthread $(PIELDFLAG)
 
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h  \
 	$(PIPINCDIR)/pip_internal.h $(PIPINCDIR)/pip_machdep.h \
 	$(PIPINCDIR)/pip_debug.h $(PIPINCDIR)/pip_util.h \
 	../test.h
 
-DEPLIBS += $(PIPLIBDIR)/libpip.so ../main.o
+DEPLIBS += $(PIPLIBDIR)/libpip.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -58,4 +58,6 @@ PROGRAMS_TO_INSTALL = # nothing
 all : $(PROGRAMS)
 
 post-clean-hook:
-	$(RM) -f *.E
+	$(RM) *.E
+	$(RM) *.log;
+	$(RM) \#*\#;
