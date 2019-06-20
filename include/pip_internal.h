@@ -45,6 +45,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stddef.h>
+#include <sched.h>
+#include <unistd.h>
+#include <string.h>
 
 #ifdef DEBUG
 #ifndef MCHECK
@@ -197,16 +200,13 @@ typedef struct pip_task_annex {
   pip_task_t			oodq;	   /* out-of-damain queue */
   pip_spinlock_t		lock_oodq; /* lock for OOD queue */
 
-  uint32_t			opts;
-
   void *volatile		export;
   void				*named_exptab;
 
   void				*aux; /* pointer to user data (if provided) */
 
+  uint32_t			opts;
   int32_t			extval;	   /* exit value */
-  pip_task_t			exitq;	   /* exit queue */
-  pip_ctx_t			*ctx_exit; /* context to exit */
 
   pid_t				pid; /* PID in process mode at beginning */
   pthread_t			thread;	/* thread */

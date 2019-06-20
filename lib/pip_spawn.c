@@ -35,14 +35,6 @@
 
 #define _GNU_SOURCE
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sched.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <sched.h>
-#include <signal.h>
-
 //#define PIP_NO_MALLOPT
 //#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
 //#define PRINT_MAPS
@@ -610,7 +602,6 @@ static void* pip_do_spawn( void *thargs )  {
     }
   }
   DBG;
-
   /* calling PIP-GDB hook function */
   pip_gdbif_hook_before_( self );
   /* calling hook function, if any */
@@ -699,7 +690,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
   pip_task_internal_t	*task = NULL;
-  size_t		stack_size = pip_stack_size();
+  size_t		stack_size;
   int 			pipid;
   pid_t			pid = 0;
   int 			err = 0;
@@ -735,11 +726,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     task->annex->hook_after  = hookp->after;
     task->annex->hook_arg    = hookp->hookarg;
   }
-  /* allocate sleep stack */
+  /* allocate stack for sleeping */
+  stack_size = pip_stack_size();
   pip_page_alloc_( pip_root_->stack_size_sleep, &task->annex->sleep_stack );
   if( task->annex->sleep_stack == NULL ) ERRJ_ERR( ENOMEM );
 
-  DBG;
   if( progp->envv == NULL ) progp->envv = environ;
   args = &task->annex->args;
   args->start_arg  = progp->arg;
@@ -890,6 +881,7 @@ void pip_finalize_task_( pip_task_internal_t *taski ) {
   /* corresponding dlmopen() and malloc() is called by the root process   */
   if( taski->annex->loaded != NULL ) pip_dlclose_( taski->annex->loaded );
 #ifdef AH
+#endif
   PIP_FREE( taski->annex->args.prog );
   taski->annex->args.prog = NULL;
   PIP_FREE( taski->annex->args.prog_full );
@@ -900,7 +892,6 @@ void pip_finalize_task_( pip_task_internal_t *taski ) {
   taski->annex->args.argv = NULL;
   PIP_FREE( taski->annex->args.funcname );
   taski->annex->args.funcname = NULL;
-#endif
   PIP_FREE( taski->annex->args.fd_list );
   taski->annex->args.fd_list = NULL;
   pip_blocking_fin( &taski->annex->sleep );

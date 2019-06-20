@@ -33,11 +33,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018, 2019
  */
 
-#include <sys/mman.h>
-#include <sched.h>
-#include <signal.h>
-#include <unistd.h>
-
 #include <pip_internal.h>
 #include <pip_blt.h>
 
@@ -78,6 +73,11 @@ static int pip_raise_sigchld( void ) {
   RETURN( pip_raise_signal_( pip_root_->task_root, SIGCHLD ) );
 }
 
+static void pip_load_context_( pip_ctx_t *ctxp ) {
+  ASSERT( ctxp == NULL );
+  ASSERT( pip_load_context( ctxp ) != 0 );
+}
+
 static void pip_force_exit( pip_task_internal_t *taski ) {
   extern int pip_is_threaded_( void );
 
@@ -85,6 +85,7 @@ static void pip_force_exit( pip_task_internal_t *taski ) {
 	taski->pipid, taski->annex->pid, pip_gettid() );
   if( pip_is_threaded_() ) {
     (void) pip_raise_sigchld();
+    DBG;
     pthread_exit( NULL );
   } else {			/* process mode */
     ASSERT( taski->annex->pid != pip_gettid() );
@@ -93,11 +94,6 @@ static void pip_force_exit( pip_task_internal_t *taski ) {
     _exit( taski->annex->extval );
   }
   NEVER_REACH_HERE;
-}
-
-static void pip_load_context_( pip_ctx_t *ctxp ) {
-  ASSERT( ctxp == NULL );
-  ASSERT( pip_load_context( ctxp ) != 0 );
 }
 
 static void pip_wakeup( pip_task_internal_t *taski ) {
@@ -390,22 +386,17 @@ static void pip_switch_stack_and_sleep( pip_task_internal_t *schedi,
   args.schedi = schedi;
   args.taski  = taski;
   /* creating new context to switch stack */
-  DBG;
   pip_save_context( &ctx );
-  DBG;
-
   stk = &(ctx.ctx.uc_stack);
   stk->ss_sp    = schedi->annex->sleep_stack;
   stk->ss_flags = 0;
   stk->ss_size  = stksz;
   args_H = ( ((intptr_t) &args) >> 32 ) & PIP_MASK32;
   args_L = (  (intptr_t) &args)         & PIP_MASK32;
-  DBG;
   pip_make_context( &ctx, pip_sleep, 4, args_H, args_L );
-  ctx.ctx.uc_link = NULL;
-  DBG;
   /* no need of saving/restoring TLS */
   pip_load_context_( &ctx );
+  NEVER_REACH_HERE;
 }
 
 static void pip_task_switch( pip_task_internal_t *old_task,
@@ -527,7 +518,7 @@ static void pip_sched_next( pip_task_internal_t *taski,
 }
 
 void pip_do_exit( pip_task_internal_t *taski, int extval ) {
-  extern void pip_do_terminate_RC( pip_task_internal_t*, int );
+  extern void pip_set_extval_RC( pip_task_internal_t*, int );
   pip_task_internal_t	*schedi, *nexti;
   int 			ntc;
   /* this is called when 1) return from main (or func) function */
@@ -536,7 +527,7 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   DBGF( "PIPID:%d", taski->pipid );
 
   taski->annex->symbols.named_export_fin( taski );
-  pip_do_terminate_RC( taski, extval );
+  pip_set_extval_RC( taski, extval );
   ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
   ASSERT( ntc < 0 );
 
@@ -544,7 +535,6 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   ASSERT( schedi == NULL );
   DBGF( "TASKI: %d[%d]",  taski->pipid,  taski->task_sched->pipid );
   DBGF( "SCHEDI: %d[%d]", schedi->pipid, schedi->task_sched->pipid );
-
   nexti = pip_schedq_next( taski );
   if( schedi != taski ) {
     /* wake up to terminate */
@@ -556,7 +546,7 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   } else if( schedi->ntakecare > 0 ||
 	     schedi != taski ) { /* schedi must not exit in this case */
     DBGF( "schedi->ntakecare:%d", (int) schedi->ntakecare );
-    /* No tasks to be scheduled but there are some tasks to take care */
+    /* no tasks to be scheduled but there are some tasks to take care */
     pip_switch_stack_and_sleep( schedi, NULL );
   } else {
     /* no tasks to take care and (schedi == taski); terminate myself */
@@ -804,10 +794,11 @@ pip_task_t *pip_task_self( void ) { return PIP_TASKQ(pip_task_); }
 
 int pip_yield( void ) {
   pip_task_t		*queue, *next;
-  pip_task_internal_t	*sched = pip_task_->task_sched;
+  pip_task_internal_t	*schedi = pip_task_->task_sched;
 
   ENTER;
-  queue = &sched->schedq;
+  (void) pip_takein_ood_task( schedi );
+  queue = &schedi->schedq;
   PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ( pip_task_ ) );
   next = PIP_TASKQ_NEXT( queue );
   PIP_TASKQ_DEQ( next );
@@ -817,15 +808,16 @@ int pip_yield( void ) {
 
 int pip_yield_to( pip_task_t *task ) {
   pip_task_internal_t	*taski = PIP_TASKI( task );
-  pip_task_internal_t	*sched;
+  pip_task_internal_t	*schedi;
   pip_task_t		*queue;
 
   IF_UNLIKELY( task  == NULL ) RETURN( pip_yield() );
-  sched = pip_task_->task_sched;
+  schedi = pip_task_->task_sched;
   /* the target task must be in the same scheduling domain */
-  IF_UNLIKELY( taski->task_sched != sched ) RETURN( EPERM );
+  IF_UNLIKELY( taski->task_sched != schedi ) RETURN( EPERM );
 
-  queue = &sched->schedq;
+  (void) pip_takein_ood_task( schedi );
+  queue = &schedi->schedq;
   PIP_TASKQ_DEQ( PIP_TASKQ(task) );
   PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ(pip_task_) );
 

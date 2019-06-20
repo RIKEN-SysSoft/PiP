@@ -35,8 +35,6 @@
 
 #define _GNU_SOURCE
 
-#include <dlfcn.h>
-
 //#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
@@ -47,6 +45,7 @@
 #include <limits.h>		/* for PTHREAD_STACK_MIN */
 #define PIP_SLEEP_STACKSZ	PTHREAD_STACK_MIN
 
+#include <pip.h>
 #include <pip_internal.h>
 #include <pip_gdbif_func.h>
 
@@ -153,7 +152,7 @@ static int pip_check_opt_and_env( int *optsp ) {
     PIP_MODE_PROCESS_PIPCLONE_BIT = 4
   } desired = 0;
 
-  if( ( opts & ~PIP_VALID_ROPTS ) != 0 ) {
+  if( ( opts & ~PIP_VALID_OPTS ) != 0 ) {
     /* unknown option(s) specified */
     RETURN( EINVAL );
   }
@@ -322,7 +321,6 @@ void pip_reset_task_struct_( pip_task_internal_t *taski ) {
   annex->sleep_stack = sleep_stack;
   taski->annex = annex;
   taski->annex->pid = -1; /* pip_gdbif_init_task_struct() refers this */
-  PIP_TASKQ_INIT(    &taski->annex->exitq );
   PIP_TASKQ_INIT(    &taski->annex->oodq );
   pip_spin_init(     &taski->annex->lock_oodq );
   pip_blocking_init( &taski->annex->sleep );
@@ -520,14 +518,17 @@ int pip_is_alive( int pipid ) {
 }
 
 int pip_get_pipid( int *pipidp ) {
+  int pipid;
   if( pipidp == NULL ) RETURN( EINVAL );
-  *pipidp = pip_get_pipid_();
+  pipid = pip_get_pipid_();
+  if( pipid == PIP_PIPID_NULL ) RETURN( EPERM );
+  *pipidp = pipid;
   RETURN( 0 );
 }
 
 int pip_get_ntasks( int *ntasksp ) {
-  if( ntasksp   == NULL ) RETURN( EINVAL );
   if( pip_root_ == NULL ) return( EPERM  ); /* intentionally using small return */
+  if( ntasksp   == NULL ) RETURN( EINVAL );
   *ntasksp = pip_root_->ntasks_curr;
   RETURN( 0 );
 }

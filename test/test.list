@@ -1,20 +1,20 @@
-basics/initfin-ACT.sh
-basics/initfin-ACTOS.sh
-basics/initfin-MIX.sh
-basics/initfin-MIXOS.sh
-basics/waitany-ACT.sh
-basics/waitany-ACTOS.sh
-basics/waitany-MIX.sh
-basics/waitany-MIXOS.sh
-basics/yield-ACT.sh
-basics/yield-ACTOS.sh
-basics/yield-MIX.sh
-basics/yield-MIXOS.sh
-basics/barrier-ACT.sh
-basics/barrier-ACTOS.sh
-basics/barrier-MIX.sh
-basics/barrier-MIXOS.sh
-basics/namexp-ACT.sh
-basics/namexp-ACTOS.sh
-basics/namexp-MIX.sh
-basics/namexp-MIXOS.sh
+timer 1 basics/pip_init
+timer 1 basics/pip_init preload
+timer 1 basics/pip_init twice
+timer 1 basics/pip_init ntask_is_zero
+timer 1 basics/pip_init ntask_too_big
+timer 1 basics/pip_init invalid_opts
+timer 1 basics/pip_init both_pthread_process
+timer 1 basics/pip_init both_preload_clone
+timer 1 basics/pip_init pip_task_unset
+timer 2 basics/pip_fin
+timer 1 basics/pip_spawn
+timer 1 pip_task 1 basics/pip_spawn
+timer 1 pip_task 10 basics/pip_spawn
+timer 1 basics/pip_get_mode
+timer 1 pip_task 1 basics/pip_get_mode
+timer 1 basics/pip_get_mode_str
+timer 1 pip_task 1 basics/pip_get_mode_str
+timer 1 basics/pip_get_ntasks
+timer 1 pip_task 1 basics/pip_get_ntasks
+timer 1 pip_task 10 basics/pip_get_ntasks

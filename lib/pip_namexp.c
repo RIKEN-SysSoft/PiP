@@ -36,8 +36,6 @@
 #define _GNU_SOURCE
 #include <stdarg.h>
 #include <ctype.h>
-#include <sched.h>
-#include <stdio.h>
 
 #include <pip.h>
 #include <pip_blt.h>

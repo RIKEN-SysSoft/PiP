@@ -53,25 +53,22 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
   ENTER;
   IF_UNLIKELY( init == 1 ) RETURN( 0 );
   c = pip_atomic_sub_and_fetch( &barrp->head.count, 1 );
-  DBGF( "c:%d", c );
-  IF_UNLIKELY( c > 0 ) {
+  IF_LIKELY( c > 0 ) {
     /* noy yet. enqueue the current task */
     err = pip_suspend_and_enqueue( &barrp->queue, NULL, NULL );
-    DBG;
   } else {
-    /* done. dequeue all tasks is=n the queue and resume them */
-    DBG;
+    /* almost done. we must wait until all tasks are enqueued */
     do {
       pip_task_queue_count( &barrp->queue, &c );
-      pip_pause();
+      pip_yield();
     } while ( c < init - 1 );
     barrp->head.count = init;
-    DBG;
-
-    c = init - 1; /* the last one is not in the queue */
+    /* really done. dequeue all tasks in the queue and resume them */
+    c = init - 1; /* the last one (myself) is not in the queue */
+    /* do not call with PIP_TASK_ALL because resumed */
+    /* task(s) might be enqueued for the next round  */
     do {
-      n = c;			/* number of rests to go */
-      DBGF( "n:%d", n );
+      n = c;			/* number of tasks to resume */
       err = pip_dequeue_and_resume_N( &barrp->queue, NULL, &n );
       if( err ) break;
       c -= n;
@@ -107,16 +104,16 @@ int pip_mutex_unlock_( pip_mutex_t *mutex ) {
   int err = 0;
   ENTER;
   err = pip_dequeue_and_resume( &mutex->queue, NULL );
-  if( err == ENOENT ) {	       /* the queue is empty, simply unlock */
-    mutex->head.lock = 0; /* otherwise resume the first one in the queue */
+  /* resume the first one in the queue */
+  if( err == ENOENT ) {	    /* if the queue is empty, simply unlock */
+    mutex->head.lock = 0;
     RETURN( 0 );
-  } else if( err ) {
-    RETURN( err );
   }
-  RETURN( 0 );
+  RETURN( err );
 }
 
 int pip_mutex_fin_( pip_mutex_t *mutex ) {
+  ENTER;
   if( !PIP_TASKQ_ISEMPTY( &mutex->queue.queue ) ) RETURN( EBUSY );
   RETURN( 0 );
 }

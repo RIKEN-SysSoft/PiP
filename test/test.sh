@@ -1,20 +1,13 @@
 #!/bin/bash
+dir=`dirname $0`
 
-export OMP_NUM_THREADS=`$MCEXEC ./util/ompnumthread`
-export LD_PRELOAD=`pwd`/../preload/pip_preload.so
-
-# XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
-unset LANG LC_ALL
-
-: ${TEST_PIP_TASKS:=$(./util/dlmopen_count -p)}
+. $dir/test.sh.inc
 
 if [ -n "$MCEXEC" ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
 	TEST_PIP_TASKS=$OMP_NUM_THREADS;
     fi
 fi
-
-export NTASKS=${TEST_PIP_TASKS}
 
 print_summary()
 {
@@ -43,8 +36,6 @@ print_summary()
 	    echo "  killed             : $n_KILLED"
 	fi
 }
-
-. ./test.sh.inc
 
 TEST_TOP_DIR=`pwd`
 TEST_LIST=test.list
@@ -155,6 +146,8 @@ n_UNSUPPORTED=0
 n_KILLED=0
 TOTAL_TIME=0
 
+export PATH=./util:$PATH
+
 LOG_BEG="=== ============================================================ ===="
 LOG_SEP="--- ------------------------------------------------------------ ----"
 
@@ -166,39 +159,35 @@ while read line; do
 	case $# in 0) continue;; esac
 	case $1 in '#'*) continue;; esac
 
-	test=$1
+	cmd=$@;
+	cmd0=$1;
+	len=${#cmd}
+	if [ $len -gt 50 ]; then
+	    short=${cmd:0:45}" ..";
+	else
+	    short=$cmd;
+	fi
 
 	for pip_mode in $pip_mode_list
 	do
 		eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
 
-		printf "%-60.60s ${pip_mode} ..." $test
+		printf "%-60.60s ${pip_mode} --" "$short"
 		(
 		  echo "$LOG_BEG"
-		  echo "--- $test PIP_MODE=${pip_mode_name}"
+		  echo "--- $short PIP_MODE=${pip_mode_name}"
 		  echo "$LOG_SEP"
 		  date +'@@_ start at %s - %Y-%m-%d %H:%M:%S'
 		) >>$TEST_LOG_FILE
 		rm -f $TEST_OUT_STDOUT $TEST_OUT_STDERR $TEST_OUT_TIME
 
-		if [ ! -x $test ]; then
-			test_exit_status=$EXIT_UNTESTED
-		else
-			(
-				if cd $(dirname $test)
-				then
-					PIP_MODE=$pip_mode_name time -p sh -c "
-						./$(basename $test) \
+		PIP_MODE=$pip_mode_name time -p sh -c "
+						$cmd \
 						< /dev/null \
 						> $TEST_OUT_STDOUT \
 						2>$TEST_OUT_STDERR" \
-					    2>$TEST_OUT_TIME
-				else
-					exit $EXIT_UNTESTED
-				fi
-			)
-			test_exit_status=$?
-		fi
+						    2>$TEST_OUT_TIME
+		test_exit_status=$?
 
 		msg=
 		case $test_exit_status in
@@ -271,7 +260,7 @@ while read line; do
 
 			date +'@@~  end  at %s - %Y-%m-%d %H:%M:%S'
 			echo "$LOG_SEP"
-			printf "@:= %-60.60s %s\n" $test "$msg"
+			printf "@:= %-60.60s %s\n" $short "$msg"
 		) >>$TEST_LOG_FILE
 
 		echo " $msg"

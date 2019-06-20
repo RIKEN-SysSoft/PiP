@@ -35,12 +35,7 @@
 
 #define _GNU_SOURCE
 
-#include <sys/mman.h>
 #include <sys/wait.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <sched.h>
-#include <signal.h>
 
 //#define PIP_NO_MALLOPT
 //#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
@@ -57,6 +52,7 @@
 #include <pip_util.h>
 #include <pip_gdbif_func.h>
 
+#ifdef PIP_DUMP_TASKS
 static void pip_dump_tasks( FILE *fp ) {
   void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
     char st;
@@ -94,25 +90,30 @@ static void pip_dump_tasks( FILE *fp ) {
   }
   pip_dump_task( fp, pip_root_->task_root );
 }
+#endif
 
 void pip_deadlock_inc_( void ) {
+#ifdef PIP_DEADLOCK_WARN
   pip_atomic_fetch_and_add( &pip_root_->ntasks_blocking, 1 );
   DBGF( "blocking:%d / ntasks:%d",
 	(int)pip_root_->ntasks_blocking, pip_root_->ntasks_count );
   if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
-    pip_dump_tasks( stderr );
+    //    pip_dump_tasks( stderr );
     pip_err_mesg( "All PiP tasks are blocked and deadlocked !!" );
     fflush( NULL );
   }
+#endif
 }
 
 void pip_deadlock_dec_( void ) {
+#ifdef PIP_DEADLOCK_WARN
   pip_atomic_sub_and_fetch( &pip_root_->ntasks_blocking, 1 );
   DBGF( "blocking:%d / ntasks:%d",
 	(int) pip_root_->ntasks_blocking, pip_root_->ntasks_count );
+#endif
 }
 
-void pip_do_terminate_RC( pip_task_internal_t *taski, int extval ) {
+void pip_set_extval_RC( pip_task_internal_t *taski, int extval ) {
   /* call fflush() in the target context to flush out std* messages */
   if( taski->annex->symbols.libc_fflush != NULL ) {
     taski->annex->symbols.libc_fflush( NULL );
@@ -146,7 +147,6 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   DBGF( "pipid=%d  type=0x%x", pipid, taski->type );
   if( pip_is_threaded_() ) {
     /* thread mode */
-    DBG;
     if( flag_try ) {
       err = pthread_tryjoin_np( taski->annex->thread, NULL );
       DBGF( "pthread_tryjoin_np(%d)=%d", taski->annex->extval, err );
@@ -188,7 +188,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
 		       taski->pipid, strsignal(sig), sig );
       }
-      pip_do_terminate_RC( taski, status );
+      pip_set_extval_RC( taski, status );
     }
   }
   DBG;
