@@ -85,7 +85,9 @@
 #define PIP_TASK_ENV		"PIP_TASK_PIPID"
 
 #define PIP_MAGIC_WORD		"PrcInPrc"
-#define PIP_MAGIC_LEN		(8)
+#define PIP_MAGIC_WLEN		(8)
+
+#define PIP_PIPID_NULL		(PIP_MAGIC_NUM-4)
 
 #define PIP_LD_SOLIBS		{ NULL }
 
@@ -249,7 +251,7 @@ typedef struct pip_task_annex {
 
 typedef struct {
   /* sanity check info */
-  char			magic[PIP_MAGIC_LEN];
+  char			magic[PIP_MAGIC_WLEN];
   unsigned int		version;
   size_t		size_whole;
   size_t		size_root;
@@ -323,6 +325,8 @@ inline static int pip_check_pipid_( int *pipidp ) {
       RETURN( ENXIO );
     }
     break;
+  default:
+    if( pipid < 0 ) RETURN( EINVAL );
   }
   return 0;
 }

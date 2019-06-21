@@ -1,7 +1,8 @@
-#!/bin/bash
+#!/bin/sh
 dir=`dirname $0`
 
 . $dir/test.sh.inc
+. $dir/exit_code.sh.inc
 
 if [ -n "$MCEXEC" ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
@@ -145,8 +146,6 @@ n_UNTESTED=0
 n_UNSUPPORTED=0
 n_KILLED=0
 TOTAL_TIME=0
-
-export PATH=./util:$PATH
 
 LOG_BEG="=== ============================================================ ===="
 LOG_SEP="--- ------------------------------------------------------------ ----"

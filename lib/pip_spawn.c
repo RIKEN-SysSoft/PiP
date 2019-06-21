@@ -397,24 +397,28 @@ static int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
 
   ENTER;
   if( coreno != PIP_CPUCORE_ASIS ) {
-    cpu_set_t cpuset;
-
-    CPU_ZERO( &cpuset );
-    CPU_SET( coreno, &cpuset );
-
-    if( pip_is_threaded_() ) {
-      err = pthread_getaffinity_np( pthread_self(),
-				    sizeof(cpu_set_t),
-				    oldsetp );
-      if( err == 0 ) {
-	err = pthread_setaffinity_np( pthread_self(),
-				      sizeof(cpu_set_t),
-				      &cpuset );
-      }
+    if( coreno < 0 || coreno > CPU_SETSIZE ) {
+      err = EINVAL;
     } else {
-      if( sched_getaffinity( 0, sizeof(cpuset), oldsetp ) != 0 ||
-	  sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) {
-	err = errno;
+      cpu_set_t cpuset;
+
+      CPU_ZERO( &cpuset );
+      CPU_SET( coreno, &cpuset );
+
+      if( pip_is_threaded_() ) {
+	err = pthread_getaffinity_np( pthread_self(),
+				      sizeof(cpu_set_t),
+				      oldsetp );
+	if( err == 0 ) {
+	  err = pthread_setaffinity_np( pthread_self(),
+					sizeof(cpu_set_t),
+					&cpuset );
+	}
+      } else {
+	if( sched_getaffinity( 0, sizeof(cpuset), oldsetp ) != 0 ||
+	    sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) {
+	  err = errno;
+	}
       }
     }
   }
@@ -697,13 +701,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 
   ENTER;
   if( pip_root_       == NULL ) RETURN( EPERM  );
-  if( pipidp          == NULL ) RETURN( EINVAL );
   if( !pip_isa_root()         ) RETURN( EPERM  );
   if( progp           == NULL ) RETURN( EINVAL );
-  if( progp->funcname != NULL &&
-      progp->argv     != NULL ) RETURN( EINVAL );
+  if( progp->prog     == NULL ) RETURN( EINVAL );
+  if( index( progp->prog, '/' ) == NULL ) RETURN( EINVAL );
+  /* starting from main */
   if( progp->funcname == NULL &&
       progp->argv     == NULL ) RETURN( EINVAL );
+  /* starting from an arbitrary func */
   if( ( opts & PIP_SYNC_MASK ) == 0 ) {
     opts |= pip_root_->opts & PIP_SYNC_MASK;
   } else {
@@ -712,7 +717,15 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   if( progp->funcname == NULL &&
       progp->prog     == NULL ) progp->prog = progp->argv[0];
 
-  pipid = *pipidp;
+  if( pipidp != NULL ) {
+    pipid = *pipidp;
+    if( pipid == PIP_PIPID_MYSELF ) RETURN( EINVAL );
+    if( pipid != PIP_PIPID_ANY ) {
+      if( pipid < 0 || pipid > pip_root_->ntasks ) RETURN( EINVAL );
+    }
+  } else {
+    pipid = PIP_PIPID_ANY;
+  }
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) ERRJ;
   task = &pip_root_->tasks[pipid];
   pip_reset_task_struct_( task );
@@ -843,7 +856,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     pip_root_->ntasks_accum ++;
     pip_root_->ntasks_curr  ++;
     pip_gdbif_task_commit_( task );
-    *pipidp = pipid;
+    if( pipidp != NULL ) *pipidp = pipid;
 
   } else {
   error:			/* undo */
@@ -861,7 +874,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
       pip_reset_task_struct_( task );
     }
   }
-  DBGF( "pip_task_spawn_(pipid=%d)", *pipidp );
+  DBGF( "pip_task_spawn_(pipid=%d)", pipid );
   RETURN( err );
 }
 
@@ -944,16 +957,10 @@ int pip_spawn( char *prog,
   pip_spawn_hook_t hook;
 
   DBGF( "pip_spawn()" );
+  if( prog == NULL ) return EINVAL;
   pip_spawn_from_main( &program, prog, argv, envv );
   pip_spawn_hook( &hook, before, after, hookarg );
   return pip_task_spawn( &program, coreno, 0, pipidp, &hook );
-}
-
-int pip_get_mode( int *mode ) {
-  if( pip_root_ == NULL ) RETURN( EPERM  );
-  if( mode      == NULL ) RETURN( EINVAL );
-  *mode = ( pip_root_->opts & PIP_MODE_MASK );
-  RETURN( 0 );
 }
 
 int pip_get_id( int pipid, intptr_t *idp ) {

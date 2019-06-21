@@ -32,124 +32,96 @@
 
 #include <test.h>
 
-static int static_entry( void *args ) {
-  int arg = *((int*)args);
-  int pipid = -1, rv;
+static int static_entry( void *args ) __attribute__ ((unused));
+static int static_entry( void *argp ) {
+  int arg = *((int*)argp);
+  int pipid = -100;
 
-  rv = pip_get_pipid( &pipid );
-  if ( rv != EPERM ) {
-    fprintf( stderr, "pip_get_pipid(static_entry): %s\n", strerror( rv ) );
-    return 1;
-  }
-
-  rv = pip_init( NULL, NULL, NULL, 0 );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_init(static_entry): %s\n", strerror( rv ) );
-    return 1;
-  }
-
-  rv = pip_get_pipid( &pipid );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_get_pipid(static_entry): %s\n", strerror( rv ) );
-    return 1;
-  }
-  if( pipid != arg ) {
-    fprintf( stderr, "static_entry: %d != %d\n", pipid, arg );
-    return 1;
-  }
+  TESTIVAL(  pip_get_pipid( &pipid ), 		EPERM,  return(1) );
+  TESTINT(   pip_init( NULL, NULL, NULL, 0 ), 		return(1) );
+  TESTINT(   pip_get_pipid( &pipid ), 			return(1) );
+  TESTTRUTH( pipid!=arg, 			FALSE,	return(1) );
   return 0;
 }
 
-int global_entry( void *args ) {
-  int arg = *((int*)args);
-  int pipid, rv;
+int global_entry( void *argp ) {
+  int arg = *((int*)argp);
+  int pipid = -100;
 
-  rv = pip_get_pipid( &pipid );
-  if ( rv != EPERM ) {
-    fprintf( stderr, "pip_get_pipid(global_entry): %s\n", strerror( rv ) );
-    return 1;
-  }
-
-  rv = pip_init( NULL, NULL, NULL, 0 );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_init(global_entry): %s\n", strerror( rv ) );
-    return 1;
-  }
-
-  rv = pip_get_pipid( &pipid );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_get_pipid(global_entry): %s\n", strerror( rv ) );
-    return 1;
-  }
-  if( pipid != arg ) {
-    fprintf( stderr, "global_entry: %d != %d\n", pipid, arg );
-    return 1;
-  }
+  TESTIVAL(  pip_get_pipid( &pipid ), 		EPERM,  return(1) );
+  TESTINT(   pip_init( NULL, NULL, NULL, 0 ), 		return(1) );
+  TESTINT(   pip_get_pipid( &pipid ), 			return(1) );
+  TESTTRUTH( pipid!=arg, 			FALSE,	return(1) );
   return 0;
 }
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
-  int pipid, ntasks, rv;
+  int pipid, ntasks;
 
   /* before calling pip_init(), this must fail */
+  pipid = PIP_PIPID_ANY;
+  TESTIVAL( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	    EPERM,
+	    return(EXIT_FAIL) );
+
+  memset( &prog, 0, sizeof(prog) );
+  pipid = PIP_PIPID_ANY;
+  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	    EPERM,
+	    return(EXIT_FAIL) );
+
   pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &pipid, NULL );
   pipid = PIP_PIPID_ANY;
-  rv = pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL );
-  if( rv != EPERM ) {
-    fprintf( stderr, "pip_spawn: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
+  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	    EPERM,
+	    return(EXIT_FAIL) );
 
   ntasks = NTASKS;
-  rv = pip_init( NULL, &ntasks, NULL, 0 );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
+  TESTINT(  pip_init( NULL, &ntasks, NULL, 0 ), return(EXIT_FAIL) );
 
   /* after calling pip_init(), this must succeed if it is the root process */
+  pipid = PIP_PIPID_ANY;
+  TESTIVAL( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	    EINVAL,
+	    return(EXIT_FAIL) );
+
+  memset( &prog, 0, sizeof(prog) );
+  pipid = PIP_PIPID_ANY;
+  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	    EINVAL,
+	    return(EXIT_FAIL) );
+
   pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &pipid, NULL );
   pipid = PIP_PIPID_ANY;
-  rv = pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL );
-  if( rv != ENOEXEC ) {
-    fprintf( stderr, "pip_spawn: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
+  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	    ENOEXEC,
+	    return(EXIT_FAIL) );
 
   pip_spawn_from_func( &prog, argv[0], "global_entry", (void*) &pipid, NULL );
   pipid = PIP_PIPID_ANY;
-  rv = pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL );
-  if( rv != 0 ) {
-    fprintf( stderr, "pip_spawn: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
 
   if( pip_isa_task() ) {
-    if( rv != EPERM ) {
-      fprintf( stderr, "pip_spawn: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
+    TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	      EPERM,
+	      return(EXIT_FAIL) );
+
   } else {
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_spawn: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
     int status = 0, extval = 0;
-    rv = pip_wait( pipid, &status );
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_wait: %s\n", strerror( rv ) );
-      return EXIT_UNTESTED;
-    }
+
+    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	     return(EXIT_FAIL) );
+    TESTINT( pip_wait( pipid, &status ), return(EXIT_UNTESTED) );
+
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
-      if( extval != 0 ) {
-	fprintf( stderr, "task returns with an error\n" );
-      }
+      TESTTRUTH( extval!=0, FALSE, return(EXIT_FAIL) );
+
     } else {
-      extval = EXIT_UNRESOLVED;
+      TESTTRUTH( 1, FALSE, return(EXIT_UNRESOLVED) );
     }
     return extval;
   }
+  TESTINT( pip_fin(), return(EXIT_FAIL) );
   return EXIT_PASS;
 }

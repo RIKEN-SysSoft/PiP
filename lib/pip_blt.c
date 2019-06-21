@@ -526,7 +526,9 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   ENTER;
   DBGF( "PIPID:%d", taski->pipid );
 
-  taski->annex->symbols.named_export_fin( taski );
+  if( taski->annex->symbols.named_export_fin != NULL ) {
+    taski->annex->symbols.named_export_fin( taski );
+  }
   pip_set_extval_RC( taski, extval );
   ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
   ASSERT( ntc < 0 );

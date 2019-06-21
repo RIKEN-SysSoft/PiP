@@ -7,14 +7,13 @@ timer 1 basics/pip_init invalid_opts
 timer 1 basics/pip_init both_pthread_process
 timer 1 basics/pip_init both_preload_clone
 timer 1 basics/pip_init pip_task_unset
-timer 2 basics/pip_fin
+timer 1 basics/pip_fin
 timer 1 basics/pip_spawn
+timer 1 basics/pip_task_spawn
+timer 1 basics/spawn_pie
 timer 1 pip_task 1 basics/pip_spawn
-timer 1 pip_task 10 basics/pip_spawn
-timer 1 basics/pip_get_mode
-timer 1 pip_task 1 basics/pip_get_mode
-timer 1 basics/pip_get_mode_str
-timer 1 pip_task 1 basics/pip_get_mode_str
-timer 1 basics/pip_get_ntasks
-timer 1 pip_task 1 basics/pip_get_ntasks
-timer 1 pip_task 10 basics/pip_get_ntasks
+timer 1 pip_task 8 basics/pip_spawn
+timer 1 basics/pip_misc
+timer 1 pip_task 1 basics/pip_misc
+timer 1 pip_task 8 basics/pip_misc
+timer 1 basics/corebind

@@ -66,12 +66,12 @@ pip_task_internal_t	*pip_task_ = NULL;
 static pip_clone_t*	pip_cloneinfo = NULL;
 
 static void pip_set_magic( pip_root_t *root ) {
-  memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN );
+  memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_WLEN );
 }
 
 static int pip_is_magic_ok( pip_root_t *root ) {
   return root != NULL &&
-    strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_LEN ) == 0;
+    strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_WLEN ) == 0;
 }
 
 static int pip_is_version_ok( pip_root_t *root ) {
@@ -113,29 +113,6 @@ static int pip_set_root( char *env ) {
 static void pip_blocking_init( pip_blocking_t *blocking ) {
   //(void) sem_init( &blocking->semaphore, 1, 0 );
   (void) sem_init( blocking, 1, 0 );
-}
-
-const char *pip_get_mode_str( void ) {
-  char *mode;
-
-  if( pip_root_ == NULL ) return NULL;
-  switch( pip_root_->opts & PIP_MODE_MASK ) {
-  case PIP_MODE_PTHREAD:
-    mode = PIP_ENV_MODE_PTHREAD;
-    break;
-  case PIP_MODE_PROCESS:
-    mode = PIP_ENV_MODE_PROCESS;
-    break;
-  case PIP_MODE_PROCESS_PRELOAD:
-    mode = PIP_ENV_MODE_PROCESS_PRELOAD;
-    break;
-  case PIP_MODE_PROCESS_PIPCLONE:
-    mode = PIP_ENV_MODE_PROCESS_PIPCLONE;
-    break;
-  default:
-    mode = "(unknown)";
-  }
-  return mode;
 }
 
 pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
@@ -519,10 +496,9 @@ int pip_is_alive( int pipid ) {
 
 int pip_get_pipid( int *pipidp ) {
   int pipid;
-  if( pipidp == NULL ) RETURN( EINVAL );
   pipid = pip_get_pipid_();
   if( pipid == PIP_PIPID_NULL ) RETURN( EPERM );
-  *pipidp = pipid;
+  if( pipidp != NULL ) *pipidp = pipid;
   RETURN( 0 );
 }
 
@@ -531,6 +507,37 @@ int pip_get_ntasks( int *ntasksp ) {
   if( ntasksp   == NULL ) RETURN( EINVAL );
   *ntasksp = pip_root_->ntasks_curr;
   RETURN( 0 );
+}
+
+int pip_get_mode( int *modep ) {
+  if( pip_root_ == NULL ) RETURN( EPERM  );
+  if( modep != NULL ) {
+    *modep = ( pip_root_->opts & PIP_MODE_MASK );
+  }
+  RETURN( 0 );
+}
+
+const char *pip_get_mode_str( void ) {
+  char *mode;
+
+  if( pip_root_ == NULL ) return NULL;
+  switch( pip_root_->opts & PIP_MODE_MASK ) {
+  case PIP_MODE_PTHREAD:
+    mode = PIP_ENV_MODE_PTHREAD;
+    break;
+  case PIP_MODE_PROCESS:
+    mode = PIP_ENV_MODE_PROCESS;
+    break;
+  case PIP_MODE_PROCESS_PRELOAD:
+    mode = PIP_ENV_MODE_PROCESS_PRELOAD;
+    break;
+  case PIP_MODE_PROCESS_PIPCLONE:
+    mode = PIP_ENV_MODE_PROCESS_PIPCLONE;
+    break;
+  default:
+    mode = "(unknown)";
+  }
+  return mode;
 }
 
 void pip_exit( int extval ) {

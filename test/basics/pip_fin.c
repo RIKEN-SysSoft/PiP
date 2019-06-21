@@ -36,41 +36,23 @@
 #include <test.h>
 
 int main( int argc, char **argv ) {
-  int pipid, ntasks, rv;
+  int pipid, ntasks;
   void *exp;
 
   ntasks = 1;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, 0);
-
-
+  TESTINT( pip_init( &pipid, &ntasks, &exp, 0), return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     pipid = 0;
-    rv = pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-		    NULL, NULL, NULL );
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_spawn: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
-    rv = pip_fin();
-    if( rv != EBUSY ) {
-      fprintf( stderr, "pip_fin/1: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
-    rv = pip_wait( 0, NULL );
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_wait: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
-    rv = pip_fin();
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_fin/2: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
-    printf( "Hello, pip root task is fine !!\n" );
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			NULL, NULL, NULL ),
+	     return(EXIT_FAIL) );
+    TESTIVAL( pip_fin(), EBUSY, 	return(EXIT_FAIL) );
+    TESTINT(  pip_wait( 0, NULL ), 	return(EXIT_FAIL) );
+    TESTINT(  pip_fin(), 		return(EXIT_FAIL) );
   } else {
     printf( "<%d> sleeping...\n", pipid );
-    sleep(1);
+    usleep( 500*1000UL );		/* 0.5 sec */
     printf( "<%d> slept!!!\n", pipid );
   }
 

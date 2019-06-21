@@ -114,10 +114,12 @@ void pip_deadlock_dec_( void ) {
 }
 
 void pip_set_extval_RC( pip_task_internal_t *taski, int extval ) {
+  ENTER;
   /* call fflush() in the target context to flush out std* messages */
   if( taski->annex->symbols.libc_fflush != NULL ) {
     taski->annex->symbols.libc_fflush( NULL );
   }
+  DBG;
   if( !taski->flag_exit ) {
     /* mark myself as exited */
     DBGF( "PIPID:%d[%d] extval:%d",
@@ -127,6 +129,7 @@ void pip_set_extval_RC( pip_task_internal_t *taski, int extval ) {
 #else
     taski->annex->extval = ( extval & 0xFF ) << 8;
 #endif
+    DBG;
     pip_gdbif_exit_RC( taski, extval );
     pip_memory_barrier();
     taski->flag_exit = PIP_EXITED;
@@ -207,6 +210,7 @@ static int pip_do_wait( int pipid, int flag_try, int *extvalp ) {
   if( !pip_isa_root() )                           RETURN( EPERM   );
   if( ( err = pip_check_pipid_( &pipid ) ) != 0 ) RETURN( err     );
   if( pipid == PIP_PIPID_ROOT )                   RETURN( EDEADLK );
+  if( pipid == PIP_PIPID_ANY  )                   RETURN( EINVAL  );
   RETURN( pip_do_wait_( pipid, flag_try, extvalp ) );
 }
 

@@ -33,6 +33,62 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-int main() {
-  return 0;
+#include <test.h>
+
+static int nth_core( int nth, cpu_set_t *cpuset ) {
+  int i, j, ncores;
+  ncores = CPU_COUNT( cpuset );
+  nth %= ncores;
+  for( i=0, j=0; i<ncores; i++ ) {
+    if( CPU_ISSET( i, cpuset ) ) {
+      if( j++ == nth ) return i;
+    }
+  }
+  return -1;
+}
+
+int main( int argc, char **argv ) {
+  cpu_set_t	init_set, *init_setp;
+  void		*exp;
+  int 		ntasks, pipid;
+  int		core, i, extval;
+
+  exp = &init_set;
+  ntasks = NTASKS;
+  TESTINT( pip_init(&pipid,&ntasks,(void**)&exp,0), return(EXIT_FAIL) );
+  if( pipid == PIP_PIPID_ROOT ) {
+    CPU_ZERO( &init_set );
+    TESTSYSERR( sched_getaffinity(0,sizeof(init_set),&init_set),
+		return(EXIT_UNRESOLVED) );
+    for( i=0; i<NTASKS; i++ ) {
+      core = nth_core( i, &init_set );
+      pipid = i;
+      printf( ">> PIPID:%d core:%d\n", pipid, core );
+      TESTINT( pip_spawn(argv[0],argv,NULL,core,&pipid,NULL,NULL,NULL),
+	       return(EXIT_FAIL) );
+    }
+    for( i=0; i<ntasks; i++ ) {
+      int status;
+      TESTINT( pip_wait_any( NULL, &status ), return(EXIT_FAIL) );
+      if( WIFEXITED( status ) ) {
+	if( ( extval = WEXITSTATUS( status ) ) != 0 ) {
+	  return EXIT_FAIL;
+	}
+      } else {
+	extval = EXIT_UNRESOLVED;
+	break;
+      }
+    }
+
+  } else {
+    extval = 0;
+    init_setp = (cpu_set_t*) exp;
+    core = nth_core( pipid, init_setp );
+    TESTTRUTH( CPU_ISSET( core, init_setp ),
+	       TRUE,
+	       return(EXIT_FAIL) );
+    printf( "<< PIPID:%d core:%d\n", pipid, core );
+  }
+  TESTINT( pip_fin(), return(EXIT_FAIL) );
+  return extval;
 }

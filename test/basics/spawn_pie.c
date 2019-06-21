@@ -30,81 +30,54 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
+#define DEBUG
+
+#include <libgen.h>
 #include <test.h>
 
 int main( int argc, char **argv ) {
-  int pipid, ntasks;
+  char *dir;
+  char *nargv[2] = { NULL, NULL };
+  int status, extval;
 
-  /* before calling pip_init(), this must fail */
-  pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-		       NULL, NULL, NULL ),
-	    EPERM,
+  dir = dirname( argv[0] );
+  chdir( dir );
+
+  TESTINT( pip_init( NULL, NULL, NULL, 0 ), return(EXIT_FAIL) );
+
+  nargv[0] = "./prog-nopie";
+  TESTIVAL( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+		      NULL, NULL, NULL ),
+	    ELIBEXEC,
 	    return(EXIT_FAIL) );
 
-  ntasks = NTASKS;
-  TESTINT( pip_init( NULL, &ntasks, NULL, 0 ), return(EXIT_FAIL) );
+  nargv[0] = "./prog-nordynamic";
+  TESTIVAL( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+		      NULL, NULL, NULL ),
+	    ENOEXEC,
+	    return(EXIT_FAIL) );
 
-  /* after calling pip_init() */
-  if( pip_isa_task() ) {
-    pipid = PIP_PIPID_ANY;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	      EPERM,
-	      return(EXIT_FAIL) );
-  } else {
-    int coreno, status = 0, extval = 0;
+  nargv[0] = "prog-pie";	/* not a path (no slash) */
+  TESTIVAL( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+		       NULL, NULL, NULL ),
+	    EINVAL,
+	    return(EXIT_FAIL) );
 
-    TESTIVAL( pip_spawn( NULL, NULL, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+  nargv[0] = "./prog-pie";	/* correct one */
+  TESTINT( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+		       NULL, NULL, NULL ),
+	   return(EXIT_FAIL) );
 
-    coreno = -1;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, coreno, &pipid,
-			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+  TESTINT(  pip_wait_any( NULL, &status ), return(EXIT_UNTESTED) );
 
-    coreno = 100000;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, coreno, &pipid,
-			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
-
-    pipid = 100000;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
-
-    pipid = -1;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
-
-    pipid = PIP_PIPID_MYSELF;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
-
-    pipid = PIP_PIPID_ANY;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	     return(EXIT_FAIL) );
-
-    TESTIVAL( pip_wait( -123, &status ), EINVAL, return(EXIT_UNTESTED) );
-    TESTINT(  pip_wait( pipid, &status ), return(EXIT_UNTESTED) );
-
-    if( WIFEXITED( status ) ) {
-      extval = WEXITSTATUS( status );
-    } else {
-      extval = EXIT_UNRESOLVED;
+  if( WIFEXITED( status ) ) {
+    if( ( extval = WEXITSTATUS( status ) ) != 0 ) {
+      return EXIT_FAIL;
     }
-    return extval;
+  } else {
+    extval = EXIT_UNRESOLVED;
   }
+
   TESTINT( pip_fin(), return(EXIT_FAIL) );
   return EXIT_PASS;
 }

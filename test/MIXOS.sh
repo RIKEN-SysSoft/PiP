@@ -1,8 +1,10 @@
 #!/bin/sh
-EXIT_UNTESTED=5		# not tested, this test hasn't been written yet
-NPASS=`expr $NTASKS \- $OMP_NUM_THREADS`
+pushd ..
+. ./test.sh.inc
+popd
 if [[ $PIP_MODE != 'pthread' ]]; then
-    exec $MCEXEC $1 $2 $OMP_NUM_THREADS $NPASS 2>&1;
+    NPASS=`expr $NTASKS / 2`;
+    exec $MCEXEC $1 $2 $NPASS $NPASS 2>&1;
 else
     exit $EXIT_UNTESTED;
 fi

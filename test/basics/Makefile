@@ -39,16 +39,28 @@ SRCS  = pip_init.c \
 	pip_fin.c \
 	pip_spawn.c \
 	pip_task_spawn.c \
-	pip_get_mode.c \
-	pip_get_mode_str.c \
-	pip_get_ntasks.c
+	pip_misc.c \
+	corebind.c
 
 PROGRAMS  = pip_init \
 	pip_fin \
 	pip_spawn \
 	pip_task_spawn \
-	pip_get_mode \
-	pip_get_mode_str \
-	pip_get_ntasks
+	pip_misc \
+	corebind \
+	spawn_pie \
+	prog-nopie \
+	prog-pie \
+	prog-nordynamic
+
+prog-nopie : prog.c Makefile
+	$(CC) -g -O2 prog.c -o prog-nopie
+
+prog-pie : prog.c Makefile
+	$(CC) -g -O2 -fpie -pie -rdynamic prog.c -o prog-pie
+
+prog-nordynamic : prog.c Makefile
+	$(CC) -g -O2 -fpie -pie prog.c -o prog-nordynamic
+
 
 include $(top_srcdir)/build/rule.mk

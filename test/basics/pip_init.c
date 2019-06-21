@@ -35,201 +35,126 @@
 
 #include <test.h>
 
-static int test_pip_init( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_pip_init( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = NTASKS;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, 0 );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
-
+  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ),
+	   return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
-static int test_pip_init_preload( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_pip_init_preload( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = NTASKS;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS_PRELOAD );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
+  TESTINT( pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS_PRELOAD ),
+	   return(EXIT_FAIL) );
 
   return EXIT_PASS;
 }
 
-static int test_twice( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_twice( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = NTASKS;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, 0 );
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_init/1: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
+  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ),
+	   return(EXIT_FAIL) );
 
   ntasks = NTASKS;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, 0 );
-  if ( rv != EBUSY ) {
-    fprintf( stderr, "pip_init/2: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
-
+  TESTIVAL( pip_init( &pipid, &ntasks, &exp, 0 ),
+	    EBUSY,
+	    return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
-static int test_ntask_is_zero( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_ntask_is_zero( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = 0;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, 0 );
-  if ( rv != EINVAL ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
-
+  TESTIVAL( pip_init( &pipid, &ntasks, &exp, 0 ),
+	    EINVAL,
+	    return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
-static int test_ntask_too_big( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_ntask_too_big( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = PIP_NTASKS_MAX + 1;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, 0 );
-  if ( rv != EOVERFLOW ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
-
+  TESTIVAL( pip_init( &pipid, &ntasks, &exp, 0 ),
+	    EOVERFLOW,
+	    return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
-static int test_invalid_opts( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_invalid_opts( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = 0;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, ~PIP_VALID_OPTS );
-  if ( rv != EINVAL ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
-
+  TESTIVAL( pip_init( &pipid, &ntasks, &exp, ~PIP_VALID_OPTS ),
+	    EINVAL,
+	    return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
-static int test_both_pthread_process( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_both_pthread_process( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = 0;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, PIP_MODE_PTHREAD | PIP_MODE_PROCESS );
-  if ( rv != EINVAL ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
-
+  TESTIVAL( pip_init( &pipid, &ntasks, &exp,
+		      PIP_MODE_PTHREAD | PIP_MODE_PROCESS ),
+	    EINVAL,
+	    return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
-static int test_both_preload_clone( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_both_preload_clone( char **argv ) {
+  int pipid, ntasks;
   void *exp;
 
   ntasks = 0;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp,
-		 PIP_MODE_PROCESS_PRELOAD | PIP_MODE_PROCESS_PIPCLONE );
-  if ( rv != EINVAL ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
-
+  TESTIVAL( pip_init( &pipid, &ntasks, &exp,
+		      PIP_MODE_PROCESS_PRELOAD | PIP_MODE_PROCESS_PIPCLONE ),
+	    EINVAL,
+	    return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
-static int test_pip_task_unset( char **argv )
-{
-  int pipid, ntasks, rv;
+static int test_pip_task_unset( char **argv ) {
+  int pipid, ntasks;
   void *exp;
-
-#ifndef DO_NOT_TEST
-  char *env_pip_root;
-
-  unsetenv( "PIP_TASK" );
-#endif
 
   ntasks = 1;
   exp = NULL;
-  rv = pip_init( &pipid, &ntasks, &exp, 0);
-
-#ifndef DO_NOT_TEST
-  env_pip_root = getenv( "PIP_ROOT" );
-  if( env_pip_root != NULL ) {
-    if( rv == EPERM )
-      return EXIT_PASS;
-
-    fprintf( stderr, "PIP_ROOT=\"%s\", but pip_init: %s\n",
-	     env_pip_root, strerror( rv ) );
-    return EXIT_FAIL;
-  }
-#endif
-
-  if ( rv != 0 ) {
-    fprintf( stderr, "pip_init: %s\n", strerror( rv ) );
-    return EXIT_FAIL;
-  }
+  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ), return(EXIT_FAIL) );
 
   if( pipid == PIP_PIPID_ROOT ) {
     pipid = 0;
-    rv = pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-		    NULL, NULL, NULL );
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_spawn: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
-    rv = pip_wait( 0, NULL );
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_wait: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
-    rv = pip_fin();
-    if( rv != 0 ) {
-      fprintf( stderr, "pip_fin: %s\n", strerror( rv ) );
-      return EXIT_FAIL;
-    }
-    printf( "Hello, pip root task is fine !!\n" );
-  } else {
-    printf( "<%d> Hello, I am fine !!\n", pipid );
+    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			NULL, NULL, NULL ),
+	     return(EXIT_FAIL) );
+    TESTINT(  pip_wait( 0, NULL ), return(EXIT_FAIL) );
+    TESTINT( pip_fin(), return(EXIT_FAIL) );
   }
-
   return EXIT_PASS;
 }
-
 
 int main( int argc, char **argv ) {
   static struct {
