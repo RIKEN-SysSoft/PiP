@@ -37,63 +37,62 @@ int main( int argc, char **argv ) {
   const char *mode_str = NULL;
 
   /*** before calling pip_init(), this must fail ***/
-  TESTTRUTH( pip_is_initialized(), 	FALSE, 	return(EXIT_FAIL) );
-  TESTTRUTH( pip_isa_root(), 		FALSE, 	return(EXIT_FAIL) );
-  TESTTRUTH( pip_isa_task(),		FALSE, 	return(EXIT_FAIL) );
-  TESTIVAL(  pip_get_pipid( NULL ),	EPERM, 	return(EXIT_FAIL) );
-  TESTIVAL(  pip_get_pipid( &pipid ),	EPERM, 	return(EXIT_FAIL) );
-  TESTIVAL(  pip_get_mode( NULL ),	EPERM, 	return(EXIT_FAIL) );
-  TESTIVAL(  pip_get_mode( &mode ),	EPERM, 	return(EXIT_FAIL) );
-  TESTIVAL(  pip_get_ntasks( &ntasks ),	EPERM,	return(EXIT_FAIL) );
+  CHECK( pip_is_initialized(), 	    RV, 	return(EXIT_FAIL) );
+  CHECK( pip_isa_root(), 	    RV, 	return(EXIT_FAIL) );
+  CHECK( pip_isa_task(),	    RV, 	return(EXIT_FAIL) );
+  CHECK( pip_get_pipid( NULL ),	    RV!=EPERM, 	return(EXIT_FAIL) );
+  CHECK( pip_get_pipid( &pipid ),   RV!=EPERM, 	return(EXIT_FAIL) );
+  CHECK( pip_get_mode( NULL ),	    RV!=EPERM, 	return(EXIT_FAIL) );
+  CHECK( pip_get_mode( &mode ),	    RV!=EPERM, 	return(EXIT_FAIL) );
+  CHECK( pip_get_ntasks( &ntasks ), RV!=EPERM,	return(EXIT_FAIL) );
 
-  mode_str = pip_get_mode_str();
-  if( mode_str != NULL ) {
-      fprintf( stderr, "pip_get_mode_str: %s", mode_str );
-      return EXIT_FAIL;
-  }
+  CHECK( ( ( mode_str = pip_get_mode_str() ) != NULL ),
+	 RV,
+	 return(EXIT_FAIL) );
 
   ntasks = NTASKS;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ), return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
   /*** after calling pip_init(), this must succeed ***/
-  TESTTRUTH( pip_is_initialized(), 	TRUE, 	return(EXIT_FAIL) );
-  TESTINT(   pip_get_mode( &mode ),		return(EXIT_FAIL) );
-  TESTINT(   pip_get_ntasks( &nt ),		return(EXIT_FAIL) );
+  CHECK( pip_is_initialized(), 	!RV, 	return(EXIT_FAIL) );
+  CHECK( pip_get_mode( &mode ),	RV,	return(EXIT_FAIL) );
+  CHECK( pip_get_ntasks( &nt ),	RV,	return(EXIT_FAIL) );
 
+  CHECK( ( ( mode_str = pip_get_mode_str() ) != NULL ),
+	 !RV,
+	 return(EXIT_FAIL) );
   mode_str = pip_get_mode_str();
-  TESTTRUTH( mode_str==NULL, 		FALSE,	return(EXIT_FAIL) );
-  if( strcmp( mode_str, PIP_ENV_MODE_PTHREAD          ) == 0 ||
-      strcmp( mode_str, PIP_ENV_MODE_PROCESS          ) == 0 ||
-      strcmp( mode_str, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ||
-      strcmp( mode_str, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
-    TESTTRUTH( TRUE, TRUE, return(EXIT_FAIL) );
+  if( strcmp( mode_str, PIP_ENV_MODE_PTHREAD          ) != 0 &&
+      strcmp( mode_str, PIP_ENV_MODE_PROCESS          ) != 0 &&
+      strcmp( mode_str, PIP_ENV_MODE_PROCESS_PRELOAD  ) != 0 &&
+      strcmp( mode_str, PIP_ENV_MODE_PROCESS_PIPCLONE ) != 0 ) {
+    CHECK( 1, RV, return(EXIT_FAIL) );
   }
 
   /* pip_isa_root() */
   if( pip_isa_root() ) {
-    TESTINT(   pip_get_pipid( NULL ), 		return(EXIT_FAIL) );
-    TESTINT(   pip_get_pipid( &id ), 		return(EXIT_FAIL) );
-    TESTTRUTH( id!=pipid, 		FALSE,	return(EXIT_FAIL) );
-    TESTTRUTH( id!=PIP_PIPID_ROOT, 	FALSE,	return(EXIT_FAIL) );
+    CHECK( pip_get_pipid( NULL ),     RV,   	return(EXIT_FAIL) );
+    CHECK( pip_get_pipid( &id ),      RV, 	return(EXIT_FAIL) );
+    CHECK( id!=pipid, 		      RV,	return(EXIT_FAIL) );
+    CHECK( id!=PIP_PIPID_ROOT, 	      RV,	return(EXIT_FAIL) );
 
   } else if( pip_isa_task() ) {
     char *env;
     int nte;
 
-    TESTINT(   pip_get_pipid( NULL ), 		return(EXIT_FAIL) );
-    TESTINT(   pip_get_pipid( &id ), 		return(EXIT_FAIL) );
-    TESTTRUTH( id!=pipid, 		FALSE,	return(EXIT_FAIL) );
+    CHECK( pip_get_pipid( NULL ),     RV,	return(EXIT_FAIL) );
+    CHECK( pip_get_pipid( &id ),      RV,	return(EXIT_FAIL) );
+    CHECK( id!=pipid, 		      RV,	return(EXIT_FAIL) );
 
     env = getenv( PIP_TASK_NUM_ENV );
-    TESTTRUTH( env==NULL, 		FALSE,	return(EXIT_FAIL) );
+    CHECK( env==NULL, 		      RV,	return(EXIT_FAIL) );
 
     nte = strtol( env, NULL, 10 );
-    TESTTRUTH( nt==nte, 		TRUE,	return(EXIT_FAIL) );
+    CHECK( nt!=nte, 		      RV,	return(EXIT_FAIL) );
 
   } else {
-    fprintf( stderr, "pip_isa_root and pip_isa_task both fail\n" );
-    return EXIT_FAIL;
+    CHECK( 1, RV, return(EXIT_FAIL) );
   }
-  TESTINT( pip_fin(), return(EXIT_FAIL) );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }

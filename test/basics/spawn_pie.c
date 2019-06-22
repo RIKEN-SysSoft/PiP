@@ -43,41 +43,43 @@ int main( int argc, char **argv ) {
   dir = dirname( argv[0] );
   chdir( dir );
 
-  TESTINT( pip_init( NULL, NULL, NULL, 0 ), return(EXIT_FAIL) );
+  CHECK( pip_init( NULL, NULL, NULL, 0 ), RV, return(EXIT_FAIL) );
 
   nargv[0] = "./prog-nopie";
-  TESTIVAL( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		      NULL, NULL, NULL ),
-	    ELIBEXEC,
-	    return(EXIT_FAIL) );
+	 RV!=ELIBEXEC,
+	 return(EXIT_FAIL) );
 
   nargv[0] = "./prog-nordynamic";
-  TESTIVAL( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		      NULL, NULL, NULL ),
-	    ENOEXEC,
-	    return(EXIT_FAIL) );
+	 RV!=ENOEXEC,
+	 return(EXIT_FAIL) );
 
   nargv[0] = "prog-pie";	/* not a path (no slash) */
-  TESTIVAL( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		       NULL, NULL, NULL ),
-	    EINVAL,
-	    return(EXIT_FAIL) );
+	 RV!=EINVAL,
+	 return(EXIT_FAIL) );
 
   nargv[0] = "./prog-pie";	/* correct one */
-  TESTINT( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		       NULL, NULL, NULL ),
-	   return(EXIT_FAIL) );
+	 RV,
+	 return(EXIT_FAIL) );
 
-  TESTINT(  pip_wait_any( NULL, &status ), return(EXIT_UNTESTED) );
+  CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_UNTESTED) );
 
   if( WIFEXITED( status ) ) {
-    if( ( extval = WEXITSTATUS( status ) ) != 0 ) {
-      return EXIT_FAIL;
-    }
+	CHECK( ( extval = WEXITSTATUS( status ) ),
+	       RV,
+	       return(EXIT_FAIL) );
   } else {
+    CHECK( 1, RV, RV=0 );
     extval = EXIT_UNRESOLVED;
   }
 
-  TESTINT( pip_fin(), return(EXIT_FAIL) );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }

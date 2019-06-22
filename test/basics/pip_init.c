@@ -41,8 +41,7 @@ static int test_pip_init( char **argv ) {
 
   ntasks = NTASKS;
   exp = NULL;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ),
-	   return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -52,8 +51,9 @@ static int test_pip_init_preload( char **argv ) {
 
   ntasks = NTASKS;
   exp = NULL;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS_PRELOAD ),
-	   return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS_PRELOAD ),
+	 RV,
+	 return(EXIT_FAIL) );
 
   return EXIT_PASS;
 }
@@ -64,14 +64,11 @@ static int test_twice( char **argv ) {
 
   ntasks = NTASKS;
   exp = NULL;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ),
-	   return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ), RV, return(EXIT_FAIL) );
 
   ntasks = NTASKS;
   exp = NULL;
-  TESTIVAL( pip_init( &pipid, &ntasks, &exp, 0 ),
-	    EBUSY,
-	    return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ), RV!=EBUSY, return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -81,9 +78,7 @@ static int test_ntask_is_zero( char **argv ) {
 
   ntasks = 0;
   exp = NULL;
-  TESTIVAL( pip_init( &pipid, &ntasks, &exp, 0 ),
-	    EINVAL,
-	    return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ), RV!=EINVAL, return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -93,9 +88,9 @@ static int test_ntask_too_big( char **argv ) {
 
   ntasks = PIP_NTASKS_MAX + 1;
   exp = NULL;
-  TESTIVAL( pip_init( &pipid, &ntasks, &exp, 0 ),
-	    EOVERFLOW,
-	    return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ),
+	 RV!=EOVERFLOW,
+	 return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -105,9 +100,9 @@ static int test_invalid_opts( char **argv ) {
 
   ntasks = 0;
   exp = NULL;
-  TESTIVAL( pip_init( &pipid, &ntasks, &exp, ~PIP_VALID_OPTS ),
-	    EINVAL,
-	    return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, ~PIP_VALID_OPTS ),
+	 RV!=EINVAL,
+	 return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -117,10 +112,10 @@ static int test_both_pthread_process( char **argv ) {
 
   ntasks = 0;
   exp = NULL;
-  TESTIVAL( pip_init( &pipid, &ntasks, &exp,
-		      PIP_MODE_PTHREAD | PIP_MODE_PROCESS ),
-	    EINVAL,
-	    return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp,
+		   PIP_MODE_PTHREAD | PIP_MODE_PROCESS ),
+	 RV!=EINVAL,
+	 return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -130,10 +125,10 @@ static int test_both_preload_clone( char **argv ) {
 
   ntasks = 0;
   exp = NULL;
-  TESTIVAL( pip_init( &pipid, &ntasks, &exp,
-		      PIP_MODE_PROCESS_PRELOAD | PIP_MODE_PROCESS_PIPCLONE ),
-	    EINVAL,
-	    return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp,
+		   PIP_MODE_PROCESS_PRELOAD | PIP_MODE_PROCESS_PIPCLONE ),
+	 RV!=EINVAL,
+	 return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -143,15 +138,16 @@ static int test_pip_task_unset( char **argv ) {
 
   ntasks = 1;
   exp = NULL;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ), return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ), RV, return(EXIT_FAIL) );
 
   if( pipid == PIP_PIPID_ROOT ) {
     pipid = 0;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			NULL, NULL, NULL ),
-	     return(EXIT_FAIL) );
-    TESTINT(  pip_wait( 0, NULL ), return(EXIT_FAIL) );
-    TESTINT( pip_fin(), return(EXIT_FAIL) );
+    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+		      NULL, NULL, NULL ),
+	   RV,
+	   return(EXIT_FAIL) );
+    CHECK( pip_wait( 0, NULL ), RV, return(EXIT_FAIL) );
+    CHECK( pip_fin(), 	 	RV, return(EXIT_FAIL) );
   }
   return EXIT_PASS;
 }

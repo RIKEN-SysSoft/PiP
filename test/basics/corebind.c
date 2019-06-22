@@ -55,26 +55,29 @@ int main( int argc, char **argv ) {
 
   exp = &init_set;
   ntasks = NTASKS;
-  TESTINT( pip_init(&pipid,&ntasks,(void**)&exp,0), return(EXIT_FAIL) );
+  CHECK( pip_init(&pipid,&ntasks,(void**)&exp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     CPU_ZERO( &init_set );
-    TESTSYSERR( sched_getaffinity(0,sizeof(init_set),&init_set),
-		return(EXIT_UNRESOLVED) );
+    CHECK( sched_getaffinity( 0, sizeof(init_set), &init_set ),
+	   RV,
+	   return(EXIT_UNRESOLVED) );
     for( i=0; i<NTASKS; i++ ) {
       core = nth_core( i, &init_set );
       pipid = i;
       printf( ">> PIPID:%d core:%d\n", pipid, core );
-      TESTINT( pip_spawn(argv[0],argv,NULL,core,&pipid,NULL,NULL,NULL),
-	       return(EXIT_FAIL) );
+      CHECK( pip_spawn(argv[0],argv,NULL,core,&pipid,NULL,NULL,NULL),
+	     RV,
+	     return(EXIT_FAIL) );
     }
     for( i=0; i<ntasks; i++ ) {
       int status;
-      TESTINT( pip_wait_any( NULL, &status ), return(EXIT_FAIL) );
+      CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
       if( WIFEXITED( status ) ) {
-	if( ( extval = WEXITSTATUS( status ) ) != 0 ) {
-	  return EXIT_FAIL;
-	}
+	CHECK( ( extval = WEXITSTATUS( status ) ),
+	       RV,
+	       return(EXIT_FAIL) );
       } else {
+	CHECK( 1, RV, RV=0 );
 	extval = EXIT_UNRESOLVED;
 	break;
       }
@@ -84,11 +87,11 @@ int main( int argc, char **argv ) {
     extval = 0;
     init_setp = (cpu_set_t*) exp;
     core = nth_core( pipid, init_setp );
-    TESTTRUTH( CPU_ISSET( core, init_setp ),
-	       TRUE,
-	       return(EXIT_FAIL) );
+    CHECK( CPU_ISSET( core, init_setp ),
+	   !RV,
+	   return(EXIT_FAIL) );
     printf( "<< PIPID:%d core:%d\n", pipid, core );
   }
-  TESTINT( pip_fin(), return(EXIT_FAIL) );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return extval;
 }

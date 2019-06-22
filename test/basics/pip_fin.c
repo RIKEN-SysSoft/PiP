@@ -39,17 +39,19 @@ int main( int argc, char **argv ) {
   int pipid, ntasks;
   void *exp;
 
+  CHECK( pip_fin(), RV!=EPERM, return(EXIT_FAIL) );
   ntasks = 1;
   exp = NULL;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, 0), return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     pipid = 0;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			NULL, NULL, NULL ),
+	     RV,
 	     return(EXIT_FAIL) );
-    TESTIVAL( pip_fin(), EBUSY, 	return(EXIT_FAIL) );
-    TESTINT(  pip_wait( 0, NULL ), 	return(EXIT_FAIL) );
-    TESTINT(  pip_fin(), 		return(EXIT_FAIL) );
+    CHECK( pip_fin(), 		RV!=EBUSY, 	return(EXIT_FAIL) );
+    CHECK( pip_wait( 0, NULL ), RV,		return(EXIT_FAIL) );
+    CHECK( pip_fin(), 		RV, 		return(EXIT_FAIL) );
   } else {
     printf( "<%d> sleeping...\n", pipid );
     usleep( 500*1000UL );		/* 0.5 sec */

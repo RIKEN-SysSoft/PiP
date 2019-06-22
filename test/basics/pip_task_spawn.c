@@ -34,13 +34,14 @@
 
 static int static_entry( void *args ) __attribute__ ((unused));
 static int static_entry( void *argp ) {
+  /* indeed, this function is not reachable */
   int arg = *((int*)argp);
   int pipid = -100;
 
-  TESTIVAL(  pip_get_pipid( &pipid ), 		EPERM,  return(1) );
-  TESTINT(   pip_init( NULL, NULL, NULL, 0 ), 		return(1) );
-  TESTINT(   pip_get_pipid( &pipid ), 			return(1) );
-  TESTTRUTH( pipid!=arg, 			FALSE,	return(1) );
+  CHECK( pip_get_pipid( &pipid ), 	  RV!=EPERM, return(1) );
+  CHECK( pip_init( NULL, NULL, NULL, 0 ), RV, 	     return(1) );
+  CHECK( pip_get_pipid( &pipid ),	  RV,	     return(1) );
+  CHECK( pipid!=arg, 			  RV,	     return(1) );
   return 0;
 }
 
@@ -48,10 +49,10 @@ int global_entry( void *argp ) {
   int arg = *((int*)argp);
   int pipid = -100;
 
-  TESTIVAL(  pip_get_pipid( &pipid ), 		EPERM,  return(1) );
-  TESTINT(   pip_init( NULL, NULL, NULL, 0 ), 		return(1) );
-  TESTINT(   pip_get_pipid( &pipid ), 			return(1) );
-  TESTTRUTH( pipid!=arg, 			FALSE,	return(1) );
+  CHECK( pip_get_pipid( &pipid ), 	  RV!=EPERM, return(1) );
+  CHECK( pip_init( NULL, NULL, NULL, 0 ), RV,        return(1) );
+  CHECK( pip_get_pipid( &pipid ), 	  RV,        return(1) );
+  CHECK( pipid!=arg, 			  RV,        return(1) );
   return 0;
 }
 
@@ -61,67 +62,68 @@ int main( int argc, char **argv ) {
 
   /* before calling pip_init(), this must fail */
   pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	    EPERM,
-	    return(EXIT_FAIL) );
+  CHECK( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	 RV!=EPERM,
+	 return(EXIT_FAIL) );
 
   memset( &prog, 0, sizeof(prog) );
   pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	    EPERM,
-	    return(EXIT_FAIL) );
+  CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	 RV!=EPERM,
+	 return(EXIT_FAIL) );
 
   pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &pipid, NULL );
   pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	    EPERM,
-	    return(EXIT_FAIL) );
+  CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	 RV!=EPERM,
+	 return(EXIT_FAIL) );
 
   ntasks = NTASKS;
-  TESTINT(  pip_init( NULL, &ntasks, NULL, 0 ), return(EXIT_FAIL) );
+  CHECK( pip_init( NULL, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
   /* after calling pip_init(), this must succeed if it is the root process */
   pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	    EINVAL,
-	    return(EXIT_FAIL) );
+  CHECK( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	 RV!=EINVAL,
+	 return(EXIT_FAIL) );
 
   memset( &prog, 0, sizeof(prog) );
   pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	    EINVAL,
-	    return(EXIT_FAIL) );
+  CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	 RV!=EINVAL,
+	 return(EXIT_FAIL) );
 
   pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &pipid, NULL );
   pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	    ENOEXEC,
-	    return(EXIT_FAIL) );
+  CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	 RV!=ENOEXEC,
+	 return(EXIT_FAIL) );
 
   pip_spawn_from_func( &prog, argv[0], "global_entry", (void*) &pipid, NULL );
   pipid = PIP_PIPID_ANY;
 
   if( pip_isa_task() ) {
-    TESTIVAL( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	      EPERM,
-	      return(EXIT_FAIL) );
+    CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	   RV!=EPERM,
+	   return(EXIT_FAIL) );
 
   } else {
     int status = 0, extval = 0;
 
-    TESTINT( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	     return(EXIT_FAIL) );
-    TESTINT( pip_wait( pipid, &status ), return(EXIT_UNTESTED) );
+    CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	   RV,
+	   return(EXIT_FAIL) );
+    CHECK( pip_wait( pipid, &status ), RV, return(EXIT_UNTESTED) );
 
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
-      TESTTRUTH( extval!=0, FALSE, return(EXIT_FAIL) );
+      CHECK( extval!=0, RV, return(EXIT_FAIL) );
 
     } else {
-      TESTTRUTH( 1, FALSE, return(EXIT_UNRESOLVED) );
+      CHECK( 1, RV, return(EXIT_UNRESOLVED) );
     }
     return extval;
   }
-  TESTINT( pip_fin(), return(EXIT_FAIL) );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }

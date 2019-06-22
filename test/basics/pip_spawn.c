@@ -37,66 +37,67 @@ int main( int argc, char **argv ) {
 
   /* before calling pip_init(), this must fail */
   pipid = PIP_PIPID_ANY;
-  TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-		       NULL, NULL, NULL ),
-	    EPERM,
-	    return(EXIT_FAIL) );
+  CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+		    NULL, NULL, NULL ),
+	 RV!=EPERM,
+	 return(EXIT_FAIL) );
 
   ntasks = NTASKS;
-  TESTINT( pip_init( NULL, &ntasks, NULL, 0 ), return(EXIT_FAIL) );
+  CHECK( pip_init( NULL, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
   /* after calling pip_init() */
   if( pip_isa_task() ) {
     pipid = PIP_PIPID_ANY;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	      EPERM,
-	      return(EXIT_FAIL) );
+    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+		      NULL, NULL, NULL ),
+	   RV!=EPERM,
+	   return(EXIT_FAIL) );
   } else {
     int coreno, status = 0, extval = 0;
 
-    TESTIVAL( pip_spawn( NULL, NULL, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+    CHECK( pip_spawn( NULL, NULL, NULL, PIP_CPUCORE_ASIS, &pipid,
+		      NULL, NULL, NULL ),
+	   RV!=EINVAL,
+	   return(EXIT_FAIL) );
 
     coreno = -1;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, coreno, &pipid,
+    CHECK( pip_spawn( argv[0], argv, NULL, coreno, &pipid,
 			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+	   RV!=EINVAL,
+	   return(EXIT_FAIL) );
 
     coreno = 100000;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, coreno, &pipid,
+    CHECK( pip_spawn( argv[0], argv, NULL, coreno, &pipid,
 			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+	   RV!=EINVAL,
+	   return(EXIT_FAIL) );
 
     pipid = 100000;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+	   RV!=EINVAL,
+	   return(EXIT_FAIL) );
 
     pipid = -1;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+	   RV!=EINVAL,
+	   return(EXIT_FAIL) );
 
     pipid = PIP_PIPID_MYSELF;
-    TESTIVAL( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			 NULL, NULL, NULL ),
-	      EINVAL,
-	      return(EXIT_FAIL) );
+	   RV!=EINVAL,
+	   return(EXIT_FAIL) );
 
     pipid = PIP_PIPID_ANY;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			 NULL, NULL, NULL ),
-	     return(EXIT_FAIL) );
+    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+		      NULL, NULL, NULL ),
+	   RV,
+	   return(EXIT_FAIL) );
 
-    TESTIVAL( pip_wait( -123, &status ), EINVAL, return(EXIT_UNTESTED) );
-    TESTINT(  pip_wait( pipid, &status ), return(EXIT_UNTESTED) );
+    CHECK( pip_wait( -123, &status ),  RV!=EINVAL, return(EXIT_UNTESTED) );
+    CHECK( pip_wait( pipid, &status ), RV,         return(EXIT_UNTESTED) );
 
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
@@ -105,6 +106,6 @@ int main( int argc, char **argv ) {
     }
     return extval;
   }
-  TESTINT( pip_fin(), return(EXIT_FAIL) );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }

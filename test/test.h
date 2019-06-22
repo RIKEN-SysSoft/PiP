@@ -43,6 +43,7 @@
 #define PIP_INTERNAL_FUNCS
 
 #include <stdbool.h>
+#include <pip.h>
 #include <pip_internal.h>
 
 #define NTASKS		PIP_NTASKS_MAX
@@ -50,6 +51,7 @@
 #define EXTVAL_MASK	(127)
 
 #define PIPENV		"PIPENV"
+#define PIP_TASK_NUM_ENV "PIP_TASK_NUM"
 
 #define EXIT_PASS	0
 #define EXIT_FAIL	1
@@ -71,12 +73,13 @@ typedef struct naive_barrier {
 } naive_barrier_t;
 
 typedef struct test_args {
-  int 	argc;
-  char 	**argv;
-  int	ntasks;
-  int	nact;
-  int	npass;
-  int 	niters;
+  int 		argc;
+  char 		**argv;
+  int		ntasks;
+  int		nact;
+  int		npass;
+  int		timer;
+  volatile int	niters;
 } test_args_t;
 
 typedef struct exp {
@@ -134,17 +137,41 @@ inline static void naive_lock_init( naive_lock_t *lock ) {
 
 void pip_abort( void );
 
-#define PRINT_FL(FSTR,V)	\
-  fprintf(stderr,"%s:%d (%s)=%d\n",__FILE__,__LINE__,FSTR,V)
+#define TRUE		(1)
+#define FALSE		(0)
+
+#define PRINT_FL(FSTR,VAL)	\
+  fprintf(stderr,"%s:%d (%s)=%d\n",__FILE__,__LINE__,FSTR,VAL)
+
+#define PRINT_FLE(FSTR,ERR)			\
+  if(!errno) {								\
+    fprintf(stderr,"%s:%d (%s): %s (%d)\n",				\
+	    __FILE__,__LINE__,FSTR,strerror(ERR),ERR);			\
+  } else {								\
+    fprintf(stderr,"%s:%d (%s): %s (%s\n",__FILE__,__LINE__,FSTR,	\
+	    strerror(ERR), strerror(errno) ); }
+
+#define PRINT_TRUTH(FSTR,T)	\
+  do { if( T )								\
+      fprintf(stderr,"%s:%d (%s): %s\n",__FILE__,__LINE__,FSTR,"TRUE");	\
+    else 								\
+      fprintf(stderr,"%s:%d (%s): %s\n",__FILE__,__LINE__,FSTR,"FALSE"); \
+  } while(0)
+
+#define CHECK(F,C,A) \
+  do{ errno=0; int RV=(F); \
+    if(C) { PRINT_FLE(#F,RV); A; } } while(0)
 
 #ifndef DEBUG
 
-#define TESTINT(F)		\
-  do{int __xyz=(F); if(__xyz){PRINT_FL(#F,__xyz);pip_abort();}} while(0)
-#define TESTSYSERR(F)		\
-  do{int __xyz=(F); if(__xyz == -1){PRINT_FL(#F,__xyz);pip_abort();}} while(0)
-#define TEST_EXPECT(F, X)	\
-  do{int __xyz=(F); if(__xyz != X){PRINT_FL(#F,__xyz);pip_abort();}} while(0)
+#define TESTINT(F,X)							\
+  do{int __xyz=(F); if(__xyz){PRINT_FLE(#F,__xyz);X;}} while(0)
+#define TESTSYSERR(F,X)							\
+  do{int __xyz=(F); if(__xyz == -1){PRINT_FLE(#F,__xyz);X;}} while(0)
+#define TESTIVAL(F,V,X)							\
+  do{int __xyz=(F); if(__xyz != (V)){PRINT_FL(#F,__xyz);X;}} while(0)
+#define TESTTRUTH(F,T,X)					\
+  do{if((!(F)&&T)||((F)&&!T)){PRINT_TRUTH(#F,T);X;}} while(0)
 
 #else
 
@@ -153,26 +180,33 @@ void pip_abort( void );
   n = sprintf( &__msgbuf[m], " %s:%d: ", __FILE__, __LINE__ );		\
   sprintf( &__msgbuf[n+m], __VA_ARGS__ );				\
   fprintf( stderr, "%s\n", __msgbuf ); } while(0)
-#define TESTINT(F)		\
+#define TESTINT(F,X)					\
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz != 0 ) pip_abort();			\
+    TPRT( "<< %s: %s", #F, strerror(__xyz) );		\
+    if( __xyz != 0 ) X;					\
   } while(0)
-#define TESTSYSERR(F)		\
+#define TESTSYSERR(F,X)					\
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz == -1 ) pip_abort();			\
+    TPRT( "<< %s: %d", #F, strerror(__xyz) );		\
+    if( __xyz == -1 ) X;				\
   } while(0)
-#define TEST_EXPECT(F, X)				\
+#define TESTIVAL(F,V,X)					\
   do{ 							\
     TPRT( ">> %s", #F );				\
     int __xyz = (F);					\
     TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz != X ) pip_abort();			\
+    if( __xyz != (V) ) X;				\
+  } while(0)
+#define TESTTRUTH(F,T,X)				\
+  do{ 							\
+    TPRT( ">> %s", #F );				\
+    int __xyz = (F);					\
+    TPRT( "<< %s=%d", #F, __xyz );			\
+    if( (!(F)&&X) || ((F)&&!T) ) X;			\
   } while(0)
 #endif
 
@@ -188,7 +222,7 @@ inline static void print_maps( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    TEST_EXPECT( write( 1, buf, sz ), sz );
+    TESTIVAL( write( 1, buf, sz ), sz, pip_abort() );
   }
   close( fd );
 }
@@ -199,7 +233,7 @@ inline static void print_numa( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    TEST_EXPECT( write( 1, buf, sz ), sz );
+    TESTIVAL( write( 1, buf, sz ), sz, pip_abort() );
   }
   close( fd );
 }
@@ -275,14 +309,14 @@ inline static void set_signal_watcher( int signal ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( signal, &sigact, NULL ) );
+  TESTINT( sigaction( signal, &sigact, NULL ), pip_abort() );
 }
 
 inline static void ignore_signal( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_handler = SIG_IGN;
-  TESTINT( sigaction( signal, &sigact, NULL ) );
+  TESTINT( sigaction( signal, &sigact, NULL ), pip_abort() );
 }
 
 inline static void watch_sigchld( void ) {
@@ -316,7 +350,7 @@ inline static void set_signal_handler( int signal, void(*handler)() ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = handler;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( signal, &sigact, NULL ) );
+  TESTINT( sigaction( signal, &sigact, NULL ), pip_abort() );
 }
 
 inline static void ignore_anysignal( void ) {
@@ -379,7 +413,7 @@ inline static void set_sigsegv_watcher( void ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = sigsegv_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( SIGSEGV, &sigact, NULL ) );
+  TESTINT( sigaction( SIGSEGV, &sigact, NULL ), pip_abort() );
 }
 
 #define PROCFD		"/proc/self/fd"
@@ -447,7 +481,7 @@ inline static void set_sigint_watcher( void ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = sigint_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( SIGINT, &sigact, NULL ) );
+  TESTINT( sigaction( SIGINT, &sigact, NULL ), pip_abort() );
 }
 
 #endif
