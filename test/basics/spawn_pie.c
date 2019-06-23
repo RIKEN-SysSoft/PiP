@@ -40,6 +40,7 @@ int main( int argc, char **argv ) {
   char *nargv[2] = { NULL, NULL };
   int status, extval;
 
+  set_sigsegv_watcher();
   dir = dirname( argv[0] );
   chdir( dir );
 
@@ -48,7 +49,7 @@ int main( int argc, char **argv ) {
   nargv[0] = "./prog-nopie";
   CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		      NULL, NULL, NULL ),
-	 RV!=ELIBEXEC,
+	 RV!=ENOEXEC,
 	 return(EXIT_FAIL) );
 
   nargv[0] = "./prog-nordynamic";

@@ -63,7 +63,7 @@ int pip_check_pie( char *path ) {
 	       elfh.e_ident[EI_MAG3] != ELFMAG3 ) {
       err = EUNATCH;
     } else if( elfh.e_type != ET_DYN ) {
-      err = ELIBEXEC;
+      err = ENOEXEC;
     }
     (void) close( fd );
   }

@@ -53,6 +53,7 @@ int main( int argc, char **argv ) {
   int 		ntasks, pipid;
   int		core, i, extval;
 
+  set_sigsegv_watcher();
   exp = &init_set;
   ntasks = NTASKS;
   CHECK( pip_init(&pipid,&ntasks,(void**)&exp,0), RV, return(EXIT_FAIL) );

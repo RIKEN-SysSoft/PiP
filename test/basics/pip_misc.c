@@ -36,6 +36,7 @@ int main( int argc, char **argv ) {
   int mode, ntasks, nt, pipid, id;
   const char *mode_str = NULL;
 
+  set_sigsegv_watcher();
   /*** before calling pip_init(), this must fail ***/
   CHECK( pip_is_initialized(), 	    RV, 	return(EXIT_FAIL) );
   CHECK( pip_isa_root(), 	    RV, 	return(EXIT_FAIL) );

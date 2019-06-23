@@ -35,14 +35,9 @@
 
 #define _GNU_SOURCE
 
+#include <test.h>
 #include <sys/time.h>
 #include <sys/wait.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <libgen.h>
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
 
 #define EXIT_PASS	0
 #define EXIT_FAIL	1

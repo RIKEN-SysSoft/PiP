@@ -8,57 +8,43 @@
 #include <test.h>
 
 int main( int argc, char **argv ) {
-  int ntasks, pipid, rv, status, extval;
+  int ntasks, pipid, status, extval;
   int i, err;
-  char *prog = basename( argv[0] );
   char env[128];
 
   if( argc < 3 ) return EXIT_UNTESTED;
+  CHECK( access( argv[2], X_OK ), RV, exit(EXIT_UNTESTED) );
+  CHECK( pip_check_pie( argv[2] ), RV, exit(EXIT_UNTESTED) );
 
   ntasks = strtol( argv[1], NULL, 10 );
-  rv = pip_init( &pipid, &ntasks, NULL, 0 );
-  if ( rv != 0 ) {
-    fprintf( stderr, "[%s] pip_init: %s\n", prog, strerror( rv ) );
-    return EXIT_UNTESTED;
-  }
+  CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_UNTESTED) );
   sprintf( env, "%s=%d", PIP_TASK_NUM_ENV, ntasks );
   putenv( env );
 
   for( i=0; i<ntasks; i++ ) {
     pipid = i;
-    rv = pip_spawn( argv[2], &argv[2], NULL, PIP_CPUCORE_ASIS, &pipid,
-		    NULL, NULL, NULL );
-    if( rv != 0 ) {
-      fprintf( stderr, "[%s] pip_spawn: %s\n", prog, strerror( rv ) );
-      return EXIT_UNTESTED;
-    }
-    if( pipid != i ) {
-      fprintf( stderr, "[%s] pip_spawn: pipid %d != %d\n", prog, i, pipid );
-      return EXIT_UNTESTED;
-    }
+    CHECK( pip_spawn( argv[2], &argv[2], NULL, PIP_CPUCORE_ASIS, &pipid,
+		      NULL, NULL, NULL ),
+	   RV,
+	   return(EXIT_UNTESTED) );
+    CHECK( pipid, RV!=i, return(EXIT_UNTESTED) );
   }
   extval = 0;
   err = 0;
   for( i=0; i<ntasks; i++ ) {
     status = 0;
-    rv = pip_wait( i, &status );
-    if( rv != 0 ) {
-      fprintf( stderr, "[%s] pip_wait: %s\n", prog, strerror( rv ) );
-      return EXIT_UNTESTED;
-    }
+    CHECK( pip_wait( i, &status ), RV, return(EXIT_UNTESTED) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
+      CHECK( extval, RV!=0, RV=0 /*nop*/ );
     } else {
-      extval = EXIT_UNRESOLVED;
+      CHECK( "test program signaled", 1, return(EXIT_UNRESOLVED) );
     }
     if( err == 0 && extval != 0 ) err = extval;
   }
 
-  rv = pip_fin();
-  if( rv != 0 ) {
-    fprintf( stderr, "[%s] pip_fin: %s\n", prog, strerror( rv ) );
-    return EXIT_UNTESTED;
-  }
+  CHECK( pip_fin(), RV, return(EXIT_UNTESTED) );
 
   return extval;
 }

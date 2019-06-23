@@ -140,75 +140,22 @@ void pip_abort( void );
 #define TRUE		(1)
 #define FALSE		(0)
 
+extern char *__progname;
+
 #define PRINT_FL(FSTR,VAL)	\
   fprintf(stderr,"%s:%d (%s)=%d\n",__FILE__,__LINE__,FSTR,VAL)
 
 #define PRINT_FLE(FSTR,ERR)			\
   if(!errno) {								\
-    fprintf(stderr,"%s:%d (%s): %s (%d)\n",				\
-	    __FILE__,__LINE__,FSTR,strerror(ERR),ERR);			\
+    fprintf(stderr,"[%s] %s:%d (%s): %s (%d)\n",			\
+	    __progname, __FILE__,__LINE__,FSTR,strerror(ERR),ERR);	\
   } else {								\
-    fprintf(stderr,"%s:%d (%s): %s (%s\n",__FILE__,__LINE__,FSTR,	\
+    fprintf(stderr,"[%s] %s:%d (%s): %s (errno: %s)\n",			\
+	    __progname, __FILE__,__LINE__,FSTR,				\
 	    strerror(ERR), strerror(errno) ); }
 
-#define PRINT_TRUTH(FSTR,T)	\
-  do { if( T )								\
-      fprintf(stderr,"%s:%d (%s): %s\n",__FILE__,__LINE__,FSTR,"TRUE");	\
-    else 								\
-      fprintf(stderr,"%s:%d (%s): %s\n",__FILE__,__LINE__,FSTR,"FALSE"); \
-  } while(0)
-
 #define CHECK(F,C,A) \
-  do{ errno=0; int RV=(F); \
-    if(C) { PRINT_FLE(#F,RV); A; } } while(0)
-
-#ifndef DEBUG
-
-#define TESTINT(F,X)							\
-  do{int __xyz=(F); if(__xyz){PRINT_FLE(#F,__xyz);X;}} while(0)
-#define TESTSYSERR(F,X)							\
-  do{int __xyz=(F); if(__xyz == -1){PRINT_FLE(#F,__xyz);X;}} while(0)
-#define TESTIVAL(F,V,X)							\
-  do{int __xyz=(F); if(__xyz != (V)){PRINT_FL(#F,__xyz);X;}} while(0)
-#define TESTTRUTH(F,T,X)					\
-  do{if((!(F)&&T)||((F)&&!T)){PRINT_TRUTH(#F,T);X;}} while(0)
-
-#else
-
-#define TPRT(...)		\
-  do { char __msgbuf[256]; int n, m = pip_idstr( __msgbuf, 256 );	\
-  n = sprintf( &__msgbuf[m], " %s:%d: ", __FILE__, __LINE__ );		\
-  sprintf( &__msgbuf[n+m], __VA_ARGS__ );				\
-  fprintf( stderr, "%s\n", __msgbuf ); } while(0)
-#define TESTINT(F,X)					\
-  do{ 							\
-    TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s: %s", #F, strerror(__xyz) );		\
-    if( __xyz != 0 ) X;					\
-  } while(0)
-#define TESTSYSERR(F,X)					\
-  do{ 							\
-    TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s: %d", #F, strerror(__xyz) );		\
-    if( __xyz == -1 ) X;				\
-  } while(0)
-#define TESTIVAL(F,V,X)					\
-  do{ 							\
-    TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz != (V) ) X;				\
-  } while(0)
-#define TESTTRUTH(F,T,X)				\
-  do{ 							\
-    TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( (!(F)&&X) || ((F)&&!T) ) X;			\
-  } while(0)
-#endif
+  do{ errno=0; int RV=(intptr_t)(F); if(C) { PRINT_FLE(#F,RV); A; } } while(0)
 
 inline static void pause_and_yield( int usec ) {
   if( usec > 0 ) usleep( usec );
@@ -222,7 +169,7 @@ inline static void print_maps( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    TESTIVAL( write( 1, buf, sz ), sz, pip_abort() );
+    CHECK( write( 1, buf, sz ), RV<0, pip_abort() );
   }
   close( fd );
 }
@@ -233,7 +180,7 @@ inline static void print_numa( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    TESTIVAL( write( 1, buf, sz ), sz, pip_abort() );
+    CHECK( write( 1, buf, sz ), RV<0, pip_abort() );
   }
   close( fd );
 }
@@ -309,14 +256,14 @@ inline static void set_signal_watcher( int signal ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( signal, &sigact, NULL ), pip_abort() );
+  CHECK( sigaction( signal, &sigact, NULL ), RV, pip_abort() );
 }
 
 inline static void ignore_signal( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_handler = SIG_IGN;
-  TESTINT( sigaction( signal, &sigact, NULL ), pip_abort() );
+  CHECK( sigaction( signal, &sigact, NULL ), RV, pip_abort() );
 }
 
 inline static void watch_sigchld( void ) {
@@ -350,7 +297,7 @@ inline static void set_signal_handler( int signal, void(*handler)() ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = handler;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( signal, &sigact, NULL ), pip_abort() );
+  CHECK( sigaction( signal, &sigact, NULL ), RV, pip_abort() );
 }
 
 inline static void ignore_anysignal( void ) {
@@ -413,7 +360,7 @@ inline static void set_sigsegv_watcher( void ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = sigsegv_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( SIGSEGV, &sigact, NULL ), pip_abort() );
+  CHECK( sigaction( SIGSEGV, &sigact, NULL ), RV, pip_abort() );
 }
 
 #define PROCFD		"/proc/self/fd"
@@ -481,7 +428,7 @@ inline static void set_sigint_watcher( void ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = sigint_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( SIGINT, &sigact, NULL ), pip_abort() );
+  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, pip_abort() );
 }
 
 #endif

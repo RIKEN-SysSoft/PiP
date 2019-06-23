@@ -35,6 +35,7 @@
 int main( int argc, char **argv ) {
   int pipid, ntasks;
 
+  set_sigsegv_watcher();
   /* before calling pip_init(), this must fail */
   pipid = PIP_PIPID_ANY;
   CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,

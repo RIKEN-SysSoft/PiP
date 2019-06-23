@@ -39,6 +39,7 @@ int main( int argc, char **argv ) {
   int pipid, ntasks;
   void *exp;
 
+  set_sigsegv_watcher();
   CHECK( pip_fin(), RV!=EPERM, return(EXIT_FAIL) );
   ntasks = 1;
   exp = NULL;
@@ -49,9 +50,10 @@ int main( int argc, char **argv ) {
 			NULL, NULL, NULL ),
 	     RV,
 	     return(EXIT_FAIL) );
-    CHECK( pip_fin(), 		RV!=EBUSY, 	return(EXIT_FAIL) );
-    CHECK( pip_wait( 0, NULL ), RV,		return(EXIT_FAIL) );
-    CHECK( pip_fin(), 		RV, 		return(EXIT_FAIL) );
+    CHECK( pip_fin(), 		RV!=EBUSY, return(EXIT_FAIL) );
+    CHECK( pip_wait( 0, NULL ), RV,	   return(EXIT_FAIL) );
+    CHECK( pip_fin(), 		RV, 	   return(EXIT_FAIL) );
+    CHECK( pip_fin(),           RV!=EPERM, return(EXIT_FAIL) );
   } else {
     printf( "<%d> sleeping...\n", pipid );
     usleep( 500*1000UL );		/* 0.5 sec */

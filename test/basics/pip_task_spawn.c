@@ -60,6 +60,7 @@ int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
   int pipid, ntasks;
 
+  set_sigsegv_watcher();
   /* before calling pip_init(), this must fail */
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
