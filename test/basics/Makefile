@@ -40,7 +40,9 @@ SRCS  = pip_init.c \
 	pip_spawn.c \
 	pip_task_spawn.c \
 	pip_misc.c \
-	corebind.c
+	corebind.c \
+	hook_and_coe.c \
+	hook_and_coe2.c
 
 PROGRAMS  = pip_init \
 	pip_fin \
@@ -51,7 +53,9 @@ PROGRAMS  = pip_init \
 	spawn_pie \
 	prog-nopie \
 	prog-pie \
-	prog-nordynamic
+	prog-nordynamic \
+	hook_and_coe \
+	hook_and_coe2
 
 prog-nopie : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-nopie

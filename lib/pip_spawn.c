@@ -225,7 +225,7 @@ size_t pip_stack_size( void ) {
 
 int pip_is_coefd_( int fd ) {
   int flags = fcntl( fd, F_GETFD );
-  return( flags > 0 && FD_CLOEXEC );
+  return( ( flags > 0 ) && ( flags & FD_CLOEXEC ) );
 }
 
 #define PROCFD_PATH		"/proc/self/fd"
@@ -239,11 +239,16 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
     int fd_dir = dirfd( dir );
     int nfds = 0;
     while( ( direntp = readdir( dir ) ) != NULL ) {
-      if( ( fd = atoi( direntp->d_name ) ) >= 0 &&
-	  fd != fd_dir && pip_is_coefd_( fd ) ) {
+      DBGF( "d_name:(%s)", direntp->d_name );
+      if( direntp->d_name[0] != '.' &&
+	  ( fd = atoi( direntp->d_name ) ) >= 0 &&
+	  fd != fd_dir &&
+	  pip_is_coefd_( fd ) ) {
+	DBGF( "COE-FD: %d", fd );
 	nfds ++;
       }
     }
+    DBGF( "nfds:%d", nfds );
     if( nfds > 0 ) {
       nfds ++;
       if( ( *fd_listp = (int*) malloc( sizeof(int) * nfds ) ) == NULL ) {
@@ -252,8 +257,10 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
 	rewinddir( dir );
 	i = 0;
 	while( ( direntp = readdir( dir ) ) != NULL ) {
-	  if( ( fd = atoi( direntp->d_name ) ) >= 0 &&
-	      fd != fd_dir && pip_is_coefd_( fd ) ) {
+	  if( direntp->d_name[0] != '.' &&
+	      ( fd = atoi( direntp->d_name ) ) >= 0 &&
+	      fd != fd_dir &&
+	      pip_is_coefd_( fd ) ) {
 	    (*fd_listp)[i++] = fd;
 	  }
 	}
@@ -534,30 +541,53 @@ static int pip_glibc_init( pip_symbols_t *symbols,
 }
 
 static int pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
-  char 		**argv     = args->argv;
-  char 		**envv     = args->envv;
-  void		*start_arg = args->start_arg;
-  int 		argc;
-  int		extval;
+  char **argv     = args->argv;
+  char **envv     = args->envv;
+  void *start_arg = args->start_arg;
+  void *hook_arg  = self->annex->hook_arg;
+  int 	argc, i;
+  int	err, extval;
 
   argc = pip_glibc_init( &self->annex->symbols,
 			 args,
 			 self->annex->loaded );
-  if( self->annex->symbols.start == NULL ) {
-    DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
-	  args->pipid, self->annex->symbols.main, argc, argv[0], argv[1] );
-    extval = self->annex->symbols.main( argc, argv, envv );
-    DBGF( "[%d] << main@%p(%d,%s,%s,...) = %d",
-	  args->pipid, self->annex->symbols.main, argc, argv[0], argv[1],
-	  extval );
+  if( self->annex->hook_before != NULL &&
+      ( err = self->annex->hook_before( hook_arg ) ) != 0 ) {
+    pip_warn_mesg( "[%s] before-hook returns %d", argv[0], err );
+    extval = err;
   } else {
-    DBGF( "[%d] >> %s:%p(%p)",
-	  args->pipid, args->funcname,
-	  self->annex->symbols.start, start_arg );
-    extval = self->annex->symbols.start( start_arg );
-    DBGF( "[%d] << %s:%p(%p) = %d",
-	  args->pipid, args->funcname,
-	  self->annex->symbols.start, start_arg, extval );
+    DBGF( "fd_list:%p", args->fd_list );
+    if( args->fd_list != NULL ) {
+      for( i=0; args->fd_list[i]>=0; i++ ) { /* Close-on-exec FDs */
+	DBGF( "COE: %d", args->fd_list[i] );
+	(void) close( args->fd_list[i] );
+      }
+    }
+    if( self->annex->symbols.start == NULL ) {
+      /* calling hook function, if any */
+      DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
+	    args->pipid, self->annex->symbols.main, argc, argv[0], argv[1] );
+      extval = self->annex->symbols.main( argc, argv, envv );
+      DBGF( "[%d] << main@%p(%d,%s,%s,...) = %d",
+	    args->pipid, self->annex->symbols.main, argc, argv[0], argv[1],
+	    extval );
+    } else {
+      DBGF( "[%d] >> %s:%p(%p)",
+	    args->pipid, args->funcname,
+	    self->annex->symbols.start, start_arg );
+      extval = self->annex->symbols.start( start_arg );
+      DBGF( "[%d] << %s:%p(%p) = %d",
+	    args->pipid, args->funcname,
+	    self->annex->symbols.start, start_arg, extval );
+    }
+    /* the after hook is supposed to free the hook_arg being malloc()ed   */
+    /*  by root and this is the reason to call this from the root process */
+    DBG;
+    if( self->annex->hook_after != NULL &&
+	( err = self->annex->hook_after( hook_arg ) ) != 0 ) {
+      pip_warn_mesg( "[%s] after-hook returns %d", argv[0], err );
+      extval = err;
+    }
   }
   return extval;
 }
@@ -569,12 +599,10 @@ static void* pip_do_spawn( void *thargs )  {
   extern void pip_do_exit( pip_task_internal_t*, int );
   pip_spawn_args_t *args = (pip_spawn_args_t*) thargs;
   int	 		pipid  = args->pipid;
-  char 			**argv = args->argv;
   int 			coreno = args->coreno;
   pip_task_internal_t 	*self  = &pip_root_->tasks[pipid];
   int			extval = 0;
   int			err    = 0;
-  int			i;
 
   ENTER;
 
@@ -600,36 +628,13 @@ static void* pip_do_spawn( void *thargs )  {
     (void) setpgid( 0, pip_root_->task_root->annex->pid );
   }
   DBG;
-  if( args->fd_list != NULL ) {
-    for( i=0; args->fd_list[i]>=0; i++ ) { /* Close-on-exec FDs */
-      (void) close( args->fd_list[i] );
-    }
-  }
-  DBG;
   /* calling PIP-GDB hook function */
   pip_gdbif_hook_before_( self );
-  /* calling hook function, if any */
-  void	*hook_arg = self->annex->hook_arg;
-  if( self->annex->hook_before != NULL &&
-      ( err = self->annex->hook_before( hook_arg ) ) != 0 ) {
-    pip_warn_mesg( "[%s] before-hook returns %d", argv[0], err );
-    extval = err;
-    goto error;
-  }
   DBG;
   extval = pip_jump_into( args, self );
-  /* the after hook is supposed to free the hook_arg being malloc()ed */
-  /* and this is the reason to call this from the root process        */
-  DBG;
-  if( self->annex->hook_after != NULL &&
-      ( err = self->annex->hook_after( hook_arg ) ) != 0 ) {
-    pip_warn_mesg( "[%s] after-hook returns %d", argv[0], err );
-    extval = err;
-  }
   /* calling PIP-GDB hook function */
   pip_gdbif_hook_after_( self );
   DBG;
- error:
   /* the main() or entry function returns here and terminate myself */
   pip_do_exit( self, extval );
   NEVER_REACH_HERE;

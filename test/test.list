@@ -17,3 +17,5 @@ timer 1 basics/pip_misc
 timer 1 pip_task 1 basics/pip_misc
 timer 1 pip_task 8 basics/pip_misc
 timer 1 basics/corebind
+timer 1 skip_thread_mode.sh basics/hook_and_coe 1
+timer 1 skip_thread_mode.sh basics/hook_and_coe 8

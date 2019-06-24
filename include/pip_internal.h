@@ -49,12 +49,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#ifdef DEBUG
-#ifndef MCHECK
-//#define MCHECK
-#endif
-#endif
-
 #include <pip.h>
 #include <pip_blt.h>
 #include <pip_clone.h>
