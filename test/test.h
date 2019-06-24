@@ -147,15 +147,28 @@ extern char *__progname;
 
 #define PRINT_FLE(FSTR,ERR)			\
   if(!errno) {								\
-    fprintf(stderr,"[%s] %s:%d (%s): %s (%d)\n",			\
+    fprintf(stderr,"[%s] %s:%d (%s): %s (%ld)\n",			\
 	    __progname, __FILE__,__LINE__,FSTR,strerror(ERR),ERR);	\
   } else {								\
     fprintf(stderr,"[%s] %s:%d (%s): %s (errno: %s)\n",			\
 	    __progname, __FILE__,__LINE__,FSTR,				\
 	    strerror(ERR), strerror(errno) ); }
 
+#ifndef DEBUG
 #define CHECK(F,C,A) \
-  do{ errno=0; int RV=(intptr_t)(F); if(C) { PRINT_FLE(#F,RV); A; } } while(0)
+  do{ errno=0; long int RV=(intptr_t)(F);	\
+    if(C) { PRINT_FLE(#F,RV); A; } } while(0)
+#else
+#define CHECK(F,C,A)							\
+  do{									\
+    fprintf(stderr,"[%s(%d)] %s:%d >> %s: %s\n",__progname,getpid(),	\
+	    __FILE__,__LINE__,__func__,#F );				\
+    errno=0; long int RV=(intptr_t)(F);					\
+    fprintf(stderr,"[%s(%d)] %s:%d << %s: %s\n",__progname,getpid(),	\
+	    __FILE__,__LINE__,__func__,#F );				\
+    if(C) { PRINT_FLE(#F,RV); A; }					\
+  } while(0)
+#endif
 
 inline static void pause_and_yield( int usec ) {
   if( usec > 0 ) usleep( usec );

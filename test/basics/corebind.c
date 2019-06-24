@@ -51,7 +51,7 @@ int main( int argc, char **argv ) {
   cpu_set_t	init_set, *init_setp;
   void		*exp;
   int 		ntasks, pipid;
-  int		core, i, extval;
+  int		core, i, extval = 0;
 
   set_sigsegv_watcher();
   exp = &init_set;
@@ -85,7 +85,6 @@ int main( int argc, char **argv ) {
     }
 
   } else {
-    extval = 0;
     init_setp = (cpu_set_t*) exp;
     core = nth_core( pipid, init_setp );
     CHECK( CPU_ISSET( core, init_setp ),
