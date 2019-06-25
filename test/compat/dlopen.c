@@ -32,28 +32,31 @@
 /*
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
-#include <test.h>
+
+#include <libgen.h>
+#include <limits.h>
 #include <dlfcn.h>
+#include <test.h>
 
-#define FILENAME 	"../libnull.so"
+#define LIBNAME 	"libnull.so"
 
-int test_main( exp_t *exp ) {
+int main( int argc, char **argv ) {
+  char path[PATH_MAX], *dir, *p;
   void *handle;
-  void* foo;
-  int err = 0;
+  int(*foo)(void);
 
-  handle = dlopen( FILENAME, RTLD_LAZY );
-  if( handle != NULL ) {
-    foo = dlsym( handle, "foo" );
-    if( foo != NULL ) {
-      ((void(*)(void))foo)();
-    } else {
-      err = 2;
-    }
-    dlclose( handle );
-  } else {
-    fprintf( stderr, "dlopen(%s): %s\n", FILENAME, dlerror() );
-    err = 1;
-  }
-  return err;
+  dir = dirname( strdup( argv[0] ) );
+  p = path;
+  p = stpcpy( p, dir );
+  p = stpcpy( p, "/../" );
+  (void) strcpy( p, LIBNAME );
+
+  //fprintf( stderr, "path:%s\n", path );
+  CHECK( handle = dlopen( path, RTLD_LAZY ),
+	 handle==NULL,
+	 return(EXIT_FAIL) );
+  CHECK( ( foo = dlsym( handle, "foo" ) ), foo==0, return(EXIT_FAIL) );
+  CHECK( foo(),                                RV, return(EXIT_FAIL) );
+  CHECK( dlclose( handle ),                    RV, return(EXIT_FAIL) );
+  return 0;
 }

@@ -41,16 +41,12 @@
 #include <sys/time.h>
 #include <test.h>
 
-int test_main( exp_t *exp ) {
+int main( int argc, char **argv ) {
   struct timeval  tv;
   struct timezone tz;
   int i;
   for( i=0; i<10000; i++ ) {
-#ifdef DEBUG
-    if( pip_id == 0 ) fprintf( stderr, "loop:%d\n", i );
-#endif
-    gettimeofday( &tv, &tz );
-    //TESTINT( pip_barrier_wait( &exp->pbarr ) );
+    CHECK( gettimeofday( &tv, &tz ), RV, return(EXIT_FAIL) );
   }
   return 0;
 }

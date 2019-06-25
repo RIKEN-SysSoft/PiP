@@ -8,6 +8,9 @@ timer 1 basics/pip_init both_pthread_process
 timer 1 basics/pip_init both_preload_clone
 timer 1 basics/pip_init pip_task_unset
 timer 1 basics/pip_fin
+timer 1 basics/pip_exit
+timer 1 pip_task 1 basics/pip_exit
+timer 1 pip_task 8 basics/pip_exit
 timer 1 basics/pip_spawn
 timer 1 basics/pip_task_spawn
 timer 1 basics/spawn_pie
@@ -17,5 +20,29 @@ timer 1 basics/pip_misc
 timer 1 pip_task 1 basics/pip_misc
 timer 1 pip_task 8 basics/pip_misc
 timer 1 basics/corebind
-timer 1 skip_thread_mode.sh basics/hook_and_coe 1
-timer 1 skip_thread_mode.sh basics/hook_and_coe 8
+timer 1 skip_mode.sh pthread basics/hook_and_coe 1
+timer 1 skip_mode.sh pthread basics/hook_and_coe 8
+timer 1 skip_mode.sh pthread basics/signal 1
+timer 1 skip_mode.sh pthread basics/signal 8
+timer 1 basics/pip_barrier 1 1000
+timer 1 basics/pip_barrier 8 1000
+timer 1 basics/seek-file.sh 1
+timer 1 basics/seek-pipe.sh 1
+timer 1 basics/seek-outin.sh 1
+timer 1 basics/seek-file.sh 8
+timer 1 basics/seek-pipe.sh 8
+timer 1 basics/seek-outin.sh 8
+timer 1 pip_task 1 compat/malloc
+timer 1 pip_task 8 compat/malloc
+timer 1 pip_task 1 compat/fork
+timer 1 pip_task 8 compat/fork
+timer 1 pip_task 1 compat/ctype
+timer 1 pip_task 8 compat/ctype
+timer 1 pip_task 1 compat/gettimeofday
+timer 1 pip_task 8 compat/gettimeofday
+timer 1 pip_task 1 compat/gethostname
+timer 1 pip_task 8 compat/gethostname
+timer 1 pip_task 1 compat/getaddrinfo
+timer 1 skip_mode.sh process:preload pip_task 8 compat/getaddrinfo
+timer 1 skip_mode.sh pthread pip_task 1 compat/dlopen
+timer 1 skip_mode.sh pthread pip_task 8 compat/dlopen

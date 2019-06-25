@@ -161,8 +161,8 @@ while read line; do
 	cmd=$@;
 	cmd0=$1;
 	len=${#cmd}
-	if [ $len -gt 50 ]; then
-	    short=${cmd:0:45}" ..";
+	if [ $len -gt 69 ]; then
+	    short=${cmd:0:65}" ..";
 	else
 	    short=$cmd;
 	fi
@@ -171,7 +171,7 @@ while read line; do
 	do
 		eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
 
-		printf "%-60.60s ${pip_mode} --" "$short"
+		printf "%-70.70s ${pip_mode} --" "$short"
 		(
 		  echo "$LOG_BEG"
 		  echo "--- $short PIP_MODE=${pip_mode_name}"

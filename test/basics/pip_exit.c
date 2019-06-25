@@ -33,40 +33,12 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
+//#define DEBUG
 #include <test.h>
 
-#ifdef DEBUG
-#define CTYPE(F,C)							\
-  if( pip_id == 0 ) { fprintf(stderr,"%s\n",#F); (void) F(C); } while(0)
-#else
-#define CTYPE(F,C)	(void) F((char)C)
-#endif
-
-int main( int argc, char **argv ) {
-  int i;
-  for( i=0; i<10000; i++ ) {
-    int c;
-#ifdef DEBUG
-    if( pip_id == 0 ) fprintf( stderr, "loop:%d\n", i );
-#endif
-    for( c=0; c<0x100; c++ ) {
-#ifdef DEBUG
-      if( pip_id == 0 ) fprintf( stderr, "[%d]  c=0x%x\n", i, c );
-#endif
-      CTYPE( isalnum, c );
-      CTYPE( isalpha, c );
-      CTYPE( isascii, c );
-      CTYPE( isblank, c );
-      CTYPE( iscntrl, c );
-      CTYPE( isdigit, c );
-      CTYPE( isgraph, c );
-      CTYPE( islower, c );
-      CTYPE( isprint, c );
-      CTYPE( ispunct, c );
-      CTYPE( isspace, c );
-      CTYPE( isupper, c );
-      CTYPE( isxdigit, c );
-    }
-  }
-  return 0;
+int main() {
+  pip_exit( 0 );
+  /* never reach here */
+  CHECK( "Should never reach here", TRUE, return(EXIT_FAIL) );
+  return 0;			/* dummy */
 }

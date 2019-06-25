@@ -35,40 +35,55 @@
 
 #include <test.h>
 
-static int nth_core( int nth, cpu_set_t *cpuset ) {
-  int i, j, ncores;
-  ncores = CPU_COUNT( cpuset );
-  nth %= ncores;
-  for( i=0, j=0; i<ncores; i++ ) {
-    if( CPU_ISSET( i, cpuset ) ) {
-      if( j++ == nth ) return i;
-    }
-  }
-  return -1;
-}
+#define NITERS		(1000)
+
+static struct my_exp {
+  pip_barrier_t		barr;
+  int			count;
+} exp;
+
+static struct my_exp *expp;
 
 int main( int argc, char **argv ) {
-  cpu_set_t	init_set, *init_setp;
-  void		*exp;
-  int 		ntasks, pipid;
-  int		core, i, extval = 0;
+  int 	ntasks, pipid;
+  int	niters;
+  int	i, j, extval = 0;
 
   set_sigsegv_watcher();
-  exp = &init_set;
-  ntasks = NTASKS;
-  CHECK( pip_init(&pipid,&ntasks,(void**)&exp,0), RV, return(EXIT_FAIL) );
+
+  ntasks = 0;
+  if( argc > 1 ) {
+    ntasks = strtol( argv[1], NULL, 10 );
+  }
+  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+
+  niters = 0;
+  if( argc > 2 ) {
+    niters = strtol( argv[2], NULL, 10 );
+  }
+  niters = ( niters == 0 ) ? NITERS : niters;
+
+  expp = &exp;;
+  CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CPU_ZERO( &init_set );
-    CHECK( sched_getaffinity( 0, sizeof(init_set), &init_set ),
-	   RV,
-	   return(EXIT_UNRESOLVED) );
+    CHECK( pip_barrier_init(&exp.barr,ntasks+1), RV, return(EXIT_FAIL) );
+    exp.count = 0;
     for( i=0; i<ntasks; i++ ) {
-      core = nth_core( i, &init_set );
       pipid = i;
-      printf( ">> PIPID:%d core:%d\n", pipid, core );
-      CHECK( pip_spawn(argv[0],argv,NULL,core,&pipid,NULL,NULL,NULL),
+      CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
+		       NULL,NULL,NULL),
 	     RV,
 	     return(EXIT_FAIL) );
+    }
+    for( i=0; i<niters; i++ ) {
+      CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+#ifdef DEBUG
+      fprintf( stderr, "Count: %d\n", expp->count );
+#endif
+      j = i % ( ntasks + 1 );
+      if( j == ntasks ) expp->count ++;
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
     }
     for( i=0; i<ntasks; i++ ) {
       int status;
@@ -78,19 +93,18 @@ int main( int argc, char **argv ) {
 	       RV,
 	       return(EXIT_FAIL) );
       } else {
-	CHECK( 1, RV, RV=0 );
-	extval = EXIT_UNRESOLVED;
-	break;
+	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
       }
     }
 
   } else {
-    init_setp = (cpu_set_t*) exp;
-    core = nth_core( pipid, init_setp );
-    CHECK( CPU_ISSET( core, init_setp ),
-	   !RV,
-	   return(EXIT_FAIL) );
-    printf( "<< PIPID:%d core:%d\n", pipid, core );
+    for( i=0; i<niters; i++ ) {
+      CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+      j = i % ( ntasks + 1 );
+      if( j == pipid ) expp->count ++;
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+    }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return extval;

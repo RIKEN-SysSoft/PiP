@@ -35,9 +35,10 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = ctype.c dlopen.c gettimeofday.c gethostbyname gethostname.c
+SRCS  = fork.c malloc.c ctype.c dlopen.c gettimeofday.c \
+	 gethostname.c getaddrinfo.c
 
-PROGRAMS  = ctype dlopen gettimeofday gethostbyname gethostname
+PROGRAMS  = fork malloc ctype dlopen gettimeofday gethostname getaddrinfo
 
 include $(top_srcdir)/build/rule.mk
 

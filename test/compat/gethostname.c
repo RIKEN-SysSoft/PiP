@@ -38,14 +38,11 @@
 
 #define HOSTNAMELEN	(256)
 
-int test_main( exp_t *exp ) {
-  int i, err = 0;
+int main( int argc, char **argv ) {
+  int i;
   for( i=0; i<1000; i++ ) {
     char hostnam[HOSTNAMELEN];
-    if( gethostname( hostnam, HOSTNAMELEN ) != 0 ) {
-      err = errno;
-    }
-    //TESTINT( pip_barrier_wait( &exp->pbarr ) );
+    CHECK( gethostname( hostnam, HOSTNAMELEN ), RV, return(EXIT_FAIL) );
   }
-  return err;
+  return 0;
 }
