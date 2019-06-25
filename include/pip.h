@@ -744,9 +744,25 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EPERM PiP library is not yet initialized
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
-   *
    */
   int pip_kill( int pipid, int signal );
+  /** @}*/
+
+  /**
+   * \brief set signal mask of the current PiP task
+   *  @{
+   * \param[in] how see \b sigprogmask or \b pthread_sigmask
+   * \param[in] sigmask signal mask
+   * \param[out] oldmask old signal mask
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized
+   * \retval EINVAL An invalid signal number or invalid PiP ID is
+   * specified
+   *
+   * \sa \b sigprocmask, \b pthread_sigmask
+   */
+  int pip_sigmask( int how, sigset_t *sigmask, sigset_t *oldmask );
   /** @}*/
 
   /**
@@ -872,6 +888,26 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 		 pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
   /** @}*/
 
+  /**
+   * \brief check if PiP execution mode is Pthread or not
+   *  @{
+   * \param[in] flagp a pointerto an integer to return
+   *
+   * \return Return true if PiP execution mode is Pthread
+   */
+  int pip_is_threaded( int *flagp );
+  /** @}*/
+
+  /**
+   * \brief check if file descriptors are shared or not
+   *  @{
+   * \param[in] flagp a pointerto an integer to return
+   *
+   * \return Return true if FDs are shared
+   */
+  int pip_is_shared_fd( int *flagp );
+  /** @}*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
   int    pip_idstr( char *buf, size_t sz );
@@ -888,8 +924,6 @@ extern "C" {
   /* the following functions deeply depends on PiP execution mode */
   char  *pip_type_str( void );
   int    pip_get_thread( int pipid, pthread_t *threadp );
-  int    pip_is_threaded( int *flagp );
-  int    pip_is_shared_fd( int *flagp );
 #ifdef __cplusplus
 }
 #endif

@@ -137,7 +137,7 @@ int main( int argc, char **argv ) {
   if( pipid == PIP_PIPID_ROOT ) {
     char fname[PATH_MAX];
     char path[PATH_MAX];
-    char *cwd, *dir, *p;
+    char *dir, *p;
     int *pipep;
     int fd_in, fd_out, fd_file;
 

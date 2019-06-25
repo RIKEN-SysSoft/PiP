@@ -33,69 +33,127 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
-pip_task_barrier_t barr;
+static struct my_exp *expp;
+static int ntasks, pipid;
+static volatile int recv_sig;
+
+static struct my_exp {
+  pip_barrier_t		barr;
+} exp;
+
+static int block_sigusrs( void ) {
+  sigset_t 	sigset;
+  int 		flag, err;
+
+  errno = 0;
+  if( sigemptyset( &sigset )             != 0 ) return errno;
+  if( sigaddset( &sigset, SIGUSR1 )      != 0 ) return errno;
+  if( sigaddset( &sigset, SIGUSR2 )      != 0 ) return errno;
+  if( ( err = pip_is_threaded( &flag ) ) != 0 ) return err;
+  return pip_sigmask( SIG_BLOCK, &sigset, NULL );
+}
+
+static int wait_signal( void ) {
+  sigset_t 	sigset;
+  int 		flag, err;
+
+  if( sigemptyset( &sigset )                              != 0 ) return errno;
+  if( ( err = pip_sigmask( SIG_UNBLOCK, &sigset, NULL ) ) != 0 ) return err;
+  if( ( err = pip_is_threaded( &flag )                  ) != 0 ) return err;
+  if( !flag ) {
+    (void) sigsuspend( &sigset ); /* always returns EINTR */
+    return 0;
+  } else {
+    while( recv_sig == 0 ) pause_and_yield(0);
+    recv_sig = 0;
+  }
+  return 0;
+}
+
+static void sigusr_root( int sig ) {
+#ifdef DEBUG
+  fprintf( stderr, "[ROOT] Signal(%d) received\n", sig );
+#endif
+  recv_sig = sig;
+}
+
+static void sigusr_task( int sig ) {
+  int next = pipid + 1;
+#ifdef DEBUG
+  fprintf( stderr, "[%d] Signal(%d) received\n", pipid, sig );
+#endif
+  recv_sig = sig;
+  if( next == ntasks ) next = PIP_PIPID_ROOT;
+  CHECK( pip_kill( next, sig ), RV, exit(EXIT_FAIL) );
+}
 
 int main( int argc, char **argv ) {
-  pip_task_barrier_t *barrp = &barr;
-  int pipid = 999;
-  int ntasks;
-  int extval = 0;
+  int	i, extval = 0;
 
-  ntasks = 2;
-  TESTINT( pip_init( &pipid, &ntasks, (void**)&barrp, 0 ) );
-  if( pipid == PIP_PIPID_ROOT ) {
-    int st0, st1;
+  set_sigsegv_watcher();
 
-    TESTINT( pip_task_barrier_init( barrp, 3 ) );
-    pipid = 0;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			NULL, NULL, NULL ) );
-    pipid = 1;
-    TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			NULL, NULL, NULL ) );
-
-    TESTINT( pip_task_barrier_wait( barrp ) );
-    TESTINT( pip_kill( 0, SIGUSR1 ) );
-    TESTINT( pip_kill( 1, SIGUSR2 ) );
-    TESTINT( pip_wait( 0, &st0 ) );
-    TESTINT( pip_wait( 1, &st1 ) );
-    //fprintf( stderr, "st0=%d  st1=%d\n", st0, st1 );
-    if( st0 == SIGUSR1 && st1 == SIGUSR2 ) {
-      printf( "OK\n" );
-    } else {
-      printf( "NG\n" );
-    }
-  } else {
-    void sigusr01_handler( int sig ) { fprintf( stderr, "[0] SIGUSR1\n" ); }
-    void sigusr02_handler( int sig ) { fprintf( stderr, "[0] SIGUSR2\n" ); }
-    void sigusr11_handler( int sig ) { fprintf( stderr, "[1] SIGUSR1\n" ); }
-    void sigusr12_handler( int sig ) { fprintf( stderr, "[1] SIGUSR2\n" ); }
-    sigset_t sigset;
-    if( pipid == 0 ) {
-      set_signal_handler( SIGUSR1, sigusr01_handler );
-      set_signal_handler( SIGUSR2, sigusr02_handler );
-      (void) sigfillset( &sigset );
-      sigprocmask( SIG_BLOCK, &sigset, NULL );
-      (void) sigfillset( &sigset );
-      (void) sigdelset( &sigset, SIGUSR1 );
-      TESTINT( pip_task_barrier_wait( barrp ) );
-      (void) sigsuspend( &sigset );
-      extval = SIGUSR1;
-    } else {
-      set_signal_handler( SIGUSR1, sigusr11_handler );
-      set_signal_handler( SIGUSR2, sigusr12_handler );
-      (void) sigfillset( &sigset );
-      sigprocmask( SIG_BLOCK, &sigset, NULL );
-      (void) sigfillset( &sigset );
-      (void) sigdelset( &sigset, SIGUSR2 );
-      TESTINT( pip_task_barrier_wait( barrp ) );
-      (void) sigsuspend( &sigset );
-      extval = SIGUSR2;
-    }
+  ntasks = 0;
+  if( argc > 1 ) {
+    ntasks = strtol( argv[1], NULL, 10 );
   }
-  TESTINT( pip_fin() );
+  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+
+  expp = &exp;;
+  CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
+  if( pipid == PIP_PIPID_ROOT ) {
+    CHECK( pip_barrier_init(&exp.barr,ntasks+1),
+	   RV, return(EXIT_FAIL) );
+    CHECK( set_signal_handler( SIGUSR1, sigusr_root ),
+	   RV, return(EXIT_UNTESTED) );
+    CHECK( set_signal_handler( SIGUSR2, sigusr_root ),
+	   RV, return(EXIT_UNTESTED) );
+
+    for( i=0; i<ntasks; i++ ) {
+      pipid = i;
+      CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
+		       NULL,NULL,NULL),
+	     RV,
+	     return(EXIT_FAIL) );
+    }
+    CHECK( block_sigusrs(), 		    RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+
+    CHECK( pip_kill( 0, SIGUSR1 ),          RV, return(EXIT_FAIL) );
+    CHECK( wait_signal(), 	            RV, return(EXIT_FAIL) );
+    CHECK( recv_sig!=SIGUSR1, 		    RV, return(EXIT_FAIL) );
+    recv_sig = 0;
+
+    CHECK( pip_kill( 0, SIGUSR2 ), 	    RV, return(EXIT_FAIL) );
+    CHECK( wait_signal(), 	            RV, return(EXIT_FAIL) );
+    CHECK( recv_sig!=SIGUSR2, 		    RV, return(EXIT_FAIL) );
+    recv_sig = 0;
+
+    for( i=0; i<ntasks; i++ ) {
+      int status;
+      CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
+      if( WIFEXITED( status ) ) {
+	CHECK( ( extval = WEXITSTATUS( status ) ),
+	       RV,
+	       return(EXIT_FAIL) );
+      } else {
+	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
+      }
+    }
+
+  } else {
+    CHECK( set_signal_handler( SIGUSR1, sigusr_task ),
+	   RV, return(EXIT_UNTESTED) );
+    CHECK( set_signal_handler( SIGUSR2, sigusr_task ),
+	   RV, return(EXIT_UNTESTED) );
+    CHECK( block_sigusrs(), 		    RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+
+    CHECK( wait_signal(), RV, return(EXIT_FAIL) );
+    CHECK( wait_signal(), RV, return(EXIT_FAIL) );
+  }
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return extval;
 }

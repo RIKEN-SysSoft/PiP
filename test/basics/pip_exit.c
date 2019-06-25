@@ -33,11 +33,11 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
-//#define DEBUG
 #include <test.h>
 
 int main() {
-  pip_exit( 0 );
+  set_sigsegv_watcher();
+  pip_exit( EXIT_PASS );
   /* never reach here */
   CHECK( "Should never reach here", TRUE, return(EXIT_FAIL) );
   return 0;			/* dummy */

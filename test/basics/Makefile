@@ -43,7 +43,9 @@ SRCS  = pip_init.c \
 	pip_misc.c \
 	corebind.c \
 	hook_and_coe.c \
-	hook_and_coe2.c
+	pip_barrier.c \
+	signal.c \
+	seek.c
 
 PROGRAMS  = pip_init \
 	pip_fin \
@@ -57,7 +59,9 @@ PROGRAMS  = pip_init \
 	prog-pie \
 	prog-nordynamic \
 	hook_and_coe \
-	hook_and_coe2
+	pip_barrier \
+	signal \
+	seek
 
 prog-nopie : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-nopie

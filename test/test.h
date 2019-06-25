@@ -47,7 +47,6 @@
 #include <pip_internal.h>
 
 #define NTASKS		PIP_NTASKS_MAX
-#define NITERS		(100)
 #define EXTVAL_MASK	(127)
 
 #define PIPENV		"PIPENV"
@@ -134,8 +133,9 @@ inline static void naive_lock_init( naive_lock_t *lock ) {
   naive_unlock( lock );
 }
 
-
-void pip_abort( void );
+inline static pid_t my_gettid( void ) {
+  return (pid_t) syscall( (long int) SYS_gettid );
+}
 
 #define TRUE		(1)
 #define FALSE		(0)
@@ -147,11 +147,11 @@ extern char *__progname;
 
 #define PRINT_FLE(FSTR,ERR)			\
   if(!errno) {								\
-    fprintf(stderr,"[%s] %s:%d (%s): %s (%ld)\n",			\
-	    __progname, __FILE__,__LINE__,FSTR,strerror(ERR),ERR);	\
+    fprintf(stderr,"[%s(%d)] %s:%d (%s): %s (%ld)\n",			\
+	    __progname,my_gettid(),__FILE__,__LINE__,FSTR,strerror(ERR),ERR); \
   } else {								\
-    fprintf(stderr,"[%s] %s:%d (%s): %s (errno: %s)\n",			\
-	    __progname, __FILE__,__LINE__,FSTR,				\
+    fprintf(stderr,"[%s(%d)] %s:%d (%s): %s (errno: %s)\n",		\
+	    __progname, my_gettid(), __FILE__,__LINE__,FSTR,		\
 	    strerror(ERR), strerror(errno) ); }
 
 #ifndef DEBUG
@@ -161,10 +161,10 @@ extern char *__progname;
 #else
 #define CHECK(F,C,A)							\
   do{									\
-    fprintf(stderr,"[%s(%d)] %s:%d >> %s: %s\n",__progname,getpid(),	\
+    fprintf(stderr,"[%s(%d)] %s:%d %s: >> %s\n",__progname,my_gettid(),	\
 	    __FILE__,__LINE__,__func__,#F );				\
     errno=0; long int RV=(intptr_t)(F);					\
-    fprintf(stderr,"[%s(%d)] %s:%d << %s: %s\n",__progname,getpid(),	\
+    fprintf(stderr,"[%s(%d)] %s:%d %s: << %s\n",__progname,my_gettid(),	\
 	    __FILE__,__LINE__,__func__,#F );				\
     if(C) { PRINT_FLE(#F,RV); A; }					\
   } while(0)
@@ -263,7 +263,7 @@ inline static void set_signal_watcher( int signal ) {
 	     signal_name( siginfo->si_signo ),
 	     siginfo->si_signo,
 	     siginfo->si_addr,
-	     getpid() );
+	     my_gettid() );
   }
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
@@ -305,12 +305,14 @@ inline static void watch_anysignal( void ) {
   set_signal_watcher( SIGTTOU );
 }
 
-inline static void set_signal_handler( int signal, void(*handler)() ) {
+inline static int set_signal_handler( int signal, void(*handler)() ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = handler;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  CHECK( sigaction( signal, &sigact, NULL ), RV, pip_abort() );
+  errno = 0;
+  (void) sigaction( signal, &sigact, NULL );
+  return errno;
 }
 
 inline static void ignore_anysignal( void ) {

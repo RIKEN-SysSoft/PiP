@@ -36,9 +36,10 @@
 //#define DEBUG
 #include <test.h>
 
-int test_main( exp_t *exp ) {
+int main() {
   int pipid;
-  TESTINT( pip_get_pipid( &pipid ) );
-  pip_exit( pipid & EXTVAL_MASK );
+  CHECK( pip_init( &pipid, NULL, NULL, 0 ), RV, return(EXIT_FAIL) );
+  CHECK( pip_exit( pipid & EXTVAL_MASK ), TRUE, retrun(EXIT_FAIL) );
+  /* never reach here */
   return 0;			/* dummy */
 }

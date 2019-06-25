@@ -54,8 +54,6 @@
 //#define ATTR_NOINLINE		__attribute__ ((noinline))
 //#define ATTR_NOINLINE
 
-int pip_is_threaded_( void );
-
 extern char 		**environ;
 
 /*** note that the following static variables are   ***/
@@ -538,6 +536,49 @@ const char *pip_get_mode_str( void ) {
     mode = "(unknown)";
   }
   return mode;
+}
+
+extern int pip_is_threaded_( void );
+int pip_is_threaded( int *flagp ) {
+  if( pip_is_threaded_() ) {
+    *flagp = 1;
+  } else {
+    *flagp = 0;
+  }
+  return 0;
+}
+
+int pip_is_shared_fd( int *flagp ) {
+  extern int pip_is_shared_fd_( void );
+  if( pip_is_shared_fd_() ) {
+    *flagp = 1;
+  } else {
+    *flagp = 0;
+  }
+  return 0;
+}
+
+int pip_kill( int pipid, int signal ) {
+  extern int pip_raise_signal_( pip_task_internal_t*, int );
+  int err;
+
+  if( signal < 0 ) RETURN( EINVAL );
+  if( ( err = pip_check_pipid_( &pipid ) ) == 0 ) {
+    err = pip_raise_signal_( pip_get_task_( pipid ), signal );
+  }
+  RETURN( err );
+}
+
+int pip_sigmask( int how, sigset_t *sigmask, sigset_t *oldmask ) {
+  int err;
+  if( sigmask == NULL ) RETURN( EINVAL );
+  if( pip_is_threaded_() ) {
+    err = pthread_sigmask( how, sigmask, oldmask );
+  } else {
+    err = 0;
+    if( sigprocmask( how, sigmask, oldmask ) != 0 ) err = errno;
+  }
+  RETURN( err );
 }
 
 void pip_exit( int extval ) {

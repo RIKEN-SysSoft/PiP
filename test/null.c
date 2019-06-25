@@ -33,6 +33,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-void foo( void ) {
-  return;
+extern int foo( void ) {
+  return 0;
 }

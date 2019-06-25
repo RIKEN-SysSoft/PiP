@@ -56,7 +56,7 @@ int pip_is_threaded_( void ) {
   return ( pip_root_->opts & PIP_MODE_PTHREAD ) != 0 ? CLONE_THREAD : 0;
 }
 
-static int pip_is_shared_fd_( void ) {
+int pip_is_shared_fd_( void ) {
   if( pip_root_->cloneinfo == NULL )
     return (pip_root_->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_FILES : 0;
   return pip_root_->cloneinfo->flag_clone & CLONE_FILES;
@@ -75,16 +75,6 @@ int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
     }
   } else if( taski->annex->pid > 0 ) {
     if( ( kill( taski->annex->pid, sig ) ) != 0 ) err = errno;
-  }
-  RETURN( err );
-}
-
-int pip_kill( int pipid, int signal ) {
-  int err;
-
-  if( signal < 0 ) RETURN( EINVAL );
-  if( ( err = pip_check_pipid_( &pipid ) ) == 0 ) {
-    err = pip_raise_signal_( pip_get_task_( pipid ), signal );
   }
   RETURN( err );
 }
