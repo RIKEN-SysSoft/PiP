@@ -33,42 +33,83 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-//#define DEBUG
 #include <test.h>
 
-#define NITERS		(10)
-#define NTHREADS	(100)
+#define NTHREADS	(4)
+#define NITERS		(100)
+
+static struct my_exp {
+  pthread_barrier_t	barr;
+} exp;
+
+static struct my_exp 	*expp;
+static int		niters;
 
 void *thread_main( void *argp ) {
-  //pthread_exit( NULL );
+  struct my_exp *expp = (struct my_exp*) argp;
+  int i;
+
+  for( i=0; i<niters; i++ ) {
+    CHECK( pthread_barrier_wait( &expp->barr ),
+	   ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	   exit(EXIT_FAIL) );
+  }
   return NULL;
 }
 
 int main( int argc, char **argv ) {
   pthread_t threads[NTHREADS];
-  int nthreads, niters;
-  int i, j;
+  int 	ntasks, pipid, nthreads;
+  int	i, extval = 0;
+
+  set_sigsegv_watcher();
+
+  ntasks = 0;
+  if( argc > 1 ) ntasks = strtol( argv[1], NULL, 10 );
+  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
 
   nthreads = 0;
-  if( argc > 1 ) {
-    nthreads = strtol( argv[1], NULL, 10 );
-  }
-  nthreads = ( nthreads == 0 ) ? NTHREADS : NITERS;
+  if( argc > 2 ) nthreads = strtol( argv[1], NULL, 10 );
+  nthreads = ( nthreads == 0 ) ? NTHREADS : nthreads;
 
   niters = 0;
-  if( argc > 2 ) {
-    niters = strtol( argv[2], NULL, 10 );
-  }
+  if( argc > 3 ) niters = strtol( argv[3], NULL, 10 );
   niters = ( niters == 0 ) ? NITERS : niters;
 
-  for( i=0; i<niters; i++ ) {
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pthread_create( &threads[j], NULL, thread_main, NULL ),
+  expp = &exp;
+  CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
+  if( pipid == PIP_PIPID_ROOT ) {
+    CHECK( pthread_barrier_init( &expp->barr, NULL, ntasks*nthreads ),
+	   RV,
+	   return(EXIT_FAIL) );
+    for( i=0; i<ntasks; i++ ) {
+      pipid = i;
+      CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
+		       NULL,NULL,NULL),
+	     RV,
+	     return(EXIT_FAIL) );
+    }
+    for( i=0; i<ntasks; i++ ) {
+      int status;
+      CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
+      if( WIFEXITED( status ) ) {
+	CHECK( ( extval = WEXITSTATUS( status ) ),
+	       RV,
+	       return(EXIT_FAIL) );
+      } else {
+	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
+      }
+    }
+
+  } else {
+    for( i=0; i<nthreads; i++ ) {
+      CHECK( pthread_create( &threads[i], NULL, thread_main, expp ),
 	     RV, return(EXIT_FAIL) );
     }
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pthread_join( threads[j], NULL ), RV, return(EXIT_FAIL) );
+    for( i=0; i<nthreads; i++ ) {
+      CHECK( pthread_join( threads[i], NULL ), RV, return(EXIT_FAIL) );
     }
   }
-  return 0;
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  return extval;
 }

@@ -38,6 +38,8 @@ include $(srcdir)/../Test.common
 SRCS  = pip_init.c \
 	pip_fin.c \
 	pip_exit.c \
+	exit.c \
+	return.c \
 	pip_spawn.c \
 	pip_task_spawn.c \
 	pip_misc.c \
@@ -50,6 +52,8 @@ SRCS  = pip_init.c \
 PROGRAMS  = pip_init \
 	pip_fin \
 	pip_exit \
+	exit \
+	return \
 	pip_spawn \
 	pip_task_spawn \
 	pip_misc \

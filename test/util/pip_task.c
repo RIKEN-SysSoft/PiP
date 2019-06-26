@@ -13,7 +13,7 @@ int main( int argc, char **argv ) {
   char env[128];
 
   if( argc < 3 ) return EXIT_UNTESTED;
-  CHECK( access( argv[2], X_OK ), RV, exit(EXIT_UNTESTED) );
+  CHECK( access( argv[2], X_OK ),  RV, exit(EXIT_UNTESTED) );
   CHECK( pip_check_pie( argv[2] ), RV, exit(EXIT_UNTESTED) );
 
   ntasks = strtol( argv[1], NULL, 10 );

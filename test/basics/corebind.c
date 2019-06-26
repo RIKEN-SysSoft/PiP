@@ -54,8 +54,13 @@ int main( int argc, char **argv ) {
   int		core, i, extval = 0;
 
   set_sigsegv_watcher();
+
+  if( argc > 1 ) {
+    ntasks = strtol( argv[1], NULL, 10 );
+  }
+  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+
   exp = &init_set;
-  ntasks = NTASKS;
   CHECK( pip_init(&pipid,&ntasks,(void**)&exp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     CPU_ZERO( &init_set );

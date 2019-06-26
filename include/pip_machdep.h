@@ -185,10 +185,10 @@ typedef struct {
 #endif
 
 #ifndef PIP_SWAP_CONTEXT
-inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new )
+inline static int pip_swap_context( pip_ctx_t *oldctx, pip_ctx_t *newctx )
   __attribute__((always_inline));
-inline static int pip_swap_context( pip_ctx_t *old, pip_ctx_t *new ) {
-    return ( swapcontext( &old->ctx, &new->ctx ) ? errno : 0 );
+inline static int pip_swap_context( pip_ctx_t *oldctx, pip_ctx_t *newctx ) {
+    return ( swapcontext( &oldctx->ctx, &newctx->ctx ) ? errno : 0 );
 }
 #endif
 

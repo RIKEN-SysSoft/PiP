@@ -1,17 +1,60 @@
 #!/bin/sh
-dir=`dirname $0`
 
-. $dir/test.sh.inc
+# XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
+unset LANG LC_ALL
+
+TEST_TRAP_SIGS='1 2 15'
+
+dir=`dirname $0`;
+base=`basename $0`;
+myself=`realpath $dir/$base`;
+
+if [[ x$SUMMARY_FILE == x ]]; then
+    pid=`$dir/util/getpid`;
+    sum_file=`realpath $dir/.test-sum-$pid.sh`;
+else
+    sum_file=$SUMMARY_FILE;
+fi
+if [[ x$INCLUDE_FILE != x ]]; then
+    inc_fn=$INCLUDE_FILE': ';
+    case $inc_fn in
+	./*) inc_fn=${inc_fn:2:${#inc_fn}};;
+    esac
+fi
+
 . $dir/exit_code.sh.inc
 
-if [ -n "$MCEXEC" ]; then
+dir_real=`realpath $dir`
+
+export PATH=$dir_real:$dir_real/util:$PATH
+
+export NTASKS=`dlmopen_count -p`;
+export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
+export LD_PRELOAD=`realpath $dir/../preload/pip_preload.so`;
+
+if [[ x$MCEXEC != x ]]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
 	TEST_PIP_TASKS=$OMP_NUM_THREADS;
     fi
 fi
 
+file_summary() {
+    truncate -s 0 $sum_file;
+    echo n_PASS=$n_PASS               >> $sum_file;
+    echo n_FAIL=$n_FAIL               >> $sum_file;
+    echo n_XPASS=$n_XPASS             >> $sum_file;
+    echo n_XFAIL=$n_XFAIL             >> $sum_file;
+    echo n_UNRESOLVED=$n_UNRESOLVED   >> $sum_file;
+    echo n_UNTESTED=$n_UNTESTED       >> $sum_file;
+    echo n_UNSUPPORTED=$n_UNSUPPORTED >> $sum_file;
+    echo n_KILLED=$n_KILLED           >> $sum_file;
+    echo TOTAL_TIME=$TOTAL_TIME       >> $sum_file;
+    chmod +x $sum_file;
+}
+
 print_summary()
 {
+    if [[ x$SUMMARY_FILE == x ]]; then
 	echo ""
 	echo     "Total test: $(expr $n_PASS + $n_FAIL + $n_XPASS + $n_XFAIL \
 		+ $n_UNRESOLVED + $n_UNTESTED + $n_UNSUPPORTED + $n_KILLED)"
@@ -19,27 +62,44 @@ print_summary()
 	echo     "  failure            : $n_FAIL"
 
 	if [ $n_XPASS -gt 0 ]; then
-	    echo "  unexpected success : $n_XPASS"
+	    echo "  unexpected success : $n_XPASS";
 	fi
 	if [ $n_XFAIL -gt 0 ]; then
-	    echo "  expected failure   : $n_XFAIL"
+	    echo "  expected failure   : $n_XFAIL";
 	fi
 	if [ $n_UNRESOLVED -gt 0 ]; then
-	    echo "  unresolved         : $n_UNRESOLVED"
+	    echo "  unresolved         : $n_UNRESOLVED";
 	fi
 	if [ $n_UNTESTED -gt 0 ]; then
-	    echo "  untested           : $n_UNTESTED"
+	    echo "  untested           : $n_UNTESTED";
 	fi
 	if [ $n_UNSUPPORTED -gt 0 ]; then
-	    echo "  unsupported        : $n_UNSUPPORTED"
+	    echo "  unsupported        : $n_UNSUPPORTED";
 	fi
 	if [ $n_KILLED -gt 0 ]; then
-	    echo "  killed             : $n_KILLED"
+	    echo "  killed             : $n_KILLED";
 	fi
+    else
+	file_summary;
+    fi
 }
 
-TEST_TOP_DIR=`pwd`
-TEST_LIST=test.list
+reset_summary()
+{
+    n_PASS=0
+    n_FAIL=0
+    n_XPASS=0
+    n_XFAIL=0
+    n_UNRESOLVED=0
+    n_UNTESTED=0
+    n_UNSUPPORTED=0
+    n_KILLED=0
+    TOTAL_TIME=0
+    file_summary
+}
+
+TEST_TOP_DIR=`realpath $dir`
+TEST_LIST=$TEST_TOP_DIR/test.list
 TEST_LOG_FILE=test.log
 TEST_LOG_XML=test.log.xml
 TEST_OUT_STDOUT=$TEST_TOP_DIR/test.out.stdout
@@ -106,17 +166,26 @@ if [ -z "$pip_mode_list" ]; then
     print_usage;
 fi
 
+if [[ x$SUMMARY_FILE == x ]]; then
+    reset_summary
+else
+    . $SUMMARY_FILE;
+fi
+
 if [ -n "$MCEXEC" ]; then
     pip_mode_list_all='T';
-    echo MCEXEC=$MCEXEC
+    if [[ x$quiet == x ]]; then
+	echo MCEXEC=$MCEXEC
+    fi
 else
     pip_mode_list_all='L C T';
 fi
 
-#echo LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-echo LD_PRELOAD=$LD_PRELOAD
-echo 'NTASKS:  ' ${TEST_PIP_TASKS}
-echo 'NTHERADS:' ${OMP_NUM_THREADS}
+if [[ x$SUMMARY_FILE == x ]]; then
+    echo LD_PRELOAD=$LD_PRELOAD
+    echo 'NTASKS:  ' ${NTASKS}
+    echo 'NTHERADS:' ${OMP_NUM_THREADS}
+fi
 
 # check whether each $PIP_MODE is testable or not
 run_test_L=''
@@ -125,53 +194,76 @@ run_test_T=''
 for pip_mode in $pip_mode_list
 do
 	eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
-	case `PIP_MODE=$pip_mode_name ./util/pip_mode 2>/dev/null | grep -e process -e thread` in
+	case `PIP_MODE=$pip_mode_name $dir/util/pip_mode 2>/dev/null | grep -e process -e thread` in
 	$pip_mode_name)
 		eval "run_test_${pip_mode}=${pip_mode}"
-		echo "testing ${pip_mode} - ${pip_mode_name}"
+		if [[ x$SUMMARY_FILE == x ]]; then
+		    echo "testing ${pip_mode} - ${pip_mode_name}";
+		fi
 		;;
 	*)	echo >&2 "WARNING: $pip_mode_name is not testable";;
 	esac
 done
+
+if [[ x$SUMMARY_FILE == x ]]; then
+    echo;
+fi
+
 pip_mode_list="$run_test_L $run_test_C $run_test_T"
 
-echo
-
-n_PASS=0
-n_FAIL=0
-n_XPASS=0
-n_XFAIL=0
-n_UNRESOLVED=0
-n_UNTESTED=0
-n_UNSUPPORTED=0
-n_KILLED=0
-TOTAL_TIME=0
+if [[ x$run_test_L == xL ]]; then
+    options="-L $options";
+fi
+if [[ x$run_test_C == xC ]]; then
+    options="-C $options";
+fi
+if [[ x$run_test_T == xT ]]; then
+    options="-T $options";
+fi
 
 LOG_BEG="=== ============================================================ ===="
 LOG_SEP="--- ------------------------------------------------------------ ----"
 
 echo "<testsuite>" >$TEST_LOG_XML
 
+cd  `dirname $TEST_LIST`
+
 while read line; do
 	set x $line
 	shift
 	case $# in 0) continue;; esac
+	case $1 in '@include')
+		shift;
+		ifile=$1
+		if [[ -f $ifile ]]; then
+		    file_summary;
+		    SUMMARY_FILE=$sum_file \
+			INCLUDE_FILE=$ifile \
+			$myself $options $ifile;
+		    . $sum_file;
+		else
+		    echo "### inlcude file ($ifile) not found ###";
+		fi
+		continue;;
+	esac
 	case $1 in '#'*) continue;; esac
 
 	cmd=$@;
-	cmd0=$1;
-	len=${#cmd}
-	if [ $len -gt 69 ]; then
-	    short=${cmd:0:65}" ..";
+	CMD=$inc_fn$cmd;
+	ilen=${#inc_fn};
+	clen=${#cmd};
+	tlen=${#CMD};
+	if [ $tlen -gt 77 ]; then
+	    short=$inc_fn"..."${cmd:(($tlen-76)):$clen};
 	else
-	    short=$cmd;
+	    short=$CMD;
 	fi
 
 	for pip_mode in $pip_mode_list
 	do
 		eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
 
-		printf "%-70.70s ${pip_mode} --" "$short"
+		printf "%-80.80s ${pip_mode} --" "$short"
 		(
 		  echo "$LOG_BEG"
 		  echo "--- $short PIP_MODE=${pip_mode_name}"
@@ -268,9 +360,13 @@ while read line; do
 		[ $test_exit_status -eq $EXIT_KILLED ] && break 2
 	done
 
-done < $TEST_LIST
+done < `basename $TEST_LIST`
 
 echo "</testsuite>" >>$TEST_LOG_XML
+
+if [[ -x$SUMAMRY_FILE != x ]]; then
+    file_summary;
+fi
 
 (
 	echo $LOG_BEG
@@ -278,6 +374,10 @@ echo "</testsuite>" >>$TEST_LOG_XML
 ) >>$TEST_LOG_FILE
 
 print_summary
+
+if [[ x$SUMMARY_FILE == x ]]; then
+    rm -f $sum_file;
+fi
 
 case $n_KILLED in 0) :;; *) exit $EXIT_KILLED;; esac
 [ $n_FAIL -eq 0 -a $n_UNRESOLVED -eq 0 ]

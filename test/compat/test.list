@@ -1,18 +1,14 @@
-compat/gethostname.sh
-compat/gethostbyname.sh
-compat/dlopen.sh
-compat/initfini.sh
-compat/iftask.sh
-compat/gettimeofday.sh
-compat/ctype.sh
-compat/main.sh
-compat/exit.sh
-compat/exit1.sh
-compat/exit2.sh
-compat/exit3.sh
-compat/exit4.sh
-#compat/brk.sh
-compat/pf.sh
-compat/system.sh
-compat/sigchld.sh
-compat/malloc.sh
+timer 1 pip_task 1 ./malloc
+timer 1 pip_task 8 ./malloc
+timer 1 pip_task 1 ./fork
+timer 1 pip_task 8 ./fork
+timer 1 pip_task 1 ./ctype
+timer 1 pip_task 8 ./ctype
+timer 1 pip_task 1 ./gettimeofday
+timer 1 pip_task 8 ./gettimeofday
+timer 1 pip_task 1 ./gethostname
+timer 1 pip_task 8 ./gethostname
+timer 1 pip_task 1 ./getaddrinfo
+skip_mode.sh P timer 1 pip_task 8 ./getaddrinfo
+skip_mode.sh T timer 1 pip_task 1 ./dlopen
+skip_mode.sh T timer 1 pip_task 8 ./dlopen

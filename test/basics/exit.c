@@ -33,13 +33,6 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
-//#define DEBUG
-#include <test.h>
-
 int main() {
-  int pipid;
-  CHECK( pip_init( &pipid, NULL, NULL, 0 ), RV, return(EXIT_FAIL) );
-  CHECK( pip_exit( pipid & EXTVAL_MASK ), TRUE, retrun(EXIT_FAIL) );
-  /* never reach here */
-  return 0;			/* dummy */
+  return 0;
 }

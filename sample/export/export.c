@@ -1,13 +1,12 @@
-#include <sys/wait.h>
-#include <pthread.h>
 #include <stdio.h>
 #include <pip.h>
+#include <pip_blt.h>
 
 #define NDATA		1000000
 
 struct dat {
-  pthread_barrier_t	barrier;
-  double		data[NDATA];
+  pip_barrier_t	barrier;
+  double	data[NDATA];
 } data;
 
 int main( int argc, char **argv ) {
@@ -16,7 +15,7 @@ int main( int argc, char **argv ) {
   int  i, ntasks, pipid;
 
   ntasks = 10;
-  pthread_barrier_init( &data.barrier, NULL, ntasks + 1 );
+  pip_barrier_init( &data.barrier, ntasks + 1 );
   pip_init( &pipid, &ntasks, (void*) &export, 0 );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<NDATA; i++ ) data.data[i] = (double) i;
@@ -24,15 +23,15 @@ int main( int argc, char **argv ) {
       pipid = i;
       pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL );
     }
-    pthread_barrier_wait( &data.barrier );
+    pip_barrier_wait( &data.barrier );
     for( i=0; i<ntasks; i++ ) {
       void *import;
       pip_import( i, &import );
       /* gather individual result */
       output += *((double*)(import));
     }
-    pthread_barrier_wait( &data.barrier );
-    for( i=0; i<ntasks; i++ ) wait( NULL );
+    pip_barrier_wait( &data.barrier );
+    for( i=0; i<ntasks; i++ ) pip_wait( i, NULL );
     printf( "output = %g\n", output );
 
   } else {	/* PIP child task */
@@ -45,14 +44,14 @@ int main( int argc, char **argv ) {
     printf( "PIPID:%d  data[%d-%d]\n", pipid, start, end-1 );
     for( i=start; i<end; i++ ) {
       /* do computation on imported data */
-      output += input[i];;
+      output += input[i];
     }
     /* note that any stack variables can also be exported */
     pip_export( (void*) &output );
 
-    pthread_barrier_wait( &import->barrier );
+    pip_barrier_wait( &import->barrier );
     /* here, the main task gathers child data */
-    pthread_barrier_wait( &import->barrier );
+    pip_barrier_wait( &import->barrier );
   }
   pip_fin();
   return 0;

@@ -35,9 +35,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 SUBDIRS = lib include bin preload util sample \
-	test/ \
-	test/util \
-	test/basics
+	test test/util test/basics test/compat test/pthread \
+	test/openmp test/cxx
 
 #	test/spawn \
 #	test/compat \

@@ -35,18 +35,14 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS    = pthread.c cthread.c
-
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
-PROGRAM = pthread cthread
+SRCS    = pthread.c pthread_exit.c pthread_barrier.c pthread_mutex.c \
+	pip_barrier.c
+
+PROGRAM = pthread pthread_exit pthread_barrier pthread_mutex \
+	pip_barrier
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
-
-post-clean-hook:
-	$(RM) *.E *.log
-
-test:
-	( cd ../; ./test.sh -A pthread/test.list )

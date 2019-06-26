@@ -38,7 +38,7 @@ include $(srcdir)/../Test.common
 SRCS  = fork.c malloc.c ctype.c dlopen.c gettimeofday.c \
 	 gethostname.c getaddrinfo.c
 
-PROGRAMS  = fork malloc ctype dlopen gettimeofday gethostname getaddrinfo
+PROGRAMS  = fork malloc ctype dlopen gettimeofday gethostname getaddrinfo \
 
 include $(top_srcdir)/build/rule.mk
 

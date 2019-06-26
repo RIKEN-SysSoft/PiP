@@ -1,1 +1,2 @@
-openmp/openmp.sh
+timer 1 pip_task 1 ./openmp
+timer 1 pip_task 8 ./openmp

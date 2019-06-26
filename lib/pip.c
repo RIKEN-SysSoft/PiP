@@ -406,7 +406,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_task_->annex->thread = pthread_self();
     pip_task_->annex->pid    = pip_gettid();
     if( rt_expp != NULL ) {
-      pip_task_->annex->export = *rt_expp;
+      pip_task_->annex->exp = *rt_expp;
     }
 
     pip_root_->stack_size_sleep = PIP_SLEEP_STACKSZ;
@@ -438,7 +438,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     ntasks    = pip_root_->ntasks;
     if( ntasksp != NULL ) *ntasksp = ntasks;
     if( rt_expp != NULL ) {
-      *rt_expp = (void*) pip_root_->task_root->annex->export;
+      *rt_expp = (void*) pip_root_->task_root->annex->exp;
     }
     if( ( err = pip_named_export_init_( pip_task_ ) ) != 0 ) RETURN( err );
     unsetenv( PIP_ROOT_ENV );
@@ -453,8 +453,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   RETURN( err );
 }
 
-int pip_export( void *export ) {
-  pip_get_myself_()->annex->export = export;
+int pip_export( void *exp ) {
+  pip_get_myself_()->annex->exp = exp;
   RETURN( 0 );
 }
 
@@ -466,7 +466,7 @@ int pip_import( int pipid, void **exportp  ) {
   if( exportp == NULL ) RETURN( EINVAL );
   if( ( err = pip_check_pipid_( &pipid ) ) != 0 ) RETURN( err );
   taski = pip_get_task_( pipid );
-  *exportp = (void*) taski->annex->export;
+  *exportp = (void*) taski->annex->exp;
   RETURN( 0 );
 }
 

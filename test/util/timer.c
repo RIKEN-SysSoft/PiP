@@ -96,7 +96,6 @@ static void usage( void ) {
 }
 
 int main( int argc, char **argv ) {
-  extern char **environ;
   int 	time, status;
 
   prog = basename( argv[0] );
@@ -107,8 +106,8 @@ int main( int argc, char **argv ) {
   set_timer( time );
   if( ( pid = fork() ) == 0 ) {
     (void) setpgid( 0, 0 );
-    execvpe( argv[2], &argv[2], environ );
-    fprintf( stderr, "[%s] execve(): %d\n", prog, errno );
+    execvp( argv[2], &argv[2] );
+    fprintf( stderr, "[%s] execvp(): %d\n", prog, errno );
     exit( EXIT_UNTESTED );
   } else if( pid > 0 ) {
     wait( &status );

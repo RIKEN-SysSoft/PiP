@@ -196,7 +196,7 @@ typedef struct pip_task_annex {
   pip_task_t			oodq;	   /* out-of-damain queue */
   pip_spinlock_t		lock_oodq; /* lock for OOD queue */
 
-  void *volatile		export;
+  void *volatile		exp;
   void				*named_exptab;
 
   void				*aux; /* pointer to user data (if provided) */

@@ -40,10 +40,9 @@
 #define _GNU_SOURCE
 #endif
 
-#define PIP_INTERNAL_FUNCS
-
 #include <stdbool.h>
 #include <pip.h>
+#include <pip_blt.h>
 #include <pip_internal.h>
 
 #define NTASKS		PIP_NTASKS_MAX

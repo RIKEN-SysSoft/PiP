@@ -38,15 +38,15 @@ include ./Test.common
 PIPCPPFLAGS = -I. -I../include
 PIPCFLAGS  = $(CFLAGS) $(PICCFLAG)
 
-SRCS = main.c null.c
+SRCS = main.c libnull.c
 OBJS = main.o libnull.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-libnull.so: null.c Makefile
-	$(CC) -g -O3 -fPIC -shared null.c -o libnull.so
+libnull.so: libnull.c Makefile
+	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so
 
 all : $(OBJS)
 

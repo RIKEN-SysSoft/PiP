@@ -229,16 +229,13 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
     int fd_dir = dirfd( dir );
     int nfds = 0;
     while( ( direntp = readdir( dir ) ) != NULL ) {
-      DBGF( "d_name:(%s)", direntp->d_name );
       if( direntp->d_name[0] != '.' &&
 	  ( fd = atoi( direntp->d_name ) ) >= 0 &&
 	  fd != fd_dir &&
 	  pip_is_coefd_( fd ) ) {
-	DBGF( "COE-FD: %d", fd );
 	nfds ++;
       }
     }
-    DBGF( "nfds:%d", nfds );
     if( nfds > 0 ) {
       nfds ++;
       if( ( *fd_listp = (int*) malloc( sizeof(int) * nfds ) ) == NULL ) {
