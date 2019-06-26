@@ -17,7 +17,7 @@ int main( int argc, char **argv ) {
       fprintf( stderr, "pip_spawn: %s", strerror( rv ) );
       return EXIT_FAIL;
   }
-  statis = 0;
+  status = 0;
   rv = pip_wait( pipid, &status );
   if( rv != 0 ) {
     fprintf( stderr, "pip_wait: %s", strerror( rv ) );
