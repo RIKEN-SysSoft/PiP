@@ -35,9 +35,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-PROGRAMS = dlmopen_count pip_mode ompnumthread
+PROGRAMS = dlmopen_count ompnumthread pip_mode
 PROGRAMS_TO_INSTALL = # nothing
-SRCS	= dlmopen_count.c pip_mode.c
+SRCS	= dlmopen_count.c ompnumthread.c pip_mode.c
 
 all: $(PROGRAMS)
 
