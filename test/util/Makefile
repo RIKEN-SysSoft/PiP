@@ -34,6 +34,9 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+CWD = $(shell pwd)
+CFLAGS += -DCWD=\"$(CWD)\"
+
 PROGRAMS = dlmopen_count ompnumthread timer pip_mode pip_task getpid
 PROGRAMS_TO_INSTALL = # nothing
 SRCS	= dlmopen_count.c ompnumthread.c timer.c pip_mode.c pip_task.c getpid.c

@@ -28,7 +28,7 @@ dir_real=`realpath $dir`
 
 export PATH=$dir_real:$dir_real/util:$PATH
 
-export NTASKS=`dlmopen_count -p`;
+export NTASKS=`$MCEXEC dlmopen_count -p`
 export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
 export LD_PRELOAD=`realpath $dir/../preload/pip_preload.so`;
 
