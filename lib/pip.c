@@ -972,8 +972,10 @@ static void pip_close_on_exec( void ) {
   if( ( dir = opendir( PROCFD_PATH ) ) != NULL ) {
     int fd_dir = dirfd( dir );
     while( ( direntp = readdir( dir ) ) != NULL ) {
-      if( ( fd = atoi( direntp->d_name ) ) >= 0 &&
-	  fd != fd_dir && pip_is_coefd( fd ) ) {
+      if( direntp->d_name[0] != '.' &&
+	  ( fd = atoi( direntp->d_name ) ) >= 0 &&
+	  fd != fd_dir &&
+	  pip_is_coefd( fd ) ) {
 #ifdef DEBUG
 	pip_print_fd( fd );
 #endif
