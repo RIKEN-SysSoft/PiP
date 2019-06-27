@@ -232,7 +232,7 @@ while read line; do
 	set x $line
 	shift
 	case $# in 0) continue;; esac
-	case $1 in '@include')
+	case $1 in '%include')
 		shift;
 		ifile=$1
 		if [[ -f $ifile ]]; then
