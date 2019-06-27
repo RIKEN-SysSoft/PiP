@@ -33,6 +33,25 @@ function print_usage() {
     exit 2;
 }
 
+TMP=''
+
+function finalize() {
+    if [[ x$TMP != x ]]; then
+	mv $TMP $FILE;
+    fi
+    if [ $quiet -eq 0 ]; then
+	echo;
+    fi
+    prt_ext $ext;
+}
+
+function sigsegv() {
+    echo SIGEGV;
+    finalize;
+}
+
+trap sigsegv 11
+
 duration=0;
 iteration=0;
 quiet=0;
@@ -66,17 +85,11 @@ do
 	echo -n $i "";
     fi
 
-    "$@" > $TMP 2>&1;
+    "$@" > $TMP 2>&1
     ext=$?;
     if [ $ext != 0 ]
     then
-	#killall $1 > /dev/null 2>&1;
-	mv $TMP $FILE;
-	if [ $quiet -eq 0 ]
-	then
-	    echo;
-	fi
-	prt_ext $ext;
+	finalize
     else
 	truncate --size=0 $TMP;
     fi

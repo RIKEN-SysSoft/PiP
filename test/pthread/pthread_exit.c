@@ -48,6 +48,8 @@ int main( int argc, char **argv ) {
   int nthreads, niters;
   int i, j;
 
+  set_sigsegv_watcher();
+
   nthreads = 0;
   if( argc > 1 ) {
     nthreads = strtol( argv[1], NULL, 10 );
