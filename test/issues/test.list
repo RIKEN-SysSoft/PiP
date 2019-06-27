@@ -1,0 +1,2 @@
+timer 1 pip_task 1 ./fflush
+timer 1 pip_task 8 ./fflush
