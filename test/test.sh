@@ -253,8 +253,8 @@ while read line; do
 	ilen=${#inc_fn};
 	clen=${#cmd};
 	tlen=${#CMD};
-	if [ $tlen -gt 77 ]; then
-	    short=$inc_fn"..."${cmd:(($tlen-76)):$clen};
+	if [ $tlen -gt 79 ]; then
+	    short=$inc_fn"..."${cmd:(($tlen-77)):$clen};
 	else
 	    short=$CMD;
 	fi
@@ -353,6 +353,16 @@ while read line; do
 			echo "$LOG_SEP"
 			printf "@:= %-60.60s %s\n" $short "$msg"
 		) >>$TEST_LOG_FILE
+
+		case $status in
+		FAIL)		msg="$msg :-O";;
+		XPASS)		msg="$msg :-D";;
+		XFAIL)		msg="$msg :-?";;
+		UNRESOLVED)	msg="$msg :-O";;
+		UNTESTED)	msg="$msg :-|";;
+		UNSUPPORTED)	msg="$msg :-/";;
+		KILLED)		msg="$msg ^C?";;
+		esac
 
 		echo " $msg"
 

@@ -34,9 +34,11 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+#SRCS = piprun.c abc.c hello.c pmap.c
+
 PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) pmap
-PROGRAMS = $(PROGRAMS_TO_INSTALL) hello
+PROGRAMS_TO_INSTALL = $(PROGRAM) piprun pmap
+PROGRAMS = $(PROGRAMS_TO_INSTALL) hello abc def ghi xyz hello
 MAN1_SRCS = piprun.c pmap.c
 
 CFLAGS += -pthread
@@ -47,17 +49,29 @@ DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 
 include $(top_srcdir)/build/rule.mk
 
-piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
-	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@ $(LDLIBS)
+piprun: piprun.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
 
-pmap: pmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
-
-hello: hello.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+hello: hello.c $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
 	-fpie -pie -rdynamic $< -o $@
 
-post-clean-hook:
-	$(RM) *.E *.log
+abc: abc.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DMSG=\"abc\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@
+
+def: abc.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DMSG=\"def\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@
+
+ghi: abc.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DMSG=\"ghi\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@
+
+xyz: abc.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DMSG=\"xyz\" -DPIP=0 -I$(PIPINCDIR) $(PIPLDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@
+
+pmap: pmap.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)

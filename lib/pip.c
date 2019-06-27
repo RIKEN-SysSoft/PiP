@@ -349,11 +349,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     if( ntasksp == NULL ) {
       ntasks = PIP_NTASKS_MAX;
-    } else if( *ntasksp <= 0 ) {
-      RETURN( EINVAL );
     } else {
       ntasks = *ntasksp;
     }
+    if( ntasks <= 0             ) RETURN( EINVAL );
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
     if( ( err  = pip_check_opt_and_env( &opts ) ) != 0 ) RETURN( err );

@@ -29,64 +29,46 @@
  * are those of the authors and should not be interpreted as representing
  * official policies, either expressed or implied, of the PiP project.$
  */
+/*
+ * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018, 2019
+ */
 
-#define DEBUG
+#ifndef MSG
+#error "MSG must be defined"
+#endif
 
-#include <libgen.h>
-#include <test.h>
+#ifdef PIP
+#include <pip.h>
+#else
+#include <stdio.h>
+#endif
+
+static char *msg = MSG;
+
+int func( void ) {
+  printf( "[func] %s\n", msg );
+  return 0;
+}
 
 int main( int argc, char **argv ) {
-  char *dir;
-  char *nargv[2] = { NULL, NULL };
-  int status, extval;
-
-  set_sigsegv_watcher();
-  dir = dirname( argv[0] );
-  chdir( dir );
-
-  CHECK( pip_init( NULL, NULL, NULL, 0 ), RV, return(EXIT_FAIL) );
-
-  nargv[0] = "./prog-noexec";
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		      NULL, NULL, NULL ),
-	 RV!=EACCES,
-	 return(EXIT_FAIL) );
-
-  nargv[0] = "./prog-nopie";
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		      NULL, NULL, NULL ),
-	 RV!=ELIBEXEC,
-	 return(EXIT_FAIL) );
-
-  nargv[0] = "./prog-nordynamic";
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		      NULL, NULL, NULL ),
-	 RV!=ENOEXEC,
-	 return(EXIT_FAIL) );
-
-  nargv[0] = "prog-pie";	/* not a path (no slash) */
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		       NULL, NULL, NULL ),
-	 RV!=ESRCH,
-	 return(EXIT_FAIL) );
-
-  nargv[0] = "./prog-pie";	/* correct one */
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		       NULL, NULL, NULL ),
-	 RV,
-	 return(EXIT_FAIL) );
-
-  CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_UNTESTED) );
-
-  if( WIFEXITED( status ) ) {
-	CHECK( ( extval = WEXITSTATUS( status ) ),
-	       RV,
-	       return(EXIT_FAIL) );
+#ifndef PIP
+  printf( "[main] %s\n", msg );
+#else
+  if( argc > 1 ) {
+    int pipid, ntasks=-1, id, err;
+    if( ( err = pip_init( &pipid, &ntasks, NULL, 0 ) ) != 0 ) {
+      fprintf( stderr, "Invoke this program by using piprun\n" );
+      return 1;
+    }
+    printf( "PIPID:%d (%d,%d)\n", pipid, argc, ntasks );
+    if( argc < pipid + 1 ) return 1;
+    id = strtol( argv[pipid+1], NULL, 10 );
+    printf( "[%d] %s (%d)\n", pipid, argv[pipid+1], id );
+    if( id != pipid ) return 1;
+    printf( "[PIP:main:%d] %s\n", pipid, msg );
   } else {
-    CHECK( 1, RV, RV=0 );
-    extval = EXIT_UNRESOLVED;
+    printf( "[PIP:main] %s\n", msg );
   }
-
-  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
-  return EXIT_PASS;
+#endif
+  return 0;
 }

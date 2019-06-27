@@ -46,24 +46,51 @@
 extern int pip_is_coefd_( int );
 extern int pip_get_dso( int pipid, void **loaded );
 
-int pip_check_pie( char *path ) {
+int pip_check_pie( char *path, int flag_verbose ) {
+  struct stat stbuf;
   Elf64_Ehdr elfh;
   int fd;
   int err = 0;
 
-  if( ( fd = open( path, O_RDONLY ) ) < 0 ) {
+  if( strchr( path, '/' ) == NULL ) {
+    if( flag_verbose ) {
+      pip_err_mesg( "'%s' is not a path (no slash '/')", path );
+    }
+    err = ESRCH;
+  } else if( ( fd = open( path, O_RDONLY ) ) < 0 ) {
     err = errno;
+    if( flag_verbose ) {
+      pip_err_mesg( "'%s': open() fails (%s)", path, strerror( errno ) );
+    }
   } else {
-    if( read( fd, &elfh, sizeof( elfh ) ) != sizeof( elfh ) ) {
-      pip_warn_mesg( "Unable to read '%s'", path );
+    if( fstat( fd, &stbuf ) < 0 ) {
+      err = errno;
+      if( flag_verbose ) {
+	pip_err_mesg( "'%s': stat() fails (%s)", path, strerror( errno ) );
+      }
+    } else if( ( stbuf.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH) ) == 0 ) {
+      if( flag_verbose ) {
+	pip_err_mesg( "'%s' is not executable", path );
+      }
+      err = EACCES;
+    } else if( read( fd, &elfh, sizeof( elfh ) ) != sizeof( elfh ) ) {
+      if( flag_verbose ) {
+	pip_err_mesg( "Unable to read '%s'", path );
+      }
       err = EUNATCH;
     } else if( elfh.e_ident[EI_MAG0] != ELFMAG0 ||
 	       elfh.e_ident[EI_MAG1] != ELFMAG1 ||
 	       elfh.e_ident[EI_MAG2] != ELFMAG2 ||
 	       elfh.e_ident[EI_MAG3] != ELFMAG3 ) {
-      err = EUNATCH;
+      if( flag_verbose ) {
+	pip_err_mesg( "'%s' is not ELF", path );
+      }
+      err = ELIBBAD;
     } else if( elfh.e_type != ET_DYN ) {
-      err = ENOEXEC;
+      if( flag_verbose ) {
+	pip_err_mesg( "'%s' is not PIE", path );
+      }
+      err = ELIBEXEC;
     }
     (void) close( fd );
   }
@@ -148,7 +175,7 @@ int pip_idstr( char *buf, size_t sz ) {
   int	n = 0;
 
   if( pip_task_ == NULL ) {
-    n = snprintf( buf, sz, "%s----:(%d)%s", pre, pid, post );
+    n = snprintf( buf, sz, "%s(%d)%s", pre, pid, post );
   } else if( PIP_ISA_ROOT( pip_task_ ) ) {
     if( PIP_IS_SUSPENDED( pip_task_ ) ) {
       n = snprintf( buf, sz, "%sroot:(%d)%s", pre, pid, post );

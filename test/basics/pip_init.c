@@ -45,6 +45,11 @@ static int test_pip_init( char **argv ) {
   return EXIT_PASS;
 }
 
+static int test_pip_init_null( char **argv ) {
+  CHECK( pip_init( NULL, NULL, NULL, 0 ), RV, return(EXIT_FAIL) );
+  return EXIT_PASS;
+}
+
 static int test_pip_init_preload( char **argv ) {
   int pipid, ntasks;
   void *exp;
@@ -157,6 +162,7 @@ int main( int argc, char **argv ) {
     char *name;
     int (*func)( char **argv );
   } tab[] = {
+    { "null", test_pip_init_null },
     { "preload", test_pip_init_preload },
     { "twice", test_twice },
     { "ntask_is_zero", test_ntask_is_zero },

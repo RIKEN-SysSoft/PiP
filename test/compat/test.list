@@ -9,6 +9,6 @@ timer 1 pip_task 8 ./gettimeofday
 timer 1 pip_task 1 ./gethostname
 timer 1 pip_task 8 ./gethostname
 timer 1 pip_task 1 ./getaddrinfo
-skip_mode.sh P timer 1 pip_task 8 ./getaddrinfo
-skip_mode.sh T timer 1 pip_task 1 ./dlopen
-skip_mode.sh T timer 1 pip_task 8 ./dlopen
+skip.sh P XFAIL timer 1 pip_task 8 ./getaddrinfo
+skip.sh T UNSUPPORTED timer 1 pip_task 1 ./dlopen
+skip.sh T UNSUPPORTED timer 1 pip_task 8 ./dlopen

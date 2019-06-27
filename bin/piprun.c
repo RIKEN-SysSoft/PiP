@@ -53,46 +53,28 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#define DEBUG
+
 #define _GNU_SOURCE
 #include <sched.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
+#include <libgen.h>
+
 #include <pip.h>
 #include <pip_internal.h>
-#include <pip_util.h>
-
-//#define DEBUG
-//#define DBGCB
 
 #define COREBIND_RR	(-100)
 
-static void print_pusage( void ) {
-  fprintf( stderr, "pusage\n" );
-  exit( 1 );
-}
+static char *program;
 
 static void print_usage( void ) {
   fprintf( stderr,
 	   "Usage: %s [-n N] [-c C] [-f F] A.OUT ... "
 	   "{ :: [-n N] [-c C] [-f F] B.OUT ... } \n",
-	   PROGRAM );
+	   program );
   fprintf( stderr, "\t-n N\t: Number of PiP tasks (default is 1)\n" );
   fprintf( stderr, "\t-c C\t: CPU core binding pattern\n" );
   fprintf( stderr, "\t-f F\t: Function name in the program to start\n" );
-  print_pusage();
-}
-
-static int count_cpu( void ) {
-  cpu_set_t cpuset;
-  int c = -1;
-
-  if( sched_getaffinity( getpid(), sizeof(cpuset), &cpuset ) == 0 ) {
-    c = CPU_COUNT( &cpuset );
-  }
-  return c;
+  exit( 2 );
 }
 
 typedef struct corebind {
@@ -102,6 +84,17 @@ typedef struct corebind {
   int		r;
 } corebind_t;
 
+#ifdef NOT_YET
+static int count_cpu( void ) {
+  cpu_set_t cpuset;
+  int c = -1;
+
+  if( sched_getaffinity( 0, sizeof(cpuset), &cpuset ) == 0 ) {
+    c = CPU_COUNT( &cpuset );
+  }
+  return c;
+}
+
 static corebind_t *new_corebind( char **p ) {
   void parse_r( corebind_t *cb, char **q ) {
     int r = 0;
@@ -109,7 +102,7 @@ static corebind_t *new_corebind( char **p ) {
       r += (**q) - '0';
       (*q) ++;
     }
-    if( r == 0 ) print_pusage();
+    if( r == 0 ) print_usage();
     cb->r = r;
   };
   void parse_s( corebind_t *cb, char **q ) {
@@ -173,6 +166,7 @@ void cb_dump( corebind_t *cb ) {
   }
 }
 #endif
+#endif
 
 typedef struct arg {
   struct arg		*next;
@@ -200,6 +194,14 @@ typedef struct spawn {
   arg_t			*args;
   arg_t			*tail;
 } spawn_t;
+
+static int isa_digit_string( const char *str ) {
+  const char *p;
+  for( p=str; *p!='\0'; p++ ) {
+    if( !isdigit( *p ) ) return( 0 );
+  }
+  return 1;
+}
 
 static spawn_t *new_spawn( void ) {
   spawn_t *spawn = (spawn_t*) malloc( sizeof( spawn_t ) );
@@ -230,6 +232,7 @@ static void free_spawn( spawn_t *spawn ) {
   free( spawn );
 }
 
+#ifdef NOT_YET
 static int nth_core( corebind_t *cb, int start, int *ithp ) {
   int	ith = *ithp;
   int	c = start;
@@ -252,22 +255,24 @@ static int nth_core( corebind_t *cb, int start, int *ithp ) {
   }
   return c;
 }
+#endif
 
 int main( int argc, char **argv ) {
-#ifndef DBGCB
   pip_spawn_program_t prog;
-  int opts	=  0;
-#endif
   spawn_t	*spawn, *head, *tail;
   arg_t		*arg;
   char		**nargv = NULL;
   int ntasks, nt_start;;
+#ifdef NOT_YET
   int ncores = count_cpu();
+#endif
   int argc_max;
   //  int flag_dryrun = 0;
-  int i, c, d;
+  int i, j, d;
+  int extval;
   int err = 0;
 
+  program = basename( argv[0] );
   if( argc < 2 || argv[1] == NULL ) print_usage();
 
   head = tail = NULL;
@@ -282,19 +287,12 @@ int main( int argc, char **argv ) {
 	if( spawn->args == NULL ) print_usage();
 	break;
       } else if( *argv[i] != '-' ) {
-#ifndef DBGCB
+	if( ( err = pip_check_pie( argv[i], 1 ) ) != 0 ) goto error;
 	if( access( argv[i], X_OK ) ) {
 	  err = errno;
-	  fprintf( stderr, "Unable to execute '%s'\n", argv[i] );
+	  fprintf( stderr, "'%s' is not executable\n", argv[i] );
 	  goto error;
 	}
-	if( ( err = pip_check_pie( argv[i] ) ) != 0 ) {
-	  fprintf( stderr, "'%s' is not PIE "
-		   "(Position Independent Executable)\n",
-		   argv[i] );
-	  goto error;
-	}
-#endif
 	spawn->args = spawn->tail = new_arg( argv[i++] );
 	spawn->argc = 1;
 	for( ; i<argc; i++ ) {
@@ -310,11 +308,12 @@ int main( int argc, char **argv ) {
 	print_usage();
       } else if( strcmp( argv[i], "-n" ) == 0 ) {
 	if( argv[i+1] == NULL ||
-	    !isdigit( *argv[i+1] ) ||
-	    ( spawn->ntasks = atoi( argv[i+1] ) ) == 0 ) {
+	    !isa_digit_string( argv[i+1] ) ||
+	    ( spawn->ntasks = strtol( argv[i+1], NULL, 10 ) ) == 0 ) {
 	  print_usage();
 	}
 	i ++;
+#ifdef NOTYET
       } else if( strcmp( argv[i], "-c" ) == 0 &&
 		 argv[++i] != NULL ) {
 	corebind_t 	*cb;
@@ -326,6 +325,7 @@ int main( int argc, char **argv ) {
 	  spawn->cb_tail->next = cb;
 	  spawn->cb_tail       = cb;
 	}
+#endif
       } else if( strcmp( argv[i], "-f" ) == 0 && argv[i+1] != NULL ) {
 	spawn->func = argv[++i];
       } else if( strcmp( argv[i], "-d" ) == 0 ) {
@@ -338,8 +338,9 @@ int main( int argc, char **argv ) {
 
 #ifdef DEBUG
   for( spawn = head, i = 0; spawn != NULL; spawn = spawn->next ) {
-    printf( "[%d] ntasks:%d coreno:%d argc:%d func:'%s'\n",
-	    i++, spawn->ntasks, spawn->coreno, spawn->argc, spawn->func );
+    int j;
+    printf( "[%d] ntasks:%d argc:%d func:'%s'\n",
+	    i++, spawn->ntasks, spawn->argc, spawn->func );
     for( arg = spawn->args, j = 0; arg != NULL; arg = arg->next ) {
       printf( "    (%d) '%s'\n", j++, arg->arg );
     }
@@ -355,6 +356,12 @@ int main( int argc, char **argv ) {
     ntasks += spawn->ntasks;
     argc_max = ( spawn->argc > argc_max ) ? spawn->argc : argc_max;
   }
+  if( ntasks > PIP_NTASKS_MAX ) {
+    fprintf( stderr, "Too many tasks\n" );
+    err = EOVERFLOW;
+    goto error;
+  }
+
   argc_max ++;
   nargv = (char**) malloc( sizeof( char* ) * argc_max );
   if( nargv == NULL ) {
@@ -363,30 +370,28 @@ int main( int argc, char **argv ) {
     goto error;
   }
 
-#ifndef DBGCB
-  if( ( err = pip_init( NULL, &ntasks, NULL, opts ) ) != 0 ) {
+  if( ( err = pip_init( NULL, &ntasks, NULL, 0 ) ) != 0 ) {
     fprintf( stderr, "pip_init()=%d\n", err );
-    return err;
+    goto error;
   }
-#endif
+  j = 0;
   nt_start = 0;
   for( spawn = head; spawn != NULL; spawn = spawn->next ) {
     for( arg = spawn->args, i = 0; arg != NULL; arg = arg->next ) {
+      DBGF( "%p [%d] %s", spawn, i, arg->arg );
       nargv[i++] = arg->arg;
     }
     nargv[i] = NULL;
-#ifndef DBGCB
-    if( spawn->func != NULL ) {
-      pip_spawn_from_func( &prog, nargv[0], spawn->func, NULL, NULL );
-    } else {
+    if( spawn->func == NULL ) {
       pip_spawn_from_main( &prog, nargv[0], nargv, NULL );
+    } else {
+      pip_spawn_from_func( &prog, nargv[0], spawn->func, NULL, NULL );
     }
-#else
-    cb_dump( spawn->cb );
-#endif
     for( i=0; i<spawn->ntasks; i++ ) {
+#ifdef NOT_YET
       int j = i;
       int s = nt_start;
+      int c;
       if( j == 0 ) {
 	c = nth_core( spawn->cb, s, &j );
 	s = c;
@@ -397,24 +402,29 @@ int main( int argc, char **argv ) {
 	}
       }
       d = ( s + nt_start ) % ncores;
-#ifdef DBGCB
-      printf( "%s\t%3d  (%3d)\n", nargv[0], s, d );
 #else
-      int pipid = i;
-      err = pip_task_spawn( &prog, d, 0, &pipid, NULL );
-      if( err ) pip_abort();
+      d = PIP_CPUCORE_ASIS;
 #endif
+      int pipid = j++;
+      err = pip_task_spawn( &prog, d, 0, &pipid, NULL );
+      //      fprintf( stderr, "pip_task_spawn()=%d\n", err );
+      if( err ) pip_abort();
     }
     nt_start += spawn->ntasks;
   }
-#ifndef DBGCB
+  extval = 0;
   for( i=0; i<ntasks; i++ ) {
-    int status;
-    while( pip_wait( i, &status ) < 0 ) {
-      if( errno == ECHILD ) break;
+    int status, ex;
+    if( ( err = pip_wait_any( NULL, &status ) ) < 0 ) break;
+    if( WIFEXITED( status ) ) {
+      ex = WEXITSTATUS( status );
+      if( ex > extval ) extval = ex;
+    } else if( WIFSIGNALED( status ) ) {
+      fprintf( stderr, "Program signaled\n" );
+      pip_abort();
     }
   }
-#endif
+  err = extval;
  error:
   if( nargv != NULL ) free( nargv );
   free_spawn( head );

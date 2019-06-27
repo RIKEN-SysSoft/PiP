@@ -278,20 +278,7 @@ static int pip_load_dso( void **handlep, char *path ) {
   PIP_ACCUM( time_dlmopen, ( loaded = dlmopen( lmid, path, flags ) ) == NULL );
   DBG;
   if( loaded == NULL ) {
-    if( ( err = pip_check_pie( path ) ) != 0 ) {
-      switch( err ) {
-      case EUNATCH:
-	pip_warn_mesg( "'%s' is not an ELF file", path );
-	break;
-      case ELIBEXEC:
-	pip_warn_mesg( "'%s' is not DYNAMIC (PIE)", path );
-	break;
-      default:
-	pip_warn_mesg( "'%s' is unknown format", path );
-	break;
-      }
-      RETURN( err );
-    }
+    if( ( err = pip_check_pie( path, 1 ) ) != 0 ) RETURN( err );
     pip_warn_mesg( "dlmopen(%s): %s", path, dlerror() );
     RETURN( ENOEXEC );
   } else {
@@ -696,7 +683,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   if( !pip_isa_root()         ) RETURN( EPERM  );
   if( progp           == NULL ) RETURN( EINVAL );
   if( progp->prog     == NULL ) RETURN( EINVAL );
-  if( index( progp->prog, '/' ) == NULL ) RETURN( EINVAL );
   /* starting from main */
   if( progp->funcname == NULL &&
       progp->argv     == NULL ) RETURN( EINVAL );

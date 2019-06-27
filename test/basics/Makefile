@@ -59,6 +59,7 @@ PROGRAMS  = pip_init \
 	pip_misc \
 	corebind \
 	spawn_pie \
+	prog-noexec \
 	prog-nopie \
 	prog-pie \
 	prog-nordynamic \
@@ -66,6 +67,10 @@ PROGRAMS  = pip_init \
 	pip_barrier \
 	signal \
 	seek
+
+prog-noexec : prog.c Makefile
+	$(CC) -g -O2 prog.c -o prog-noexec
+	chmod -x prog-noexec
 
 prog-nopie : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-nopie

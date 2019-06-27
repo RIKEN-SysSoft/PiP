@@ -62,7 +62,7 @@ extern "C" {
 #endif
 
   pid_t pip_gettid( void );
-  int  pip_check_pie( char *path );
+  int  pip_check_pie( char *path, int );
 
   void pip_info_fmesg( FILE *fp, char *format, ... )
     __attribute__((format (printf, 2, 3)));
