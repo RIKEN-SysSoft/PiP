@@ -80,4 +80,4 @@ if [[ x$skip_flag == xskip ]]; then
     exit $extval;
 fi
 
-exec $@;
+exec "$@";

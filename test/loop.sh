@@ -66,7 +66,7 @@ do
 	echo -n $i "";
     fi
 
-    $@ > $TMP 2>&1;
+    "$@" > $TMP 2>&1;
     ext=$?;
     if [ $ext != 0 ]
     then

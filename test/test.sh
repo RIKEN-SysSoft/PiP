@@ -151,9 +151,16 @@ case $# in
 		case $1 in *$pip_mode_name_C) run_test_C=C;; esac
 		shift
 	done
-	pip_mode_list="$run_test_L $run_test_C $run_test_T"
+	if [ ${#run_test_L} -eq 0 ] &&
+	   [ ${#run_test_C} -eq 0 ] &&
+	   [ ${#run_test_T} -eq 0 ]; then
+	    pip_mode_list="L C T";
+	else
+	    pip_mode_list="$run_test_L $run_test_C $run_test_T"
+	fi
 	;;
 esac
+
 case $# in
 0)	;;
 1)	TEST_LIST=$1;;
@@ -248,7 +255,7 @@ while read line; do
 	esac
 	case $1 in '#'*) continue;; esac
 
-	cmd=$@;
+	cmd="$@";
 	CMD=$inc_fn$cmd;
 	ilen=${#inc_fn};
 	clen=${#cmd};
