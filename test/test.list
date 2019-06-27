@@ -1,8 +1,8 @@
-@include sample.list
-@include basics/test.list
-@include compat/test.list
-@include pthread/test.list
-@include openmp/test.list
-@include cxx/test.list
-@include fortran/test.list
-@include issues/test.list
+%include sample.list
+%include basics/test.list
+%include compat/test.list
+%include pthread/test.list
+%include openmp/test.list
+%include cxx/test.list
+%include fortran/test.list
+%include issues/test.list
