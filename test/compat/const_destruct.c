@@ -30,52 +30,40 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2018
+  * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
 //#define DEBUG
 #include <test.h>
 
-int root_exp = 0;
+#define SZ	(10)
+
+int array[SZ] = { 0 };
+int pipid;
+
+void init_func( void ) __attribute__ ((constructor));
+void init_func( void ) {
+  char *env;
+  int i;
+
+  CHECK( (env=getenv(PIP_TEST_PIPID_ENV)), RV==0, exit(EXIT_FAIL) );
+  pipid = strtol( env, NULL, 10 );
+  fprintf( stderr, "[%d] constructor is called\n", pipid );
+  for( i=0; i<SZ; i++ ) {
+    array[i] = i + pipid;
+  }
+}
+
+void dest_func( void ) __attribute__ ((destructor));
+void dest_func( void ) {
+  fprintf( stderr, "[%d] destructor is called\n", pipid );
+}
 
 int main( int argc, char **argv ) {
-  int pipid, ntasks;
   int i;
-  int err;
 
-  ntasks = NTASKS;
-  TESTINT( pip_init( &pipid, &ntasks, NULL, PIP_MODE_PROCESS ) );
-  if( pipid == PIP_PIPID_ROOT ) {
-    for( i=0; i<NTASKS; i++ ) {
-      int retval;
-
-      pipid = i;
-      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
-		       &pipid, NULL, NULL, NULL );
-      if( err ) {
-	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
-		 i, NTASKS, strerror( err ) );
-	break;
-      }
-
-      if( i != pipid ) {
-	fprintf( stderr, "pip_spawn(%d!=%d)=%d !!!!!!\n", i, pipid, err );
-	break;
-      }
-      DBGF( "calling pip_wait(%d)", i );
-      TESTINT( pip_wait( i, &retval ) );
-      if( retval != ( i & 0xFF ) ) {
-	fprintf( stderr, "[PIPID=%d] pip_wait() returns %d ???\n", i, retval );
-      } else {
-        fprintf( stderr, "[PIPID=%d] terminated. OK\n", i );
-      }
-    }
-    TESTINT( pip_fin() );
-
-  } else {
-    fprintf( stderr, "Hello, I am PIPID[%d/%d] ...", pipid, getpid() );
-    exit( pipid );
-    /* never reach here */
+  for( i=0; i<SZ; i++ ) {
+    CHECK( array[i]!=i+pipid, RV, return(EXIT_FAIL) );
   }
   return 0;
 }

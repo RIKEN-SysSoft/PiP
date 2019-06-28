@@ -1,9 +1,0 @@
-ulp/ulpnew.sh
-ulp/tls.sh
-ulp/yield.sh
-ulp/func.sh
-ulp/exit.sh
-#ulp/migrate.sh
-ulp/mutex.sh
-ulp/barrier.sh
-ulp/waitany.sh

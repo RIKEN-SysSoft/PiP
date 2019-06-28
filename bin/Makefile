@@ -38,7 +38,7 @@ include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
 PROGRAMS_TO_INSTALL = $(PROGRAM) piprun pmap
-PROGRAMS = $(PROGRAMS_TO_INSTALL) hello abc def ghi xyz hello
+PROGRAMS = $(PROGRAMS_TO_INSTALL)
 MAN1_SRCS = piprun.c pmap.c
 
 CFLAGS += -pthread
@@ -51,26 +51,6 @@ include $(top_srcdir)/build/rule.mk
 
 piprun: piprun.c $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
-
-hello: hello.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
-
-abc: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"abc\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
-
-def: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"def\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
-
-ghi: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"ghi\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
-
-xyz: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"xyz\" -DPIP=0 -I$(PIPINCDIR) $(PIPLDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
 
 pmap: pmap.c $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \

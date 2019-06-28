@@ -34,18 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include bin preload util sample \
-	test test/util test/basics test/compat test/pthread \
-	test/openmp test/cxx
-
-#	test/spawn \
-#	test/compat \
-#	test/openmp \
-#	test/pthread \
-#	test/fortran
-#	test/namexp
-#	test/ulp2 \
-#	test/universal
+SUBDIRS = lib include bin preload util sample
 
 include $(top_srcdir)/build/rule.mk
 
@@ -57,6 +46,23 @@ install: doxygen-install
 
 debug:
 	CPPFLAGS="-DDEBUG" make all;
+
+### build test programs and run them
+
+.PHONY: test
+test:
+	make all
+	make -C test
+	make -C test/util
+	make -C test/prog
+	make -C test/basics
+	make -C test/compat
+	make -C test/pthread
+	make -C test/openmp
+	make -C	test/cxx
+	make -C test/fortran
+	make -C test/issues
+	test/test.sh test/test.list
 
 ### doxygen
 
@@ -113,7 +119,7 @@ post-distclean-hook:
 ###
 
 check:
-	( cd test && ./test.sh -A )
+	make test
 .PHONY: check
 
 eval:

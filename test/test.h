@@ -45,11 +45,13 @@
 #include <pip_blt.h>
 #include <pip_internal.h>
 
-#define NTASKS		PIP_NTASKS_MAX
-#define EXTVAL_MASK	(127)
+#define NTASKS			PIP_NTASKS_MAX
+#define EXTVAL_MASK		(127)
 
-#define PIPENV		"PIPENV"
-#define PIP_TASK_NUM_ENV "PIP_TASK_NUM"
+#define PIPENV			"PIPENV"
+
+#define PIP_TEST_NTASKS_ENV 	"PIP_TEST_NTASKS"
+#define PIP_TEST_PIPID_ENV 	"PIP_TEST_PIPID"
 
 #define EXIT_PASS	0
 #define EXIT_FAIL	1
@@ -366,7 +368,7 @@ inline static void set_sigsegv_watcher( void ) {
 	     siginfo->si_addr,
 	     sigcode );
     fflush( NULL );
-    ignore_signal( SIGSEGV );
+    exit( EXIT_FAIL );
   }
 
   struct sigaction sigact;

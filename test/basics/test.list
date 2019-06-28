@@ -12,10 +12,10 @@ timer 1 ./pip_fin
 timer 1 ./pip_exit
 timer 1 pip_task 1 ./pip_exit
 timer 1 pip_task 8 ./pip_exit
-timer 1 pip_task 1 ./exit
-timer 1 pip_task 8 ./exit
 timer 1 pip_task 1 ./return
 timer 1 pip_task 8 ./return
+skip.sh T UNSUPPORTED timer 1 pip_task 1 ./exit
+skip.sh T UNSUPPORTED timer 1 pip_task 8 ./exit
 timer 1 ./pip_spawn
 timer 1 ./pip_task_spawn
 timer 1 ./spawn_pie

@@ -12,3 +12,11 @@ timer 1 pip_task 1 ./getaddrinfo
 skip.sh P XFAIL timer 1 pip_task 8 ./getaddrinfo
 skip.sh T UNSUPPORTED timer 1 pip_task 1 ./dlopen
 skip.sh T UNSUPPORTED timer 1 pip_task 8 ./dlopen
+timer 1 pip_task 1 ./const_destruct
+timer 1 pip_task 8 ./const_destruct
+timer 1 pip_task 1 ./system
+timer 1 pip_task 8 ./system
+timer 1 ./sigchld 1
+timer 1 ./sigchld 8
+timer 1 ./pagefault 1
+timer 1 ./pagefault 8

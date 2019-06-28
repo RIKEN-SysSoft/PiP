@@ -41,12 +41,29 @@
 #include <sys/time.h>
 #include <test.h>
 
-int main( int argc, char **argv ) {
+#define NITERS		(1000*1000)
+
+double gettime( void ) {
   struct timeval  tv;
   struct timezone tz;
-  int i;
-  for( i=0; i<10000; i++ ) {
-    CHECK( gettimeofday( &tv, &tz ), RV, return(EXIT_FAIL) );
+
+  CHECK( gettimeofday( &tv, &tz ), RV, exit(EXIT_FAIL) );
+  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
+}
+
+int main( int argc, char **argv ) {
+  double prev = 0.0, now;
+  int niters, i;
+
+  niters = NITERS;
+  if( argc > 1 ) {
+    niters = strtol( argv[1], NULL, 10 );
+  }
+  niters = ( niters == 0 ) ? NITERS : niters;
+  for( i=0; i<niters; i++ ) {
+    now = gettime();
+    CHECK( now<prev, RV, return(EXIT_FAIL) );
+    prev = now;
   }
   return 0;
 }

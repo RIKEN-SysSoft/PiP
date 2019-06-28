@@ -33,12 +33,22 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <sys/wait.h>
+#define DEBUG
 #include <test.h>
+#include <sys/mman.h>
 
-static int check_sid( int argc, char **argv ) {
-  pid_t pid, sid_old, sid_new;
+struct maps {
+  pip_barrier_t	barrier;
+  void		*maps[NTASKS+1];
+} maps;
+
+int main( int argc, char **argv ) {
+  struct maps *export = (void*) &maps;
+  void *map;
+  long pgsz = sysconf( _SC_PAGESIZE );
   int  i, ntasks, pipid;
+
+  set_signal_watcher( SIGSEGV );
 
   ntasks = NTASKS;
   if( argc > 1 ) {
@@ -46,49 +56,60 @@ static int check_sid( int argc, char **argv ) {
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
 
-  pid = getpid();
-  CHECK( ( sid_old = getsid(pid) ), RV<0, return(EXIT_FAIL) );
-  CHECK( pip_init(&pipid, &ntasks,NULL,PIP_MODE_PROCESS),
+  CHECK( pip_init( &pipid, &ntasks, (void*) &export, 0 ),
 	 RV,
 	 return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( (sid_new=setsid()), RV<0, return(EXIT_FAIL) );
+    map = mmap( NULL,
+		pgsz,
+		PROT_READ|PROT_WRITE,
+		MAP_PRIVATE|MAP_ANONYMOUS,
+		0,
+		0 );
+    CHECK( (map==MAP_FAILED), RV, return(EXIT_FAIL) );
+    maps.maps[ntasks] = map;
+
+    CHECK( pip_barrier_init(&export->barrier,ntasks+1),
+	   RV,
+	   return(EXIT_FAIL) );
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      CHECK( pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL ),
+      CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			NULL, NULL, NULL ),
 	     RV,
 	     return(EXIT_FAIL) );
     }
+    CHECK( pip_barrier_wait(&export->barrier), RV, return(EXIT_FAIL) );
+    for( i=0; i<ntasks+1; i++ ) {
+      *((int*)(maps.maps[i])) = 0;
+    }
+    CHECK( pip_barrier_wait(&export->barrier), RV, return(EXIT_FAIL) );
     for( i=0; i<ntasks; i++ ) {
       CHECK( pip_wait( i, NULL ), RV, return(EXIT_FAIL) );
     }
-    CHECK( ( sid_new == getsid( pid) ), RV, return(EXIT_FAIL) );
 
   } else {	/* PIP child task */
-    CHECK( ( sid_new = setsid() ), RV<0, return(EXIT_FAIL) );
-  }
-  CHECK( pip_fin(),  RV, return(EXIT_FAIL) );
-  return 0;
-}
+    struct maps* import = (struct maps*) export;
 
-int main( int argc, char **argv ) {
-  pid_t pid, sid;
-  int rv, status;
+    map = mmap( NULL,
+		pgsz,
+		PROT_READ|PROT_WRITE,
+		MAP_PRIVATE|MAP_ANONYMOUS,
+		0,
+		0 );
+    CHECK( (map==MAP_FAILED), RV, return(EXIT_FAIL) );
+    import->maps[pipid] = map;
 
-  pid = getpid();
-  CHECK( ( sid = getsid(pid) ), RV<0, return(EXIT_FAIL) );
-  if( sid != pid ) {
-    printf( "fork\n" );
-    rv = check_sid( argc, argv );
-  } else if( ( pid = fork() ) == 0 ) {
-    exit( check_sid( argc, argv ) );
-  } else {
-    wait( &status );
-    if( WIFEXITED( status ) ) {
-      rv = WEXITSTATUS( status );
-    } else {
-      CHECK( "test program signaled", 1, return(EXIT_UNRESOLVED) );
+    CHECK( pip_barrier_wait(&export->barrier), RV, return(EXIT_FAIL) );
+    for( i=pipid; i<ntasks+1; i++ ) {
+      *((int*)(import->maps[i])) = 0;
     }
+    for( i=0; i<pipid; i++ ) {
+      *((int*)(import->maps[i])) = 0;
+    }
+    CHECK( pip_barrier_wait(&export->barrier), RV, return(EXIT_FAIL) );
   }
-  return rv;
+  CHECK( munmap( map, pgsz ), RV, return(EXIT_FAIL) );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  return 0;
 }

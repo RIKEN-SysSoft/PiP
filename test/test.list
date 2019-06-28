@@ -6,4 +6,4 @@
 %include cxx/test.list
 %include fortran/test.list
 %include issues/test.list
-%include ../bin/test.list
+%include piprun.list

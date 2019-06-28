@@ -33,22 +33,8 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <signal.h>
-
 //#define DEBUG
 #include <test.h>
-#include <time.h>
-
-void my_sleep( int n ) {
-  struct timespec tm, tr;
-  tm.tv_sec = 0;
-  tm.tv_nsec = n * 1000 * 1000;
-#ifdef DEBUG
-  tm.tv_sec  = 1 * n;
-  tm.tv_nsec = 0;
-#endif
-  (void) nanosleep( &tm, &tr );
-}
 
 int count_sigchld = 0;;
 
@@ -60,41 +46,42 @@ void sigchld_handler( int sig ) {
 }
 
 int main( int argc, char **argv ) {
-  int pipid = 999;
-  int ntasks = 0;
+  int pipid, ntasks;
   int i;
 
   set_signal_watcher( SIGSEGV );
 
-  if( argc   > 1 ) ntasks = atoi( argv[1] );
-  if( ntasks < 1 ) ntasks = NTASKS;
-  ntasks = ( ntasks > 256 ) ? 256 : ntasks;
+  ntasks = NTASKS;
+  if( argc > 1 ) {
+    ntasks = strtol( argv[1], NULL, 10 );
+  }
+  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
 
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     struct sigaction 	sigact;
 
     memset( &sigact, 0, sizeof( sigact ) );
-    TESTINT( sigemptyset( &sigact.sa_mask ) );
-    TESTINT( sigaddset( &sigact.sa_mask, SIGCHLD ) );
-    //sigact.sa_flags = SA_SIGINFO;
+    CHECK( sigemptyset( &sigact.sa_mask ),        RV, return(EXIT_FAIL) );
+    CHECK( sigaddset( &sigact.sa_mask, SIGCHLD ), RV, return(EXIT_FAIL) );
     sigact.sa_sigaction = (void(*)()) sigchld_handler;
-    TESTINT( sigaction( SIGCHLD, &sigact, NULL ) );
+    CHECK( sigaction( SIGCHLD, &sigact, NULL ),   RV, return(EXIT_FAIL) );
+
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			  NULL, NULL, NULL ) );
-      TESTINT( pip_wait_any( NULL, NULL ) );
+      CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
+			NULL, NULL, NULL ),
+	     RV,
+	     return(EXIT_FAIL) );
+      CHECK( pip_wait_any( NULL, NULL ), RV, return(EXIT_FAIL) );
     }
-    if( count_sigchld == ntasks ) {
-      fprintf( stderr, "SUCCEEDED\n" );
-    } else {
-      fprintf( stderr, "FAILED (%d!=%d)\n", count_sigchld, ntasks );
-    }
-    TESTINT( pip_fin() );
+    CHECK( (count_sigchld != ntasks), RV, return(EXIT_FAIL) );
   } else {
-    pip_exit( pipid );
+    CHECK( pip_fin(),    RV, return(EXIT_FAIL) );
+    pip_exit( 0 );
+    CHECK( "pip_exit() returns", RV, return(EXIT_FAIL) );
     /* never reach here */
   }
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return 0;
 }

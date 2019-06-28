@@ -10,7 +10,8 @@
 int main( int argc, char **argv ) {
   int ntasks, pipid, status, extval;
   int i, err;
-  char env[128];
+  char env_ntasks[128];
+  char env_pipid[128];
 
   if( argc < 3 ) return EXIT_UNTESTED;
   CHECK( access( argv[2], X_OK ),     RV, exit(EXIT_UNTESTED) );
@@ -19,11 +20,13 @@ int main( int argc, char **argv ) {
   ntasks = strtol( argv[1], NULL, 10 );
   CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_UNTESTED) );
-  sprintf( env, "%s=%d", PIP_TASK_NUM_ENV, ntasks );
-  putenv( env );
+  sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
+  putenv( env_ntasks );
 
   for( i=0; i<ntasks; i++ ) {
     pipid = i;
+    sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
+    putenv( env_pipid );
     CHECK( pip_spawn( argv[2], &argv[2], NULL, PIP_CPUCORE_ASIS, &pipid,
 		      NULL, NULL, NULL ),
 	   RV,

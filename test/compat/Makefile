@@ -36,9 +36,12 @@ include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
 SRCS  = fork.c malloc.c ctype.c dlopen.c gettimeofday.c \
-	 gethostname.c getaddrinfo.c
+	gethostname.c getaddrinfo.c const_destruct.c \
+	system.c sigchld.c pagefault.c
 
-PROGRAMS  = fork malloc ctype dlopen gettimeofday gethostname getaddrinfo \
+PROGRAMS  = fork malloc ctype dlopen gettimeofday \
+	gethostname getaddrinfo const_destruct \
+	system sigchld pagefault
 
 include $(top_srcdir)/build/rule.mk
 

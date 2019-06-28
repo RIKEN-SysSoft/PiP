@@ -85,7 +85,7 @@ int main( int argc, char **argv ) {
     CHECK( pip_get_pipid( &id ),      RV,	return(EXIT_FAIL) );
     CHECK( id!=pipid, 		      RV,	return(EXIT_FAIL) );
 
-    env = getenv( PIP_TASK_NUM_ENV );
+    env = getenv( PIP_TEST_NTASKS_ENV );
     CHECK( env==NULL, 		      RV,	return(EXIT_FAIL) );
 
     nte = strtol( env, NULL, 10 );
