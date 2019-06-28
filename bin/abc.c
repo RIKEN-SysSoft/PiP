@@ -54,17 +54,28 @@ int main( int argc, char **argv ) {
 #ifndef PIP
   printf( "[main] %s\n", msg );
 #else
-  if( argc > 1 ) {
-    int pipid, ntasks=-1, id, err;
+  if( argc > 2 ) {
+    int pipid, ntasks=-1, id, prevn, err;
+
     if( ( err = pip_init( &pipid, &ntasks, NULL, 0 ) ) != 0 ) {
       fprintf( stderr, "Invoke this program by using piprun\n" );
       return 1;
     }
+    prevn = strtol( argv[1], NULL, 10 );
+    if( pipid < prevn ) {
+      fprintf( stderr, "Illegal argument(s)\n" );
+      return 9;
+    }
+    if( argc < pipid - prevn + 2 ) {
+      fprintf( stderr, "PIPID list is short\n" );
+      return 9;
+    }
+    id = strtol( argv[pipid-prevn+2], NULL, 10 );
     printf( "PIPID:%d (%d,%d)\n", pipid, argc, ntasks );
-    if( argc < pipid + 1 ) return 1;
-    id = strtol( argv[pipid+1], NULL, 10 );
-    printf( "[%d] %s (%d)\n", pipid, argv[pipid+1], id );
-    if( id != pipid ) return 1;
+    if( id != pipid ) {
+      printf( "[%d] %s != %d\n", pipid, argv[pipid+1], id );
+      return 9;
+    }
     printf( "[PIP:main:%d] %s\n", pipid, msg );
   } else {
     printf( "[PIP:main] %s\n", msg );
