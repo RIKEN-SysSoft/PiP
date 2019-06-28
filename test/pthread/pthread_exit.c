@@ -37,7 +37,7 @@
 #include <test.h>
 
 #define NITERS		(10)
-#define NTHREADS	(100)
+#define NTHREADS	(10)
 
 void *thread_main( void *argp ) {
   pthread_exit( NULL );
@@ -54,7 +54,8 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) {
     nthreads = strtol( argv[1], NULL, 10 );
   }
-  nthreads = ( nthreads == 0 ) ? NTHREADS : NITERS;
+  nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
+  nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
   niters = 0;
   if( argc > 2 ) {
