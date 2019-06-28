@@ -36,7 +36,7 @@
 #include <test.h>
 
 #define NITERS		(100)
-#define NTHREADS	(100)
+#define NTHREADS	(10)
 
 int		  niters;
 pthread_barrier_t barr;
@@ -56,10 +56,12 @@ int main( int argc, char **argv ) {
   int nthreads;
   int i;
 
+  nthreads = 0;
   if( argc > 1 ) {
     nthreads = strtol( argv[1], NULL, 10 );
   }
-  nthreads = ( nthreads == 0 ) ? NTHREADS : NITERS;
+  nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
+  nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
   if( argc > 2 ) {
     niters = strtol( argv[2], NULL, 10 );

@@ -70,7 +70,8 @@ int main( int argc, char **argv ) {
 
   nthreads = 0;
   if( argc > 2 ) nthreads = strtol( argv[1], NULL, 10 );
-  nthreads = ( nthreads == 0 ) ? NTHREADS : nthreads;
+  nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
+  nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
   niters = 0;
   if( argc > 3 ) niters = strtol( argv[3], NULL, 10 );
