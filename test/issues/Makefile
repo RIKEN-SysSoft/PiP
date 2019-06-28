@@ -35,9 +35,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = fflush-ticket518.c fflush-aug.c
+SRCS  = fflush-ticket518.c fflush-ticket518+.c
 
-PROGRAMS  = fflush-ticket518 fflush-aug
+PROGRAMS  = fflush-ticket518 fflush-ticket518+
 
 include $(top_srcdir)/build/rule.mk
 

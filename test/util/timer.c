@@ -58,7 +58,7 @@ static void set_timer( int timer ) {
     killpg( pid, SIGKILL );
     sleep( 1 );			/* to flush out messages */
     fprintf( stderr, "Timer expired (%d sec)\n", timer );
-    exit( EXIT_UNTESTED );
+    exit( EXIT_UNRESOLVED );
   }
   struct itimerval tv;
 
