@@ -51,6 +51,7 @@ debug:
 
 .PHONY: test
 test:
+	make all
 	make -C test
 	make -C test/util
 	make -C test/prog
