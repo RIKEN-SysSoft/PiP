@@ -49,7 +49,7 @@ static pip_spinlock_t		lock;
 static volatile int		count;
 
 static void *thread_main( void *argp ) {
-  int id, i, j;
+  int id, i, ncols;
 
   id = *((int*)argp);
   //fprintf( stderr, "ID:%d\n", id );
@@ -58,9 +58,14 @@ static void *thread_main( void *argp ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
-  for( i=0,j=0; i<NITERS*2; i++ ) {
-    while( !pip_spin_trylock( &lock) ) sched_yield();
-    if( j++ & 0x1 ) {
+  ncols = 0;
+  for( i=0; i<NITERS*2; i++ ) {
+    if( !pip_spin_trylock( &lock) ) {
+      ncols += 1;
+      sched_yield();
+      while( !pip_spin_trylock( &lock) ) sched_yield();
+    }
+    if( i & 0x1 ) {
       count += id + 10;
     } else {
       count -= id + 10;
@@ -70,11 +75,20 @@ static void *thread_main( void *argp ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
+  for( i=0; i<nthreads; i++ ) {
+    if( i == id ) {
+      printf( "[%d] ncols:%d/%d\n", id, ncols, NITERS*2 );
+      fflush( NULL );
+    }
+    CHECK( pthread_barrier_wait( &barr ),
+	   ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	   exit(EXIT_FAIL) );
+  }
   return NULL;
 }
 
 int main( int argc, char **argv ) {
-  int i;
+  int i, c;
 
   nthreads = 10;
   if( argc > 1 ) {
@@ -99,10 +113,16 @@ int main( int argc, char **argv ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
-  fprintf( stderr, "COUNT: %d\n", count );
-  CHECK( (count!=0), RV, return(EXIT_FAIL) );
+  c = count;
+  CHECK( (c!=0), RV, return(EXIT_FAIL) );
+  for( i=0; i<nthreads; i++ ) {
+    CHECK( pthread_barrier_wait( &barr ),
+	   ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	   exit(EXIT_FAIL) );
+  }
   for( i=0; i<nthreads; i++ ) {
     CHECK( pthread_join( threads[i], NULL ), RV, return(EXIT_FAIL) );
   }
+  fprintf( stderr, "COUNT: %d\n", c );
   return 0;
 }

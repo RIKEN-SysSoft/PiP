@@ -81,8 +81,13 @@ static void *thread_main( void *argp ) {
 
   for( i=0; i<nthreads; i++ ) {
     if( i == id ) {
-      printf( "[%d]\t%g\t%g\t%p\t0x%lx\t0x%lx\n",
-	      (int) id, t0, t1, &tlsvar, tls, (intptr_t) thr );
+      if( tls == thr ) {
+	printf( "[%d]\t%g\t%g\t%p\t0x%lx\t<<< same <<<\t%p\n",
+		(int) id, t0, t1, &tlsvar, tls, &i );
+      } else {
+	printf( "[%d]\t%g\t%g\t%p\t0x%lx\t0x%lx\t%p\n",
+		(int) id, t0, t1, &tlsvar, tls, (intptr_t) thr, &i );
+      }
       fflush( NULL );
     }
     CHECK( pthread_barrier_wait( &barr ),

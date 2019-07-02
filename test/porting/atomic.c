@@ -47,7 +47,7 @@ static int 			nthreads;
 static pip_atomic_t		count;
 
 static void *thread_main( void *argp ) {
-  int id, i, j;
+  int id, i;
 
   id = *((int*)argp);
   //fprintf( stderr, "ID:%d\n", id );
@@ -56,11 +56,11 @@ static void *thread_main( void *argp ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
-  for( i=0,j=0; i<NITERS; i++ ) {
-    if( j++ & 0x1 ) {
-      pip_atomic_fetch_and_add( &count, id );
+  for( i=0; i<NITERS*2; i++ ) {
+    if( i & 0x1 ) {
+      pip_atomic_fetch_and_add( &count, id + 20 );
     } else {
-      pip_atomic_sub_and_fetch( &count, id );
+      pip_atomic_sub_and_fetch( &count, id + 20 );
     }
   }
   CHECK( pthread_barrier_wait( &barr ),
