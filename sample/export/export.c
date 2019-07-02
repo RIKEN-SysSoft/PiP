@@ -14,7 +14,7 @@ int main( int argc, char **argv ) {
   double output = 0.0;
   int  i, ntasks, pipid;
 
-  ntasks = 10;
+  ntasks = 8;
   pip_barrier_init( &data.barrier, ntasks + 1 );
   pip_init( &pipid, &ntasks, (void*) &export, 0 );
   if( pipid == PIP_PIPID_ROOT ) {

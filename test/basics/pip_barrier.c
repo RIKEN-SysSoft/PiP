@@ -33,6 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+//#define DEBUG
 #include <test.h>
 
 #define NITERS		(1000)

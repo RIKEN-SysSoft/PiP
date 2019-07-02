@@ -38,11 +38,14 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+typedef intptr_t		pip_tls_t;
+#define PIP_TYPE_TLS
+
 inline static int pip_save_tls( pip_tls_t *tlsp ) {
   pip_tls_t tls;
   asm volatile ("mrs  %0, tpidr_el0" : "=r" (tls));
   *tlsp = tls;
-  return 0
+  return 0;
 }
 #define PIP_SAVE_TLS
 

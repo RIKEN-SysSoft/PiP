@@ -835,6 +835,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     pip_root_->ntasks_curr  ++;
     pip_gdbif_task_commit_( task );
     if( pipidp != NULL ) *pipidp = pipid;
+    errno = 0;
 
   } else {
   error:			/* undo */

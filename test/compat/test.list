@@ -1,5 +1,5 @@
-timer 1 pip_task 1 ./malloc
-timer 1 pip_task 8 ./malloc
+timer 10 pip_task 1 ./malloc
+timer 10 pip_task 8 ./malloc
 timer 1 pip_task 1 ./fork
 timer 1 pip_task 8 ./fork
 timer 1 pip_task 1 ./ctype
