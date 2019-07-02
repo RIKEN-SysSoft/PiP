@@ -80,6 +80,9 @@ static void *thread_main( void *argp ) {
   for( i=0; i<NITERS; i++ ) thr = pthread_self();
 
   for( i=0; i<nthreads; i++ ) {
+    if( i == 0 && id == 0 ) {
+      printf( "No.\tsave_tls()\tpthread_self()\tTLS-reg\t\tthread\t\tTLS var\t\tstack\n" );
+    }
     if( i == id ) {
       if( tls == thr ) {
 	printf( "[%d]\t%g\t%g\t%p\t<<< same <<<\t%p\t%p\n",
