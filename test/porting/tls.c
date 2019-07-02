@@ -45,32 +45,53 @@ static pthread_t 		threads[NTHREADS];
 static int			ids[NTHREADS];
 static pthread_barrier_t	barr;
 static int 			nthreads;
-static pip_spinlock_t		lock;
-static volatile int		count;
+static __thread int		tlsvar;
 
 static void *thread_main( void *argp ) {
-  int id, i, j;
+  pthread_t thr;
+  double t0, t1;
+  intptr_t tls;
+  int id, i;
 
   id = *((int*)argp);
   //fprintf( stderr, "ID:%d\n", id );
   CHECK( (id<0 || id>nthreads), RV, exit(EXIT_FAIL) );
 
-  CHECK( pthread_barrier_wait( &barr ),
-	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
-	 exit(EXIT_FAIL) );
-  for( i=0,j=0; i<nthreads; i++ ) {
-    while( pip_spin_trylock( &lock) ) sched_yield();
-    if( j++ & 0x1 ) {
-      count += id;
-    } else {
-      count -= id;
-    }
+  for( i=0; i<WARMUP; i++ ) {
+    CHECK( pip_save_tls( &tls ), RV, exit(EXIT_FAIL) );
   }
-  CHECK( pthread_barrier_wait( &barr ),
-	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
-	 exit(EXIT_FAIL) );
+  t0 = -pip_gettime();
+  for( i=0; i<NITERS; i++ ) {
+    CHECK( pip_save_tls( &tls ), RV, exit(EXIT_FAIL) );
+  }
+  t0 += pip_gettime();
+  t0 /= (double)NITERS;
+
+  for( i=0; i<WARMUP; i++ ) {
+    CHECK( pip_load_tls( tls ), RV, exit(EXIT_FAIL) );
+  }
+  t1 = -pip_gettime();
+  for( i=0; i<NITERS; i++ ) {
+    CHECK( pip_load_tls( tls ), RV, exit(EXIT_FAIL) );
+  }
+  t1 += pip_gettime();
+  t1 /= (double)NITERS;
+
+  for( i=0; i<NITERS; i++ ) thr = pthread_self();
+
+  for( i=0; i<nthreads; i++ ) {
+    if( i == id ) {
+      printf( "[%d]\t%g\t%g\t%p\t0x%lx\t0x%lx\n",
+	      (int) id, t0, t1, &tlsvar, tls, (intptr_t) thr );
+      fflush( NULL );
+    }
+    CHECK( pthread_barrier_wait( &barr ),
+	   ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	   exit(EXIT_FAIL) );
+  }
   return NULL;
 }
+
 
 int main( int argc, char **argv ) {
   int i;
@@ -82,8 +103,7 @@ int main( int argc, char **argv ) {
   nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
   nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
-  CHECK( pip_spin_init( &lock ), RV, return(EXIT_FAIL) );
-  CHECK( pthread_barrier_init( &barr, NULL, nthreads+1 ),
+  CHECK( pthread_barrier_init( &barr, NULL, nthreads ),
 	 RV,
 	 return(EXIT_FAIL) );
 
@@ -92,13 +112,6 @@ int main( int argc, char **argv ) {
     CHECK( pthread_create( &threads[i], NULL, thread_main, &ids[i] ),
 	   RV, return(EXIT_FAIL) );
   }
-  CHECK( pthread_barrier_wait( &barr ),
-	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
-	 exit(EXIT_FAIL) );
-  CHECK( pthread_barrier_wait( &barr ),
-	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
-	 exit(EXIT_FAIL) );
-  CHECK( (count!=0), RV, return(EXIT_FAIL) );
   for( i=0; i<nthreads; i++ ) {
     CHECK( pthread_join( threads[i], NULL ), RV, return(EXIT_FAIL) );
   }

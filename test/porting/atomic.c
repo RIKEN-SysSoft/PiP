@@ -45,8 +45,7 @@ static pthread_t 		threads[NTHREADS];
 static int			ids[NTHREADS];
 static pthread_barrier_t	barr;
 static int 			nthreads;
-static pip_spinlock_t		lock;
-static volatile int		count;
+static pip_atomic_t		count;
 
 static void *thread_main( void *argp ) {
   int id, i, j;
@@ -59,11 +58,10 @@ static void *thread_main( void *argp ) {
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
   for( i=0,j=0; i<nthreads; i++ ) {
-    while( pip_spin_trylock( &lock) ) sched_yield();
     if( j++ & 0x1 ) {
-      count += id;
+      pip_atomic_fetch_and_add( &count, id );
     } else {
-      count -= id;
+      pip_atomic_sub_and_fetch( &count, id );
     }
   }
   CHECK( pthread_barrier_wait( &barr ),
@@ -82,7 +80,6 @@ int main( int argc, char **argv ) {
   nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
   nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
-  CHECK( pip_spin_init( &lock ), RV, return(EXIT_FAIL) );
   CHECK( pthread_barrier_init( &barr, NULL, nthreads+1 ),
 	 RV,
 	 return(EXIT_FAIL) );
