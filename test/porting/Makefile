@@ -37,9 +37,9 @@ include $(srcdir)/../Test.common
 
 LDLIBS += $(PIPLDLIB) -ldl
 
-SRCS    = spinlock.c atomic.c tls.c
+SRCS    = spinlock.c atomic.c tls.c tlsvar.c
 
-PROGRAMS = spinlock atomic tls
+PROGRAMS = spinlock atomic tls tlsvar.S
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
@@ -49,3 +49,5 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
+tlsvar.S : tlsvar.c
+	$(CC) -S tlsvar.c -o tlsvar.S
