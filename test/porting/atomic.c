@@ -42,12 +42,13 @@
 
 static pthread_t 		threads[NTHREADS];
 static int			ids[NTHREADS];
-static pthread_barrier_t	barr;
 static int 			nthreads;
+static pthread_barrier_t	barr;
 static pip_atomic_t		count;
 
 static void *thread_main( void *argp ) {
-  int id, i;
+  int id, i, inc, x, y;
+  int ninter = 0;
 
   id = *((int*)argp);
   //fprintf( stderr, "ID:%d\n", id );
@@ -56,21 +57,31 @@ static void *thread_main( void *argp ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
-  for( i=0; i<NITERS*2; i++ ) {
-    if( i & 0x1 ) {
-      pip_atomic_fetch_and_add( &count, id + 20 );
-    } else {
-      pip_atomic_sub_and_fetch( &count, id + 20 );
-    }
+  inc = id + 20;
+  for( i=0; i<NITERS; i++ ) {
+    x = pip_atomic_fetch_and_add( &count, inc );
+    y = pip_atomic_sub_and_fetch( &count, inc );
+    if( x != y ) ninter ++;
   }
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
+  for( i=0; i<nthreads; i++ ) {
+    if( i == id ) {
+      float percent = ((float)ninter) / ((float)NITERS);
+      printf( "[%d] interleaved:%d/%d (%g %%)\n",
+	      id, ninter, NITERS, percent*100.0 );
+      fflush( NULL );
+    }
+    CHECK( pthread_barrier_wait( &barr ),
+	   ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	   exit(EXIT_FAIL) );
+  }
   return NULL;
 }
 
 int main( int argc, char **argv ) {
-  int i;
+  int i, c;
 
   nthreads = 10;
   if( argc > 1 ) {
@@ -94,10 +105,16 @@ int main( int argc, char **argv ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
-  fprintf( stderr, "COUNT: %d\n", (int) count );
-  CHECK( (count!=0), RV, return(EXIT_FAIL) );
+  c = count;
+  for( i=0; i<nthreads; i++ ) {
+    CHECK( pthread_barrier_wait( &barr ),
+	   ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	   exit(EXIT_FAIL) );
+  }
   for( i=0; i<nthreads; i++ ) {
     CHECK( pthread_join( threads[i], NULL ), RV, return(EXIT_FAIL) );
   }
+  fprintf( stderr, "COUNT: %d\n", c );
+  CHECK( (c!=0), RV, return(EXIT_FAIL) );
   return 0;
 }

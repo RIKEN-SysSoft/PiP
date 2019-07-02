@@ -57,6 +57,7 @@ static void *thread_main( void *argp ) {
   //fprintf( stderr, "ID:%d\n", id );
   CHECK( (id<0 || id>nthreads), RV, exit(EXIT_FAIL) );
 
+  tlsvar = id;
   for( i=0; i<WARMUP; i++ ) {
     CHECK( pip_save_tls( &tls ), RV, exit(EXIT_FAIL) );
   }
@@ -77,6 +78,7 @@ static void *thread_main( void *argp ) {
   t1 += pip_gettime();
   t1 /= (double)NITERS;
 
+  CHECK( (tlsvar!=id), RV, exit(EXIT_FAIL) );
   for( i=0; i<NITERS; i++ ) thr = pthread_self();
 
   for( i=0; i<nthreads; i++ ) {

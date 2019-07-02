@@ -43,13 +43,13 @@
 
 static pthread_t 		threads[NTHREADS];
 static int			ids[NTHREADS];
-static pthread_barrier_t	barr;
 static int 			nthreads;
+static pthread_barrier_t	barr;
 static pip_spinlock_t		lock;
 static volatile int		count;
 
 static void *thread_main( void *argp ) {
-  int id, i, ncols;
+  int id, i, ncols, inc;
 
   id = *((int*)argp);
   //fprintf( stderr, "ID:%d\n", id );
@@ -58,18 +58,37 @@ static void *thread_main( void *argp ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
+  /* testing nolock */
+  inc = id + 10;
+  for( i=0; i<NITERS; i++ ) {
+    count += inc;
+    sched_yield();
+    count -= inc;
+  }
+  CHECK( pthread_barrier_wait( &barr ),
+	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	 exit(EXIT_FAIL) );
+
+  CHECK( pthread_barrier_wait( &barr ),
+	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	 exit(EXIT_FAIL) );
+  /* testing lock */
   ncols = 0;
-  for( i=0; i<NITERS*2; i++ ) {
+  for( i=0; i<NITERS; i++ ) {
     if( !pip_spin_trylock( &lock) ) {
-      ncols += 1;
+      ncols ++;
       sched_yield();
       while( !pip_spin_trylock( &lock) ) sched_yield();
     }
-    if( i & 0x1 ) {
-      count += id + 10;
-    } else {
-      count -= id + 10;
+    count += inc;
+    pip_spin_unlock( &lock );
+
+    if( !pip_spin_trylock( &lock) ) {
+      ncols ++;
+      sched_yield();
+      while( !pip_spin_trylock( &lock) ) sched_yield();
     }
+    count -= inc;
     pip_spin_unlock( &lock );
   }
   CHECK( pthread_barrier_wait( &barr ),
@@ -77,7 +96,7 @@ static void *thread_main( void *argp ) {
 	 exit(EXIT_FAIL) );
   for( i=0; i<nthreads; i++ ) {
     if( i == id ) {
-      printf( "[%d] ncols:%d/%d\n", id, ncols, NITERS*2 );
+      printf( "[%d] ncols:%d/%d\n", id, ncols, NITERS );
       fflush( NULL );
     }
     CHECK( pthread_barrier_wait( &barr ),
@@ -107,14 +126,24 @@ int main( int argc, char **argv ) {
     CHECK( pthread_create( &threads[i], NULL, thread_main, &ids[i] ),
 	   RV, return(EXIT_FAIL) );
   }
+  count = 0;
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
+  /* testing nolock */
+  CHECK( pthread_barrier_wait( &barr ),
+	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	 exit(EXIT_FAIL) );
+  CHECK( (nthreads>1&&count==0), RV, return(EXIT_FAIL) );
+  count = 0;
+  CHECK( pthread_barrier_wait( &barr ),
+	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	 exit(EXIT_FAIL) );
+  /* testing lock */
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
   c = count;
-  CHECK( (c!=0), RV, return(EXIT_FAIL) );
   for( i=0; i<nthreads; i++ ) {
     CHECK( pthread_barrier_wait( &barr ),
 	   ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
@@ -124,5 +153,6 @@ int main( int argc, char **argv ) {
     CHECK( pthread_join( threads[i], NULL ), RV, return(EXIT_FAIL) );
   }
   fprintf( stderr, "COUNT: %d\n", c );
+  CHECK( (c!=0), RV, return(EXIT_FAIL) );
   return 0;
 }
