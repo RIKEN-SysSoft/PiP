@@ -62,6 +62,10 @@ int main( int argc, char **argv ) {
   }
   niters = ( niters == 0 ) ? NITERS : niters;
 
+  CHECK( pthread_barrier_init( &barr, NULL, nthreads ),
+	 RV,
+	 return(EXIT_FAIL) );
+
   for( i=0; i<niters; i++ ) {
     for( j=0; j<nthreads; j++ ) {
       CHECK( pthread_create( &threads[j], NULL, thread_main, NULL ),

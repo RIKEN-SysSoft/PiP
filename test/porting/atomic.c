@@ -38,7 +38,6 @@
 
 #define NTHREADS	(100)
 
-#define WARMUP		(100)
 #define NITERS		(10*1000*1000)
 
 static pthread_t 		threads[NTHREADS];
@@ -57,7 +56,7 @@ static void *thread_main( void *argp ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
-  for( i=0,j=0; i<nthreads; i++ ) {
+  for( i=0,j=0; i<NITERS; i++ ) {
     if( j++ & 0x1 ) {
       pip_atomic_fetch_and_add( &count, id );
     } else {
@@ -95,6 +94,7 @@ int main( int argc, char **argv ) {
   CHECK( pthread_barrier_wait( &barr ),
 	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
 	 exit(EXIT_FAIL) );
+  fprintf( stderr, "COUNT: %d\n", (int) count );
   CHECK( (count!=0), RV, return(EXIT_FAIL) );
   for( i=0; i<nthreads; i++ ) {
     CHECK( pthread_join( threads[i], NULL ), RV, return(EXIT_FAIL) );
