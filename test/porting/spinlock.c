@@ -54,23 +54,23 @@ int main( int argc, char **argv ) {
   pip_spin_init( &exp->lock );
   exp->x = 0;
 
-  TESTINT( pip_init( &pipid, &ntasks, (void**) &exp, 0 ) );
+  CHECK( pip_init( &pipid, &ntasks, (void**) &exp, 0 ),
+	 RV,
+	 return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      TESTINT( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS,
-			  &pipid, NULL, NULL, NULL ) );
+      CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS,
+			&pipid, NULL, NULL, NULL ),
+	     RV,
+	     return(EXIT_FAIL) );
     }
     for( i=0; i<ntasks; i++ ) {
-      TESTINT( pip_wait( i, NULL ) );
+      CHECK( pip_wait( i, NULL ), RV, return(EXIT_FAIL) );
     }
 
     long long k = (long) ntasks * (long) NITERS;
-    if( exp->x == k ) {
-      fprintf( stderr, "Succeded\n" );
-    } else {
-      fprintf( stderr, "FAILED %Ld: %Ld\n", exp->x, k );
-    }
+    CHECK( (exp->x!=k), RV, return(EXIT_FAIL) );
   } else {
     double z;
     for( i=0; i<NITERS; i++ ) {
@@ -86,6 +86,6 @@ int main( int argc, char **argv ) {
       pip_spin_unlock( &exp->lock );
     }
   }
-  TESTINT( pip_fin() );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return 0;
 }

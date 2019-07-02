@@ -45,9 +45,13 @@ int main( int argc, char **argv ) {
   int i;
   double t0, t1;
 
-  for( i=0; i<100; i++ ) pip_get_tls( &tls );
+  for( i=0; i<100; i++ ) {
+    CHECK( pip_save_tls( &tls ), RV, return(EXIT_FAIL) );
+  }
   t0 = -pip_gettime();
-  for( i=0; i<NITERS; i++ ) pip_get_tls( &tls );
+  for( i=0; i<NITERS; i++ ) {
+    CHECK( pip_load_tls( tls ), RV, return(EXIT_FAIL) );
+  }
   t0 += pip_gettime();
 
   for( i=0; i<100; i++ ) thread = pthread_self();
