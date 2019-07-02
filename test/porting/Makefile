@@ -49,5 +49,3 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-post-clean-hook:
-	$(RM) *.E *.log
