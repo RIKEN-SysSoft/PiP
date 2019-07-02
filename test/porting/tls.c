@@ -82,11 +82,11 @@ static void *thread_main( void *argp ) {
   for( i=0; i<nthreads; i++ ) {
     if( i == id ) {
       if( tls == thr ) {
-	printf( "[%d]\t%g\t%g\t%p\t0x%lx\t<<< same <<<\t%p\n",
-		(int) id, t0, t1, &tlsvar, tls, &i );
+	printf( "[%d]\t%g\t%g\t%p\t<<< same <<<\t%p\t%p\n",
+		(int) id, t0, t1, (void*) tls, &tlsvar, &i );
       } else {
-	printf( "[%d]\t%g\t%g\t%p\t0x%lx\t0x%lx\t%p\n",
-		(int) id, t0, t1, &tlsvar, tls, (intptr_t) thr, &i );
+	printf( "[%d]\t%g\t%g\t%p\t0x%lx\t%p\t%p\n",
+		(int) id, t0, t1, (void*) tls, (intptr_t) thr, &tlsvar, &i );
       }
       fflush( NULL );
     }
