@@ -452,13 +452,6 @@ static pip_task_internal_t *pip_schedq_next( pip_task_internal_t *taski ) {
   return nexti;
 }
 
-typedef struct pip_queue_info {
-  pip_task_queue_t	*queue;
-  pip_enqueue_callback_t callback;
-  void			*cbarg;
-  int 			flag_lock;
-} pip_queue_info_t;
-
 static void pip_sched_next( pip_task_internal_t *taski,
 			    pip_task_internal_t *nexti,
 			    pip_queue_info_t *qip ) {
@@ -557,9 +550,9 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   NEVER_REACH_HERE;
 }
 
-static void pip_do_suspend( pip_task_internal_t *taski,
-			    pip_task_internal_t *nexti,
-			    pip_queue_info_t	*qip ) {
+void pip_do_suspend_( pip_task_internal_t *taski,
+		      pip_task_internal_t *nexti,
+		      pip_queue_info_t	*qip ) {
   PIP_SUSPEND( taski );
   pip_sched_next( taski, nexti, qip );
 }
@@ -677,7 +670,7 @@ int pip_suspend_and_enqueue( pip_task_queue_t *queue,
   qi.callback  = callback;
   qi.cbarg     = cbarg;
   /* pip_scheq_next() protected current stack. and now we can enqueue myself */
-  pip_do_suspend( pip_task_, nexti, &qi );
+  pip_do_suspend_( pip_task_, nexti, &qi );
   RETURN( 0 );
 }
 
@@ -695,7 +688,7 @@ int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
   qi.callback  = callback;
   qi.cbarg     = cbarg;
   /* pip_scheq_next() protected current stack. and now we can enqueue myself */
-  pip_do_suspend( pip_task_, nexti, &qi );
+  pip_do_suspend_( pip_task_, nexti, &qi );
   RETURN( 0 );
 }
 

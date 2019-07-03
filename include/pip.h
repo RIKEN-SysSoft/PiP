@@ -195,6 +195,8 @@
 
 #define PIP_CPUCORE_ASIS 		(PIP_MAGIC_NUM-1)
 
+#define PIP_TASK_PASSIVE		(0x1000)
+
 typedef struct {
   char			*prog;
   char			**argv;
@@ -373,7 +375,6 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
   int pip_fin( void );
   /** @}*/
 
-
   /**
    * \brief spawn a PiP task (PiP API Version 2)
    *  @{
@@ -410,7 +411,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 		    int *pipidp,
 		    pip_spawn_hook_t *hookp );
   /** @}*/
-
 
   /**
    * \brief export an address of the calling PiP root or a PiP task to

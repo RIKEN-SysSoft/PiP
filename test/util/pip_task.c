@@ -5,6 +5,7 @@
  * $PIP_license$
  */
 
+#define DEBUG
 #include <test.h>
 
 int main( int argc, char **argv ) {
@@ -12,6 +13,8 @@ int main( int argc, char **argv ) {
   int i, err;
   char env_ntasks[128];
   char env_pipid[128];
+
+  set_sigsegv_watcher();
 
   if( argc < 3 ) return EXIT_UNTESTED;
   CHECK( access( argv[2], X_OK ),     RV, exit(EXIT_UNTESTED) );

@@ -115,13 +115,18 @@ typedef pip_task_t	pip_list_t;
 #define PIP_TASKQ_FOREACH_SAFE_XXX(L,E,TV)			\
   for( (E)=(L), (TV)=PIP_TASKQ_NEXT(E); (L)!=(E); (E)=(TV) )
 
+#define PIP_TASKQ_MOVE(D,S)		\
+  do{ (D)->next = (S)->next;			\
+    (D)->prev = (S)->prev;			\
+    PIP_LIST_INIT(S); } while(0)
+
 #define PIP_LIST_INIT(L)		PIP_TASKQ_INIT(L)
 #define PIP_LIST_ISEMPTY(L)		PIP_TASKQ_ISEMPTY(L)
 #define PIP_LIST_ADD(L,E)		PIP_TASKQ_ENQ_LAST(L,E)
 #define PIP_LIST_DEL(E)			PIP_TASKQ_DEQ(E)
-#define PIP_LIST_MOVE(P,Q)		PIP_TASKQ_MOVE_QUEUE(P,Q)
 #define PIP_LIST_FOREACH(L,E)		PIP_TASKQ_FOREACH(L,E)
 #define PIP_LIST_FOREACH_SAFE(L,E,F)	PIP_TASKQ_FOREACH_SAFE(L,E,F)
+#define PIP_LIST_MOVE(D,S)		PIP_TASKQ_MOVE(D,S)
 
 struct pip_task_queue_methods;
 
@@ -164,24 +169,17 @@ typedef struct pip_task_queue_methods {
     T		   	V;	    \
   } N;
 
-typedef struct pip_mutex_head {
+typedef struct pip_mutex {
   pip_atomic_t			lock;
   uint32_t			flags;
-} pip_mutex_head_t;
-
-typedef struct pip_mutex {
-  pip_mutex_head_t		head;
-  pip_task_queue_t		queue; /* this must be the last elm */
+  pip_task_queue_t		queue; /* this must be placed at the end */
 } pip_mutex_t;
 
-typedef struct pip_barrier_head {
+typedef struct pip_barrier {
   pip_atomic_t			count_init;
   pip_atomic_t			count;
-} pip_barrier_head_t;
-
-typedef struct pip_barrier {
-  pip_barrier_head_t		head;
-  pip_task_queue_t		queue; /* this must be the last elm */
+  int				turn;
+  pip_task_queue_t		queue[2]; /* this must be placed at the end */
 } pip_barrier_t;
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
@@ -229,6 +227,43 @@ extern "C" {
 #define pip_task_queue_init( Q, M )				\
   pip_task_queue_init_( (pip_task_queue_t*)(Q), (M) )
 #endif
+
+  /**
+   * \brief spawn a passive PiP task
+   *  @{
+   * \param[in] progp Program information to spawn as a PiP task
+   * \param[in] coreno Core number for the PiP task to be bound to. If
+   *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
+   *  take place.
+   * \param[in] opts option flags
+   * \param[in,out] bltp returns created BLT
+   * \param[in] hookp Hook information to be invoked before and after
+   *  the program invokation.
+   * \param[in] ist PiP task queue
+   *
+   * \note In theory, there is no reason to restrict for a PiP task to
+   * spawn another PiP task. However, the current implementation fails
+   * to do so. If the root process is multithreaded, only the main
+   * thread can call this function.
+   * \note In the process mode, the file descriptors set the
+   * close-on-exec flag will be closed on the created child task.
+   *
+   * \return zero is returned if this function succeeds. On error, an
+   * error number is returned.
+   * \retval EPERM PiP task tries to spawn child task
+   * \retval EBUSY Specified PiP ID is alredy occupied
+   *
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   *
+   */
+int pip_blt_spawn( pip_spawn_program_t *progp,
+		   int coreno,
+		   int pipid,
+		   uint32_t opts,
+		   pip_task_t **bltp,
+		   pip_spawn_hook_t *hookp,
+		   pip_task_t *list );
+  /** @}*/
 
   /**
    * \brief Count the length of task queue

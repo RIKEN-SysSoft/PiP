@@ -180,8 +180,8 @@ typedef struct {
   char			*funcname;
   void			*start_arg;
   char			**envv;
-  /* list of close-on-exec FDs */
-  int			*fd_list;
+  pip_task_t		list;
+  int			*fd_list; /* list of close-on-exec FDs */
 } pip_spawn_args_t;
 
 struct pip_gdbif_task;
@@ -274,6 +274,13 @@ typedef struct {
   pip_task_internal_t	tasks[];
 
 } pip_root_t;
+
+typedef struct pip_queue_info {
+  pip_task_queue_t	*queue;
+  pip_enqueue_callback_t callback;
+  void			*cbarg;
+  int 			flag_lock;
+} pip_queue_info_t;
 
 extern pip_clone_mostly_pthread_t 	pip_clone_mostly_pthread_ptr;
 

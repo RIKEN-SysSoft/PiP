@@ -97,8 +97,8 @@ int main( int argc, char **argv ) {
 	   RV,
 	   return(EXIT_FAIL) );
 
-    CHECK( pip_wait( -123, &status ),  RV!=EINVAL, return(EXIT_UNTESTED) );
-    CHECK( pip_wait( pipid, &status ), RV,         return(EXIT_UNTESTED) );
+    CHECK( pip_wait( -123, &status ),  RV!=EINVAL, return(EXIT_FAIL) );
+    CHECK( pip_wait( pipid, &status ), RV,         return(EXIT_FAIL) );
 
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
