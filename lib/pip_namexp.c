@@ -49,26 +49,26 @@ typedef uint64_t 		pip_hash_t;
 struct pip_named_exptab;
 
 typedef struct pip_namexp_wait {
-  pip_list_t			list;
+  pip_task_t			list;
   void				*address;
   int				err;
 } pip_namexp_wait_t;
 
 typedef struct pip_namexp_entry {
-  pip_list_t			list; /* hash collision list */
+  pip_task_t			list; /* hash collision list */
   struct pip_named_exptab	*namexp;
   pip_hash_t			hashval;
   char				*name;
   void				*address;
   int				flag_exported;
   int				flag_canceled;
-  pip_list_t			list_wait; /* waiting list */
+  pip_task_t			list_wait; /* waiting list */
   pip_task_queue_t		queue_owner;
   pip_task_queue_t		queue_others;
 } pip_namexp_entry_t;
 
 typedef struct pip_namexp_list {
-  pip_list_t			list;
+  pip_task_t			list;
   pip_spinlock_t		lock;
 } pip_namexp_list_t;
 
@@ -80,11 +80,11 @@ typedef struct pip_named_exptab {
 
 static void pip_add_namexp_entry( pip_namexp_list_t *head,
 				  pip_namexp_entry_t *entry ) {
-  PIP_LIST_ADD( (pip_list_t*) &head->list, (pip_list_t*) entry );
+  PIP_LIST_ADD( (pip_task_t*) &head->list, (pip_task_t*) entry );
 }
 
 static void pip_del_namexp_entry( pip_namexp_entry_t *entry ) {
-  PIP_LIST_DEL( (pip_list_t*) entry );
+  PIP_LIST_DEL( (pip_task_t*) entry );
 }
 
 int pip_named_export_init_( pip_task_internal_t *taski ) {
@@ -146,10 +146,10 @@ pip_name_hash( char **namep, const char *format, va_list ap ) {
 
 static pip_namexp_entry_t*
 pip_find_namexp( pip_namexp_list_t *head, pip_hash_t hash, char *name ) {
-  pip_list_t		*entry;
+  pip_task_t		*entry;
   pip_namexp_entry_t	*name_entry;
 
-  PIP_LIST_FOREACH( (pip_list_t*) &head->list, entry ) {
+  PIP_LIST_FOREACH( (pip_task_t*) &head->list, entry ) {
     name_entry = (pip_namexp_entry_t*) entry;
     DBGF( "entry:%p  hash:0x%lx/0x%lx  name:%s/%s",
 	  name_entry, name_entry->hashval, hash, name_entry->name, name );
@@ -264,7 +264,7 @@ static int pip_named_import_( int pipid,
   pip_namexp_list_t  	*head;
   pip_namexp_wait_t	wait;
   pip_namexp_wait_t	*waitp;
-  pip_list_t		*list, *next;
+  pip_task_t		*list, *next;
   pip_hash_t 		hash;
   void			*address = NULL;
   char 			*name = NULL;
@@ -290,7 +290,7 @@ static int pip_named_import_( int pipid,
 	if( flag_nblk ) {
 	  err = EAGAIN;
 	} else {
-	  PIP_LIST_ADD( &entry->list_wait, (pip_list_t*) &wait );
+	  PIP_LIST_ADD( &entry->list_wait, (pip_task_t*) &wait );
 	  pip_suspend_and_enqueue_nolock( &entry->queue_others,
 					  pip_unlock_hashtab,
 					  (void*) head );
@@ -361,7 +361,7 @@ int pip_named_tryimport( int pipid, void **expp, const char *format, ... ) {
 
 void pip_named_export_fin_( pip_task_internal_t *taski ) {
   pip_named_exptab_t	*namexp;
-  pip_list_t		*list, *next;
+  pip_task_t		*list, *next;
   int 			i, err;
 
   ENTER;
@@ -372,7 +372,7 @@ void pip_named_export_fin_( pip_task_internal_t *taski ) {
       pip_namexp_list_t	*htab = namexp->hash_table;
       pip_namexp_list_t	*head = &(htab[i]);
       pip_spin_lock( &head->lock );
-      PIP_LIST_FOREACH_SAFE( (pip_list_t*) &head->list, list, next ) {
+      PIP_LIST_FOREACH_SAFE( (pip_task_t*) &head->list, list, next ) {
 	pip_namexp_entry_t *entry = (pip_namexp_entry_t*) list;
 	pip_del_namexp_entry( entry );
 	if( entry->flag_exported ) {

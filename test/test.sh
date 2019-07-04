@@ -22,6 +22,13 @@ if [[ x$INCLUDE_FILE != x ]]; then
     esac
 fi
 
+function delete_sumfile() {
+    rm -f $sum_file > /dev/null 2>&1;
+    exit 2;
+}
+
+trap delete_sumfile 2;
+
 . $dir/exit_code.sh.inc
 
 dir_real=`realpath $dir`

@@ -58,6 +58,7 @@ int main( int argc, char **argv ) {
   CHECK( pip_is_initialized(), 	!RV, 	return(EXIT_FAIL) );
   CHECK( pip_get_mode( &mode ),	RV,	return(EXIT_FAIL) );
   CHECK( pip_get_ntasks( &nt ),	RV,	return(EXIT_FAIL) );
+  CHECK( nt!=ntasks, 		RV,	return(EXIT_FAIL) );
 
   CHECK( ( ( mode_str = pip_get_mode_str() ) != NULL ),
 	 !RV,

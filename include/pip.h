@@ -577,11 +577,23 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  will be set to the maximum number of the PiP tasks.
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINVAL \c ntasksp is \c NULL
    * \retval EPERM PiP library is not yet initialized
    *
    */
   int pip_get_ntasks( int *ntasksp );
+  /** @}*/
+
+  /**
+   * \brief get the number of the PiP tasks currently created
+   *  @{
+   * \param[out] ntasksp This parameter points to the variable which
+   *  will be set to the maximum number of the PiP tasks.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized
+   *
+   */
+  int pip_get_curr_ntasks( int *ntasksp );
   /** @}*/
 
   /**
@@ -611,7 +623,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  will be set to the PiP execution mode
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINVAL \c modep is \c NULL
    * \retval EPERM PiP library is not yet initialized
    *
    */

@@ -477,6 +477,7 @@ static void pip_sched_next( pip_task_internal_t *taski,
 
   ENTER;
 
+  PIP_SUSPEND( taski );
 #ifdef PIP_USE_STATIC_CTX
   ctxp = taski->ctx_static;
 #else
@@ -548,13 +549,6 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
     pip_force_exit( schedi );
   }
   NEVER_REACH_HERE;
-}
-
-void pip_do_suspend_( pip_task_internal_t *taski,
-		      pip_task_internal_t *nexti,
-		      pip_queue_info_t	*qip ) {
-  PIP_SUSPEND( taski );
-  pip_sched_next( taski, nexti, qip );
 }
 
 static int pip_do_resume( pip_task_internal_t *taski,
@@ -656,40 +650,36 @@ int pip_enqueue_runnable_N( pip_task_queue_t *queue, int *np ) {
   return 0;
 }
 
-int pip_suspend_and_enqueue( pip_task_queue_t *queue,
-			     pip_enqueue_callback_t callback,
-			     void *cbarg ) {
+int pip_suspend_and_enqueue_( pip_task_internal_t *taski,
+			      pip_task_queue_t *queue,
+			      int flag_lock,
+			      pip_enqueue_callback_t callback,
+			      void *cbarg ) {
   pip_task_internal_t	*nexti;
   pip_queue_info_t	qi;
 
   ENTER;
-  ASSERT( pip_task_->task_sched == NULL );
-  nexti = pip_schedq_next( pip_task_ );
+  ASSERT( taski->task_sched == NULL );
+  nexti = pip_schedq_next( taski );
   qi.queue     = queue;
-  qi.flag_lock = 1;
+  qi.flag_lock = flag_lock;
   qi.callback  = callback;
   qi.cbarg     = cbarg;
   /* pip_scheq_next() protected current stack. and now we can enqueue myself */
-  pip_do_suspend_( pip_task_, nexti, &qi );
+  pip_sched_next( taski, nexti, &qi );
   RETURN( 0 );
+}
+
+int pip_suspend_and_enqueue( pip_task_queue_t *queue,
+			     pip_enqueue_callback_t callback,
+			     void *cbarg ) {
+  RETURN( pip_suspend_and_enqueue_( pip_task_, queue, 1, callback, cbarg ) );
 }
 
 int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
 				    pip_enqueue_callback_t callback,
 				    void *cbarg ) {
-  pip_task_internal_t	*nexti;
-  pip_queue_info_t	qi;
-
-  ENTER;
-  ASSERT( pip_task_->task_sched == NULL );
-  nexti = pip_schedq_next( pip_task_ );
-  qi.queue     = queue;
-  qi.flag_lock = 0;
-  qi.callback  = callback;
-  qi.cbarg     = cbarg;
-  /* pip_scheq_next() protected current stack. and now we can enqueue myself */
-  pip_do_suspend_( pip_task_, nexti, &qi );
-  RETURN( 0 );
+  RETURN( pip_suspend_and_enqueue_( pip_task_, queue, 0, callback, cbarg ) );
 }
 
 int pip_resume( pip_task_t *task, pip_task_t *sched ) {

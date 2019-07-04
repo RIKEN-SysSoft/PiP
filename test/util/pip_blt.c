@@ -7,18 +7,20 @@
 
 #include <test.h>
 
-static pip_task_t	*queue;
+static pip_task_list_t	lists[NTASKS];
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
-  int 	nacts, npass, ntasks, pipid, status, extval;
+  int 	nacts, npass, ntasks, pipid;
   char 	env_ntasks[128];
   char 	env_pipid[128];
-  int 	i, j, err;
+  int 	i, j;
+
+  set_sigsegv_watcher();
 
   if( argc < 4 ) return EXIT_UNTESTED;
-  CHECK( access( argv[2], X_OK ),     RV, exit(EXIT_UNTESTED) );
-  CHECK( pip_check_pie( argv[2], 1 ), RV, exit(EXIT_UNTESTED) );
+  CHECK( access( argv[3], X_OK ),     RV, exit(EXIT_UNTESTED) );
+  CHECK( pip_check_pie( argv[3], 1 ), RV, exit(EXIT_UNTESTED) );
 
   nacts = strtol( argv[1], NULL, 10 );
   CHECK( nacts,  RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
@@ -27,9 +29,7 @@ int main( int argc, char **argv ) {
   ntasks = nacts + npass;
   CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
 
-  queue = (pip_task_t*) malloc( sizeof(pip_task_t) * nacts );
-  CHECK( (queue==NULL), RV, return(EXIT_UNTESTED) );
-  for( i=0; i<nacts; i++ ) PIP_LIST_INIT( &queue[i] );
+  for( i=0; i<nacts; i++ ) PIP_LIST_INIT( &lists[i] );
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
@@ -37,40 +37,36 @@ int main( int argc, char **argv ) {
   putenv( env_ntasks );
   pip_spawn_from_main( &prog, argv[3], &argv[3], NULL );
 
-  for( i=0, j=0; i<npass; i++ ) {
+  for( i=0, j=0; i<npass; i++, j++ ) {
     pipid = i;
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
-    CHECK( pip_blt_spawn( &prog, 0, pipid, PIP_TASK_PASSIVE,
-			  NULL, NULL, &queue[j] ),
+    j = ( j >= nacts ) ? 0 : j;
+    CHECK( pip_blt_spawn( &prog, pipid, 0, PIP_TASK_PASSIVE,
+			  NULL, &lists[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );
-    j = ( ++j >= nacts ) ? 0 : nacts;
   }
-  for( i=npass; i<ntasks; i++ ) {
+  for( i=npass, j=0; i<ntasks; i++, j++ ) {
     pipid = i;
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
-    CHECK( pip_blt_spawn( &prog, PIP_CPUCORE_ASIS, pipid, 0,
-			  NULL, NULL, &queue[i] ),
+    CHECK( pip_blt_spawn( &prog, pipid, PIP_CPUCORE_ASIS, 0,
+			  NULL, &lists[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );
+    CHECK( PIP_LIST_ISEMPTY(&lists[j]), !RV, return(EXIT_FAIL) );
   }
-  extval = 0;
-  err = 0;
   for( i=0; i<ntasks; i++ ) {
-    status = 0;
+    int extval, status = 0;
     CHECK( pip_wait( i, &status ), RV, return(EXIT_UNTESTED) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
-      CHECK( extval, RV!=0, RV=0 /*nop*/ );
+      CHECK( extval, RV!=0, return(EXIT_FAIL) );
     } else {
       CHECK( "test program signaled", 1, return(EXIT_UNRESOLVED) );
     }
-    if( err == 0 && extval != 0 ) err = extval;
   }
-
   CHECK( pip_fin(), RV, return(EXIT_UNTESTED) );
-
-  return extval;
+  return 0;
 }

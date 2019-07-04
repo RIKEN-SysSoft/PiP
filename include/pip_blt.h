@@ -66,7 +66,7 @@ typedef struct pip_queue {
   struct pip_queue	*prev;
 } pip_task_t;
 
-typedef pip_task_t	pip_list_t;
+typedef pip_task_t	pip_task_list_t;
 
 #define PIP_TASKQ_NEXT(L)	((L)->next)
 #define PIP_TASKQ_PREV(L)	((L)->prev)
@@ -74,7 +74,7 @@ typedef pip_task_t	pip_list_t;
 #define PIP_TASKQ_NEXT_PREV(L)	((L)->next->prev)
 
 #define PIP_TASKQ_INIT(L)					\
-  do { PIP_TASKQ_NEXT(L) = (L); PIP_TASKQ_PREV(L) = (L); } while(0)
+  do { PIP_TASKQ_NEXT(L) = PIP_TASKQ_PREV(L) = (L); } while(0)
 
 #define PIP_TASKQ_ENQ_FIRST(L,E)				\
   do { PIP_TASKQ_NEXT(E)      = PIP_TASKQ_NEXT(L);		\
@@ -112,13 +112,13 @@ typedef pip_task_t	pip_list_t;
        (L)!=(E);						\
        (E)=(TV), (TV)=PIP_TASKQ_NEXT(TV) )
 
-#define PIP_TASKQ_FOREACH_SAFE_XXX(L,E,TV)			\
-  for( (E)=(L), (TV)=PIP_TASKQ_NEXT(E); (L)!=(E); (E)=(TV) )
-
 #define PIP_TASKQ_MOVE(D,S)		\
-  do{ (D)->next = (S)->next;			\
-    (D)->prev = (S)->prev;			\
-    PIP_LIST_INIT(S); } while(0)
+  do { if( PIP_TASKQ_ISEMPTY(S) ) {		\
+      PIP_TASKQ_INIT(D);			\
+    } else {					\
+      (D)->next = (S)->next;			\
+      (D)->prev = (S)->prev;			\
+      PIP_TASKQ_INIT(S); } } while(0)
 
 #define PIP_LIST_INIT(L)		PIP_TASKQ_INIT(L)
 #define PIP_LIST_ISEMPTY(L)		PIP_TASKQ_ISEMPTY(L)
@@ -232,6 +232,7 @@ extern "C" {
    * \brief spawn a passive PiP task
    *  @{
    * \param[in] progp Program information to spawn as a PiP task
+   * \param[in] pipid PiP ID
    * \param[in] coreno Core number for the PiP task to be bound to. If
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
@@ -257,12 +258,12 @@ extern "C" {
    *
    */
 int pip_blt_spawn( pip_spawn_program_t *progp,
-		   int coreno,
 		   int pipid,
+		   int coreno,
 		   uint32_t opts,
 		   pip_task_t **bltp,
-		   pip_spawn_hook_t *hookp,
-		   pip_task_t *list );
+		   pip_task_t *list,
+		   pip_spawn_hook_t *hookp );
   /** @}*/
 
   /**

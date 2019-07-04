@@ -500,9 +500,18 @@ int pip_get_pipid( int *pipidp ) {
 }
 
 int pip_get_ntasks( int *ntasksp ) {
-  if( pip_root_ == NULL ) return( EPERM  ); /* intentionally using small return */
-  if( ntasksp   == NULL ) RETURN( EINVAL );
-  *ntasksp = pip_root_->ntasks_curr;
+  if( pip_root_ == NULL ) return( EPERM  ); /* intentionally small return */
+  if( ntasksp != NULL ) {
+    *ntasksp = pip_root_->ntasks;
+  }
+  RETURN( 0 );
+}
+
+int pip_get_curr_ntasks( int *ntasksp ) {
+  if( pip_root_ == NULL ) return( EPERM  ); /* intentionally small return */
+  if( ntasksp != NULL ) {
+    *ntasksp = pip_root_->ntasks_curr;
+  }
   RETURN( 0 );
 }
 

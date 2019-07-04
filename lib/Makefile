@@ -66,7 +66,7 @@ $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
 
 debug:
-	CPPFLAGS="-DDEBUG" make all;
+	CPPFLAGS+="-DDEBUG" make all;
 
 TAGS:
 	ctags -Re

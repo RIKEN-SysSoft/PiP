@@ -180,8 +180,8 @@ typedef struct {
   char			*funcname;
   void			*start_arg;
   char			**envv;
-  pip_task_t		list;
   int			*fd_list; /* list of close-on-exec FDs */
+  pip_task_queue_t	*queue;
 } pip_spawn_args_t;
 
 struct pip_gdbif_task;

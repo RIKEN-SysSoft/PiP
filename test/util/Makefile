@@ -56,4 +56,7 @@ dlmopen_count: dlmopen_count.c
 ompnumthread: ompnumthread.c
 	$(CC) -fopenmp -openmp -O2 $< -o$@
 
+debug:
+	CPPFLAGS+="-DDEBUG" make all;
+
 include $(top_srcdir)/build/rule.mk

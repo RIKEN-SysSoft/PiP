@@ -388,18 +388,26 @@ static int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
       CPU_SET( coreno, &cpuset );
 
       if( pip_is_threaded_() ) {
-	err = pthread_getaffinity_np( pthread_self(),
-				      sizeof(cpu_set_t),
-				      oldsetp );
+	if( oldsetp != NULL ) {
+	  err = pthread_getaffinity_np( pthread_self(),
+					sizeof(cpu_set_t),
+					oldsetp );
+	}
 	if( err == 0 ) {
 	  err = pthread_setaffinity_np( pthread_self(),
 					sizeof(cpu_set_t),
 					&cpuset );
 	}
       } else {
-	if( sched_getaffinity( 0, sizeof(cpuset), oldsetp ) != 0 ||
-	    sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) {
-	  err = errno;
+	if( oldsetp != NULL ) {
+	  if( sched_getaffinity( 0, sizeof(cpuset), oldsetp ) != 0 ) {
+	    err = errno;
+	  }
+	}
+	if( err == 0 ) {
+	  if( sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) {
+	    err = errno;
+	  }
 	}
       }
     }
@@ -423,23 +431,6 @@ static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
     }
   }
   RETURN( err );
-}
-
-static int pip_corebind( int coreno ) {
-  cpu_set_t cpuset;
-
-  ENTER;
-  if( coreno != PIP_CPUCORE_ASIS &&
-      coreno >= 0                &&
-      coreno <  sizeof(cpuset) * 8 ) {
-    DBG;
-    CPU_ZERO( &cpuset );
-    CPU_SET( coreno, &cpuset );
-    if( sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) RETURN( errno );
-  } else {
-    DBGF( "coreno=%d", coreno );
-  }
-  RETURN( 0 );
 }
 
 int pip_get_dso( int pipid, void **loaded ) {
@@ -538,6 +529,7 @@ static int pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
 	(void) close( args->fd_list[i] );
       }
     }
+    pip_gdbif_hook_before_( self );
     if( self->annex->symbols.start == NULL ) {
       /* calling hook function, if any */
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
@@ -555,6 +547,7 @@ static int pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
 	    args->pipid, args->funcname,
 	    self->annex->symbols.start, start_arg, extval );
     }
+    pip_gdbif_hook_after_( self );
     /* the after hook is supposed to free the hook_arg being malloc()ed   */
     /*  by root and this is the reason to call this from the root process */
     DBG;
@@ -576,7 +569,7 @@ static void* pip_do_spawn( void *thargs )  {
   int	 		pipid  = args->pipid;
   int 			coreno = args->coreno;
   pip_task_internal_t 	*self  = &pip_root_->tasks[pipid];
-  pip_task_t		*list  = &args->list;
+  pip_task_queue_t	*queue = args->queue;
   int			extval = 0;
   int			err    = 0;
 
@@ -601,33 +594,19 @@ static void* pip_do_spawn( void *thargs )  {
   }
   /* calling PIP-GDB hook function */
   if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
-    void pip_do_suspend_( pip_task_internal_t *taski,
-			  pip_task_internal_t *nexti,
-			  pip_queue_info_t    *qip );
+    int pip_suspend_and_enqueue_( pip_task_internal_t*, pip_task_queue_t*,
+				  int, pip_enqueue_callback_t, void* );
     /* suspend myself */
-    PIP_TASKQ_ENQ_LAST( list, (pip_task_t*) self );
-    pip_do_suspend_( self, NULL, NULL );
+    err = pip_suspend_and_enqueue_( self, queue, 1, NULL, NULL );
     /* resumed */
-    extval = pip_jump_into( args, self );
+
   } else {			/* spawn passive task */
-    pip_task_t *tsk, *nxt;
-    int len = 0;
-
-    if( ( err = pip_corebind( coreno ) ) != 0 ) {
-      pip_warn_mesg( "failed to bund CPU core (%d)", err );
+    if( ( err = pip_do_corebind( coreno, NULL ) ) != 0 ) {
+      pip_warn_mesg( "failed to bound CPU core:%d (%d)", coreno, err );
     }
-    PIP_TASKQ_FOREACH_SAFE( list, tsk, nxt ) {
-      PIP_TASKQ_DEQ( tsk );
-      PIP_TASKQ_ENQ_LAST( &self->annex->oodq, tsk );
-      len ++;
-    }
-    self->oodq_len = len;
-
-    pip_gdbif_hook_before_( self );
-    extval = pip_jump_into( args, self );
-    /* calling PIP-GDB hook function */
-    pip_gdbif_hook_after_( self );
   }
+  extval = pip_jump_into( args, self );
+
   /* the main() or entry function returns here and terminate myself */
   pip_do_exit( self, extval );
   NEVER_REACH_HERE;
@@ -684,12 +663,13 @@ static int pip_find_a_free_task( int *pipidp ) {
 }
 
 static int pip_do_task_spawn( pip_spawn_program_t *progp,
+			      int pipid,
 			      int coreno,
 			      uint32_t opts,
-			      int pipid,
 			      pip_task_t **bltp,
-			      pip_spawn_hook_t *hookp,
-			      pip_task_t *list ) {
+			      pip_task_t *list,
+			      pip_task_queue_t *queue,
+			      pip_spawn_hook_t *hookp ) {
   extern uint32_t pip_check_sync_flag_( uint32_t );
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
@@ -732,6 +712,19 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     task->annex->hook_after  = hookp->after;
     task->annex->hook_arg    = hookp->hookarg;
   }
+  PIP_RUN( task );
+  if( ( opts & PIP_TASK_PASSIVE ) == 0 ) { /* active task */
+    if( list != NULL ) {
+      pip_task_t *tsk, *nxt;
+
+      PIP_TASKQ_FOREACH_SAFE( list, tsk, nxt ) {
+	int pip_resume( pip_task_t*, pip_task_t* );
+	DBGF( "tsk:%p", tsk );
+	PIP_TASKQ_DEQ( tsk );
+	if( ( err = pip_resume( tsk, PIP_TASKQ(task) ) ) != 0 ) ERRJ;
+      }
+    }
+  }
   /* allocate stack for sleeping */
   stack_size = pip_stack_size();
   pip_page_alloc_( pip_root_->stack_size_sleep, &task->annex->sleep_stack );
@@ -739,14 +732,10 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
   if( progp->envv == NULL ) progp->envv = environ;
   args = &task->annex->args;
-  args->start_arg  = progp->arg;
-  args->pipid      = pipid;
-  args->coreno     = coreno;
-  if( list == NULL ) {
-    PIP_TASKQ_INIT( &args->list );
-  } else {
-    PIP_TASKQ_MOVE( &args->list, list );
-  }
+  args->start_arg = progp->arg;
+  args->pipid     = pipid;
+  args->coreno    = coreno;
+  args->queue     = queue;
   {
     char *p;
     if( ( p = strrchr( progp->prog, '/' ) ) == NULL) {
@@ -864,7 +853,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   error:			/* undo */
     DBG;
     if( args != NULL ) {
-      if( list != NULL ) PIP_TASKQ_MOVE( list, &args->list ); /* undo copy */
       PIP_FREE( args->prog );
       PIP_FREE( args->prog_full );
       PIP_FREE( args->argv );
@@ -900,7 +888,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   } else {
     pipid = *pipidp;
   }
-  err = pip_do_task_spawn( progp, coreno, opts, pipid, &task, hookp, NULL );
+  err = pip_do_task_spawn( progp, pipid, coreno, opts,
+			   &task, NULL, NULL, hookp );
   if( !err ) {
     if( pipidp != NULL ) {
       pip_task_internal_t *taski = PIP_TASKI(task);
@@ -911,20 +900,64 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 }
 
 int pip_blt_spawn( pip_spawn_program_t *progp,
-		   int coreno,
 		   int pipid,
+		   int coreno,
 		   uint32_t opts,
 		   pip_task_t **bltp,
-		   pip_spawn_hook_t *hookp,
-		   pip_task_t *list ) {
-  pip_task_t *blt;
-  int err;
+		   pip_task_t *list,
+		   pip_spawn_hook_t *hookp ) {
+  pip_task_t 	*blt;
+  int 		err;
 
-  if( opts | PIP_TASK_PASSIVE && list == NULL ) RETURN( EINVAL );
-  err = pip_do_task_spawn( progp, coreno, opts, pipid, &blt, hookp, list );
-  if( !err ) {
-    if( bltp != NULL ) *bltp = blt;
+  ENTER;
+  if( opts & PIP_TASK_PASSIVE ) {
+    pip_task_queue_t queue;
+
+    if( ( err = pip_task_queue_init( &queue, NULL ) ) != 0 ) RETURN( err );
+
+    err = pip_do_task_spawn( progp, pipid, coreno, opts,
+			     &blt, NULL, &queue, hookp );
+    DBG;
+    if( err == 0 && list != NULL ) {
+      pip_task_t *tsk = NULL;
+
+    DBG;
+      do {
+	sched_yield();
+	pip_task_queue_lock( &queue );
+	if( !pip_task_queue_isempty( &queue ) ) {
+	  tsk = PIP_TASKQ_NEXT( &queue.queue );
+	  PIP_TASKQ_DEQ( tsk );
+	}
+	pip_task_queue_unlock( &queue );
+      } while( tsk == NULL );
+      DBGF( "PassiveTask-PIPID: %d", ((pip_task_internal_t*)tsk)->pipid );
+      PIP_TASKQ_ENQ_LAST( list, tsk );
+    {
+      pip_task_t *t;
+      PIP_TASKQ_FOREACH( list, t ) {
+	DBGF( "PassiveTask-PIPID: %d", ((pip_task_internal_t*)t)->pipid );
+      }
+    }
+    }
+    (void) pip_task_queue_fin( &queue );
+    DBG;
+
+  } else {
+    DBG;
+    {
+      pip_task_t *tsk;
+      PIP_TASKQ_FOREACH( list, tsk ) {
+	DBGF( "PassiveTask-PIPID: %d", ((pip_task_internal_t*)tsk)->pipid );
+      }
+    }
+    err = pip_do_task_spawn( progp, pipid, coreno, opts,
+			     &blt, list, NULL, hookp );
+    DBG;
   }
+  if( !err && bltp != NULL ) *bltp = blt;
+  DBG;
+
   RETURN( err );
 }
 

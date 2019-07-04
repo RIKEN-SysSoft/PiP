@@ -35,11 +35,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include ./Test.common
 
-PIPCPPFLAGS = -I. -I../include
-PIPCFLAGS  = $(CFLAGS) $(PICCFLAG)
-
-SRCS = main.c libnull.c
-OBJS = main.o libnull.so
+SRCS = libnull.c
+OBJS = libnull.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -52,3 +49,7 @@ all : $(OBJS)
 
 clean:
 	rm -f $(OBJS)
+
+.PHONY: test
+test:
+	make -C .. test
