@@ -238,7 +238,7 @@ int pip_named_export( void *exp, const char *format, ... ) {
 	/* another PiP task and this PiP task must free it in this case */
 	pip_add_namexp_entry( head, new );
 	/* resume suspended PiP tasks on this entry */
-	err = pip_dequeue_and_resume_nolock( &entry->queue_owner, NULL );
+	err = pip_dequeue_and_resume_nolock_( &entry->queue_owner, NULL );
       }
     }
   }
@@ -291,9 +291,9 @@ static int pip_named_import_( int pipid,
 	  err = EAGAIN;
 	} else {
 	  PIP_LIST_ADD( &entry->list_wait, (pip_task_t*) &wait );
-	  pip_suspend_and_enqueue_nolock( &entry->queue_others,
-					  pip_unlock_hashtab,
-					  (void*) head );
+	  pip_suspend_and_enqueue_nolock_( &entry->queue_others,
+					   pip_unlock_hashtab,
+					   (void*) head );
 	  /* now, it is exported */
 	  /* note that the lock is unlocked !! */
 	  err     = wait.err;
@@ -310,9 +310,9 @@ static int pip_named_import_( int pipid,
 	pip_add_namexp_entry( head, entry );
 	/* add query entry and suspend until it is exported */
 	/* when the query is enqueued, lock in unlocked */
-	pip_suspend_and_enqueue_nolock( &entry->queue_owner,
-					(void*) pip_unlock_hashtab,
-					(void*) head );
+	pip_suspend_and_enqueue_nolock_( &entry->queue_owner,
+					 (void*) pip_unlock_hashtab,
+					 (void*) head );
 	/* now, it is exported */
 	/* note that the lock is unlocked !! */
 	if( entry->flag_canceled ) {
@@ -326,7 +326,7 @@ static int pip_named_import_( int pipid,
 	  waitp->address = address;
 	}
 	n = PIP_TASK_ALL;
-	err = pip_dequeue_and_resume_N_nolock( &entry->queue_others, NULL, &n);
+	err = pip_dequeue_and_resume_N_nolock_(&entry->queue_others,NULL,&n);
 
 	PIP_FREE( entry->name );
 	PIP_FREE( entry );
@@ -381,7 +381,7 @@ void pip_named_export_fin_( pip_task_internal_t *taski ) {
 	} else {
 	  /* this is a query entry, it must be free()ed by the query task */
 	  entry->flag_canceled = 1;
-	  err = pip_dequeue_and_resume_nolock( &entry->queue_owner, NULL );
+	  err = pip_dequeue_and_resume_nolock_( &entry->queue_owner, NULL );
 	  ASSERT( err );
 	}
       }

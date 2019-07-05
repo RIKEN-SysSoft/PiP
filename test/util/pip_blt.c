@@ -7,7 +7,7 @@
 
 #include <test.h>
 
-static pip_task_list_t	lists[NTASKS];
+static pip_task_queue_t	queues[NTASKS];
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
@@ -29,7 +29,7 @@ int main( int argc, char **argv ) {
   ntasks = nacts + npass;
   CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
 
-  for( i=0; i<nacts; i++ ) PIP_LIST_INIT( &lists[i] );
+  for( i=0; i<nacts; i++ ) pip_task_queue_init( &queues[i], NULL );
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
@@ -42,8 +42,8 @@ int main( int argc, char **argv ) {
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
     j = ( j >= nacts ) ? 0 : j;
-    CHECK( pip_blt_spawn( &prog, pipid, 0, PIP_TASK_PASSIVE,
-			  NULL, &lists[j], NULL ),
+    CHECK( pip_blt_spawn( &prog, 0, PIP_TASK_PASSIVE, &pipid,
+			  NULL, &queues[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );
   }
@@ -51,11 +51,11 @@ int main( int argc, char **argv ) {
     pipid = i;
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
-    CHECK( pip_blt_spawn( &prog, pipid, PIP_CPUCORE_ASIS, 0,
-			  NULL, &lists[j], NULL ),
+    CHECK( pip_blt_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid,
+			  NULL, &queues[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );
-    CHECK( PIP_LIST_ISEMPTY(&lists[j]), !RV, return(EXIT_FAIL) );
+    CHECK( pip_task_queue_isempty( &queues[j]), !RV, return(EXIT_FAIL) );
   }
   for( i=0; i<ntasks; i++ ) {
     int extval, status = 0;

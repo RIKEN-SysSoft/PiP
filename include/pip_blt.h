@@ -36,6 +36,10 @@
 #ifndef _pip_blt_h_
 #define _pip_blt_h_
 
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#define DOXYGEN_INPROGRESS
+#endif
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <pip.h>
@@ -163,12 +167,6 @@ typedef struct pip_task_queue_methods {
   pip_task_queue_fin_t		finalize;
 } pip_task_queue_methods_t;
 
-#define PIP_QUEUE_TYPEDEF(T,V,N)    \
-  typedef struct N {		    \
-    pip_task_queue_t	task_queue; \
-    T		   	V;	    \
-  } N;
-
 typedef struct pip_mutex {
   pip_atomic_t			lock;
   uint32_t			flags;
@@ -181,6 +179,24 @@ typedef struct pip_barrier {
   int				turn;
   pip_task_queue_t		queue[2]; /* this must be placed at the end */
 } pip_barrier_t;
+
+#define PIP_QUEUE_TYPEDEF(N,B)	    \
+  typedef struct N {		    \
+    pip_task_queue_t	pip_queue; \
+    B;				   \
+  } N;
+
+#define PIP_MUTEX_TYPEDEF(N,B)	    \
+  typedef struct N {		    \
+    pip_mutex_t		pip_mutex; \
+    B;				   \
+  } N;
+
+#define PIP_BARTIER_TYPEDEF(N,B)    \
+  typedef struct N {		    \
+    pip_barrier_t	pip_barrier; \
+    B;				     \
+  } N;
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
@@ -206,7 +222,7 @@ extern "C" {
    *
    * \return This function returns no error
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_init( pip_task_queue_t *queue,
 			   pip_task_queue_methods_t *methods );
   /** @}*/
@@ -232,15 +248,18 @@ extern "C" {
    * \brief spawn a passive PiP task
    *  @{
    * \param[in] progp Program information to spawn as a PiP task
-   * \param[in] pipid PiP ID
    * \param[in] coreno Core number for the PiP task to be bound to. If
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
    * \param[in] opts option flags
+   * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
+   *  \c PIP_PIPID_ANY is specified, then the PiP ID of the spawned PiP
+   *  task is up to the PiP library and the assigned PiP ID will be
+   *  returned.
    * \param[in,out] bltp returns created BLT
+   * \param[in] queue PiP task queue where the created BLT will be added
    * \param[in] hookp Hook information to be invoked before and after
    *  the program invokation.
-   * \param[in] ist PiP task queue
    *
    * \note In theory, there is no reason to restrict for a PiP task to
    * spawn another PiP task. However, the current implementation fails
@@ -257,14 +276,27 @@ extern "C" {
    * \sa pip_task_spawn(3), pip_spawn_from_main(3)
    *
    */
+#ifdef DOXYGEN_INPROGRESS
 int pip_blt_spawn( pip_spawn_program_t *progp,
-		   int pipid,
 		   int coreno,
 		   uint32_t opts,
+		   int *pipid,
 		   pip_task_t **bltp,
-		   pip_task_t *list,
+		   pip_task_queue_t *queue,
 		   pip_spawn_hook_t *hookp );
   /** @}*/
+#else
+int pip_blt_spawn_( pip_spawn_program_t *progp,
+		    int coreno,
+		    uint32_t opts,
+		    int *pipid,
+		    pip_task_t **bltp,
+		    pip_task_queue_t *queue,
+		    pip_spawn_hook_t *hookp );
+#define pip_blt_spawn( progp, coreno, opts, pipid, bltp, queue, hookp ) \
+  pip_blt_spawn_( (progp), (coreno), (opts), (pipid), (bltp),		\
+		  (pip_task_queue_t*) (queue), (hookp) )
+#endif
 
   /**
    * \brief Count the length of task queue
@@ -275,7 +307,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EINVAL \c np is \c NULL
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_count( pip_task_queue_t *queue, int *np );
   /** @}*/
 #else
@@ -301,7 +333,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
    *
    * \return This function returns no error
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_lock( pip_task_queue_t *queue );
   /** @}*/
 #else
@@ -323,7 +355,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
    *
    * \return Returns true if lock succeeds.
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_trylock( pip_task_queue_t *queue );
   /** @}*/
 #else
@@ -345,7 +377,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
    *
    * \return This function returns no error
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_unlock( pip_task_queue_t *queue );
   /** @}*/
 #else
@@ -368,7 +400,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
    *
    * \return Returns true if there is no tasks to schedule.
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_isempty( pip_task_queue_t *queue );
   /** @}*/
 #else
@@ -390,7 +422,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
    *
    * \return Returns true if lock succeeds.
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_enqueue( pip_task_queue_t *queue, pip_task_t *task );
   /** @}*/
 #else
@@ -415,7 +447,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
    * \return Dequeue a task in the specified task queue and return
    * it. If the task queue is empty then \b NULL is returned.
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   pip_task_t* pip_task_queue_dequeue( pip_task_queue_t *queue );
   /** @}*/
 #else
@@ -447,7 +479,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * \return This function returns no error
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_describe( pip_task_queue_t *queue, FILE *fp );
   /** @}*/
 #else
@@ -487,7 +519,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * \return If succeedss, 0 is returned. Otherwise an error code is
    * returned.
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_fin( pip_task_queue_t *queue );
   /** @}*/
 #else
@@ -549,10 +581,18 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * \sa pip_enqueu_and_suspend_nolock(3), pip_dequeue_and_resume(3)
    */
+#ifdef DOXYGEN_INPROGRESS
   int pip_suspend_and_enqueue( pip_task_queue_t *queue,
 			       pip_enqueue_callback_t callback,
 			       void *cbarg );
   /** @}*/
+#else
+  int pip_suspend_and_enqueue_( pip_task_queue_t *queue,
+				pip_enqueue_callback_t callback,
+				void *cbarg );
+#define pip_suspend_and_enqueue( Q, C, A ) \
+  pip_suspend_and_enqueue_( (pip_task_queue_t*)(Q), (C), (A) )
+#endif
 
   /**
    * \brief suspend the curren task and enqueue it without locking the queue
@@ -573,10 +613,18 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * given a task by resuming a suspended task.
    *
    */
+#ifdef DOXYGEN_INPROGRESS
   int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
 				      pip_enqueue_callback_t callback,
 				      void *cbarg );
   /** @}*/
+#else
+  int pip_suspend_and_enqueue_nolock_( pip_task_queue_t *queue,
+				       pip_enqueue_callback_t callback,
+				       void *cbarg );
+#define pip_suspend_and_enqueue_nolock( Q, C, A ) \
+  pip_suspend_and_enqueue_nolock_( (pip_task_queue_t*)(Q), (C), (A) )
+#endif
 
   /**
    * \brief dequeue a task and make it runnable
@@ -590,8 +638,14 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * The \b queue is locked and unlocked when dequeued.
    */
+#ifdef DOXYGEN_INPROGRESS
   int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched );
   /** @}*/
+#else
+  int pip_dequeue_and_resume_( pip_task_queue_t *queue, pip_task_t *sched );
+#define pip_dequeue_and_resume( Q, S )		\
+  pip_dequeue_and_resume_( (pip_task_queue_t*)(Q), (S) )
+#endif
 
   /**
    * \brief dequeue a task and make it runnable
@@ -606,9 +660,16 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * this function and unlock the queue after calling this
    * function.
    */
+#ifdef DOXYGEN_INPROGRESS
   int pip_dequeue_and_resume_nolock( pip_task_queue_t *queue,
 				     pip_task_t *sched );
   /** @}*/
+#else
+  int pip_dequeue_and_resume_nolock_( pip_task_queue_t *queue,
+				      pip_task_t *sched );
+#define pip_dequeue_and_resume_nolock( Q, S )	\
+  pip_dequeue_and_resume_nolock_( (pip_task_queue_t*)(Q), (S) )
+#endif
 
   /**
    * \brief dequeue tasks and resume the execution of them
@@ -628,10 +689,19 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * this function and unlock the queue after calling this
    * function.
    */
+#ifdef DOXYGEN_INPROGRESS
   int pip_dequeue_and_resume_N( pip_task_queue_t *queue,
 				pip_task_t *sched,
 				int *np );
   /** @}*/
+#else
+  int pip_dequeue_and_resume_N_( pip_task_queue_t *queue,
+				 pip_task_t *sched,
+				 int *np );
+#define pip_dequeue_and_resume_N( Q, S, N )	\
+  pip_dequeue_and_resume_N_( (pip_task_queue_t)(Q), (S), (N) )
+
+#endif
 
   /**
    * \brief dequeue tasks and resume the execution of them
@@ -649,10 +719,17 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * this function and unlock the queue after calling this
    * function.
    */
+#ifdef DOXYGEN_INPROGRESS
   int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue,
 				       pip_task_t *sched,
 				       int *np );
   /** @}*/
+#else
+  int pip_dequeue_and_resume_N_nolock_( pip_task_queue_t *queue,
+					pip_task_t *sched, int *np );
+#define pip_dequeue_and_resume_N_nolock( Q, N ) \
+  pip_dequeue_and_resume_N_nolock_( (pip_task_queue_t*)(Q), (N) )
+#endif
 
   /**
    * \brief Return the current task
@@ -763,7 +840,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * pip_barrier_init(3),
    * pip_barrier_wait(3),
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_barrier_init( pip_barrier_t *barrp, int n );
   /** @}*/
 #else
@@ -783,7 +860,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * \sa pip_barrier_init(3), pip_barrier_init(3),
    *
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_barrier_wait( pip_barrier_t *barrp );
   /** @}*/
 #else
@@ -806,7 +883,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * pip_barrier_init(3),
    * pip_barrier_wait(3),
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_barrier_fin( pip_barrier_t *queue );
   /** @}*/
 #else
@@ -825,7 +902,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * \sa pip_mutex_lock(3), pip_mutex_unlock(3)
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_mutex_init( pip_mutex_t *mutex );
   /** @}*/
 #else
@@ -843,7 +920,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * \sa pip_mutex_init(3), pip_mutex_unlock(3)
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_mutex_lock( pip_mutex_t *mutex );
   /** @}*/
 #else
@@ -861,7 +938,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * \sa pip_mutex_init(3), pip_mutex_lock(3)
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_mutex_unlock( pip_mutex_t *mutex );
   /** @}*/
 #else
@@ -880,7 +957,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *
    * \sa pip_mutex_lock(3), pip_mutex_unlock(3)
    */
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_INPROGRESS
   int pip_mutex_fin( pip_mutex_t *mutex );
   /** @}*/
 #else

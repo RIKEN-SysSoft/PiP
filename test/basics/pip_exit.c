@@ -36,7 +36,10 @@
 #include <test.h>
 
 int main() {
+  int ntasks =1;
+
   set_sigsegv_watcher();
+  CHECK( pip_init( NULL, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
   pip_exit( EXIT_PASS );
   /* never reach here */
   CHECK( "Should never reach here", TRUE, return(EXIT_FAIL) );

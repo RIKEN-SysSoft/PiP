@@ -458,18 +458,20 @@ static void pip_sched_next( pip_task_internal_t *taski,
   void pip_enqueue_qi( pip_task_t *task, pip_queue_info_t *qip ) {
     pip_task_queue_t	*queue = qip->queue;
 
-    if( qip->flag_lock ) {
-      pip_task_queue_lock( queue );
-      TASK_QUEUE_DUMP( queue );
-      pip_task_queue_enqueue( queue, task );
-      TASK_QUEUE_DUMP( queue );
-      pip_task_queue_unlock( queue );
-    } else {
-      TASK_QUEUE_DUMP( queue );
-      pip_task_queue_enqueue( queue, task );
-      TASK_QUEUE_DUMP( queue );
+    if( queue != NULL ) {
+      if( qip->flag_lock ) {
+	pip_task_queue_lock( queue );
+	//TASK_QUEUE_DUMP( queue );
+	pip_task_queue_enqueue( queue, task );
+	//TASK_QUEUE_DUMP( queue );
+	pip_task_queue_unlock( queue );
+      } else {
+	TASK_QUEUE_DUMP( queue );
+	pip_task_queue_enqueue( queue, task );
+	TASK_QUEUE_DUMP( queue );
+      }
+      if( qip->callback != NULL ) qip->callback( qip->cbarg );
     }
-    if( qip->callback != NULL ) qip->callback( qip->cbarg );
   }
   pip_task_internal_t	*schedi = taski->task_sched;
   pip_ctx_t		*ctxp;
@@ -650,11 +652,11 @@ int pip_enqueue_runnable_N( pip_task_queue_t *queue, int *np ) {
   return 0;
 }
 
-int pip_suspend_and_enqueue_( pip_task_internal_t *taski,
-			      pip_task_queue_t *queue,
-			      int flag_lock,
-			      pip_enqueue_callback_t callback,
-			      void *cbarg ) {
+int pip_suspend_and_enqueue_generic_( pip_task_internal_t *taski,
+				      pip_task_queue_t *queue,
+				      int flag_lock,
+				      pip_enqueue_callback_t callback,
+				      void *cbarg ) {
   pip_task_internal_t	*nexti;
   pip_queue_info_t	qi;
 
@@ -670,23 +672,27 @@ int pip_suspend_and_enqueue_( pip_task_internal_t *taski,
   RETURN( 0 );
 }
 
-int pip_suspend_and_enqueue( pip_task_queue_t *queue,
+int pip_suspend_and_enqueue_( pip_task_queue_t *queue,
 			     pip_enqueue_callback_t callback,
 			     void *cbarg ) {
-  RETURN( pip_suspend_and_enqueue_( pip_task_, queue, 1, callback, cbarg ) );
+  if( queue == NULL && callback != NULL ) RETURN( EINVAL );
+  RETURN( pip_suspend_and_enqueue_generic_( pip_task_, queue, 1,
+					    callback, cbarg ) );
 }
 
-int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
-				    pip_enqueue_callback_t callback,
-				    void *cbarg ) {
-  RETURN( pip_suspend_and_enqueue_( pip_task_, queue, 0, callback, cbarg ) );
+int pip_suspend_and_enqueue_nolock_( pip_task_queue_t *queue,
+				     pip_enqueue_callback_t callback,
+				     void *cbarg ) {
+  if( queue == NULL && callback != NULL ) RETURN( EINVAL );
+  RETURN( pip_suspend_and_enqueue_generic_( pip_task_, queue, 0,
+					    callback, cbarg ) );
 }
 
 int pip_resume( pip_task_t *task, pip_task_t *sched ) {
   return pip_do_resume( PIP_TASKI(task), PIP_TASKI(sched) );
 }
 
-int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched ) {
+int pip_dequeue_and_resume_( pip_task_queue_t *queue, pip_task_t *sched ) {
   ENTER;
   pip_task_t *task;
   pip_task_queue_lock( queue );
@@ -696,8 +702,8 @@ int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched ) {
   RETURN( pip_do_resume( PIP_TASKI(task), PIP_TASKI(sched) ) );
 }
 
-int pip_dequeue_and_resume_nolock( pip_task_queue_t *queue,
-				   pip_task_t *sched ) {
+int pip_dequeue_and_resume_nolock_( pip_task_queue_t *queue,
+				    pip_task_t *sched ) {
   ENTER;
   pip_task_t *task;
   task = pip_task_queue_dequeue( queue );
@@ -705,9 +711,9 @@ int pip_dequeue_and_resume_nolock( pip_task_queue_t *queue,
   RETURN( pip_do_resume( PIP_TASKI(task), PIP_TASKI(sched) ) );
 }
 
-int pip_dequeue_and_resume_N( pip_task_queue_t *queue,
-			      pip_task_t *sched,
-			      int *np ) {
+int pip_dequeue_and_resume_N_( pip_task_queue_t *queue,
+			       pip_task_t *sched,
+			       int *np ) {
   pip_task_t 	*task;
   int		n, c = 0, err = 0;
 
@@ -747,9 +753,9 @@ int pip_dequeue_and_resume_N( pip_task_queue_t *queue,
   RETURN( err );
 }
 
-int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue,
-				     pip_task_t *sched,
-				     int *np ) {
+int pip_dequeue_and_resume_N_nolock_( pip_task_queue_t *queue,
+				      pip_task_t *sched,
+				      int *np ) {
   pip_task_t 	*task;
   int		n, c = 0, err = 0;
 

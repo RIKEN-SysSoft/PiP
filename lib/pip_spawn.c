@@ -594,10 +594,11 @@ static void* pip_do_spawn( void *thargs )  {
   }
   /* calling PIP-GDB hook function */
   if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
-    int pip_suspend_and_enqueue_( pip_task_internal_t*, pip_task_queue_t*,
-				  int, pip_enqueue_callback_t, void* );
+    int pip_suspend_and_enqueue_generic_( pip_task_internal_t*,
+					  pip_task_queue_t*,
+					  int, pip_enqueue_callback_t, void* );
     /* suspend myself */
-    err = pip_suspend_and_enqueue_( self, queue, 1, NULL, NULL );
+    err = pip_suspend_and_enqueue_generic_( self, queue, 1, NULL, NULL );
     /* resumed */
 
   } else {			/* spawn passive task */
@@ -667,7 +668,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 			      int coreno,
 			      uint32_t opts,
 			      pip_task_t **bltp,
-			      pip_task_t *list,
 			      pip_task_queue_t *queue,
 			      pip_spawn_hook_t *hookp ) {
   extern uint32_t pip_check_sync_flag_( uint32_t );
@@ -711,19 +711,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     task->annex->hook_before = hookp->before;
     task->annex->hook_after  = hookp->after;
     task->annex->hook_arg    = hookp->hookarg;
-  }
-  PIP_RUN( task );
-  if( ( opts & PIP_TASK_PASSIVE ) == 0 ) { /* active task */
-    if( list != NULL ) {
-      pip_task_t *tsk, *nxt;
-
-      PIP_TASKQ_FOREACH_SAFE( list, tsk, nxt ) {
-	int pip_resume( pip_task_t*, pip_task_t* );
-	DBGF( "tsk:%p", tsk );
-	PIP_TASKQ_DEQ( tsk );
-	if( ( err = pip_resume( tsk, PIP_TASKQ(task) ) ) != 0 ) ERRJ;
-      }
-    }
   }
   /* allocate stack for sleeping */
   stack_size = pip_stack_size();
@@ -787,6 +774,14 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   ERRJ_CHK(err);
 
   pip_gdbif_task_new_( task );
+
+  PIP_RUN( task );
+  if( ( opts & PIP_TASK_PASSIVE ) == 0 && /* active task */
+      queue != NULL ) {
+    int n = PIP_TASK_ALL;
+    err = pip_dequeue_and_resume_N_( queue, PIP_TASKQ(task), &n );
+    if( err ) ERRJ;
+  }
 
   if( ( pip_root_->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
@@ -888,76 +883,34 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   } else {
     pipid = *pipidp;
   }
-  err = pip_do_task_spawn( progp, pipid, coreno, opts,
-			   &task, NULL, NULL, hookp );
+  err = pip_do_task_spawn( progp, pipid, coreno, opts, &task, NULL, hookp );
   if( !err ) {
-    if( pipidp != NULL ) {
-      pip_task_internal_t *taski = PIP_TASKI(task);
-      *pipidp = taski->pipid;
-    }
+    if( pipidp != NULL ) *pipidp = PIP_TASKI(task)->pipid;
   }
   RETURN( err );
 }
 
-int pip_blt_spawn( pip_spawn_program_t *progp,
-		   int pipid,
-		   int coreno,
-		   uint32_t opts,
-		   pip_task_t **bltp,
-		   pip_task_t *list,
-		   pip_spawn_hook_t *hookp ) {
+int pip_blt_spawn_( pip_spawn_program_t *progp,
+		    int coreno,
+		    uint32_t opts,
+		    int *pipidp,
+		    pip_task_t **bltp,
+		    pip_task_queue_t *queue,
+		    pip_spawn_hook_t *hookp ) {
   pip_task_t 	*blt;
-  int 		err;
+  int 		pipid, err;
 
   ENTER;
-  if( opts & PIP_TASK_PASSIVE ) {
-    pip_task_queue_t queue;
-
-    if( ( err = pip_task_queue_init( &queue, NULL ) ) != 0 ) RETURN( err );
-
-    err = pip_do_task_spawn( progp, pipid, coreno, opts,
-			     &blt, NULL, &queue, hookp );
-    DBG;
-    if( err == 0 && list != NULL ) {
-      pip_task_t *tsk = NULL;
-
-    DBG;
-      do {
-	sched_yield();
-	pip_task_queue_lock( &queue );
-	if( !pip_task_queue_isempty( &queue ) ) {
-	  tsk = PIP_TASKQ_NEXT( &queue.queue );
-	  PIP_TASKQ_DEQ( tsk );
-	}
-	pip_task_queue_unlock( &queue );
-      } while( tsk == NULL );
-      DBGF( "PassiveTask-PIPID: %d", ((pip_task_internal_t*)tsk)->pipid );
-      PIP_TASKQ_ENQ_LAST( list, tsk );
-    {
-      pip_task_t *t;
-      PIP_TASKQ_FOREACH( list, t ) {
-	DBGF( "PassiveTask-PIPID: %d", ((pip_task_internal_t*)t)->pipid );
-      }
-    }
-    }
-    (void) pip_task_queue_fin( &queue );
-    DBG;
-
+  if( pipidp == NULL ) {
+    pipid = PIP_PIPID_ANY;
   } else {
-    DBG;
-    {
-      pip_task_t *tsk;
-      PIP_TASKQ_FOREACH( list, tsk ) {
-	DBGF( "PassiveTask-PIPID: %d", ((pip_task_internal_t*)tsk)->pipid );
-      }
-    }
-    err = pip_do_task_spawn( progp, pipid, coreno, opts,
-			     &blt, list, NULL, hookp );
-    DBG;
+    pipid = *pipidp;
   }
-  if( !err && bltp != NULL ) *bltp = blt;
-  DBG;
-
+  err = pip_do_task_spawn( progp, pipid, coreno, opts, &blt, queue, hookp );
+  if( !err ) {
+    if( pipidp != NULL ) *pipidp = PIP_TASKI(blt)->pipid;
+    if( bltp   != NULL ) *bltp   = blt;
+  }
   RETURN( err );
 }
 

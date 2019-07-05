@@ -78,7 +78,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     /* task(s) might be enqueued for the next round  */
     do {
       n = c;			/* number of tasks to resume */
-      err = pip_dequeue_and_resume_N( qp, NULL, &n );
+      err = pip_dequeue_and_resume_N_( qp, NULL, &n );
       if( err ) break;
       c -= n;
     } while( c > 0 );
@@ -115,7 +115,7 @@ int pip_mutex_lock_( pip_mutex_t *mutex ) {
 int pip_mutex_unlock_( pip_mutex_t *mutex ) {
   int err = 0;
   ENTER;
-  err = pip_dequeue_and_resume( &mutex->queue, NULL );
+  err = pip_dequeue_and_resume_( &mutex->queue, NULL );
   /* resume the first one in the queue */
   if( err == ENOENT ) {	    /* if the queue is empty, simply unlock */
     mutex->lock = 0;

@@ -593,9 +593,9 @@ void pip_exit( int extval ) {
   extern void pip_do_exit( pip_task_internal_t*, int );
 
   DBGF( "extval:%d", extval );
-  if( pip_root_ == NULL ||
-      pip_task_ == NULL ||
-      PIP_ISA_ROOT( pip_task_ ) ) {
+  if( !pip_is_initialized() ) {
+    exit( extval );
+  } else if( pip_isa_root() ) {
     exit( extval );
   } else {
     pip_do_exit( pip_task_, extval );

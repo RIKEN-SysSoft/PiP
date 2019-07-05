@@ -38,10 +38,10 @@ CWD = $(shell pwd)
 CFLAGS += -DCWD=\"$(CWD)\"
 
 PROGRAMS = dlmopen_count ompnumthread \
-	timer pip_mode pip_task pip_blt getpid
+	timer pip_mode pip_task pip_blt
 
 SRCS	= dlmopen_count.c ompnumthread.c \
-	timer.c pip_mode.c pip_task.c pip_blt.c getpid.c
+	timer.c pip_mode.c pip_task.c pip_blt.c
 
 PROGRAMS_TO_INSTALL = # nothing
 

@@ -1,5 +1,5 @@
 %include sample.list
-%include basics/test.list
+%include basics/task.list
 %include compat/test.list
 %include pthread/test.list
 %include openmp/test.list
@@ -7,3 +7,4 @@
 %include fortran/test.list
 %include issues/test.list
 %include piprun.list
+%include basics/blt.list

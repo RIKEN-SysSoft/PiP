@@ -5,21 +5,35 @@ unset LANG LC_ALL
 
 TEST_TRAP_SIGS='1 2 15'
 
+function check_command() {
+    cmd=$1;
+    shift;
+    $@ > /dev/null 2>&1;
+    if [ $? != 0 ]; then
+	echo "$cmd does not work";
+	exit 2;
+    fi
+}
+
+check_command "dirname";
+check_command "basename";
+check_command "realptah .";
+
 dir=`dirname $0`;
+dir_real=`realpath $dir`
 base=`basename $0`;
-myself=`realpath $dir/$base`;
+myself=$dir_real/$base;
+
+export PATH=$dir_real:$dir_real/util:$PATH
+
+check_command "pip_mode";
+check_command "dlmopen_count";
+check_command "ompnumthread";
 
 if [[ x$SUMMARY_FILE == x ]]; then
-    pid=`$dir/util/getpid`;
-    sum_file=`realpath $dir/.test-sum-$pid.sh`;
+    sum_file=$dir_real/.test-sum-$$.sh;
 else
     sum_file=$SUMMARY_FILE;
-fi
-if [[ x$INCLUDE_FILE != x ]]; then
-    inc_fn=$INCLUDE_FILE': ';
-    case $inc_fn in
-	./*) inc_fn=${inc_fn:2:${#inc_fn}};;
-    esac
 fi
 
 function delete_sumfile() {
@@ -29,15 +43,18 @@ function delete_sumfile() {
 
 trap delete_sumfile 2;
 
+if [[ x$INCLUDE_FILE != x ]]; then
+    inc_fn=$INCLUDE_FILE': ';
+    case $inc_fn in
+	./*) inc_fn=${inc_fn:2:${#inc_fn}};;
+    esac
+fi
+
 . $dir/exit_code.sh.inc
-
-dir_real=`realpath $dir`
-
-export PATH=$dir_real:$dir_real/util:$PATH
 
 export NTASKS=`$MCEXEC dlmopen_count -p`
 export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
-export LD_PRELOAD=`realpath $dir/../preload/pip_preload.so`;
+export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
 
 if [[ x$MCEXEC != x ]]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
@@ -105,7 +122,7 @@ reset_summary()
     file_summary
 }
 
-TEST_TOP_DIR=`realpath $dir`
+TEST_TOP_DIR=$dir_real
 TEST_LIST=$TEST_TOP_DIR/test.list
 TEST_LOG_FILE=test.log
 TEST_LOG_XML=test.log.xml
@@ -400,7 +417,7 @@ fi
 print_summary
 
 if [[ x$SUMMARY_FILE == x ]]; then
-    rm -f $sum_file;
+    rm -f $sum_file > /dev/null 2>&1;
 fi
 
 case $n_KILLED in 0) :;; *) exit $EXIT_KILLED;; esac
