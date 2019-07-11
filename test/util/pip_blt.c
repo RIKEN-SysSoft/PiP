@@ -9,6 +9,15 @@
 
 static pip_task_queue_t	queues[NTASKS];
 
+static int is_taskq_empty( pip_task_queue_t *queue ) {
+  int rv;
+
+  pip_task_queue_lock( queue );
+  rv = pip_task_queue_isempty( queue );
+  pip_task_queue_unlock( queue );
+  return rv;
+}
+
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
   int 	nacts, npass, ntasks, pipid;
@@ -17,6 +26,7 @@ int main( int argc, char **argv ) {
   int 	i, j;
 
   set_sigsegv_watcher();
+  set_sigint_watcher();
 
   if( argc < 4 ) return EXIT_UNTESTED;
   CHECK( access( argv[3], X_OK ),     RV, exit(EXIT_UNTESTED) );
@@ -46,6 +56,7 @@ int main( int argc, char **argv ) {
 			  NULL, &queues[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );
+    CHECK( is_taskq_empty( &queues[j]), RV, return(EXIT_FAIL) );
   }
   for( i=npass, j=0; i<ntasks; i++, j++ ) {
     pipid = i;
@@ -55,11 +66,11 @@ int main( int argc, char **argv ) {
 			  NULL, &queues[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );
-    CHECK( pip_task_queue_isempty( &queues[j]), !RV, return(EXIT_FAIL) );
+    CHECK( is_taskq_empty( &queues[j]), !RV, return(EXIT_FAIL) );
   }
   for( i=0; i<ntasks; i++ ) {
     int extval, status = 0;
-    CHECK( pip_wait( i, &status ), RV, return(EXIT_UNTESTED) );
+    CHECK( pip_wait_any( &pipid, &status ), RV, return(EXIT_FAIL) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
       CHECK( extval, RV!=0, return(EXIT_FAIL) );

@@ -98,6 +98,9 @@ static void usage( void ) {
 int main( int argc, char **argv ) {
   int 	time, status;
 
+  set_sigsegv_watcher();
+  set_sigint_watcher();
+
   prog = basename( argv[0] );
   if( argc < 3 ) usage();
 

@@ -48,7 +48,7 @@ static struct my_exp *expp;
 int main( int argc, char **argv ) {
   int 	ntasks, pipid;
   int	niters;
-  int	i, j, extval = 0;
+  int	i, extval = 0;
 
   set_sigsegv_watcher();
 
@@ -67,7 +67,7 @@ int main( int argc, char **argv ) {
   expp = &exp;;
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( pip_barrier_init(&exp.barr,ntasks+1), RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_init(&exp.barr,ntasks), RV, return(EXIT_FAIL) );
     exp.count = 0;
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
@@ -75,16 +75,6 @@ int main( int argc, char **argv ) {
 		       NULL,NULL,NULL),
 	     RV,
 	     return(EXIT_FAIL) );
-    }
-    for( i=0; i<niters; i++ ) {
-      CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );
-      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
-#ifdef DEBUG
-      fprintf( stderr, "Count: %d\n", expp->count );
-#endif
-      j = i % ( ntasks + 1 );
-      if( j == ntasks ) expp->count ++;
-      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
     }
     for( i=0; i<ntasks; i++ ) {
       int status;
@@ -97,13 +87,13 @@ int main( int argc, char **argv ) {
 	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
       }
     }
+    CHECK( expp->count==niters, !RV, return(EXIT_FAIL) );
 
   } else {
     for( i=0; i<niters; i++ ) {
       CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );
       CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
-      j = i % ( ntasks + 1 );
-      if( j == pipid ) expp->count ++;
+      if( ( i % ntasks ) == pipid ) expp->count ++;
       CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
     }
   }

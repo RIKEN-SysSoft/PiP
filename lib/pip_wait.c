@@ -52,6 +52,8 @@
 #include <pip_util.h>
 #include <pip_gdbif_func.h>
 
+extern int pip_is_threaded_( void );
+
 #ifdef PIP_DUMP_TASKS
 static void pip_dump_tasks( FILE *fp ) {
   void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
@@ -138,7 +140,6 @@ void pip_set_extval_RC( pip_task_internal_t *taski, int extval ) {
 }
 
 static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
-  extern int pip_is_threaded_( void );
   extern void pip_finalize_task_( pip_task_internal_t* );
   pip_task_internal_t *taski;
   int err = 0;
@@ -151,9 +152,12 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   if( pip_is_threaded_() ) {
     /* thread mode */
     if( flag_try ) {
+      DBG;
       err = pthread_tryjoin_np( taski->annex->thread, NULL );
       DBGF( "pthread_tryjoin_np(%d)=%d", taski->annex->extval, err );
+
     } else {
+      DBG;
       pip_deadlock_inc_();
       err = pthread_join( taski->annex->thread, NULL );
       pip_deadlock_dec_();
@@ -163,7 +167,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     /* process mode */
     int status  = 0;
     int options = 0;
-    pid_t pid = taski->annex->pid;
+    pid_t pid = taski->annex->tid;
 
 #ifdef __WALL
     /* __WALL: Wait for all children, regardless of type */
@@ -262,7 +266,11 @@ static int pip_find_terminated( int *pipidp ) {
   /*** end lock region ***/
   pip_spin_unlock( &pip_root_->lock_tasks );
 
-  DBGF( "PIPID=%d  count=%d", *pipidp, count );
+  if( *pipidp == PIP_PIPID_NULL ) {
+    DBGF( "PIPID=(not found)  count=%d", count );
+  } else {
+    DBGF( "PIPID=%d  count=%d", *pipidp, count );
+  }
   return( count );
 }
 
@@ -270,8 +278,10 @@ static int pip_set_sigchld_handler( sigset_t *sigset_oldp ) {
   /* must only be called from the root */
   void pip_sighand_sigchld( int sig, siginfo_t *siginfo, void *null ) {
     ENTER;
+
     if( pip_root_ != NULL ) {
-      struct sigaction *sigact = &pip_root_->sigact_chain;
+      struct sigaction *sigact;
+      sigact = &pip_root_->sigact_chain;
       if( sigact->sa_sigaction != NULL ) {
 	/* if user sets a signal handler, then it must be called */
 	if( sigact->sa_sigaction != (void*) SIG_DFL &&  /* SIG_DFL==0 */

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cmd=$0;
+cmd=`basename $0`;
 
 function prt_ext() {
     exit=$1
@@ -26,7 +26,7 @@ function prt_ext() {
 }
 
 function print_usage() {
-    echo >&2 "Usage: `basename $1` [-n <NITER>] [-t <SEC>] [-q] [<test_prog> ...]";
+    echo >&2 "Usage: $cmd [-n <NITER>] [-t <SEC>] [-q] [<test_prog> ...]";
     echo >&2 "    -n <NITER>: Number of iterations";
     echo >&2 "    -t <SEC>: Duration limit of one loop [seconds]";
     echo >&2 "    -q: Quiet mode";
@@ -37,6 +37,8 @@ TMP=''
 
 function finalize() {
     if [[ x$TMP != x ]]; then
+	echo;
+	echo -n "Logfile: $FILE";
 	mv $TMP $FILE;
     fi
     if [ $quiet -eq 0 ]; then
@@ -57,7 +59,7 @@ iteration=0;
 quiet=0;
 
 case $# in
-    0)	print_usage $cmd;;
+    0)	print_usage;;
     *)	while	case $1 in
 	-*) true;;
          *) false;;
@@ -66,13 +68,22 @@ case $# in
 	    case $1 in *n) shift; iteration=$1;; esac
 	    case $1 in *t) shift; duration=$1;;  esac
 	    case $1 in *q)        quiet=1;;      esac
+	    case $1 in *h | *u)   print_usage;;  esac
 	    shift;
         done
 	;;
 esac
 
+if [ $# -lt 1 ]; then
+    print_usage;
+fi
+
+if [ ! -x $1 ]; then
+    echo "$1 is not executable"
+fi
+
 PROGNAM=`basename $1`;
-FILE="loop-${PROGNAM}.log";
+FILE="loop-$$.log";
 TMP=.$FILE;
 
 i=0;

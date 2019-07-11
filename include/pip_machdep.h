@@ -178,10 +178,10 @@ typedef struct {
 #endif
 
 /* I cannot call getcontext() in a function but       */
-/* gcc (4.8.5 20150623) complains if it is attributed */
-/* as always_inline. so I ake it as a mcro            */
+/* gcc (4.8.5 20150623) complains it is attributed */
+/* as always_inline. So I make it as a mcro            */
 #ifndef PIP_SAVE_CONTEXT
-#define pip_save_context(ctxp)	 ( getcontext(&(ctxp)->ctx) ? errno : 0 );
+#define pip_save_context(ctxp)	 ( getcontext(&(ctxp)->ctx) ? errno : 0 )
 #endif
 
 #ifndef PIP_SWAP_CONTEXT

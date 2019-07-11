@@ -15,6 +15,7 @@ int main( int argc, char **argv ) {
   char env_pipid[128];
 
   set_sigsegv_watcher();
+  set_sigint_watcher();
 
   if( argc < 3 ) return EXIT_UNTESTED;
   CHECK( access( argv[2], X_OK ),     RV, exit(EXIT_UNTESTED) );

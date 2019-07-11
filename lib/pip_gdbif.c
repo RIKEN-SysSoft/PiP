@@ -123,7 +123,7 @@ void pip_gdbif_task_commit_( pip_task_internal_t *task ) {
   struct pip_gdbif_task *gdbif_task =
     &pip_gdbif_root->tasks[task->pipid];
 
-  gdbif_task->pid = task->annex->pid;
+  gdbif_task->pid = task->annex->tid;
   pip_memory_barrier();
   gdbif_task->status = PIP_GDBIF_STATUS_CREATED;
 }
@@ -148,7 +148,7 @@ static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
   gdbif_task->handle = task->annex->loaded; /* filled by pip_load_gdbif later*/
   gdbif_task->load_address = NULL; /* filled by pip_load_gdbif() later */
   gdbif_task->exit_code    = -1;
-  gdbif_task->pid          = task->annex->pid;
+  gdbif_task->pid          = task->annex->tid;
   gdbif_task->pipid        = pipid_to_gdbif( task->pipid );
   gdbif_task->exec_mode =
     (pip_root_->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :

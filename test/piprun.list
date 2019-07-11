@@ -4,6 +4,8 @@ timer 1 NG.sh ../bin/piprun -n 100000 prog/abc
 timer 1 NG.sh ../bin/piprun -n 100 prog/abc :: -n 10000 prog/def
 timer 1 NG.sh ../bin/piprun -n 10 nosuchfile
 timer 1 OK.sh ../bin/piprun -n 1 prog/abc
+timer 1 OK.sh ../bin/piprun -n 1 prog/abc ::
+timer 1 NG.sh ../bin/piprun -n 1 prog/abc :: ::
 timer 1 OK.sh ../bin/piprun -n 8 prog/abc
 timer 1 OK.sh ../bin/piprun -n 1 prog/abc :: -n 1 prog/def
 timer 1 OK.sh ../bin/piprun -n 4 prog/abc :: -n 4 prog/def

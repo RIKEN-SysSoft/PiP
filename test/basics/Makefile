@@ -46,6 +46,7 @@ SRCS  = pip_init.c \
 	corebind.c \
 	hook_and_coe.c \
 	pip_barrier.c \
+	pip_barrier2.c \
 	signal.c \
 	seek.c
 
@@ -65,6 +66,7 @@ PROGRAMS  = pip_init \
 	prog-nordynamic \
 	hook_and_coe \
 	pip_barrier \
+	pip_barrier2 \
 	signal \
 	seek
 

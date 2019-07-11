@@ -148,10 +148,10 @@ extern char *__progname;
 
 #define PRINT_FLE(FSTR,ERR)			\
   if(!errno) {								\
-    fprintf(stderr,"[%s(%d)] %s:%d (%s): %s (%ld)\n",			\
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %s (%ld)\n\n",		\
 	    __progname,my_gettid(),__FILE__,__LINE__,FSTR,strerror(ERR),ERR); \
   } else {								\
-    fprintf(stderr,"[%s(%d)] %s:%d (%s): %s (errno: %s)\n",		\
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %s (errno: %s)\n\n",		\
 	    __progname, my_gettid(), __FILE__,__LINE__,FSTR,		\
 	    strerror(ERR), strerror(errno) ); }
 
@@ -379,6 +379,25 @@ inline static void set_sigsegv_watcher( void ) {
   CHECK( sigaction( SIGSEGV, &sigact, NULL ), RV, pip_abort() );
 }
 
+inline static void set_sigint_watcher( void ) {
+  pid_t pip_gettid( void );
+  void sigint_watcher( int sig, siginfo_t *info, void* extra ) {
+    char idstr[64];
+
+    pip_idstr( idstr, 64 );
+    fprintf( stderr, "\n%s interrupted by user !!!!!!\n", idstr );
+    fflush( NULL );
+    exit( EXIT_UNRESOLVED );
+  }
+
+  struct sigaction sigact;
+
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_sigaction = sigint_watcher;
+  sigact.sa_flags     = SA_RESETHAND;
+  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, pip_abort() );
+}
+
 #define PROCFD		"/proc/self/fd"
 inline static int print_fds( FILE *file ) {
   struct dirent **entry_list;
@@ -421,32 +440,6 @@ inline static int print_fds( FILE *file ) {
   }
   return err;
 }
-
-inline static void set_sigint_watcher( void ) {
-  void sigint_watcher( int sig, siginfo_t *siginfo, void *context ) {
-#ifdef REG_RIP
-    ucontext_t *ctx = (ucontext_t*) context;
-    intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
-#else
-    intptr_t pc = 0;
-#endif
-    fprintf( stderr,
-	     "\n...... SIGINT@%p  pid=%d  segvaddr=%p !!!!!!\n",
-	     (void*) pc,
-	     siginfo->si_pid,
-	     siginfo->si_addr );
-    print_maps();
-    while( 1 );
-  }
-
-  struct sigaction sigact;
-
-  memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = sigint_watcher;
-  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, pip_abort() );
-}
-
 #endif
 
 inline static unsigned long get_total_memory( void ) {

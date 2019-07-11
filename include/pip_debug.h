@@ -89,10 +89,10 @@ extern void pip_abort( void );
 #define RETURNV								\
   do { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; return; } while(0)
 
-#ifdef DEBUG_ASSERT
-#define ASSERT(X)						\
-  do { if(X) { DBGF( "Assertion FAILED '%s' !!!!!!", #X );		\
-      pip_abort(); } else { DBGF( "Assertion OK '(%s)' = %d", #X, X ); } } \
+#ifdef DEBUG
+#define ASSERT(X)							\
+  do { int RV = (X); if(RV) { DBGF( "<%s> ?? Assertion FAILED", #X );		\
+      pip_abort(); } else { DBGF( "(%s) -- Assertion is OK", #X ); } } \
   while(0)
 #else
 #define ASSERT(X)						\

@@ -28,10 +28,12 @@ timer 1 ./corebind 1
 timer 1 ./corebind 8
 skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 1
 skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 8
-skip.sh T UNSUPPORTED timer 1 ./signal 1
-skip.sh T UNSUPPORTED timer 1 ./signal 8
 timer 10 ./pip_barrier 1 100
 timer 10 ./pip_barrier 8 100
+timer 10 ./pip_barrier2 1 100
+timer 10 ./pip_barrier2 8 100
+skip.sh T UNSUPPORTED timer 1 ./signal 1
+skip.sh T UNSUPPORTED timer 1 ./signal 8
 timer 5 ./seek-file.sh 1
 timer 5 ./seek-pipe.sh 1
 timer 5 ./seek-outin.sh 1

@@ -295,7 +295,7 @@ void pip_reset_task_struct_( pip_task_internal_t *taski ) {
   memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
   annex->sleep_stack = sleep_stack;
   taski->annex = annex;
-  taski->annex->pid = -1; /* pip_gdbif_init_task_struct() refers this */
+  taski->annex->tid = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_TASKQ_INIT(    &taski->annex->oodq );
   pip_spin_init(     &taski->annex->lock_oodq );
   pip_blocking_init( &taski->annex->sleep );
@@ -402,8 +402,11 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_task_->task_sched = pip_task_;
 
     pip_task_->annex->loaded = dlopen( NULL, RTLD_NOW );
+    pip_task_->annex->tid    = pip_gettid();
     pip_task_->annex->thread = pthread_self();
-    pip_task_->annex->pid    = pip_gettid();
+#ifdef PIP_SAVE_TLS
+    pip_save_tls( &pip_task_->tls );
+#endif
     if( rt_expp != NULL ) {
       pip_task_->annex->exp = *rt_expp;
     }

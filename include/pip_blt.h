@@ -143,6 +143,8 @@ typedef struct pip_task_queue {
 
 typedef void(*pip_enqueue_callback_t)(void*);
 
+#define PIP_CB_UNLOCK_AFTER_ENQUEUE	((void*)1)
+
 typedef int(*pip_task_queue_init_t)	(void*);
 typedef void(*pip_task_queue_lock_t)	(void*);
 typedef int(*pip_task_queue_trylock_t)	(void*);
@@ -218,7 +220,6 @@ extern "C" {
    * \param[in] queue A task queue
    * \param[in] methods Usre defined function table. If NULL then
    *  default functions will be used.
-   * \param[in] aux User data associate with the queue
    *
    * \return This function returns no error
    */
@@ -245,7 +246,7 @@ extern "C" {
 #endif
 
   /**
-   * \brief spawn a passive PiP task
+   * \brief spawn a PiP BLT (Bi-Level Task)
    *  @{
    * \param[in] progp Program information to spawn as a PiP task
    * \param[in] coreno Core number for the PiP task to be bound to. If
@@ -280,7 +281,7 @@ extern "C" {
 int pip_blt_spawn( pip_spawn_program_t *progp,
 		   int coreno,
 		   uint32_t opts,
-		   int *pipid,
+		   int *pipidp,
 		   pip_task_t **bltp,
 		   pip_task_queue_t *queue,
 		   pip_spawn_hook_t *hookp );
@@ -289,7 +290,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
 int pip_blt_spawn_( pip_spawn_program_t *progp,
 		    int coreno,
 		    uint32_t opts,
-		    int *pipid,
+		    int *pipidp,
 		    pip_task_t **bltp,
 		    pip_task_queue_t *queue,
 		    pip_spawn_hook_t *hookp );
@@ -416,9 +417,10 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief Try locking task queue
+   * \brief Enqueue a BLT
    *  @{
    * \param[in] queue A task queue
+   * \param[in] task A task to be enqueued
    *
    * \return Returns true if lock succeeds.
    */
@@ -469,13 +471,11 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   pip_task_queue_dequeue_( (pip_task_queue_t*) (Q) )
 #endif
 
-extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
-
   /**
    * \brief Describe queue
    *  @{
    * \param[in] queue A task queue
-   * \param[in] a file pointer
+   * \param[in] fp a file pointer
    *
    * \return This function returns no error
    */
@@ -485,6 +485,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
 #else
   static inline void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
+    extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
     if( queue->methods == NULL ) {
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) {
 	fprintf( fp, "%s: (EMPTY)\n", tag );
@@ -768,7 +769,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    *  @{
    *
    * \param[in] task a PiP task
-   * \param[out] countp pointer to the PIPID value returning
+   * \param[out] pipidp  pointer to the PIPID value returning
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c task is \c NULL
@@ -884,7 +885,7 @@ extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
    * pip_barrier_wait(3),
    */
 #ifdef DOXYGEN_INPROGRESS
-  int pip_barrier_fin( pip_barrier_t *queue );
+  int pip_barrier_fin( pip_barrier_t *barrp );
   /** @}*/
 #else
   int pip_barrier_fin_( pip_barrier_t *queue );

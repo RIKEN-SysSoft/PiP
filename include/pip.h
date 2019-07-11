@@ -193,7 +193,7 @@
 
 #define PIP_NTASKS_MAX			(300)
 
-#define PIP_CPUCORE_ASIS 		(PIP_MAGIC_NUM-1)
+#define PIP_CPUCORE_ASIS 		(PIP_MAGIC_NUM+1)
 
 #define PIP_TASK_PASSIVE		(0x1000)
 

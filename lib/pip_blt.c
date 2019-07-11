@@ -33,6 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018, 2019
  */
 
+#define _GNU_SOURCE
 #include <pip_internal.h>
 #include <pip_blt.h>
 
@@ -68,47 +69,18 @@
 #define TASK_QUEUE_DUMP( queue )
 #endif
 
-static int pip_raise_sigchld( void ) {
-  extern int pip_raise_signal_( pip_task_internal_t*, int );
-  RETURN( pip_raise_signal_( pip_root_->task_root, SIGCHLD ) );
-}
-
-static void pip_load_context_( pip_ctx_t *ctxp ) {
-  ASSERT( ctxp == NULL );
-  ASSERT( pip_load_context( ctxp ) != 0 );
-}
-
-static void pip_force_exit( pip_task_internal_t *taski ) {
-  extern int pip_is_threaded_( void );
-
-  DBGF( "PIPID:%d  pid:%d(%d)",
-	taski->pipid, taski->annex->pid, pip_gettid() );
-  if( pip_is_threaded_() ) {
-    (void) pip_raise_sigchld();
-    DBG;
-    pthread_exit( NULL );
-  } else {			/* process mode */
-    ASSERT( taski->annex->pid != pip_gettid() );
-    /* there is something wrong in exit() */
-    /* must be investigate !!!!!! */
-    _exit( taski->annex->extval );
-  }
-  NEVER_REACH_HERE;
-}
-
 static void pip_wakeup( pip_task_internal_t *taski ) {
-  DBGF( "%d[%d]: schedq_len:%d  oodq_len:%d  ntakecare:%d  "
-	"flag_semwait:%d  flag_exit:%d",
-	taski->pipid, taski->task_sched->pipid,
-	taski->schedq_len, (int) taski->oodq_len,
-	(int) taski->ntakecare, taski->flag_semwait,
-	taski->flag_exit );
-  taski->flag_wakeup = 1;
   pip_memory_barrier();
+  taski->flag_wakeup = 1;
   if( taski->flag_semwait ) {
+    DBGF( "PIPID:%d -- WAKEUP vvvvvvvvvv\n"
+	  "    schedq_len:%d  oodq_len:%d  ntakecare:%d"
+	  "  flag_semwait:%d  flag_exit:%d",
+	  taski->pipid, taski->schedq_len,
+	  (int) taski->oodq_len, (int) taski->ntakecare,
+	  taski->flag_semwait, taski->flag_exit );
     taski->flag_semwait = 0;
     /* not to call sem_post() more than once per blocking */
-    DBGF( "WAKEUP vvvvvvvvvv PIPID:%d", taski->pipid );
     errno = 0;
     sem_post( &taski->annex->sleep );
     ASSERT( errno );
@@ -118,14 +90,14 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
 static void pip_change_sched( pip_task_internal_t *taski,
 			      pip_task_internal_t *schedi ) {
   ASSERT( schedi == NULL );
-  DBGF( "taski:%d[%d]-NTC:%d  schedi:%d[%d]-NTC:%d",
-	taski->pipid,
-	taski->task_sched->pipid,
-	(int) taski->task_sched->ntakecare,
-	schedi->pipid,
-	schedi->task_sched->pipid,
-	(int) schedi->ntakecare );
   if( taski->task_sched != schedi ) {
+    DBGF( "taski:%d[%d]-NTC:%d  schedi:%d[%d]-NTC:%d",
+	  taski->pipid,
+	  taski->task_sched->pipid,
+	  (int) taski->task_sched->ntakecare,
+	  schedi->pipid,
+	  schedi->task_sched->pipid,
+	  (int) schedi->ntakecare );
     int ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
     ASSERT( ntc < 0 );
     taski->task_sched = schedi;
@@ -154,14 +126,10 @@ static void pip_sched_ood_task( pip_task_internal_t *schedi,
   pip_wakeup( schedi );
 }
 
-static int pip_takein_ood_task( pip_task_internal_t *schedi ) {
+static void pip_takein_ood_task( pip_task_internal_t *schedi ) {
   pip_task_annex_t	*annex;
   int		 	oodq_len = schedi->oodq_len;
 
-  if( oodq_len == 0 ) {
-    DBGF( "oodq is empty" );
-    return 0;
-  }
   ENTER;
   annex = schedi->annex;
   pip_spin_lock( &annex->lock_oodq );
@@ -174,98 +142,73 @@ static int pip_takein_ood_task( pip_task_internal_t *schedi ) {
     QUEUE_DUMP( &schedi->schedq, schedi->schedq_len );
   }
   pip_spin_unlock( &annex->lock_oodq );
-  return oodq_len;
 }
 
-static void pip_stack_set_unprotect( pip_task_internal_t *curr,
-				     pip_task_internal_t *new ) {
-  DBGF( "PIPID:%d protected, and will be unprotected by PIPID:%d",
-	curr->pipid, new->pipid );
-#ifdef DEBUG
-  if( new->flag_stackpp ) {
-    DBGF( "PIPID:%d is already protected by PIPID:%d "
-	  "and wait until unprotected",
-	  new->pipid,
-	  ((pip_task_internal_t*)
-	   (new->flag_stackpp -
-	    offsetof(pip_task_internal_t,flag_stackpp)))->pipid );
-  }
-#endif
-  if( curr != new ) {
-    while( new->flag_stackpp != NULL ) pip_pause();
-  }
-  new->flag_stackpp = &curr->flag_stackp; /* next task is scheduled */
-}
-
-static void pip_stack_unprotect_prevt( pip_task_internal_t *taski ) {
-  /* this function musrt be called everytime a context is switched */
-  if( taski->flag_stackpp != NULL ) {
-    DBGF( "PIPID:%d unprotecting PIPID:%d", taski->pipid,
-	  ((pip_task_internal_t*)
-	   (taski->flag_stackpp -
-	    offsetof(pip_task_internal_t,flag_stackp)))->pipid );
-    *taski->flag_stackpp = 0;
-    taski->flag_stackpp  = NULL;
+static void pip_system_yield( void ) {
+  extern int pip_is_threaded_( void );
+  if( pip_is_threaded_() ) {
+    (void) pthread_yield();
   } else {
-    DBGF( "pipid:%d  <<<NULL>>>", taski->pipid );
+    sched_yield();
+  }
+}
+
+static void pip_stack_protect( pip_task_internal_t *taski,
+			       pip_task_internal_t *nexti ) {
+  /* so that new task can reset the flag */
+  DBGF( "protect PIPID:%d released by PIPID:%d", taski->pipid, nexti->pipid );
+  taski->flag_stackp = 1;
+  pip_memory_barrier();
+  nexti->flag_stackpp = &taski->flag_stackp;
+}
+
+static void pip_stack_unprotect( pip_task_internal_t *taski ) {
+  /* this function musrt be called everytime a context is switched */
+  if( taski != NULL && taski->flag_stackpp != NULL ) {
+    DBGF( "UNprotect PIPID:%d", taski->pipid );
+    *taski->flag_stackpp = 0;
+    pip_memory_barrier();
+    taski->flag_stackpp  = NULL;
   }
 }
 
 static void pip_stack_wait( pip_task_internal_t *taski ) {
-  int pip_stack_isbusy( pip_task_internal_t *taski ) {
-    //return taski->flag_stackp || taski->flag_sleep;
-    return taski->flag_stackp;
-  }
+  if( taski->flag_stackp ) {
+    int i, j;
 
-  if( pip_stack_isbusy( taski ) ) {
-    int i;
-    DBGF( "PIPID:%d waiting for unprotect", taski->pipid );
-    for( i=0; i<PIP_BUSYWAIT_COUNT; i++ ) {
-      if( !pip_stack_isbusy( taski ) ) {
-	DBGF( "WAIT-COUNT:%d", i );
-	goto done;
-      }
-      pip_pause();
-    }
+    DBGF( "PIPID:%d wait for unprotect", taski->pipid );
     i = 0;
-    while( pip_stack_isbusy( taski ) ) {
-      sched_yield();
-      i++;
-#ifdef DEBUG
-      int j;
+    while( 1 ) {
       for( j=0; j<PIP_BUSYWAIT_COUNT; j++ ) {
-	if( !pip_stack_isbusy( taski ) ) goto done;
-	pip_pause();
+	if( !taski->flag_stackp ) goto done;
       }
-#endif
-      DBGF( "YILED-COUNT:%d", i );
+      i ++;
+      pip_system_yield();
+      DBGF( "WAITING  pipid:%d (count=%d*%d) ...",
+	    taski->pipid, i, PIP_BUSYWAIT_COUNT );
     }
+  done:
+    DBGF( "WAIT-DONE  pipid:%d (count=%d*%d)",
+	  taski->pipid, i, PIP_BUSYWAIT_COUNT );
   }
- done:
-  DBGF( "WAIT-DONE  pipid:%d", taski->pipid );
   return;
 }
 
 static void pip_task_sched( pip_task_internal_t *taski ) {
-  pip_stack_wait( taski );	/* wait until context is free to use */
-  ASSERT( taski->ctx_suspend == NULL );
   void *ctxp = taski->ctx_suspend;
+  ASSERT( ctxp == NULL );
+  pip_stack_wait( taski );
   taski->ctx_suspend = NULL;
-  pip_load_context_( ctxp );
-  NEVER_REACH_HERE;
-}
-
-static void pip_task_sched_with_tls( pip_task_internal_t *taski ) {
+  DBGF( "CTXP:%p", ctxp );
 #ifdef PIP_LOAD_TLS
   ASSERT( pip_load_tls( taski->tls ) );
 #endif
-  pip_task_sched( taski );
+  ASSERT( pip_load_context( ctxp ) );
   NEVER_REACH_HERE;
 }
 
 typedef struct pip_sleep_args {
-  pip_task_internal_t	*schedi;
-  pip_task_internal_t	*taski;	/* task's stack will be unprotected */
+  pip_task_internal_t	*taski;
 } pip_sleep_args_t;
 
 static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
@@ -273,15 +216,15 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
     ENTER;
     DBGF( "flag_wakeup:%d  flag_exit:%d",
 	  taski->flag_wakeup, taski->flag_exit );
-    taski->flag_semwait = 1;
     pip_memory_barrier();
+    taski->flag_semwait = 1;
     while( !taski->flag_wakeup && !taski->flag_exit ) {
       errno = 0;
       if( sem_wait( &taski->annex->sleep ) == 0 ) continue;
       ASSERT( errno != EINTR );
     }
-    taski->flag_semwait = 0;
     pip_memory_barrier();
+    taski->flag_semwait = 0;
     RETURNV;
   }
   extern void pip_deadlock_inc_( void );
@@ -289,143 +232,124 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
 
   pip_sleep_args_t 	*args = (pip_sleep_args_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
-  pip_task_internal_t	*taski  = args->taski;
-  pip_task_internal_t	*schedi = args->schedi;
+  pip_task_internal_t	*taski = args->taski;
   int			i;
 
   ENTER;
-  ASSERT( schedi->task_sched == NULL );
-  DBGF( "taski:%d  schedi:%d",
-	(taski!=NULL)?taski->pipid:-1, schedi->pipid );
-  /* now the stack has been switched and one may swicth to the prev. stack */
-  if( taski != NULL ) taski->flag_stackp = 0;	/* unprotect stack */
+  DBGF( "PIPID:%d", taski->pipid );
+  ASSERT( taski->task_sched == NULL );
+  pip_stack_unprotect( taski );
 
   while( 1 ) {
-    (void) pip_takein_ood_task( schedi );
-#ifdef DEBUG
-    if( !schedi->flag_exit ) {
-      DBGF( "PIPID:%d schedq_len:%d", schedi->pipid, schedi->schedq_len );
-    } else {
-      DBGF( "PIPID:%d schedq_len:%d  ntakecare:%d -- EXIT",
-	    schedi->pipid, schedi->schedq_len, (int) schedi->ntakecare );
-    }
-#endif
-    if( !PIP_TASKQ_ISEMPTY( &schedi->schedq ) ) break;
+    /* now stack is switched and unprotect the stack */
+    pip_takein_ood_task( taski );
+    if( !PIP_TASKQ_ISEMPTY( &taski->schedq ) ) break;
 
-    if( schedi->flag_exit && !schedi->ntakecare ) {
-      DBGF( "WOKEUP and EXIT" );
-      pip_force_exit( schedi );
+    if( taski->flag_exit && !taski->ntakecare ) {
+      DBGF( "PIPID:%d -- WOKEUP to EXIT", taski->pipid );
+      /* wait for the stack is free to use */
+      pip_stack_wait( taski );
+      /* then switch to the exit context */
+#ifdef PIP_LOAD_TLS
+      ASSERT( pip_load_tls( taski->tls ) );
+#endif
+      ASSERT( taski->annex->ctx_exit == NULL );
+      ASSERT( pip_load_context( taski->annex->ctx_exit ) );
       NEVER_REACH_HERE;
     }
 
     pip_deadlock_inc_();
     {
-      switch( schedi->annex->opts & PIP_SYNC_MASK ) {
+      switch( taski->annex->opts & PIP_SYNC_MASK ) {
       case PIP_SYNC_BLOCKING:
-	DBGF( "SLEEPING (blocking) zzzzzzz" );
-	pip_block_myself( schedi );
+	DBGF( "PIPID:%d -- SLEEPING (blocking) zzzzzzz", taski->pipid );
+	pip_block_myself( taski );
 	break;
       case PIP_SYNC_BUSYWAIT:
-	DBGF( "SLEEPING (busywait) zzzzzzzz" );
-	while( !schedi->flag_wakeup ) pip_pause();
+	DBGF( "PIPID:%d -- SLEEPING (busywait) zzzzzzzz", taski->pipid );
+	while( !taski->flag_wakeup ) pip_pause();
 	break;
       case PIP_SYNC_YIELD:
-	DBGF( "SLEEPING (yield) zzzzzzzz" );
-	while( !schedi->flag_wakeup ) sched_yield();
+	DBGF( "PIPID:%d -- SLEEPING (yield) zzzzzzzz", taski->pipid );
+	while( !taski->flag_wakeup ) pip_system_yield();
 	break;
       case PIP_SYNC_AUTO:
       default:
 	for( i=0; i<PIP_BUSYWAIT_COUNT; i++ ) {
 	  pip_pause();
-	  if( schedi->flag_wakeup ) {
-	    DBGF( "SLEEPING (blocking-busywait:%d)", i );
+	  if( taski->flag_wakeup ) {
+	    DBGF( "PIPID:%d -- SLEEPING (blocking-busywait:%d)", taski->pipid, i );
 	    goto done;
 	  }
 	}
-	DBGF( "SLEEPING (blocking) zzzzzzz" );
-	pip_block_myself( schedi );
+	DBGF( "PIPID:%d --SLEEPING (blocking) zzzzzzz", taski->pipid );
+	pip_block_myself( taski );
       done:
 	break;
       }
+      DBGF( "PIPID:%d -- WOKEUP ^^^^^^^^", taski->pipid );
     }
     pip_deadlock_dec_();
-    schedi->flag_wakeup = 0;
-    pip_memory_barrier();
+    taski->flag_wakeup = 0;
   }
-  pip_change_sched( schedi, schedi );
+  pip_change_sched( taski, taski );
 
-  DBGF( "WOKEUP ^^^^^^^^" );
-  ASSERT( schedi->schedq_len == 0 );
-  ASSERT( PIP_TASKQ_ISEMPTY( &schedi->schedq ) );
+  ASSERT( taski->schedq_len == 0 );
+  ASSERT( PIP_TASKQ_ISEMPTY( &taski->schedq ) );
   {
-    pip_task_t *next = PIP_TASKQ_NEXT( &schedi->schedq );
+    pip_task_t *next = PIP_TASKQ_NEXT( &taski->schedq );
     pip_task_internal_t *nexti = PIP_TASKI( next );
+
     ASSERT( next == NULL );
     PIP_TASKQ_DEQ( next );
-    schedi->schedq_len --;
+    taski->schedq_len --;
     DBGF( "PIPID:%d(ctxp:%p) -->> PIPID:%d(CTXP:%p)",
-	  schedi->pipid, schedi->ctx_suspend,
-	  nexti->pipid,  nexti->ctx_suspend );
+	  taski->pipid, taski->ctx_suspend,
+	  nexti->pipid, nexti->ctx_suspend );
     pip_task_sched( nexti );
   }
   NEVER_REACH_HERE;
 }
 
-static void pip_switch_stack_and_sleep( pip_task_internal_t *schedi,
-					pip_task_internal_t *taski ) {
+static void pip_block_task( pip_task_internal_t *taski ) {
   pip_sleep_args_t	args;
-  size_t	stksz = pip_root_->stack_size_sleep;
-  pip_ctx_t	ctx;
-  stack_t	*stk;
-  int 		args_H, args_L;
+  pip_ctx_t		ctx;
+  stack_t		*stk;
+  int 			args_H, args_L;
 
   ENTER;
-  DBGF( "sched-PIPID:%d  taski-PIPID:%d",
-	schedi->pipid, (taski!=NULL)?taski->pipid:-1 );
-  /* pass taski, not schedi, so that stack can be unprotected in pip_sleep */
-  args.schedi = schedi;
-  args.taski  = taski;
+  DBGF( "PIPID:%d", taski->pipid );
+  args.taski = taski;
   /* creating new context to switch stack */
-  pip_save_context( &ctx );
+  ASSERT( pip_save_context( &ctx ) );
   stk = &(ctx.ctx.uc_stack);
-  stk->ss_sp    = schedi->annex->sleep_stack;
+  stk->ss_sp    = taski->annex->sleep_stack;
+  stk->ss_size  = pip_root_->stack_size_sleep;
   stk->ss_flags = 0;
-  stk->ss_size  = stksz;
   args_H = ( ((intptr_t) &args) >> 32 ) & PIP_MASK32;
   args_L = (  (intptr_t) &args)         & PIP_MASK32;
   pip_make_context( &ctx, pip_sleep, 4, args_H, args_L );
   /* no need of saving/restoring TLS */
-  pip_load_context_( &ctx );
+  ASSERT( pip_load_context( &ctx ) );
   NEVER_REACH_HERE;
 }
 
-static void pip_task_switch( pip_task_internal_t *old_task,
+static void pip_task_switch( pip_task_internal_t *curr_task,
 			     pip_task_internal_t *new_task ) {
+  pip_ctx_t	ctx, *new_ctxp;
+
   ENTER;
-  DBGF( "pipid:%d -> pipid:%d", old_task->pipid, new_task->pipid );
+  DBGF( "PIPID:%d (CTXP:%p) ==>> PIPID:%d (CTXP:%p)",
+	curr_task->pipid, &ctx, new_task->pipid, new_task->ctx_suspend );
+  ASSERT( curr_task->ctx_suspend != NULL );
 
-  if( old_task != new_task ) {
-#ifdef PIP_USE_STATIC_CTX
-    old_task->ctx_suspend = old_task->ctx_static;
-    new_task->ctx_suspend = new_task->ctx_static;
-#else  /* context on stack */
-    pip_ctx_t 	oldctx;
-    old_task->ctx_suspend = &oldctx;
-#endif
-    DBGF( "PIPID:%d(ctxp:%p) <<==>> PIPID:%d(CTXP:%p)",
-	  old_task->pipid, old_task->ctx_suspend,
-	  new_task->pipid, new_task->ctx_suspend );
-
-    pip_stack_wait( new_task );
-    old_task->flag_stackp = 1;			/* protect current */
-    pip_stack_set_unprotect( old_task, new_task );
-#ifdef PIP_LOAD_TLS
-    ASSERT( pip_load_tls( new_task->tls ) );
-#endif
-    ASSERT( pip_swap_context( old_task->ctx_suspend,
-			      new_task->ctx_suspend ) );
-    pip_stack_unprotect_prevt( old_task );
-  }
+  curr_task->ctx_suspend = &ctx;
+  new_ctxp = new_task->ctx_suspend;
+  new_task->ctx_suspend = NULL;
+  ASSERT( pip_swap_context( &ctx, new_ctxp ) );
+  /* resumed */
+  pip_stack_unprotect( curr_task );
+  RETURNV;
 }
 
 static pip_task_internal_t *pip_schedq_next( pip_task_internal_t *taski ) {
@@ -435,7 +359,7 @@ static pip_task_internal_t *pip_schedq_next( pip_task_internal_t *taski ) {
 
   ASSERT( schedi == NULL );
   DBGF( "sched-PIPID:%d", schedi->pipid );
-  (void) pip_takein_ood_task( schedi );
+  pip_takein_ood_task( schedi );
   if( !PIP_TASKQ_ISEMPTY( &schedi->schedq ) ) {
     QUEUE_DUMP( &schedi->schedq, schedi->schedq_len );
     next = PIP_TASKQ_NEXT( &schedi->schedq );
@@ -445,6 +369,11 @@ static pip_task_internal_t *pip_schedq_next( pip_task_internal_t *taski ) {
     nexti = PIP_TASKI( next );
     DBGF( "next-PIPID:%d", nexti->pipid );
 
+  } else if( schedi->flag_exit ) {
+    /* if the scheduler has no scheduling tasks, then switch bask to */
+    /* the scheduler so that scheduling task can terminate itself    */
+    nexti = schedi;
+
   } else {
     nexti = NULL;
     DBGF( "next:NULL" );
@@ -453,103 +382,106 @@ static pip_task_internal_t *pip_schedq_next( pip_task_internal_t *taski ) {
 }
 
 static void pip_sched_next( pip_task_internal_t *taski,
-			    pip_task_internal_t *nexti,
 			    pip_queue_info_t *qip ) {
-  void pip_enqueue_qi( pip_task_t *task, pip_queue_info_t *qip ) {
+  void pip_enqueue_qi( pip_task_internal_t *taski,
+		       pip_queue_info_t *qip ) {
+    pip_task_t		*task = PIP_TASKQ( taski );
     pip_task_queue_t	*queue = qip->queue;
 
-    if( queue != NULL ) {
-      if( qip->flag_lock ) {
-	pip_task_queue_lock( queue );
-	//TASK_QUEUE_DUMP( queue );
-	pip_task_queue_enqueue( queue, task );
-	//TASK_QUEUE_DUMP( queue );
-	pip_task_queue_unlock( queue );
-      } else {
-	TASK_QUEUE_DUMP( queue );
-	pip_task_queue_enqueue( queue, task );
-	TASK_QUEUE_DUMP( queue );
-      }
-      if( qip->callback != NULL ) qip->callback( qip->cbarg );
+    if( qip->flag_lock ) {
+      pip_task_queue_lock( queue );
+      pip_task_queue_enqueue( queue, task );
+      pip_task_queue_unlock( queue );
+    } else {
+      pip_task_queue_enqueue( queue, task );
     }
+    if( qip->callback != NULL ) qip->callback( qip->cbarg );
   }
+
   pip_task_internal_t	*schedi = taski->task_sched;
-  pip_ctx_t		*ctxp;
-  volatile int 		flag_jump = 0;	/* must be volatile */
+  pip_task_internal_t	*nexti  = pip_schedq_next( taski );
+  volatile int 	flag_jump = 0;	/* must be volatile */
+  pip_ctx_t	ctx;
 
   ENTER;
-
   PIP_SUSPEND( taski );
-#ifdef PIP_USE_STATIC_CTX
-  ctxp = taski->ctx_static;
-#else
-  pip_ctx_t		ctx;
-  ctxp = &ctx;
-#endif
-  taski->ctx_suspend = ctxp;
-  pip_save_context( ctxp );
+  if( qip != NULL && qip->queue != NULL ) {
+    if( nexti != NULL ) {
+      pip_stack_protect( taski, nexti );
+    } else {
+      pip_stack_protect( taski, schedi );
+    }
+    /* before enqueue, the stack must be protected */
+    pip_enqueue_qi( taski, qip );
+  }
+  DBGF( "CTXP:%p", &ctx );
+  taski->ctx_suspend = &ctx;
+  ASSERT( pip_save_context( &ctx ) );
   if( !flag_jump ) {
     flag_jump = 1;
-
-    taski->flag_stackp = 1;	/* protect current stack before enqueue */
-    if( qip != NULL ) {
-      /* enqueue */
-      pip_enqueue_qi( PIP_TASKQ(taski), qip );
-    }
     if( nexti != NULL ) {
       /* context-switch to the next task */
       DBGF( "PIPID:%d(ctxp:%p) -->> PIPID:%d(CTXP:%p)",
 	    taski->pipid, taski->ctx_suspend,
 	    nexti->pipid, nexti->ctx_suspend );
-      pip_stack_set_unprotect( taski, nexti ); /* next task unprotect me */
-      pip_task_sched_with_tls( nexti );
+      pip_task_sched( nexti );
 
     } else {
-      /* no task to be scheduled next, and block the scheduling task */
-      pip_switch_stack_and_sleep( schedi, taski );
+      /* no task to be scheduled next and block the scheduling task */
+      pip_block_task( schedi );
     }
     NEVER_REACH_HERE;
   }
-  pip_stack_unprotect_prevt( taski );
+  DBG;
+  /* resumed */
+  pip_stack_unprotect( taski );
 }
 
 void pip_do_exit( pip_task_internal_t *taski, int extval ) {
   extern void pip_set_extval_RC( pip_task_internal_t*, int );
-  pip_task_internal_t	*schedi, *nexti;
+  pip_task_internal_t	*schedi = taski->task_sched;
+  pip_task_t		*queue, *next;
+  pip_task_internal_t	*nexti;
   int 			ntc;
   /* this is called when 1) return from main (or func) function */
   /*                     2) pip_exit() is explicitly called     */
   ENTER;
   DBGF( "PIPID:%d", taski->pipid );
+  ASSERT( schedi == NULL );
 
-  if( taski->annex->symbols.named_export_fin != NULL ) {
-    taski->annex->symbols.named_export_fin( taski );
-  }
   pip_set_extval_RC( taski, extval );
-  ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
+
+  ntc = pip_atomic_sub_and_fetch( &schedi->ntakecare, 1 );
   ASSERT( ntc < 0 );
 
-  schedi = taski->task_sched;
-  ASSERT( schedi == NULL );
-  DBGF( "TASKI: %d[%d]",  taski->pipid,  taski->task_sched->pipid );
+  DBGF( "TASKI:  %d[%d]", taski->pipid,  taski->task_sched->pipid  );
   DBGF( "SCHEDI: %d[%d]", schedi->pipid, schedi->task_sched->pipid );
-  nexti = pip_schedq_next( taski );
-  if( schedi != taski ) {
-    /* wake up to terminate */
-    pip_wakeup( taski );	/* since taski will be reset by root */
-  }				/* do not touch taski after this */
-  if( nexti != NULL ) {
-    DBGF( "NEXT %d[%d]", nexti->pipid, nexti->task_sched->pipid );
-    pip_task_sched_with_tls( nexti );
-  } else if( schedi->ntakecare > 0 ||
-	     schedi != taski ) { /* schedi must not exit in this case */
-    DBGF( "schedi->ntakecare:%d", (int) schedi->ntakecare );
-    /* no tasks to be scheduled but there are some tasks to take care */
-    pip_switch_stack_and_sleep( schedi, NULL );
-  } else {
-    /* no tasks to take care and (schedi == taski); terminate myself */
-    pip_force_exit( schedi );
+  DBGF( "schedi->ntakecare:%d", (int) schedi->ntakecare );
+
+  DBG;
+  pip_takein_ood_task( schedi );
+  queue = &schedi->schedq;
+  if( !PIP_TASKQ_ISEMPTY( queue ) ) {
+    next = PIP_TASKQ_NEXT( queue );
+    PIP_TASKQ_DEQ( next );
+    schedi->schedq_len --;
+    ASSERT( schedi->schedq_len < 0 );
+    nexti = PIP_TASKI( next );
+    pip_stack_protect( taski, nexti );
+    if( taski != schedi ) {
+      /* wake up (if sleeping) to terminate */
+      pip_wakeup( taski );
+    }
+    pip_task_switch( taski, nexti );
+  } else if( taski != schedi ) {
+    pip_stack_protect( taski, schedi );
+    /* wake up (if sleeping) to terminate */
+    pip_wakeup( taski );
   }
+
+  DBG;
+  /* there might be suspended tasks waiting to be resumed */
+  pip_block_task( schedi );
   NEVER_REACH_HERE;
 }
 
@@ -572,7 +504,7 @@ static int pip_do_resume( pip_task_internal_t *taski,
   ASSERT( schedi == NULL );
   ASSERT( taski->task_sched == NULL );
   DBGF( "Sched PIPID:%d (PID:%d) takes in PIPID:%d (PID:%d)",
-	schedi->pipid, schedi->annex->pid, taski->pipid, taski->annex->pid );
+	schedi->pipid, schedi->annex->tid, taski->pipid, taski->annex->tid );
 
   PIP_RUN( taski );
   DBGF( "RUN: %d[%d]", taski->pipid, taski->task_sched->pipid );
@@ -652,23 +584,31 @@ int pip_enqueue_runnable_N( pip_task_queue_t *queue, int *np ) {
   return 0;
 }
 
+static void pip_cb_unlock_after_enqueue( void *q ) {
+  pip_task_queue_t *queue = (pip_task_queue_t*) q;
+  pip_task_queue_unlock( queue );
+}
+
 int pip_suspend_and_enqueue_generic_( pip_task_internal_t *taski,
 				      pip_task_queue_t *queue,
 				      int flag_lock,
 				      pip_enqueue_callback_t callback,
 				      void *cbarg ) {
-  pip_task_internal_t	*nexti;
-  pip_queue_info_t	qi;
+  pip_queue_info_t qi;
 
   ENTER;
   ASSERT( taski->task_sched == NULL );
-  nexti = pip_schedq_next( taski );
   qi.queue     = queue;
   qi.flag_lock = flag_lock;
-  qi.callback  = callback;
-  qi.cbarg     = cbarg;
+  if( callback == PIP_CB_UNLOCK_AFTER_ENQUEUE ) {
+    qi.callback  = pip_cb_unlock_after_enqueue;
+    qi.cbarg     = (void*) queue;
+  } else {
+    qi.callback  = callback;
+    qi.cbarg     = cbarg;
+  }
   /* pip_scheq_next() protected current stack. and now we can enqueue myself */
-  pip_sched_next( taski, nexti, &qi );
+  pip_sched_next( taski, &qi );
   RETURN( 0 );
 }
 
@@ -785,15 +725,18 @@ pip_task_t *pip_task_self( void ) { return PIP_TASKQ(pip_task_); }
 
 int pip_yield( void ) {
   pip_task_t		*queue, *next;
-  pip_task_internal_t	*schedi = pip_task_->task_sched;
+  pip_task_internal_t	*nexti, *schedi = pip_task_->task_sched;
 
   ENTER;
-  (void) pip_takein_ood_task( schedi );
+  if( schedi->oodq_len > 0 ) {	/* fast check */
+    pip_takein_ood_task( schedi );
+  }
   queue = &schedi->schedq;
   PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ( pip_task_ ) );
   next = PIP_TASKQ_NEXT( queue );
   PIP_TASKQ_DEQ( next );
-  pip_task_switch( pip_task_, PIP_TASKI( next ) );
+  nexti = PIP_TASKI( next );
+  if( pip_task_ != nexti ) pip_task_switch( pip_task_, nexti );
   RETURN( 0 );
 }
 
@@ -802,17 +745,19 @@ int pip_yield_to( pip_task_t *task ) {
   pip_task_internal_t	*schedi;
   pip_task_t		*queue;
 
-  IF_UNLIKELY( task  == NULL ) RETURN( pip_yield() );
+  IF_UNLIKELY( task == NULL ) RETURN( pip_yield() );
   schedi = pip_task_->task_sched;
   /* the target task must be in the same scheduling domain */
   IF_UNLIKELY( taski->task_sched != schedi ) RETURN( EPERM );
 
-  (void) pip_takein_ood_task( schedi );
+  if( schedi->oodq_len > 0 ) {	/* fast check */
+    pip_takein_ood_task( schedi );
+  }
   queue = &schedi->schedq;
   PIP_TASKQ_DEQ( PIP_TASKQ(task) );
   PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ(pip_task_) );
 
-  pip_task_switch( pip_task_, taski );
+  if( pip_task_ != taski ) pip_task_switch( pip_task_, taski );
   RETURN( 0 );
 }
 

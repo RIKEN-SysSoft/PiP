@@ -53,7 +53,9 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#define DEBUG
+#ifndef DEBUG
+//#define DEBUG
+#endif
 
 #define _GNU_SOURCE
 #include <sched.h>
