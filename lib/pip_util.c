@@ -46,7 +46,7 @@
 extern int pip_is_coefd_( int );
 extern int pip_get_dso( int pipid, void **loaded );
 
-int pip_check_pie( char *path, int flag_verbose ) {
+int pip_check_pie( const char *path, int flag_verbose ) {
   struct stat stbuf;
   Elf64_Ehdr elfh;
   int fd;
@@ -198,7 +198,7 @@ int pip_idstr( char *buf, size_t sz ) {
   return n;
 }
 
-static void pip_message( FILE *fp, char *tagf, char *format, va_list ap ) {
+static void pip_message( FILE *fp, char *tagf, const char *format, va_list ap ) {
 #define PIP_MESGLEN		(512)
   char mesg[PIP_MESGLEN];
   char idstr[PIP_MIDLEN];
@@ -210,26 +210,26 @@ static void pip_message( FILE *fp, char *tagf, char *format, va_list ap ) {
   fprintf( stderr, "%s\n", mesg );
 }
 
-void pip_info_fmesg( FILE *fp, char *format, ... ) {
+void pip_info_fmesg( FILE *fp, const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   if( fp == NULL ) fp = stderr;
   pip_message( fp, "PiP-INFO%s ", format, ap );
 }
 
-void pip_info_mesg( char *format, ... ) {
+void pip_info_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   pip_message( stderr, "PiP-INFO%s ", format, ap );
 }
 
-void pip_warn_mesg( char *format, ... ) {
+void pip_warn_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   pip_message( stderr, "PiP-WARN%s ", format, ap );
 }
 
-void pip_err_mesg( char *format, ... ) {
+void pip_err_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   pip_message( stderr, "PiP-ERROR%s ", format, ap );

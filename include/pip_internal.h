@@ -179,6 +179,7 @@ typedef struct {
 } pip_spawn_args_t;
 
 struct pip_gdbif_task;
+struct pip_gdbif_root;
 
 typedef sem_t			pip_blocking_t;
 
@@ -264,6 +265,8 @@ typedef struct {
   size_t		stack_size_sleep; /* size for the stack for sleeping */
   /* for chaining SIGCHLD */
   struct sigaction	sigact_chain;
+  /* GDB Interface */
+  struct pip_gdbif_root	*gdbif_root;
   /* PiP tasks array */
   pip_task_annex_t	*annex;
   pip_task_internal_t	tasks[];

@@ -9,6 +9,8 @@ timer 1 ./pip_init both_pthread_process
 timer 1 ./pip_init both_preload_clone
 timer 1 ./pip_init pip_task_unset
 timer 1 ./pip_fin
+timer 1 pip_task 1 ./pip_init pip_child_task
+timer 1 pip_task 8 ./pip_init pip_child_task
 timer 1 ./pip_exit
 timer 1 pip_task 1 ./pip_exit
 timer 1 pip_task 8 ./pip_exit
@@ -34,9 +36,9 @@ timer 10 ./pip_barrier2 1 100
 timer 10 ./pip_barrier2 8 100
 skip.sh T UNSUPPORTED timer 1 ./signal 1
 skip.sh T UNSUPPORTED timer 1 ./signal 8
-timer 5 ./seek-file.sh 1
-timer 5 ./seek-pipe.sh 1
-timer 5 ./seek-outin.sh 1
-timer 5 ./seek-file.sh 4
-timer 5 ./seek-pipe.sh 4
-timer 5 ./seek-outin.sh 4
+timer 10 ./seek-file.sh 1
+timer 10 ./seek-pipe.sh 1
+timer 10 ./seek-outin.sh 1
+timer 10 ./seek-file.sh 4
+timer 10 ./seek-pipe.sh 4
+timer 10 ./seek-outin.sh 4

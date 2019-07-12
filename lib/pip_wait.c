@@ -140,7 +140,7 @@ void pip_set_extval_RC( pip_task_internal_t *taski, int extval ) {
 }
 
 static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
-  extern void pip_finalize_task_( pip_task_internal_t* );
+  extern void pip_finalize_task_RC( pip_task_internal_t* );
   pip_task_internal_t *taski;
   int err = 0;
 
@@ -202,7 +202,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   if( err == 0 ) {
     pip_root_->ntasks_count --;
     if( extvalp != NULL ) *extvalp = taski->annex->extval;
-    pip_finalize_task_( taski );
+    pip_finalize_task_RC( taski );
   }
   RETURN( err );
 }

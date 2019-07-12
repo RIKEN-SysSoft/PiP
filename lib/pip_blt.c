@@ -728,6 +728,7 @@ int pip_yield( void ) {
   pip_task_internal_t	*nexti, *schedi = pip_task_->task_sched;
 
   ENTER;
+  if( pip_task_ == NULL ) RETURN( EPERM );
   if( schedi->oodq_len > 0 ) {	/* fast check */
     pip_takein_ood_task( schedi );
   }
@@ -746,6 +747,7 @@ int pip_yield_to( pip_task_t *task ) {
   pip_task_t		*queue;
 
   IF_UNLIKELY( task == NULL ) RETURN( pip_yield() );
+  if( pip_task_ == NULL ) RETURN( EPERM );
   schedi = pip_task_->task_sched;
   /* the target task must be in the same scheduling domain */
   IF_UNLIKELY( taski->task_sched != schedi ) RETURN( EPERM );

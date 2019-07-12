@@ -39,11 +39,11 @@
  *
  * \section synopsis SYNOPSIS
  *
- *	\c \b piprun [OPTIONS] &lt;program&gt; ... [ :: ... ]
+ *	\c \b piprun [OPTIONS] &lt;program&gt; ... [ : ... ]
  *
  * \section description DESCRIPTION
  * \b Run a program as PiP task(s).  Mutiple programs can be specified
- * by separating them with '::'.
+ * by separating them with ':'.
  *
  * -n \b &lt;N&gt; number of tasks\n
  * -f \b &lt;FUNC&gt; function name to start\n
@@ -71,7 +71,7 @@ static char *program;
 static void print_usage( void ) {
   fprintf( stderr,
 	   "Usage: %s [-n N] [-c C] [-f F] A.OUT ... "
-	   "{ :: [-n N] [-c C] [-f F] B.OUT ... } \n",
+	   "{ : [-n N] [-c C] [-f F] B.OUT ... } \n",
 	   program );
   fprintf( stderr, "\t-n N\t: Number of PiP tasks (default is 1)\n" );
   fprintf( stderr, "\t-c C\t: CPU core binding pattern\n" );
@@ -259,6 +259,11 @@ static int nth_core( corebind_t *cb, int start, int *ithp ) {
 }
 #endif
 
+static int isa_sep( char *str ) {
+  return ( strcmp( str, ":"  ) == 0 ||
+	   strcmp( str, "::" ) == 0 );
+}
+
 int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
   spawn_t	*spawn, *head, *tail;
@@ -285,7 +290,7 @@ int main( int argc, char **argv ) {
     if( tail != NULL ) tail->next = spawn;
     tail = spawn;
     for( ; i<argc; i++ ) {
-      if( strcmp( argv[i], "::" ) == 0 ) {
+      if( isa_sep( argv[i] ) ) {
 	if( spawn->args == NULL ) print_usage();
 	break;
       } else if( *argv[i] != '-' ) {
@@ -298,7 +303,7 @@ int main( int argc, char **argv ) {
 	spawn->args = spawn->tail = new_arg( argv[i++] );
 	spawn->argc = 1;
 	for( ; i<argc; i++ ) {
-	  if( argv[i] == NULL || strcmp( argv[i], "::" ) == 0 ) break;
+	  if( argv[i] == NULL || isa_sep( argv[i] ) ) break;
 	  arg = new_arg( argv[i] );
 	  spawn->tail->next = arg;
 	  spawn->tail       = arg;

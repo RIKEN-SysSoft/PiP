@@ -117,4 +117,6 @@ struct pip_gdbif_root {
   struct pip_gdbif_task	tasks[];
 };
 
+extern struct pip_gdbif_root	*pip_gdbif_root;
+
 #endif /* _pip_gdbif_h_ */

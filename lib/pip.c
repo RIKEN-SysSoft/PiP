@@ -47,7 +47,7 @@
 
 #include <pip.h>
 #include <pip_internal.h>
-#include <pip_gdbif_func.h>
+#include <pip_gdbif.h>
 
 #define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
 
@@ -285,6 +285,7 @@ void pip_page_alloc_( size_t sz, void **allocp ) {
 void pip_reset_task_struct_( pip_task_internal_t *taski ) {
   pip_task_annex_t 	*annex = taski->annex;
   void			*sleep_stack = annex->sleep_stack;
+  void			*namexp = annex->named_exptab;
 
   memset( (void*) taski, 0, sizeof( pip_task_internal_t ) );
   PIP_TASKQ_INIT( &taski->queue  );
@@ -293,9 +294,10 @@ void pip_reset_task_struct_( pip_task_internal_t *taski ) {
   taski->pipid = PIP_PIPID_NULL;
 
   memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
-  annex->sleep_stack = sleep_stack;
-  taski->annex = annex;
-  taski->annex->tid = -1; /* pip_gdbif_init_task_struct() refers this */
+  annex->sleep_stack  = sleep_stack;
+  annex->named_exptab = namexp;
+  annex->tid          = -1; /* pip_gdbif_init_task_struct() refers this */
+  taski->annex        = annex;
   PIP_TASKQ_INIT(    &taski->annex->oodq );
   pip_spin_init(     &taski->annex->lock_oodq );
   pip_blocking_init( &taski->annex->sleep );
@@ -393,6 +395,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     for( i=0; i<ntasks+1; i++ ) {
       pip_root_->tasks[i].annex = &pip_root_->annex[i];
       pip_reset_task_struct_( &pip_root_->tasks[i] );
+      pip_named_export_init_( &pip_root_->tasks[i] );
     }
     pip_root_->task_root = &pip_root_->tasks[ntasks];
 
@@ -410,7 +413,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( rt_expp != NULL ) {
       pip_task_->annex->exp = *rt_expp;
     }
-
     pip_root_->stack_size_sleep = PIP_SLEEP_STACKSZ;
     pip_page_alloc_( pip_root_->stack_size_sleep,
 		     &pip_task_->annex->sleep_stack );
@@ -420,10 +422,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
     unsetenv( PIP_ROOT_ENV );
 
-    if( ( err = pip_named_export_init_( pip_task_ ) ) != 0 ) {
-      free( pip_root_ );
-      RETURN( err );
-    }
     pip_gdbif_initialize_root_( ntasks );
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
@@ -433,8 +431,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ( err = pip_set_root( envroot ) ) != 0 ) RETURN( err );
     pipid = (int) strtoll( envtask, NULL, 10 );
     if( pipid < 0 || pipid >= pip_root_->ntasks ) {
-      pip_err_mesg( "PiP-ID is too large (pipid=%d)", pipid );
-      RETURN( EPERM );
+      RETURN( ERANGE );
     }
     pip_task_ = &pip_root_->tasks[pipid];
     ntasks    = pip_root_->ntasks;
@@ -442,7 +439,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( rt_expp != NULL ) {
       *rt_expp = (void*) pip_root_->task_root->annex->exp;
     }
-    if( ( err = pip_named_export_init_( pip_task_ ) ) != 0 ) RETURN( err );
     unsetenv( PIP_ROOT_ENV );
     unsetenv( PIP_TASK_ENV );
 
@@ -566,6 +562,7 @@ int pip_is_shared_fd( int *flagp ) {
   } else {
     *flagp = 0;
   }
+  ASSERT( pip_task_->annex->named_exptab == NULL );
   return 0;
 }
 
@@ -590,20 +587,6 @@ int pip_sigmask( int how, sigset_t *sigmask, sigset_t *oldmask ) {
     if( sigprocmask( how, sigmask, oldmask ) != 0 ) err = errno;
   }
   RETURN( err );
-}
-
-void pip_exit( int extval ) {
-  extern void pip_do_exit( pip_task_internal_t*, int );
-
-  DBGF( "extval:%d", extval );
-  if( !pip_is_initialized() ) {
-    exit( extval );
-  } else if( pip_isa_root() ) {
-    exit( extval );
-  } else {
-    pip_do_exit( pip_task_, extval );
-  }
-  NEVER_REACH_HERE;
 }
 
 int pip_is_debug_build( void ) {

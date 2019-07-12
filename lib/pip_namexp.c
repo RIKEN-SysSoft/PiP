@@ -87,13 +87,15 @@ static void pip_del_namexp_entry( pip_namexp_entry_t *entry ) {
   PIP_LIST_DEL( (pip_task_t*) entry );
 }
 
-int pip_named_export_init_( pip_task_internal_t *taski ) {
+void pip_named_export_init_( pip_task_internal_t *taski ) {
   pip_named_exptab_t 	*namexp;
   pip_namexp_list_t	*hashtab;
   int			i, sz = PIP_HASHTAB_SZ;
 
+  DBGF( "PIPID:%d", taski->pipid );
   hashtab = (pip_namexp_list_t*)
     PIP_MALLOC( sizeof( pip_namexp_list_t ) * sz );
+  ASSERT( hashtab == NULL );
   memset( hashtab, 0, sizeof( pip_namexp_list_t ) * sz );
   for( i=0; i<sz; i++ ) {
     PIP_LIST_INIT( &(hashtab[i].list) );
@@ -101,12 +103,11 @@ int pip_named_export_init_( pip_task_internal_t *taski ) {
     //DBGF( "htab[%d]:%p", i, &(hashtab[i]) );
   }
   namexp = (pip_named_exptab_t*) PIP_MALLOC( sizeof( pip_named_exptab_t ) );
-  if( namexp == NULL ) RETURN( ENOMEM );
+  ASSERT( namexp == NULL );
   memset( namexp, 0, sizeof( pip_named_exptab_t ) );
   namexp->sz         = sz;
   namexp->hash_table = hashtab;
   taski->annex->named_exptab = (void*) namexp;
-  return 0;
 }
 
 static pip_namexp_list_t*
@@ -206,13 +207,11 @@ int pip_named_export( void *exp, const char *format, ... ) {
   ENTER;
   va_start( ap, format );
   hash = pip_name_hash( &name, format, ap );
-  if( name == NULL ) {
-    err = ENOMEM;
-    goto error;
-  }
+  ASSERT( name == NULL );
   DBGF( "pipid:%d  name:%s", pip_task_->pipid, name );
 
   namexp = (pip_named_exptab_t*) pip_task_->annex->named_exptab;
+  ASSERT( namexp == NULL );
   head = pip_lock_hashtab_head( namexp, hash );
   {
     if( ( entry = pip_find_namexp( head, hash, name ) ) == NULL ) {
@@ -244,7 +243,7 @@ int pip_named_export( void *exp, const char *format, ... ) {
   }
   pip_unlock_hashtab_head( head );
   PIP_FREE( name );
- error:
+
   va_end( ap );
   RETURN( err );
 }
@@ -392,17 +391,25 @@ void pip_named_export_fin_( pip_task_internal_t *taski ) {
 }
 
 void pip_named_export_fin_all_( void ) {
+  pip_task_internal_t *taski, *rooti;
+  pip_named_exptab_t  *namexp;
   int i;
 
   DBGF( "pip_root->ntasks:%d", pip_root_->ntasks );
   for( i=0; i<pip_root_->ntasks; i++ ) {
     DBGF( "PiP task: %d", i );
-    PIP_FREE( pip_root_->tasks[i].annex->named_exptab );
-    pip_root_->tasks[i].annex->named_exptab = NULL;
+    taski  = &pip_root_->tasks[i];
+    namexp = taski->annex->named_exptab;
+    PIP_FREE( namexp->hash_table );
+    PIP_FREE( namexp );
+    taski->annex->named_exptab = NULL;
   }
   DBGF( "PiP root" );
-  (void) pip_named_export_fin_( pip_root_->task_root );
-  PIP_FREE( pip_root_->task_root->annex->named_exptab );
-  pip_root_->task_root->annex->named_exptab = NULL;
+  rooti = pip_root_->task_root;
+  (void) pip_named_export_fin_( rooti );
+  namexp = rooti->annex->named_exptab;
+  PIP_FREE( namexp->hash_table );
+  PIP_FREE( namexp );
+  rooti->annex->named_exptab = NULL;
   RETURNV;
 }

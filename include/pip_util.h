@@ -62,15 +62,15 @@ extern "C" {
 #endif
 
   pid_t pip_gettid( void );
-  int  pip_check_pie( char *path, int );
+  int  pip_check_pie( const char *path, int );
 
-  void pip_info_fmesg( FILE *fp, char *format, ... )
+  void pip_info_fmesg( FILE *fp, const char *format, ... )
     __attribute__((format (printf, 2, 3)));
-  void pip_info_mesg( char *format, ... )
+  void pip_info_mesg( const char *format, ... )
     __attribute__((format (printf, 1, 2)));
-  void pip_err_mesg( char *format, ... )
+  void pip_err_mesg( const char *format, ... )
     __attribute__((format (printf, 1, 2)));
-  void pip_warn_mesg( char *format, ... )
+  void pip_warn_mesg( const char *format, ... )
     __attribute__((format (printf, 1, 2)));
 
   /* the following pip_pring_*() functions will be deprecated */

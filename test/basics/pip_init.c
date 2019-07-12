@@ -33,15 +33,18 @@
 #include <string.h>
 #include <libgen.h>
 
+//#define DEBUG
 #include <test.h>
 
 static int test_pip_init( char **argv ) {
   int pipid, ntasks;
   void *exp;
 
+  CHECK( pip_is_initialized(), RV, return(EXIT_FAIL) );
   ntasks = NTASKS;
   exp = NULL;
   CHECK( pip_init( &pipid, &ntasks, &exp, 0 ), RV, return(EXIT_FAIL) );
+  CHECK( pip_is_initialized(), !RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -157,6 +160,15 @@ static int test_pip_task_unset( char **argv ) {
   return EXIT_PASS;
 }
 
+static int test_pip_child_task( char **argv ) {
+  int pipid, ntasks;
+
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
+  CHECK( (pipid>=0&&pipid<ntasks), !RV, return(EXIT_FAIL) );
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  return EXIT_PASS;
+}
+
 int main( int argc, char **argv ) {
   static struct {
     char *name;
@@ -171,6 +183,7 @@ int main( int argc, char **argv ) {
     { "both_pthread_process", test_both_pthread_process },
     { "both_preload_clone", test_both_preload_clone },
     { "pip_task_unset", test_pip_task_unset },
+    { "pip_child_task", test_pip_child_task },
   };
   char *test = argv[1];
   int i;
@@ -178,12 +191,12 @@ int main( int argc, char **argv ) {
   set_sigsegv_watcher();
   switch( argc ) {
   case 1:
-    exit( test_pip_init( argv ) );
+    pip_exit( test_pip_init( argv ) );
     break;
   default:
     for( i = 0; i < sizeof( tab ) / sizeof( tab[0] ); i++ ) {
       if( strcmp( tab[i].name, test ) == 0 )
-	exit( tab[i].func( argv ) );
+	pip_exit( tab[i].func( argv ) );
     }
     fprintf( stderr, "%s: unknown test type\n", test );
     break;

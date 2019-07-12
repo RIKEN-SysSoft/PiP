@@ -41,6 +41,8 @@ int main( int argc, char **argv ) {
   CHECK( ( pid = fork() ),  RV<0, return(EXIT_FAIL) );
   if( pid > 0 ) {
     CHECK( wait( NULL ), RV!=pid, return(EXIT_FAIL) );
+  } else {
+    exit( 0 );
   }
   return 0;
 }

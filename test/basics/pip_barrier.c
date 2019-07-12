@@ -64,7 +64,7 @@ int main( int argc, char **argv ) {
   }
   niters = ( niters == 0 ) ? NITERS : niters;
 
-  expp = &exp;;
+  expp = &exp;
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     CHECK( pip_barrier_init(&exp.barr,ntasks), RV, return(EXIT_FAIL) );

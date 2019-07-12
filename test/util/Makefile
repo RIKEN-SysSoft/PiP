@@ -37,11 +37,11 @@ include $(top_srcdir)/build/var.mk
 CWD = $(shell pwd)
 CFLAGS += -DCWD=\"$(CWD)\"
 
-PROGRAMS = dlmopen_count ompnumthread \
-	timer pip_mode pip_task pip_blt
-
 SRCS	= dlmopen_count.c ompnumthread.c \
-	timer.c pip_mode.c pip_task.c pip_blt.c
+	timer.c pip_mode.c pip_task.c pip_blt.c pip_barrier.c
+
+PROGRAMS = dlmopen_count ompnumthread \
+	timer pip_mode pip_task pip_blt pip_barrier
 
 PROGRAMS_TO_INSTALL = # nothing
 

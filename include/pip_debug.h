@@ -100,7 +100,7 @@ extern void pip_abort( void );
       pip_abort(); } } while(0)
 #endif
 #define NEVER_REACH_HERE						\
-  do { DBGF( "Never Reach Here !!!!!!" );  pip_abort(); } while(0)
+  do { DBGF( "Should not reach here !!!!!!" );  pip_abort(); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

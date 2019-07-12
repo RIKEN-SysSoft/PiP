@@ -89,13 +89,13 @@ int main( int argc, char **argv ) {
   expp = &exp;;
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( pip_barrier_init(&exp.barr,ntasks+1),   RV,   return(EXIT_FAIL) );
+    CHECK( pip_barrier_init(&exp.barr,ntasks+1),   RV, return(EXIT_FAIL) );
     strcpy( buff, ROOT );
     len = strlen( buff );
     if( stdin ) {
       fd = 0;
       exp.fd = fd;
-      CHECK( read( fd, check, len ),              RV<0,  return(EXIT_FAIL) );
+      CHECK( read( fd, check, len ),              RV<0, return(EXIT_FAIL) );
       for( i=0; i<ntasks; i++ ) {
 	pipid = i;
 	CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
@@ -106,8 +106,8 @@ int main( int argc, char **argv ) {
       CHECK( strcmp( buff, check ),               RV!=0, return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
 	for( j=0; j<ntasks; j++ ) {
-	  CHECK( pip_barrier_wait( &expp->barr ), RV,  return(EXIT_FAIL) );
-	  CHECK( pip_barrier_wait( &expp->barr ), RV,  return(EXIT_FAIL) );
+	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
+	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	}
       }
     } else if( stdout ) {

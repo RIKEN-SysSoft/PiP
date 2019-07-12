@@ -483,9 +483,9 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   void pip_task_queue_describe( pip_task_queue_t *queue, FILE *fp );
   /** @}*/
 #else
+  extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
   static inline void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
-    extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
     if( queue->methods == NULL ) {
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) {
 	fprintf( fp, "%s: (EMPTY)\n", tag );

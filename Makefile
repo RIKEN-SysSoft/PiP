@@ -62,6 +62,7 @@ test:
 	make -C	test/cxx
 	make -C test/fortran
 	make -C test/issues
+	make -C test/blt
 	test/test.sh test/test.list
 
 ### doxygen

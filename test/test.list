@@ -8,3 +8,4 @@
 %include issues/test.list
 %include piprun.list
 %include basics/blt.list
+%include blt/test.list

@@ -54,10 +54,14 @@ int main( int argc, char **argv ) {
     CHECK( pip_wait( 0, NULL ), RV,	   return(EXIT_FAIL) );
     CHECK( pip_fin(), 		RV, 	   return(EXIT_FAIL) );
     CHECK( pip_fin(),           RV!=EPERM, return(EXIT_FAIL) );
+
+    CHECK( pip_init( &pipid, &ntasks, &exp, 0), RV, return(EXIT_FAIL) );
+    CHECK( pip_fin(),           RV       , return(EXIT_FAIL) );
   } else {
     printf( "<%d> sleeping...\n", pipid );
     usleep( 500*1000UL );		/* 0.5 sec */
     printf( "<%d> slept!!!\n", pipid );
+    CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   }
 
   return EXIT_PASS;
