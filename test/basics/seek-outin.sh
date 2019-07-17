@@ -1,17 +1,19 @@
 #!/bin/sh
-dir=`dirname $0`
+dir=`dirname $0`;
+ntasks=$1;
+niters=100
 fname=seek.text
-$dir/seek stdout $1 100 > $fname
+$dir/seek stdout $ntasks $niters > $fname
 rv=$?
 if [[ $rv -ne 0 ]]; then
     exit $rv
 fi
-$dir/seek stdin $1 100 < $fname
+$dir/seek stdin $ntasks niters < $fname
 rv=$?
 if [[ $rv -ne 0 ]]; then
     exit $rv
 fi
-cat $fname | $dir/seek stdin $1 100
+cat $fname | $dir/seek stdin $ntasks $niters
 rv=$?
 rm -f $fname
 exit $rv
