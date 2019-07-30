@@ -612,8 +612,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( rt_expp != NULL ) {
       pip_root->task_root->export          = *rt_expp;
     }
-    pip_gdbif_root->hook_before_main = pip_gdb_hook_before;
-    pip_gdbif_root->hook_after_main  = pip_gdb_hook_after;
     pip_spin_init( &pip_root->task_root->lock_malloc );
     unsetenv( PIP_ROOT_ENV );
 
@@ -621,6 +619,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ( err = pip_page_alloc( sz, (void**) &gdbif_root ) ) != 0 ) {
       RETURN( err );
     }
+    gdbif_root->hook_before_main = pip_gdb_hook_before;
+    gdbif_root->hook_after_main  = pip_gdb_hook_after;
     pip_spin_init( &gdbif_root->lock_free );
     PIP_SLIST_INIT(&gdbif_root->task_free);
     pip_spin_init( &gdbif_root->lock_root );
