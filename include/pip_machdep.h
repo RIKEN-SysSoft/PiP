@@ -62,8 +62,6 @@ typedef volatile intptr_t	pip_atomic_t;
 #ifndef PIP_PAUSE
 inline static void pip_pause( void ) {
   /* nop */
-  static int x = 0;
-  x ++;
 }
 #endif
 

@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 //#define DEBUG
@@ -46,7 +46,7 @@ void init_func( void ) {
   char *env;
   int i;
 
-  CHECK( (env=getenv(PIP_TEST_PIPID_ENV)), RV==0, exit(EXIT_FAIL) );
+  CHECK( (env=getenv(PIP_TEST_PIPID_ENV)), RV==0, _exit(EXIT_FAIL) );
   pipid = strtol( env, NULL, 10 );
   fprintf( stderr, "[%d] constructor is called\n", pipid );
   for( i=0; i<SZ; i++ ) {

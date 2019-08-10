@@ -368,7 +368,8 @@ inline static void set_sigsegv_watcher( void ) {
 	     siginfo->si_addr,
 	     sigcode );
     fflush( NULL );
-    exit( EXIT_FAIL );
+    //exit( EXIT_FAIL );
+    pip_abort();
   }
 
   struct sigaction sigact;

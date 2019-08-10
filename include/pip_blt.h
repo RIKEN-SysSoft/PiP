@@ -70,27 +70,26 @@ typedef struct pip_queue {
   struct pip_queue	*prev;
 } pip_task_t;
 
-typedef pip_task_t	pip_task_list_t;
-
-#define PIP_TASKQ_NEXT(L)	((L)->next)
-#define PIP_TASKQ_PREV(L)	((L)->prev)
-#define PIP_TASKQ_PREV_NEXT(L)	((L)->prev->next)
-#define PIP_TASKQ_NEXT_PREV(L)	((L)->next->prev)
+#define PIP_TASKQ_NEXT(L)	(((pip_task_t*)(L))->next)
+#define PIP_TASKQ_PREV(L)	(((pip_task_t*)(L))->prev)
+#define PIP_TASKQ_PREV_NEXT(L)	(((pip_task_t*)(L))->prev->next)
+#define PIP_TASKQ_NEXT_PREV(L)	(((pip_task_t*)(L))->next->prev)
 
 #define PIP_TASKQ_INIT(L)					\
-  do { PIP_TASKQ_NEXT(L) = PIP_TASKQ_PREV(L) = (L); } while(0)
+  do { PIP_TASKQ_NEXT(L) = PIP_TASKQ_PREV(L) =			\
+      (pip_task_t*)(L); } while(0)
 
 #define PIP_TASKQ_ENQ_FIRST(L,E)				\
   do { PIP_TASKQ_NEXT(E)      = PIP_TASKQ_NEXT(L);		\
-       PIP_TASKQ_PREV(E)      = (L);				\
-       PIP_TASKQ_NEXT_PREV(L) = (E);				\
-       PIP_TASKQ_NEXT(L)      = (E); } while(0)
+       PIP_TASKQ_PREV(E)      = (pip_taskt*)(L);		\
+       PIP_TASKQ_NEXT_PREV(L) = (pip_task_t*)(E);		\
+       PIP_TASKQ_NEXT(L)      = (pip_task_t*)(E); } while(0)
 
 #define PIP_TASKQ_ENQ_LAST(L,E)					\
-  do { PIP_TASKQ_NEXT(E)      = (L);				\
+  do { PIP_TASKQ_NEXT(E)      = (pip_task_t*)(L);		\
        PIP_TASKQ_PREV(E)      = PIP_TASKQ_PREV(L);		\
-       PIP_TASKQ_PREV_NEXT(L) = (E);				\
-       PIP_TASKQ_PREV(L)      = (E); } while(0)
+       PIP_TASKQ_PREV_NEXT(L) = (pip_task_t*)(E);		\
+       PIP_TASKQ_PREV(L)      = (pip_task_t*)(E); } while(0)
 
 #define PIP_TASKQ_DEQ(E)					\
   do { PIP_TASKQ_NEXT_PREV(E) = PIP_TASKQ_PREV(E);		\
@@ -106,14 +105,15 @@ typedef pip_task_t	pip_task_list_t;
       PIP_TASKQ_INIT(Q); } } while(0)
 
 #define PIP_TASKQ_ISEMPTY(L)					\
-  ( PIP_TASKQ_NEXT(L) == (L) && PIP_TASKQ_PREV(L) == (L) )
+  ( PIP_TASKQ_NEXT(L) == (L) && PIP_TASKQ_PREV(L) == (pip_task_t*)(L) )
 
 #define PIP_TASKQ_FOREACH(L,E)					\
-  for( (E)=(L)->next; (L)!=(E); (E)=PIP_TASKQ_NEXT(E) )
+  for( (E)=PIP_TASKQ_NEXT(L); (pip_task_t*)(L)!=(E);		\
+       (E)=PIP_TASKQ_NEXT(E) )
 
 #define PIP_TASKQ_FOREACH_SAFE(L,E,TV)				\
-  for( (E)=(L)->next, (TV)=PIP_TASKQ_NEXT(E);			\
-       (L)!=(E);						\
+  for( (E)=PIP_TASKQ_NEXT(L), (TV)=PIP_TASKQ_NEXT(E);		\
+       (pip_task_t*)(L)!=(E);					\
        (E)=(TV), (TV)=PIP_TASKQ_NEXT(TV) )
 
 #define PIP_TASKQ_MOVE(D,S)		\
@@ -123,6 +123,9 @@ typedef pip_task_t	pip_task_list_t;
       (D)->next = (S)->next;			\
       (D)->prev = (S)->prev;			\
       PIP_TASKQ_INIT(S); } } while(0)
+
+
+typedef pip_task_t	pip_list_t;
 
 #define PIP_LIST_INIT(L)		PIP_TASKQ_INIT(L)
 #define PIP_LIST_ISEMPTY(L)		PIP_TASKQ_ISEMPTY(L)
@@ -135,10 +138,10 @@ typedef pip_task_t	pip_task_list_t;
 struct pip_task_queue_methods;
 
 typedef struct pip_task_queue {
-  pip_task_t			queue;
+  volatile pip_task_t		queue;
   struct pip_task_queue_methods	*methods;
   pip_spinlock_t		lock;
-  int32_t			length;
+  volatile int32_t		length;
 } pip_task_queue_t;
 
 typedef void(*pip_enqueue_callback_t)(void*);
@@ -178,7 +181,7 @@ typedef struct pip_mutex {
 typedef struct pip_barrier {
   pip_atomic_t			count_init;
   pip_atomic_t			count;
-  int				turn;
+  volatile int			turn;
   pip_task_queue_t		queue[2]; /* this must be placed at the end */
 } pip_barrier_t;
 
@@ -455,9 +458,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   static inline pip_task_t*
   pip_task_queue_dequeue_( pip_task_queue_t *queue ) {
-    pip_task_t 		*task;
-
     if( queue->methods == NULL ) {
+      pip_task_t *task;
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) return NULL;
       task = PIP_TASKQ_NEXT( &queue->queue );
       PIP_TASKQ_DEQ( task );

@@ -40,7 +40,7 @@
 
 static struct my_exp {
   pip_barrier_t		barr;
-  int			count;
+  volatile int		count;
 } exp;
 
 static struct my_exp *expp;
@@ -90,9 +90,11 @@ int main( int argc, char **argv ) {
     CHECK( expp->count==niters, !RV, return(EXIT_FAIL) );
 
   } else {
+    srand( ( pipid + 1 ) * ( pipid + 1 ) );
     for( i=0; i<niters; i++ ) {
       CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );
       CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+      usleep( rand() % 10000 );
       if( ( i % ntasks ) == pipid ) expp->count ++;
       CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
     }

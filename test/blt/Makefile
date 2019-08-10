@@ -35,23 +35,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = namexp.c
-
-PROGRAMS  = namexp
-
-PROGRAMS_TO_INSTALL = # nothing
+SRCS  = pip_yield.c pip_namexp.c pip_barrier.c
+PROGRAMS  = pip_yield pip_namexp pip_barrier
 
 include $(top_srcdir)/build/rule.mk
-
-LDLIBS += -lm
-
-test-file:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )
-
-post-clean-hook:
-	$(RM) *.E *.log
-
-check: test
-
-test:
-	( cd ../; ./test.sh -A namexp/test.list )

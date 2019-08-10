@@ -39,14 +39,9 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 
-#define EXIT_PASS	0
-#define EXIT_FAIL	1
-#define EXIT_XPASS	2  /* passed, but it's unexpected. fixed recently?   */
-#define EXIT_XFAIL	3  /* failed, but it's expected. i.e. known bug      */
-#define EXIT_UNRESOLVED	4  /* cannot determine whether (X)?PASS or (X)?FAIL  */
-#define EXIT_UNTESTED	5  /* not tested, this test haven't written yet      */
-#define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
-#define EXIT_KILLED	7  /* killed by Control-C or something               */
+#define DEBUG_SCALE	(5)
+
+extern int pip_is_debug_build( void );
 
 static pid_t pid = 0;
 static char *prog;
@@ -96,7 +91,7 @@ static void usage( void ) {
 }
 
 int main( int argc, char **argv ) {
-  int 	time, status;
+  int 	time, status, flag_debug = 0;
 
   set_sigsegv_watcher();
   set_sigint_watcher();
@@ -104,8 +99,18 @@ int main( int argc, char **argv ) {
   prog = basename( argv[0] );
   if( argc < 3 ) usage();
 
-  time = strtol( argv[1], NULL, 10 );
+  if( *argv[1] == '-' ) {
+    flag_debug = 1;
+    time = strtol( &argv[1][1], NULL, 10 );
+  } else {
+    time = strtol( argv[1], NULL, 10 );
+  }
   if( time == 0 ) usage();
+
+  if( pip_is_debug_build() && !flag_debug ) {
+    time *= DEBUG_SCALE;
+  }
+
   set_timer( time );
   if( ( pid = fork() ) == 0 ) {
     (void) setpgid( 0, 0 );

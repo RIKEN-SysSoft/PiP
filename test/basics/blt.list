@@ -1,0 +1,30 @@
+timer 1 pip_blt 1 1  ./pip_init pip_child_task
+timer 1 pip_blt 1 1  ./pip_init pip_child_task
+timer 1 pip_blt 1 1  ./pip_init pip_child_task
+timer 1 pip_blt 8 16 ./pip_init pip_child_task
+timer 1 pip_blt 8 16 ./pip_init pip_child_task
+timer 1 pip_blt 8 16 ./pip_init pip_child_task
+timer 1 pip_blt 1 1  ./pip_spawn
+timer 1 pip_blt 1 1  ./pip_spawn
+timer 1 pip_blt 1 1  ./pip_spawn
+timer 1 pip_blt 8 16 ./pip_spawn
+timer 1 pip_blt 8 16 ./pip_spawn
+timer 1 pip_blt 8 16 ./pip_spawn
+timer 1 pip_blt 1 1  ./pip_misc
+timer 1 pip_blt 1 1  ./pip_misc
+timer 1 pip_blt 1 1  ./pip_misc
+timer 1 pip_blt 8 16 ./pip_misc
+timer 1 pip_blt 8 16 ./pip_misc
+timer 1 pip_blt 8 16 ./pip_misc
+timer 1 pip_blt 1 1  ./pip_exit
+timer 1 pip_blt 1 1  ./pip_exit
+timer 1 pip_blt 1 1  ./pip_exit
+timer 1 pip_blt 8 16 ./pip_exit
+timer 1 pip_blt 8 16 ./pip_exit
+timer 1 pip_blt 8 16 ./pip_exit
+timer 1 pip_blt 1 1  ./return
+timer 1 pip_blt 1 1  ./return
+timer 1 pip_blt 1 1  ./return
+timer 1 pip_blt 8 16 ./return
+timer 1 pip_blt 8 16 ./return
+timer 1 pip_blt 8 16 ./return

@@ -113,6 +113,35 @@ static void pip_blocking_init( pip_blocking_t *blocking ) {
   (void) sem_init( blocking, 1, 0 );
 }
 
+#define NITERS		(1000)
+#define FACTOR		(10)
+static uint64_t pip_yield_setting( void ) {
+  double dt, xt;
+  uint64_t c;
+  int i, j;
+
+  for( i=0; i<NITERS; i++ ) pip_system_yield();
+  dt = -pip_gettime();
+  for( i=0; i<NITERS; i++ ) pip_system_yield();
+  dt += pip_gettime();
+  DBGF( "DT:%g", dt );
+
+  for( i=0; i<NITERS; i++ ) pip_pause();
+  xt = 0.0;
+  for( c=FACTOR; ; c*=2 ) {
+    xt = -pip_gettime();
+    for( j=0; j<c; j++ ) {
+      for( i=0; i<NITERS; i++ ) pip_pause();
+    }
+    xt += pip_gettime();
+    DBGF( "c:%lu  XT:%g  DT:%g", c, xt, dt );
+    if( xt > dt ) break;
+  }
+  c /= 2;
+  DBGF( "yield:%lu", c );
+  return c;
+}
+
 pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
 
 static int pip_check_opt_and_env( int *optsp ) {
@@ -303,12 +332,12 @@ void pip_reset_task_struct_( pip_task_internal_t *taski ) {
   pip_blocking_init( &taski->annex->sleep );
 }
 
-uint32_t pip_check_sync_flag_( uint32_t flags ) {
+int pip_check_sync_flag_( uint32_t flags ) {
   if( flags & PIP_SYNC_MASK ) {
-    if( ( flags & ~PIP_SYNC_AUTO     ) != ~PIP_SYNC_AUTO     ) return 0;
-    if( ( flags & ~PIP_SYNC_BUSYWAIT ) != ~PIP_SYNC_BUSYWAIT ) return 0;
-    if( ( flags & ~PIP_SYNC_YIELD    ) != ~PIP_SYNC_YIELD    ) return 0;
-    if( ( flags & ~PIP_SYNC_BLOCKING ) != ~PIP_SYNC_BLOCKING ) return 0;
+    if( ( flags & ~PIP_SYNC_AUTO     ) != ~PIP_SYNC_AUTO     ) return -1;
+    if( ( flags & ~PIP_SYNC_BUSYWAIT ) != ~PIP_SYNC_BUSYWAIT ) return -1;
+    if( ( flags & ~PIP_SYNC_YIELD    ) != ~PIP_SYNC_YIELD    ) return -1;
+    if( ( flags & ~PIP_SYNC_BLOCKING ) != ~PIP_SYNC_BLOCKING ) return -1;
   } else if( !pip_is_initialized() ) {
     char *env = getenv( PIP_ENV_SYNC );
     if( env == NULL ) {
@@ -320,8 +349,8 @@ uint32_t pip_check_sync_flag_( uint32_t flags ) {
       flags |= PIP_SYNC_BUSYWAIT;
     } else if( strcasecmp( env, PIP_ENV_SYNC_YIELD    ) == 0 ) {
       flags |= PIP_SYNC_YIELD;
-    } else if( strcasecmp( env, PIP_ENV_SYNC_BLOCK     ) == 0 ||
-	       strcasecmp( env, PIP_ENV_SYNC_BLOCKING  ) == 0 ) {
+    } else if( strcasecmp( env, PIP_ENV_SYNC_BLOCK    ) == 0 ||
+	       strcasecmp( env, PIP_ENV_SYNC_BLOCKING ) == 0 ) {
       flags |= PIP_SYNC_BLOCKING;
     }
   }
@@ -358,7 +387,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
     if( ( err  = pip_check_opt_and_env( &opts ) ) != 0 ) RETURN( err );
-    if( ( opts = pip_check_sync_flag_(   opts ) ) == 0 ) RETURN( EINVAL );
+    if( ( opts = pip_check_sync_flag_(   opts ) )  < 0 ) RETURN( EINVAL );
 
     sz = PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
          PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
@@ -392,6 +421,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root_->ntasks_count = 1;
     pip_root_->cloneinfo    = pip_cloneinfo;
     pip_root_->opts         = opts;
+    pip_root_->yield_iters  = pip_yield_setting();
     for( i=0; i<ntasks+1; i++ ) {
       pip_root_->tasks[i].annex = &pip_root_->annex[i];
       pip_reset_task_struct_( &pip_root_->tasks[i] );
@@ -545,7 +575,10 @@ const char *pip_get_mode_str( void ) {
   return mode;
 }
 
-extern int pip_is_threaded_( void );
+int pip_is_threaded_( void ) {
+  return ( pip_root_->opts & PIP_MODE_PTHREAD ) != 0 ? CLONE_THREAD : 0;
+}
+
 int pip_is_threaded( int *flagp ) {
   if( pip_is_threaded_() ) {
     *flagp = 1;
@@ -555,8 +588,13 @@ int pip_is_threaded( int *flagp ) {
   return 0;
 }
 
+int pip_is_shared_fd_( void ) {
+  if( pip_root_->cloneinfo == NULL )
+    return (pip_root_->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_FILES : 0;
+  return pip_root_->cloneinfo->flag_clone & CLONE_FILES;
+}
+
 int pip_is_shared_fd( int *flagp ) {
-  extern int pip_is_shared_fd_( void );
   if( pip_is_shared_fd_() ) {
     *flagp = 1;
   } else {
@@ -595,4 +633,47 @@ int pip_is_debug_build( void ) {
 #else
   return 0;
 #endif
+}
+
+void *pip_dlopen( const char *filename, int flag ) {
+  void *handle;
+  pip_spin_lock( &pip_root_->lock_ldlinux );
+  handle = dlopen( filename, flag );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  return handle;
+}
+
+void *pip_dlsym( void *handle, const char *symbol ) {
+  void *addr;
+  pip_spin_lock( &pip_root_->lock_ldlinux );
+  addr = dlsym( handle, symbol );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  return addr;
+}
+
+int pip_dlclose( void *handle ) {
+  int rv;
+  pip_spin_lock( &pip_root_->lock_ldlinux );
+  rv = dlclose( handle );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  return rv;
+}
+
+int pip_pthread_create( pthread_t *thread, const pthread_attr_t *attr,
+			void *(*start_routine) (void *), void *arg ) {
+  int rv;
+  ENTER;
+  pip_spin_lock( &pip_root_->lock_ldlinux );
+  rv = pthread_create( thread, attr, start_routine, arg );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  RETURN( rv );
+}
+
+int pip_pthread_join( pthread_t thread, void **retval ) {
+  int rv;
+  ENTER;
+  pip_spin_lock( &pip_root_->lock_ldlinux );
+  rv = pthread_join( thread, retval );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  RETURN( rv );
 }

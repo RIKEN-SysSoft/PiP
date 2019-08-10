@@ -48,10 +48,8 @@ debug:
 	CPPFLAGS+="-DDEBUG" make all;
 
 ### build test programs and run them
-
-.PHONY: test
-test:
-	make all
+.PHONY: test-progs
+test-progs:
 	make -C test
 	make -C test/util
 	make -C test/prog
@@ -63,6 +61,11 @@ test:
 	make -C test/fortran
 	make -C test/issues
 	make -C test/blt
+
+.PHONY: test
+test:
+	make all
+	make test-progs
 	test/test.sh test/test.list
 
 ### doxygen

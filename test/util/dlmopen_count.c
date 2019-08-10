@@ -87,7 +87,7 @@ main(int argc, char **argv)
 	  fprintf( stderr, "DL_NNS=%d  PIP_NATSKS_MAX=%d\n",
 		   n, PIP_NTASKS_MAX );
 	}
-	if (option_pip_mode && n > PIP_NTASKS_MAX)
+	if( option_pip_mode && n > PIP_NTASKS_MAX )
 		n = PIP_NTASKS_MAX;
 	n = ( n > m ) ? m : n;
 	printf("%d\n", n);

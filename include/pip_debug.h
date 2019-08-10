@@ -90,17 +90,18 @@ extern void pip_abort( void );
   do { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; return; } while(0)
 
 #ifdef DEBUG
-#define ASSERT(X)							\
-  do { int RV = (X); if(RV) { DBGF( "<%s> ?? Assertion FAILED", #X );		\
-      pip_abort(); } else { DBGF( "(%s) -- Assertion is OK", #X ); } } \
+#define ASSERT(X)						       \
+  do {int RV=(X);IF_UNLIKELY(RV){DBGF("<%s> Assertion FAILED\n",#X);  \
+      pip_abort(); } else { DBGF( "(%s) -- Assertion OK", #X ); } } \
   while(0)
 #else
-#define ASSERT(X)						\
-  do { if(X) { DBGF( "Assertion FAILED '%s' !!!!!!", #X );	\
+#define ASSERT(X)							\
+  do {IF_UNLIKELY(X) { DBGF( "Assertion FAILED '%s' !!!!!!\n", #X );	\
       pip_abort(); } } while(0)
 #endif
+
 #define NEVER_REACH_HERE						\
-  do { DBGF( "Should not reach here !!!!!!" );  pip_abort(); } while(0)
+  do { DBGF( "Should not reach here !!!!!!\n" );  pip_abort(); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

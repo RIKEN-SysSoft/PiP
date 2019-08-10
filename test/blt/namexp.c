@@ -1,18 +1,18 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
   * 	  System Software Devlopment Team. All rights researved$
   * $PIP_VERSION: Version 1.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
   * met:
-  * 
+  *
   * 1. Redistributions of source code must retain the above copyright
   *    notice, this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the 
+  *    notice, this list of conditions and the following disclaimer in the
   *    documentation and/or other materials provided with the distribution.
-  * 
+  *
   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
   * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
   * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,7 +24,7 @@
   * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  * 
+  *
   * The views and conclusions contained in the software and documentation
   * are those of the authors and should not be interpreted as representing
   * official policies, either expressed or implied, of the PiP project.$
@@ -33,70 +33,63 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
+//#define DEBUG
 #include <test.h>
 
-int a[100];
+#define BIAS	(1000)
 
-int main( int argc, char **argv, char **envv ) {
-  void *exp;
-  int pipid, ntasks;
-  int i;
+#define SZ	(128)
 
-  a[0] = 123456;
+static int a[SZ];
 
-  ntasks = NTASKS;
-  exp = (void*) a;
-  TESTINT( pip_init( &pipid, &ntasks, &exp, 0 ) );
-  if( pipid == PIP_PIPID_ROOT ) {
-    for( i=0; i<NTASKS; i++ ) {
-      int err;
-      pipid = i;
-      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
-		       &pipid, NULL, NULL, NULL );
-      if( err != 0 ) {
-	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
-		 i, NTASKS, strerror( err ) );
-	break;
+int test_main( exp_t *exp ) {
+  static int initialized = 0;
+  int pipid = 0;
+  int ntasks = exp->args.ntasks;
+  int *ap, flag, j, k;
+  static int i = 0;
+
+  if( ntasks < 2 ) return 1;
+
+  if( !initialized ) {
+    initialized = 1;
+    srand( pipid );
+    TESTINT( pip_get_pipid( &pipid ) );
+    for( i=0; i<SZ; i++ ) {
+      if( pipid & 0x1 ) {
+	a[i] = ( BIAS * pipid ) + i;
+      } else {
+	a[i] = -1;;
       }
-      if( i != pipid ) {
-	fprintf( stderr, "pip_spawn(%d!=%d) !!!!!!\n", i, pipid );
-      }
     }
-    ntasks = i;
-    for( i=0; i<ntasks; i++ ) {
-      //fprintf( stderr, "[ROOT] >> import[%d]\n", i );
-      while( 1 ) {
-	TESTINT( pip_import( i, &exp ) );
-	if( exp != NULL ) break;
-	pause_and_yield( 0 );
-      }
-      DBG;
-      //fprintf( stderr, "[ROOT] << import[%d]: %d\n", i, *(int*)exp );
-    }
-    DBG;
-    for( i=0; i<ntasks; i++ ) {
-      a[i+1] = i + 100;
-      TESTINT( pip_wait( i, NULL ) );
-    }
-    TESTINT( pip_fin() );
-  } else {
-    void *root;
-
-    a[0] = pipid * 10;
-    TESTINT( pip_export( (void*) a ) );
-    while( 1 ) {
-      TESTINT( pip_import( PIP_PIPID_ROOT, &root ) );
-      if( root != NULL ) break;
-      pause_and_yield( 0 );
-    }
-    DBG;
-    //fprintf( stderr, "[%d] import[ROOT]: %d\n", pipid, *(int*)root );
-    while( 1 ) {
-      if( ((int*)root)[pipid+1] == pipid + 100 ) break;
-      pause_and_yield( 0 );
-    }
-    fprintf( stderr, "[PID=%d] Hello, my PIPID is %d\n", getpid(), pipid );
   }
-  DBG;
-  return 0;
+
+  flag = 0;
+  if( i < SZ ) {
+    if( pipid & 0x1 ) {
+      ap = &a[i];
+      fprintf( stderr, "[%d] export[%d]\n", pipid, i );
+      TESTINT( pip_named_export( (void*) &a, "a[%d]", i ) );
+    } else {
+      do {
+	k = rand() % ntasks;
+      } while( !( k & 0x1 ) );
+      fprintf( stderr, "[%d] import[%d]@%d\n", pipid, i, k );
+      TESTINT( pip_named_import( k, (void**) &ap, "a[%d]", i ) );
+      if( *ap != ( BIAS * k ) + i ) {
+	flag = -1;
+	fprintf( stderr, "[%d] i=%d  %d != %d\n", pipid, i, *ap, i+BIAS );
+      }
+    }
+  } else {
+    j = rand() % SZ;
+    k = rand() % ntasks;
+    TESTINT( pip_named_import( k, (void**) &ap, "a[%d]", j ) );
+    if( *ap != ( BIAS * k ) + j ) {
+      flag = -1;
+      fprintf( stderr, "[%d] i=%d  %d != %d\n", pipid, j, *ap, i+BIAS );
+    }
+  }
+  i ++;
+  return flag;
 }

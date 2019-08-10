@@ -1,7 +1,7 @@
 /*
- * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
- * 	  System Software Devlopment Team. All rights researved$
- * $PIP_VERSION: Version 1.0$
+ * $RIKEN_copyright: Riken Center for Computational Sceience,
+ * System Software Development Team, 2016, 2017, 2018, 2019$
+ * $PIP_VERSION: Version 1.0.0$
  * $PIP_license: <Simplified BSD License>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,76 +30,17 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define _GNU_SOURCE
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <pthread.h>
-#include <stdlib.h>
-#include <unistd.h>
-
-#include <pip.h>
+#include <netdb.h>
 #include <test.h>
 
-#define NTASKS_MAX	PIP_NTASKS_MAX
-
-double	time_start, time_spawn, time_end;
-
-void spawn_tasks( int ntasks ) {
-  char *argv[] = { "./null", NULL };
-  int pipid, i;
-
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
-  TESTINT( ( pipid != PIP_PIPID_ROOT ) );
-
-#ifdef AH
-  pip_print_maps();
-  printf( "root pid: %d\n", getpid() );
-#endif
-
-  time_start = pip_gettime();
-  for( i=0; i<ntasks; i++ ) {
-    pipid = i;
-    TESTINT( pip_spawn( argv[0],
-			argv,
-			NULL,
-			PIP_CPUCORE_ASIS,
-			&pipid,
-			NULL,
-			NULL,
-			NULL ) );
-  }
-  time_spawn = pip_gettime();
-  for( i=0; i<ntasks; i++ ) {
-    TESTINT( pip_wait( i, NULL ) );
-  }
-  time_end = pip_gettime();
-
-  TESTINT( pip_fin() );
-}
-
 int main( int argc, char **argv ) {
-  int ntasks;
+  struct hostent *he;
 
-  set_sigsegv_watcher();
-
-  if( argc < 2 ) {
-    fprintf( stderr, "spawn-XXX <ntasks>\n" );
-    exit( 1 );
-  }
-  ntasks = atoi( argv[1] );
-  if( ntasks > NTASKS_MAX ) {
-    fprintf( stderr, "Illegal number of tasks is specified.\n" );
-    exit( 1 );
-  }
-
-  spawn_tasks( ntasks );
-  printf( "%g  %g  [sec] %d tasks\n",
-	  time_spawn - time_start, time_end - time_spawn, ntasks );
-
+  CHECK( (he=gethostbyname( "127.0.0.1" )),             RV==0, return(EXIT_FAIL) );
+  CHECK( (he=gethostbyname( "localhost" )),             RV==0, return(EXIT_FAIL) );
+  CHECK( (he=gethostbyname( "localhost.localdomain" )), RV==0, return(EXIT_FAIL) );
   return 0;
 }

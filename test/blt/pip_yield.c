@@ -33,20 +33,25 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#define PIP_INTERNAL_FUNCS
-
 #include <test.h>
 
-int test_main( exp_t *exp ) {
-  int i, n;
+#define NITERS		(1000)
 
-  if( pip_is_debug_build() ) {
-    n = 10;
-  } else {
-    n = 100;
+int main( int argc, char **argv ) {
+  int	niters, i;
+
+  set_sigsegv_watcher();
+
+  niters = 0;
+  if( argc > 1 ) {
+    niters = strtol( argv[1], NULL, 10 );
   }
-  for( i=0; i<n; i++ ) {
-    TESTINT( pip_yield() );
+  niters = ( niters == 0 ) ? NITERS : niters;
+
+  CHECK( pip_init(NULL,NULL,NULL,0), RV, return(EXIT_FAIL) );
+
+  for( i=0; i<niters; i++ ) {
+    CHECK( pip_yield(), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
   }
   return 0;
 }

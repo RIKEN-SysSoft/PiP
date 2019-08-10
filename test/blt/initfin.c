@@ -33,28 +33,14 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <netdb.h>
 #include <test.h>
 
-int my_getaddrinfo( char *hostname ) {
-  struct addrinfo hints, *res = NULL;
-  int rv;
+int test_main( void *dummy ) {
+  int pipid;
+  char *env = getenv( PIPENV );
 
-  memset( &hints, 0, sizeof(hints) );
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_family   = AF_INET;
-  rv = getaddrinfo( hostname, NULL, &hints, &res );
-  freeaddrinfo( res );
-  return rv;
-}
-
-#define HOSTNAMELEN	(256)
-
-int main( int argc, char **argv ) {
-  char hostname[HOSTNAMELEN];
-
-  CHECK( gethostname( hostname, HOSTNAMELEN ), RV, return(EXIT_FAIL) );
-  CHECK( my_getaddrinfo( "127.0.0.1" ),        RV, return(EXIT_FAIL) );
-  //CHECK( my_getaddrinfo( hostname ),           RV, return(EXIT_FAIL) );
-  return 0;
+  TESTINT( pip_get_pipid( &pipid ) );
+  if( env == NULL ) return -1;
+  if( strtol( env, NULL, 10 ) != pipid  ) return -2;
+  return 1;
 }

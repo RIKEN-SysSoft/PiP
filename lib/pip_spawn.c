@@ -45,6 +45,8 @@
 
 //#define DEBUG
 
+#include <malloc.h> 		/* M_MMAP_THRESHOLD and M_TRIM_THRESHOLD  */
+
 #include <pip_internal.h>
 #include <pip_blt.h>
 #include <pip_gdbif.h>
@@ -52,6 +54,9 @@
 extern void pip_page_alloc_( size_t, void** );
 extern void pip_named_export_fin_all_( void );
 extern void pip_reset_task_struct_( pip_task_internal_t* );
+extern int  pip_is_threaded_( void );
+extern int  pip_is_shared_fd_( void );
+extern int  pip_dlclose( void* );
 
 #ifdef DEBUG
 #define CHECK_TLS
@@ -61,15 +66,6 @@ extern void pip_reset_task_struct_( pip_task_internal_t* );
 __thread int pipid_tls;
 #endif
 
-int pip_is_threaded_( void ) {
-  return ( pip_root_->opts & PIP_MODE_PTHREAD ) != 0 ? CLONE_THREAD : 0;
-}
-
-int pip_is_shared_fd_( void ) {
-  if( pip_root_->cloneinfo == NULL )
-    return (pip_root_->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_FILES : 0;
-  return pip_root_->cloneinfo->flag_clone & CLONE_FILES;
-}
 
 int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
   int err = 0;
@@ -127,32 +123,24 @@ static char **pip_copy_vec3( char *addition0,
   if( ( vecdst = (char**) PIP_MALLOC( sz ) ) == NULL ) return NULL;
   p = ((char*)vecdst) + ( sizeof(char*) * vecln );
   i = j = 0;
-  if( addition0 ) {
+  if( addition0 != NULL ) {
     vecdst[j++] = p;
     p = stpcpy( p, addition0 ) + 1;
   }
-  //ASSERT( ( (intptr_t)p >= (intptr_t)(vecdst+sz) ) );
-  if( addition1 ) {
+  if( addition1 != NULL ) {
     vecdst[j++] = p;
     p = stpcpy( p, addition1 ) + 1;
   }
-  //ASSERT( ( (intptr_t)p >= (intptr_t)(vecdst+sz) ) );
+  if( addition2 != NULL ) {
+    vecdst[j++] = p;
+    p = stpcpy( p, addition2 ) + 1;
+  }
   for( i=0; vecsrc[i]!=NULL; i++ ) {
     vecdst[j++] = p;
     p = stpcpy( p, vecsrc[i] ) + 1;
-    //ASSERT( ( (intptr_t)p >= (intptr_t)(vecdst+sz) ) );
   }
   vecdst[j] = NULL;
 
-  if( 0 ) {
-    int ii;
-    for( ii=0; vecsrc[ii]!=NULL; ii++ ) {
-      fprintf( stderr, "<<SRC>> vec[%d] %s\n", ii, vecsrc[ii] );
-    }
-    for( ii=0; vecdst[ii]!=NULL; ii++ ) {
-      fprintf( stderr, "<<DST>> vec[%d] %s\n", ii, vecdst[ii] );
-    }
-  }
   return( vecdst );
 }
 
@@ -161,14 +149,10 @@ static char **pip_copy_vec( char **vecsrc ) {
 }
 
 static char **pip_copy_env( char **envsrc, int pipid ) {
-  char rootenv[128];
-  char taskenv[128];
+  char rootenv[128], taskenv[128];
   char *preload_env = getenv( "LD_PRELOAD" );
-
-  if( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root_ ) <= 0 ||
-      sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 ) {
-    return NULL;
-  }
+  ASSERT( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root_ ) <= 0 );
+  ASSERT( sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid     ) <= 0 );
   return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
 }
 
@@ -290,14 +274,6 @@ static int pip_dlinfo( void *handle, int request, void *info ) {
   return rv;
 }
 
-static void pip_dlclose( void *handle ) {
-#ifdef AH
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  dlclose( handle );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
-#endif
-}
-
 static int pip_load_dso( void **handlep, const char *path ) {
   Lmid_t	lmid;
   int 		flags = RTLD_NOW | RTLD_LOCAL;
@@ -395,7 +371,7 @@ static int pip_load_prog( pip_spawn_program_t *progp,
   RETURN( err );
 }
 
-static int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
+int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
   int err = 0;
 
   ENTER;
@@ -496,20 +472,21 @@ static int pip_glibc_init( pip_symbols_t *symbols,
   /* heap is not safe to use */
 #ifndef PIP_NO_MALLOPT
   if( symbols->mallopt != NULL ) {
-    DBGF( ">> mallopt()" );
 #ifdef M_MMAP_THRESHOLD
     if( symbols->mallopt( M_MMAP_THRESHOLD, 1 ) == 1 ) {
-      DBGF( "<< mallopt(M_MMAP_THRESHOLD): succeeded" );
+      DBGF( "mallopt(M_MMAP_THRESHOLD): succeeded" );
     } else {
-      DBGF( "<< mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
+      DBGF( "mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
     }
 #endif
+#ifdef AH
 #ifdef M_TRIM_THRESHOLD
     if( symbols->mallopt( M_TRIM_THRESHOLD, -1 ) == 1 ) {
-      DBGF( "<< mallopt(M_TRIM_THRESHOLD): succeeded" );
+      DBGF( "mallopt(M_TRIM_THRESHOLD): succeeded" );
     } else {
-      DBGF( "<< mallopt(M_TRIM_THRESHOLD): failed !!!!!!" );
+      DBGF( "mallopt(M_TRIM_THRESHOLD): failed !!!!!!" );
     }
+#endif
 #endif
   }
 #endif
@@ -535,16 +512,11 @@ return_from_start_func( pip_task_internal_t *taski, int extval ) {
   /*  by root and this is the reason to call this from the root process */
   ENTER;
   if( taski->annex->hook_after != NULL ) {
-    DBG;
     if( ( err = taski->annex->hook_after( hook_arg ) ) != 0 ) {
-    DBG;
       pip_warn_mesg( "PIPID:%d after-hook returns %d", taski->pipid, err );
       if( extval == 0 ) extval = err;
     }
   }
-    DBG;
-  pip_gdbif_hook_after_( taski );
-    DBG;
   pip_do_exit( taski, extval );
   NEVER_REACH_HERE;
 }
@@ -655,8 +627,8 @@ static void* pip_do_spawn( void *thargs )  {
     flag_jump = 1;
     if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
       int pip_suspend_and_enqueue_generic_( pip_task_internal_t*,
-					    pip_task_queue_t*,
-					    int, pip_enqueue_callback_t, void* );
+					    pip_task_queue_t*, int,
+					    pip_enqueue_callback_t, void* );
       /* suspend myself */
       if( queue != NULL ) {
 	err = pip_suspend_and_enqueue_generic_( self,
@@ -672,19 +644,22 @@ static void* pip_do_spawn( void *thargs )  {
     pip_jump_into( args, self );
     NEVER_REACH_HERE;
   }
+  /* long jump to get here */
   DBGF( "PIPID:%d  pid:%d (%d)",
 	self->pipid, self->annex->tid, pip_gettid() );
   ASSERT( self->annex->tid != pip_gettid() );
-
-  if( self->annex->symbols.named_export_fin != NULL ) {
-    self->annex->symbols.named_export_fin( self );
-  }
-
 #ifdef CHECK_TLS
   DBGF( "TLS:0x%lx  pipid_tls:%d (%p)  pipid:%d",
 	(intptr_t) self->tls, pipid_tls, &pipid_tls, self->pipid );
   ASSERT( pipid_tls != self->pipid );
 #endif
+  /* call fflush() in the target context to flush out std* messages */
+  if( self->annex->symbols.libc_fflush != NULL ) {
+    self->annex->symbols.libc_fflush( NULL );
+  }
+  if( self->annex->symbols.named_export_fin != NULL ) {
+    self->annex->symbols.named_export_fin( self );
+  }
 
   DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
   if( pip_is_threaded_() ) {
@@ -753,13 +728,13 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 			      pip_task_t **bltp,
 			      pip_task_queue_t *queue,
 			      pip_spawn_hook_t *hookp ) {
-  extern uint32_t pip_check_sync_flag_( uint32_t );
+  extern int pip_check_sync_flag_( uint32_t );
   cpu_set_t 		cpuset;
   pip_spawn_args_t	*args = NULL;
   pip_task_internal_t	*task = NULL;
   size_t		stack_size;
   pid_t			pid = 0;
-  int 			err = 0;
+  int 			op, err = 0;
 
   ENTER;
   if( pip_root_       == NULL ) RETURN( EPERM  );
@@ -770,11 +745,9 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( progp->funcname == NULL &&
       progp->argv     == NULL ) RETURN( EINVAL );
   /* starting from an arbitrary func */
-  if( ( opts & PIP_SYNC_MASK ) == 0 ) {
-    opts |= pip_root_->opts & PIP_SYNC_MASK;
-  } else {
-    if( ( opts = pip_check_sync_flag_( opts ) ) == 0 ) RETURN( EINVAL );
-  }
+  if( ( op = pip_check_sync_flag_( opts ) ) < 0 ) RETURN( EINVAL );
+  opts = op;
+
   if( progp->funcname == NULL &&
       progp->prog     == NULL ) progp->prog = progp->argv[0];
 
@@ -1003,7 +976,9 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   pip_gdbif_finalize_task_( taski );
   /* dlclose() and free() must be called only from the root process since */
   /* corresponding dlmopen() and malloc() is called by the root process   */
-  if( taski->annex->loaded != NULL ) pip_dlclose( taski->annex->loaded );
+#ifdef PIP_DLCLOSE
+ if( taski->annex->loaded != NULL ) pip_dlclose( taski->annex->loaded );
+#endif
 
   PIP_FREE( taski->annex->args.prog );
   taski->annex->args.prog = NULL;

@@ -64,12 +64,11 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
   } else {
     /* almost done. we must wait until all tasks are enqueued */
 #ifdef AH
-    do {
-      pip_task_queue_count( &barrp->queue, &c );
-      pip_yield();
-      sched_yield();
-    } while ( c < init - 1 );
 #endif
+    do {
+      pip_task_queue_count( qp, &c );
+      if( pip_yield() == 0 ) sched_yield();
+    } while ( c < init - 1 );
     /* really done. dequeue all tasks in the queue and resume them */
     barrp->turn ^= 1;
     barrp->count = init;
@@ -78,6 +77,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     /* task(s) might be enqueued for the next round  */
     do {
       n = c;			/* number of tasks to resume */
+      //n = PIP_TASK_ALL;
       err = pip_dequeue_and_resume_N_( qp, NULL, &n );
       if( err ) break;
       c -= n;

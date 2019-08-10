@@ -7,20 +7,9 @@
 
 #include <test.h>
 
-#define DO_COREBIND
-
-#ifdef DO_COREBIND
-extern int pip_do_corebind( int, cpu_set_t* );
-
-static int get_ncpus( void ) {
-  cpu_set_t cpuset;
-  CHECK( sched_getaffinity( 0, sizeof(cpuset), &cpuset ),
-	 RV, exit(EXIT_UNTESTED) );
-  return CPU_COUNT( &cpuset );
-}
-#endif
-
 static pip_task_queue_t	queues[NTASKS];
+
+static pip_barrier_t	barr;
 
 static int is_taskq_empty( pip_task_queue_t *queue ) {
   int rv;
@@ -33,10 +22,12 @@ static int is_taskq_empty( pip_task_queue_t *queue ) {
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
+  pip_barrier_t		*barrp = &barr;
   int 	nacts, npass, ntasks, pipid;
+  int	count;
   char 	env_ntasks[128];
   char 	env_pipid[128];
-  int 	c, nc, i, j;
+  int 	i, j;
 
   set_sigsegv_watcher();
   set_sigint_watcher();
@@ -53,17 +44,15 @@ int main( int argc, char **argv ) {
   CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
 
   for( i=0; i<nacts; i++ ) pip_task_queue_init( &queues[i], NULL );
+  CHECK( pip_barrier_init( &barr, ntasks ), RV, return(EXIT_FAIL) );
 
-  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
-
-#ifdef DO_COREBIND
-  nc = get_ncpus() - 1;
-  CHECK( pip_do_corebind(0,NULL), RV, return(EXIT_UNTESTED) );
-#endif
-
+  CHECK( pip_init( &pipid, &ntasks, (void**) &barrp, 0 ), RV, return(EXIT_FAIL) );
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );
   pip_spawn_from_main( &prog, argv[3], &argv[3], NULL );
+
+  count = 0;
+  CHECK( pip_named_export( (void*) &count, "COUNT" ), RV, return(EXIT_FAIL) );
 
   for( i=0, j=0; i<npass; i++, j++ ) {
     pipid = i;
@@ -78,14 +67,9 @@ int main( int argc, char **argv ) {
   }
   for( i=npass, j=0; i<ntasks; i++, j++ ) {
     pipid = i;
-#ifndef DO_COREBIND
-    c = PIP_CPUCORE_ASIS;
-#else
-    c = ( j % nc ) + 1;
-#endif
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
-    CHECK( pip_blt_spawn( &prog, c, 0, &pipid,
+    CHECK( pip_blt_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid,
 			  NULL, &queues[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );

@@ -115,13 +115,8 @@ void pip_deadlock_dec_( void ) {
 #endif
 }
 
-void pip_set_extval_RC( pip_task_internal_t *taski, int extval ) {
+void pip_set_extval( pip_task_internal_t *taski, int extval ) {
   ENTER;
-  /* call fflush() in the target context to flush out std* messages */
-  if( taski->annex->symbols.libc_fflush != NULL ) {
-    taski->annex->symbols.libc_fflush( NULL );
-  }
-  DBG;
   if( !taski->flag_exit ) {
     /* mark myself as exited */
     DBGF( "PIPID:%d[%d] extval:%d",
@@ -131,12 +126,13 @@ void pip_set_extval_RC( pip_task_internal_t *taski, int extval ) {
 #else
     taski->annex->extval = ( extval & 0xFF ) << 8;
 #endif
-    DBG;
-    pip_gdbif_exit_RC( taski, extval );
+    pip_gdbif_exit( taski, extval );
     pip_memory_barrier();
     taski->flag_exit = PIP_EXITED;
+    pip_gdbif_hook_after_( taski );
   }
   DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->extval );
+  RETURNV;
 }
 
 static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
@@ -195,7 +191,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
 		       taski->pipid, strsignal(sig), sig );
       }
-      pip_set_extval_RC( taski, status );
+      pip_set_extval( taski, status );
     }
   }
   DBG;

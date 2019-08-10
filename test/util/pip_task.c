@@ -5,12 +5,25 @@
  * $PIP_license$
  */
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
+
+#define DO_COREBIND
+
+#ifdef DO_COREBIND
+extern int pip_do_corebind( int, cpu_set_t* );
+
+static int get_ncpus( void ) {
+  cpu_set_t cpuset;
+  CHECK( sched_getaffinity( 0, sizeof(cpuset), &cpuset ),
+	 RV, exit(EXIT_UNTESTED) );
+  return CPU_COUNT( &cpuset );
+}
+#endif
 
 int main( int argc, char **argv ) {
   int ntasks, pipid, status, extval;
-  int i, err;
+  int i, c, nc, err;
   char env_ntasks[128];
   char env_pipid[128];
 
@@ -27,11 +40,21 @@ int main( int argc, char **argv ) {
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );
 
+#ifdef DO_COREBIND
+  nc = get_ncpus() - 1;
+  CHECK( pip_do_corebind(0,NULL), RV, return(EXIT_UNTESTED) );
+#endif
+
   for( i=0; i<ntasks; i++ ) {
     pipid = i;
+#ifndef DO_COREBIND
+    c = PIP_CPUCORE_ASIS;
+#else
+    c = ( i % nc ) + 1;
+#endif
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
-    CHECK( pip_spawn( argv[2], &argv[2], NULL, PIP_CPUCORE_ASIS, &pipid,
+    CHECK( pip_spawn( argv[2], &argv[2], NULL, c, &pipid,
 		      NULL, NULL, NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );

@@ -39,7 +39,7 @@
 #include <pip_internal.h>
 
 void pip_gdbif_load_( pip_task_internal_t* );
-void pip_gdbif_exit_RC( pip_task_internal_t*, int );
+void pip_gdbif_exit( pip_task_internal_t*, int );
 void pip_gdbif_task_commit_( pip_task_internal_t* );
 void pip_gdbif_task_new_( pip_task_internal_t* );
 void pip_gdbif_initialize_root_( int );

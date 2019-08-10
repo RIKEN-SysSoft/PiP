@@ -33,28 +33,36 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
-#include <netdb.h>
+#include <libgen.h>
+#include <limits.h>
+#include <dlfcn.h>
 #include <test.h>
 
-int my_getaddrinfo( char *hostname ) {
-  struct addrinfo hints, *res = NULL;
-  int rv;
+#define LIBNAME 	"libnull.so"
 
-  memset( &hints, 0, sizeof(hints) );
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_family   = AF_INET;
-  rv = getaddrinfo( hostname, NULL, &hints, &res );
-  freeaddrinfo( res );
-  return rv;
-}
-
-#define HOSTNAMELEN	(256)
+void *pip_dlopen( const char*, int );
+void *pip_dlsym( void*, const char* );
+int   pip_dlclose( void* );
 
 int main( int argc, char **argv ) {
-  char hostname[HOSTNAMELEN];
+  char path[PATH_MAX], *dir, *p;
+  void *handle;
+  int(*foo)(void);
 
-  CHECK( gethostname( hostname, HOSTNAMELEN ), RV, return(EXIT_FAIL) );
-  CHECK( my_getaddrinfo( "127.0.0.1" ),        RV, return(EXIT_FAIL) );
-  //CHECK( my_getaddrinfo( hostname ),           RV, return(EXIT_FAIL) );
+  CHECK( pip_init(NULL,NULL,NULL,0), RV, return(EXIT_FAIL) );
+
+  dir = dirname( strdup( argv[0] ) );
+  p = path;
+  p = stpcpy( p, dir );
+  p = stpcpy( p, "/../" );
+  (void) strcpy( p, LIBNAME );
+
+  //fprintf( stderr, "path:%s\n", path );
+  CHECK( handle = pip_dlopen( path, RTLD_LAZY ),
+	 handle==NULL,
+	 return(EXIT_FAIL) );
+  CHECK( ( foo = pip_dlsym( handle, "foo" ) ), foo==0, return(EXIT_FAIL) );
+  CHECK( foo(),                                    RV, return(EXIT_FAIL) );
+  //CHECK( pip_dlclose( handle ),                    RV, return(EXIT_FAIL) );
   return 0;
 }

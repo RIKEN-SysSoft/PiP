@@ -38,6 +38,10 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -212,6 +216,10 @@ typedef struct pip_task_annex {
 
   /* GDB interface */
   struct 			pip_gdbif_task	*gdbif_task; /* GDB if */
+
+#ifdef DEBUG
+  pip_task_internal_t		*task_unprotect;
+#endif
 } pip_task_annex_t;
 
 
@@ -256,6 +264,7 @@ typedef struct {
   int			ntasks;
   int			pipid_curr;
   uint32_t		opts;
+  uint64_t		yield_iters;
   size_t		page_size;
   pip_clone_t		*cloneinfo;   /* only valid with process:preload */
   pip_task_internal_t	*task_root; /* points to tasks[ntasks] */
@@ -346,6 +355,16 @@ inline static pip_task_internal_t *pip_get_task_( int pipid ) {
 
 inline static pip_clone_t *pip_get_cloneinfo_( void ) {
   return pip_root_->cloneinfo;
+}
+
+inline static void pip_system_yield( void ) {
+  extern int pip_is_threaded_( void );
+  if( pip_is_threaded_() ) {
+    int pthread_yield( void );
+    (void) pthread_yield();
+  } else {
+    sched_yield();
+  }
 }
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

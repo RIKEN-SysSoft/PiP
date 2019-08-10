@@ -33,6 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016
  */
 
+//#define DEBUG
 #include <test.h>
 
 #define NITERS		(10)
@@ -69,6 +70,8 @@ int main( int argc, char **argv ) {
     } else {
       fname = argv[1];
     }
+  } else {
+    exit( EXIT_UNTESTED );
   }
 
   ntasks = 0;
@@ -87,15 +90,15 @@ int main( int argc, char **argv ) {
   memset( check, 0, sizeof(check) );
 
   expp = &exp;;
-  CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
+  CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV,   return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( pip_barrier_init(&exp.barr,ntasks+1),   RV, return(EXIT_FAIL) );
-    strcpy( buff, ROOT );
+    CHECK( pip_barrier_init(&exp.barr,ntasks+1),   RV,   return(EXIT_FAIL) );
+    sprintf( buff, "%8s", ROOT );
     len = strlen( buff );
     if( stdin ) {
-      fd = 0;
+      CHECK( fd = open( "/dev/stdin", O_RDONLY ), RV<0,  return(EXIT_UNTESTED) );
       exp.fd = fd;
-      CHECK( read( fd, check, len ),              RV<0, return(EXIT_FAIL) );
+      CHECK( read( fd, check, len ),              RV<0,  return(EXIT_FAIL) );
       for( i=0; i<ntasks; i++ ) {
 	pipid = i;
 	CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
@@ -111,7 +114,7 @@ int main( int argc, char **argv ) {
 	}
       }
     } else if( stdout ) {
-      fd = 1;
+      CHECK( fd = open( "/dev/stdout", O_WRONLY ), RV<0, return(EXIT_UNTESTED) );
       exp.fd = fd;
       CHECK( write( fd, buff, len ), RV<0, return(EXIT_UNTESTED) );
       for( i=0; i<ntasks; i++ ) {
@@ -141,22 +144,20 @@ int main( int argc, char **argv ) {
       }
       for( i=0; i<niters; i++ ) {
 	for( j=0; j<ntasks; j++ ) {
-	  CHECK( pip_barrier_wait( &expp->barr ), RV,  return(EXIT_FAIL) );
-	  CHECK( pip_barrier_wait( &expp->barr ), RV,  return(EXIT_FAIL) );
+	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
+	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	}
       }
-      CHECK( lseek( fd, (off_t) 0, SEEK_SET ),  RV<0,  return(EXIT_FAIL) );
-      CHECK( read( fd, check, len ),            RV<0,  return(EXIT_FAIL) );
-      CHECK( strcmp( buff, check ),             RV!=0, return(EXIT_FAIL) );
+      CHECK( lseek( fd, (off_t) 0, SEEK_SET ),    RV<0,  return(EXIT_FAIL) );
+      CHECK( read( fd, check, len ),              RV<0,  return(EXIT_FAIL) );
+      CHECK( strcmp( buff, check ),               RV!=0, return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
 	for( j=0; j<ntasks; j++ ) {
-	  CHECK( pip_barrier_wait( &expp->barr ), RV,  return(EXIT_FAIL) );
-	  CHECK( pip_barrier_wait( &expp->barr ), RV,  return(EXIT_FAIL) );
+	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
+	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	}
       }
-      CHECK( close(fd),                         RV<0,  return(EXIT_FAIL) );
     }
-
     for( i=0; i<ntasks; i++ ) {
       int status;
       CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
@@ -170,15 +171,15 @@ int main( int argc, char **argv ) {
     }
 
   } else {
-    fd = expp->fd;
     sprintf( buff, "%8d", pipid );
     len = strlen( buff );
+    fd = expp->fd;
     if( stdin ) {
       for( i=0; i<niters; i++ ) {
 	for( j=0; j<ntasks; j++ ) {
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	  if( j == pipid ) {
-	    CHECK( read( fd, check, len ),        RV<0,  return(EXIT_FAIL) );
+	    CHECK( read( fd, check, len ),        RV<=0, return(EXIT_FAIL) );
 	    CHECK( strcmp( buff, check ),         RV!=0, return(EXIT_FAIL) );
 	  }
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
@@ -189,7 +190,7 @@ int main( int argc, char **argv ) {
 	for( j=0; j<ntasks; j++ ) {
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	  if( j == pipid ) {
-	    CHECK( write( fd, buff, len ),        RV<0,  return(EXIT_FAIL) );
+	    CHECK( write( fd, buff, len ),        RV<=0, return(EXIT_FAIL) );
 	  }
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	}
@@ -199,28 +200,29 @@ int main( int argc, char **argv ) {
 	for( j=0; j<ntasks; j++ ) {
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	  if( j == pipid ) {
-	    CHECK( write( fd, buff, len ),        RV<0,  return(EXIT_FAIL) );
+	    CHECK( write( fd, buff, len ),        RV<=0, return(EXIT_FAIL) );
 	  }
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	}
       }
+      CHECK( lseek( fd, (off_t) 0, SEEK_SET ),    RV<0,  return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
 	for( j=0; j<ntasks; j++ ) {
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	  if( j == pipid ) {
-	    CHECK( read( fd, check, len ),        RV<0,  return(EXIT_FAIL) );
+	    CHECK( read( fd, check, len ),        RV<=0, return(EXIT_FAIL) );
 	    CHECK( strcmp( buff, check ),         RV!=0, return(EXIT_FAIL) );
 	  }
 	  CHECK( pip_barrier_wait( &expp->barr ), RV,    return(EXIT_FAIL) );
 	}
       }
-      int flag;
-      CHECK( pip_is_threaded( &flag ),            RV,    return(EXIT_FAIL) );
-      if( !flag ) {
-	CHECK( close(fd),                         RV<0,  return(EXIT_FAIL) );
-      }
     }
   }
-  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  int flag;
+  CHECK( pip_is_threaded( &flag ),            RV,    return(EXIT_FAIL) );
+  if( !flag ) {
+    CHECK( close(fd),                         RV<0,  return(EXIT_FAIL) );
+  }
+  CHECK( pip_fin(), RV,   return(EXIT_FAIL) );
   return extval;
 }

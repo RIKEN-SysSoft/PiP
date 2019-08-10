@@ -36,47 +36,75 @@
 //#define DEBUG
 #include <test.h>
 
-#define NITERS		(10)
-#define NTHREADS	(10)
+#define NITERS		(1000)
 
-void *thread_main( void *argp ) {
-  pthread_exit( NULL );
-}
+static struct my_exp {
+  pip_barrier_t		barr;
+  int			count;
+} exp;
 
-int pip_pthread_create( pthread_t *thread, const pthread_attr_t *attr,
-			void *(*start_routine) (void *), void *arg );
-int pip_pthread_join( pthread_t thread, void **retval );
+static struct my_exp *expp;
 
 int main( int argc, char **argv ) {
-  pthread_t threads[NTHREADS];
-  int nthreads, niters;
-  int i, j;
+  int 	ntasks, pipid;
+  int	niters;
+  int	i, extval = 0;
 
   set_sigsegv_watcher();
 
-  nthreads = 0;
+  ntasks = 0;
   if( argc > 1 ) {
-    nthreads = strtol( argv[1], NULL, 10 );
+    ntasks = strtol( argv[1], NULL, 10 );
   }
-  nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
-  nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
+  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
 
   niters = 0;
   if( argc > 2 ) {
     niters = strtol( argv[2], NULL, 10 );
   }
   niters = ( niters == 0 ) ? NITERS : niters;
+  srand( ( pipid + 1 ) * ( pipid + 1 ) );
 
-  CHECK( pip_init(NULL,NULL,NULL,0), RV, return(EXIT_FAIL) );
-
-  for( i=0; i<niters; i++ ) {
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pip_pthread_create( &threads[j], NULL, thread_main, NULL ),
-	     RV, return(EXIT_FAIL) );
+  expp = &exp;;
+  CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
+  if( pipid == PIP_PIPID_ROOT ) {
+    CHECK( pip_barrier_init(&exp.barr,ntasks+1), RV, return(EXIT_FAIL) );
+    exp.count = 0;
+    for( i=0; i<ntasks; i++ ) {
+      pipid = i;
+      CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
+		       NULL,NULL,NULL),
+	     RV,
+	     return(EXIT_FAIL) );
     }
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pip_pthread_join( threads[j], NULL ), RV, return(EXIT_FAIL) );
+    for( i=0; i<niters; i++ ) {
+      CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+      usleep( rand() % 10000 );
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+    }
+    for( i=0; i<ntasks; i++ ) {
+      int status;
+      CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
+      if( WIFEXITED( status ) ) {
+	CHECK( ( extval = WEXITSTATUS( status ) ),
+	       RV,
+	       return(EXIT_FAIL) );
+      } else {
+	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
+      }
+    }
+    CHECK( expp->count==niters, !RV, return(EXIT_FAIL) );
+
+  } else {
+    for( i=0; i<niters; i++ ) {
+      CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+      if( ( i % ntasks ) == pipid ) expp->count ++;
+      usleep( rand() % 10000 );
+      CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
     }
   }
-  return 0;
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  return extval;
 }

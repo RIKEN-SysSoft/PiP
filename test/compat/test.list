@@ -8,10 +8,12 @@ timer 1 pip_task 1 ./gettimeofday
 timer 1 pip_task 8 ./gettimeofday
 timer 1 pip_task 1 ./gethostname
 timer 1 pip_task 8 ./gethostname
+skip.sh A UNSUPPORTED timer 1 pip_task 1 ./gethostbyname
+skip.sh A UNSUPPORTED timer 1 pip_task 8 ./gethostbyname
 timer 1 pip_task 1 ./getaddrinfo
-skip.sh P XFAIL timer 1 pip_task 8 ./getaddrinfo
-skip.sh T UNSUPPORTED timer 1 pip_task 1 ./dlopen
-skip.sh T UNSUPPORTED timer 1 pip_task 8 ./dlopen
+timer 1 pip_task 8 ./getaddrinfo
+skip.sh T UNSUPPORTED timer 1 pip_task 1 ./pip_dlopen
+skip.sh T UNSUPPORTED timer 1 pip_task 8 ./pip_dlopen
 timer 1 pip_task 1 ./const_destruct
 timer 1 pip_task 8 ./const_destruct
 timer 1 pip_task 1 ./system

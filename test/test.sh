@@ -64,15 +64,20 @@ fi
 
 file_summary() {
     truncate -s 0 $sum_file;
-    echo n_PASS=$n_PASS               >> $sum_file;
-    echo n_FAIL=$n_FAIL               >> $sum_file;
-    echo n_XPASS=$n_XPASS             >> $sum_file;
-    echo n_XFAIL=$n_XFAIL             >> $sum_file;
-    echo n_UNRESOLVED=$n_UNRESOLVED   >> $sum_file;
-    echo n_UNTESTED=$n_UNTESTED       >> $sum_file;
-    echo n_UNSUPPORTED=$n_UNSUPPORTED >> $sum_file;
-    echo n_KILLED=$n_KILLED           >> $sum_file;
-    echo TOTAL_TIME=$TOTAL_TIME       >> $sum_file;
+    echo TEST_LOG_FILE=$TEST_LOG_FILE		>> $sum_file;
+    echo TEST_LOG_XML=$TEST_LOG_XML		>> $sum_file;
+    echo TEST_OUT_STDOUT=$TEST_OUT_STDOUT	>> $sum_file;
+    echo TEST_OUT_STDERR=$TEST_OUT_STDERR	>> $sum_file;
+    echo TEST_OUT_TIME=$TEST_OUT_TIME		>> $sum_file;
+    echo n_PASS=$n_PASS              		>> $sum_file;
+    echo n_FAIL=$n_FAIL              		>> $sum_file;
+    echo n_XPASS=$n_XPASS             		>> $sum_file;
+    echo n_XFAIL=$n_XFAIL             		>> $sum_file;
+    echo n_UNRESOLVED=$n_UNRESOLVED   		>> $sum_file;
+    echo n_UNTESTED=$n_UNTESTED       		>> $sum_file;
+    echo n_UNSUPPORTED=$n_UNSUPPORTED 		>> $sum_file;
+    echo n_KILLED=$n_KILLED           		>> $sum_file;
+    echo TOTAL_TIME=$TOTAL_TIME       		>> $sum_file;
     chmod +x $sum_file;
 }
 
@@ -110,25 +115,25 @@ print_summary()
 
 reset_summary()
 {
-    n_PASS=0
-    n_FAIL=0
-    n_XPASS=0
-    n_XFAIL=0
-    n_UNRESOLVED=0
-    n_UNTESTED=0
-    n_UNSUPPORTED=0
-    n_KILLED=0
-    TOTAL_TIME=0
-    file_summary
-}
+    TEST_TOP_DIR=$dir_real;
+    TEST_LOG_FILE=test.log;
+    TEST_LOG_XML=test.log.xml;
+    TEST_OUT_STDOUT=$TEST_TOP_DIR/test.out.stdout;
+    TEST_OUT_STDERR=$TEST_TOP_DIR/test.out.err;
+    TEST_OUT_TIME=$TEST_TOP_DIR/test.out.time;
 
-TEST_TOP_DIR=$dir_real
-TEST_LIST=$TEST_TOP_DIR/test.list
-TEST_LOG_FILE=test.log
-TEST_LOG_XML=test.log.xml
-TEST_OUT_STDOUT=$TEST_TOP_DIR/test.out.stdout
-TEST_OUT_STDERR=$TEST_TOP_DIR/test.out.err
-TEST_OUT_TIME=$TEST_TOP_DIR/test.out.time
+    n_PASS=0;
+    n_FAIL=0;
+    n_XPASS=0;
+    n_XFAIL=0;
+    n_UNRESOLVED=0;
+    n_UNTESTED=0;
+    n_UNSUPPORTED=0;
+    n_KILLED=0;
+    TOTAL_TIME=0;
+
+    file_summary;
+}
 
 mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak 2>/dev/null
 
@@ -198,7 +203,7 @@ if [ -z "$pip_mode_list" ]; then
 fi
 
 if [[ x$SUMMARY_FILE == x ]]; then
-    reset_summary
+    reset_summary;
 else
     . $SUMMARY_FILE;
 fi
