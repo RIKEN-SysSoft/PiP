@@ -37,9 +37,9 @@
 
 #include <sys/syscall.h>
 #include <stdarg.h>
-#include <dlfcn.h>
 #include <elf.h>
 
+#include <pip_dlfcn.h>
 #include <pip_internal.h>
 #include <pip_util.h>
 

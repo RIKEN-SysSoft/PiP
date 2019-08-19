@@ -71,11 +71,11 @@ int main( int argc, char **argv ) {
 
   for( i=0; i<niters; i++ ) {
     for( j=0; j<nthreads; j++ ) {
-      CHECK( pip_pthread_create( &threads[j], NULL, thread_main, NULL ),
+      CHECK( pthread_create( &threads[j], NULL, thread_main, NULL ),
 	     RV, return(EXIT_FAIL) );
     }
     for( j=0; j<nthreads; j++ ) {
-      CHECK( pip_pthread_join( threads[j], NULL ), RV, return(EXIT_FAIL) );
+      CHECK( pthread_join( threads[j], NULL ), RV, return(EXIT_FAIL) );
     }
   }
   return 0;

@@ -46,6 +46,7 @@
 #define PIP_SLEEP_STACKSZ	PTHREAD_STACK_MIN
 
 #include <pip.h>
+#include <pip_dlfcn.h>
 #include <pip_internal.h>
 #include <pip_gdbif.h>
 
@@ -637,43 +638,71 @@ int pip_is_debug_build( void ) {
 
 void *pip_dlopen( const char *filename, int flag ) {
   void *handle;
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  handle = dlopen( filename, flag );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  if( pip_is_initialized() ) {
+    DBGF( ">>" );
+    pip_spin_lock( &pip_root_->lock_ldlinux );
+    handle = dlopen( filename, flag );
+    pip_spin_unlock( &pip_root_->lock_ldlinux );
+    DBGF( "<<" );
+  } else {
+    handle = dlopen( filename, flag );
+  }
   return handle;
+}
+
+void *pip_dlmopen( Lmid_t lmid, const char *path, int flag ) {
+  void *handle;
+  if( pip_is_initialized() ) {
+    DBGF( ">>" );
+    pip_spin_lock( &pip_root_->lock_ldlinux );
+    PIP_ACCUM( time_dlmopen, ( handle = dlmopen( lmid, path, flag ) ) == NULL );
+    pip_spin_unlock( &pip_root_->lock_ldlinux );
+    DBGF( "<<" );
+  } else {
+    handle = pip_dlmopen( lmid, path, flag );
+  }
+  return handle;
+}
+
+int pip_dlinfo( void *handle, int request, void *info ) {
+  int rv;
+  if( pip_is_initialized() ) {
+    if( !PIP_ISA_ROOT( pip_task_ ) ) return( -EPERM );
+    DBGF( ">>" );
+    pip_spin_lock( &pip_root_->lock_ldlinux );
+    rv = dlinfo( handle, request, info );
+    pip_spin_unlock( &pip_root_->lock_ldlinux );
+    DBGF( "<<" );
+  } else {
+    rv = dlinfo( handle, request, info );
+  }
+  return rv;
 }
 
 void *pip_dlsym( void *handle, const char *symbol ) {
   void *addr;
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  addr = dlsym( handle, symbol );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  if( pip_is_initialized() ) {
+    DBGF( ">>" );
+    pip_spin_lock( &pip_root_->lock_ldlinux );
+    addr = dlsym( handle, symbol );
+    pip_spin_unlock( &pip_root_->lock_ldlinux );
+    DBGF( "<<" );
+  } else {
+    addr = dlsym( handle, symbol );
+  }
   return addr;
 }
 
 int pip_dlclose( void *handle ) {
   int rv;
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  rv = dlclose( handle );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  if( pip_is_initialized() ) {
+    DBGF( ">>" );
+    pip_spin_lock( &pip_root_->lock_ldlinux );
+    rv = dlclose( handle );
+    pip_spin_unlock( &pip_root_->lock_ldlinux );
+    DBGF( "<<" );
+  } else {
+    rv = dlclose( handle );
+  }
   return rv;
-}
-
-int pip_pthread_create( pthread_t *thread, const pthread_attr_t *attr,
-			void *(*start_routine) (void *), void *arg ) {
-  int rv;
-  ENTER;
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  rv = pthread_create( thread, attr, start_routine, arg );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
-  RETURN( rv );
-}
-
-int pip_pthread_join( pthread_t thread, void **retval ) {
-  int rv;
-  ENTER;
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  rv = pthread_join( thread, retval );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
-  RETURN( rv );
 }

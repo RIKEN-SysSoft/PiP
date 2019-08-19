@@ -36,13 +36,24 @@
 #include <sys/wait.h>
 #include <test.h>
 
+#define NCHILD 	(10)
+
 int main( int argc, char **argv ) {
   pid_t pid;
-  CHECK( ( pid = fork() ),  RV<0, return(EXIT_FAIL) );
-  if( pid > 0 ) {
-    CHECK( wait( NULL ), RV!=pid, return(EXIT_FAIL) );
-  } else {
-    exit( 0 );
+  int nchild, i;
+
+  nchild = 0;
+  if( argc > 1 ) {
+    nchild = strtol( argv[1], NULL, 10 );
+  }
+  nchild = ( nchild == 0 ) ? NCHILD : nchild;
+
+  for( i=0; i<nchild; i++ ) {
+    CHECK( ( pid = fork() ),  RV<0, return(EXIT_FAIL) );
+    if( pid == 0 ) exit( 0 ); // calling return here will eventually call pip_exit()!!
+  }
+  for( i=0; i<nchild; i++ ) {
+    CHECK( wait( NULL ), RV<0, return(EXIT_FAIL) );
   }
   return 0;
 }

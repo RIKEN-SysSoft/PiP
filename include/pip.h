@@ -150,8 +150,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <pthread.h>
-#include <link.h>
-#include <dlfcn.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <stdint.h>

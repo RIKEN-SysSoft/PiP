@@ -47,6 +47,7 @@
 
 #include <malloc.h> 		/* M_MMAP_THRESHOLD and M_TRIM_THRESHOLD  */
 
+#include <pip_dlfcn.h>
 #include <pip_internal.h>
 #include <pip_blt.h>
 #include <pip_gdbif.h>
@@ -250,28 +251,6 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
     (void) close( fd_dir );
   }
   RETURN( err );
-}
-
-static void *pip_dlmopen( Lmid_t lmid, const char *path, int flag ) {
-  void *handle;
-  ENTER;
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  DBGF( ">> dlmopen(%s)", path );
-  PIP_ACCUM( time_dlmopen, ( handle = dlmopen( lmid, path, flag ) ) == NULL );
-  DBGF( "<< dlmopen(%s)", path );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
-  return handle;
-}
-
-static int pip_dlinfo( void *handle, int request, void *info ) {
-  int rv;
-  ENTER;
-  pip_spin_lock( &pip_root_->lock_ldlinux );
-  DBGF( ">> dlinfo" );
-  rv = dlinfo( handle, request, info );
-  DBGF( "<< dlinfo" );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
-  return rv;
 }
 
 static int pip_load_dso( void **handlep, const char *path ) {
@@ -577,7 +556,14 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
 	    self->annex->symbols.start, start_arg, extval );
     }
   }
-  return_from_start_func( self, extval );
+  if( self->task_sched->annex->tid != pip_gettid() ) {
+    /* when a pip task call fork() and the forked */
+    /* process return from main, this may happen  */
+    DBG;
+    exit( extval );
+  } else {
+    return_from_start_func( self, extval );
+  }
   NEVER_REACH_HERE;
 }
 
@@ -597,7 +583,6 @@ static void* pip_do_spawn( void *thargs )  {
   int			err    = 0;
 
   ENTER;
-
   self->annex->tid    = pip_gettid();
   self->annex->thread = pthread_self();
 #ifdef PIP_SAVE_TLS
@@ -647,10 +632,10 @@ static void* pip_do_spawn( void *thargs )  {
   /* long jump to get here */
   DBGF( "PIPID:%d  pid:%d (%d)",
 	self->pipid, self->annex->tid, pip_gettid() );
-  ASSERT( self->annex->tid != pip_gettid() );
 #ifdef CHECK_TLS
   DBGF( "TLS:0x%lx  pipid_tls:%d (%p)  pipid:%d",
 	(intptr_t) self->tls, pipid_tls, &pipid_tls, self->pipid );
+  ASSERT( self->annex->tid != pip_gettid() );
   ASSERT( pipid_tls != self->pipid );
 #endif
   /* call fflush() in the target context to flush out std* messages */
@@ -977,8 +962,8 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   /* dlclose() and free() must be called only from the root process since */
   /* corresponding dlmopen() and malloc() is called by the root process   */
 #ifdef PIP_DLCLOSE
- if( taski->annex->loaded != NULL ) pip_dlclose( taski->annex->loaded );
 #endif
+ if( taski->annex->loaded != NULL ) pip_dlclose( taski->annex->loaded );
 
   PIP_FREE( taski->annex->args.prog );
   taski->annex->args.prog = NULL;

@@ -53,7 +53,8 @@ int main( int argc, char **argv ) {
 		      NULL, NULL, NULL ),
 	   RV!=EPERM,
 	   return(EXIT_FAIL) );
-  } else {
+
+  } else {			/* root */
     int coreno, status = 0, extval = 0;
 
     CHECK( pip_spawn( NULL, NULL, NULL, PIP_CPUCORE_ASIS, &pipid,
