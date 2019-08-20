@@ -40,6 +40,8 @@
 #define _GNU_SOURCE
 #endif
 
+#define __USE_GNU
+#include <dlfcn.h>
 #include <stdbool.h>
 #include <pip.h>
 #include <pip_blt.h>
@@ -109,8 +111,7 @@ inline static int naive_barrier_wait( naive_barrier_t *barrp ) {
       barrp->gsense = lsense;
     } else {
       while( barrp->gsense != lsense ) {
-	pip_yield();
-	sched_yield();
+	pip_yield( PIP_YIELD_DEFAULT );
       }
     }
   }
@@ -121,8 +122,7 @@ typedef pip_spinlock_t		naive_lock_t;
 
 inline static void naive_lock( naive_lock_t *lock ) {
   while( !pip_spin_trylock( lock ) ) {
-    pip_yield();
-    sched_yield();
+    pip_yield( PIP_YIELD_DEFAULT );
   }
 }
 
@@ -173,8 +173,7 @@ extern char *__progname;
 
 inline static void pause_and_yield( int usec ) {
   if( usec > 0 ) usleep( usec );
-  pip_yield();
-  sched_yield();
+  pip_yield( PIP_YIELD_DEFAULT );
 }
 
 inline static void print_maps( void ) {
@@ -339,7 +338,6 @@ inline static void ignore_anysignal( void ) {
 }
 
 inline static void set_sigsegv_watcher( void ) {
-  pid_t pip_gettid( void );
   void sigsegv_watcher( int sig, siginfo_t *siginfo, void *context ) {
 #ifdef REG_RIP
     ucontext_t *ctx = (ucontext_t*) context;
@@ -369,6 +367,8 @@ inline static void set_sigsegv_watcher( void ) {
 	     sigcode );
     fflush( NULL );
     //exit( EXIT_FAIL );
+    fflush( NULL );
+    print_maps();
     pip_abort();
   }
 
@@ -381,7 +381,6 @@ inline static void set_sigsegv_watcher( void ) {
 }
 
 inline static void set_sigint_watcher( void ) {
-  pid_t pip_gettid( void );
   void sigint_watcher( int sig, siginfo_t *info, void* extra ) {
     char idstr[64];
 

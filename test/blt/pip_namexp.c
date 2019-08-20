@@ -60,17 +60,13 @@ int main( int argc, char **argv ) {
     done = 1;
     CHECK( pip_named_export( (void*) &done, "DONE" ), RV, return(EXIT_FAIL) );
     while( done < ntasks ) {
-      int rv = pip_yield();
-      CHECK( rv, RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
-      if( rv == 0 ) pip_system_yield();
+      CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
     }
   } else {
     done = 0;
     CHECK( pip_named_export( (void*) &done, "DONE" ), RV, return(EXIT_FAIL) );
     while( done == 0 ) {
-      int rv = pip_yield();
-      CHECK( rv, RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
-      if( rv == 0 ) pip_system_yield();
+      CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
     }
     donep = NULL;
     CHECK( pip_named_import( 0, (void**) &donep, "DONE" ),

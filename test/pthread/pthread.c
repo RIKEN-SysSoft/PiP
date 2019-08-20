@@ -40,7 +40,6 @@
 #define NTHREADS	(10)
 
 void *thread_main( void *argp ) {
-  //pthread_exit( NULL );
   return NULL;
 }
 

@@ -45,6 +45,7 @@
 
 //#define DEBUG
 
+#include <time.h>
 #include <malloc.h> 		/* M_MMAP_THRESHOLD and M_TRIM_THRESHOLD  */
 
 #include <pip_dlfcn.h>
@@ -588,6 +589,7 @@ static void* pip_do_spawn( void *thargs )  {
 #ifdef PIP_SAVE_TLS
   pip_save_tls( &self->tls );
 #endif
+  pip_memory_barrier();
 #ifdef CHECK_TLS
   DBGF( "TLS:0x%lx  pipid_tls@%p", (intptr_t)self->tls, &pipid_tls );
   pipid_tls = pipid;
@@ -874,6 +876,15 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     }
   }
   if( err == 0 ) {
+    struct timespec ts;
+    ts.tv_sec  = 0;
+    ts.tv_nsec = 100 * 1000;	/* 0.1 msec */
+    while( 1 ) {
+      if( task->annex->tid    >  0 &&
+	  task->annex->thread != 0 &&
+	  task->tls           != 0 ) break;
+      nanosleep( &ts, NULL );
+    }
     pip_root_->ntasks_count ++;
     pip_root_->ntasks_accum ++;
     pip_root_->ntasks_curr  ++;

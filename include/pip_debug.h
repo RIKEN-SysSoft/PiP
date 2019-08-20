@@ -46,6 +46,7 @@
 
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <dlfcn.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -77,6 +78,29 @@ extern void pip_abort( void );
 
 #ifdef DEBUG
 
+inline static void pip_bt10( void ) {
+  pid_t pid = pip_gettid();
+  Dl_info info;
+
+#define BTN(L)								\
+  do { void *addr = __builtin_return_address(L);			\
+    if( addr != NULL ) {						\
+      dladdr( addr, &info );						\
+      fprintf( stderr, "BT(%d) [%d] %s()@%p\n", pid, (L), info.dli_sname, addr ); \
+    } } while( 0 )
+
+  BTN(0);
+  BTN(1);
+  BTN(2);
+  BTN(3);
+  BTN(4);
+  BTN(5);
+  BTN(6);
+  BTN(7);
+  BTN(8);
+  BTN(9);
+}
+
 #define DBG						\
   do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
 #define DBGF(...)							\
@@ -92,8 +116,8 @@ extern void pip_abort( void );
 
 #ifdef DEBUG
 #define ASSERT(X)						       \
-  do {int RV=(X);IF_UNLIKELY(RV){DBGF("<%s> Assertion FAILED\n",#X);  \
-      pip_abort(); } else { DBGF( "(%s) -- Assertion OK", #X ); } } \
+  do {IF_UNLIKELY(X) { DBGF("<%s> Assertion FAILED\n",#X);		\
+      pip_bt10(); pip_abort(); } else { DBGF( "(%s) -- Assertion OK", #X ); } } \
   while(0)
 #else
 #define ASSERT(X)							\

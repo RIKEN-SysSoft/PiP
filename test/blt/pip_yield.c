@@ -51,7 +51,7 @@ int main( int argc, char **argv ) {
   CHECK( pip_init(NULL,NULL,NULL,0), RV, return(EXIT_FAIL) );
 
   for( i=0; i<niters; i++ ) {
-    CHECK( pip_yield(), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
+    CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
   }
   return 0;
 }

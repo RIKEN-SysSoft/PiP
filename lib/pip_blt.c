@@ -748,7 +748,7 @@ int pip_dequeue_and_resume_N_nolock_( pip_task_queue_t *queue,
 
 pip_task_t *pip_task_self( void ) { return PIP_TASKQ(pip_task_); }
 
-int pip_yield( void ) {
+int pip_yield( int flag ) {
   pip_task_t		*queue, *next;
   pip_task_internal_t	*taski = pip_task_;
   pip_task_internal_t	*nexti, *schedi = taski->task_sched;
@@ -759,7 +759,13 @@ int pip_yield( void ) {
     pip_takein_ood_task( schedi );
   }
   queue = &schedi->schedq;
-  IF_UNLIKELY( PIP_TASKQ_ISEMPTY( queue ) ) RETURN( 0 );
+  IF_UNLIKELY( PIP_TASKQ_ISEMPTY( queue ) ) {
+    if( flag == PIP_YIELD_DEFAULT ||
+	flag &  PIP_YIELD_SYSTEM ) {
+      pip_system_yield();
+    }
+    RETURN( 0 );
+  }
   PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ( taski ) );
   next = PIP_TASKQ_NEXT( queue );
   PIP_TASKQ_DEQ( next );
@@ -774,7 +780,9 @@ int pip_yield_to( pip_task_t *target ) {
   pip_task_internal_t	*schedi, *taski = pip_task_;
   pip_task_t		*queue;
 
-  IF_UNLIKELY( targeti == NULL  ) RETURN( pip_yield() );
+  IF_UNLIKELY( targeti == NULL  ) {
+    RETURN( pip_yield( PIP_YIELD_DEFAULT ) );
+  }
   IF_UNLIKELY( taski   == NULL  ) RETURN( EPERM );
   IF_UNLIKELY( targeti == taski ) RETURN( 0 );
   schedi = taski->task_sched;

@@ -67,7 +67,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
 #endif
     do {
       pip_task_queue_count( qp, &c );
-      if( pip_yield() == 0 ) sched_yield();
+      pip_yield( PIP_YIELD_DEFAULT );
     } while ( c < init - 1 );
     /* really done. dequeue all tasks in the queue and resume them */
     barrp->turn ^= 1;

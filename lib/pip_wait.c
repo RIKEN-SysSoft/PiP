@@ -163,7 +163,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     /* process mode */
     int status  = 0;
     int options = 0;
-    pid_t pid = taski->annex->tid;
+    pid_t tid   = 0;
 
 #ifdef __WALL
     /* __WALL: Wait for all children, regardless of type */
@@ -172,18 +172,20 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 #endif
     if( flag_try ) options |= WNOHANG;
 
-    DBGF( "calling waitpid()  task:%p  pid:%d  pipid:%d",
-	  taski, pid, taski->pipid );
+    DBGF( "PIPID:%d  taski->annex->tid:%d", taski->pipid, taski->annex->tid );
     pip_deadlock_inc_();
+    tid = taski->annex->tid;
+    DBGF( "calling waitpid()  task:%p  tid:%d  pipid:%d",
+	  taski, tid, taski->pipid );
     while( 1 ) {
       errno = 0;
-      pid = waitpid( pid, &status, options );
+      tid = waitpid( tid, &status, options );
       if( errno != EINTR ) break;
     }
     pip_deadlock_dec_();
-    DBGF( "waitpid(status=0x%x)=%d (err=%d)", status, pid, errno );
+    DBGF( "waitpid(status=0x%x)=%d (err=%d)", status, tid, errno );
 
-    if( pid < 0 ) {
+    if( tid < 0 ) {
       err = errno;
     } else {
       if( WIFSIGNALED( status ) ) {

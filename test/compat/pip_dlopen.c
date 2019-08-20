@@ -35,7 +35,6 @@
 
 #include <libgen.h>
 #include <limits.h>
-#include <dlfcn.h>
 #include <test.h>
 
 #define LIBNAME 	"libnull.so"

@@ -37,11 +37,13 @@ include $(srcdir)/../Test.common
 
 SRCS  = fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
 	gethostname.c gethostbyname.c getaddrinfo.c \
-	const_destruct.c system.c sigchld.c pagefault.c
+	const_destruct.c system.c sigchld.c pagefault.c \
+	get_nprocs.c
 
 PROGRAMS  = fork malloc ctype pip_dlopen gettimeofday \
 	gethostname gethostbyname getaddrinfo \
-	const_destruct system sigchld pagefault
+	const_destruct system sigchld pagefault \
+	get_nprocs
 
 include $(top_srcdir)/build/rule.mk
 

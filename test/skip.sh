@@ -61,6 +61,11 @@ case $mode_arg in
 	case $mode_env in
 	    pthread)	 	skip_flag=skip;;
 	esac;;
+    *D*)
+	$dir/util/pip_is_debug_build;
+	if [ $? != 0 ]; then
+	    skip_debug=skip;
+	fi;;
     *) usage;
 esac
 
@@ -76,6 +81,9 @@ case $exit_code in
     *) 			echo $exit_code "unknown"; exit $extval;;
 esac
 
+if [[ x$skip_debug == xskip ]]; then
+    exit $extval;
+fi
 if [[ x$skip_flag == xskip ]]; then
     exit $extval;
 fi

@@ -460,7 +460,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
     /* child task */
     if( ( err = pip_set_root( envroot ) ) != 0 ) RETURN( err );
-    pipid = (int) strtoll( envtask, NULL, 10 );
+    pipid = (int) strtol( envtask, NULL, 10 );
     if( pipid < 0 || pipid >= pip_root_->ntasks ) {
       RETURN( ERANGE );
     }

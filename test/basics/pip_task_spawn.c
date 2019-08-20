@@ -58,7 +58,7 @@ int global_entry( void *argp ) {
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
-  int pipid, ntasks;
+  int pipid, arg, ntasks;
 
   set_sigsegv_watcher();
   /* before calling pip_init(), this must fail */
@@ -73,7 +73,7 @@ int main( int argc, char **argv ) {
 	 RV!=EPERM,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &pipid, NULL );
+  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=EPERM,
@@ -82,7 +82,7 @@ int main( int argc, char **argv ) {
   ntasks = NTASKS;
   CHECK( pip_init( NULL, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
-  /* after calling pip_init(), this must succeed if it is the root process */
+  /* after calling pip_init(), it must succeed if it is called with right args */
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=EINVAL,
@@ -94,13 +94,13 @@ int main( int argc, char **argv ) {
 	 RV!=EINVAL,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &pipid, NULL );
+  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=ENOEXEC,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "global_entry", (void*) &pipid, NULL );
+  pip_spawn_from_func( &prog, argv[0], "global_entry", (void*) &arg, NULL );
   pipid = PIP_PIPID_ANY;
 
   if( pip_isa_task() ) {
@@ -111,6 +111,7 @@ int main( int argc, char **argv ) {
   } else {
     int status = 0, extval = 0;
 
+    pipid = arg = 8;
     CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	   RV,
 	   return(EXIT_FAIL) );

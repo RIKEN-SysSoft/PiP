@@ -54,6 +54,10 @@
 
 #define PIP_TASK_ALL			(-1)
 
+#define PIP_YIELD_DEFAULT		(0x0)
+#define PIP_YIELD_USER			(0x1)
+#define PIP_YIELD_SYSTEM		(0x2)
+
 #define PIP_ENV_SYNC			"PIP_SYNC"
 #define PIP_ENV_SYNC_AUTO		"auto"
 #define PIP_ENV_SYNC_BUSY		"busy"
@@ -256,7 +260,7 @@ extern "C" {
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
    * \param[in] opts option flags
-   * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
+w   * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
    *  \c PIP_PIPID_ANY is specified, then the PiP ID of the spawned PiP
    *  task is up to the PiP library and the assigned PiP ID will be
    *  returned.
@@ -541,12 +545,13 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /**
    * \brief Yield
    *  @{
+   * \param[in] flag to specify the behavior of yielding
    *
    * \return Return 0 on success. Return an error code on error.
    *
    * \sa pip_yield_to(3)
    */
-  int pip_yield( void );
+  int pip_yield( int flag );
   /** @}*/
 
   /**
