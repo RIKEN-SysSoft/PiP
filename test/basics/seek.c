@@ -127,7 +127,7 @@ int main( int argc, char **argv ) {
 	expp->sync = 0;
 	while( expp->sync < ntasks );
       }
-    } else {
+    } else {			/* file */
       CHECK( fd = open( fname, O_CREAT|O_TRUNC|O_RDWR, S_IRWXU ),
 	       RV<0, return(EXIT_UNTESTED) );
       expp->fd = fd;
@@ -139,17 +139,18 @@ int main( int argc, char **argv ) {
 	       return(EXIT_FAIL) );
       }
       for( i=0; i<niters; i++ ) {
-	fprintf( stderr, "[ROOT]:%d write '%s'\n", i, buff );
-	CHECK( write( fd, buff, len ), RV<0, return(EXIT_UNTESTED) );
+	//fprintf( stderr, "[ROOT]:%d write '%s'\n", i, buff );
+	CHECK( write( fd, buff, len ),         RV<0,  return(EXIT_UNTESTED) );
+	CHECK( fsync(fd),                      RV!=0, return(EXIT_UNRESOLVED) );
 	expp->sync = 0;
 	while( expp->sync < ntasks );
       }
-      system( "cat seek-file.text" );
-      CHECK( lseek( fd, (off_t) 0, SEEK_SET ),    RV<0,  return(EXIT_FAIL) );
+      //system( "echo '>>>'; cat seek-file.text; echo; echo '<<<';" );
+      CHECK( lseek( fd, (off_t) 0, SEEK_SET ), RV<0,  return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
-	CHECK( read( fd, check, len ),            RV<0,  return(EXIT_FAIL) );
-	fprintf( stderr, "[ROOT]:%d read '%s':'%s'\n", i, buff, check );
-	CHECK( strcmp( buff, check ),             RV!=0, return(EXIT_FAIL) );
+	CHECK( read( fd, check, len ),         RV<0,  return(EXIT_FAIL) );
+	//fprintf( stderr, "[ROOT]:%d read '%s':'%s'\n", i, buff, check );
+	CHECK( strcmp( buff, check ),          RV!=0, return(EXIT_FAIL) );
 	expp->sync = 0;
 	while( expp->sync < ntasks );
       }
@@ -166,7 +167,7 @@ int main( int argc, char **argv ) {
       }
     }
 
-  } else {
+  } else {			/* child tasks */
     fd = expp->fd;
     sprintf( buff, "%8d", pipid );
     len = strlen( buff );
@@ -183,18 +184,18 @@ int main( int argc, char **argv ) {
 	CHECK( write( fd, buff, len ),        RV<=0, return(EXIT_FAIL) );
 	pip_atomic_fetch_and_add( &expp->sync, 1 );
       }
-    } else {
+    } else {			/* file */
       for( i=0; i<niters; i++ ) {
 	while( expp->sync != pipid ) pip_system_yield();
-	fprintf( stderr, "[%d]:%d write '%s'\n", pipid, i, buff );
+	//fprintf( stderr, "[%d]:%d write '%s'\n", pipid, i, buff );
 	CHECK( write( fd, buff, len ),        RV<=0, return(EXIT_FAIL) );
+	CHECK( fsync(fd),                     RV!=0, return(EXIT_UNRESOLVED) );
 	pip_atomic_fetch_and_add( &expp->sync, 1 );
       }
-      CHECK( lseek( fd, (off_t) 0, SEEK_SET ),    RV<0,  return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
 	while( expp->sync != pipid ) pip_system_yield();
 	CHECK( read( fd, check, len ),        RV<=0, return(EXIT_FAIL) );
-	fprintf( stderr, "[%d]:%d read '%s':'%s'\n", pipid, i, buff, check );
+	//fprintf( stderr, "[%d]:%d read '%s':'%s'\n", pipid, i, buff, check );
 	CHECK( strcmp( buff, check ),         RV!=0, return(EXIT_FAIL) );
 	pip_atomic_fetch_and_add( &expp->sync, 1 );
       }
