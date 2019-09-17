@@ -43,7 +43,7 @@
 #include <pip_internal.h>
 #include <pip_util.h>
 
-extern int pip_is_coefd_( int );
+extern int pip_isa_coefd_( int );
 extern int pip_get_dso( int pipid, void **loaded );
 
 int pip_check_pie( const char *path, int flag_verbose ) {
@@ -97,37 +97,33 @@ int pip_check_pie( const char *path, int flag_verbose ) {
   return err;
 }
 
-char *pip_pipidstr( char *buf ) {
-  char *idstr;
-
-  switch( pip_task_->pipid ) {
+void pip_pipidstr_( pip_task_internal_t *taski, char *buf ) {
+  switch( taski->pipid ) {
   case PIP_PIPID_ROOT:
-    idstr = "?root?";
+    strcpy( buf, "?root?" );
     break;
   case PIP_PIPID_MYSELF:
-    idstr = "?myself?";
+    strcpy( buf, "?myself?" );
     break;
   case PIP_PIPID_ANY:
-    idstr = "?any?";
+    strcpy( buf, "?any?" );
     break;
   case PIP_PIPID_NULL:
-    idstr = "?null?";
+    strcpy( buf, "?null?" );
     break;
   default:
-    if( pip_task_->task_sched == NULL ) {
-      (void) sprintf( buf, "%d[-]", pip_task_->pipid );
+    if( taski->task_sched == NULL ) {
+      (void) sprintf( buf, "%d[-]", taski->pipid );
     } else if( pip_task_->task_sched == pip_task_ ) {
-      (void) sprintf( buf, "%d[*]", pip_task_->pipid );
+      (void) sprintf( buf, "%d[*]", taski->pipid );
     } else if( pip_task_->task_sched != NULL ) {
       (void) sprintf( buf, "%d[%d]",
-		      pip_task_->pipid, pip_task_->task_sched->pipid );
+		      taski->pipid, taski->task_sched->pipid );
     } else {
-      (void) sprintf( buf, "%d/?", pip_task_->pipid );
+      (void) sprintf( buf, "%d/?", taski->pipid );
     }
-    idstr = buf;
     break;
   }
-  return idstr;
 }
 
 static char *pip_type_str_( pip_task_internal_t *taski ) {
@@ -183,9 +179,9 @@ int pip_idstr( char *buf, size_t sz ) {
       n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
     }
   } else if( PIP_ISA_TASK( pip_task_ ) ) {
-    char *idstr, idnum[64];
+    char idstr[64];
 
-    idstr = pip_pipidstr( idnum );
+    pip_pipidstr_( pip_task_, idstr );
     if( PIP_IS_SUSPENDED( pip_task_ ) ) {
       n = snprintf( buf, sz, "%stask:%s(%d)%s", pre, idstr, pid, post );
     } else {
@@ -226,13 +222,13 @@ void pip_info_mesg( const char *format, ... ) {
 void pip_warn_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( stderr, "PiP-WARN%s ", format, ap );
+  pip_message( stderr, "PiP-WRN%s ", format, ap );
 }
 
 void pip_err_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( stderr, "PiP-ERROR%s ", format, ap );
+  pip_message( stderr, "PiP-ERR%s ", format, ap );
 }
 
 void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
@@ -369,6 +365,18 @@ void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue ) {
 
 /* the following function(s) are for debugging */
 
+int pip_debug_env( void ) {
+  static int flag = 0;
+  if( !flag ) {
+    if( getenv( "PIP_NODEBUG" ) ) {
+      flag = -1;
+    } else {
+      flag = 1;
+    }
+  }
+  return flag > 0;
+}
+
 #define PIP_DEBUG_BUFSZ		(4096)
 
 void pip_fprint_maps( FILE *fp ) {
@@ -428,7 +436,7 @@ void pip_fprint_fds( FILE *fp ) {
       if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( ( fd = atoi( de->d_name ) ) != fd_dir ) {
-	  if( pip_is_coefd_ ( fd ) ) coe = '*';
+	  if( pip_isa_coefd_ ( fd ) ) coe = '*';
 	  fprintf( fp, "%s %s -> %s %c", idstr, fdpath, fdname, coe );
 	} else {
 	  fprintf( fp, "%s %s -> %s  opendir(\"/proc/self/fd\")",

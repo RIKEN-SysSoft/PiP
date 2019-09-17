@@ -138,9 +138,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 
     } else if( oldval == tid ) {
       DBGF( "!!! clone() wrapper" );
-#ifdef DEBUG
       int oldflags = flags;
-#endif
 
       flags &= ~(CLONE_FS);	 /* 0x00200 */
       flags &= ~(CLONE_FILES);	 /* 0x00400 */

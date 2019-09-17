@@ -15,6 +15,11 @@ function check_command() {
     fi
 }
 
+rprocs=`ps uxw | grep R | wc -l`;
+if [[ $rprocs > 3 ]]; then
+    echo 'WARNING: some other processes are running ...'
+fi
+
 check_command "dirname";
 check_command "basename";
 check_command "realptah .";
@@ -36,12 +41,16 @@ else
     sum_file=$SUMMARY_FILE;
 fi
 
-function delete_sumfile() {
+function cleanup() {
+    echo;
+    echo "^C: cleaning up ..."
+    killall -s KILL -w pip_task > /dev/null 2>&1;
+    killall -s KILL -w pip_blt  > /dev/null 2>&1;
     rm -f $sum_file > /dev/null 2>&1;
     exit 2;
 }
 
-trap delete_sumfile 2;
+trap cleanup 2;
 
 if [[ x$INCLUDE_FILE != x ]]; then
     inc_fn=$INCLUDE_FILE': ';

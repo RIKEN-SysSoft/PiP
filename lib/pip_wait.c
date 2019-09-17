@@ -37,15 +37,7 @@
 
 #include <sys/wait.h>
 
-//#define PIP_NO_MALLOPT
-//#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
-
-//#define DEBUG
-//#define PRINT_MAPS
-//#define PRINT_FDS
-
-/* the EVAL define symbol is to measure the time for calling dlmopen() */
-//#define EVAL
+//#define PIP_DEADLOCK_WARN
 
 #include <pip.h>
 #include <pip_internal.h>
@@ -97,12 +89,15 @@ static void pip_dump_tasks( FILE *fp ) {
 void pip_deadlock_inc_( void ) {
 #ifdef PIP_DEADLOCK_WARN
   pip_atomic_fetch_and_add( &pip_root_->ntasks_blocking, 1 );
-  DBGF( "blocking:%d / ntasks:%d",
-	(int)pip_root_->ntasks_blocking, pip_root_->ntasks_count );
+  DBGF( "nblks:%d ntasks:%d",
+	(int) pip_root_->ntasks_blocking,
+	(int) pip_root_->ntasks_count );
   if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
-    //    pip_dump_tasks( stderr );
-    pip_err_mesg( "All PiP tasks are blocked and deadlocked !!" );
-    fflush( NULL );
+    static int flag_reported = 0;
+    if( !flag_reported ) {
+      flag_reported = 1;
+      pip_kill( PIP_PIPID_ROOT, SIGHUP );
+    }
   }
 #endif
 }
@@ -110,14 +105,16 @@ void pip_deadlock_inc_( void ) {
 void pip_deadlock_dec_( void ) {
 #ifdef PIP_DEADLOCK_WARN
   pip_atomic_sub_and_fetch( &pip_root_->ntasks_blocking, 1 );
-  DBGF( "blocking:%d / ntasks:%d",
-	(int) pip_root_->ntasks_blocking, pip_root_->ntasks_count );
+  DBGF( "nblks:%d ntasks:%d",
+	(int) pip_root_->ntasks_blocking,
+	(int) pip_root_->ntasks_count );
 #endif
 }
 
 void pip_set_extval( pip_task_internal_t *taski, int extval ) {
   ENTER;
   if( !taski->flag_exit ) {
+    taski->flag_exit = PIP_EXITED;
     /* mark myself as exited */
     DBGF( "PIPID:%d[%d] extval:%d",
 	  taski->pipid, taski->task_sched->pipid, extval );
@@ -128,7 +125,6 @@ void pip_set_extval( pip_task_internal_t *taski, int extval ) {
 #endif
     pip_gdbif_exit( taski, extval );
     pip_memory_barrier();
-    taski->flag_exit = PIP_EXITED;
     pip_gdbif_hook_after_( taski );
   }
   DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->extval );
@@ -173,16 +169,18 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     if( flag_try ) options |= WNOHANG;
 
     DBGF( "PIPID:%d  taski->annex->tid:%d", taski->pipid, taski->annex->tid );
-    pip_deadlock_inc_();
     tid = taski->annex->tid;
     DBGF( "calling waitpid()  task:%p  tid:%d  pipid:%d",
 	  taski, tid, taski->pipid );
+
+    pip_deadlock_inc_();
     while( 1 ) {
       errno = 0;
       tid = waitpid( tid, &status, options );
       if( errno != EINTR ) break;
     }
     pip_deadlock_dec_();
+
     DBGF( "waitpid(status=0x%x)=%d (err=%d)", status, tid, errno );
 
     if( tid < 0 ) {
@@ -198,7 +196,10 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
   }
   DBG;
   if( err == 0 ) {
-    pip_root_->ntasks_count --;
+    pip_atomic_sub_and_fetch( &pip_root_->ntasks_count, 1 );
+    DBGF( "nblks:%d ntasks:%d",
+	  (int) pip_root_->ntasks_blocking,
+	  (int) pip_root_->ntasks_count );
     if( extvalp != NULL ) *extvalp = taski->annex->extval;
     pip_finalize_task_RC( taski );
   }
@@ -357,8 +358,9 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
 	  err = errno;
 	  break;
 	}
+	pip_deadlock_inc_();
 	(void) sigsuspend( &sigset ); /* always returns EINTR */
-	continue;
+	pip_deadlock_dec_();
       }
     }
     /* undo signal setting */

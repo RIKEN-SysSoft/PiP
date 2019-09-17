@@ -239,13 +239,12 @@ extern "C" {
 					  pip_task_queue_methods_t *methods ) {
     memset( queue, 0, sizeof(pip_task_queue_t) );
     PIP_TASKQ_INIT( &queue->queue );
-    if( methods == NULL ) {
-      queue->methods = NULL;
+    queue->methods = methods;
+    if( methods == NULL || methods->init == NULL) {
       pip_spin_init( &queue->lock );
       return 0;
     } else {
-      queue->methods = methods;
-      return queue->methods->init( queue );
+      return methods->init( queue );
     }
   }
 #define pip_task_queue_init( Q, M )				\
@@ -307,6 +306,35 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \brief Yield
+   *  @{
+   * \param[in] flag to specify the behavior of yielding
+   *
+   * \return Return 0 on success. Return an error code on error.
+   *
+   * \sa pip_yield_to(3)
+   */
+  int pip_yield( int flag );
+  /** @}*/
+
+  /**
+   * \brief Yield to the specified PiP task
+   *  @{
+   * \param[in] task Target PiP task to switch
+   *
+   * Context-switch to the specified PiP task. If \c task is \c NULL, then
+   * this works the same as \c pip_yield() does.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The specified task belongs to the other scheduling
+   * domain.
+   *
+   * \sa pip_yield(3)
+   */
+  int pip_yield_to( pip_task_t *task );
+  /** @}*/
+
+  /**
    * \brief Count the length of task queue
    *  @{
    * \param[in] queue A task queue
@@ -323,7 +351,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   pip_task_queue_count_( pip_task_queue_t *queue, int *np ) {
     int err = 0;
     if( np == NULL ) return EINVAL;
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->count == NULL ) {
       *np = queue->length;
     } else {
       err = queue->methods->count( queue, np );
@@ -332,28 +360,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   }
 #define pip_task_queue_count( Q, NP )			\
   pip_task_queue_count_( (pip_task_queue_t*)(Q), (NP) )
-#endif
-
-  /**
-   * \brief Lock task queue
-   *  @{
-   * \param[in] queue A task queue
-   *
-   * \return This function returns no error
-   */
-#ifdef DOXYGEN_INPROGRESS
-  void pip_task_queue_lock( pip_task_queue_t *queue );
-  /** @}*/
-#else
-  static inline void pip_task_queue_lock_( pip_task_queue_t *queue ) {
-    if( queue->methods == NULL ) {
-      pip_spin_lock( &queue->lock );
-    } else {
-      queue->methods->lock( queue );
-    }
-  }
-#define pip_task_queue_lock( Q )			\
-  pip_task_queue_lock_( (pip_task_queue_t*)(Q) )
 #endif
 
   /**
@@ -368,7 +374,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline int pip_task_queue_trylock_( pip_task_queue_t *queue ) {
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->trylock == NULL ) {
       return pip_spin_trylock( &queue->lock );
     } else {
       return queue->methods->trylock( (void*) queue );
@@ -376,6 +382,30 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   }
 #define pip_task_queue_trylock( Q )			\
   pip_task_queue_trylock_( (pip_task_queue_t*)(Q) )
+#endif
+
+  /**
+   * \brief Lock task queue
+   *  @{
+   * \param[in] queue A task queue
+   *
+   * \return This function returns no error
+   */
+#ifdef DOXYGEN_INPROGRESS
+  void pip_task_queue_lock( pip_task_queue_t *queue );
+  /** @}*/
+#else
+  static inline void pip_task_queue_lock_( pip_task_queue_t *queue ) {
+    if( queue->methods == NULL || queue->methods->lock == NULL ) {
+      while( !pip_spin_trylock( &queue->lock ) ) {
+	(void) pip_pause();
+      }
+    } else {
+      queue->methods->lock( queue );
+    }
+  }
+#define pip_task_queue_lock( Q )			\
+  pip_task_queue_lock_( (pip_task_queue_t*)(Q) )
 #endif
 
   /**
@@ -390,7 +420,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline void pip_task_queue_unlock_( pip_task_queue_t *queue ) {
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->unlock == NULL ) {
       pip_spin_unlock( &queue->lock );
     } else {
       queue->methods->unlock( (void*) queue );
@@ -413,7 +443,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline int pip_task_queue_isempty_( pip_task_queue_t *queue ) {
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->isempty == NULL ) {
       return PIP_TASKQ_ISEMPTY( &queue->queue );
     } else {
       return queue->methods->isempty( (void*) queue );
@@ -429,7 +459,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \param[in] queue A task queue
    * \param[in] task A task to be enqueued
    *
-   * \return Returns true if lock succeeds.
    */
 #ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_enqueue( pip_task_queue_t *queue, pip_task_t *task );
@@ -437,7 +466,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   static inline void
   pip_task_queue_enqueue_( pip_task_queue_t *queue, pip_task_t *task ) {
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->enqueue == NULL ) {
       PIP_TASKQ_ENQ_LAST( &queue->queue, task );
       queue->length ++;
     } else {
@@ -448,6 +477,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   pip_task_queue_enqueue_( (pip_task_queue_t*) (Q), (T) )
 #endif
 
+#include <pip_debug.h>
   /**
    * \brief Dequeue a task from a task queue
    *  @{
@@ -462,7 +492,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   static inline pip_task_t*
   pip_task_queue_dequeue_( pip_task_queue_t *queue ) {
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->dequeue == NULL ) {
       pip_task_t *task;
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) return NULL;
       task = PIP_TASKQ_NEXT( &queue->queue );
@@ -492,7 +522,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
   static inline void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->describe == NULL ) {
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) {
 	fprintf( fp, "%s: (EMPTY)\n", tag );
       } else {
@@ -501,14 +531,9 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 	int i = 0;
 	PIP_TASKQ_FOREACH( &queue->queue, task ) {
 	  pip_task_queue_brief( task, msg, 512 );
-	  if( i == 0 ) {
-	    fprintf( fp, "%s: [0]:%s", tag, msg );
-	  } else {
-	    fprintf( fp, ", [%d]:%s", i, msg );
-	  }
+	  fprintf( fp, "%s: [%d/%d]:%s\n", tag, i, queue->length, msg );
 	  i++;
 	}
-	fprintf( fp, "\n" );
       }
     } else {
       queue->methods->describe( (void*) queue, fp );
@@ -531,7 +556,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline int pip_task_queue_fin_( pip_task_queue_t *queue ) {
-    if( queue->methods == NULL ) {
+    if( queue->methods == NULL || queue->methods->finalize == NULL ) {
       if( !PIP_TASKQ_ISEMPTY( &queue->queue ) ) return EBUSY;
       return 0;
     } else {
@@ -541,35 +566,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #define pip_task_queue_fin( Q )			\
   pip_task_queue_fin_( (pip_task_queue_t*)(Q) )
 #endif
-
-  /**
-   * \brief Yield
-   *  @{
-   * \param[in] flag to specify the behavior of yielding
-   *
-   * \return Return 0 on success. Return an error code on error.
-   *
-   * \sa pip_yield_to(3)
-   */
-  int pip_yield( int flag );
-  /** @}*/
-
-  /**
-   * \brief Yield to the specified PiP task
-   *  @{
-   * \param[in] task Target PiP task to switch
-   *
-   * Context-switch to the specified PiP task. If \c task is \c NULL, then
-   * this works the same as \c pip_yield() does.
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM The specified task belongs to the other scheduling
-   * domain.
-   *
-   * \sa pip_yield(3)
-   */
-  int pip_yield_to( pip_task_t *task );
-  /** @}*/
 
   /**
    * \brief suspend the curren task and enqueue it

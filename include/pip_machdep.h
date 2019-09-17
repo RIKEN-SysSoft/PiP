@@ -110,22 +110,20 @@ inline static void pip_spin_lock( pip_spinlock_t *lock ) {
 #endif
 
 #ifndef PIP_SPIN_UNLOCK
-inline static void pip_spin_unlock (pip_spinlock_t *lock) {
+inline static void pip_spin_unlock( pip_spinlock_t *lock ) {
   __sync_lock_release( lock );	/* *lock <= 0 */
 }
 #endif
 
 #ifndef PIP_SPIN_INIT
-inline static int pip_spin_init (pip_spinlock_t *lock) {
+inline static void pip_spin_init( pip_spinlock_t *lock ) {
   pip_spin_unlock( lock );
-  return 0;
 }
 #endif
 
 #ifndef PIP_SPIN_DESTROY
-inline static int pip_spin_destroy( pip_spinlock_t *lock ) {
+inline static void pip_spin_destroy( pip_spinlock_t *lock ) {
   /* Nothing to do.  */
-  return 0;
 }
 #endif
 

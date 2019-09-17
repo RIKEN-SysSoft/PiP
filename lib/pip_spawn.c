@@ -59,6 +59,7 @@ extern void pip_reset_task_struct_( pip_task_internal_t* );
 extern int  pip_is_threaded_( void );
 extern int  pip_is_shared_fd_( void );
 extern int  pip_dlclose( void* );
+extern void pip_do_exit( pip_task_internal_t*, int );
 
 #ifdef DEBUG
 #define CHECK_TLS
@@ -68,22 +69,6 @@ extern int  pip_dlclose( void* );
 __thread int pipid_tls;
 #endif
 
-
-int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
-  int err = 0;
-
-  ENTER;
-  if( pip_is_threaded_() ) {
-    if( pthread_kill( taski->annex->thread, sig ) == ESRCH ) {
-      DBGF( "[%d] task->thread:%p", taski->pipid,
-	    (void*) taski->annex->thread );
-      if( kill( taski->annex->tid, sig ) != 0 ) err = errno;
-    }
-  } else if( taski->annex->tid > 0 ) {
-    if( ( kill( taski->annex->tid, sig ) ) != 0 ) err = errno;
-  }
-  RETURN( err );
-}
 
 int pip_count_vec_( char **vecsrc ) {
   int n = 0;
@@ -207,7 +192,7 @@ size_t pip_stack_size( void ) {
   return sz;
 }
 
-int pip_is_coefd_( int fd ) {
+int pip_isa_coefd_( int fd ) {
   int flags = fcntl( fd, F_GETFD );
   return( ( flags > 0 ) && ( flags & FD_CLOEXEC ) );
 }
@@ -222,31 +207,30 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
   if( ( dir = opendir( PROCFD_PATH ) ) != NULL ) {
     int fd_dir = dirfd( dir );
     int nfds = 0;
+
     while( ( direntp = readdir( dir ) ) != NULL ) {
       if( direntp->d_name[0] != '.' &&
 	  ( fd = atoi( direntp->d_name ) ) >= 0 &&
 	  fd != fd_dir &&
-	  pip_is_coefd_( fd ) ) {
+	  pip_isa_coefd_( fd ) ) {
 	nfds ++;
       }
     }
     if( nfds > 0 ) {
-      nfds ++;
-      if( ( *fd_listp = (int*) malloc( sizeof(int) * nfds ) ) == NULL ) {
-	err = ENOMEM;
-      } else {
-	rewinddir( dir );
-	i = 0;
-	while( ( direntp = readdir( dir ) ) != NULL ) {
-	  if( direntp->d_name[0] != '.' &&
-	      ( fd = atoi( direntp->d_name ) ) >= 0 &&
-	      fd != fd_dir &&
-	      pip_is_coefd_( fd ) ) {
-	    (*fd_listp)[i++] = fd;
-	  }
+      ASSERT( ( *fd_listp = (int*) malloc( sizeof(int) * ( nfds + 1 ) ) ) == NULL );
+      rewinddir( dir );
+      i = 0;
+      while( ( direntp = readdir( dir ) ) != NULL ) {
+	errno = 0;
+	if( direntp->d_name[0] != '.'             		&&
+	    ( fd = strtol( direntp->d_name, NULL, 10 ) ) >= 0	&&
+	    errno == 0						&&
+	    fd != fd_dir                         		&&
+	    pip_isa_coefd_( fd ) ) {
+	  (*fd_listp)[i++] = fd;
 	}
-	(*fd_listp)[i] = -1;
       }
+      (*fd_listp)[i] = -1;
     }
     (void) closedir( dir );
     (void) close( fd_dir );
@@ -485,13 +469,12 @@ static int pip_glibc_init( pip_symbols_t *symbols,
 
 static void
 return_from_start_func( pip_task_internal_t *taski, int extval ) {
-  extern void pip_do_exit( pip_task_internal_t*, int );
-  void *hook_arg = taski->annex->hook_arg;
-  int err;
-  /* the after hook is supposed to free the hook_arg being malloc()ed   */
-  /*  by root and this is the reason to call this from the root process */
   ENTER;
   if( taski->annex->hook_after != NULL ) {
+    void *hook_arg = taski->annex->hook_arg;
+    int err;
+    /* the after hook is supposed to free the hook_arg being malloc()ed  */
+    /* by root and this is the reason to call this from the root context */
     if( ( err = taski->annex->hook_after( hook_arg ) ) != 0 ) {
       pip_warn_mesg( "PIPID:%d after-hook returns %d", taski->pipid, err );
       if( extval == 0 ) extval = err;
@@ -526,7 +509,6 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
 			 args,
 			 self->annex->loaded );
 
-  pip_gdbif_hook_before_( self );
   if( self->annex->hook_before != NULL &&
       ( err = self->annex->hook_before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "[%s] before-hook returns %d", argv[0], err );
@@ -539,6 +521,7 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
 	(void) close( args->fd_list[i] );
       }
     }
+    pip_gdbif_hook_before_( self );
     if( self->annex->symbols.start == NULL ) {
       /* calling hook function, if any */
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
@@ -557,9 +540,9 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
 	    self->annex->symbols.start, start_arg, extval );
     }
   }
-  if( self->task_sched->annex->tid != pip_gettid() ) {
+  if( (pid_t) self->task_sched->annex->tid != pip_gettid() ) {
     /* when a pip task call fork() and the forked */
-    /* process return from main, this may happen  */
+    /* process returns from main, this may happen  */
     DBG;
     exit( extval );
   } else {
@@ -573,6 +556,13 @@ static void* pip_do_spawn( void *thargs )  {
     extern int pip_raise_signal_( pip_task_internal_t*, int );
     RETURN( pip_raise_signal_( pip_root_->task_root, SIGCHLD ) );
   }
+  void pip_cb_start( void *tsk ) {
+    pip_task_internal_t *taski = (pip_task_internal_t*) tsk;
+    /* let root proc know the task is running */
+    taski->annex->tid    = pip_gettid();
+    taski->annex->thread = pthread_self();
+    DBG;
+  }
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
   /* and do not call malloc() and free() in this contxt !!!!         */
@@ -584,8 +574,7 @@ static void* pip_do_spawn( void *thargs )  {
   int			err    = 0;
 
   ENTER;
-  self->annex->tid    = pip_gettid();
-  self->annex->thread = pthread_self();
+
 #ifdef PIP_SAVE_TLS
   pip_save_tls( &self->tls );
 #endif
@@ -594,19 +583,24 @@ static void* pip_do_spawn( void *thargs )  {
   DBGF( "TLS:0x%lx  pipid_tls@%p", (intptr_t)self->tls, &pipid_tls );
   pipid_tls = pipid;
 #endif
+
+  pip_atomic_fetch_and_add( &pip_root_->ntasks_count, 1 );
+  DBGF( "nblks:%d ntasks:%d",
+	(int) pip_root_->ntasks_blocking,
+	(int) pip_root_->ntasks_count );
   if( pip_is_threaded_() ) {
     sigset_t sigmask;
     (void) sigemptyset( &sigmask );
     (void) sigaddset( &sigmask, SIGCHLD );
-    (void) pthread_sigmask( SIG_BLOCK, &sigmask, NULL );
+    (void) pip_sigmask( SIG_BLOCK, &sigmask, NULL );
   } else {
-    (void) setpgid( 0, pip_root_->task_root->annex->tid );
+    (void) setpgid( 0, (pid_t) pip_root_->task_root->annex->tid );
   }
   if( ( err = pip_do_corebind( coreno, NULL ) ) != 0 ) {
     pip_warn_mesg( "failed to bound CPU core:%d (%d)", coreno, err );
   }
-  pip_ctx_t		ctx;
-  volatile int 		flag_jump = 0;	/* must be volatile */
+  pip_ctx_t	ctx;
+  volatile int	flag_jump = 0;	/* must be volatile */
 
   self->annex->ctx_exit = &ctx;
   pip_save_context( &ctx );
@@ -617,28 +611,37 @@ static void* pip_do_spawn( void *thargs )  {
 					    pip_task_queue_t*, int,
 					    pip_enqueue_callback_t, void* );
       /* suspend myself */
-      if( queue != NULL ) {
-	err = pip_suspend_and_enqueue_generic_( self,
-						queue,
-						0,
-						PIP_CB_UNLOCK_AFTER_ENQUEUE,
-						NULL );
-      } else {
-	err = pip_suspend_and_enqueue_generic_( self, NULL, 0, NULL, NULL );
-      }
+      err = pip_suspend_and_enqueue_generic_( self,
+					      queue,
+					      1,
+					      pip_cb_start,
+					      self );
       /* resumed */
+
+    } else {			/* active task */
+      PIP_RUN( self );
+      if( queue != NULL ) {
+	int n = PIP_TASK_ALL;
+	err = pip_dequeue_and_resume_N_( queue, PIP_TASKQ(self), &n );
+      }
+      /* since there is no callback, the cb func is called explicitly */
+      pip_cb_start( (void*) self );
     }
-    pip_jump_into( args, self );
+    if( err == 0 ) {
+      pip_jump_into( args, self );
+    } else {
+      pip_do_exit( self, err );
+    }
     NEVER_REACH_HERE;
   }
-  /* long jump to get here */
+  /* long jump to get here to terminate myself */
   DBGF( "PIPID:%d  pid:%d (%d)",
 	self->pipid, self->annex->tid, pip_gettid() );
 #ifdef CHECK_TLS
   DBGF( "TLS:0x%lx  pipid_tls:%d (%p)  pipid:%d",
 	(intptr_t) self->tls, pipid_tls, &pipid_tls, self->pipid );
-  ASSERT( self->annex->tid != pip_gettid() );
-  ASSERT( pipid_tls != self->pipid );
+  ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
+  ASSERTD( pipid_tls != self->pipid );
 #endif
   /* call fflush() in the target context to flush out std* messages */
   if( self->annex->symbols.libc_fflush != NULL ) {
@@ -649,6 +652,13 @@ static void* pip_do_spawn( void *thargs )  {
   }
 
   DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
+
+  if( self->annex->pip_root_p != NULL ) {
+    *self->annex->pip_root_p = NULL;
+  }
+  if( self->annex->pip_task_p != NULL ) {
+    *self->annex->pip_task_p = NULL;
+  }
   if( pip_is_threaded_() ) {
     (void) pip_raise_sigchld();
     pthread_exit( NULL );
@@ -797,31 +807,17 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     ERRJ_ERR( ENOMEM );
   }
 
-  if( opts & PIP_TASK_PASSIVE ) { /* passive task */
-    if( queue != NULL ) pip_task_queue_lock( queue );
+  if( ( err = pip_do_corebind( coreno, &cpuset ) ) == 0 ) {
+    /* corebinding should take place before loading solibs,       */
+    /* hoping anon maps would be mapped onto the closer numa node */
     PIP_ACCUM( time_load_prog,
 	       ( err = pip_load_prog( progp, args, task ) ) == 0 );
-  } else {			/* active task */
-    if( ( err = pip_do_corebind( coreno, &cpuset ) ) == 0 ) {
-      /* corebinding should take place before loading solibs,       */
-      /* hoping anon maps would be mapped onto the closer numa node */
-      PIP_ACCUM( time_load_prog,
-		 ( err = pip_load_prog( progp, args, task ) ) == 0 );
-      /* and of course, the corebinding must be undone */
-      (void) pip_undo_corebind( coreno, &cpuset );
-    }
+    /* and of course, the corebinding must be undone */
+    (void) pip_undo_corebind( coreno, &cpuset );
   }
   ERRJ_CHK(err);
 
   pip_gdbif_task_new_( task );
-
-  PIP_RUN( task );
-  if( ( opts & PIP_TASK_PASSIVE ) == 0 && /* active task */
-      queue != NULL ) {
-    int n = PIP_TASK_ALL;
-    err = pip_dequeue_and_resume_N_( queue, PIP_TASKQ(task), &n );
-    if( err ) ERRJ;
-  }
 
   if( ( pip_root_->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
@@ -836,7 +832,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
       CLONE_PTRACE |
       SIGCHLD;
 
-    err = pip_clone_mostly_pthread_ptr( &task->annex->thread,
+    err = pip_clone_mostly_pthread_ptr( (pthread_t*) &task->annex->thread,
 					flags,
 					coreno,
 					stack_size,
@@ -862,7 +858,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 	pip_spin_lock_wv( &clone_info->lock, tid );
       }
       do {
-	err = pthread_create( &task->annex->thread,
+	err = pthread_create( (pthread_t*) &task->annex->thread,
 			      &attr,
 			      (void*(*)(void*)) pip_do_spawn,
 			      (void*) args );
@@ -877,30 +873,37 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   }
   if( err == 0 ) {
     struct timespec ts;
+    int i;
+
     ts.tv_sec  = 0;
     ts.tv_nsec = 100 * 1000;	/* 0.1 msec */
-    while( 1 ) {
+
+    for( i=0; i<1000; i++ ) {
+      /* wait until task starts running */
+      /* or is enqueued when suspended  */
       if( task->annex->tid    >  0 &&
-	  task->annex->thread != 0 &&
-	  task->tls           != 0 ) break;
+	  task->annex->thread != 0 ) goto done;
       nanosleep( &ts, NULL );
     }
-    pip_root_->ntasks_count ++;
+    pip_err_mesg( "Spawning PiP task does not respond (timeout)" );
+    err = ETIMEDOUT;
+    goto error;
+
+  done:
+    DBGF( "task (PIPID:%d) is created and running", task->pipid );
     pip_root_->ntasks_accum ++;
-    pip_root_->ntasks_curr  ++;
     pip_gdbif_task_commit_( task );
     if( bltp != NULL ) *bltp = (pip_task_t*) task;
     errno = 0;
 
   } else {
   error:			/* undo */
-    DBG;
     if( args != NULL ) {
       PIP_FREE( args->prog );
       PIP_FREE( args->prog_full );
+      PIP_FREE( args->funcname );
       PIP_FREE( args->argv );
       PIP_FREE( args->envv );
-      PIP_FREE( args->funcname );
       PIP_FREE( args->fd_list );
     }
     if( task != NULL ) {
@@ -980,12 +983,12 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   taski->annex->args.prog = NULL;
   PIP_FREE( taski->annex->args.prog_full );
   taski->annex->args.prog_full = NULL;
-  PIP_FREE( taski->annex->args.envv );
-  taski->annex->args.envv = NULL;
-  PIP_FREE( taski->annex->args.argv );
-  taski->annex->args.argv = NULL;
   PIP_FREE( taski->annex->args.funcname );
   taski->annex->args.funcname = NULL;
+  PIP_FREE( taski->annex->args.argv );
+  taski->annex->args.argv = NULL;
+  PIP_FREE( taski->annex->args.envv );
+  taski->annex->args.envv = NULL;
   PIP_FREE( taski->annex->args.fd_list );
   taski->annex->args.fd_list = NULL;
   pip_blocking_fin( &taski->annex->sleep );
@@ -1061,29 +1064,4 @@ int pip_get_id( int pipid, intptr_t *idp ) {
     *idp = (intptr_t) taski->annex->tid;
   }
   RETURN( 0 );
-}
-
-void pip_abort( void ) {
-  extern int pip_raise_signal_( pip_task_internal_t*, int );
-  ENTER;
-
-  fflush( NULL );
-  if( pip_root_ == NULL ) {
-    kill( 0, SIGQUIT );
-  } else {
-    (void) killpg( pip_root_->task_root->annex->tid, SIGQUIT );
-  }
-}
-
-void pip_abort_all_tasks( void ) {
-  int	i, pipid;
-
-  if( pip_isa_root() ) {
-    for( i=0; i<pip_root_->ntasks; i++ ) {
-      pipid = i;
-      if( pip_check_pipid_( &pipid ) == 0 ) {
-	(void) pip_raise_signal_( &pip_root_->tasks[i], SIGKILL );
-      }
-    }
-  }
 }

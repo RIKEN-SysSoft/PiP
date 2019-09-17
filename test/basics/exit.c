@@ -33,6 +33,8 @@
   * Written by Atsushi HORI <ahori@riken.jp>, 2016
 */
 
+#include <stdlib.h>
+
 int main() {
-  return 0;
+  exit( 0 );
 }

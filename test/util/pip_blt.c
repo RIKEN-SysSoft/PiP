@@ -20,7 +20,7 @@ static int get_ncpus( void ) {
 }
 #endif
 
-static pip_task_queue_t	queues[NTASKS];
+static pip_task_queue_t	queues[NTASKS+1];
 
 static int is_taskq_empty( pip_task_queue_t *queue ) {
   int rv;
@@ -46,13 +46,13 @@ int main( int argc, char **argv ) {
   CHECK( pip_check_pie( argv[3], 1 ), RV, exit(EXIT_UNTESTED) );
 
   nacts = strtol( argv[1], NULL, 10 );
-  CHECK( nacts,  RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
+  CHECK( nacts,  RV<0||RV>NTASKS,  return(EXIT_UNTESTED) );
   npass = strtol( argv[2], NULL, 10 );
-  CHECK( npass,  RV<0 ||RV>NTASKS, return(EXIT_UNTESTED) );
+  CHECK( npass,  RV<0||RV>NTASKS,  return(EXIT_UNTESTED) );
   ntasks = nacts + npass;
   CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
 
-  for( i=0; i<nacts; i++ ) pip_task_queue_init( &queues[i], NULL );
+  for( i=0; i<nacts+1; i++ ) pip_task_queue_init( &queues[i], NULL );
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 

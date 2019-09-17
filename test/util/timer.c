@@ -44,16 +44,26 @@
 extern int pip_is_debug_build( void );
 
 static pid_t pid = 0;
-static char *prog;
+static char *prog = NULL;
+static char *target = NULL;
+static int timedout = 0;
 
 static void set_timer( int timer ) {
-  extern void pip_abort_all_tasks( void );
   struct sigaction sigact;
   void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    killpg( pid, SIGKILL );
-    sleep( 1 );			/* to flush out messages */
+    char sysstr[256];
+
+    timedout = 1;
     fprintf( stderr, "Timer expired (%d sec)\n", timer );
-    exit( EXIT_UNRESOLVED );
+    fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
+    errno = 0;
+    killpg( pid, SIGHUP );
+    if( errno != ESRCH ) {
+      sleep( 1 );
+      sprintf( sysstr, "killall -KILL %s", target );
+      system( sysstr );
+    }
+    //exit( EXIT_UNRESOLVED );
   }
   struct itimerval tv;
 
@@ -98,14 +108,14 @@ int main( int argc, char **argv ) {
 
   prog = basename( argv[0] );
   if( argc < 3 ) usage();
+  target = basename( argv[2] );
 
-  if( *argv[1] == '-' ) {
-    flag_debug = 1;
-    time = strtol( &argv[1][1], NULL, 10 );
-  } else {
-    time = strtol( argv[1], NULL, 10 );
-  }
+  time = strtol( argv[1], NULL, 10 );
   if( time == 0 ) usage();
+  if( time <  0 ) {
+    time = -time;
+    flag_debug = 1;
+  }
 
   if( pip_is_debug_build() && !flag_debug ) {
     time *= DEBUG_SCALE;
@@ -113,15 +123,17 @@ int main( int argc, char **argv ) {
 
   set_timer( time );
   if( ( pid = fork() ) == 0 ) {
-    (void) setpgid( 0, 0 );
+    //(void) setpgid( 0, 0 );
     execvp( argv[2], &argv[2] );
     fprintf( stderr, "[%s] execvp(): %d\n", prog, errno );
     exit( EXIT_UNTESTED );
   } else if( pid > 0 ) {
     wait( &status );
-    unset_timer();
     if( WIFEXITED( status ) ) {
       exit( WEXITSTATUS( status ) );
+    } else if( WIFSIGNALED( status ) ) {
+      int sig = WTERMSIG( status );
+      fprintf( stderr, "'%s' terminated due to signal (%s)\n", target, strsignal(sig) );
     }
     exit( EXIT_UNRESOLVED );
   } else {

@@ -102,6 +102,7 @@ typedef struct pip_cacheblk {
 } pip_cacheblk_t;
 
 typedef volatile uint8_t	pip_stack_protect_t;
+typedef volatile uint8_t	*pip_stack_protect_p;
 
 struct pip_task_annex;
 
@@ -116,7 +117,7 @@ typedef struct pip_task_internal {
       pip_tls_t			tls;
 #endif
       pip_ctx_t			*ctx_suspend; /* context to resume */
-      pip_stack_protect_t	*flag_stackpp; /* to unprotect stack (ctxsw) */
+      pip_stack_protect_p	flag_stackpp; /* to unprotect stack (ctxsw) */
       /* end of one cache block (64 bytes) */
       /* less frequently accessed part follows */
       pip_atomic_t		ntakecare; /* tasks must be taken care */
@@ -182,6 +183,7 @@ typedef struct {
   pip_task_queue_t	*queue;
 } pip_spawn_args_t;
 
+struct pip_root;
 struct pip_gdbif_task;
 struct pip_gdbif_root;
 
@@ -205,7 +207,7 @@ typedef struct pip_task_annex {
   pip_ctx_t			*ctx_exit; /* context to exit */
 
   volatile pid_t		tid; /* TID in process mode at beginning */
-  pthread_t			thread;	/* thread */
+  volatile pthread_t		thread;	/* thread */
   void				*loaded; /* loaded DSO handle */
   /* spawn info */
   pip_spawn_args_t		args;	 /* arguments for a PiP task */
@@ -213,13 +215,14 @@ typedef struct pip_task_annex {
   pip_spawnhook_t		hook_before; /* before spawning hook */
   pip_spawnhook_t		hook_after;  /* after spawning hook */
   void				*hook_arg;   /* hook arg */
+  /* cleanup */
+  void				**pip_root_p;
+  pip_task_internal_t		**pip_task_p;
 
   /* GDB interface */
-  struct 			pip_gdbif_task	*gdbif_task; /* GDB if */
+  struct pip_gdbif_task		*gdbif_task; /* GDB if */
 
-#ifdef DEBUG
-  pip_task_internal_t		*task_unprotect;
-#endif
+  pip_task_internal_t		*task_unprotect; /* just for sanity check */
 } pip_task_annex_t;
 
 
@@ -230,8 +233,10 @@ typedef struct pip_task_annex {
 #define PIP_TYPE_ROOT		(0x01)
 #define PIP_TYPE_TASK		(0x02)
 
-#define PIP_TASK_RUNNING	('R')
-#define PIP_TASK_SUSPENDED	('S')
+#define PIP_TASK_RUNNING		('R')
+#define PIP_TASK_SUSPENDED		('S')
+#define PIP_TASK_RUNNING_NOSCHED	('r')
+#define PIP_TASK_SUSPENDED_NOSCHED	('s')
 
 #define PIP_RUN(T)		( PIP_TASKI(T)->state = PIP_TASK_RUNNING   )
 #define PIP_SUSPEND(T)		( PIP_TASKI(T)->state = PIP_TASK_SUSPENDED )
@@ -258,8 +263,7 @@ typedef struct {
   /* actual root info */
   pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
   pip_atomic_t		ntasks_blocking;
-  int			ntasks_count;
-  int			ntasks_curr;
+  pip_atomic_t		ntasks_count;
   int			ntasks_accum;
   int			ntasks;
   int			pipid_curr;

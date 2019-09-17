@@ -771,7 +771,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \sa \b sigprocmask, \b pthread_sigmask
    */
-  int pip_sigmask( int how, sigset_t *sigmask, sigset_t *oldmask );
+  int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
   /** @}*/
 
   /**

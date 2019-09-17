@@ -51,11 +51,12 @@ int pip_barrier_init_( pip_barrier_t *barrp, int n ) {
 int pip_barrier_wait_( pip_barrier_t *barrp ) {
   pip_task_queue_t *qp;
   int init = barrp->count_init;
+  int turn = barrp->turn;
   int n, c, err = 0;
 
   ENTER;
   IF_UNLIKELY( init == 1 ) RETURN( 0 );
-  qp = &barrp->queue[barrp->turn];
+  qp = &barrp->queue[turn];
   c = pip_atomic_sub_and_fetch( &barrp->count, 1 );
   IF_LIKELY( c > 0 ) {
     /* noy yet. enqueue the current task */
@@ -70,14 +71,14 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
       pip_yield( PIP_YIELD_DEFAULT );
     } while ( c < init - 1 );
     /* really done. dequeue all tasks in the queue and resume them */
-    barrp->turn ^= 1;
+    //barrp->turn  = turn ^ 1;
     barrp->count = init;
-    c = init - 1; /* the last one (myself) is not in the queue */
+    pip_memory_barrier();
+    c = init - 1;  /* the last one (myself) is not in the queue */
     /* do not call with PIP_TASK_ALL because resumed */
     /* task(s) might be enqueued for the next round  */
     do {
       n = c;			/* number of tasks to resume */
-      //n = PIP_TASK_ALL;
       err = pip_dequeue_and_resume_N_( qp, NULL, &n );
       if( err ) break;
       c -= n;

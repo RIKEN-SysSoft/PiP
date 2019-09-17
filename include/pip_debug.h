@@ -78,79 +78,55 @@ extern void pip_abort( void );
 
 #ifdef DEBUG
 
-inline static void pip_bt10( void ) {
-  pid_t pid = pip_gettid();
-  Dl_info info;
+extern int pip_debug_env( void );
 
-#define BTN(L)								\
-  do { void *addr = __builtin_return_address(L);			\
-    if( addr != NULL ) {						\
-      dladdr( addr, &info );						\
-      fprintf( stderr, "BT(%d) [%d] %s()@%p\n", pid, (L), info.dli_sname, addr ); \
-    } } while( 0 )
+#define DBGSW	pip_debug_env()
 
-  BTN(0);
-  BTN(1);
-  BTN(2);
-  BTN(3);
-  BTN(4);
-  BTN(5);
-  BTN(6);
-  BTN(7);
-  BTN(8);
-  BTN(9);
-}
-
-#define DBG						\
-  do { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; } while(0)
-#define DBGF(...)							\
-  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
-#define ENTER						\
-  do { DBG_PRTBUF; DBG_TAG_ENTER; DBG_OUTPUT; } while(0)
-#define RETURN(X)						\
-  do { DBG_PRTBUF; int __xxx=(X); DBG_TAG_LEAVE; if(__xxx) {		\
-      DBG_PRNT("ERROR RETURN '%s'",strerror(__xxx));			\
-    } DBG_OUTPUT; return(__xxx); } while(0)
-#define RETURNV								\
-  do { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; return; } while(0)
-
-#ifdef DEBUG
-#define ASSERT(X)						       \
-  do {IF_UNLIKELY(X) { DBGF("<%s> Assertion FAILED\n",#X);		\
-      pip_bt10(); pip_abort(); } else { DBGF( "(%s) -- Assertion OK", #X ); } } \
-  while(0)
 #else
-#define ASSERT(X)							\
-  do {IF_UNLIKELY(X) { DBGF( "Assertion FAILED '%s' !!!!!!\n", #X );	\
-      pip_abort(); } } while(0)
+
+#define DBGSW	(0)
+
 #endif
 
+#define DBG						\
+  if(DBGSW) { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; }
+
+#define EMSG(...)							\
+  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
+
+#define DBGF(...)						\
+  if(DBGSW) { EMSG(__VA_ARGS__); }
+
+#define ENTER							\
+  if(DBGSW) { DBG_PRTBUF; DBG_TAG_ENTER; DBG_OUTPUT; }
+
+#define RETURN(X)						    \
+  do { int __xxx=(X);						    \
+    if(DBGSW) { DBG_PRTBUF; DBG_TAG_LEAVE;			    \
+      if(__xxx) { DBG_PRNT("ERROR RETURN '%s'",strerror(__xxx)); }  \
+      DBG_OUTPUT; } return (__xxx); } while(0)
+
+#define RETURNV								\
+  do { if(DBGSW) { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; }		\
+    return; } while(0)
+
+#define ASSERT(X)						       \
+  if(X) { EMSG("<%s> Assertion FAILED !!!!!!\n",#X);		       \
+    pip_abort(); } else { DBGF( "(%s) -- Assertion OK", #X ); }
+
+#define ASSERTD(X)						       \
+  if(DBGSW) { if(X) { EMSG("<%s> Assertion FAILED !!!!!!\n",#X);       \
+    pip_abort(); } else { DBGF( "(%s) -- Assertion OK", #X ); } }
+
+
 #define NEVER_REACH_HERE						\
-  do { DBGF( "Should not reach here !!!!!!\n" );  pip_abort(); } while(0)
+  do { EMSG( "\nShould not reach here !!!!!!\n" ); pip_abort(); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );
+
 #define QUEUE_DESCRIBE( Q )				\
   pip_queue_describe( stderr, __func__, PIP_TASKQ(Q) );
-
-#else
-
-#define DBG
-#define DBGF(...)
-#define ENTER
-#define RETURN(X)	return (X)
-#define RETURNV
-#define ASSERT(X)					  \
-  do { if( X ) { DBG_PRTBUF; DBG_TAG;			  \
-      DBG_PRNT( "Assertion FAILED '%s' !!!!!!", #X );	\
-      DBG_OUTPUT; } } while(0)
-
-#define NEVER_REACH_HERE
-
-#define TASK_DESCRIBE( ID )
-#define QUEUE_DESCRIBE( Q )
-
-#endif
 
 #define ERRJ		{ DBG;                goto error; }
 #define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }

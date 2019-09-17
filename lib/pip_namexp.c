@@ -200,7 +200,7 @@ int pip_named_export( void *exp, const char *format, ... ) {
   DBGF( "pipid:%d  name:%s  exp:%p", pip_task_->pipid, name, exp );
 
   namexp = (pip_named_exptab_t*) pip_task_->annex->named_exptab;
-  ASSERT( namexp == NULL );
+  ASSERTD( namexp == NULL );
 
   if( namexp->flag_closed ) RETURN( ECANCELED );
 
@@ -406,7 +406,7 @@ void pip_named_export_fin_all_( void ) {
   pip_named_exptab_t  *namexp;
   int i;
 
-  ASSERT( pip_task_ != pip_root_->task_root );
+  ASSERTD( pip_task_ != pip_root_->task_root );
   DBGF( "pip_root->ntasks:%d", pip_root_->ntasks );
   for( i=0; i<pip_root_->ntasks; i++ ) {
     DBGF( "PiP task: %d", i );

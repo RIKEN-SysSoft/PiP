@@ -1,9 +1,20 @@
+timer 1 pip_blt 1 1  ../basics/pip_exit
+timer 1 pip_blt 8 8  ../basics/pip_exit
+timer 1 pip_blt 8 24 ../basics/pip_exit
+timer 1 pip_blt 1 1  ../basics/return
+timer 1 pip_blt 8 8  ../basics/return
+timer 1 pip_blt 8 24 ../basics/return
+skip.sh A UNSUPPORTED timer 1 pip_blt 1 1  ../basics/exit
+skip.sh A UNSUPPORTED timer 1 pip_blt 8 8  ../basics/exit
 timer 1 pip_blt 1 1 ./pip_yield
 timer 5 pip_blt 8 8 ./pip_yield
 timer 10 pip_blt 8 24 ./pip_yield
 timer 1 pip_blt 1 1 ./pip_namexp
 timer 5 pip_blt 8 8 ./pip_namexp
 timer 10 pip_blt 8 24 ./pip_namexp
-timer 1 pip_blt 1 1 ./pip_barrier
-timer 5 pip_blt 8 8 ./pip_barrier
-timer 20 pip_blt 8 24 ./pip_barrier
+timer 1 pip_blt 1 1 ./pip_barrier 1
+timer 5 pip_blt 8 8 ./pip_barrier 1
+timer 20 pip_blt 8 24 ./pip_barrier 1
+timer 1 pip_blt 1 1 ./pip_barrier 100
+timer 5 pip_blt 8 8 ./pip_barrier 100
+timer 20 pip_blt 8 24 ./pip_barrier 100

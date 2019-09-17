@@ -364,6 +364,83 @@ int pip_check_sync_flag_( uint32_t flags ) {
   ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
+  void pip_sigterm_handler( void ) {
+    struct timespec ts;
+    int	pipid, i;
+
+    DBG;
+#ifdef DEBUG
+    extern void pip_pipidstr_( pip_task_internal_t *taski, char *buf );
+
+    for( i=0; i<pip_root_->ntasks; i++ ) {
+      pip_task_internal_t *taski = &pip_root_->tasks[i];
+      char *ststr = "(unknown)";
+      char idstr[64];
+      if( taski->type == PIP_TYPE_NONE ) continue;
+      if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
+	ststr = "EXITED";
+      } else {
+	if( PIP_IS_RUNNING( taski ) ) {
+	  if( taski->task_sched == taski ) {
+	    ststr = "RUNNING";
+	  } else if( !taski->flag_semwait ) {
+	    ststr = "running";
+	  } else {
+	    ststr = "sleeping";
+	  }
+	} else if( PIP_IS_SUSPENDED( taski ) ) {
+	  if( taski->task_sched == taski ) {
+	    ststr = "SUSPENDED";
+	  } else if( !taski->flag_semwait ) {
+	    ststr = "suspended";
+	  } else {
+	    ststr = "sleeping";
+	  }
+	}
+      }
+      pip_pipidstr_( taski, idstr );
+      DBGF( "%s(PID:%d) %s", idstr, taski->annex->tid, ststr );
+    }
+#endif
+    for( pipid=0; pipid<pip_root_->ntasks; pipid++ ) {
+      if( pip_check_pipid_( &pipid ) == 0 ) {
+	(void) pip_kill( pipid, SIGKILL );
+      }
+    }
+    ts.tv_sec  = 0;
+    ts.tv_nsec = 100 * 1000;	/* 0.1 msec */
+    nanosleep( &ts, NULL );
+    for( i=0; i<pip_root_->ntasks_count; i++ ) {
+      (void) pip_trywait_any( NULL, NULL );
+    }
+    (void) pip_kill( PIP_PIPID_ROOT, SIGKILL );
+  }
+  void pip_sighup_handler( void ) {
+    if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
+      pip_err_mesg( "PiP root and tasks are blocked and deadlocked !!" );
+      fflush( NULL );
+      pip_sigterm_handler();
+    } else {
+      pip_err_mesg( "Hangup signal !!" );
+      fflush( NULL );
+      pip_sigterm_handler();
+    }
+  }
+  void pip_set_signal_handler( int sig, void(*handler)() ) {
+    struct sigaction 	sigact;
+    int err;
+
+    memset( &sigact, 0, sizeof( sigact ) );
+    ASSERT( sigemptyset( &sigact.sa_mask )    != 0 );
+    ASSERT( sigaddset( &sigact.sa_mask, sig ) != 0 );
+    err = pthread_sigmask( SIG_SETMASK, &sigact.sa_mask, NULL );
+    if( !err ) {
+      sigact.sa_sigaction = handler;
+      errno = 0;
+      (void) sigaction( sig, &sigact, NULL );
+      err = errno;
+    }
+  }
   extern int pip_named_export_init_( pip_task_internal_t* );
   size_t	sz;
   char		*envroot = NULL;
@@ -419,7 +496,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_set_magic( pip_root_ );
     pip_root_->version      = PIP_API_VERSION;
     pip_root_->ntasks       = ntasks;
-    pip_root_->ntasks_count = 1;
+    pip_root_->ntasks_count = 1; /* root is also a PiP task */
     pip_root_->cloneinfo    = pip_cloneinfo;
     pip_root_->opts         = opts;
     pip_root_->yield_iters  = pip_yield_setting();
@@ -455,6 +532,11 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     pip_gdbif_initialize_root_( ntasks );
 
+    /* deadlock */
+    pip_set_signal_handler( SIGHUP,  pip_sighup_handler  );
+    /* pip_abort */
+    pip_set_signal_handler( SIGTERM, pip_sigterm_handler );
+
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
@@ -472,6 +554,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
     unsetenv( PIP_ROOT_ENV );
     unsetenv( PIP_TASK_ENV );
+    pip_task_->annex->pip_root_p = (void**) &pip_root_;
+    pip_task_->annex->pip_task_p = &pip_task_;
 
   } else {
     RETURN( EPERM );
@@ -510,7 +594,7 @@ int pip_isa_root( void ) {
 int pip_isa_task( void ) {
   return
     pip_is_initialized() &&
-    PIP_ISA_TASK( pip_task_ ) &&
+    PIP_ISA_TASK( pip_task_ ) && /* root is also a task */
     !PIP_ISA_ROOT( pip_task_ );
 }
 
@@ -533,14 +617,6 @@ int pip_get_ntasks( int *ntasksp ) {
   if( pip_root_ == NULL ) return( EPERM  ); /* intentionally small return */
   if( ntasksp != NULL ) {
     *ntasksp = pip_root_->ntasks;
-  }
-  RETURN( 0 );
-}
-
-int pip_get_curr_ntasks( int *ntasksp ) {
-  if( pip_root_ == NULL ) return( EPERM  ); /* intentionally small return */
-  if( ntasksp != NULL ) {
-    *ntasksp = pip_root_->ntasks_curr;
   }
   RETURN( 0 );
 }
@@ -601,14 +677,30 @@ int pip_is_shared_fd( int *flagp ) {
   } else {
     *flagp = 0;
   }
-  ASSERT( pip_task_->annex->named_exptab == NULL );
   return 0;
 }
 
-int pip_kill( int pipid, int signal ) {
-  extern int pip_raise_signal_( pip_task_internal_t*, int );
-  int err;
+int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
+  int err = 0;
 
+  if( pip_is_threaded_() ) {
+    if( pthread_kill( taski->annex->thread, sig ) == ESRCH ) {
+      DBGF( "[%d] task->thread:%p", taski->pipid,
+	    (void*) taski->annex->thread );
+      errno = 0;
+      (void) kill( (pid_t) taski->annex->tid, sig );
+      err = errno;
+    }
+  } else if( taski->annex->tid > 0 ) {
+    errno = 0;
+    (void) kill( (pid_t) taski->annex->tid, sig );
+    err = errno;
+  }
+  return err;
+}
+
+int pip_kill( int pipid, int signal ) {
+  int err;
   if( signal < 0 ) RETURN( EINVAL );
   if( ( err = pip_check_pipid_( &pipid ) ) == 0 ) {
     err = pip_raise_signal_( pip_get_task_( pipid ), signal );
@@ -616,16 +708,20 @@ int pip_kill( int pipid, int signal ) {
   RETURN( err );
 }
 
-int pip_sigmask( int how, sigset_t *sigmask, sigset_t *oldmask ) {
+int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask ) {
   int err;
-  if( sigmask == NULL ) RETURN( EINVAL );
   if( pip_is_threaded_() ) {
     err = pthread_sigmask( how, sigmask, oldmask );
   } else {
-    err = 0;
-    if( sigprocmask( how, sigmask, oldmask ) != 0 ) err = errno;
+    errno = 0;
+    (void) sigprocmask( how, sigmask, oldmask );
+    err = errno;
   }
   RETURN( err );
+}
+
+void pip_abort( void ) {
+  pip_kill( PIP_PIPID_ROOT, SIGTERM );
 }
 
 int pip_is_debug_build( void ) {
@@ -694,13 +790,15 @@ void *pip_dlsym( void *handle, const char *symbol ) {
 }
 
 int pip_dlclose( void *handle ) {
-  int rv;
+  int rv = 0;
   if( pip_is_initialized() ) {
+#ifdef AH
     DBGF( ">>" );
     pip_spin_lock( &pip_root_->lock_ldlinux );
     rv = dlclose( handle );
     pip_spin_unlock( &pip_root_->lock_ldlinux );
     DBGF( "<<" );
+#endif
   } else {
     rv = dlclose( handle );
   }

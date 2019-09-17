@@ -62,7 +62,7 @@ static void *thread_main( void *argp ) {
   inc = id + 10;
   for( i=0; i<NITERS; i++ ) {
     count += inc;
-    sched_yield();
+    CHECK( pthread_yield(), RV, exit(EXIT_FAIL) );
     count -= inc;
   }
   CHECK( pthread_barrier_wait( &barr ),
@@ -77,16 +77,18 @@ static void *thread_main( void *argp ) {
   for( i=0; i<NITERS; i++ ) {
     if( !pip_spin_trylock( &lock) ) {
       ncols ++;
-      sched_yield();
-      while( !pip_spin_trylock( &lock) ) sched_yield();
+      do {
+	CHECK( pthread_yield(), RV, exit(EXIT_FAIL) );
+      } while( !pip_spin_trylock( &lock) );
     }
     count += inc;
     pip_spin_unlock( &lock );
 
     if( !pip_spin_trylock( &lock) ) {
       ncols ++;
-      sched_yield();
-      while( !pip_spin_trylock( &lock) ) sched_yield();
+      do {
+	CHECK( pthread_yield(), RV, exit(EXIT_FAIL) );
+      } while( !pip_spin_trylock( &lock) );
     }
     count -= inc;
     pip_spin_unlock( &lock );
@@ -116,7 +118,7 @@ int main( int argc, char **argv ) {
   nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
   nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
-  CHECK( pip_spin_init( &lock ), RV, return(EXIT_FAIL) );
+  pip_spin_init( &lock );
   CHECK( pthread_barrier_init( &barr, NULL, nthreads+1 ),
 	 RV,
 	 return(EXIT_FAIL) );

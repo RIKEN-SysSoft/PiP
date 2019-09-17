@@ -35,7 +35,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = pip_init.c \
+SRCS  = hello.c \
+	pip_init.c \
 	pip_fin.c \
 	pip_exit.c \
 	exit.c \
@@ -48,9 +49,11 @@ SRCS  = pip_init.c \
 	pip_barrier.c \
 	pip_barrier2.c \
 	signal.c \
-	seek.c
+	seek.c \
+	pipid.c
 
-PROGRAMS  = pip_init \
+PROGRAMS  = hello.c \
+	pip_init \
 	pip_fin \
 	pip_exit \
 	exit \
@@ -68,7 +71,8 @@ PROGRAMS  = pip_init \
 	pip_barrier \
 	pip_barrier2 \
 	signal \
-	seek
+	seek \
+	pipid
 
 prog-noexec : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-noexec
@@ -82,6 +86,5 @@ prog-pie : prog.c Makefile
 
 prog-nordynamic : prog.c Makefile
 	$(CC) -g -O2 -fpie -pie prog.c -o prog-nordynamic
-
 
 include $(top_srcdir)/build/rule.mk

@@ -264,18 +264,18 @@ void pip_gdbif_finalize_task_( pip_task_internal_t *task ) {
   RETURNV;
 }
 
-void pip_gdbif_hook_before_( pip_task_internal_t *task ) {
+void pip_gdbif_hook_before_( pip_task_internal_t *taski ) {
   struct pip_gdbif_root *gdbif_root = pip_root_->gdbif_root;
-  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = taski->annex->gdbif_task;
 
   if( gdbif_root->hook_before_main != NULL ) {
     gdbif_root->hook_before_main( gdbif_task );
   }
 }
 
-void pip_gdbif_hook_after_( pip_task_internal_t *task ) {
+void pip_gdbif_hook_after_( pip_task_internal_t *taski ) {
   struct pip_gdbif_root *gdbif_root = pip_root_->gdbif_root;
-  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = taski->annex->gdbif_task;
 
   if( gdbif_root->hook_after_main != NULL ) {
     gdbif_root->hook_after_main( gdbif_task );
