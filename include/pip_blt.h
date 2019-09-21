@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2019
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_blt_h_
@@ -79,18 +79,29 @@ typedef struct pip_queue {
 #define PIP_TASKQ_PREV_NEXT(L)	(((pip_task_t*)(L))->prev->next)
 #define PIP_TASKQ_NEXT_PREV(L)	(((pip_task_t*)(L))->next->prev)
 
+#ifdef DEBUG
+#define PIP_TASKQ_CHECK(Q)					\
+  do { if( PIP_TASKQ_NEXT(Q) != PIP_TASKQ_PREV(Q) )		\
+      fprintf( stderr, "Queue:%p is wrong !!!!\n", (Q) );	\
+  } while(0)
+#else
+#define PIP_TASKQ_CHECK(Q)
+#endif
+
 #define PIP_TASKQ_INIT(L)					\
   do { PIP_TASKQ_NEXT(L) = PIP_TASKQ_PREV(L) =			\
       (pip_task_t*)(L); } while(0)
 
 #define PIP_TASKQ_ENQ_FIRST(L,E)				\
-  do { PIP_TASKQ_NEXT(E)      = PIP_TASKQ_NEXT(L);		\
+  do { PIP_TASKQ_CHECK(E);					\
+       PIP_TASKQ_NEXT(E)      = PIP_TASKQ_NEXT(L);		\
        PIP_TASKQ_PREV(E)      = (pip_taskt*)(L);		\
        PIP_TASKQ_NEXT_PREV(L) = (pip_task_t*)(E);		\
        PIP_TASKQ_NEXT(L)      = (pip_task_t*)(E); } while(0)
 
 #define PIP_TASKQ_ENQ_LAST(L,E)					\
-  do { PIP_TASKQ_NEXT(E)      = (pip_task_t*)(L);		\
+  do { PIP_TASKQ_CHECK(E);					\
+       PIP_TASKQ_NEXT(E)      = (pip_task_t*)(L);		\
        PIP_TASKQ_PREV(E)      = PIP_TASKQ_PREV(L);		\
        PIP_TASKQ_PREV_NEXT(L) = (pip_task_t*)(E);		\
        PIP_TASKQ_PREV(L)      = (pip_task_t*)(E); } while(0)
@@ -142,10 +153,10 @@ typedef pip_task_t	pip_list_t;
 struct pip_task_queue_methods;
 
 typedef struct pip_task_queue {
-  volatile pip_task_t		queue;
-  struct pip_task_queue_methods	*methods;
-  pip_spinlock_t		lock;
-  volatile int32_t		length;
+  volatile pip_task_t			queue;
+  struct pip_task_queue_methods		*methods;
+  pip_spinlock_t			lock;
+  volatile uint32_t			length;
 } pip_task_queue_t;
 
 typedef void(*pip_enqueue_callback_t)(void*);
@@ -219,36 +230,6 @@ typedef struct pip_barrier {
 #ifdef __cplusplus
 extern "C" {
 #endif
-#endif
-
-  /**
-   * \brief Initialize task queue
-   *  @{
-   * \param[in] queue A task queue
-   * \param[in] methods Usre defined function table. If NULL then
-   *  default functions will be used.
-   *
-   * \return This function returns no error
-   */
-#ifdef DOXYGEN_INPROGRESS
-  int pip_task_queue_init( pip_task_queue_t *queue,
-			   pip_task_queue_methods_t *methods );
-  /** @}*/
-#else
-  static inline int pip_task_queue_init_( pip_task_queue_t *queue,
-					  pip_task_queue_methods_t *methods ) {
-    memset( queue, 0, sizeof(pip_task_queue_t) );
-    PIP_TASKQ_INIT( &queue->queue );
-    queue->methods = methods;
-    if( methods == NULL || methods->init == NULL) {
-      pip_spin_init( &queue->lock );
-      return 0;
-    } else {
-      return methods->init( queue );
-    }
-  }
-#define pip_task_queue_init( Q, M )				\
-  pip_task_queue_init_( (pip_task_queue_t*)(Q), (M) )
 #endif
 
   /**
@@ -335,31 +316,34 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief Count the length of task queue
+   * \brief Initialize task queue
    *  @{
    * \param[in] queue A task queue
-   * \param[out] np the queue length returned
+   * \param[in] methods Usre defined function table. If NULL then
+   *  default functions will be used.
    *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EINVAL \c np is \c NULL
+   * \return This function returns no error
    */
 #ifdef DOXYGEN_INPROGRESS
-  int pip_task_queue_count( pip_task_queue_t *queue, int *np );
+  int pip_task_queue_init( pip_task_queue_t *queue,
+			   pip_task_queue_methods_t *methods );
   /** @}*/
 #else
-  static inline int
-  pip_task_queue_count_( pip_task_queue_t *queue, int *np ) {
-    int err = 0;
-    if( np == NULL ) return EINVAL;
-    if( queue->methods == NULL || queue->methods->count == NULL ) {
-      *np = queue->length;
+  static inline int pip_task_queue_init_( pip_task_queue_t *queue,
+					  pip_task_queue_methods_t *methods ) {
+    if( queue == NULL ) return EINVAL;
+    queue->methods = methods;
+    if( methods == NULL || methods->init == NULL) {
+      memset( queue, 0, sizeof(pip_task_queue_t) );
+      PIP_TASKQ_INIT( &queue->queue );
+      pip_spin_init( &queue->lock );
+      return 0;
     } else {
-      err = queue->methods->count( queue, np );
+      return methods->init( queue );
     }
-    return err;
   }
-#define pip_task_queue_count( Q, NP )			\
-  pip_task_queue_count_( (pip_task_queue_t*)(Q), (NP) )
+#define pip_task_queue_init( Q, M )				\
+  pip_task_queue_init_( (pip_task_queue_t*)(Q), (M) )
 #endif
 
   /**
@@ -374,6 +358,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline int pip_task_queue_trylock_( pip_task_queue_t *queue ) {
+    if( queue == NULL ) return EINVAL;
     if( queue->methods == NULL || queue->methods->trylock == NULL ) {
       return pip_spin_trylock( &queue->lock );
     } else {
@@ -396,6 +381,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline void pip_task_queue_lock_( pip_task_queue_t *queue ) {
+    if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->lock == NULL ) {
       while( !pip_spin_trylock( &queue->lock ) ) {
 	(void) pip_pause();
@@ -420,6 +406,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline void pip_task_queue_unlock_( pip_task_queue_t *queue ) {
+    if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->unlock == NULL ) {
       pip_spin_unlock( &queue->lock );
     } else {
@@ -443,6 +430,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline int pip_task_queue_isempty_( pip_task_queue_t *queue ) {
+    if( queue == NULL ) return EINVAL;
     if( queue->methods == NULL || queue->methods->isempty == NULL ) {
       return PIP_TASKQ_ISEMPTY( &queue->queue );
     } else {
@@ -451,6 +439,35 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   }
 #define pip_task_queue_isempty( Q )			\
   pip_task_queue_isempty_( (pip_task_queue_t*)(Q) )
+#endif
+
+  /**
+   * \brief Count the length of task queue
+   *  @{
+   * \param[in] queue A task queue
+   * \param[out] np the queue length returned
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c np is \c NULL
+   */
+#ifdef DOXYGEN_INPROGRESS
+  int pip_task_queue_count( pip_task_queue_t *queue, int *np );
+  /** @}*/
+#else
+  static inline int
+  pip_task_queue_count_( pip_task_queue_t *queue, int *np ) {
+    int err = 0;
+    if( queue == NULL ) return EINVAL;
+    if( np    == NULL ) return EINVAL;
+    if( queue->methods == NULL || queue->methods->count == NULL ) {
+      *np = queue->length;
+    } else {
+      err = queue->methods->count( queue, np );
+    }
+    return err;
+  }
+#define pip_task_queue_count( Q, NP )			\
+  pip_task_queue_count_( (pip_task_queue_t*)(Q), (NP) )
 #endif
 
   /**
@@ -466,6 +483,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   static inline void
   pip_task_queue_enqueue_( pip_task_queue_t *queue, pip_task_t *task ) {
+    if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->enqueue == NULL ) {
       PIP_TASKQ_ENQ_LAST( &queue->queue, task );
       queue->length ++;
@@ -492,13 +510,14 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   static inline pip_task_t*
   pip_task_queue_dequeue_( pip_task_queue_t *queue ) {
+    if( queue == NULL ) return NULL;
     if( queue->methods == NULL || queue->methods->dequeue == NULL ) {
-      pip_task_t *task;
+      pip_task_t *first;
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) return NULL;
-      task = PIP_TASKQ_NEXT( &queue->queue );
-      PIP_TASKQ_DEQ( task );
+      first = PIP_TASKQ_NEXT( &queue->queue );
+      PIP_TASKQ_DEQ( first );
       queue->length --;
-      return task;
+      return first;
     } else {
       return queue->methods->dequeue( (void*) queue );
     }
@@ -522,6 +541,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
   static inline void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
+    if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->describe == NULL ) {
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) {
 	fprintf( fp, "%s: (EMPTY)\n", tag );
@@ -531,8 +551,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 	int i = 0;
 	PIP_TASKQ_FOREACH( &queue->queue, task ) {
 	  pip_task_queue_brief( task, msg, 512 );
-	  fprintf( fp, "%s: [%d/%d]:%s\n", tag, i, queue->length, msg );
-	  i++;
+	  fprintf( fp, "%s: [%d/%d]:%s\n", tag, i++, queue->length, msg );
 	}
       }
     } else {
@@ -556,6 +575,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   static inline int pip_task_queue_fin_( pip_task_queue_t *queue ) {
+    if( queue == NULL ) return EINVAL;
     if( queue->methods == NULL || queue->methods->finalize == NULL ) {
       if( !PIP_TASKQ_ISEMPTY( &queue->queue ) ) return EBUSY;
       return 0;

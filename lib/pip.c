@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018, 2019
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #define _GNU_SOURCE
@@ -683,27 +683,28 @@ int pip_is_shared_fd( int *flagp ) {
 int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
   int err = 0;
 
+  DBGF( "%s to PIPID:%d", strsignal(sig), taski->pipid );
   if( pip_is_threaded_() ) {
-    if( pthread_kill( taski->annex->thread, sig ) == ESRCH ) {
-      DBGF( "[%d] task->thread:%p", taski->pipid,
-	    (void*) taski->annex->thread );
-      errno = 0;
-      (void) kill( (pid_t) taski->annex->tid, sig );
-      err = errno;
-    }
-  } else if( taski->annex->tid > 0 ) {
+    err = pthread_kill( taski->annex->thread, sig );
+  } else {
     errno = 0;
     (void) kill( (pid_t) taski->annex->tid, sig );
     err = errno;
   }
-  return err;
+  RETURN( err );
 }
 
 int pip_kill( int pipid, int signal ) {
   int err;
   if( signal < 0 ) RETURN( EINVAL );
   if( ( err = pip_check_pipid_( &pipid ) ) == 0 ) {
-    err = pip_raise_signal_( pip_get_task_( pipid ), signal );
+    pip_task_internal_t *taski = pip_get_task_( pipid );
+    if( taski->task_sched != taski &&
+	taski->schedq_len > 0 ) {
+      err = EPERM;
+    } else {
+      err = pip_raise_signal_( taski, signal );
+    }
   }
   RETURN( err );
 }
@@ -717,7 +718,7 @@ int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask ) {
     (void) sigprocmask( how, sigmask, oldmask );
     err = errno;
   }
-  RETURN( err );
+  return( err );
 }
 
 void pip_abort( void ) {

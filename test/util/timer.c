@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016-2019
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #define _GNU_SOURCE
@@ -57,7 +57,7 @@ static void set_timer( int timer ) {
     fprintf( stderr, "Timer expired (%d sec)\n", timer );
     fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
     errno = 0;
-    killpg( pid, SIGHUP );
+    (void) kill( pid, SIGHUP );
     if( errno != ESRCH ) {
       sleep( 1 );
       sprintf( sysstr, "killall -KILL %s", target );

@@ -49,6 +49,3 @@ include $(top_srcdir)/build/rule.mk
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@ $(LDLIBS) -ldl
-
-post-clean-hook:
-	$(RM) *.E *.log

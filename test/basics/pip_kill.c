@@ -30,68 +30,54 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
-static struct my_exp *expp;
-static int ntasks, pipid;
-static volatile int recv_sig;
+static struct my_exp	*expp;
+static int 		ntasks, pipid;
 
 static struct my_exp {
-  pip_barrier_t		barr;
+  pthread_barrier_t	barr;
 } exp;
 
 static int block_sigusrs( void ) {
-  sigset_t 	sigset;
-  int 		flag, err;
-
+  sigset_t 	ss;
   errno = 0;
-  if( sigemptyset( &sigset )             != 0 ) return errno;
-  if( sigaddset( &sigset, SIGUSR1 )      != 0 ) return errno;
-  if( sigaddset( &sigset, SIGUSR2 )      != 0 ) return errno;
-  if( ( err = pip_is_threaded( &flag ) ) != 0 ) return err;
-  return pip_sigmask( SIG_BLOCK, &sigset, NULL );
+  if( sigemptyset( &ss )        != 0 ) return errno;
+  if( sigaddset( &ss, SIGUSR1 ) != 0 ) return errno;
+  if( sigaddset( &ss, SIGUSR2 ) != 0 ) return errno;
+  return pip_sigmask( SIG_BLOCK, &ss, NULL );
 }
 
-static int wait_signal( void ) {
-  sigset_t 	sigset;
-  int 		flag, err;
+static int wait_signal_root( void ) {
+  sigset_t 	ss;
+  int		sig;
 
-  if( sigemptyset( &sigset )                              != 0 ) return errno;
-  if( ( err = pip_sigmask( SIG_UNBLOCK, &sigset, NULL ) ) != 0 ) return err;
-  if( ( err = pip_is_threaded( &flag )                  ) != 0 ) return err;
-  if( !flag ) {
-    (void) sigsuspend( &sigset ); /* always returns EINTR */
-    return 0;
-  } else {
-    while( recv_sig == 0 ) pause_and_yield(0);
-    recv_sig = 0;
-  }
-  return 0;
+  if( sigemptyset( &ss )        != 0 ) return errno;
+  if( sigaddset( &ss, SIGUSR1 ) != 0 ) return errno;
+  if( sigaddset( &ss, SIGUSR2 ) != 0 ) return errno;
+  (void) sigwait( &ss, &sig );
+  return sig;
 }
 
-static void sigusr_root( int sig ) {
-#ifdef DEBUG
-  fprintf( stderr, "[ROOT] Signal(%d) received\n", sig );
-#endif
-  recv_sig = sig;
-}
+static int wait_signal_task( int pipid ) {
+  sigset_t 	ss;
+  int 		sig, next = pipid + 1;
 
-static void sigusr_task( int sig ) {
-  int next = pipid + 1;
-#ifdef DEBUG
-  fprintf( stderr, "[%d] Signal(%d) received\n", pipid, sig );
-#endif
-  recv_sig = sig;
-  if( next == ntasks ) next = PIP_PIPID_ROOT;
+  if( sigemptyset( &ss )        != 0 ) return errno;
+  if( sigaddset( &ss, SIGUSR1 ) != 0 ) return errno;
+  if( sigaddset( &ss, SIGUSR2 ) != 0 ) return errno;
+  (void) sigwait( &ss, &sig );
+  if( next >= ntasks ) next = PIP_PIPID_ROOT;
   CHECK( pip_kill( next, sig ), RV, exit(EXIT_FAIL) );
+  return sig;
 }
 
 int main( int argc, char **argv ) {
-  int	i, extval = 0;
+  int	i, recv_sig, extval = 0;
 
   set_sigsegv_watcher();
 
@@ -101,15 +87,12 @@ int main( int argc, char **argv ) {
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
 
-  expp = &exp;;
+  expp = &exp;
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( pip_barrier_init(&exp.barr,ntasks+1),
+    memset( &exp, 0, sizeof(exp) );
+    CHECK( pthread_barrier_init(&exp.barr,NULL,ntasks+1),
 	   RV, return(EXIT_FAIL) );
-    CHECK( set_signal_handler( SIGUSR1, sigusr_root ),
-	   RV, return(EXIT_UNTESTED) );
-    CHECK( set_signal_handler( SIGUSR2, sigusr_root ),
-	   RV, return(EXIT_UNTESTED) );
 
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
@@ -119,17 +102,19 @@ int main( int argc, char **argv ) {
 	     return(EXIT_FAIL) );
     }
     CHECK( block_sigusrs(), 		    RV, return(EXIT_FAIL) );
-    CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+    CHECK( pthread_barrier_wait( &expp->barr ),
+	   (RV!=0&&RV!=PTHREAD_BARRIER_SERIAL_THREAD), return(EXIT_FAIL) );
 
-    CHECK( pip_kill( 0, SIGUSR1 ),          RV, return(EXIT_FAIL) );
-    CHECK( wait_signal(), 	            RV, return(EXIT_FAIL) );
-    CHECK( recv_sig!=SIGUSR1, 		    RV, return(EXIT_FAIL) );
-    recv_sig = 0;
+    CHECK( pip_kill( 0, SIGUSR1 ),          RV,    return(EXIT_FAIL) );
+    CHECK( recv_sig = wait_signal_root(),   RV==0, return(EXIT_FAIL) );
+    CHECK( recv_sig!=SIGUSR1, 		    RV,    return(EXIT_FAIL) );
 
-    CHECK( pip_kill( 0, SIGUSR2 ), 	    RV, return(EXIT_FAIL) );
-    CHECK( wait_signal(), 	            RV, return(EXIT_FAIL) );
-    CHECK( recv_sig!=SIGUSR2, 		    RV, return(EXIT_FAIL) );
-    recv_sig = 0;
+    CHECK( pip_kill( 0, SIGUSR2 ),          RV,    return(EXIT_FAIL) );
+    CHECK( recv_sig = wait_signal_root(),   RV==0, return(EXIT_FAIL) );
+    CHECK( recv_sig!=SIGUSR2, 		    RV,    return(EXIT_FAIL) );
+
+    CHECK( pthread_barrier_wait( &expp->barr ),
+	   (RV!=0&&RV!=PTHREAD_BARRIER_SERIAL_THREAD), return(EXIT_FAIL) );
 
     for( i=0; i<ntasks; i++ ) {
       int status;
@@ -142,17 +127,21 @@ int main( int argc, char **argv ) {
 	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
       }
     }
+    CHECK( pip_kill( ntasks, SIGUSR1 ), RV!=EINVAL, return(EXIT_FAIL) );
 
   } else {
-    CHECK( set_signal_handler( SIGUSR1, sigusr_task ),
-	   RV, return(EXIT_UNTESTED) );
-    CHECK( set_signal_handler( SIGUSR2, sigusr_task ),
-	   RV, return(EXIT_UNTESTED) );
-    CHECK( block_sigusrs(), 		    RV, return(EXIT_FAIL) );
-    CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+    CHECK( block_sigusrs(), RV, return(EXIT_FAIL) );
 
-    CHECK( wait_signal(), RV, return(EXIT_FAIL) );
-    CHECK( wait_signal(), RV, return(EXIT_FAIL) );
+    CHECK( pthread_barrier_wait( &expp->barr ),
+	   (RV!=0&&RV!=PTHREAD_BARRIER_SERIAL_THREAD), return(EXIT_FAIL) );
+
+    CHECK( recv_sig = wait_signal_task(pipid),  RV==0, return(EXIT_FAIL) );
+    CHECK( recv_sig==SIGUSR1,                  !RV,    return(EXIT_FAIL) );
+    CHECK( recv_sig = wait_signal_task(pipid),  RV==0, return(EXIT_FAIL) );
+    CHECK( recv_sig==SIGUSR2,                  !RV,    return(EXIT_FAIL) );
+
+    CHECK( pthread_barrier_wait( &expp->barr ),
+	   (RV!=0&&RV!=PTHREAD_BARRIER_SERIAL_THREAD), return(EXIT_FAIL) );
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return extval;

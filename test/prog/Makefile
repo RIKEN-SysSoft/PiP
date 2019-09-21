@@ -35,10 +35,10 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS = hello.c pipid.c
+SRCS = abc.c
 
 PROGRAMS_TO_INSTALL =
-PROGRAMS = hello abc def ghi xyz pipid
+PROGRAMS = abc def ghi xyz
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR)

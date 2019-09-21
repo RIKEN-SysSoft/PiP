@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef __test_h__
@@ -366,12 +366,10 @@ inline static void set_sigsegv_watcher( void ) {
 	     siginfo->si_addr,
 	     sigcode );
     fflush( NULL );
-    //exit( EXIT_FAIL );
     fflush( NULL );
     print_maps();
     pip_abort();
   }
-
   struct sigaction sigact;
 
   memset( (void*) &sigact, 0, sizeof( sigact ) );

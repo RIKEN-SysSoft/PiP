@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([pip], [SNAPSHOT])
-AC_CONFIG_SRCDIR([include/pip.h])
+AC_INIT([pip], [1.0.0])
+AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
 AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_HEADERS([include/config.h])
@@ -48,5 +48,10 @@ fi
 
 # Checks for library functions.
 
-AC_CONFIG_FILES([build/config.mk util/piplnlibs])
+AC_CONFIG_FILES([
+	bin/pipcc
+	build/config.mk
+	release/version.conf
+	util/piplnlibs
+])
 AC_OUTPUT

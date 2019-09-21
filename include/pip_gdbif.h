@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2018
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_gdbif_h_

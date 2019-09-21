@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #include <libgen.h>

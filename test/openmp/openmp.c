@@ -30,10 +30,11 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #include <omp.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 int main( int argc, char **argv ) {
@@ -41,11 +42,13 @@ int main( int argc, char **argv ) {
 
 #pragma omp parallel private(nth, tid)
   {
+    char *pipid = getenv( "PIP_TEST_PIPID" );
     /* Obtain thread number */
     nth = omp_get_num_threads();
     tid = omp_get_thread_num();
 
-    printf( "Hello World from OMP thread = %d/%d\n", tid, nth );
+
+    printf( "[%s] Hello World from OMP thread = %d/%d\n", pipid, tid, nth );
   }
   return 0;
 }

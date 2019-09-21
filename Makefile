@@ -62,6 +62,20 @@ test-progs:
 	make -C test/issues
 	make -C test/blt
 
+.PHONY: clean-test
+clean-test:
+	make -C test clean
+	make -C test/util clean
+	make -C test/prog clean
+	make -C test/basics clean
+	make -C test/compat clean
+	make -C test/pthread clean
+	make -C test/openmp clean
+	make -C	test/cxx clean
+	make -C test/fortran clean
+	make -C test/issues clean
+	make -C test/blt clean
+
 .PHONY: test
 test:
 	make all
@@ -136,5 +150,8 @@ prog-distclean:
 
 .PHONY: TAGS
 
-TAGS:
+tags:
 	ctags -Re
+
+post-clean-hook:
+	$(RM) test.log.* test.out.*

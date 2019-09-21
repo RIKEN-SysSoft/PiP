@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018, 2019
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #define _GNU_SOURCE
@@ -45,6 +45,7 @@
 
 //#define DEBUG
 
+#include <sys/prctl.h>
 #include <time.h>
 #include <malloc.h> 		/* M_MMAP_THRESHOLD and M_TRIM_THRESHOLD  */
 
@@ -443,15 +444,6 @@ static int pip_glibc_init( pip_symbols_t *symbols,
       DBGF( "mallopt(M_MMAP_THRESHOLD): failed !!!!!!" );
     }
 #endif
-#ifdef AH
-#ifdef M_TRIM_THRESHOLD
-    if( symbols->mallopt( M_TRIM_THRESHOLD, -1 ) == 1 ) {
-      DBGF( "mallopt(M_TRIM_THRESHOLD): succeeded" );
-    } else {
-      DBGF( "mallopt(M_TRIM_THRESHOLD): failed !!!!!!" );
-    }
-#endif
-#endif
   }
 #endif
   if( symbols->glibc_init != NULL ) {
@@ -543,7 +535,6 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
   if( (pid_t) self->task_sched->annex->tid != pip_gettid() ) {
     /* when a pip task call fork() and the forked */
     /* process returns from main, this may happen  */
-    DBG;
     exit( extval );
   } else {
     return_from_start_func( self, extval );
@@ -584,6 +575,32 @@ static void* pip_do_spawn( void *thargs )  {
   pipid_tls = pipid;
 #endif
 
+#ifdef PR_SET_NAME
+  { /* the following code is to set the right */
+    /* name shown by the ps and top commands  */
+    char nam[16];
+    if( args->funcname == NULL ) {
+      snprintf( nam, 16, "<%s", args->prog );
+    } else {
+      snprintf( nam, 16, "<%s:%s", args->prog, args->funcname );
+    }
+    if( !pip_is_threaded_() ) {
+#define FMT "/proc/self/task/%u/comm"
+      char fname[sizeof(FMT)+8];
+      int fd;
+
+      (void) prctl( PR_SET_NAME, nam, 0, 0, 0 );
+      sprintf( fname, FMT, (unsigned int) pip_gettid() );
+      if( ( fd = open( fname, O_RDWR ) ) >= 0 ) {
+	(void) write( fd, nam, strlen(nam) );
+	(void) close( fd );
+      }
+    } else {
+      (void) pthread_setname_np( pthread_self(), nam );
+    }
+  }
+#endif
+
   pip_atomic_fetch_and_add( &pip_root_->ntasks_count, 1 );
   DBGF( "nblks:%d ntasks:%d",
 	(int) pip_root_->ntasks_blocking,
@@ -607,15 +624,17 @@ static void* pip_do_spawn( void *thargs )  {
   if( !flag_jump ) {
     flag_jump = 1;
     if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
-      int pip_suspend_and_enqueue_generic_( pip_task_internal_t*,
-					    pip_task_queue_t*, int,
-					    pip_enqueue_callback_t, void* );
+      void pip_suspend_and_enqueue_generic_( pip_task_internal_t*,
+					     pip_task_queue_t*,
+					     int,
+					     pip_enqueue_callback_t,
+					     void* );
       /* suspend myself */
-      err = pip_suspend_and_enqueue_generic_( self,
-					      queue,
-					      1,
-					      pip_cb_start,
-					      self );
+      pip_suspend_and_enqueue_generic_( self,
+					queue,
+					1, /* lock flag */
+					pip_cb_start,
+					self );
       /* resumed */
 
     } else {			/* active task */
@@ -634,13 +653,14 @@ static void* pip_do_spawn( void *thargs )  {
     }
     NEVER_REACH_HERE;
   }
-  /* long jump to get here to terminate myself */
+  /* long jump on ctx_exit to terminate itself */
+
   DBGF( "PIPID:%d  pid:%d (%d)",
 	self->pipid, self->annex->tid, pip_gettid() );
 #ifdef CHECK_TLS
+  ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
   DBGF( "TLS:0x%lx  pipid_tls:%d (%p)  pipid:%d",
 	(intptr_t) self->tls, pipid_tls, &pipid_tls, self->pipid );
-  ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
   ASSERTD( pipid_tls != self->pipid );
 #endif
   /* call fflush() in the target context to flush out std* messages */
@@ -650,16 +670,14 @@ static void* pip_do_spawn( void *thargs )  {
   if( self->annex->symbols.named_export_fin != NULL ) {
     self->annex->symbols.named_export_fin( self );
   }
-
-  DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
-
   if( self->annex->pip_root_p != NULL ) {
     *self->annex->pip_root_p = NULL;
   }
   if( self->annex->pip_task_p != NULL ) {
     *self->annex->pip_task_p = NULL;
   }
-  if( pip_is_threaded_() ) {
+  DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
+  if( pip_is_threaded_() ) {	/* thread mode */
     (void) pip_raise_sigchld();
     pthread_exit( NULL );
   } else {			/* process mode */
@@ -894,7 +912,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     pip_root_->ntasks_accum ++;
     pip_gdbif_task_commit_( task );
     if( bltp != NULL ) *bltp = (pip_task_t*) task;
-    errno = 0;
 
   } else {
   error:			/* undo */

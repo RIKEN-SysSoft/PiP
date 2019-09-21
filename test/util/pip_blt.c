@@ -31,6 +31,20 @@ static int is_taskq_empty( pip_task_queue_t *queue ) {
   return rv;
 }
 
+static void set_sighup_watcher( void ) {
+  void sighup_watcher( int sig, siginfo_t *info, void* extra ) {
+    fprintf( stderr, "\nSIGHUP !!!!!!\n" );
+    fflush( NULL );
+    pip_abort();
+  }
+  struct sigaction sigact;
+
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_sigaction = sighup_watcher;
+  sigact.sa_flags     = SA_RESETHAND;
+  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, pip_abort() );
+}
+
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
   int 	nacts, npass, ntasks, pipid;
@@ -40,6 +54,7 @@ int main( int argc, char **argv ) {
 
   set_sigsegv_watcher();
   set_sigint_watcher();
+  set_sighup_watcher();
 
   if( argc < 4 ) return EXIT_UNTESTED;
   CHECK( access( argv[3], X_OK ),     RV, exit(EXIT_UNTESTED) );

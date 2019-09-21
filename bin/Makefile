@@ -34,12 +34,10 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-#SRCS = piprun.c abc.c hello.c pmap.c
-
 PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) piprun pmap
+PROGRAMS_TO_INSTALL = $(PROGRAM) pipmap pipcc
 PROGRAMS = $(PROGRAMS_TO_INSTALL)
-MAN1_SRCS = piprun.c pmap.c
+MAN1_SRCS = piprun.c pipmap.c pipcc.in
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
@@ -49,9 +47,12 @@ DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 
 include $(top_srcdir)/build/rule.mk
 
-piprun: piprun.c $(DEPINCS) $(PIPLIB) Makefile
+piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
 
-pmap: pmap.c $(DEPINCS) $(PIPLIB) Makefile
+pipmap: pipmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
 	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
+
+post-clean-hook:
+	$(RM) *.E *.log

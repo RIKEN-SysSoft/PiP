@@ -8,7 +8,7 @@
 #define PACKAGE_NAME "pip"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "pip SNAPSHOT"
+#define PACKAGE_STRING "pip 1.0.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "pip"
@@ -17,4 +17,4 @@
 #define PACKAGE_URL ""
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "SNAPSHOT"
+#define PACKAGE_VERSION "1.0.0"
