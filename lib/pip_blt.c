@@ -734,7 +734,7 @@ int pip_dequeue_and_resume_N_nolock_( pip_task_queue_t *queue,
 				      pip_task_t *sched,
 				      int *np ) {
   pip_task_internal_t	*taski = pip_task_;
-  pip_task_t 		*resume;
+  pip_task_t 		tmpq, *resume, *next;
   int			n, c = 0, err = 0;
 
   ENTER;

@@ -37,7 +37,6 @@ include $(srcdir)/../Test.common
 
 SRCS = abc.c
 
-PROGRAMS_TO_INSTALL =
 PROGRAMS = abc def ghi xyz
 
 CFLAGS += -pthread

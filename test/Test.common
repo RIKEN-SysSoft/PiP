@@ -30,7 +30,7 @@
 
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
 CFLAGS +=  $(PIECFLAG)
-PIPLIBDIR = $(shell realpath $(top_builddir)/lib)
+PIPLIBDIR = $(shell (cd $(top_builddir)/lib && pwd))
 
 LDLIBS = -L$(PIPLIBDIR) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
 
