@@ -38,7 +38,7 @@ include $(srcdir)/../Test.common
 SRCS = hello.c pipid.c
 
 PROGRAMS_TO_INSTALL =
-PROGRAMS = hello abc def ghi xyz pipid
+PROGRAMS = abc def ghi xyz # pipid
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR)

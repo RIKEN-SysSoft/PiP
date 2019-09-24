@@ -35,8 +35,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include $(srcdir)/../Test.common
 
-SRCS  = hello.c \
-	pip_init.c \
+SRCS  = pip_init.c \
 	pip_fin.c \
 	pip_exit.c \
 	exit.c \
@@ -50,9 +49,9 @@ SRCS  = hello.c \
 	pip_barrier2.c \
 	signal.c \
 	seek.c \
-	pipid.c
+	# pipid.c
 
-PROGRAMS  = hello.c \
+PROGRAMS = \
 	pip_init \
 	pip_fin \
 	pip_exit \
@@ -72,7 +71,7 @@ PROGRAMS  = hello.c \
 	pip_barrier2 \
 	signal \
 	seek \
-	pipid
+	# pipid
 
 prog-noexec : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-noexec
