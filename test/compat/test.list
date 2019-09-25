@@ -1,5 +1,7 @@
 timer 1 pip_task 1 ./ctype
 timer 1 pip_task 8 ./ctype
+timer 1 ./pagefault 1
+timer 1 ./pagefault 8
 timer 10 pip_task 1 ./malloc
 timer 10 pip_task 8 ./malloc
 timer 1 pip_task 1 ./fork
@@ -10,12 +12,10 @@ timer 1 pip_task 1 ./gettimeofday
 timer 1 pip_task 8 ./gettimeofday
 timer 1 pip_task 1 ./gethostname
 timer 1 pip_task 8 ./gethostname
-timer 1 ./pagefault 1
-timer 1 ./pagefault 8
-#skip.sh A UNSUPPORTED timer 1 pip_task 1 ./gethostbyname
-#skip.sh A UNSUPPORTED timer 1 pip_task 8 ./gethostbyname
 timer 1 pip_task 1 ./getaddrinfo
 timer 1 pip_task 8 ./getaddrinfo
+#skip.sh A UNSUPPORTED timer 1 pip_task 1 ./gethostbyname
+#skip.sh A UNSUPPORTED timer 1 pip_task 8 ./gethostbyname
 skip.sh T UNSUPPORTED timer 1 pip_task 1 ./pip_dlopen
 skip.sh T UNSUPPORTED timer 1 pip_task 8 ./pip_dlopen
 timer 1 pip_task 1 ./const_destruct

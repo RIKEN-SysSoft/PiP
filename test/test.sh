@@ -3,7 +3,7 @@
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
 
-TEST_TRAP_SIGS='1 2 15'
+TEST_TRAP_SIGS='1 2 14 15'
 
 function check_command() {
     cmd=$1;
@@ -43,7 +43,19 @@ fi
 
 function cleanup() {
     echo;
-    echo "^C: cleaning up ..."
+    echo "cleaning up ..."
+##    pslist=`ps a h o comm,pid`;
+##    for line in $pslist; do
+##	echo xxx $line;
+##	case $line in
+##	    \$*) echo yyy $p;;
+##	esac
+##    done;
+
+#### FIXME !! The follwoing code to cleanup will not work any more !!
+    killall -s HUP -w pip_task > /dev/null 2>&1;
+    killall -s HUP -w pip_blt  > /dev/null 2>&1;
+    sleep 1
     killall -s KILL -w pip_task > /dev/null 2>&1;
     killall -s KILL -w pip_blt  > /dev/null 2>&1;
     rm -f $sum_file > /dev/null 2>&1;

@@ -115,7 +115,7 @@ void pip_deadlock_dec_( void ) {
 #define __W_EXITCODE(retval,signal)	( (retval) << 8 | (signal) )
 #endif
 
-void pip_set_extval( pip_task_internal_t *taski, int extval ) {
+void pip_set_extval_( pip_task_internal_t *taski, int extval ) {
   ENTER;
   if( !taski->flag_exit ) {
     taski->flag_exit = PIP_EXITED;
@@ -195,7 +195,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
 		       taski->pipid, strsignal(sig), sig );
       }
-      pip_set_extval( taski, status );
+      pip_set_extval_( taski, status );
     }
   }
   DBG;

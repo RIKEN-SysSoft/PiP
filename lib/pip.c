@@ -417,7 +417,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   }
   void pip_sighup_handler( void ) {
     if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
-      pip_err_mesg( "PiP root and tasks are blocked and deadlocked !!" );
+      pip_err_mesg( "All PiP root and tasks are blocked and deadlocked !!" );
       fflush( NULL );
       pip_sigterm_handler();
     } else {
@@ -634,9 +634,6 @@ const char *pip_get_mode_str( void ) {
 
   if( pip_root_ == NULL ) return NULL;
   switch( pip_root_->opts & PIP_MODE_MASK ) {
-  case PIP_MODE_PTHREAD:
-    mode = PIP_ENV_MODE_PTHREAD;
-    break;
   case PIP_MODE_PROCESS:
     mode = PIP_ENV_MODE_PROCESS;
     break;
@@ -645,6 +642,9 @@ const char *pip_get_mode_str( void ) {
     break;
   case PIP_MODE_PROCESS_PIPCLONE:
     mode = PIP_ENV_MODE_PROCESS_PIPCLONE;
+    break;
+  case PIP_MODE_PTHREAD:
+    mode = PIP_ENV_MODE_PTHREAD;
     break;
   default:
     mode = "(unknown)";
@@ -681,12 +681,12 @@ int pip_is_shared_fd( int *flagp ) {
 }
 
 int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
-  int err = 0;
+  int err = ESRCH;
 
   DBGF( "%s to PIPID:%d", strsignal(sig), taski->pipid );
-  if( pip_is_threaded_() ) {
+  if( taski->annex->thread != 0 && pip_is_threaded_() ) {
     err = pthread_kill( taski->annex->thread, sig );
-  } else {
+  } else if( taski->annex->tid > 0 ) {
     errno = 0;
     (void) kill( (pid_t) taski->annex->tid, sig );
     err = errno;

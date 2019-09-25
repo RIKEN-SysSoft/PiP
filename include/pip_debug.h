@@ -120,7 +120,7 @@ extern int pip_debug_env( void );
 
 
 #define NEVER_REACH_HERE						\
-  do { EMSG( "\nShould not reach here !!!!!!\n" ); pip_abort(); } while(0)
+  do { EMSG( "Should not reach here !!!!!!\n" ); pip_abort(); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

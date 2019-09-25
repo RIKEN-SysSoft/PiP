@@ -62,8 +62,8 @@ test-progs:
 	make -C test/issues
 	make -C test/blt
 
-.PHONY: clean-test
-clean-test:
+.PHONY: testclean
+testclean:
 	make -C test clean
 	make -C test/util clean
 	make -C test/prog clean

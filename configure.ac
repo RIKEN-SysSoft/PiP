@@ -50,6 +50,7 @@ fi
 
 AC_CONFIG_FILES([
 	bin/pipcc
+	bin/pipmode
 	build/config.mk
 	release/version.conf
 	util/piplnlibs

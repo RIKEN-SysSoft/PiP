@@ -535,10 +535,11 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
   if( (pid_t) self->task_sched->annex->tid != pip_gettid() ) {
     /* when a pip task call fork() and the forked */
     /* process returns from main, this may happen  */
+    DBGF( "%d : %d", self->task_sched->annex->tid, pip_gettid() );
     exit( extval );
-  } else {
-    return_from_start_func( self, extval );
+    NEVER_REACH_HERE;
   }
+  return_from_start_func( self, extval );
   NEVER_REACH_HERE;
 }
 
@@ -579,10 +580,11 @@ static void* pip_do_spawn( void *thargs )  {
   { /* the following code is to set the right */
     /* name shown by the ps and top commands  */
     char nam[16];
+    char symbol = '$';
     if( args->funcname == NULL ) {
-      snprintf( nam, 16, "<%s", args->prog );
+      snprintf( nam, 16, "%c%s",    symbol, args->prog );
     } else {
-      snprintf( nam, 16, "<%s:%s", args->prog, args->funcname );
+      snprintf( nam, 16, "%c%s:%s", symbol, args->prog, args->funcname );
     }
     if( !pip_is_threaded_() ) {
 #define FMT "/proc/self/task/%u/comm"
@@ -630,6 +632,7 @@ static void* pip_do_spawn( void *thargs )  {
 					     pip_enqueue_callback_t,
 					     void* );
       /* suspend myself */
+      PIP_SUSPEND( self );
       pip_suspend_and_enqueue_generic_( self,
 					queue,
 					1, /* lock flag */
@@ -640,8 +643,13 @@ static void* pip_do_spawn( void *thargs )  {
     } else {			/* active task */
       PIP_RUN( self );
       if( queue != NULL ) {
+	int pip_dequeue_and_resume_multiple_( pip_task_internal_t*,
+					      pip_task_queue_t*,
+					      pip_task_internal_t*,
+					      int* );
+
 	int n = PIP_TASK_ALL;
-	err = pip_dequeue_and_resume_N_( queue, PIP_TASKQ(self), &n );
+	err = pip_dequeue_and_resume_multiple_( self, queue, self, &n );
       }
       /* since there is no callback, the cb func is called explicitly */
       pip_cb_start( (void*) self );
@@ -667,15 +675,18 @@ static void* pip_do_spawn( void *thargs )  {
   if( self->annex->symbols.libc_fflush != NULL ) {
     self->annex->symbols.libc_fflush( NULL );
   }
+  DBG;
   if( self->annex->symbols.named_export_fin != NULL ) {
     self->annex->symbols.named_export_fin( self );
   }
+#ifdef AH
   if( self->annex->pip_root_p != NULL ) {
     *self->annex->pip_root_p = NULL;
   }
   if( self->annex->pip_task_p != NULL ) {
     *self->annex->pip_task_p = NULL;
   }
+#endif
   DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
   if( pip_is_threaded_() ) {	/* thread mode */
     (void) pip_raise_sigchld();

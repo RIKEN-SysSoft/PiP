@@ -54,7 +54,7 @@ int main( int argc, char **argv ) {
   char hostname[HOSTNAMELEN];
 
   CHECK( gethostname( hostname, HOSTNAMELEN ), RV, return(EXIT_FAIL) );
+  CHECK( my_getaddrinfo( hostname ),           RV, return(EXIT_FAIL) );
   CHECK( my_getaddrinfo( "127.0.0.1" ),        RV, return(EXIT_FAIL) );
-  //CHECK( my_getaddrinfo( hostname ),           RV, return(EXIT_FAIL) );
   return 0;
 }

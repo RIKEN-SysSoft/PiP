@@ -167,20 +167,19 @@ pip_find_namexp( pip_namexp_list_t *head, pip_hash_t hash, char *name ) {
 }
 
 static pip_namexp_entry_t *
-pip_new_entry( pip_named_exptab_t *namexp, char **namep, pip_hash_t hash ) {
+pip_new_entry( pip_named_exptab_t *namexp, char *name, pip_hash_t hash ) {
   pip_namexp_entry_t 	*entry;
 
   entry = (pip_namexp_entry_t*) PIP_MALLOC( sizeof( pip_namexp_entry_t ) );
   if( entry == NULL ) return NULL;
   memset( entry, 0, sizeof( pip_namexp_entry_t ) );
-  DBGF( "entry:%p  %s@0x%lx", entry, *namep, hash );
+  DBGF( "entry:%p  %s@0x%lx", entry, name, hash );
   PIP_LIST_INIT( &entry->list );
   PIP_LIST_INIT( &entry->list_wait );
   pip_task_queue_init( &entry->queue_owner, NULL );
   pip_task_queue_init( &entry->queue_others, NULL );
   entry->hashval = hash;
-  entry->name    = *namep;
-  *namep = NULL;
+  entry->name    = name;
   return entry;
 }
 
@@ -208,7 +207,8 @@ int pip_named_export( void *exp, const char *format, ... ) {
   {
     if( ( entry = pip_find_namexp( head, hash, name ) ) == NULL ) {
       /* no entry yet */
-      entry = pip_new_entry( namexp, &name, hash );
+      entry = pip_new_entry( namexp, name, hash );
+      name = NULL;
       if( entry == NULL ) {
 	err = ENOMEM;
       } else {
@@ -222,7 +222,8 @@ int pip_named_export( void *exp, const char *format, ... ) {
 	err = EBUSY;
       } else {
 	/* this is a query entry */
-	new = pip_new_entry( namexp, &name, hash );
+	new = pip_new_entry( namexp, name, hash );
+	name = NULL;
 	if( new == NULL ) {
 	  err = ENOMEM;
 	} else {
@@ -307,7 +308,9 @@ static int pip_named_import_( int pipid,
       } else if( flag_nblk ) {	/* no entry yet */
 	err = EAGAIN;
       } else {
-	if( ( entry = pip_new_entry( namexp, &name, hash ) ) == NULL ) {
+	entry = pip_new_entry( namexp, name, hash );
+	name = NULL;
+	if( entry == NULL ) {
 	  err = ENOMEM;
 	} else {
 	  pip_add_namexp_entry( head, entry );

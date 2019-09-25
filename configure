@@ -3078,7 +3078,7 @@ fi
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files bin/pipcc build/config.mk release/version.conf util/piplnlibs"
+ac_config_files="$ac_config_files bin/pipcc bin/pipmode build/config.mk release/version.conf util/piplnlibs"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3772,6 +3772,7 @@ do
   case $ac_config_target in
     "include/config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/config.h" ;;
     "bin/pipcc") CONFIG_FILES="$CONFIG_FILES bin/pipcc" ;;
+    "bin/pipmode") CONFIG_FILES="$CONFIG_FILES bin/pipmode" ;;
     "build/config.mk") CONFIG_FILES="$CONFIG_FILES build/config.mk" ;;
     "release/version.conf") CONFIG_FILES="$CONFIG_FILES release/version.conf" ;;
     "util/piplnlibs") CONFIG_FILES="$CONFIG_FILES util/piplnlibs" ;;

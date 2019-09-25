@@ -42,7 +42,7 @@ main(int argc, char **argv)
 {
   int c, rv = 0;
   int option_pip_mode = 0;
-  int pipid;
+  int pipid, ntasks;
 
   while ((c = getopt( argc, argv, "CLPT" )) != -1) {
     switch (c) {
@@ -64,7 +64,8 @@ main(int argc, char **argv)
     }
   }
 
-  rv = pip_init( &pipid, NULL, NULL, option_pip_mode );
+  ntasks = 1;
+  rv = pip_init( &pipid, &ntasks, NULL, option_pip_mode );
   if ( rv != 0 ) {
     fprintf( stderr, "pip_init: %s\n", strerror( rv ));
     return EXIT_FAILURE;
