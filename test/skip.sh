@@ -8,7 +8,8 @@ prog=`basename $0`;
 mode_env=$PIP_MODE;
 extval=$EXIT_UNTESTED;
 
-usage() {
+usage()
+{
     echo $prog "<MODE> <EXIT_CODE> a.out ...";
     exit $extval;
 }
@@ -18,10 +19,10 @@ shift;
 exit_code=$1;
 shift;
 
-if [ $# == 0 ]; then
+if [ $# -eq 0 ]; then
     usage;
 fi
-if [[ x$PIP_MODE == x ]]; then
+if [ x"$PIP_MODE" = x ]; then
     usage;
 fi
 
@@ -81,10 +82,10 @@ case $exit_code in
     *) 			echo $exit_code "unknown"; exit $extval;;
 esac
 
-if [[ x$skip_debug == xskip ]]; then
+if [ x"$skip_debug" = x"skip" ]; then
     exit $extval;
 fi
-if [[ x$skip_flag == xskip ]]; then
+if [ x"$skip_flag" = x"skip" ]; then
     exit $extval;
 fi
 

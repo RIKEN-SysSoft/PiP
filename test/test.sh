@@ -4,8 +4,9 @@
 unset LANG LC_ALL
 
 TEST_TRAP_SIGS='1 2 15'
+width=80
 
-function check_command() {
+check_command() {
     cmd=$1;
     $@ > /dev/null 2>&1;
     if [ $? != 0 ]; then
@@ -15,8 +16,8 @@ function check_command() {
 }
 
 rprocs=`ps uxw | grep R | wc -l`;
-if [[ $rprocs > 3 ]]; then
-    echo 'WARNING: some other processes are running ...'
+if [ $rprocs -gt 3 ]; then
+    echo >&2 'WARNING: some other processes are running ...'
 fi
 
 check_command "dirname .";
@@ -33,27 +34,28 @@ check_command "pip_mode";
 check_command "dlmopen_count";
 check_command "ompnumthread";
 
-if [[ x$SUMMARY_FILE == x ]]; then
+if [ x"$SUMMARY_FILE" = x ]; then
     sum_file=$dir_real/.test-sum-$$.sh;
 else
     sum_file=$SUMMARY_FILE;
 fi
 
-function cleanup() {
+cleanup()
+{
     echo;
     echo "^C: cleaning up ..."
     killall -s KILL -w pip_task > /dev/null 2>&1;
     killall -s KILL -w pip_blt  > /dev/null 2>&1;
-    rm -f $sum_file > /dev/null 2>&1;
+    rm -f $sum_file;
     exit 2;
 }
 
 trap cleanup 2;
 
-if [[ x$INCLUDE_FILE != x ]]; then
+if [ x"$INCLUDE_FILE" != x ]; then
     inc_fn=$INCLUDE_FILE': ';
     case $inc_fn in
-	./*) inc_fn=${inc_fn:2:${#inc_fn}};;
+	./*) inc_fn=`expr "$inc_fn" : '..\(.*\)'`;;
     esac
 fi
 
@@ -63,14 +65,14 @@ export NTASKS=`$MCEXEC dlmopen_count -p`
 export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
 export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
 
-if [[ x$MCEXEC != x ]]; then
+if [ x"$MCEXEC" != x ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
 	TEST_PIP_TASKS=$OMP_NUM_THREADS;
     fi
 fi
 
 file_summary() {
-    truncate -s 0 $sum_file;
+    rm -f $sum_file;
     echo TEST_LOG_FILE=$TEST_LOG_FILE		>> $sum_file;
     echo TEST_LOG_XML=$TEST_LOG_XML		>> $sum_file;
     echo TEST_OUT_STDOUT=$TEST_OUT_STDOUT	>> $sum_file;
@@ -90,7 +92,7 @@ file_summary() {
 
 print_summary()
 {
-    if [[ x$SUMMARY_FILE == x ]]; then
+    if [ x"$SUMMARY_FILE" = x ]; then
 	echo ""
 	echo     "Total test: $(expr $n_PASS + $n_FAIL + $n_XPASS + $n_XFAIL \
 		+ $n_UNRESOLVED + $n_UNTESTED + $n_UNSUPPORTED + $n_KILLED)"
@@ -149,7 +151,8 @@ pip_mode_name_L=$pip_mode_name_P:preload
 pip_mode_name_C=$pip_mode_name_P:pipclone
 pip_mode_name_T=pthread
 
-function print_mode_list() {
+print_mode_list()
+{
     echo "List of PiP execution modes:"
     echo "  " $pip_mode_name_T "(T)";
     echo "  " $pip_mode_name_P "(P)";
@@ -158,7 +161,8 @@ function print_mode_list() {
     exit 1;
 }
 
-function print_usage() {
+print_usage()
+{
     echo >&2 "Usage: `basename $cmd` [-APCLT] [-thread] [-process[:preload|:pipclone]] [<test_list_file>]";
     exit 2;
 }
@@ -187,9 +191,7 @@ case $# in
 		case $1 in *$pip_mode_name_C) run_test_C=C;; esac
 		shift
 	done
-	if [ ${#run_test_L} -eq 0 ] &&
-	   [ ${#run_test_C} -eq 0 ] &&
-	   [ ${#run_test_T} -eq 0 ]; then
+	if [ X"${run_test_L}${run_test_C}${run_test_T}" = X ]; then      
 	    pip_mode_list="L C T";
 	else
 	    pip_mode_list="$run_test_L $run_test_C $run_test_T"
@@ -209,7 +211,7 @@ if [ -z "$pip_mode_list" ]; then
     print_usage;
 fi
 
-if [[ x$SUMMARY_FILE == x ]]; then
+if [ x"$SUMMARY_FILE" = x ]; then
     reset_summary;
 else
     . $SUMMARY_FILE;
@@ -217,14 +219,14 @@ fi
 
 if [ -n "$MCEXEC" ]; then
     pip_mode_list_all='T';
-    if [[ x$quiet == x ]]; then
+    if [ x"$quiet" = x ]; then
 	echo MCEXEC=$MCEXEC
     fi
 else
     pip_mode_list_all='L C T';
 fi
 
-if [[ x$SUMMARY_FILE == x ]]; then
+if [ x"$SUMMARY_FILE" = x ]; then
     echo LD_PRELOAD=$LD_PRELOAD
     echo 'NTASKS:  ' ${NTASKS}
     echo 'NTHERADS:' ${OMP_NUM_THREADS}
@@ -240,7 +242,7 @@ do
 	case `PIP_MODE=$pip_mode_name $dir/util/pip_mode 2>/dev/null | grep -e process -e thread` in
 	$pip_mode_name)
 		eval "run_test_${pip_mode}=${pip_mode}"
-		if [[ x$SUMMARY_FILE == x ]]; then
+		if [ x"$SUMMARY_FILE" = x ]; then
 		    echo "testing ${pip_mode} - ${pip_mode_name}";
 		fi
 		;;
@@ -248,19 +250,19 @@ do
 	esac
 done
 
-if [[ x$SUMMARY_FILE == x ]]; then
+if [ x"$SUMMARY_FILE" = x ]; then
     echo;
 fi
 
 pip_mode_list="$run_test_L $run_test_C $run_test_T"
 
-if [[ x$run_test_L == xL ]]; then
+if [ x"$run_test_L" = x"L" ]; then
     options="-L $options";
 fi
-if [[ x$run_test_C == xC ]]; then
+if [ x"$run_test_C" = x"C" ]; then
     options="-C $options";
 fi
-if [[ x$run_test_T == xT ]]; then
+if [ x"$run_test_T" = x"T" ]; then
     options="-T $options";
 fi
 
@@ -278,14 +280,14 @@ while read line; do
 	case $1 in '%include')
 		shift;
 		ifile=$1
-		if [[ -f $ifile ]]; then
+		if [ -f $ifile ]; then
 		    file_summary;
 		    SUMMARY_FILE=$sum_file \
 			INCLUDE_FILE=$ifile \
 			$myself $options $ifile;
 		    . $sum_file;
 		else
-		    echo "### inlcude file ($ifile) not found ###";
+		    echo >&2 "### inlcude file ($ifile) not found ###";
 		fi
 		continue;;
 	esac
@@ -293,11 +295,8 @@ while read line; do
 
 	cmd="$@";
 	CMD=$inc_fn$cmd;
-	ilen=${#inc_fn};
-	clen=${#cmd};
-	tlen=${#CMD};
-	if [ $tlen -gt 79 ]; then
-	    short=$inc_fn"..."${cmd:(($tlen-77)):$clen};
+        if [ ${#CMD} -ge $width ]; then
+	    short="`printf "%-${width}.${width}s" "${inc_fn}...${cmd}"`"
 	else
 	    short=$CMD;
 	fi
@@ -306,10 +305,10 @@ while read line; do
 	do
 		eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
 
-		printf "%-80.80s ${pip_mode} --" "$short"
+		printf "%-${width}.${width}s ${pip_mode} --" "$short"
 		(
 		  echo "$LOG_BEG"
-		  echo "--- $short PIP_MODE=${pip_mode_name}"
+		  echo "--- $CMD PIP_MODE=${pip_mode_name}"
 		  echo "$LOG_SEP"
 		  date +'@@_ start at %s - %Y-%m-%d %H:%M:%S'
 		) >>$TEST_LOG_FILE
@@ -394,7 +393,7 @@ while read line; do
 
 			date +'@@~  end  at %s - %Y-%m-%d %H:%M:%S'
 			echo "$LOG_SEP"
-			printf "@:= %-60.60s %s\n" $short "$msg"
+			printf "@:= %s %s\n" $CMD "$msg"
 		) >>$TEST_LOG_FILE
 
 		case $status in
@@ -417,7 +416,7 @@ done < `basename $TEST_LIST`
 
 echo "</testsuite>" >>$TEST_LOG_XML
 
-if [[ -x$SUMAMRY_FILE != x ]]; then
+if [ -x"$SUMAMRY_FILE" != x ]; then
     file_summary;
 fi
 
@@ -428,7 +427,7 @@ fi
 
 print_summary
 
-if [[ x$SUMMARY_FILE == x ]]; then
+if [ x"$SUMMARY_FILE" = x ]; then
     rm -f $sum_file > /dev/null 2>&1;
 fi
 

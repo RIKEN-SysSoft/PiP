@@ -5,7 +5,8 @@ cmd=`basename $0`;
 ext=0;
 TMP=''
 
-function prt_ext() {
+prt_ext()
+{
     exit=$1
     if [ $quiet -eq 0 ]; then
 	echo;
@@ -23,7 +24,8 @@ function prt_ext() {
     fi
 }
 
-function print_usage() {
+print_usage()
+{
     echo >&2 "Usage: $cmd [-n <NITER>] [-t <SEC>] [-q] [<test_prog> ...]";
     echo >&2 "    -n <NITER>: Number of iterations";
     echo >&2 "    -t <SEC>: Duration limit of one loop [seconds]";
@@ -31,21 +33,24 @@ function print_usage() {
     exit 2;
 }
 
-function finalize() {
-    if [[ x$TMP != x ]]; then
+finalize()
+{
+    if [ x"$TMP" != x ]; then
 	echo "Logfile: $FILE";
 	mv $TMP $FILE;
     fi
 }
 
-function sigsegv() {
+sigsegv()
+{
     echo;
     echo "SIGEGV";
     finalize;
     exit 127;
 }
 
-function control_c() {
+control_c()
+{
     echo;
     finalize;
     exit 4;
@@ -92,7 +97,7 @@ TMP=.$FILE;
 i=0;
 start=`date +%s`;
 
-while [ true ]; do
+while true; do
     date > $TMP;
     echo "$cmdline" >> $TMP;
     echo "---------------------------------" >> $TMP;
@@ -112,7 +117,8 @@ while [ true ]; do
 	finalize;
 	exit $ext;
     else
-	truncate --size=0 $TMP;
+	rm -f $TMP
+	touch $TMP
     fi
 
     i=$((i+1));
