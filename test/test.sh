@@ -126,7 +126,7 @@ reset_summary()
 {
     TEST_TOP_DIR=$dir_real;
     TEST_LOG_FILE=test.log;
-    TEST_LOG_XML=test.log.xml;
+    : ${TEST_LOG_XML:=$TEST_TOP_DIR/test.log.xml};
     TEST_OUT_STDOUT=$TEST_TOP_DIR/test.out.stdout;
     TEST_OUT_STDERR=$TEST_TOP_DIR/test.out.err;
     TEST_OUT_TIME=$TEST_TOP_DIR/test.out.time;
