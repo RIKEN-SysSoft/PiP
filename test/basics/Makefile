@@ -47,9 +47,8 @@ SRCS  = pip_init.c \
 	hook_and_coe.c \
 	pip_barrier.c \
 	pip_barrier2.c \
-	signal.c \
 	seek.c \
-	# pipid.c
+	pip_kill.c
 
 PROGRAMS = \
 	pip_init \
@@ -69,9 +68,8 @@ PROGRAMS = \
 	hook_and_coe \
 	pip_barrier \
 	pip_barrier2 \
-	signal \
 	seek \
-	# pipid
+	pip_kill
 
 prog-noexec : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-noexec

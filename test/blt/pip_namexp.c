@@ -58,13 +58,13 @@ int main( int argc, char **argv ) {
       *donep = 1;
     }
     done = 1;
-    CHECK( pip_named_export( (void*) &done, "DONE" ), RV, return(EXIT_FAIL) );
+    CHECK( pip_named_export( (void*) &done, "DONE" ), RV,    return(EXIT_FAIL) );
     while( done < ntasks ) {
       CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
     }
   } else {
     done = 0;
-    CHECK( pip_named_export( (void*) &done, "DONE" ), RV, return(EXIT_FAIL) );
+    CHECK( pip_named_export( (void*) &done, "DONE" ), RV,    return(EXIT_FAIL) );
     while( done == 0 ) {
       CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
     }

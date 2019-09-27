@@ -1,0 +1,118 @@
+#!/bin/sh
+
+# $RIKEN_copyright: Riken Center for Computational Sceience,
+# System Software Development Team, 2016, 2017, 2018, 2019$
+# $PIP_VERSION: Version 1.0.0$
+# $PIP_license: <Simplified BSD License>
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation
+# are those of the authors and should not be interpreted as representing
+# official policies, either expressed or implied, of the PiP project.$
+
+### \addtogroup pipcc pipcc
+###
+### \brief C compiler driver for PiP
+###
+### \section synopsis SYNOPSIS
+###
+###	\c \b pipenv [<b>pipenv-option\b>] [<b>commands ...</b>]
+###
+### \section options OPTIONS
+###
+### The following options are avilable. If no of them specified, then
+### the compiled output file can be used as both PiP root and PiP task.
+###
+### \subsection process	-P
+### If specified, PiP will run with the 'process' mode
+###
+### \subsection process	-p
+### If specified, PiP will run with the 'process' mode (preload)
+###
+### \subsection process	-c
+### If specified, PiP will run with the 'process' mode (pip clone)
+###
+### \subsection process	-T
+### If specified, PiP will run with the 'thread' mode
+###
+
+self=$0;
+prefix=@prefix@;
+libdir=${prefix}/lib/;
+flag_help=0;
+
+if [[ -f ${libdir}/pip_preload.so ]]; then
+    preload=${libdir}/pip_preload.so;
+fi
+
+for i; do
+    case $i in
+	-P|--process)
+	    if [[ x${preload} == x ]]; then
+		pip_mode=process:pipclone;
+	    else
+		pip_mode=process:preload;
+	    fi;;
+	-p|--process:preload)
+	    if [[ x${preload} == x ]]; then
+		echo "Unable to find PiP preload library (${preload})";
+		exit 1;
+	    else
+		pip_mode=process:preload;
+	    fi;;
+	-c|--process:pipclone)
+	    pip_mode=process:pipclone;;
+	-t|-T)
+	    pip_mode=pthread;;
+	-u|--help)
+	    flag_help=1;;
+	*)
+	    cmd="${cmd} $i";;
+    esac
+done
+
+function pipmode_help() {
+    echo $self "-P|-p|-c|-t [<command> ...]";
+    echo "    -P: process mode";
+    echo "    -p: process:preload mode";
+    echo "    -c: process:pipclone mode";
+    echo "    -t: pthread mode";
+}
+
+if [[ x${cmd} != x ]]; then
+    if [[ ${flag_help} == 1 ]]; then
+	pipmode_help;
+	exit 1;
+    elif [[ x${preload} == x ]]; then
+	PIP_MODE=${pip_mode} exec ${cmd};
+    else
+	PIP_MODE=${pip_mode} LD_PRELOAD=${preload}:$LD_PRELOAD exec ${cmd};
+    fi
+else
+    if [[ ${flag_help} == 1 ]]; then
+	pipmode_help;
+    else
+	echo "PIP_MODE=${pip_mode}";
+	export PIP_MODE=${pip_mode};
+    fi
+fi

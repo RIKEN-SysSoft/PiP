@@ -30,15 +30,15 @@ timer 1 ./corebind 1
 timer 1 ./corebind 8
 skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 1
 skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 8
-timer 10 ./pip_barrier 1 100
-timer 10 ./pip_barrier 8 100
+timer 10 ./pip_barrier  1 100
+timer 10 ./pip_barrier  8 100
 timer 10 ./pip_barrier2 1 100
 timer 10 ./pip_barrier2 8 100
-skip.sh T UNSUPPORTED timer 1 ./signal 1
-skip.sh T UNSUPPORTED timer 1 ./signal 8
-skip.sh D UNTESTED timer 10 ./seek-file.sh 1
-skip.sh D UNTESTED timer 10 ./seek-pipe.sh 1
+timer 1 ./pip_kill 1
+timer 1 ./pip_kill 8
+skip.sh D UNTESTED timer 10 ./seek-file.sh  1
+skip.sh D UNTESTED timer 10 ./seek-pipe.sh  1
 skip.sh D UNTESTED timer 10 ./seek-outin.sh 1
-skip.sh D UNTESTED timer 10 ./seek-file.sh 4
-skip.sh D UNTESTED timer 10 ./seek-pipe.sh 4
+skip.sh D UNTESTED timer 10 ./seek-file.sh  4
+skip.sh D UNTESTED timer 10 ./seek-pipe.sh  4
 skip.sh D UNTESTED timer 10 ./seek-outin.sh 4

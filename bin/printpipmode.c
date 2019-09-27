@@ -30,30 +30,29 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-/** \addtogroup pmap pmap
+/** \addtogroup printpipmode printpipmode
  *
- * \brief command to print PiP memory map
+ * \brief command to print current PiP mode
  *
  * \section synopsis SYNOPSIS
  *
- *	\b pmap
- *
+ *	\b printpipmode
  *
  * \section description DESCRIPTION
  *
- * \b This command prints memory map of current task
- *
- * \section environment ENVIRONMENT
+ * \b This command prints the current PiP mode setting
  *
  */
 
-#include <pip_blt.h>
-#include <pip_util.h>
+#include <pip.h>
 
 int main() {
-  pip_print_maps();
-  return 0;
+  int err;
+  if( ( err = pip_init( NULL, NULL, NULL, 0 ) ) == 0 ) {
+    printf( "%s\n", pip_get_mode_str() );
+  }
+  return err;
 }

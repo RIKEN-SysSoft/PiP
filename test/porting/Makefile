@@ -51,6 +51,3 @@ include $(top_srcdir)/build/rule.mk
 
 tlsvar.S : tlsvar.c
 	$(CC) -S tlsvar.c -o tlsvar.S
-
-clean:
-	$(RM) tlsvar.S

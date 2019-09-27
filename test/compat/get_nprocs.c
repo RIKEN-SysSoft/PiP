@@ -1,7 +1,7 @@
 /*
- * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
- * 	  System Software Devlopment Team. All rights researved$
- * $PIP_VERSION: Version 1.0$
+ * $RIKEN_copyright: Riken Center for Computational Sceience,
+ * System Software Development Team, 2016, 2017, 2018, 2019$
+ * $PIP_VERSION: Version 1.0.0$
  * $PIP_license: <Simplified BSD License>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,17 +30,21 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
+#include <sys/sysinfo.h>
 #include <test.h>
 
-int test_main( void *dummy ) {
-  int pipid;
-  char *env = getenv( PIPENV );
+#define NITERS		(10*1000)
 
-  TESTINT( pip_get_pipid( &pipid ) );
-  if( env == NULL ) return -1;
-  if( strtol( env, NULL, 10 ) != pipid  ) return -2;
-  return 1;
+int main( int argc, char **argv ) {
+  int i, np, n;
+
+  CHECK( (np=get_nprocs()), np<=0, return(EXIT_FAIL) );
+  for( i=0; i<NITERS; i++ ) {
+    CHECK( (n=get_nprocs()), n<=0,  return(EXIT_FAIL) );
+    CHECK( 1,                n!=np, return(EXIT_FAIL) );
+  }
+  return 0;
 }

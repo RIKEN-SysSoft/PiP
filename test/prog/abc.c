@@ -34,7 +34,7 @@
  */
 
 #ifndef MSG
-#error "MSG must be defined"
+#error "MSG must be defined as a compile option"
 #endif
 
 #ifdef PIP

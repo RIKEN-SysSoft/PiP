@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016-2019
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #define _GNU_SOURCE
@@ -48,21 +48,26 @@ static char *prog = NULL;
 static char *target = NULL;
 static int timedout = 0;
 
-static void set_timer( int timer ) {
-  struct sigaction sigact;
-  void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    char sysstr[256];
-
-    timedout = 1;
-    fprintf( stderr, "Timer expired (%d sec)\n", timer );
-    fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
+static void cleanup( void ) {
+  if( pid > 0 ) {
     errno = 0;
-    killpg( pid, SIGHUP );
-    if( errno != ESRCH ) {
+    (void) kill( pid, SIGHUP );
+    if( errno != ESRCH && target != NULL ) {
+      char sysstr[256];
       sleep( 1 );
       sprintf( sysstr, "killall -KILL %s", target );
       system( sysstr );
     }
+  }
+}
+
+static void set_timer( int timer ) {
+  struct sigaction sigact;
+  void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
+    timedout = 1;
+    fprintf( stderr, "Timer expired (%d sec)\n", timer );
+    fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
+    cleanup();
     //exit( EXIT_UNRESOLVED );
   }
   struct itimerval tv;
@@ -72,7 +77,7 @@ static void set_timer( int timer ) {
   sigact.sa_flags     = SA_RESETHAND;
   if( sigaction( SIGALRM, &sigact, NULL ) != 0 ) {
     fprintf( stderr, "[%s] sigaction(): %d\n", prog, errno );
-    if( pid > 0 ) killpg( pid, SIGKILL );
+    cleanup();
     exit( EXIT_UNTESTED );
   }
   memset( &tv, 0, sizeof(tv) );
@@ -80,7 +85,7 @@ static void set_timer( int timer ) {
   tv.it_value.tv_sec    = timer;
   if( setitimer( ITIMER_REAL, &tv, NULL ) != 0 ) {
     fprintf( stderr, "[%s] setitimer(): %d\n", prog, errno );
-    if( pid > 0 ) killpg( pid, SIGKILL );
+    cleanup();
     exit( EXIT_UNTESTED );
   }
 }
@@ -91,7 +96,7 @@ static void unset_timer( void ) {
   sigact.sa_handler = SIG_IGN;
   if( sigaction( SIGALRM, &sigact, NULL ) != 0 ) {
     fprintf( stderr, "[%s] sigaction(): %d\n", prog, errno );
-    if( pid > 0 ) killpg( pid, SIGKILL );
+    cleanup();
   }
 }
 
@@ -127,6 +132,7 @@ int main( int argc, char **argv ) {
     execvp( argv[2], &argv[2] );
     fprintf( stderr, "[%s] execvp(): %d\n", prog, errno );
     exit( EXIT_UNTESTED );
+
   } else if( pid > 0 ) {
     wait( &status );
     if( WIFEXITED( status ) ) {
@@ -136,6 +142,7 @@ int main( int argc, char **argv ) {
       fprintf( stderr, "'%s' terminated due to signal (%s)\n", target, strsignal(sig) );
     }
     exit( EXIT_UNRESOLVED );
+
   } else {
     fprintf( stderr, "[%s] fork(): %d\n", prog, errno );
     unset_timer();

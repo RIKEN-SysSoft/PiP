@@ -58,6 +58,11 @@ PROGRAMS_TO_INSTALL = # nothing
 all : $(PROGRAMS)
 
 post-clean-hook:
-	$(RM) *.E
-	$(RM) *.log;
-	$(RM) \#*\#;
+	$(RM) *.E *.S
+	$(RM) *.log *.log.xml
+	$(RM) test.log test.log.* test.out.*
+	$(RM) .test-sum-*.sh
+	$(RM) .loop-*.log
+	$(RM) \#*\# .\#*
+	$(RM) *~
+	$(RM) seek-file.text

@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2018
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_gdbif_func_h_
@@ -39,7 +39,7 @@
 #include <pip_internal.h>
 
 void pip_gdbif_load_( pip_task_internal_t* );
-void pip_gdbif_exit( pip_task_internal_t*, int );
+void pip_gdbif_exit_( pip_task_internal_t*, int );
 void pip_gdbif_task_commit_( pip_task_internal_t* );
 void pip_gdbif_task_new_( pip_task_internal_t* );
 void pip_gdbif_initialize_root_( int );

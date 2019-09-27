@@ -8,5 +8,5 @@ timer 1 pip_blt 1 1  ./pip_exit
 timer 1 pip_blt 8 16 ./pip_exit
 timer 1 pip_blt 1 1  ./return
 timer 1 pip_blt 8 16 ./return
-skip.sh A UNSUPPORTED timer 1 pip_blt 1 1  ./exit
-skip.sh A UNSUPPORTED timer 1 pip_blt 8 16 ./exit
+#skip.sh A UNSUPPORTED timer 1 pip_blt 1 1  ./exit
+#skip.sh A UNSUPPORTED timer 1 pip_blt 8 16 ./exit

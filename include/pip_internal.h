@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2018
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_internal_h_
@@ -57,8 +57,8 @@
 #include <pip_blt.h>
 #include <pip_clone.h>
 #include <pip_machdep.h>
-#include <pip_debug.h>
 #include <pip_util.h>
+#include <pip_debug.h>
 
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
@@ -222,7 +222,6 @@ typedef struct pip_task_annex {
   /* GDB interface */
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
 
-  pip_task_internal_t		*task_unprotect; /* just for sanity check */
 } pip_task_annex_t;
 
 
@@ -285,13 +284,6 @@ typedef struct {
   pip_task_internal_t	tasks[];
 
 } pip_root_t;
-
-typedef struct pip_queue_info {
-  pip_task_queue_t	*queue;
-  pip_enqueue_callback_t callback;
-  void			*cbarg;
-  int 			flag_lock;
-} pip_queue_info_t;
 
 extern pip_clone_mostly_pthread_t 	pip_clone_mostly_pthread_ptr;
 

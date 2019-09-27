@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_debug_h_
@@ -120,7 +120,7 @@ extern int pip_debug_env( void );
 
 
 #define NEVER_REACH_HERE						\
-  do { EMSG( "\nShould not reach here !!!!!!\n" ); pip_abort(); } while(0)
+  do { EMSG( "Should not reach here !!!!!!\n" ); pip_abort(); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

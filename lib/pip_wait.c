@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017, 2018
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #define _GNU_SOURCE
@@ -111,19 +111,19 @@ void pip_deadlock_dec_( void ) {
 #endif
 }
 
-void pip_set_extval( pip_task_internal_t *taski, int extval ) {
+#ifndef __W_EXITCODE
+#define __W_EXITCODE(retval,signal)	( (retval) << 8 | (signal) )
+#endif
+
+void pip_set_extval_( pip_task_internal_t *taski, int extval ) {
   ENTER;
   if( !taski->flag_exit ) {
     taski->flag_exit = PIP_EXITED;
     /* mark myself as exited */
     DBGF( "PIPID:%d[%d] extval:%d",
 	  taski->pipid, taski->task_sched->pipid, extval );
-#ifdef __W_EXITCODE
     taski->annex->extval = __W_EXITCODE( extval, 0 );
-#else
-    taski->annex->extval = ( extval & 0xFF ) << 8;
-#endif
-    pip_gdbif_exit( taski, extval );
+    pip_gdbif_exit_( taski, extval );
     pip_memory_barrier();
     pip_gdbif_hook_after_( taski );
   }
@@ -166,6 +166,10 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
     /* ("clone" or "non-clone") [from the man page]      */
     options |= __WALL;
 #endif
+#ifdef __WCLONE
+    /* __WCLONE: Wait for all clone()ed processes */
+    options |= __WCLONE;
+#endif
     if( flag_try ) options |= WNOHANG;
 
     DBGF( "PIPID:%d  taski->annex->tid:%d", taski->pipid, taski->annex->tid );
@@ -191,7 +195,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
 	pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
 		       taski->pipid, strsignal(sig), sig );
       }
-      pip_set_extval( taski, status );
+      pip_set_extval_( taski, status );
     }
   }
   DBG;
