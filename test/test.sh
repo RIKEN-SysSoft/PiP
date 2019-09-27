@@ -144,8 +144,6 @@ reset_summary()
     file_summary;
 }
 
-mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak 2>/dev/null
-
 pip_mode_name_P=process
 pip_mode_name_L=$pip_mode_name_P:preload
 pip_mode_name_C=$pip_mode_name_P:pipclone
@@ -216,6 +214,8 @@ if [ x"$SUMMARY_FILE" = x ]; then
 else
     . $SUMMARY_FILE;
 fi
+
+[ -f ${TEST_LOG_FILE} ] && mv -f ${TEST_LOG_FILE} ${TEST_LOG_FILE}.bak
 
 if [ -n "$MCEXEC" ]; then
     pip_mode_list_all='T';
@@ -428,7 +428,7 @@ fi
 print_summary
 
 if [ x"$SUMMARY_FILE" = x ]; then
-    rm -f $sum_file > /dev/null 2>&1;
+    rm -f $sum_file
 fi
 
 case $n_KILLED in 0) :;; *) exit $EXIT_KILLED;; esac
