@@ -7,7 +7,6 @@ TEST_TRAP_SIGS='1 2 15'
 
 function check_command() {
     cmd=$1;
-    shift;
     $@ > /dev/null 2>&1;
     if [ $? != 0 ]; then
 	echo "$cmd does not work";
@@ -20,9 +19,9 @@ if [[ $rprocs > 3 ]]; then
     echo 'WARNING: some other processes are running ...'
 fi
 
-check_command "dirname";
-check_command "basename";
-check_command "realptah .";
+check_command "dirname .";
+check_command "basename .";
+check_command "realpath .";
 
 dir=`dirname $0`;
 dir_real=`realpath $dir`
