@@ -21,10 +21,9 @@ fi
 
 check_command "dirname .";
 check_command "basename .";
-check_command "realpath .";
 
 dir=`dirname $0`;
-dir_real=`realpath $dir`
+dir_real=`cd $dir && pwd`
 base=`basename $0`;
 myself=$dir_real/$base;
 
