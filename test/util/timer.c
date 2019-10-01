@@ -46,6 +46,7 @@ extern int pip_is_debug_build( void );
 static pid_t pid = 0;
 static char *prog = NULL;
 static char *target = NULL;
+static int timer_period = 0;
 static int timedout = 0;
 
 static void cleanup( void ) {
@@ -61,16 +62,20 @@ static void cleanup( void ) {
   }
 }
 
+static void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
+  timedout = 1;
+  /* XXX - the followings are NOT async-signal-safe */
+  fprintf( stderr, "Timer expired (%d sec)\n", timer_period );
+  fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
+  cleanup();
+  //exit( EXIT_UNRESOLVED );
+}
+
 static void set_timer( int timer ) {
   struct sigaction sigact;
-  void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    timedout = 1;
-    fprintf( stderr, "Timer expired (%d sec)\n", timer );
-    fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
-    cleanup();
-    //exit( EXIT_UNRESOLVED );
-  }
   struct itimerval tv;
+
+  timer_period = timer;
 
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = timer_watcher;
@@ -134,8 +139,14 @@ int main( int argc, char **argv ) {
     exit( EXIT_UNTESTED );
 
   } else if( pid > 0 ) {
-    wait( &status );
-    if( WIFEXITED( status ) ) {
+    pid_t rv;
+    for( ;; ) {
+      rv = wait( &status );
+      if (rv != -1 || errno != EINTR) break;
+    }
+    if (rv == -1) {
+      fprintf( stderr, "'%s' failed to wait: %s\n", target, strerror(errno) );
+    } else if( WIFEXITED( status ) ) {
       exit( WEXITSTATUS( status ) );
     } else if( WIFSIGNALED( status ) ) {
       int sig = WTERMSIG( status );
