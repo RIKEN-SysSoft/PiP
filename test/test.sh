@@ -281,7 +281,9 @@ fi
 LOG_BEG="=== ============================================================ ===="
 LOG_SEP="--- ------------------------------------------------------------ ----"
 
-echo "<testsuite>" >$TEST_LOG_XML
+if [ x"$SUMMARY_FILE" = x ]; then
+    echo "<testsuite>" >$TEST_LOG_XML
+fi
 
 cd  `dirname $TEST_LIST`
 
@@ -358,7 +360,7 @@ while read line; do
 		TOTAL_TIME=$(awk 'BEGIN {print '"$TOTAL_TIMME"'+'"$t"'; exit}')
 		(
 			echo '  <testcase classname="'PIP'"' \
-				'name="'"${test} - ${pip_mode_name}"'"' \
+				'name="'"${CMD} - ${pip_mode_name}"'"' \
 				'time="'"${t}"'">'
 			case $status in
 			PASS|XPASS)
@@ -426,9 +428,9 @@ while read line; do
 
 done < `basename $TEST_LIST`
 
-echo "</testsuite>" >>$TEST_LOG_XML
-
-if [ -x"$SUMAMRY_FILE" != x ]; then
+if [ x"$SUMMARY_FILE" = x ]; then
+    echo "</testsuite>" >>$TEST_LOG_XML
+else
     file_summary;
 fi
 
