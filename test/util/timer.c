@@ -38,6 +38,7 @@
 #include <test.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <stdbool.h>
 
 #define DEBUG_SCALE	(5)
 
@@ -62,12 +63,20 @@ static void cleanup( void ) {
   }
 }
 
+static bool ignore_alarm( void ) {
+  struct sigaction sigact;
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_handler = SIG_IGN;
+  return( sigaction( SIGALRM, &sigact, NULL ) == 0 );
+}
+
 static void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
   timedout = 1;
   /* XXX - the followings are NOT async-signal-safe */
   fprintf( stderr, "Timer expired (%d sec)\n", timer_period );
   fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
   cleanup();
+  (void)ignore_alarm();
   //exit( EXIT_UNRESOLVED );
 }
 
@@ -96,10 +105,7 @@ static void set_timer( int timer ) {
 }
 
 static void unset_timer( void ) {
-  struct sigaction sigact;
-  memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_handler = SIG_IGN;
-  if( sigaction( SIGALRM, &sigact, NULL ) != 0 ) {
+  if( !ignore_alarm() ) {
     fprintf( stderr, "[%s] sigaction(): %d\n", prog, errno );
     cleanup();
   }
