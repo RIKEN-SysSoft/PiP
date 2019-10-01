@@ -96,7 +96,11 @@ int main( int argc, char **argv ) {
 #ifndef DO_COREBIND
     c = PIP_CPUCORE_ASIS;
 #else
-    c = ( j % nc ) + 1;
+    if( nc == 0 ) {
+      c = PIP_CPUCORE_ASIS;
+    } else {
+      c = ( i % nc ) + 1;
+    }
 #endif
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
