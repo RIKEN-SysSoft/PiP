@@ -8,7 +8,7 @@ timer 1 ./pip_init invalid_opts
 timer 1 ./pip_init both_pthread_process
 timer 1 ./pip_init both_preload_clone
 timer 1 ./pip_init pip_task_unset
-timer 1 ./pip_fin
+timer 2 ./pip_fin
 timer 1 pip_task 1 ./pip_init pip_child_task
 timer 1 pip_task 8 ./pip_init pip_child_task
 timer 1 ./pip_exit
