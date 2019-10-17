@@ -97,8 +97,9 @@ pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
 
 #ifndef PIP_SPIN_TRYLOCK
 inline static int pip_spin_trylock( pip_spinlock_t *lock ) {
+  int oldval;
   if( *lock != 0 ) return 0;
-  int oldval = __sync_val_compare_and_swap( lock, 0, 1 );
+  oldval = __sync_val_compare_and_swap( lock, 0, 1 );
   return oldval == 0;
 }
 #endif
