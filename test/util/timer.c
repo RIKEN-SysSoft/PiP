@@ -38,7 +38,9 @@
 #include <test.h>
 #include <sys/time.h>
 #include <sys/wait.h>
+#include <ctype.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define DEBUG_SCALE	(5)
 
@@ -118,6 +120,7 @@ static void usage( void ) {
 
 int main( int argc, char **argv ) {
   int 	time, status, flag_debug = 0;
+  char	*pip_test_timer_scale = getenv("PIP_TEST_TIMER_SCALE");
 
   set_sigsegv_watcher();
   set_sigint_watcher();
@@ -133,6 +136,9 @@ int main( int argc, char **argv ) {
     flag_debug = 1;
   }
 
+  if( pip_test_timer_scale != NULL && isdigit(pip_test_timer_scale[0]) ) {
+    time *= atoi( pip_test_timer_scale );
+  }
   if( pip_is_debug_build() && !flag_debug ) {
     time *= DEBUG_SCALE;
   }
