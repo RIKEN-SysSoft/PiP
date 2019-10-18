@@ -8,5 +8,5 @@ timer 1  pip_blt 1 1  ./pip_barrier 1
 timer 5  pip_blt 8 8  ./pip_barrier 1
 timer 20 pip_blt 8 24 ./pip_barrier 1
 timer 1  pip_blt 1 1  ./pip_barrier 100
-timer 10 pip_blt 8 8  ./pip_barrier 100
-timer 30 pip_blt 8 24 ./pip_barrier 100
+timer 5  pip_blt 8 8  ./pip_barrier 100
+timer 20 pip_blt 8 24 ./pip_barrier 100
