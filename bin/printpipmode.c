@@ -53,6 +53,8 @@ int main() {
   int err;
   if( ( err = pip_init( NULL, NULL, NULL, 0 ) ) == 0 ) {
     printf( "%s\n", pip_get_mode_str() );
+  } else {
+    fprintf( stderr, "pip_init() fails (%s)\n", strerror(err) );
   }
   return err;
 }

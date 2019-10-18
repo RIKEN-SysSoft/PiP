@@ -36,13 +36,12 @@ include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
 PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pipmode printpipmode
-##PROGRAMS = $(PROGRAMS_TO_INSTALL)
-PROGRAMS = piprun printpipmode
+PROGRAMS  = $(PROGRAM) printpipmode
 MAN1_SRCS = piprun.c pipcc.in pipmode.in printpipmode.c
 
-CFLAGS += -pthread
+CFLAGS   += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
-LDLIBS += $(PIPLDLIB) -ldl
+LDLIBS   += $(PIPLDLIB) -ldl
 
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 

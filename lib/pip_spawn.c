@@ -580,7 +580,7 @@ static void* pip_do_spawn( void *thargs )  {
   { /* the following code is to set the right */
     /* name shown by the ps and top commands  */
     char nam[16];
-    char symbol = '$';
+    char symbol = '@';
     if( args->funcname == NULL ) {
       snprintf( nam, 16, "%c%s",    symbol, args->prog );
     } else {
