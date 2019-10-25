@@ -39,17 +39,22 @@
 #define NITERS		(10)
 #define NTHREADS	(10)
 
+static int nthreads, niters;
+#ifdef BARRIER
+static pthread_barrier_t barr;
+#endif
+
 void *thread_main( void *argp ) {
+#ifdef BARRIER
+  CHECK( pthread_barrier_wait( &barr ),
+	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
+	 exit(EXIT_FAIL) );
+#endif
   pthread_exit( NULL );
 }
 
-int pip_pthread_create( pthread_t *thread, const pthread_attr_t *attr,
-			void *(*start_routine) (void *), void *arg );
-int pip_pthread_join( pthread_t thread, void **retval );
-
 int main( int argc, char **argv ) {
   pthread_t threads[NTHREADS];
-  int nthreads, niters;
   int i, j;
 
   set_sigsegv_watcher();
@@ -67,7 +72,11 @@ int main( int argc, char **argv ) {
   }
   niters = ( niters == 0 ) ? NITERS : niters;
 
-  CHECK( pip_init(NULL,NULL,NULL,0), RV, return(EXIT_FAIL) );
+#ifdef BARRIER
+  CHECK( pthread_barrier_init( &barr, NULL, nthreads ),
+	 RV,
+	 return(EXIT_FAIL) );
+#endif
 
   for( i=0; i<niters; i++ ) {
     for( j=0; j<nthreads; j++ ) {

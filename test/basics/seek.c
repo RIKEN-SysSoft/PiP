@@ -33,18 +33,56 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
 #define NITERS		(10)
 #define ROOT		"ROOT"
 
+#define USE_BARRIER
+
 static struct my_exp {
+#ifndef USE_BARRIER
   pip_atomic_t		sync;
+#else
+  pthread_barrier_t	barr;
+#endif
   int			fd;
 } exp;
 
 static struct my_exp *expp;
+
+static int my_read( int fd, char *buff, size_t len ) {
+  char *p = buff;
+  int cc, l = len;
+
+  while( l > 0 ) {
+    cc = read( fd, p, l );
+    if( cc <= 0 ) {
+      if( l == len ) return cc;
+      break;
+    }
+    p += cc;
+    l -= cc;
+  }
+  return (int)( p - buff );
+}
+
+static int my_write( int fd, char *buff, size_t len ) {
+  char *p = buff;
+  int cc, l = len;
+
+  while( l > 0 ) {
+    cc = write( fd, p, l );
+    if( cc <= 0 ) {
+      if( l == len ) return cc;
+      break;
+    }
+    p += cc;
+    l -= cc;
+  }
+  return (int)( p - buff );
+}
 
 int main( int argc, char **argv ) {
   char	*fname;
@@ -53,7 +91,7 @@ int main( int argc, char **argv ) {
   int 	ntasks, pipid;
   int	niters;
   int	fd, len;
-  int	i, extval = 0;
+  int	i, ii, extval = 0;
 
   set_sigsegv_watcher();
 
@@ -89,17 +127,25 @@ int main( int argc, char **argv ) {
   memset( buff,  0, sizeof(buff)  );
   memset( check, 0, sizeof(check) );
 
+
   expp = &exp;
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV,   return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     /* the FD opened by the root process are inherited to child tasks */
+#ifndef USE_BARRIER
     expp->sync = -1;
+#else
+    CHECK( pthread_barrier_init( &expp->barr, NULL, ntasks+1 ),
+      RV,
+      return(EXIT_FAIL) );
+#endif
     sprintf( buff, "%8s", ROOT );
     len = strlen( buff );
     if( stdin ) {
       CHECK( fd = open( "/dev/stdin", O_RDONLY ), RV<0,  return(EXIT_UNTESTED) );
       expp->fd = fd;
-      CHECK( read( fd, check, len ),              RV<0,  return(EXIT_FAIL) );
+      CHECK( my_read( fd, check, len ),           RV<0,  return(EXIT_FAIL) );
+      CHECK( strcmp( buff, check ),               RV!=0, return(EXIT_FAIL) );
       for( i=0; i<ntasks; i++ ) {
 	pipid = i;
 	CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
@@ -107,15 +153,18 @@ int main( int argc, char **argv ) {
 	       RV,
 	       return(EXIT_FAIL) );
       }
-      CHECK( strcmp( buff, check ),               RV!=0, return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
+#ifndef USE_BARRIER
 	expp->sync = 0;
 	while( expp->sync < ntasks );
+#else
+	for( ii=0; ii<ntasks+1; ii++ ) pthread_barrier_wait( &expp->barr );
+#endif
       }
     } else if( stdout ) {
       CHECK( fd = open( "/dev/stdout", O_WRONLY ), RV<0, return(EXIT_UNTESTED) );
       expp->fd = fd;
-      CHECK( write( fd, buff, len ), RV<0, return(EXIT_UNTESTED) );
+      CHECK( my_write( fd, buff, len ), RV<0, return(EXIT_UNTESTED) );
       for( i=0; i<ntasks; i++ ) {
 	pipid = i;
 	CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
@@ -124,8 +173,12 @@ int main( int argc, char **argv ) {
 	       return(EXIT_FAIL) );
       }
       for( i=0; i<niters; i++ ) {
+#ifndef USE_BARRIER
 	expp->sync = 0;
 	while( expp->sync < ntasks );
+#else
+	for( ii=0; ii<ntasks+1; ii++ ) pthread_barrier_wait( &expp->barr );
+#endif
       }
     } else {			/* file */
       CHECK( fd = open( fname, O_CREAT|O_TRUNC|O_RDWR, S_IRWXU ),
@@ -140,21 +193,30 @@ int main( int argc, char **argv ) {
       }
       for( i=0; i<niters; i++ ) {
 	//fprintf( stderr, "[ROOT]:%d write '%s'\n", i, buff );
-	CHECK( write( fd, buff, len ),         RV<0,  return(EXIT_UNTESTED) );
+	CHECK( my_write( fd, buff, len ),      RV<0,  return(EXIT_UNTESTED) );
 	CHECK( fsync(fd),                      RV!=0, return(EXIT_UNRESOLVED) );
+#ifndef USE_BARRIER
 	expp->sync = 0;
 	while( expp->sync < ntasks );
+#else
+	for( ii=0; ii<ntasks+1; ii++ ) pthread_barrier_wait( &expp->barr );
+#endif
       }
       //system( "echo '>>>'; cat seek-file.text; echo; echo '<<<';" );
       CHECK( lseek( fd, (off_t) 0, SEEK_SET ), RV<0,  return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
-	CHECK( read( fd, check, len ),         RV<0,  return(EXIT_FAIL) );
-	//fprintf( stderr, "[ROOT]:%d read '%s':'%s'\n", i, buff, check );
+	CHECK( my_read( fd, check, len ),      RV<0,  return(EXIT_FAIL) );
+	fprintf( stderr, "[ROOT]:%d read '%s':'%s'\n", i, buff, check );
 	CHECK( strcmp( buff, check ),          RV!=0, return(EXIT_FAIL) );
+#ifndef USE_BARRIER
 	expp->sync = 0;
 	while( expp->sync < ntasks );
+#else
+	for( ii=0; ii<ntasks+1; ii++ ) pthread_barrier_wait( &expp->barr );
+#endif
       }
     }
+
     for( i=0; i<ntasks; i++ ) {
       int status;
       CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
@@ -171,33 +233,82 @@ int main( int argc, char **argv ) {
     fd = expp->fd;
     sprintf( buff, "%8d", pipid );
     len = strlen( buff );
+
     if( stdin ) {
       for( i=0; i<niters; i++ ) {
-	while( expp->sync != pipid );
-	CHECK( read( fd, check, len ),        RV<=0, return(EXIT_FAIL) );
+#ifndef USE_BARRIER
+	while( expp->sync != pipid ) pip_system_yield();
+#else
+	for( ii=0; ii<pipid+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
+	CHECK( my_read( fd, check, len ),     RV<=0, return(EXIT_FAIL) );
 	CHECK( strcmp( buff, check ),         RV!=0, return(EXIT_FAIL) );
+#ifndef USE_BARRIER
 	pip_atomic_fetch_and_add( &expp->sync, 1 );
+#else
+	for( ii=pipid+1; ii<ntasks+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
       }
     } else if( stdout ) {
       for( i=0; i<niters; i++ ) {
+#ifndef USE_BARRIER
 	while( expp->sync != pipid ) pip_system_yield();
-	CHECK( write( fd, buff, len ),        RV<=0, return(EXIT_FAIL) );
+#else
+	for( ii=0; ii<pipid+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
+	CHECK( my_write( fd, buff, len ),     RV<=0, return(EXIT_FAIL) );
+#ifndef USE_BARRIER
 	pip_atomic_fetch_and_add( &expp->sync, 1 );
+#else
+	for( ii=pipid+1; ii<ntasks+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
       }
     } else {			/* file */
       for( i=0; i<niters; i++ ) {
+#ifndef USE_BARRIER
 	while( expp->sync != pipid ) pip_system_yield();
+#else
+	for( ii=0; ii<pipid+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
 	//fprintf( stderr, "[%d]:%d write '%s'\n", pipid, i, buff );
-	CHECK( write( fd, buff, len ),        RV<=0, return(EXIT_FAIL) );
+	CHECK( my_write( fd, buff, len ),     RV<=0, return(EXIT_FAIL) );
 	CHECK( fsync(fd),                     RV!=0, return(EXIT_UNRESOLVED) );
+#ifndef USE_BARRIER
 	pip_atomic_fetch_and_add( &expp->sync, 1 );
+#else
+	for( ii=pipid+1; ii<ntasks+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
       }
       for( i=0; i<niters; i++ ) {
+#ifndef USE_BARRIER
 	while( expp->sync != pipid ) pip_system_yield();
-	CHECK( read( fd, check, len ),        RV<=0, return(EXIT_FAIL) );
-	//fprintf( stderr, "[%d]:%d read '%s':'%s'\n", pipid, i, buff, check );
+#else
+	for( ii=0; ii<pipid+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
+	CHECK( my_read( fd, check, len ),     RV<=0, return(EXIT_FAIL) );
+	fprintf( stderr, "[%d]:%d read '%s':'%s'\n", pipid, i, buff, check );
 	CHECK( strcmp( buff, check ),         RV!=0, return(EXIT_FAIL) );
+#ifndef USE_BARRIER
 	pip_atomic_fetch_and_add( &expp->sync, 1 );
+#else
+	for( ii=pipid+1; ii<ntasks+1; ii++ ) {
+	  pthread_barrier_wait( &expp->barr );
+	}
+#endif
       }
     }
   }

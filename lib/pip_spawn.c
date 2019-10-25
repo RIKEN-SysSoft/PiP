@@ -62,9 +62,7 @@ extern int  pip_is_shared_fd_( void );
 extern int  pip_dlclose( void* );
 extern void pip_do_exit( pip_task_internal_t*, int );
 
-#ifdef DEBUG
 #define CHECK_TLS
-#endif
 
 #ifdef CHECK_TLS
 __thread int pipid_tls;
@@ -665,11 +663,11 @@ static void* pip_do_spawn( void *thargs )  {
 
   DBGF( "PIPID:%d  pid:%d (%d)",
 	self->pipid, self->annex->tid, pip_gettid() );
-#ifdef CHECK_TLS
   ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
+#ifdef CHECK_TLS
   DBGF( "TLS:0x%lx  pipid_tls:%d (%p)  pipid:%d",
 	(intptr_t) self->tls, pipid_tls, &pipid_tls, self->pipid );
-  ASSERTD( pipid_tls != self->pipid );
+  ASSERT( pipid_tls != self->pipid );
 #endif
   /* call fflush() in the target context to flush out std* messages */
   if( self->annex->symbols.libc_fflush != NULL ) {
@@ -679,14 +677,12 @@ static void* pip_do_spawn( void *thargs )  {
   if( self->annex->symbols.named_export_fin != NULL ) {
     self->annex->symbols.named_export_fin( self );
   }
-#ifdef AH
   if( self->annex->pip_root_p != NULL ) {
     *self->annex->pip_root_p = NULL;
   }
   if( self->annex->pip_task_p != NULL ) {
     *self->annex->pip_task_p = NULL;
   }
-#endif
   DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
   if( pip_is_threaded_() ) {	/* thread mode */
     (void) pip_raise_sigchld();

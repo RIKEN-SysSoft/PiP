@@ -92,6 +92,8 @@ extern "C" {
   void pip_task_describe(  FILE *fp, const char *tag, int pipid );
   void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue);
 
+  void pip_backtrace_fd( int depth, int fd );
+
 #ifdef __cplusplus
 }
 #endif

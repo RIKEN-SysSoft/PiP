@@ -56,13 +56,3 @@ PROGRAMS_TO_INSTALL = # nothing
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@
 
 all : $(PROGRAMS)
-
-post-clean-hook:
-	$(RM) *.E *.S
-	$(RM) *.log *.log.xml
-	$(RM) test.log test.log.* test.out.*
-	$(RM) .test-sum-*.sh
-	$(RM) .loop-*.log
-	$(RM) \#*\# .\#*
-	$(RM) *~
-	$(RM) seek-file.text

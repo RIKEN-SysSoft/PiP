@@ -68,12 +68,12 @@ static void pip_set_magic( pip_root_t *root ) {
   memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_WLEN );
 }
 
-static int pip_is_magic_ok( pip_root_t *root ) {
+int pip_is_magic_ok_( pip_root_t *root ) {
   return root != NULL &&
     strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_WLEN ) == 0;
 }
 
-static int pip_is_version_ok( pip_root_t *root ) {
+int pip_is_version_ok_( pip_root_t *root ) {
   if( root            != NULL                           &&
       root->version    == PIP_API_VERSION               &&
       root->size_root  == sizeof( pip_root_t )          &&
@@ -85,20 +85,17 @@ static int pip_is_version_ok( pip_root_t *root ) {
 }
 
 static int pip_set_root( char *env ) {
-  if( env == NULL || *env == '\0' ) {
-    pip_err_mesg( "No PiP root found" );
-    ERRJ;
-  }
+  if( *env == '\0' ) ERRJ;
   pip_root_ = (pip_root_t*) strtoll( env, NULL, 16 );
   if( pip_root_ == NULL ) {
     pip_err_mesg( "Invalid PiP root" );
     ERRJ;
   }
-  if( !pip_is_magic_ok( pip_root_ ) ) {
+  if( !pip_is_magic_ok_( pip_root_ ) ) {
     pip_err_mesg( "%s environment not found", PIP_ROOT_ENV );
     ERRJ;
   }
-  if( !pip_is_version_ok( pip_root_ ) ) {
+  if( !pip_is_version_ok_( pip_root_ ) ) {
     pip_err_mesg( "Version miss-match between PiP root and task" );
     ERRJ;
   }
@@ -491,6 +488,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     pip_spin_init( &pip_root_->lock_ldlinux );
     pip_spin_init( &pip_root_->lock_tasks   );
+    pip_spin_init( &pip_root_->lock_bt      );
 
     pipid = PIP_PIPID_ROOT;
     pip_set_magic( pip_root_ );
