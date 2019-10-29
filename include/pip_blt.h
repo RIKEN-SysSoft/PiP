@@ -990,6 +990,10 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   pip_mutex_fin_( (pip_mutex_t*)(M) )
 #endif
 
+  void pip_task_describe(  FILE *fp, const char *tag, int pipid );
+  void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue);
+
+
 /**
  * @}
  */

@@ -89,9 +89,6 @@ extern "C" {
   void pip_check_addr( char *tag, void *addr );
   double pip_gettime( void );
 
-  void pip_task_describe(  FILE *fp, const char *tag, int pipid );
-  void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue);
-
 #ifdef __cplusplus
 }
 #endif
