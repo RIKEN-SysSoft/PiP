@@ -542,175 +542,223 @@ void pip_print_dsos( void ) {
   dl_iterate_phdr( pip_dsos_cb_, (void*) fp );
 }
 
-static int pip_check_inside( FILE *fp, void *addr ) {
-  char *line = NULL;
-  size_t ls = 0;
-  void *sta, *end;
-  char perm[4];
-  int retv = 0;
+static char*
+pip_check_inside( FILE *fp, void *addr, void *laddr, void **startp ) {
+  static char 	*line = NULL;
+  size_t 	ls = 0;
+  void 		*sta, *end;
+  char 		perm[4], *p;
 
   rewind( fp );
   while( getline( &line, &ls, fp ) > 0 ) {
     if( sscanf( line, "%p-%p %4s", &sta, &end, perm ) > 0 ) {
-      if( sta <= addr && addr < end && perm[2] == 'x' ) {
-	retv = 1;
+      if( sta <= addr  &&  addr < end &&
+	  sta <= laddr && laddr < end &&
+	  perm[2] == 'x' ) {
+	//fprintf( stderr, "sta:%p  addr:%p  laddr:%p\n", sta, addr, laddr );
+	*startp = sta;
+	/* then extract the filename part */
+	p = line + strlen(line) - 1;
+	while( *p != ' ' && *p != '\0' ) p--;
+	if( *p != '\0' ) return p;
 	break;
       }
     }
   }
-  if( line != NULL ) free( line );
-  return retv;
+  return NULL;
 }
 
-static int 
-pip_determine_pipid( pip_root_t *root, FILE *fp, void *addr ) {
+static char *pip_determine_pipid( pip_root_t *root, 
+				  FILE *fp, 
+				  void *addr, 
+				  void **startp,
+				  int *pipidp ) {
   struct link_map *lm;
-  int pipid = 0;
-  int i;
+  char *file = NULL;
+  int id, i;
 
-  if( root != NULL ) {
-    if( pip_task_ != NULL ) {
-      pipid = ( pip_task_->pipid < 0 ) ? 0 : pip_task_->pipid;
-    }
-    for( i=pipid; i<root->ntasks; i++ ) {
-      for( lm = (struct link_map*) root->tasks[i].annex->loaded;
-	   lm != NULL;
-	   lm = lm->l_next ) {
-	if( pip_check_inside( fp, addr ) ) return i;
-      }
-    }
-    for( i=0; i<pipid; i++ ) {
-      for( lm = (struct link_map*) root->tasks[i].annex->loaded;
-	   lm != NULL;
-	   lm = lm->l_next ) {
-	if( pip_check_inside( fp, addr ) ) return i;
-      }
-    }
-    for( lm = (struct link_map*) root->task_root->annex->loaded;
+  id = 0;
+  if( pip_task_ != NULL ) {
+    id = ( pip_task_->pipid < 0 ) ? 0 : pip_task_->pipid;
+  }
+  for( i=id; i<root->ntasks; i++ ) {
+    for( lm = (struct link_map*) root->tasks[i].annex->loaded;
 	 lm != NULL;
 	 lm = lm->l_next ) {
-      if( pip_check_inside( fp, addr ) ) return PIP_PIPID_ROOT;
+      file = pip_check_inside( fp, addr, (void*) lm->l_addr, startp );
+      if( file != NULL ) {
+	*pipidp = i;
+	return file;
+      }
     }
   }
-  return PIP_PIPID_NULL;
+  for( i=0; i<id; i++ ) {
+    for( lm = (struct link_map*) root->tasks[i].annex->loaded;
+	 lm != NULL;
+	 lm = lm->l_next ) {
+      file = pip_check_inside( fp, addr, (void*) lm->l_addr, startp );
+      if( file != NULL ) {
+	*pipidp = i;
+	return file;
+      }
+    }
+  }
+  for( lm = (struct link_map*) root->task_root->annex->loaded;
+       lm != NULL;
+       lm = lm->l_next ) {
+    file = pip_check_inside( fp, addr, (void*) lm->l_addr, startp );
+    if( file != NULL ) {
+      *pipidp = PIP_PIPID_ROOT;
+      return file;
+    }
+  }
+  return NULL;
+}
+
+static void pip_print_bt( FILE *fp_maps, FILE *fp_out, 
+			  pip_root_t *root, int depth, void *addr ) {
+  Dl_info 	info;
+  char	idstr[64], fname[64], sname[64], saddr[64], off[64];
+  char  *file  = NULL;
+  void	*start = NULL;
+  int 	pipid  = PIP_PIPID_NULL;
+
+  idstr[0] = '\0';
+  fname[0] = '\0';
+  sname[0] = '\0';
+  saddr[0] = '\0';
+  off[0]   = '\0';
+
+  if( root != NULL ) {
+    file = pip_determine_pipid( root, fp_maps, addr, &start, &pipid );
+    if( pipid == PIP_PIPID_ROOT ) {
+      strcpy( idstr,  "PIPID:R " );
+    } else if( pipid != PIP_PIPID_NULL ) {
+      sprintf( idstr, "PIPID:%d%c", pipid, ' ' );
+    }
+  }
+  if( dladdr( addr, &info ) != 0 ) {
+    if( info.dli_fname != NULL ) {
+      snprintf( fname, sizeof(fname), "%s", basename( info.dli_fname ) );
+    }
+    if( info.dli_sname != NULL ) {
+      sprintf( sname, ":%s", info.dli_sname );
+    }
+    if( info.dli_saddr != NULL ) {
+      sprintf( saddr, "@%p", info.dli_saddr );
+      if( start != NULL ) {
+	sprintf( off,   "(0x%lx)", (off_t)(info.dli_saddr-start) );
+      }
+    } else {
+      sprintf( saddr, "@%p", addr );
+      if( start != NULL ) {
+	sprintf( off,   "(0x%lx)", (off_t)(addr-start) );
+      }
+    }
+  } else {
+    sprintf( fname, "%s", file );
+    sprintf( saddr, "@%p", addr );
+    if( start != NULL ) {
+      sprintf( off,   "(0x%lx)", (off_t)(addr-start) );
+    }
+  }
+  fprintf( fp_out, "PBT[%d] %s%s%s%s%s\n",
+	   depth, idstr, fname, sname, saddr, off );
 }
 
 #define DEPTH_MAX	(32)
-#define BACKTRACE(N,D)						\
-  if( (N) < (D) && __builtin_frame_address( N ) != NULL ) {	\
-    addrs[N] = __builtin_return_address( N );			\
-  } else {							\
-    addrs[N] = NULL; goto done; }
+#define BACKTRACE(FM,FO,RT,D,N)					\
+  do { if( (N)<(D) ) {						\
+      void *_addr_ = __builtin_return_address(N);		\
+      if( _addr_ != NULL &&					\
+	  __builtin_frame_address(N) != NULL )			\
+	pip_print_bt( (FM), (FO), (RT), (N), _addr_ );		\
+    } else goto done; } while(0)
+
+static pip_ctx_t ctx_bt;
+
+static void pip_stack_end( int sig, siginfo_t *siginfo, void *context ) {
+  pip_load_context( &ctx_bt );
+}
 
 void pip_backtrace_fd( int depth, int fd ) {
-  void *addrs[DEPTH_MAX];
+  int pip_is_magic_ok_(   pip_root_t* );
+  int pip_is_version_ok_( pip_root_t* );
+  struct sigaction sigact, sigact_old;
+  pip_root_t	*root = pip_root_;
+  volatile int 	flag_jump = 0;	/* must be volatile */
+  FILE	 	*fp_maps = NULL;
+  FILE		*fp_out  = NULL;
+  char		*envroot;
 
   ENTER;
-  depth = ( depth <= 0 || depth > DEPTH_MAX ) ? DEPTH_MAX : depth;
-  BACKTRACE(  0, depth );
-  BACKTRACE(  1, depth );
-  BACKTRACE(  2, depth );
-  BACKTRACE(  3, depth );
-  BACKTRACE(  4, depth );
-  BACKTRACE(  5, depth );
-  BACKTRACE(  6, depth );
-  BACKTRACE(  7, depth );
-  BACKTRACE(  8, depth );
-  BACKTRACE(  9, depth );
-  BACKTRACE( 10, depth );
-  BACKTRACE( 11, depth );
-  BACKTRACE( 12, depth );
-  BACKTRACE( 13, depth );
-  BACKTRACE( 14, depth );
-  BACKTRACE( 15, depth );
-  BACKTRACE( 16, depth );
-  BACKTRACE( 17, depth );
-  BACKTRACE( 18, depth );
-  BACKTRACE( 19, depth );
-  BACKTRACE( 20, depth );
-  BACKTRACE( 21, depth );
-  BACKTRACE( 22, depth );
-  BACKTRACE( 23, depth );
-  BACKTRACE( 24, depth );
-  BACKTRACE( 25, depth );
-  BACKTRACE( 26, depth );
-  BACKTRACE( 27, depth );
-  BACKTRACE( 28, depth );
-  BACKTRACE( 29, depth );
-  BACKTRACE( 30, depth );
-  BACKTRACE( 31, depth );
-
- done:
-  if( addrs[0] == NULL ) DBGF( "No backtrace available" );
-  {
-    int pip_is_magic_ok_(   pip_root_t* );
-    int pip_is_version_ok_( pip_root_t* );
-    pip_root_t	*root = pip_root_;
-    FILE 	*fp_maps, *fp_out;
-    Dl_info 	info;
-    char 	*envroot, idstr[32];
-    void 	*addr;
-    int 	pipid, i, j;
-
-    if( root == NULL ) {
-      if( ( envroot = getenv( PIP_ROOT_ENV ) ) != NULL &&
-	  *envroot != '\0' ) {
-	root = (pip_root_t*) strtoll( envroot, NULL, 16 );
-	if( root == NULL ||
-	    !pip_is_magic_ok_( root ) ||
-	    !pip_is_version_ok_( root ) ) {
-	  root = NULL;
-	}
+  if( root == NULL ) {
+    if( ( envroot = getenv( PIP_ROOT_ENV ) ) != NULL &&
+	*envroot != '\0' ) {
+      root = (pip_root_t*) strtoll( envroot, NULL, 16 );
+      if( root == NULL ||
+	  !pip_is_magic_ok_( root ) ||
+	  !pip_is_version_ok_( root ) ) {
+	root = NULL;
       }
-    }
-    if( root != NULL ) {
-      pip_spin_lock( &root->lock_bt );
-    }
-    fflush( NULL );
-    if( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) != NULL &&
-	( fp_out  = fdopen( fd, "w" ) ) != NULL ) {
-      for( i=0; i<DEPTH_MAX; i++ ) {
-	if( ( addr = addrs[i] ) == NULL ) break;
-	pipid = pip_determine_pipid( root, fp_maps, addr );
-	j = 0;
-	switch( pipid ) {
-	case PIP_PIPID_ROOT:
-	  idstr[j++] = 'P';
-	  idstr[j++] = 'i';
-	  idstr[j++] = 'P';
-	  idstr[j++] = 'r';
-	  idstr[j++] = 'o';
-	  idstr[j++] = 'o';
-	  idstr[j++] = 't';
-	  idstr[j++] = ' ';
-	case PIP_PIPID_NULL:
-	  idstr[j++] = '\0';
-	  break;
-	default:
-	  sprintf( idstr, "PIPID:%d%c", pipid, ' ' );
-	}
-	if( dladdr( addr, &info ) != 0 ) {
-	  fprintf( fp_out, 
-		   "%sbacktrace[%d] %s:%s@%p\n",
-		   idstr,
-		   i,
-		   basename( info.dli_fname ),
-		   info.dli_sname,
-		   info.dli_saddr );
-	} else {
-	  fprintf( fp_out, 
-		   "%sbacktrace[%d] ????:????@%p\n",
-		   idstr,
-		   i,
-		   addr );
-	}
-      }
-      fclose( fp_maps );
-      fflush( fp_out );
-    }
-    if( root != NULL ) {
-      pip_spin_unlock( &root->lock_bt );
     }
   }
+  if( root != NULL ) pip_spin_lock( &root->lock_bt );
+  fflush( NULL );
+
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_sigaction = pip_stack_end;
+  sigact.sa_flags     = SA_RESETHAND;
+  (void) sigaction( SIGSEGV, &sigact, &sigact_old );
+
+  depth = ( depth <= 0 || depth > DEPTH_MAX ) ? DEPTH_MAX : depth;
+  if( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) != NULL &&
+      ( fp_out  = fdopen( fd, "w" ) ) != NULL ) {
+    pip_save_context( &ctx_bt );
+    if( !flag_jump ) {
+      flag_jump = 1;
+      
+      BACKTRACE(  fp_maps, fp_out, root, depth,  0 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  1 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  2 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  3 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  4 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  5 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  6 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  7 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  8 );
+      BACKTRACE(  fp_maps, fp_out, root, depth,  9 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 10 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 11 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 12 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 13 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 14 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 15 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 16 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 17 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 18 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 19 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 20 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 21 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 22 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 23 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 24 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 25 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 26 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 27 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 28 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 29 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 30 );
+      BACKTRACE(  fp_maps, fp_out, root, depth, 31 );
+    } else {
+      //fprintf( fp_out, "PBT[-] (stack bottom)\n" );
+    }
+  done:
+    fflush( fp_out );
+  }
+  if( fp_maps != NULL ) fclose( fp_maps );
+  (void) sigaction( SIGSEGV, &sigact_old, NULL );
+
+  if( root != NULL ) pip_spin_unlock( &root->lock_bt );
   RETURNV;
 }
