@@ -33,11 +33,10 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
-SRCS = abc.c
+SRCS = ../../bin/piprun.c abc.c
 
-PROGRAMS = abc def ghi xyz
+PROGRAMS = piprun abc def ghi xyz
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR)
@@ -46,6 +45,11 @@ LDLIBS += $(PIPLDLIB) -ldl
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 
 include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common
+
+piprun: ../../bin/piprun.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) -DMSG=\"abc\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
+	-fpie -pie -rdynamic $< -o $@
 
 abc: abc.c $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) -DMSG=\"abc\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \

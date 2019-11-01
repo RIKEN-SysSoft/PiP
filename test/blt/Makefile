@@ -33,9 +33,9 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
-SRCS  = pip_yield.c pip_namexp.c pip_barrier.c
-PROGRAMS  = pip_yield pip_namexp pip_barrier
+SRCS     = pip_yield.c pip_namexp.c pip_barrier.c
+PROGRAMS = pip_yield pip_namexp pip_barrier
 
 include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common

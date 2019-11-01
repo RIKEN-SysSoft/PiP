@@ -1,4 +1,3 @@
-#%include sample.list
 %include basics/task.list
 %include compat/test.list
 %include pthread/test.list

@@ -35,7 +35,7 @@ PIPLIBDIR = $(shell (cd $(top_builddir)/lib && pwd))
 LDLIBS = -L$(PIPLIBDIR) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
 
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
-	$(LDLIBS) -ldl -pthread $(PIELDFLAG)
+	$(LDLIBS) -pthread $(PIELDFLAG) 
 
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h  \
 	$(PIPINCDIR)/pip_internal.h $(PIPINCDIR)/pip_machdep.h \

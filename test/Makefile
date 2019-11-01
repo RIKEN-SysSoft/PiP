@@ -33,7 +33,6 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include ./Test.common
 
 SRCS = libnull.c
 OBJS = libnull.so
@@ -41,6 +40,7 @@ OBJS = libnull.so
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
+include ./Test.common
 
 libnull.so: libnull.c Makefile
 	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so

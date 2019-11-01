@@ -47,8 +47,6 @@ PROGRAMS = dlmopen_count ompnumthread timer \
 
 PROGRAMS_TO_INSTALL = # nothing
 
-include ../Test.common
-
 all: $(PROGRAMS)
 
 pip_mode: pip_mode.c
@@ -59,6 +57,7 @@ ompnumthread: ompnumthread.c
 	$(CC) -fopenmp -openmp -O2 $< -o$@
 
 debug:
-	CPPFLAGS+="-DDEBUG" make all;
+	CPPFLAGS+="-DDEBUG" make all
 
 include $(top_srcdir)/build/rule.mk
+include ../Test.common

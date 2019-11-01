@@ -33,13 +33,13 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
 SRCS  = fflush-ticket518.c fflush-ticket518+.c
 
 PROGRAMS  = fflush-ticket518 fflush-ticket518+
 
 include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common
 
 check: test
 

@@ -33,10 +33,10 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
 SRCS  = pip_backtrace.c
 
 PROGRAMS = pip_backtrace
 
 include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common

@@ -33,7 +33,6 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
 LDLIBS += $(PIPLDLIB) -ldl
 
@@ -48,6 +47,7 @@ LDLIBS += -lm
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common
 
 tlsvar.S : tlsvar.c
 	$(CC) -S tlsvar.c -o tlsvar.S
