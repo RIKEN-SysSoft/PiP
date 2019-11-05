@@ -365,7 +365,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     struct timespec ts;
     int	pipid, i;
 
-    DBG;
+    ENTER;
 #ifdef DEBUG
     extern void pip_pipidstr_( pip_task_internal_t *taski, char *buf );
 
@@ -401,16 +401,17 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 #endif
     for( pipid=0; pipid<pip_root_->ntasks; pipid++ ) {
       if( pip_check_pipid_( &pipid ) == 0 ) {
-	(void) pip_kill( pipid, SIGKILL );
+	(void) pip_kill( pipid, SIGTERM );
       }
     }
     ts.tv_sec  = 0;
     ts.tv_nsec = 100 * 1000;	/* 0.1 msec */
     nanosleep( &ts, NULL );
-    for( i=0; i<pip_root_->ntasks_count; i++ ) {
+    for( i=0; i<pip_root_->ntasks; i++ ) {
       (void) pip_trywait_any( NULL, NULL );
     }
     (void) pip_kill( PIP_PIPID_ROOT, SIGKILL );
+    RETURNV;
   }
   void pip_sighup_handler( void ) {
     if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
@@ -533,7 +534,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     /* deadlock */
     pip_set_signal_handler( SIGHUP,  pip_sighup_handler  );
     /* pip_abort */
-    pip_set_signal_handler( SIGTERM, pip_sigterm_handler );
+    //pip_set_signal_handler( SIGTERM, pip_sigterm_handler );
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 

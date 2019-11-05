@@ -52,12 +52,15 @@ cleanup()
 ##	esac
 ##    done;
 
-#### FIXME !! The follwoing code to cleanup will not work any more !!
-    killall -s HUP -w pip_task > /dev/null 2>&1;
-    killall -s HUP -w pip_blt  > /dev/null 2>&1;
+    killall -s HUP -w pip_task   > /dev/null 2>&1;
+    killall -s HUP -w @pip_task  > /dev/null 2>&1;
+    killall -s HUP -w pip_blt    > /dev/null 2>&1;
+    killall -s HUP -w @pip_blt   > /dev/null 2>&1;
     sleep 1
-    killall -s KILL -w pip_task > /dev/null 2>&1;
-    killall -s KILL -w pip_blt  > /dev/null 2>&1;
+    killall -s KILL -w pip_task  > /dev/null 2>&1;
+    killall -s KILL -w @pip_task > /dev/null 2>&1;
+    killall -s KILL -w pip_blt   > /dev/null 2>&1;
+    killall -s KILL -w @pip_blt  > /dev/null 2>&1;
     rm -f $sum_file;
     exit 2;
 }

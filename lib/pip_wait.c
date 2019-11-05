@@ -242,9 +242,9 @@ static int pip_find_terminated( int *pipidp ) {
     count = 0;
     for( i=sidx; i<pip_root_->ntasks; i++ ) {
       if( pip_root_->tasks[i].type != PIP_TYPE_NONE ) count ++;
+      DBGF( "PIPID:%d flag_exit:%d", i, pip_root_->tasks[i].flag_exit );
       if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
 	DBGF( "%d terminated", pip_root_->tasks[i].pipid );
-	/* terminated task found */
 	pip_root_->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
 	pip_memory_barrier();
 	*pipidp = i;
@@ -254,9 +254,9 @@ static int pip_find_terminated( int *pipidp ) {
     }
     for( i=0; i<sidx; i++ ) {
       if( pip_root_->tasks[i].type != PIP_TYPE_NONE ) count ++;
+      DBGF( "PIPID:%d flag_exit:%d", i, pip_root_->tasks[i].flag_exit );
       if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
 	DBGF( "%d terminated", pip_root_->tasks[i].pipid );
-	/* terminated task found */
 	pip_root_->tasks[i].flag_exit = PIP_EXIT_FINALIZE;
 	pip_memory_barrier();
 	*pipidp = i;
@@ -306,9 +306,8 @@ static int pip_set_sigchld_handler( sigset_t *sigset_oldp ) {
   if( sigaddset( &sigact.sa_mask, SIGCHLD ) != 0 ) RETURN( errno );
   err = pthread_sigmask( SIG_SETMASK, &sigact.sa_mask, sigset_oldp );
   if( !err ) {
-    if( sigaction( SIGCHLD, NULL, sigact_oldp ) == 0 ) {
-      sigact.sa_flags = sigact_oldp->sa_flags;
-    }
+    (void) sigaction( SIGCHLD, NULL, sigact_oldp );
+    sigact.sa_flags = SA_NOCLDSTOP;
     sigact.sa_sigaction = (void(*)()) pip_sighand_sigchld;
     if( sigaction( SIGCHLD, &sigact, NULL ) != 0 ) err = errno;
   }
@@ -360,7 +359,7 @@ static int pip_do_waitany( int flag_try, int *pipidp, int *extvalp ) {
 	err = ECHILD;
 	break;
       } else {
-	sigset_t 	sigset;
+	sigset_t sigset;
 	if( sigemptyset( &sigset ) != 0 ) {
 	  err = errno;
 	  break;

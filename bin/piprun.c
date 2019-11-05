@@ -54,7 +54,7 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifndef DEBUG
-//#define DEBUG
+#define DEBUG
 #endif
 
 #define _GNU_SOURCE
@@ -275,6 +275,7 @@ int main( int argc, char **argv ) {
 #endif
   int argc_max;
   //  int flag_dryrun = 0;
+  int pipid;
   int i, j, d;
   int extval;
   int err = 0;
@@ -412,7 +413,7 @@ int main( int argc, char **argv ) {
 #else
       d = PIP_CPUCORE_ASIS;
 #endif
-      int pipid = j++;
+      pipid = j++;
       err = pip_task_spawn( &prog, d, 0, &pipid, NULL );
       //      fprintf( stderr, "pip_task_spawn()=%d\n", err );
       if( err ) pip_abort();
@@ -422,13 +423,13 @@ int main( int argc, char **argv ) {
   extval = 0;
   for( i=0; i<ntasks; i++ ) {
     int status, ex;
-    if( ( err = pip_wait_any( NULL, &status ) ) < 0 ) break;
+    if( ( err = pip_wait_any( &pipid, &status ) ) < 0 ) break;
+    DBG;
     if( WIFEXITED( status ) ) {
       ex = WEXITSTATUS( status );
       if( ex > extval ) extval = ex;
     } else if( WIFSIGNALED( status ) ) {
-      fprintf( stderr, "Program signaled\n" );
-      pip_abort();
+      fprintf( stderr, "PIPID:%d Program signaled\n", pipid );
     }
   }
   err = extval;
