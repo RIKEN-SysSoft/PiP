@@ -279,6 +279,8 @@ typedef struct {
   struct sigaction	sigact_chain;
   /* GDB Interface */
   struct pip_gdbif_root	*gdbif_root;
+  /* for backtrace */
+  pip_spinlock_t	lock_bt; /* lock for backtrace */
   /* PiP tasks array */
   pip_task_annex_t	*annex;
   pip_task_internal_t	tasks[];

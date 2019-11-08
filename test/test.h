@@ -43,6 +43,7 @@
 #define __USE_GNU
 #include <dlfcn.h>
 #include <stdbool.h>
+
 #include <pip.h>
 #include <pip_blt.h>
 #include <pip_internal.h>
@@ -365,9 +366,7 @@ inline static void set_sigsegv_watcher( void ) {
 	     siginfo->si_pid,
 	     siginfo->si_addr,
 	     sigcode );
-    fflush( NULL );
-    fflush( NULL );
-    print_maps();
+    pip_backtrace_fd( 0, 2 );	/* fflush is called inside */
     pip_abort();
   }
   struct sigaction sigact;

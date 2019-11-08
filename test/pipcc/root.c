@@ -33,59 +33,26 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
-#include <test.h>
+#include <stdio.h>
+#include <pip.h>
 
-#define NITERS		(10)
-#define NTHREADS	(10)
+#define NTASKS	(10)
 
-static int nthreads, niters;
-#ifdef BARRIER
-static pthread_barrier_t barr;
-#endif
+int main() {
+  int pipid, ntasks, i, j, err;
+  char *argv[2] = { "./task", NULL };
 
-void *thread_main( void *argp ) {
-#ifdef BARRIER
-  CHECK( pthread_barrier_wait( &barr ),
-	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
-	 exit(EXIT_FAIL) );
-#endif
-  pthread_exit( NULL );
-}
-
-int main( int argc, char **argv ) {
-  pthread_t threads[NTHREADS];
-  int i, j;
-
-  set_sigsegv_watcher();
-
-  nthreads = 0;
-  if( argc > 1 ) {
-    nthreads = strtol( argv[1], NULL, 10 );
+  ntasks = NTASKS;
+  pip_init( &pipid, &ntasks, NULL, 0 );
+  for( i=0; i<NTASKS; i++ ) {
+    pipid = PIP_PIPID_ANY;
+    err = pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, 
+		     &pipid, NULL, NULL, NULL );
+    if( err ) break;
   }
-  nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
-  nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
-
-  niters = 0;
-  if( argc > 2 ) {
-    niters = strtol( argv[2], NULL, 10 );
+  for( j=0; j<i; j++ ) {
+    pip_wait( pipid, NULL );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
-
-#ifdef BARRIER
-  CHECK( pthread_barrier_init( &barr, NULL, nthreads ),
-	 RV,
-	 return(EXIT_FAIL) );
-#endif
-
-  for( i=0; i<niters; i++ ) {
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pthread_create( &threads[j], NULL, thread_main, NULL ),
-	     RV, return(EXIT_FAIL) );
-    }
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pthread_join( threads[j], NULL ), RV, return(EXIT_FAIL) );
-    }
-  }
-  return 0;
+  pip_fin();
+  return err;
 }

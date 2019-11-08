@@ -89,6 +89,8 @@ extern "C" {
   void pip_check_addr( char *tag, void *addr );
   double pip_gettime( void );
 
+  void pip_backtrace_fd( int depth, int fd );
+
 #ifdef __cplusplus
 }
 #endif

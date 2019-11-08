@@ -53,6 +53,7 @@ test-progs:
 	make -C test
 	make -C test/util
 	make -C test/prog
+	make -C test/pipcc
 	make -C test/basics
 	make -C test/compat
 	make -C test/pthread
@@ -63,18 +64,19 @@ test-progs:
 	make -C test/blt
 
 .PHONY: testclean
-testclean:
-	make -C test clean
-	make -C test/util clean
-	make -C test/prog clean
-	make -C test/basics clean
-	make -C test/compat clean
-	make -C test/pthread clean
-	make -C test/openmp clean
-	make -C	test/cxx clean
-	make -C test/fortran clean
-	make -C test/issues clean
-	make -C test/blt clean
+testclean: 
+	make -C test testclean
+	make -C test/util testclean
+	make -C test/prog testclean
+	make -C test/pipcc testclean
+	make -C test/basics testclean
+	make -C test/compat testclean
+	make -C test/pthread testclean
+	make -C test/openmp testclean
+	make -C	test/cxx testclean
+	make -C test/fortran testclean
+	make -C test/issues testclean
+	make -C test/blt testclean
 
 .PHONY: test
 test:

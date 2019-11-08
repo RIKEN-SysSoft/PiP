@@ -8,7 +8,7 @@ $dir/../util/pip_is_debug_build;
 #fi
 
 ntasks=$1;
-niters=100
+niters=10
 fname=seek-outin.text
 $dir/seek stdout $ntasks $niters > $fname
 rv=$?

@@ -33,7 +33,6 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
 SRCS  = fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
 	gethostname.c gethostbyname.c getaddrinfo.c \
@@ -46,6 +45,7 @@ PROGRAMS  = fork malloc ctype pip_dlopen gettimeofday \
 	get_nprocs
 
 include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common
 
 check: test
 

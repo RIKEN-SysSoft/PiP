@@ -50,12 +50,12 @@
 ### If specified, the compile (and link) is done for PiP task
 ###
 
-prefix=@prefix@
-exec_prefix=@exec_prefix@
+prefix=/home/ahori/work/PIP/install
+exec_prefix=${prefix}
 
-includedir=@includedir@
-libdir=@libdir@
-dynamic_linker=@dynamic_linker@
+includedir=${prefix}/include
+libdir=${exec_prefix}/lib
+dynamic_linker=/home/ahori/work/PIP/install/lib//ld-2.17.so
 
 : ${CC:=cc}
 

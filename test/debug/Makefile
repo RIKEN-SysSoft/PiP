@@ -28,30 +28,15 @@
 # $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-top_builddir = ..
+top_builddir = ../..
 top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pipmode printpipmode pipcheck
-PROGRAMS  = $(PROGRAM) printpipmode
-MAN1_SRCS = piprun.c pipcc.in pipmode.in printpipmode.c
+SRCS  = pip_backtrace.c
 
-CFLAGS   += -pthread
-CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
-LDLIBS   += $(PIPLDLIB) -ldl
-
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
+PROGRAMS = pip_backtrace
 
 include $(top_srcdir)/build/rule.mk
-
-piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
-
-printpipmode: printpipmode.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
-
-post-clean-hook:
-	$(RM) *.E *.log
+include $(srcdir)/../Test.common

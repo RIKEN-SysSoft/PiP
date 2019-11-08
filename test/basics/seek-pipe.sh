@@ -6,6 +6,6 @@ $dir/../util/pip_is_debug_build;
 #    exit $EXIT_UNTESTED;
 #fi
 ntasks=$1;
-niters=100
-$dir/seek stdout $1 100 | $dir/seek stdin $ntasks $niters
+niters=10
+$dir/seek stdout $1 $niters | $dir/seek stdin $ntasks $niters
 exit $?

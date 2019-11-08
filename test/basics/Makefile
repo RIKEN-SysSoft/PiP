@@ -33,7 +33,6 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
 SRCS  = pip_init.c \
 	pip_fin.c \
@@ -71,6 +70,9 @@ PROGRAMS = \
 	seek \
 	pip_kill
 
+include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common
+
 prog-noexec : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-noexec
 	chmod -x prog-noexec
@@ -83,5 +85,3 @@ prog-pie : prog.c Makefile
 
 prog-nordynamic : prog.c Makefile
 	$(CC) -g -O2 -fpie -pie prog.c -o prog-nordynamic
-
-include $(top_srcdir)/build/rule.mk

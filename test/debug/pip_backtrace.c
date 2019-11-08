@@ -33,59 +33,45 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
+/***
+    This test program is to see if the VDSO function call
+    may not cause any problem.
+ ***/
+
 //#define DEBUG
+
+#include <execinfo.h>
 #include <test.h>
 
-#define NITERS		(10)
-#define NTHREADS	(10)
+#define SZ	(10)
 
-static int nthreads, niters;
-#ifdef BARRIER
-static pthread_barrier_t barr;
-#endif
+extern void pip_backtrace_symbols_fd( int, int );
 
-void *thread_main( void *argp ) {
-#ifdef BARRIER
-  CHECK( pthread_barrier_wait( &barr ),
-	 ( RV!=PTHREAD_BARRIER_SERIAL_THREAD && RV!=0 ),
-	 exit(EXIT_FAIL) );
-#endif
-  pthread_exit( NULL );
+void bar( void ) {
+  kill( getpid(), SIGUSR1 );
+}
+
+void foo( int depth ) {
+  if( depth > 0 ) {
+    foo( depth - 1 );
+  } else {
+    bar();
+  }
+}
+
+void handler( int sig, siginfo_t *siginfo, void *context ) {
+  pip_backtrace_fd( 0, 2 );
 }
 
 int main( int argc, char **argv ) {
-  pthread_t threads[NTHREADS];
-  int i, j;
+  struct sigaction sigact;
 
-  set_sigsegv_watcher();
+  memset( (void*) &sigact, 0, sizeof( sigact ) );
+  sigact.sa_sigaction = handler;
+  sigact.sa_flags     = SA_RESETHAND;
+  sigaction( SIGUSR1, &sigact, NULL );
 
-  nthreads = 0;
-  if( argc > 1 ) {
-    nthreads = strtol( argv[1], NULL, 10 );
-  }
-  nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
-  nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
-
-  niters = 0;
-  if( argc > 2 ) {
-    niters = strtol( argv[2], NULL, 10 );
-  }
-  niters = ( niters == 0 ) ? NITERS : niters;
-
-#ifdef BARRIER
-  CHECK( pthread_barrier_init( &barr, NULL, nthreads ),
-	 RV,
-	 return(EXIT_FAIL) );
-#endif
-
-  for( i=0; i<niters; i++ ) {
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pthread_create( &threads[j], NULL, thread_main, NULL ),
-	     RV, return(EXIT_FAIL) );
-    }
-    for( j=0; j<nthreads; j++ ) {
-      CHECK( pthread_join( threads[j], NULL ), RV, return(EXIT_FAIL) );
-    }
-  }
+  //pip_init( NULL, NULL, 0, 0 );
+  foo( 5 );
   return 0;
 }

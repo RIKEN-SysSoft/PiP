@@ -11,9 +11,13 @@ install: all \
 
 clean: subdir-clean header-clean lib-clean prog-clean \
 	misc-clean post-clean-hook
-.PHONY: install
+.PHONY: clean
 
-veryclean: clean \
+testclean: \
+	subdir-testclean testclean-here post-testclean-hook
+.PHONY: testclean
+
+veryclean: clean testclean \
 	subdir-veryclean header-veryclean lib-veryclean prog-veryclean \
 	post-veryclean-hook
 .PHONY: veryclean
@@ -30,6 +34,8 @@ misc-clean:
 	@echo \
 	$(RM) *~ .nfs*; \
 	$(RM) *~ .nfs*
+	$(RM) *.E *.S
+	$(RM) \#*\# .\#*
 .PHONY: misc-clean
 
 distclean-here:
@@ -40,9 +46,18 @@ distclean-here:
 	fi
 .PHONY: distclean-here
 
+testclean-here:
+	$(RM) *.log *.log.xml
+	$(RM) test.log test.log.* test.out.*
+	$(RM) .test-sum-*.sh
+	$(RM) loop-*.log .loop-*.log
+	$(RM) seek-file.text
+.PHONY: testclean-here
+
 ### subdir rules
 
-subdir-all subdir-install subdir-clean subdir-veryclean subdir-distclean \
+subdir-all subdir-install \
+subdir-clean subdir-veryclean subdir-distclean subdir-testclean \
 subdir-doxygen:
 	@target=`expr $@ : 'subdir-\(.*\)'`; \
 	for dir in -- $(SUBDIRS); do \
@@ -78,7 +93,7 @@ subdir-doxygen:
 		fi; \
 	done
 .PHONY: subdir-all subdir-install \
-	subdir-clean subdir-veryclean subdir-distclean
+	subdir-clean subdir-veryclean subdir-distclean subdir-testclean
 
 ### header rules
 
@@ -117,6 +132,14 @@ header-distclean:
 	esac
 .PHONY: header-distclean
 
+header-testclean: 
+	$(RM) *.log *.log.xml
+	$(RM) test.log test.log.* test.out.*
+	$(RM) .test-sum-*.sh
+	$(RM) loop-*.log .loop-*.log
+	$(RM) seek-file.text
+.PHONY: header-testclean
+
 ### lib rules
 
 lib-all: $(LIBRARIES)
@@ -147,6 +170,14 @@ lib-veryclean:
 lib-distclean:
 .PHONY: lib-distclean
 
+lib-testclean: 
+	$(RM) *.log *.log.xml
+	$(RM) test.log test.log.* test.out.*
+	$(RM) .test-sum-*.sh
+	$(RM) loop-*.log .loop-*.log
+	$(RM) seek-file.text
+.PHONY: lib-testclean
+
 ### prog rules
 
 prog-all: $(PROGRAMS)
@@ -176,6 +207,14 @@ prog-veryclean:
 
 prog-distclean:
 .PHONY: prog-distclean
+
+prog-testclean: 
+	$(RM) *.log *.log.xml
+	$(RM) test.log test.log.* test.out.*
+	$(RM) .test-sum-*.sh
+	$(RM) loop-*.log .loop-*.log
+	$(RM) seek-file.text
+.PHONY: prog-testclean
 
 ### doxygen rules
 
@@ -217,5 +256,7 @@ post-install-hook:
 post-clean-hook:
 post-veryclean-hook:
 post-distclean-hook:
+post-testclean-hook:
 .PHONY: post-all-hook pre-install-hook post-install-hook
 .PHONY: post-clean-hook post-veryclean-hook post-distclean-hook
+.PHONY: post-testclean-hook

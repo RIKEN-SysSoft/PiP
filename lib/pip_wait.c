@@ -182,6 +182,7 @@ static int pip_do_wait_( int pipid, int flag_try, int *extvalp ) {
       errno = 0;
       tid = waitpid( tid, &status, options );
       if( errno != EINTR ) break;
+      if( tid > 0 && WIFSTOPPED( status ) ) continue;
     }
     pip_deadlock_dec_();
 
@@ -305,9 +306,11 @@ static int pip_set_sigchld_handler( sigset_t *sigset_oldp ) {
   if( sigaddset( &sigact.sa_mask, SIGCHLD ) != 0 ) RETURN( errno );
   err = pthread_sigmask( SIG_SETMASK, &sigact.sa_mask, sigset_oldp );
   if( !err ) {
-    sigact.sa_flags     = SA_SIGINFO;
+    if( sigaction( SIGCHLD, NULL, sigact_oldp ) == 0 ) {
+      sigact.sa_flags = sigact_oldp->sa_flags;
+    }
     sigact.sa_sigaction = (void(*)()) pip_sighand_sigchld;
-    if( sigaction( SIGCHLD, &sigact, sigact_oldp ) != 0 ) err = errno;
+    if( sigaction( SIGCHLD, &sigact, NULL ) != 0 ) err = errno;
   }
   RETURN( err );
 }

@@ -1,0 +1,164 @@
+#!/bin/sh
+
+# $RIKEN_copyright: Riken Center for Computational Sceience,
+# System Software Development Team, 2016, 2017, 2018, 2019$
+# $PIP_VERSION: Version 1.0.0$
+# $PIP_license: <Simplified BSD License>
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation
+# are those of the authors and should not be interpreted as representing
+# official policies, either expressed or implied, of the PiP project.$
+
+### \addtogroup pipcheck pipcheck
+###
+### \brief PiP binary checking program
+###
+### \section synopsis SYNOPSIS
+###
+###	\c \b pipcheck <b>pip-prog<\b> [...]
+###
+
+ldso="@dynamic_linker@"
+
+prog=$0;
+
+show_usage () {
+    echo "$0 [-r|-t|-b|-v|-h] a.out ..." > /dev/stderr;
+    echo "  -r: check if a.out can be PiP root" > /dev/stderr;
+    echo "  -t: check if a.out can be PiP task" > /dev/stderr;
+    echo "  -b: check if a.out can be PiP root and/or PiP task" > /dev/stderr;
+    echo "  -v: show reason" > /dev/stderr;
+    echo "  -h: show this message" > /dev/stderr;
+    exit 1;
+}
+
+export LANG=en_US;
+
+flag_root=false;
+flag_task=false;
+flag_both=false;
+flag_error=false;
+flag_verbose=false;
+
+show_msgs () {
+    target=$1;
+    shift;
+    for i; do
+	if [ "$i" != "" ]; then
+	    echo "$target :" $i > /dev/stderr;
+	fi
+    done
+}
+
+check () {
+    target=$1;
+    froot=true;
+    ftask=true;
+
+    reason_root="";
+    reason_task0="";
+    reason_task1="";
+
+    if [ ! -e $target ]; then
+	show_msgs "$target" "not found";
+	flag_error=true;
+	return 1;
+    fi
+    if [ ! -x $target ]; then
+	show_msgs "$target" "not an executable file";
+	flag_error=true;
+	return 1;
+    fi
+
+    if [ "$ldso" != "" ]; then
+	interp=`readelf -p .interp $target | sed -e "s/  \[     0\]  //" -e "1,2d" -e "4d"`;
+	if [ "$interp" != "$ldso" ]; then
+	    froot=false;
+	    reason_root="(root) not linked with '--dynamic-linker' option"
+	fi
+    fi
+    if ! readelf --dyn-syms $target | grep ' main' > /dev/null 2>&1; then
+	ftask=false;
+	reason_task0="(task) not linked with '-rdynamic' option"
+    fi
+    if ! readelf -h $target | grep "DYN (Shared object file)" > /dev/null 2>&1; then 
+	ftask=false;
+	reason_task1="(task) not compiled and linked with '-fPIC -pie' options"
+    fi
+
+    if $flag_root; then
+	if ! $froot; then
+	    show_msgs "$target" "cannot be PiP root";
+	    flag_error=true;
+	fi
+    elif $flag_task; then
+	if ! $ftask; then
+	    show_msgs "$target" "cannot be PiP task";
+	    flag_error=true;
+	fi
+    elif $flag_both; then
+	if ! $froot || ! $ftask; then
+	    show_msgs "$target" "can be neither PiP root nor PiP task ";
+	    flag_error=true;
+	fi
+    elif $froot && $ftask; then
+	show_msgs "$target" "Root&Task";
+    elif $froot; then
+	show_msgs "$target" "Root";
+    elif $ftask; then
+	show_msgs "$target" "Task";
+    else
+	show_msgs "$target" "not a PiP program";
+    fi
+    if $flag_verbose; then
+	if ! $froot; then
+	    show_msgs "$target" "$reason_root";
+	fi
+	if ! $ftask; then
+	    show_msgs "$target" "$reason_task0" "$reason_task1";
+	fi
+    fi
+}
+
+for i; do
+	case $i in
+	    -r|--root)    flag_root=true;;
+	    -t|--task)    flag_task=true;;
+	    -b|--both)    flag_both=true;;
+	    -v|--verbose) flag_verbose=true;;
+	    -h|--usage)   show_usage;;
+	    --ldlinux|--ldso)	  echo ${ldso}; exit 0;;
+	    -*)		  echo "Invalid option" > /dev/stderr; exit 1;;
+	    *)  	  files="${files} $i";;
+	esac
+done
+
+for f in $files; do
+    check $f;
+done
+
+if $flag_error; then
+    exit 1;
+fi
+exit 0;
