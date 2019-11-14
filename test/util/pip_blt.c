@@ -47,10 +47,10 @@ static void set_sighup_watcher( void ) {
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
-  int 	nacts, npass, ntasks, pipid;
+  int 	nacts, npass, ntasks, pipid, extval;
   char 	env_ntasks[128];
   char 	env_pipid[128];
-  int 	c, nc, i, j;
+  int 	c, nc, i, j, err;
 
   set_sigsegv_watcher();
   set_sigint_watcher();
@@ -110,16 +110,21 @@ int main( int argc, char **argv ) {
 	   return(EXIT_UNTESTED) );
     CHECK( is_taskq_empty( &queues[j]), !RV, return(EXIT_FAIL) );
   }
+  err    = 0;
+  extval = 0;
   for( i=0; i<ntasks; i++ ) {
-    int extval, status = 0;
+    int status = 0;
     CHECK( pip_wait_any( &pipid, &status ), RV, return(EXIT_FAIL) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
-      CHECK( extval, RV!=0, return(EXIT_FAIL) );
+      if( extval ) {
+	fprintf( stderr, "Task[%d] returns %d\n", i, extval );
+      }
     } else {
-      CHECK( "test program signaled", 1, return(EXIT_UNRESOLVED) );
+      extval = EXIT_UNRESOLVED;
     }
+    if( err == 0 && extval != 0 ) err = extval;
   }
   CHECK( pip_fin(), RV, return(EXIT_UNTESTED) );
-  return 0;
+  return extval;
 }

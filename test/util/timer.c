@@ -56,12 +56,14 @@ static void cleanup( void ) {
   if( pid > 0 ) {
     errno = 0;
     (void) kill( pid, SIGHUP );
+#ifdef AH
     if( errno != ESRCH && target != NULL ) {
       char sysstr[256];
       sleep( 1 );
-      sprintf( sysstr, "killall -KILL %s", target );
+      sprintf( sysstr, "killall -KILL %s > /dev/null 2>&1", target );
       system( sysstr );
     }
+#endif
   }
 }
 

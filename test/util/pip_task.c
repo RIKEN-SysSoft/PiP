@@ -71,13 +71,15 @@ int main( int argc, char **argv ) {
     CHECK( pip_wait( i, &status ), RV, return(EXIT_UNTESTED) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
+      if( extval ) {
+	fprintf( stderr, "Task[%d] returns %d\n", i, extval );
+      }
     } else {
-      CHECK( "test program signaled", 1, return(EXIT_UNRESOLVED) );
+      extval = EXIT_UNRESOLVED;
     }
     if( err == 0 && extval != 0 ) err = extval;
   }
 
   CHECK( pip_fin(), RV, return(EXIT_UNTESTED) );
-
-  return extval;
+  return err;
 }
