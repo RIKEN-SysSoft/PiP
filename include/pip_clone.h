@@ -49,9 +49,6 @@
 
 typedef struct pip_clone {
   pip_spinlock_t lock;	     /* lock */
-  int		flag_clone;  /* clone flags set by the wrapper func */
-  int		pid_clone;   /* pid os the created child task */
-  void		*stack;	     /* this is just for checking stack pointer */
 } pip_clone_t;
 
 #endif

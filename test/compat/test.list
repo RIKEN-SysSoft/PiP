@@ -22,5 +22,5 @@ timer 1 pip_task 1 ./const_destruct
 timer 1 pip_task 8 ./const_destruct
 timer 1 pip_task 1 ./get_nprocs
 timer 1 pip_task 8 ./get_nprocs
-timer 1 ./sigchld 1
-timer 1 ./sigchld 8
+#timer 1 ./sigchld 1
+#timer 1 ./sigchld 8

@@ -51,9 +51,6 @@
 
 struct pip_gdbif_root	*pip_gdbif_root = NULL;
 
-extern int  pip_count_vec_( char** );
-extern void pip_page_alloc_( size_t, void** );
-
 static int pipid_to_gdbif( int pipid ) {
   switch( pipid ) {
   case PIP_PIPID_ROOT:

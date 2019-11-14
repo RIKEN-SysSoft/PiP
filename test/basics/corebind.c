@@ -79,9 +79,8 @@ int main( int argc, char **argv ) {
       int status;
       CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
       if( WIFEXITED( status ) ) {
-	CHECK( ( extval = WEXITSTATUS( status ) ),
-	       RV,
-	       return(EXIT_FAIL) );
+	extval = WEXITSTATUS( status );
+	CHECK( ( extval != 0 ), RV, return(EXIT_FAIL) );
       } else {
 	CHECK( 1, RV, RV=0 );
 	extval = EXIT_UNRESOLVED;

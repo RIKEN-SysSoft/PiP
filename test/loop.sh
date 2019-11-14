@@ -36,8 +36,10 @@ print_usage()
 finalize()
 {
     if [ x"$TMP" != x ]; then
-	echo "Logfile: $FILE";
-	mv $TMP $FILE;
+	if [ -f $TMP ]; then
+	    echo "Logfile: $FILE";
+	    mv $TMP $FILE;
+	fi
     fi
 }
 

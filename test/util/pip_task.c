@@ -64,14 +64,13 @@ int main( int argc, char **argv ) {
 	   return(EXIT_UNTESTED) );
     CHECK( pipid, RV!=i, return(EXIT_UNTESTED) );
   }
+  err    = 0;
   extval = 0;
-  err = 0;
   for( i=0; i<ntasks; i++ ) {
     status = 0;
     CHECK( pip_wait( i, &status ), RV, return(EXIT_UNTESTED) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
-      CHECK( extval, RV!=0, RV=0 /*nop*/ );
     } else {
       CHECK( "test program signaled", 1, return(EXIT_UNRESOLVED) );
     }

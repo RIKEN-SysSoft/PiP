@@ -43,8 +43,40 @@
 #include <pip_internal.h>
 #include <pip_util.h>
 
-extern int pip_isa_coefd_( int );
-extern int pip_get_dso( int pipid, void **loaded );
+void pip_set_name_( char *symbol, char *progname, char *funcname ) {
+#ifdef PR_SET_NAME
+  { /* the following code is to set the right */
+    /* name shown by the ps and top commands  */
+    char nam[16];
+
+    if( progname == NULL ) {
+      char prg[16];
+      prctl( PR_GET_NAME, prg, 0, 0, 0 );
+      snprintf( nam, 16, "%s%s",      symbol, prg );
+    } else {
+      if( funcname == NULL ) {
+	snprintf( nam, 16, "%s%s",    symbol, progname );
+      } else {
+	snprintf( nam, 16, "%s%s@%s", symbol, progname, funcname );
+      }
+    }
+    if( !pip_is_threaded_() ) {
+#define FMT "/proc/self/task/%u/comm"
+      char fname[sizeof(FMT)+8];
+      int fd;
+
+      (void) prctl( PR_SET_NAME, nam, 0, 0, 0 );
+      sprintf( fname, FMT, (unsigned int) pip_gettid() );
+      if( ( fd = open( fname, O_RDWR ) ) >= 0 ) {
+	(void) write( fd, nam, strlen(nam) );
+	(void) close( fd );
+      }
+    } else {
+      (void) pthread_setname_np( pthread_self(), nam );
+    }
+  }
+#endif
+}
 
 int pip_check_pie( const char *path, int flag_verbose ) {
   struct stat stbuf;
@@ -164,32 +196,40 @@ pid_t pip_gettid( void ) {
   return (pid_t) syscall( (long int) SYS_gettid );
 }
 
+int pip_tgkill( int tgid, int tid, int signal ) {
+  return (int) syscall( (long int) SYS_tgkill, tgid, tid, signal );
+}
+
+int pip_tkill( int tid, int signal ) {
+  return (int) syscall( (long int) SYS_tkill, tid, signal );
+}
+
 int pip_idstr( char *buf, size_t sz ) {
-  pid_t	pid = pip_gettid();
+  pid_t	tid = pip_gettid();
   char *pre  = "<";
   char *post = ">";
   int	n = 0;
 
   if( pip_task_ == NULL ) {
-    n = snprintf( buf, sz, "%s(%d)%s", pre, pid, post );
+    n = snprintf( buf, sz, "(%d)", tid );
   } else if( PIP_ISA_ROOT( pip_task_ ) ) {
     if( PIP_IS_SUSPENDED( pip_task_ ) ) {
-      n = snprintf( buf, sz, "%sroot:(%d)%s", pre, pid, post );
+      n = snprintf( buf, sz, "%sroot:(%d)%s", pre, tid, post );
     } else {
-      n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, pid, post );
+      n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, tid, post );
     }
   } else if( PIP_ISA_TASK( pip_task_ ) ) {
     char idstr[64];
 
     pip_pipidstr_( pip_task_, idstr );
     if( PIP_IS_SUSPENDED( pip_task_ ) ) {
-      n = snprintf( buf, sz, "%stask:%s(%d)%s", pre, idstr, pid, post );
+      n = snprintf( buf, sz, "%stask:%s(%d)%s", pre, idstr, tid, post );
     } else {
-      n = snprintf( buf, sz, "%sTASK:%s(%d)%s", pre, idstr, pid, post );
+      n = snprintf( buf, sz, "%sTASK:%s(%d)%s", pre, idstr, tid, post );
     }
   } else {
     n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
-		  pre, pip_task_->type, pid, post );
+		  pre, pip_task_->type, tid, post );
   }
   return n;
 }

@@ -415,7 +415,6 @@ int main( int argc, char **argv ) {
 #endif
       pipid = j++;
       err = pip_task_spawn( &prog, d, 0, &pipid, NULL );
-      //      fprintf( stderr, "pip_task_spawn()=%d\n", err );
       if( err ) pip_abort();
     }
     nt_start += spawn->ntasks;
@@ -423,13 +422,15 @@ int main( int argc, char **argv ) {
   extval = 0;
   for( i=0; i<ntasks; i++ ) {
     int status, ex;
+    DBG;
     if( ( err = pip_wait_any( &pipid, &status ) ) < 0 ) break;
     DBG;
     if( WIFEXITED( status ) ) {
       ex = WEXITSTATUS( status );
       if( ex > extval ) extval = ex;
     } else if( WIFSIGNALED( status ) ) {
-      fprintf( stderr, "PIPID:%d Program signaled\n", pipid );
+      int sig = WTERMSIG( status );
+      fprintf( stderr, "PIPID:%d signaled (%s)\n", pipid, strsignal(sig) );
     }
   }
   err = extval;

@@ -155,8 +155,8 @@ static int test_pip_task_unset( char **argv ) {
 	   RV,
 	   return(EXIT_FAIL) );
     CHECK( pip_wait( 0, NULL ), RV, return(EXIT_FAIL) );
-    CHECK( pip_fin(), 	 	RV, return(EXIT_FAIL) );
   }
+  CHECK( pip_fin(), 	 	RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -195,8 +195,9 @@ int main( int argc, char **argv ) {
     break;
   default:
     for( i = 0; i < sizeof( tab ) / sizeof( tab[0] ); i++ ) {
-      if( strcmp( tab[i].name, test ) == 0 )
+      if( strcmp( tab[i].name, test ) == 0 ) {
 	pip_exit( tab[i].func( argv ) );
+      }
     }
     fprintf( stderr, "%s: unknown test type\n", test );
     break;

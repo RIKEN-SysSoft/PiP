@@ -33,6 +33,7 @@
   * Written by Atsushi HORI <ahori@riken.jp>
 */
 
+#include <ctype.h>
 #include <test.h>
 
 #ifdef DEBUG

@@ -186,15 +186,18 @@
 
 #define PIP_PIPID_ROOT			(PIP_MAGIC_NUM-1)
 #define PIP_PIPID_MYSELF		(PIP_MAGIC_NUM-2)
-#define PIP_PIPID_SELF			PIP_PIPID_MYSELF
 #define PIP_PIPID_ANY			(PIP_MAGIC_NUM-3)
 #define PIP_PIPID_NULL			(PIP_MAGIC_NUM-4)
+#define PIP_PIPID_SELF			PIP_PIPID_MYSELF
 
 #define PIP_NTASKS_MAX			(300)
 
 #define PIP_CPUCORE_ASIS 		(PIP_MAGIC_NUM+1)
 
 #define PIP_TASK_PASSIVE		(0x1000)
+
+#define PIP_WAIT_BLOCKING		(0)
+#define PIP_WAIT_NONBLOCKING		(1)
 
 typedef struct {
   char			*prog;

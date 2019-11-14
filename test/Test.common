@@ -32,7 +32,7 @@ CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
 CFLAGS +=  $(PIECFLAG)
 PIPLIBDIR = $(shell (cd $(top_builddir)/lib && pwd))
 
-LDLIBS = -L$(PIPLIBDIR) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
+LDLIBS = -L$(PIPLIBDIR) -L$(libdir) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
 
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
 	$(LDLIBS) -pthread $(PIELDFLAG) 

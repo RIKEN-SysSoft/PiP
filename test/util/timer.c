@@ -42,7 +42,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define DEBUG_SCALE	(5)
+#define DEBUG_SCALE	(3)
 
 extern int pip_is_debug_build( void );
 
@@ -137,7 +137,7 @@ int main( int argc, char **argv ) {
   }
 
   if( pip_test_timer_scale != NULL && isdigit(pip_test_timer_scale[0]) ) {
-    time *= atoi( pip_test_timer_scale );
+    time *= strtol( pip_test_timer_scale, NULL, 10 );
   }
   if( pip_is_debug_build() && !flag_debug ) {
     time *= DEBUG_SCALE;

@@ -149,12 +149,13 @@ extern char *__progname;
 
 #define PRINT_FLE(FSTR,ERR)			\
   if(!errno) {								\
-    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %s (%ld)\n\n",		\
-	    __progname,my_gettid(),__FILE__,__LINE__,FSTR,strerror(ERR),ERR); \
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s'\n\n",			\
+	    __progname,my_gettid(),__FILE__,__LINE__,FSTR,		\
+	    ERR,strerror(ERR));						\
   } else {								\
-    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %s (errno: %s)\n\n",		\
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s' (errno: %d:'%s')\n\n",	\
 	    __progname, my_gettid(), __FILE__,__LINE__,FSTR,		\
-	    strerror(ERR), strerror(errno) ); }
+	    (ERR), strerror(ERR), errno,  strerror(errno) ); }
 
 #ifndef DEBUG
 #define CHECK(F,C,A) \

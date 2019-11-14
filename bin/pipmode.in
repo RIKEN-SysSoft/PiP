@@ -112,7 +112,7 @@ if [[ x$pip_mode == x ]]; then
     exit 0;
 fi
 
-echo "CMD: " $cmd 
+#echo "CMD: " $cmd 
 
 export PIP_MODE=${pip_mode};
 

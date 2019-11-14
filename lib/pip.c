@@ -319,12 +319,12 @@ void pip_reset_task_struct_( pip_task_internal_t *taski ) {
   PIP_TASKQ_INIT( &taski->schedq );
   taski->type  = PIP_TYPE_NONE;
   taski->pipid = PIP_PIPID_NULL;
+  taski->annex = annex;
 
   memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
   annex->sleep_stack  = sleep_stack;
   annex->named_exptab = namexp;
   annex->tid          = -1; /* pip_gdbif_init_task_struct() refers this */
-  taski->annex        = annex;
   PIP_TASKQ_INIT(    &taski->annex->oodq );
   pip_spin_init(     &taski->annex->lock_oodq );
   pip_blocking_init( &taski->annex->sleep );
@@ -355,91 +355,104 @@ int pip_check_sync_flag_( uint32_t flags ) {
   return flags;
 }
 
+static void pip_set_signal_handler( int sig, 
+				    void(*handler)(), 
+				    struct sigaction *oldp ) {
+  struct sigaction	sigact;
+  
+  memset( &sigact, 0, sizeof( sigact ) );
+  sigact.sa_sigaction = handler;
+  ASSERT( sigemptyset( &sigact.sa_mask )    != 0 );
+  ASSERT( sigaddset( &sigact.sa_mask, sig ) != 0 );
+  ASSERT( sigaction( sig, &sigact, oldp )   != 0 );
+}
+
+static void pip_unset_signal_handler( int sig, 
+				      struct sigaction *oldp ) {
+  ASSERT( sigaction( sig, oldp, NULL ) != 0 );
+}
+
+/* signal handlers */
+
+static void pip_sigchld_handler( int sig, siginfo_t *siginfo, void *extra ) {
+  DBG;
+}
+
+static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
+  int	pipid;
+  
+  ENTER;
+  ASSERTD( pip_task_->pipid != PIP_PIPID_ROOT );
+#ifdef AH
+  int i;
+  for( i=0; i<pip_root_->ntasks; i++ ) {
+    pip_task_internal_t *taski = &pip_root_->tasks[i];
+    char *ststr = "(unknown)";
+    char idstr[64];
+    if( taski->type == PIP_TYPE_NONE ) continue;
+    if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
+      ststr = "EXITED";
+    } else {
+      if( PIP_IS_RUNNING( taski ) ) {
+	if( taski->task_sched == taski ) {
+	  ststr = "RUNNING";
+	} else if( !taski->flag_semwait ) {
+	  ststr = "running";
+	} else {
+	  ststr = "sleeping";
+	}
+      } else if( PIP_IS_SUSPENDED( taski ) ) {
+	if( taski->task_sched == taski ) {
+	  ststr = "SUSPENDED";
+	} else if( !taski->flag_semwait ) {
+	  ststr = "suspended";
+	} else {
+	  ststr = "sleeping";
+	}
+      }
+    }
+    pip_pipidstr_( taski, idstr );
+    DBGF( "%s(PID:%d) %s", idstr, taski->annex->tid, ststr );
+  }
+#endif
+  if( pip_root_->opts & PIP_MODE_PTHREAD ) {
+    (void) kill( getpid(), SIGKILL );
+  } else {
+    for( pipid=0; pipid<pip_root_->ntasks; pipid++ ) {
+      if( pip_check_pipid_( &pipid ) == 0 ) {
+	(void) pip_kill( pipid, SIGTERM );
+      }
+    }
+  }
+  RETURNV;
+}
+
+static void pip_set_sigmask( int sig ) {
+  sigset_t sigmask;
+
+  ASSERT( sigemptyset( &sigmask ) );
+  ASSERT( sigaddset(   &sigmask, sig ) );
+  ASSERT( sigprocmask( SIG_BLOCK, &sigmask, &pip_root_->old_sigmask ) );
+}
+
+static void pip_unset_sigmask( void ) {
+  ASSERT( sigprocmask( SIG_SETMASK, &pip_root_->old_sigmask, NULL ) );
+}
+
+static void pip_sighup_handler( int sig, siginfo_t *info, void *extra ) {
+  ENTER;
+  pip_err_mesg( "Hangup signal !!" );
+  fflush( NULL );
+  pip_sigterm_handler( sig, info, extra );
+  RETURNV;
+}
+
 /* API */
 
 #define PIP_CACHE_ALIGN(X) \
   ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
-  void pip_sigterm_handler( void ) {
-    struct timespec ts;
-    int	pipid, i;
-
-    ENTER;
-#ifdef DEBUG
-    extern void pip_pipidstr_( pip_task_internal_t *taski, char *buf );
-
-    for( i=0; i<pip_root_->ntasks; i++ ) {
-      pip_task_internal_t *taski = &pip_root_->tasks[i];
-      char *ststr = "(unknown)";
-      char idstr[64];
-      if( taski->type == PIP_TYPE_NONE ) continue;
-      if( pip_root_->tasks[i].flag_exit == PIP_EXITED ) {
-	ststr = "EXITED";
-      } else {
-	if( PIP_IS_RUNNING( taski ) ) {
-	  if( taski->task_sched == taski ) {
-	    ststr = "RUNNING";
-	  } else if( !taski->flag_semwait ) {
-	    ststr = "running";
-	  } else {
-	    ststr = "sleeping";
-	  }
-	} else if( PIP_IS_SUSPENDED( taski ) ) {
-	  if( taski->task_sched == taski ) {
-	    ststr = "SUSPENDED";
-	  } else if( !taski->flag_semwait ) {
-	    ststr = "suspended";
-	  } else {
-	    ststr = "sleeping";
-	  }
-	}
-      }
-      pip_pipidstr_( taski, idstr );
-      DBGF( "%s(PID:%d) %s", idstr, taski->annex->tid, ststr );
-    }
-#endif
-    for( pipid=0; pipid<pip_root_->ntasks; pipid++ ) {
-      if( pip_check_pipid_( &pipid ) == 0 ) {
-	(void) pip_kill( pipid, SIGTERM );
-      }
-    }
-    ts.tv_sec  = 0;
-    ts.tv_nsec = 100 * 1000;	/* 0.1 msec */
-    nanosleep( &ts, NULL );
-    for( i=0; i<pip_root_->ntasks; i++ ) {
-      (void) pip_trywait_any( NULL, NULL );
-    }
-    (void) pip_kill( PIP_PIPID_ROOT, SIGKILL );
-    RETURNV;
-  }
-  void pip_sighup_handler( void ) {
-    if( pip_root_->ntasks_blocking == pip_root_->ntasks_count ) {
-      pip_err_mesg( "All PiP root and tasks are blocked and deadlocked !!" );
-      fflush( NULL );
-      pip_sigterm_handler();
-    } else {
-      pip_err_mesg( "Hangup signal !!" );
-      fflush( NULL );
-      pip_sigterm_handler();
-    }
-  }
-  void pip_set_signal_handler( int sig, void(*handler)() ) {
-    struct sigaction 	sigact;
-    int err;
-
-    memset( &sigact, 0, sizeof( sigact ) );
-    ASSERT( sigemptyset( &sigact.sa_mask )    != 0 );
-    ASSERT( sigaddset( &sigact.sa_mask, sig ) != 0 );
-    err = pthread_sigmask( SIG_SETMASK, &sigact.sa_mask, NULL );
-    if( !err ) {
-      sigact.sa_sigaction = handler;
-      errno = 0;
-      (void) sigaction( sig, &sigact, NULL );
-      err = errno;
-    }
-  }
-  extern int pip_named_export_init_( pip_task_internal_t* );
   size_t	sz;
   char		*envroot = NULL;
   char		*envtask = NULL;
@@ -527,16 +540,40 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       free( pip_root_ );
       RETURN( err );
     }
+    {
+      char *sym;
+      switch( pip_root_->opts & PIP_MODE_MASK ) {
+      case PIP_MODE_PROCESS_PRELOAD:
+	sym = "R-";
+	break;
+      case PIP_MODE_PROCESS_PIPCLONE:
+	sym = "R=";
+	break;
+      case PIP_MODE_PTHREAD:
+	sym = "R|";
+	break;
+      default:
+	sym = "R?";
+	break;
+      }
+      pip_set_name_( sym, NULL, NULL );
+    }
     unsetenv( PIP_ROOT_ENV );
 
-    pip_gdbif_initialize_root_( ntasks );
-
-    /* deadlock */
-    pip_set_signal_handler( SIGHUP,  pip_sighup_handler  );
-    /* pip_abort */
-    //pip_set_signal_handler( SIGTERM, pip_sigterm_handler );
+    pip_set_sigmask( SIGCHLD );
+    pip_set_signal_handler( SIGCHLD, 
+			    pip_sigchld_handler, 
+			    &pip_root_->old_sigchld );
+    pip_set_signal_handler( SIGTERM, 
+			    pip_sigterm_handler, 
+			    &pip_root_->old_sigterm );
+    pip_set_signal_handler( SIGHUP, 
+			    pip_sighup_handler, 
+			    &pip_root_->old_sighup );
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
+
+    pip_gdbif_initialize_root_( ntasks );
 
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
     /* child task */
@@ -563,6 +600,49 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   /* root and child */
   if( pipidp != NULL ) *pipidp = pipid;
   RETURN( err );
+}
+
+int pip_fin( void ) {
+  int ntasks, i;
+
+  ENTER;
+  if( pip_root_ == NULL ) RETURN( EPERM );
+  if( pip_isa_root() ) {		/* root */
+    ntasks = pip_root_->ntasks;
+    for( i=0; i<ntasks; i++ ) {
+      pip_task_internal_t *taski = &pip_root_->tasks[i];
+      if( taski->pipid != PIP_PIPID_NULL ) {
+	if( taski->flag_exit != PIP_EXIT_WAITED) {
+	  DBGF( "%d/%d [pipid=%d (type=0x%x)] -- BUSY",
+		i, ntasks, taski->pipid, taski->type );
+	  RETURN( EBUSY );
+	}
+      }
+    }
+    pip_named_export_fin_all_();
+    /* report accumulated timer values, if set */
+    PIP_REPORT( time_load_dso  );
+    PIP_REPORT( time_load_prog );
+    PIP_REPORT( time_dlmopen   );
+
+    /* SIGCHLD */
+    pip_unset_sigmask();
+    pip_unset_signal_handler( SIGCHLD, 
+			      &pip_root_->old_sigchld );
+    /* SIGTERM */
+    pip_unset_signal_handler( SIGTERM, 
+			      &pip_root_->old_sigterm );
+    /* deadlock? */
+    pip_unset_signal_handler( SIGHUP, 
+			      &pip_root_->old_sighup );
+
+    memset( pip_root_, 0, pip_root_->size_whole );
+    /* after this point DBG(F) macros cannot be used */
+    free( pip_root_ );
+    pip_root_ = NULL;
+    pip_task_ = NULL;
+  }
+  return 0;
 }
 
 int pip_export( void *exp ) {
@@ -652,7 +732,7 @@ const char *pip_get_mode_str( void ) {
 }
 
 int pip_is_threaded_( void ) {
-  return ( pip_root_->opts & PIP_MODE_PTHREAD ) != 0 ? CLONE_THREAD : 0;
+  return pip_root_->opts & PIP_MODE_PTHREAD;
 }
 
 int pip_is_threaded( int *flagp ) {
@@ -665,9 +745,7 @@ int pip_is_threaded( int *flagp ) {
 }
 
 int pip_is_shared_fd_( void ) {
-  if( pip_root_->cloneinfo == NULL )
-    return (pip_root_->opts & PIP_MODE_PTHREAD) != 0 ? CLONE_FILES : 0;
-  return pip_root_->cloneinfo->flag_clone & CLONE_FILES;
+  return pip_is_threaded_();
 }
 
 int pip_is_shared_fd( int *flagp ) {
@@ -682,28 +760,36 @@ int pip_is_shared_fd( int *flagp ) {
 int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
   int err = ESRCH;
 
-  DBGF( "%s to PIPID:%d", strsignal(sig), taski->pipid );
-  if( taski->annex->thread != 0 && pip_is_threaded_() ) {
-    err = pthread_kill( taski->annex->thread, sig );
-  } else if( taski->annex->tid > 0 ) {
-    errno = 0;
-    (void) kill( (pid_t) taski->annex->tid, sig );
-    err = errno;
+  DBGF( "raise signal (%s) to PIPID:%d TID:%d", 
+	strsignal(sig), 
+	//pip_root_->task_root->annex->tid, 
+	getpid(),
+	taski->annex->tid );
+  if( taski->flag_exit == 0 ) {
+    if( taski->task_sched != taski &&
+	taski->schedq_len > 0 ) {
+      /* Not allowed to a signal to an inactive task */
+      err = EPERM;
+    } else if( taski->annex->tid > 0 ) {
+      errno = 0;
+#ifdef AH
+      (void) pip_tgkill( pip_root_->task_root->annex->tid,
+			 taski->annex->tid, 
+			 sig );
+#endif
+      (void) pip_tkill( taski->annex->tid, sig );
+      err= errno;
+    }
   }
   RETURN( err );
 }
 
 int pip_kill( int pipid, int signal ) {
   int err;
-  if( signal < 0 ) RETURN( EINVAL );
+  if( pip_root_ == NULL            ) RETURN( EPERM  );
+  if( signal < 0 || signal > _NSIG ) RETURN( EINVAL );
   if( ( err = pip_check_pipid_( &pipid ) ) == 0 ) {
-    pip_task_internal_t *taski = pip_get_task_( pipid );
-    if( taski->task_sched != taski &&
-	taski->schedq_len > 0 ) {
-      err = EPERM;
-    } else {
-      err = pip_raise_signal_( taski, signal );
-    }
+    err = pip_raise_signal_( pip_get_task_( pipid ), signal );
   }
   RETURN( err );
 }
@@ -792,7 +878,7 @@ void *pip_dlsym( void *handle, const char *symbol ) {
 int pip_dlclose( void *handle ) {
   int rv = 0;
   if( pip_is_initialized() ) {
-#ifdef AH
+#ifdef PIP_DLCLOSE
     DBGF( ">>" );
     pip_spin_lock( &pip_root_->lock_ldlinux );
     rv = dlclose( handle );

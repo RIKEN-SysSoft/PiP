@@ -62,6 +62,9 @@ extern "C" {
 #endif
 
   pid_t pip_gettid( void );
+  int   pip_tgkill( int, int, int );
+  int   pip_tkill( int, int );
+
   int  pip_check_pie( const char *path, int );
 
   void pip_info_fmesg( FILE *fp, const char *format, ... )

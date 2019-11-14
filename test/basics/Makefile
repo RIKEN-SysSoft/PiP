@@ -35,6 +35,11 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 SRCS  = pip_init.c \
+	pip_wait.c \
+	pip_wait.c \
+	pip_wait_any.c \
+	pip_trywait.c \
+	pip_trywait_any.c \
 	pip_fin.c \
 	pip_exit.c \
 	exit.c \
@@ -51,6 +56,10 @@ SRCS  = pip_init.c \
 
 PROGRAMS = \
 	pip_init \
+	pip_wait \
+	pip_wait_any \
+	pip_trywait \
+	pip_trywait_any \
 	pip_fin \
 	pip_exit \
 	exit \

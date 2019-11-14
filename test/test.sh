@@ -6,6 +6,9 @@ unset LANG LC_ALL
 TEST_TRAP_SIGS='1 2 14 15'
 width=80
 
+# not to print any debug messages
+export PIP_NODEBUG=1;
+
 check_command() {
     cmd=$1;
     $@ > /dev/null 2>&1;

@@ -43,6 +43,9 @@ SRCS     = $(srcdir)/pip_preload.c
 
 DEPINCS  = $(PIPINCDIR)/pip_debug.h
 
+debug:
+	CPPFLAGS+="-DDEBUG" make all;
+
 include $(top_srcdir)/build/rule.mk
 
 $(LIBRARY): $(SRCS) $(DEPINCS) Makefile

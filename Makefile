@@ -53,7 +53,7 @@ test-progs:
 	make -C test
 	make -C test/util
 	make -C test/prog
-	make -C test/pipcc
+	make -C test/scripts
 	make -C test/basics
 	make -C test/compat
 	make -C test/pthread
@@ -68,7 +68,7 @@ testclean:
 	make -C test testclean
 	make -C test/util testclean
 	make -C test/prog testclean
-	make -C test/pipcc testclean
+	make -C test/scripts testclean
 	make -C test/basics testclean
 	make -C test/compat testclean
 	make -C test/pthread testclean

@@ -199,14 +199,10 @@ static void pip_stack_wait( pip_task_internal_t *taski ) {
       pip_system_yield();
       DBGF( "WAITING  pipid:%d (count=%d*%d) ...",
 	    taski->pipid, i, PIP_BUSYWAIT_COUNT );
-#ifdef DEBUG
-      pip_task_internal_t *prev = (pip_task_internal_t*)
-	( taski->flag_stackpp - offsetof(pip_task_internal_t,flag_stackp) );
-      DBGF( "WAITING  pipid:%d (count=%d*%d, unprotect-PIPID:%d) ...",
-	    taski->pipid, i, PIP_BUSYWAIT_COUNT,
-	    prev->pipid );
-      if( i > 100 ) pip_abort();
-#endif
+      if( i > 10*1000 ) {
+	pip_err_mesg( "Stack-wait timedoout (PIPID:%d)\n", taski->pipid );
+	pip_abort();
+      }
     }
   }
  done:
@@ -243,8 +239,6 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
     taski->flag_semwait = 0;
     RETURNV;
   }
-  extern void pip_deadlock_inc_( void );
-  extern void pip_deadlock_dec_( void );
   pip_task_internal_t	*taski = (pip_task_internal_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
   int	i, j;
@@ -460,7 +454,6 @@ void pip_suspend_and_enqueue_generic_( pip_task_internal_t *taski,
 }
 
 void pip_do_exit( pip_task_internal_t *taski, int extval ) {
-  extern void pip_set_extval_( pip_task_internal_t*, int );
   pip_task_internal_t	*schedi = taski->task_sched;
   pip_task_t		*queue, *next;
   pip_task_internal_t	*nexti;
@@ -511,6 +504,7 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
       goto try_again;
     } else {
       DBG;
+      pip_stack_protect( taski, nexti );
       pip_wakeup( taski );    /* wake up (if sleeping) to terminate */
       pip_task_sched( nexti );
       NEVER_REACH_HERE;

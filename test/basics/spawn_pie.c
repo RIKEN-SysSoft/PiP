@@ -61,13 +61,13 @@ int main( int argc, char **argv ) {
   nargv[0] = "./prog-nordynamic";
   CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		      NULL, NULL, NULL ),
-	 (RV!=ENOEXEC && RV!=0), /* this test depends on system */
+	 (RV!=ENOEXEC && RV!=0), /* this MAY depend ... */
 	 return(EXIT_FAIL) );
 
   nargv[0] = "prog-pie";	/* not a path (no slash) */
   CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		       NULL, NULL, NULL ),
-	 (RV!=ESRCH && RV!=0), 	/* this test depends on system */
+	 (RV!=ESRCH && RV!=0), 	/* this MAY depend ... */
 	 return(EXIT_FAIL) );
 
   nargv[0] = "./prog-pie";	/* correct one */

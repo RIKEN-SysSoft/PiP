@@ -55,8 +55,8 @@ int main( int argc, char **argv ) {
   if( pipid == PIP_PIPID_ROOT ) {
     CHECK( pthread_mutex_init( &tc.mutex[0], NULL ), RV, return(EXIT_FAIL) );
     CHECK( pthread_mutex_init( &tc.mutex[1], NULL ), RV, return(EXIT_FAIL) );
-    CHECK( pthread_mutex_lock( &tc.mutex[0] ), RV, return(EXIT_FAIL) );
-    CHECK( pthread_mutex_lock( &tc.mutex[1] ), RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_lock( &tc.mutex[0] ),       RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_lock( &tc.mutex[1] ),       RV, return(EXIT_FAIL) );
 
     pipid = 0;
     CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
@@ -67,12 +67,10 @@ int main( int argc, char **argv ) {
     for( i=0; i<NTIMES; i++ ) {
       CHECK( pthread_mutex_lock(   &tc.mutex[0] ), RV, return(EXIT_FAIL) );
       CHECK( pthread_mutex_unlock( &tc.mutex[1] ), RV, return(EXIT_FAIL) );
-      //fprintf( stderr, "[ROOT] unlocking mutex (%d)\n", i );
     }
-    CHECK( pthread_mutex_unlock( &tc.mutex[0] ), RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_unlock( &tc.mutex[0] ),   RV, return(EXIT_FAIL) );
 
     CHECK( pip_wait( 0, NULL ), RV, return(EXIT_FAIL) );
-    CHECK( pip_fin(), RV, return(EXIT_FAIL) );
 
   } else {
     struct task_comm 	*tcp;
@@ -84,7 +82,8 @@ int main( int argc, char **argv ) {
       CHECK( pthread_mutex_unlock( &tcp->mutex[0] ), RV, return(EXIT_FAIL) );
       CHECK( pthread_mutex_lock(   &tcp->mutex[1] ), RV, return(EXIT_FAIL) );
     }
-    CHECK( pthread_mutex_unlock( &tcp->mutex[1] ), RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_unlock( &tcp->mutex[1] ),   RV, return(EXIT_FAIL) );
   }
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return 0;
 }
