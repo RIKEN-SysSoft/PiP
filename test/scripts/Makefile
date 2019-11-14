@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAMS  = pipcc pipcheck pipkillall pipmode
+##PROGRAMS  = pipcc pipcheck pipkillall pipmode
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -47,8 +47,8 @@ pipcc:
 pipcheck:
 	$(INSTALL_PROGRAM) ../../bin/pipcheck .
 
-pipkillall:
-	$(INSTALL_PROGRAM) ../../bin/pipkillall .
+##pipkillall:
+##	$(INSTALL_PROGRAM) ../../bin/pipkillall .
 
 pipmode:
 	$(INSTALL_PROGRAM) ../../bin/pipmode .
