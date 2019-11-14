@@ -85,7 +85,7 @@ include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 inf : inf.c Makefile
-	../scripts/pipcc inf.c -o inf
+	../scripts/pipcc --TEST ../.. inf.c --piptask -o inf
 
 prog-noexec : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-noexec
