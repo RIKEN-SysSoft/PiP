@@ -811,6 +811,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   /* must be called before calling dlmopen() */
   pip_gdbif_task_new_( task );	
 
+  pip_gdbif_task_new_( task );
+
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
     /* corebinding should take place before loading solibs,       */
     /* hoping anon maps would be mapped onto the closer numa node */
