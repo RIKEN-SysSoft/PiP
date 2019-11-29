@@ -798,6 +798,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     ERRJ_ERR( ENOMEM );
   }
 
+  pip_gdbif_task_new_( task );
+
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
     /* corebinding should take place before loading solibs,       */
     /* hoping anon maps would be mapped onto the closer numa node */
@@ -807,8 +809,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     (void) pip_undo_corebind( 0, coreno, &cpuset );
   }
   ERRJ_CHK(err);
-
-  pip_gdbif_task_new_( task );
 
   if( ( pip_root_->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
