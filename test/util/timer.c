@@ -54,16 +54,7 @@ static int timedout = 0;
 
 static void cleanup( void ) {
   if( pid > 0 ) {
-    errno = 0;
     (void) kill( pid, SIGHUP );
-#ifdef AH
-    if( errno != ESRCH && target != NULL ) {
-      char sysstr[256];
-      sleep( 1 );
-      sprintf( sysstr, "killall -KILL %s > /dev/null 2>&1", target );
-      system( sysstr );
-    }
-#endif
   }
 }
 
@@ -80,7 +71,7 @@ static void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
   fprintf( stderr, "Timer expired (%d sec)\n", timer_period );
   fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
   cleanup();
-  (void)ignore_alarm();
+  (void) ignore_alarm();
   //exit( EXIT_UNRESOLVED );
 }
 
@@ -145,7 +136,6 @@ int main( int argc, char **argv ) {
     time *= DEBUG_SCALE;
   }
 
-  set_timer( time );
   if( ( pid = fork() ) == 0 ) {
     //(void) setpgid( 0, 0 );
     execvp( argv[2], &argv[2] );
@@ -154,6 +144,8 @@ int main( int argc, char **argv ) {
 
   } else if( pid > 0 ) {
     pid_t rv;
+
+    set_timer( time );
     for( ;; ) {
       rv = wait( &status );
       if (rv != -1 || errno != EINTR) break;

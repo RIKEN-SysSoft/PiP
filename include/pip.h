@@ -848,11 +848,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief abort all PiP tasks and root
+   * \brief kill all PiP tasks
    *  @{
-   * \return Return true nothing
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM Not called from root
    */
-  void pip_abort( void );
+  int pip_kill_all_tasks( void );
   /** @}*/
 
   /**

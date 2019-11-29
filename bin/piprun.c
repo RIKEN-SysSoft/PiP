@@ -415,7 +415,10 @@ int main( int argc, char **argv ) {
 #endif
       pipid = j++;
       err = pip_task_spawn( &prog, d, 0, &pipid, NULL );
-      if( err ) pip_abort();
+      if( err ) {
+	(void) pip_kill_all_tasks();
+	pip_exit( 9 );
+      }
     }
     nt_start += spawn->ntasks;
   }

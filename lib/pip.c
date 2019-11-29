@@ -229,7 +229,8 @@ static int pip_check_opt_and_env( int *optsp ) {
   if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
     /* check if the __clone() systemcall wrapper exists or not */
     if( pip_cloneinfo == NULL ) {
-      pip_cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
+      pip_cloneinfo = 
+	(pip_clone_t*) pip_dlsym( RTLD_DEFAULT, "pip_clone_info");
     }
     DBGF( "cloneinfo-%p", pip_cloneinfo );
     if( pip_cloneinfo != NULL ) {
@@ -252,7 +253,7 @@ static int pip_check_opt_and_env( int *optsp ) {
   if( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) {
     if ( pip_clone_mostly_pthread_ptr == NULL )
       pip_clone_mostly_pthread_ptr =
-	dlsym( RTLD_DEFAULT, "pip_clone_mostly_pthread" );
+	pip_dlsym( RTLD_DEFAULT, "pip_clone_mostly_pthread" );
     if ( pip_clone_mostly_pthread_ptr != NULL ) {
       newmod = PIP_MODE_PROCESS_PIPCLONE;
       goto done;
@@ -355,9 +356,9 @@ int pip_check_sync_flag_( uint32_t flags ) {
   return flags;
 }
 
-static void pip_set_signal_handler( int sig, 
-				    void(*handler)(), 
-				    struct sigaction *oldp ) {
+void pip_set_signal_handler_( int sig, 
+			      void(*handler)(), 
+			      struct sigaction *oldp ) {
   struct sigaction	sigact;
   
   memset( &sigact, 0, sizeof( sigact ) );
@@ -374,13 +375,11 @@ static void pip_unset_signal_handler( int sig,
 
 /* signal handlers */
 
-static void pip_sigchld_handler( int sig, siginfo_t *siginfo, void *extra ) {
+static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {
   DBG;
 }
 
 static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
-  int	pipid;
-  
   ENTER;
   ASSERTD( pip_task_->pipid != PIP_PIPID_ROOT );
 #ifdef AH
@@ -415,15 +414,7 @@ static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
     DBGF( "%s(PID:%d) %s", idstr, taski->annex->tid, ststr );
   }
 #endif
-  if( pip_root_->opts & PIP_MODE_PTHREAD ) {
-    (void) kill( getpid(), SIGKILL );
-  } else {
-    for( pipid=0; pipid<pip_root_->ntasks; pipid++ ) {
-      if( pip_check_pipid_( &pipid ) == 0 ) {
-	(void) pip_kill( pipid, SIGTERM );
-      }
-    }
-  }
+  (void) pip_kill_all_tasks();
   RETURNV;
 }
 
@@ -544,10 +535,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       char *sym;
       switch( pip_root_->opts & PIP_MODE_MASK ) {
       case PIP_MODE_PROCESS_PRELOAD:
-	sym = "R-";
+	sym = "R:";
 	break;
       case PIP_MODE_PROCESS_PIPCLONE:
-	sym = "R=";
+	sym = "R;";
 	break;
       case PIP_MODE_PTHREAD:
 	sym = "R|";
@@ -561,16 +552,16 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     unsetenv( PIP_ROOT_ENV );
 
     pip_set_sigmask( SIGCHLD );
-    pip_set_signal_handler( SIGCHLD, 
-			    pip_sigchld_handler, 
-			    &pip_root_->old_sigchld );
-    pip_set_signal_handler( SIGTERM, 
-			    pip_sigterm_handler, 
-			    &pip_root_->old_sigterm );
-    pip_set_signal_handler( SIGHUP, 
-			    pip_sighup_handler, 
-			    &pip_root_->old_sighup );
-
+    pip_set_signal_handler_( SIGCHLD, 
+			     pip_sigchld_handler, 
+			     &pip_root_->old_sigchld );
+    pip_set_signal_handler_( SIGTERM, 
+			     pip_sigterm_handler, 
+			     &pip_root_->old_sigterm );
+    pip_set_signal_handler_( SIGHUP, 
+			     pip_sighup_handler, 
+			     &pip_root_->old_sighup );
+    
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
     pip_gdbif_initialize_root_( ntasks );
@@ -760,9 +751,9 @@ int pip_is_shared_fd( int *flagp ) {
 int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
   int err = ESRCH;
 
-  DBGF( "raise signal (%s) to PIPID:%d TID:%d", 
+  DBGF( "raise signal (%s) to PIPID:%d PID:%d TID:%d", 
 	strsignal(sig), 
-	//pip_root_->task_root->annex->tid, 
+	taski->pipid,
 	getpid(),
 	taski->annex->tid );
   if( taski->flag_exit == 0 ) {
@@ -772,13 +763,8 @@ int pip_raise_signal_( pip_task_internal_t *taski, int sig ) {
       err = EPERM;
     } else if( taski->annex->tid > 0 ) {
       errno = 0;
-#ifdef AH
-      (void) pip_tgkill( pip_root_->task_root->annex->tid,
-			 taski->annex->tid, 
-			 sig );
-#endif
       (void) pip_tkill( taski->annex->tid, sig );
-      err= errno;
+      err = errno;
     }
   }
   RETURN( err );
@@ -806,8 +792,28 @@ int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask ) {
   return( err );
 }
 
-void pip_abort( void ) {
-  pip_kill( PIP_PIPID_ROOT, SIGTERM );
+int pip_kill_all_tasks( void ) {
+  int pipid, err;
+
+  err = 0;
+  if( pip_is_initialized() ) {
+    if( !pip_isa_root() ) {
+      err = EPERM;
+    } else {
+      for( pipid=0; pipid<pip_root_->ntasks; pipid++ ) {
+	if( pip_check_pipid_( &pipid ) == 0 ) {
+	  if( pip_is_threaded_() ) {
+	    pip_task_internal_t *taski = &pip_root_->tasks[pipid];
+	    taski->annex->status = PIP_W_EXITCODE( 0, SIGTERM );
+	    (void) pip_kill( pipid, SIGQUIT );
+	  } else {
+	    (void) pip_kill( pipid, SIGKILL );
+	  }
+	}
+      }
+    }
+  }
+  return err;
 }
 
 int pip_is_debug_build( void ) {

@@ -97,6 +97,7 @@ int main( int argc, char **argv ) {
       usleep( rand() % 10000 );
       if( ( i % ntasks ) == pipid ) expp->count ++;
       CHECK( pip_barrier_wait( &expp->barr ), RV, return(EXIT_FAIL) );
+      fprintf( stderr, "%c", i/10+'0' );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );

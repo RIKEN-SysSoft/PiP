@@ -71,25 +71,19 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
   pip_spinlock_t oldval;
   int 		 retval = -1;
 
-  DBGF( "tid=%d", tid );
   while( 1 ) {
     oldval = pip_spin_trylock_wv( &pip_clone_info.lock, PIP_LOCK_OTHERWISE );
-    DBGF( "oldval=%d", oldval );
     switch( oldval ) {
     case PIP_LOCK_UNLOCKED:
       /* lock succeeded */
-      DBG;
       goto lock_ok;
     case PIP_LOCK_OTHERWISE:
       /* busy-waiting */
-      DBG;
       continue;
     default:
       if( oldval == tid ) {
-	DBG;
 	goto lock_ok; /* locked by PiP lib */
       }
-      DBG;
       break;
     }
   }
@@ -103,13 +97,11 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 
     if( pip_clone_orig == NULL ) {
       if( ( pip_clone_orig = pip_get_clone() ) == NULL ) {
-	DBGF( "!!! Original clone() NOT FOUND" );
 	errno = ENOSYS;
 	goto error;
       }
     }
     if( oldval == PIP_LOCK_UNLOCKED ) {
-      DBGF( "!!! Original clone() is called" );
       retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid);
 
 #ifdef CHECK_TLS
@@ -129,8 +121,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 #endif
 
     } else if( oldval == tid ) {
-      DBGF( "!!! PiP clone() wrapper" );
-      int oldflags = flags;
+      /* int oldflags = flags; */
 
       flags &= ~(CLONE_FS);	 /* 0x00200 */
       flags &= ~(CLONE_FILES);	 /* 0x00400 */
@@ -143,13 +134,7 @@ int __clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       flags |= SIGCHLD;
 
       errno = 0;
-      DBGF( ">>>> clone(flags: 0x%x -> 0x%x)@%p  STACK=%p, TLS=%p",
-	    oldflags, flags, fn, child_stack, tls );
       retval = pip_clone_orig( fn, child_stack, flags, args, ptid, tls, ctid );
-      DBGF( "<<<< clone()=%d (errno=%d)", retval, errno );
-
-    } else {
-      DBGF( "!!! wrpper clone() ??????" );
     }
     va_end( ap );
   }

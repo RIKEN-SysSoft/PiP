@@ -47,23 +47,7 @@ cleanup()
 {
     echo;
     echo "cleaning up ..."
-##    pslist=`ps a h o comm,pid`;
-##    for line in $pslist; do
-##	echo xxx $line;
-##	case $line in
-##	    \$*) echo yyy $p;;
-##	esac
-##    done;
-
-    killall -s HUP -w pip_task   > /dev/null 2>&1;
-    killall -s HUP -w @pip_task  > /dev/null 2>&1;
-    killall -s HUP -w pip_blt    > /dev/null 2>&1;
-    killall -s HUP -w @pip_blt   > /dev/null 2>&1;
-    sleep 1
-    killall -s KILL -w pip_task  > /dev/null 2>&1;
-    killall -s KILL -w @pip_task > /dev/null 2>&1;
-    killall -s KILL -w pip_blt   > /dev/null 2>&1;
-    killall -s KILL -w @pip_blt  > /dev/null 2>&1;
+    $dir_real/scripts/pipkillall -s KILL -v
     rm -f $sum_file;
     exit 2;
 }

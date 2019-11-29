@@ -57,21 +57,23 @@
 static void pip_wakeup( pip_task_internal_t *taski ) {
   if( taski->flag_wakeup ) return;
   taski->flag_wakeup = 1;
-  if( taski->flag_semwait ) {
+  pip_memory_barrier();
+  if( ( taski->annex->opts & PIP_SYNC_MASK ) == 0 ||
+      taski->annex->opts & PIP_SYNC_AUTO      ||
+      taski->annex->opts & PIP_SYNC_BLOCKING ) {
+    /* if blocked at sem_wait(), call sem_post() */
     DBGF( "PIPID:%d -- WAKEUP vvvvvvvvvv\n"
-	  "    schedq_len:%d  oodq_len:%d  ntakecare:%d"
-	  "  flag_semwait:%d  flag_exit:%d",
+	  "  schedq_len:%d  oodq_len:%d  ntakecare:%d"
+	  "  flag_exit:%d",
 	  taski->pipid, taski->schedq_len,
 	  (int) taski->oodq_len, (int) taski->ntakecare,
-	  taski->flag_semwait, taski->flag_exit );
-    taski->flag_semwait = 0;
-    /* not to call sem_post() more than once per blocking */
+	  taski->flag_exit );
     errno = 0;
-    sem_post( &taski->annex->sleep );
+    (void) sem_post( &taski->annex->sleep );
     ASSERT( errno );
   } else {
-    DBGF( "PIPID:%d -- WAKEUP (not sleeping)",
-	  taski->pipid );
+    DBGF( "PIPID:%d -- WAKEUP (not blocked opts:0x%x)",
+	  taski->pipid, taski->annex->opts );
   }
 }
 
@@ -201,7 +203,7 @@ static void pip_stack_wait( pip_task_internal_t *taski ) {
 	    taski->pipid, i, PIP_BUSYWAIT_COUNT );
       if( i > 10*1000 ) {
 	pip_err_mesg( "Stack-wait timedoout (PIPID:%d)\n", taski->pipid );
-	pip_abort();
+	pip_exit(9);
       }
     }
   }
@@ -223,25 +225,59 @@ static void pip_task_sched( pip_task_internal_t *taski ) {
   NEVER_REACH_HERE;
 }
 
-static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
-  void pip_block_myself( pip_task_internal_t *taski ) {
-    ENTER;
-    DBGF( "flag_wakeup:%d  flag_exit:%d",
-	  taski->flag_wakeup, taski->flag_exit );
-    pip_memory_barrier();
-    taski->flag_semwait = 1;
-    while( !taski->flag_wakeup && !taski->flag_exit ) {
-      errno = 0;
-      if( sem_wait( &taski->annex->sleep ) == 0 ) continue;
-      ASSERT( errno != EINTR );
+static void pip_do_sleep( pip_task_internal_t *taski ) {
+  int	i, j;
+
+  ENTER;
+  pip_deadlock_inc_();
+  {
+    switch( taski->annex->opts & PIP_SYNC_MASK ) {
+    case PIP_SYNC_BUSYWAIT:
+      DBGF( "PIPID:%d -- SLEEPING (busywait) zzzzzzzz", taski->pipid );
+      while( !taski->flag_wakeup ) pip_pause();
+      break;
+    case PIP_SYNC_YIELD:
+      DBGF( "PIPID:%d -- SLEEPING (yield) zzzzzzzz", taski->pipid );
+      while( !taski->flag_wakeup ) pip_system_yield();
+      break;
+    case PIP_SYNC_AUTO:
+    sync_auto:
+      DBGF( "PIPID:%d -- SLEEPING (AUTO)", taski->pipid );
+      for( j=0; j<10; j++ ) {
+	for( i=0; i<pip_root_->yield_iters; i++ ) {
+	  if( taski->flag_wakeup ) {
+	    DBGF( "PIPID:%d -- SLEEPING (blocking-busywait:%d)", taski->pipid, i );
+	    goto done;
+	  }
+	}
+	pip_system_yield();
+      }
+      /* followed by blocking wait */
+    case PIP_SYNC_BLOCKING:
+      DBGF( "PIPID:%d -- SLEEPING (blocking) zzzzzzz", taski->pipid );
+      while( !taski->flag_wakeup ) {
+	errno = 0;
+	(void) sem_wait( &taski->annex->sleep );
+	ASSERT( errno !=0 && errno != EINTR );
+      }
+      break;
+    default:
+      DBG;
+      goto sync_auto;
     }
-    pip_memory_barrier();
-    taski->flag_semwait = 0;
-    RETURNV;
+    DBGF( "PIPID:%d -- WOKEUP ^^^^^^^^", taski->pipid );
   }
+ done:
+  pip_deadlock_dec_();
+  taski->flag_wakeup = 0;
+  RETURNV;
+}
+
+static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
   pip_task_internal_t	*taski = (pip_task_internal_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
-  int	i, j;
+  pip_task_internal_t 	*nexti;
+  pip_task_t 		*next;
 
   ENTER;
   DBGF( "PIPID:%d", taski->pipid );
@@ -267,56 +303,18 @@ static void pip_sleep( intptr_t task_H, intptr_t task_L ) {
       ASSERT( pip_load_context( ctxp ) );
       NEVER_REACH_HERE;
     }
-
-    pip_deadlock_inc_();
-    {
-      switch( taski->annex->opts & PIP_SYNC_MASK ) {
-      case PIP_SYNC_AUTO:
-      default:
-	for( j=0; j<10; j++ ) {
-	  for( i=0; i<pip_root_->yield_iters; i++ ) {
-	    if( taski->flag_wakeup ) {
-	      DBGF( "PIPID:%d -- SLEEPING (blocking-busywait:%d)", taski->pipid, i );
-	      goto done;
-	    }
-	  }
-	  pip_system_yield();
-	}
-      case PIP_SYNC_BLOCKING:
-	DBGF( "PIPID:%d -- SLEEPING (blocking) zzzzzzz", taski->pipid );
-	pip_block_myself( taski );
-	break;
-      case PIP_SYNC_BUSYWAIT:
-	DBGF( "PIPID:%d -- SLEEPING (busywait) zzzzzzzz", taski->pipid );
-	while( !taski->flag_wakeup ) pip_pause();
-	break;
-      case PIP_SYNC_YIELD:
-	DBGF( "PIPID:%d -- SLEEPING (yield) zzzzzzzz", taski->pipid );
-	while( !taski->flag_wakeup ) pip_system_yield();
-	break;
-      }
-      DBGF( "PIPID:%d -- WOKEUP ^^^^^^^^", taski->pipid );
-    }
-  done:
-    pip_deadlock_dec_();
-    taski->flag_wakeup = 0;
+    pip_do_sleep( taski );
   }
-  //AH//pip_change_sched( taski, taski );
+  next = PIP_TASKQ_NEXT( &taski->schedq );
+  PIP_TASKQ_DEQ( next );
+  taski->schedq_len --;
 
-  //QUEUE_DUMP( &taski->schedq );
-  ASSERTD( taski->schedq_len == 0 );
-  ASSERTD( PIP_TASKQ_ISEMPTY( &taski->schedq ) );
-  {
-    pip_task_t *next = PIP_TASKQ_NEXT( &taski->schedq );
-    pip_task_internal_t *nexti = PIP_TASKI( next );
+  nexti = PIP_TASKI( next );
+  DBGF( "PIPID:%d(ctxp:%p) -->> PIPID:%d(CTXP:%p)",
+	taski->pipid, taski->ctx_suspend,
+	nexti->pipid, nexti->ctx_suspend );
+  pip_task_sched( nexti );
 
-    PIP_TASKQ_DEQ( next );
-    taski->schedq_len --;
-    DBGF( "PIPID:%d(ctxp:%p) -->> PIPID:%d(CTXP:%p)",
-	  taski->pipid, taski->ctx_suspend,
-	  nexti->pipid, nexti->ctx_suspend );
-    pip_task_sched( nexti );
-  }
   NEVER_REACH_HERE;
 }
 

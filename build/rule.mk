@@ -47,7 +47,7 @@ distclean-here:
 .PHONY: distclean-here
 
 testclean-here:
-	$(RM) *.log *.log.xml
+	$(RM) *.log.xml
 	$(RM) test.log test.log.* test.out.*
 	$(RM) .test-sum-*.sh
 	$(RM) loop-*.log .loop-*.log

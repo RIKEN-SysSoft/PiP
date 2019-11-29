@@ -173,9 +173,9 @@ extern char *__progname;
   } while(0)
 #endif
 
-inline static void pause_and_yield( int usec ) {
-  if( usec > 0 ) usleep( usec );
-  pip_yield( PIP_YIELD_DEFAULT );
+inline static void abend( int extval ) {
+  (void) pip_kill_all_tasks();
+  exit( extval );
 }
 
 inline static void print_maps( void ) {
@@ -184,7 +184,7 @@ inline static void print_maps( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    CHECK( write( 1, buf, sz ), RV<0, pip_abort() );
+    CHECK( write( 1, buf, sz ), RV<0, abend(EXIT_UNTESTED) );
   }
   close( fd );
 }
@@ -195,7 +195,7 @@ inline static void print_numa( void ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    CHECK( write( 1, buf, sz ), RV<0, pip_abort() );
+    CHECK( write( 1, buf, sz ), RV<0, abend(EXIT_UNTESTED) );
   }
   close( fd );
 }
@@ -271,14 +271,14 @@ inline static void set_signal_watcher( int signal ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  CHECK( sigaction( signal, &sigact, NULL ), RV, pip_abort() );
+  CHECK( sigaction( signal, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
 inline static void ignore_signal( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_handler = SIG_IGN;
-  CHECK( sigaction( signal, &sigact, NULL ), RV, pip_abort() );
+  CHECK( sigaction( signal, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
 inline static void watch_sigchld( void ) {
@@ -368,14 +368,14 @@ inline static void set_sigsegv_watcher( void ) {
 	     siginfo->si_addr,
 	     sigcode );
     pip_backtrace_fd( 0, 2 );	/* fflush is called inside */
-    pip_abort();
+    abend(EXIT_UNTESTED);
   }
   struct sigaction sigact;
 
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = sigsegv_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  CHECK( sigaction( SIGSEGV, &sigact, NULL ), RV, pip_abort() );
+  CHECK( sigaction( SIGSEGV, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
 inline static void set_sigint_watcher( void ) {
@@ -393,7 +393,7 @@ inline static void set_sigint_watcher( void ) {
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = sigint_watcher;
   sigact.sa_flags     = SA_RESETHAND;
-  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, pip_abort() );
+  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
 #define PROCFD		"/proc/self/fd"

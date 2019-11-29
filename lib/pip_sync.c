@@ -63,15 +63,15 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     err = pip_suspend_and_enqueue( qp, NULL, NULL );
 
   } else {
-    /* almost done. we must wait until all tasks are enqueued */
 #ifdef AH
-#endif
+    /* the last task. we must wait until all tasks are enqueued */
     do {
       pip_task_queue_count( qp, &c );
       pip_yield( PIP_YIELD_DEFAULT );
     } while ( c < init - 1 );
+#endif
     /* really done. dequeue all tasks in the queue and resume them */
-    //barrp->turn  = turn ^ 1;
+    barrp->turn  = turn ^ 1;
     barrp->count = init;
     pip_memory_barrier();
     c = init - 1;  /* the last one (myself) is not in the queue */
@@ -86,6 +86,53 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
   }
   RETURN( err );
 }
+
+#ifdef AHAH
+int pip_barrier_wait_( pip_barrier_t *barrp ) {
+  pip_task_queue_t *qp;
+  int init = barrp->count_init;
+  int turn = barrp->turn;
+  int n, c, err = 0;
+
+  ENTER;
+  IF_UNLIKELY( init == 1 ) RETURN( 0 );
+  qp = &barrp->queue[turn];
+  c = pip_atomic_sub_and_fetch( &barrp->count, 1 );
+  IF_LIKELY( c > 0 ) {
+    /* noy yet. enqueue the current task */
+    err = pip_suspend_and_enqueue( qp, NULL, NULL );
+
+  } else {
+    pip_task_queue_t 	queue;
+    pip_task_t		*t;
+    int 		i;
+    /* the last task. we must wait until all tasks are enqueued */
+    pip_task_queue_init( &queue, NULL );
+    c = init - 1;  /* the last one (myself) is not in the queue */
+    for( i=0; i<c; i++ ) {
+      while( 1 ) {
+	{
+	  pip_task_queue_lock( qp );
+	  t = pip_task_queue_dequeue( qp );
+	  pip_task_queue_unlock( qp );
+	}
+	if( t != NULL ) break;
+	pip_yield( PIP_YIELD_DEFAULT );
+      }
+      pip_task_queue_enqueue( &queue, t );
+    }
+    /* really done. dequeue all tasks in the queue and resume them */
+    barrp->count = init;
+    pip_memory_barrier();
+    n = PIP_TASK_ALL;			/* number of tasks to resume */
+    err = pip_dequeue_and_resume_N_( &queue, NULL, &n );
+    DBGF( "n:%d  c:%d", n, c );
+    ASSERT( n != c );
+    ASSERT( !pip_task_queue_isempty( &queue ) );
+  }
+  RETURN( err );
+}
+#endif
 
 int pip_barrier_fin_( pip_barrier_t *barrp ) {
   if( !PIP_TASKQ_ISEMPTY( (pip_task_t*) &(barrp->queue[0]) ) ||

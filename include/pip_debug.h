@@ -53,8 +53,6 @@
 
 #include <pip_util.h>
 
-extern void pip_abort( void );
-
 #define DBGSW	pip_debug_env()
 
 #define DBGBUFLEN	(256)
@@ -118,11 +116,11 @@ extern int pip_debug_env( void );
 
 #define ASSERT(X)						       \
   if(X) { EMSG(": <%s> Assertion FAILED !!!!!!\n",#X);		       \
-    pip_abort(); } else { DBGF( "(%s) -- Assertion OK", #X ); }
+    pip_exit(9); } else { DBGF( "(%s) -- Assertion OK", #X ); }
 
 #define ASSERTD(X)						       \
   if(DBGSW) { if(X) { EMSG(": <%s> Assertion FAILED !!!!!!\n",#X);       \
-    pip_abort(); } else { DBGF( ": (%s) -- Assertion OK", #X ); } }
+    pip_exit(9); } else { DBGF( ": (%s) -- Assertion OK", #X ); } }
 
 #define DO_CHECK_CTYPE
 
@@ -146,14 +144,14 @@ extern int pip_debug_env( void );
 #define ASSERTD(X)
 
 #define ASSERT(X)						       \
-  if(X) { EMSG(": '%s' Assertion FAILED !!!!!!\n",#X);  pip_abort(); }
+  if(X) { EMSG(": '%s' Assertion FAILED !!!!!!\n",#X);  pip_exit(9); }
 
 #define PIP_CHECK_CTYPE
 
 #endif
 
 #define NEVER_REACH_HERE						\
-  do { EMSG( ": Should not reach here !!!!!!\n" ); pip_abort(); } while(0)
+  do { EMSG( ": Should not reach here !!!!!!\n" ); pip_exit(9); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

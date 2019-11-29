@@ -261,26 +261,26 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   int err = 0;
 
   /* functions */
-  symp->main             = dlsym( handle, "main"                         );
+  symp->main             = pip_dlsym( handle, "main"                  );
   if( progp->funcname != NULL ) {
-    symp->start          = dlsym( handle, progp->funcname                );
+    symp->start          = pip_dlsym( handle, progp->funcname         );
   }
-  symp->ctype_init       = dlsym( handle, "__ctype_init"                 );
-  symp->libc_fflush      = dlsym( handle, "fflush"                       );
-  symp->mallopt          = dlsym( handle, "mallopt"                      );
+  symp->ctype_init       = pip_dlsym( handle, "__ctype_init"          );
+  symp->libc_fflush      = pip_dlsym( handle, "fflush"                );
+  symp->mallopt          = pip_dlsym( handle, "mallopt"               );
   /* pip_named_export_fin symbol may not be found when the task
      program is not linked with the PiP lib. (due to not calling
      any PiP functions) */
-  symp->named_export_fin = dlsym( handle, "pip_named_export_fin_"        );
+  symp->named_export_fin = pip_dlsym( handle, "pip_named_export_fin_" );
   /* glibc workaround */
-  symp->pip_set_tid      = dlsym( handle, "pip_set_pthread_tid"          );
+  symp->pip_set_tid      = pip_dlsym( handle, "pip_set_pthread_tid"   );
   //symp->pip_set_tid = NULL;
   /* variables */
-  symp->environ          = dlsym( handle, "environ"                      );
-  symp->libc_argvp       = dlsym( handle, "__libc_argv"                  );
-  symp->libc_argcp       = dlsym( handle, "__libc_argc"                  );
-  symp->prog             = dlsym( handle, "__progname"                   );
-  symp->prog_full        = dlsym( handle, "__progname_full"              );
+  symp->environ          = pip_dlsym( handle, "environ"               );
+  symp->libc_argvp       = pip_dlsym( handle, "__libc_argv"           );
+  symp->libc_argcp       = pip_dlsym( handle, "__libc_argc"           );
+  symp->prog             = pip_dlsym( handle, "__progname"            );
+  symp->prog_full        = pip_dlsym( handle, "__progname_full"       );
 
   /* check mandatory symbols */
   DBGF( "env:%p  func(%s):%p   main:%p",
@@ -527,6 +527,13 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
   NEVER_REACH_HERE;
 }
 
+static void pip_sigquit_handler( int sig, 
+				 void(*handler)(), 
+				 struct sigaction *oldp ) {
+  DBG;
+  pthread_exit( NULL );
+}
+
 static void* pip_do_spawn( void *thargs )  {
   void pip_cb_start( void *tsk ) {
     pip_task_internal_t *taski = (pip_task_internal_t*) tsk;
@@ -547,12 +554,16 @@ static void* pip_do_spawn( void *thargs )  {
   ENTER;
 
   if( pip_is_threaded_() ) {
+    void pip_set_signal_handler_( int sig, 
+				  void(*)(), 
+				  struct sigaction* );
     if( self->annex->symbols.pip_set_tid != NULL ) {
       int tid, old;
       tid = pip_gettid();
       self->annex->symbols.pip_set_tid( pthread_self(), tid , &old );
       DBGF( "TID:%d", tid );
     }
+    pip_set_signal_handler_( SIGQUIT, pip_sigquit_handler, NULL );
   }
 
 #ifdef PIP_SAVE_TLS
@@ -797,6 +808,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   } else if( ( err = pip_list_coe_fds( &args->fd_list ) ) != 0 ) {
     ERRJ_ERR( ENOMEM );
   }
+  /* must be called before calling dlmopen() */
+  pip_gdbif_task_new_( task );	
 
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
     /* corebinding should take place before loading solibs,       */
@@ -807,8 +820,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     (void) pip_undo_corebind( 0, coreno, &cpuset );
   }
   ERRJ_CHK(err);
-
-  pip_gdbif_task_new_( task );
 
   if( ( pip_root_->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
@@ -876,7 +887,9 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
       nanosleep( &ts, NULL );
       pip_system_yield();
     }
-    pip_err_mesg( "Spawning PiP task does not respond (timeout)" );
+    pip_err_mesg( "Spawning PiP task (PIPID:%d) does not respond "
+		  "(timeout)",
+		  task->pipid );
     err = ETIMEDOUT;
     goto error;
 

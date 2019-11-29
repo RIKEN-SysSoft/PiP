@@ -47,22 +47,21 @@ DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
-piprun: ../../bin/piprun.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"abc\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
+piprun: ../../bin/piprun.c $(DEPINCS) Makefile
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
 
-abc: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"abc\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
+abc: abc.c $(DEPINCS) Makefile
+	$(CC) -DMSG=\"abc\" \
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
 
-def: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"def\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
+def: abc.c $(DEPINCS) Makefile
+	$(CC) -DMSG=\"def\" \
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
 
-ghi: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"ghi\" -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
+ghi: abc.c $(DEPINCS)  Makefile
+	$(CC) -DMSG=\"ghi\" \
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
 
-xyz: abc.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -DMSG=\"xyz\" -DPIP=0 -I$(PIPINCDIR) $(PIPLDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@
+xyz: abc.c $(DEPINCS) Makefile
+	$(CC) -DMSG=\"xyz\" \
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 

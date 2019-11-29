@@ -83,6 +83,7 @@ int main( int argc, char **argv ) {
       CHECK( pip_wait(i,&status), RV!=ESRCH, return(EXIT_FAIL) );
     }
   } else {
+    CHECK( pip_wait(0,&status), RV!=EPERM, return(EXIT_FAIL) );
     if( sig > 0 ) {
       if( sig != SIGSEGV ) {
 	(void) pip_kill( PIP_PIPID_SELF, sig );
@@ -91,6 +92,7 @@ int main( int argc, char **argv ) {
 	printf( "%d", *((int*)null) );
       }
     }
+    CHECK( pip_wait(0,&status), RV!=EPERM, return(EXIT_FAIL) );
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return 0;			/* dummy */

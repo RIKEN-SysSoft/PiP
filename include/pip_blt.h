@@ -495,7 +495,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   pip_task_queue_enqueue_( (pip_task_queue_t*) (Q), (T) )
 #endif
 
-#include <pip_debug.h>
   /**
    * \brief Dequeue a task from a task queue
    *  @{

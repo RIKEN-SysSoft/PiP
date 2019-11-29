@@ -15,7 +15,7 @@ extern int pip_do_corebind( int, cpu_set_t* );
 static int get_ncpus( void ) {
   cpu_set_t cpuset;
   CHECK( sched_getaffinity( 0, sizeof(cpuset), &cpuset ),
-	 RV, exit(EXIT_UNTESTED) );
+	 RV, abend(EXIT_UNTESTED) );
   return CPU_COUNT( &cpuset );
 }
 #endif
@@ -35,14 +35,15 @@ static void set_sighup_watcher( void ) {
   void sighup_watcher( int sig, siginfo_t *info, void* extra ) {
     fprintf( stderr, "\nSIGHUP !!!!!!\n" );
     fflush( NULL );
-    pip_abort();
+    abend(EXIT_UNTESTED);
   }
   struct sigaction sigact;
 
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = sighup_watcher;
   sigact.sa_flags     = SA_RESETHAND;
-  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, pip_abort() );
+  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, 
+	 abend(EXIT_UNTESTED) );
 }
 
 int main( int argc, char **argv ) {
@@ -57,23 +58,23 @@ int main( int argc, char **argv ) {
   set_sighup_watcher();
 
   if( argc < 4 ) return EXIT_UNTESTED;
-  CHECK( access( argv[3], X_OK ),     RV, exit(EXIT_UNTESTED) );
-  CHECK( pip_check_pie( argv[3], 1 ), RV, exit(EXIT_UNTESTED) );
+  CHECK( access( argv[3], X_OK ),     RV, abend(EXIT_UNTESTED) );
+  CHECK( pip_check_pie( argv[3], 1 ), RV, abend(EXIT_UNTESTED) );
 
   nacts = strtol( argv[1], NULL, 10 );
-  CHECK( nacts,  RV<0||RV>NTASKS,  return(EXIT_UNTESTED) );
+  CHECK( nacts,  RV<0||RV>NTASKS,  abend(EXIT_UNTESTED) );
   npass = strtol( argv[2], NULL, 10 );
-  CHECK( npass,  RV<0||RV>NTASKS,  return(EXIT_UNTESTED) );
+  CHECK( npass,  RV<0||RV>NTASKS,  abend(EXIT_UNTESTED) );
   ntasks = nacts + npass;
-  CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
+  CHECK( ntasks, RV<=0||RV>NTASKS, abend(EXIT_UNTESTED) );
 
   for( i=0; i<nacts+1; i++ ) pip_task_queue_init( &queues[i], NULL );
 
-  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, abend(EXIT_FAIL) );
 
 #ifdef DO_COREBIND
   nc = get_ncpus() - 1;
-  CHECK( pip_do_corebind(0,NULL), RV, return(EXIT_UNTESTED) );
+  CHECK( pip_do_corebind(0,NULL), RV, abend(EXIT_UNTESTED) );
 #endif
 
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
@@ -88,8 +89,8 @@ int main( int argc, char **argv ) {
     CHECK( pip_blt_spawn( &prog, 0, PIP_TASK_PASSIVE, &pipid,
 			  NULL, &queues[j], NULL ),
 	   RV,
-	   return(EXIT_UNTESTED) );
-    CHECK( is_taskq_empty( &queues[j]), RV, return(EXIT_FAIL) );
+	   abend(EXIT_UNTESTED) );
+    CHECK( is_taskq_empty( &queues[j]), RV, abend(EXIT_FAIL) );
   }
   for( i=npass, j=0; i<ntasks; i++, j++ ) {
     pipid = i;
@@ -107,14 +108,14 @@ int main( int argc, char **argv ) {
     CHECK( pip_blt_spawn( &prog, c, 0, &pipid,
 			  NULL, &queues[j], NULL ),
 	   RV,
-	   return(EXIT_UNTESTED) );
-    CHECK( is_taskq_empty( &queues[j]), !RV, return(EXIT_FAIL) );
+	   abend(EXIT_UNTESTED) );
+    CHECK( is_taskq_empty( &queues[j]), !RV, abend(EXIT_FAIL) );
   }
   err    = 0;
   extval = 0;
   for( i=0; i<ntasks; i++ ) {
     int status = 0;
-    CHECK( pip_wait_any( &pipid, &status ), RV, return(EXIT_FAIL) );
+    CHECK( pip_wait_any( &pipid, &status ), RV, abend(EXIT_FAIL) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
       if( extval ) {
@@ -125,6 +126,6 @@ int main( int argc, char **argv ) {
     }
     if( err == 0 && extval != 0 ) err = extval;
   }
-  CHECK( pip_fin(), RV, return(EXIT_UNTESTED) );
+  CHECK( pip_fin(), RV, abend(EXIT_UNTESTED) );
   return extval;
 }

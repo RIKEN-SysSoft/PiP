@@ -42,6 +42,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <sys/wait.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <signal.h>
@@ -123,12 +124,11 @@ typedef struct pip_task_internal {
 	int16_t			pipid;	    /* PiP ID */
 	uint16_t		schedq_len; /* length of schedq */
 	volatile uint16_t	oodq_len; /* indictaes ood task is added */
-	pip_stack_protect_t	flag_stackp; /* stack protection (ctxsw) */
 	volatile uint8_t	type; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
 	volatile char		state; /* BLT state */
+	pip_stack_protect_t	flag_stackp; /* stack protection (ctxsw) */
 	volatile uint8_t	flag_exit; /* if this task is terminated */
 	volatile uint8_t	flag_wakeup; /* flag to wakeup */
-	volatile uint8_t	flag_semwait; /* if sem_wait() is called */
       };
       struct pip_task_annex	*annex;
     };
@@ -304,6 +304,13 @@ extern void pip_set_thread_id( pthread_t th, int );
 
 #define IF_LIKELY(C)		if( pip_likely( C ) )
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
+
+
+#ifndef __W_EXITCODE
+#define __W_EXITCODE(retval,signal)	( (retval) << 8 | (signal) )
+#endif
+
+#define PIP_W_EXITCODE(X,S)	__W_EXITCODE(X,S)
 
 extern pip_root_t		*pip_root_;
 extern pip_task_internal_t	*pip_task_;

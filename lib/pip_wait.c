@@ -35,8 +35,6 @@
 
 #define _GNU_SOURCE
 
-#include <sys/wait.h>
-
 //#define PIP_DEADLOCK_WARN
 
 #include <pip.h>
@@ -109,10 +107,6 @@ void pip_deadlock_dec_( void ) {
 #endif
 }
 
-#ifndef __W_EXITCODE
-#define __W_EXITCODE(retval,signal)	( (retval) << 8 | (signal) )
-#endif
-
 void pip_set_extval_( pip_task_internal_t *taski, int extval ) {
   ENTER;
   if( !taski->flag_exit ) {
@@ -120,7 +114,9 @@ void pip_set_extval_( pip_task_internal_t *taski, int extval ) {
     /* mark myself as exited */
     DBGF( "PIPID:%d[%d] extval:%d",
 	  taski->pipid, taski->task_sched->pipid, extval );
-    taski->annex->status = __W_EXITCODE( extval, 0 );
+    if( taski->annex->status == 0 ) {
+      taski->annex->status = PIP_W_EXITCODE( extval, 0 );
+    }
     pip_gdbif_exit_( taski, extval );
     pip_memory_barrier();
     pip_gdbif_hook_after_( taski );
@@ -136,7 +132,9 @@ static void pip_set_status_( pip_task_internal_t *taski, int status ) {
     /* mark myself as exited */
     DBGF( "PIPID:%d[%d] status:0x%x",
 	  taski->pipid, taski->task_sched->pipid, status );
-    taski->annex->status = status;
+    if( taski->annex->status == 0 ) {
+      taski->annex->status = status;
+    }
     pip_gdbif_exit_( taski, status );
     pip_memory_barrier();
     pip_gdbif_hook_after_( taski );
