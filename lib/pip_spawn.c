@@ -837,6 +837,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
     err = pip_clone_mostly_pthread_ptr( (pthread_t*) &task->annex->thread,
 					flags,
+					coreno == PIP_CPUCORE_ASIS ? - 1 :
 					coreno,
 					stack_size,
 					(void*(*)(void*)) pip_do_spawn,
