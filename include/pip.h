@@ -924,24 +924,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-  int    pip_idstr( char *buf, size_t sz );
 
 #ifdef __cplusplus
 }
 #endif
-
-#ifdef PIP_INTERNAL_FUNCS
-#include <pip_internal.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
-  /* the following functions deeply depends on PiP execution mode */
-  char  *pip_type_str( void );
-  int    pip_get_thread( int pipid, pthread_t *threadp );
-#ifdef __cplusplus
-}
-#endif
-#endif /* PIP_INTERNAL_FUNCS */
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

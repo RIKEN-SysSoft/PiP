@@ -47,11 +47,13 @@
 extern "C" {
 #endif
 
-void *pip_dlopen( const char *filename, int flag );
-void *pip_dlmopen( Lmid_t lmid, const char *path, int flag );
-int   pip_dlinfo(  void *handle, int request, void *info );
-void *pip_dlsym(   void *handle, const char *symbol );
-int   pip_dlclose( void *handle );
+  /* locked dl* functions */
+  void *pip_dlopen( const char *filename, int flag );
+  void *pip_dlmopen( Lmid_t lmid, const char *path, int flag );
+  int   pip_dlinfo( void *handle, int request, void *info );
+  void *pip_dlsym( void *handle, const char *symbol );
+  int   pip_dladdr( void *addr, Dl_info *info );
+  int   pip_dlclose( void *handle );
 
 #ifdef __cplusplus
 }

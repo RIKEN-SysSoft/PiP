@@ -260,7 +260,6 @@ static int pip_named_import_( int pipid,
   pip_named_exptab_t 	*namexp;
   pip_namexp_entry_t 	*entry;
   pip_namexp_list_t  	*head;
-  pip_namexp_wait_t	wait;
   pip_namexp_wait_t	*waitp;
   pip_list_t		*list, *next;
   pip_hash_t 		hash;
@@ -285,17 +284,23 @@ static int pip_named_import_( int pipid,
     if( ( entry = pip_find_namexp( head, hash, name ) ) != NULL ) {
       if( entry->flag_exported ) { /* exported already */
 	address = entry->address;
-      } else {
-	/* already queried, but not yet exported */
+      } else {		   /* already queried, but not yet exported */
 	if( flag_nblk ) {
 	  err = EAGAIN;
 	} else {
-	  PIP_LIST_ADD( &entry->list_wait, (pip_list_t*) &wait );
+	  pip_namexp_wait_t	wait;
+	  
+	  memset( &wait, 0, sizeof(wait) );
+	  PIP_LIST_INIT( &wait.list );
+
+	  PIP_LIST_ADD( &entry->list_wait, &wait.list );
+	  DBG;
 	  pip_suspend_and_enqueue_nolock_( &entry->queue_others,
 					   pip_unlock_hashtab,
 					   (void*) head );
 	  /* now, it is exported */
 	  /* note that the lock is unlocked !! */
+	  DBG;
 	  err     = wait.err;
 	  address = wait.address;
 	  DBGF( "address:%p  err:%d", address, err );
@@ -327,12 +332,14 @@ static int pip_named_import_( int pipid,
 	    address = entry->address;
 	  }
 	  DBGF( "address:%p", address );
+
 	  PIP_LIST_FOREACH_SAFE( &entry->list_wait, list, next ) {
+	    PIP_LIST_DEL( list );
 	    waitp = (pip_namexp_wait_t*) list;
 	    waitp->err     = err;
 	    waitp->address = address;
 	  }
-	  pip_memory_barrier();
+
 	  n = PIP_TASK_ALL;
 	  err = pip_dequeue_and_resume_N_nolock_(&entry->queue_others,NULL,&n);
 

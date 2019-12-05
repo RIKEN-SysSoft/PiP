@@ -309,7 +309,7 @@ static int pip_nonblocking_waitany( void ) {
   static int		start = 0;
   int			id, pipid = PIP_PIPID_NULL;
 
-  ENTER;
+  DBG;
   pip_spin_lock( &pip_root_->lock_tasks );
   /*** start lock region ***/
   for( id=start; id<pip_root_->ntasks; id++ ) {
@@ -337,13 +337,13 @@ static int pip_nonblocking_waitany( void ) {
     pipid = PIP_PIPID_ANY;
   }
  success:
-  RETURN( pipid );
+  return( pipid );
 }
 
 static int pip_blocking_waitany( void ) {
   int	pipid;
 
-  ENTER;
+  DBG;
   while( 1 ) {
     sigset_t	sigset;
     pipid = pip_nonblocking_waitany();
@@ -357,7 +357,7 @@ static int pip_blocking_waitany( void ) {
     (void) sigsuspend( &sigset ); /* always returns EINTR */
     DBG;
   }
-  RETURN( pipid );
+  return( pipid );
 }
 
 int pip_wait( int pipid, int *statusp ) {

@@ -35,9 +35,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pipmode printpipmode pipcheck
+PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pipmode printpipmode pipcheck pipman
 PROGRAMS  = $(PROGRAM) printpipmode
-MAN1_SRCS = piprun.c pipcc.in pipmode.in printpipmode.c
+MAN1_SRCS = piprun.c pipcc.in pipmode.in printpipmode.c pipman
 
 CFLAGS   += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"

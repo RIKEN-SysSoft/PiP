@@ -47,7 +47,7 @@ cleanup()
 {
     echo;
     echo "cleaning up ..."
-    $dir_real/scripts/pipkillall -s KILL -v
+    $dir_real/../bin/pips -s KILL -v
     rm -f $sum_file;
     exit 2;
 }

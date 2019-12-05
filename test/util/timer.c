@@ -46,15 +46,19 @@
 
 extern int pip_is_debug_build( void );
 
-static pid_t pid = 0;
-static char *prog = NULL;
-static char *target = NULL;
+static pid_t pid        = 0;
+static char *prog       = NULL;
+static char *target     = NULL;
 static int timer_period = 0;
-static int timedout = 0;
+static int timedout     = 0;
 
 static void cleanup( void ) {
   if( pid > 0 ) {
+    system( PIPS " -s HUP -v" );
     (void) kill( pid, SIGHUP );
+    usleep( 100 * 1000 );
+    system( PIPS " -s KILL > /dev/nunll 2>&1" );
+    (void) kill( pid, SIGKILL );
   }
 }
 
@@ -69,7 +73,6 @@ static void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
   timedout = 1;
   /* XXX - the followings are NOT async-signal-safe */
   fprintf( stderr, "Timer expired (%d sec)\n", timer_period );
-  fprintf( stderr, "deliver SIGHUP : pid:%d\n", (int) pid );
   cleanup();
   (void) ignore_alarm();
   //exit( EXIT_UNRESOLVED );
@@ -137,7 +140,6 @@ int main( int argc, char **argv ) {
   }
 
   if( ( pid = fork() ) == 0 ) {
-    //(void) setpgid( 0, 0 );
     execvp( argv[2], &argv[2] );
     fprintf( stderr, "[%s] execvp(): %d\n", prog, errno );
     exit( EXIT_UNTESTED );
@@ -150,6 +152,7 @@ int main( int argc, char **argv ) {
       rv = wait( &status );
       if (rv != -1 || errno != EINTR) break;
     }
+    pid = 0;
     if (rv == -1) {
       fprintf( stderr, "'%s' failed to wait: %s\n", target, strerror(errno) );
     } else if( WIFEXITED( status ) ) {

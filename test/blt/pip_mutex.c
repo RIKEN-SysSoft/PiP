@@ -33,27 +33,50 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#include <stdio.h>
-#include <pip.h>
+#define DEBUG
+#include <test.h>
 
-#define NTASKS	(10)
+#define NITERS		(100)
 
-int main() {
-  int pipid, ntasks, i, j, err;
-  char *argv[2] = { "./task", NULL };
+int main( int argc, char **argv ) {
+  pip_mutex_t 	mutex, *mutexp;
+  int 		ntasks, pipid;
+  int 		niters = 0, i;
+  volatile int	count, *countp;
 
-  err = 0;
-  ntasks = NTASKS;
-  pip_init( &pipid, &ntasks, NULL, 0 );
-  for( i=0; i<NTASKS; i++ ) {
-    pipid = PIP_PIPID_ANY;
-    err = pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, 
-		     &pipid, NULL, NULL, NULL );
-    if( err ) break;
+  set_sigsegv_watcher();
+
+  if( argc > 1 ) {
+    niters = strtol( argv[1], NULL, 10 );
   }
-  for( j=0; j<i; j++ ) {
-    pip_wait( pipid, NULL );
+  niters = ( niters == 0 ) ? NITERS : niters;
+
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ),		     RV, return(EXIT_FAIL) );
+  if( pipid == 0 ) {
+    mutexp = &mutex;
+    CHECK( pip_mutex_init( mutexp ), 		    	     RV, return(EXIT_FAIL) );
+    CHECK( pip_named_export( (void*) mutexp, "MUTEX" ),      RV, return(EXIT_FAIL) );
+    count = 0;
+    countp = &count;
+    CHECK( pip_named_export( (void*) countp, "COUNT" ),      RV, return(EXIT_FAIL) );
+  } else {
+    mutexp = NULL;
+    CHECK( pip_named_import( 0, (void**) &mutexp, "MUTEX" ), RV, return(EXIT_FAIL) );
+    CHECK( mutexp==NULL,				     RV, return(EXIT_FAIL) );
+    countp = NULL;
+    CHECK( pip_named_import( 0, (void**) &countp, "COUNT" ), RV, return(EXIT_FAIL) );
+    CHECK( countp==NULL,			             RV, return(EXIT_FAIL) );
   }
-  pip_fin();
-  return err;
+  for( i=0; i<niters; i++ ) {
+    CHECK( pip_mutex_lock( mutexp ),   RV, return(EXIT_FAIL) );
+    DBGF( "\ncountp:%d\n", *countp );
+    *countp ++;
+    CHECK( pip_mutex_unlock( mutexp ), RV, return(EXIT_FAIL) );
+  }
+  if( pipid == 0 ) {
+    DBGF( "\ncount:%d\n", count );
+    CHECK( count!=ntasks*niters,       RV, return(EXIT_FAIL) );
+  }
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  return 0;
 }

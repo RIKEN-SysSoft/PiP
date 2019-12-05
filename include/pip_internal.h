@@ -162,7 +162,7 @@ typedef struct {
   /* Unused functions */
   free_t		free;	      /* to override free() - EXPERIMENTAL*/
   glibc_init_t		glibc_init;   /* only in patched Glibc */
-  /* variables */
+  /* glibc variables */
   char			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
   char			**prog;
@@ -210,6 +210,7 @@ typedef struct pip_task_annex {
   volatile pid_t		tid; /* TID in process mode at beginning */
   volatile pthread_t		thread;	/* thread */
   void				*loaded; /* loaded DSO handle */
+  struct pip_root		*task_root;
   /* spawn info */
   pip_spawn_args_t		args;	 /* arguments for a PiP task */
   pip_symbols_t			symbols; /* symbols */
@@ -221,6 +222,7 @@ typedef struct pip_task_annex {
   pip_task_internal_t		**pip_task_p;
 
   /* GDB interface */
+  void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
 
 } pip_task_annex_t;
@@ -252,7 +254,7 @@ typedef struct pip_task_annex {
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
-typedef struct {
+typedef struct pip_root {
   /* sanity check info */
   char			magic[PIP_MAGIC_WLEN];
   unsigned int		version;
@@ -326,6 +328,12 @@ extern int  pip_check_sync_flag_( uint32_t );
 
 extern int  pip_dlclose( void* );
 
+extern void pip_suspend_and_enqueue_generic_( pip_task_internal_t*,
+					      pip_task_queue_t*,
+					      int,
+					      pip_enqueue_callback_t,
+					      void* );
+
 extern void pip_named_export_init_( pip_task_internal_t* );
 extern void pip_named_export_fin_all_( void );
 
@@ -342,6 +350,7 @@ extern void pip_pipidstr_( pip_task_internal_t *taski, char *buf );
 extern void pip_page_alloc_( size_t, void** );
 extern int  pip_count_vec_( char** );
 extern int  pip_get_dso( int pipid, void **loaded );
+extern int  pip_idstr( char *buf, size_t sz );
 
 inline static int pip_is_alive_( pip_task_internal_t *taski ) {
   return taski->pipid != PIP_TYPE_NONE && !taski->flag_exit;

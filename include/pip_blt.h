@@ -43,6 +43,7 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <pip.h>
+#include <pip_debug.h>
 
 #define PIP_SYNC_AUTO			(0x0001)
 #define PIP_SYNC_BUSYWAIT		(0x0002)
@@ -81,9 +82,7 @@ typedef struct pip_queue {
 
 #ifdef DEBUG
 #define PIP_TASKQ_CHECK(Q)					\
-  do { if( PIP_TASKQ_NEXT(Q) != PIP_TASKQ_PREV(Q) )		\
-      fprintf( stderr, "Queue:%p is wrong !!!!\n", (Q) );	\
-  } while(0)
+  ASSERTD( PIP_TASKQ_NEXT(Q) != PIP_TASKQ_PREV(Q) )
 #else
 #define PIP_TASKQ_CHECK(Q)
 #endif
@@ -189,15 +188,13 @@ typedef struct pip_task_queue_methods {
 
 typedef struct pip_mutex {
   pip_atomic_t			lock;
-  uint32_t			flags;
   pip_task_queue_t		queue; /* this must be placed at the end */
 } pip_mutex_t;
 
 typedef struct pip_barrier {
   pip_atomic_t			count_init;
   pip_atomic_t			count;
-  volatile int			turn;
-  pip_task_queue_t		queue[2]; /* this must be placed at the end */
+  pip_task_queue_t		queue; /* this must be placed at the end */
 } pip_barrier_t;
 
 #define PIP_QUEUE_TYPEDEF(N,B)	    \
@@ -423,7 +420,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    *  @{
    * \param[in] queue A task queue
    *
-   * \return Returns true if there is no tasks to schedule.
+   * \return Returns true if there is no tasks to in the queue
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_isempty( pip_task_queue_t *queue );

@@ -53,7 +53,9 @@
 
 #include <pip_util.h>
 
-#define DBGSW	pip_debug_env()
+extern int  pip_idstr( char *buf, size_t sz );
+
+#define DBGSW		pip_debug_env()
 
 #define DBGBUFLEN	(256)
 #define DBGTAGLEN	(32)

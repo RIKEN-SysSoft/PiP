@@ -1,12 +1,14 @@
 #!/bin/sh
 
+dir=`dirname $0`
+dir_real=`cd $dir && pwd`
+
 cmdline="$0 $@";
 cmd=`basename $0`;
 ext=0;
 TMP=''
 
-prt_ext()
-{
+prt_ext() {
     exit=$1
     if [ $quiet -eq 0 ]; then
 	echo;
@@ -24,8 +26,7 @@ prt_ext()
     fi
 }
 
-print_usage()
-{
+print_usage() {
     echo >&2 "Usage: $cmd [-n <NITER>] [-t <SEC>] [-q] [<test_prog> ...]";
     echo >&2 "    -n <NITER>: Number of iterations";
     echo >&2 "    -t <SEC>: Duration limit of one loop [seconds]";
@@ -33,8 +34,9 @@ print_usage()
     exit 2;
 }
 
-finalize()
-{
+finalize() {
+    $dir_real/scripts/pipkillall -l;
+    $dir_real/scripts/pipkillall -s KILL > /dev/null 2>&1;
     if [ x"$TMP" != x ]; then
 	if [ -f $TMP ]; then
 	    echo "Logfile: $FILE";
@@ -43,16 +45,14 @@ finalize()
     fi
 }
 
-sigsegv()
-{
+sigsegv() {
     echo;
     echo "SIGEGV";
     finalize;
     exit 127;
 }
 
-control_c()
-{
+control_c() {
     echo;
     finalize;
     exit 4;

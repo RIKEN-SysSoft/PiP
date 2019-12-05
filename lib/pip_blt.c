@@ -136,30 +136,6 @@ static void pip_takein_ood_task( pip_task_internal_t *schedi ) {
   pip_spin_unlock( &annex->lock_oodq );
 }
 
-#ifdef AH
-static void pip_stack_protect_myself( pip_task_internal_t *taski ) {
-  /* the stack must be protected until its stack is being switched */
-  DBGF( "protect PIPID:%d released by myself", taski->pipid );
-  ASSERTD( taski->flag_stackpp != NULL );
-  taski->flag_stackp  = 1;
-  taski->flag_stackpp = &taski->flag_stackp;
-  pip_memory_barrier();
-}
-
-static void pip_stack_unprotect_myself( pip_task_internal_t *taski ) {
-  /* this must be called when the stack is switched */
-  DBGF( "UNprotect PIPID:%d by myself", taski->pipid );
-#ifdef DEBUG
-  if( !taski->flag_stackp ) DBGF( "ALREADY UN-protected" );
-#endif
-  ASSERTD( taski->flag_stackpp == NULL );
-  ASSERTD( taski->flag_stackpp != &taski->flag_stackp );
-  taski->flag_stackp  = 0;
-  taski->flag_stackpp = NULL;
-  pip_memory_barrier();
-}
-#endif
-
 static void pip_stack_protect( pip_task_internal_t *taski,
 			       pip_task_internal_t *nexti ) {
   /* so that new task can reset the flag */
@@ -240,6 +216,7 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
       DBGF( "PIPID:%d -- SLEEPING (yield) zzzzzzzz", taski->pipid );
       while( !taski->flag_wakeup ) pip_system_yield();
       break;
+    case 0:
     case PIP_SYNC_AUTO:
     sync_auto:
       DBGF( "PIPID:%d -- SLEEPING (AUTO)", taski->pipid );
@@ -327,13 +304,15 @@ static void pip_block_task( pip_task_internal_t *taski ) {
   DBGF( "PIPID:%d", taski->pipid );
   /* creating new context to switch stack */
   ASSERT( pip_save_context( &ctx ) );
+  DBGF( "Stack:%p (0x%lx)", taski->annex->sleep_stack, pip_root_->stack_size_sleep);
+  memset( taski->annex->sleep_stack, 0, pip_root_->stack_size_sleep );
   stk = &(ctx.ctx.uc_stack);
   stk->ss_sp    = taski->annex->sleep_stack;
   stk->ss_size  = pip_root_->stack_size_sleep;
   stk->ss_flags = 0;
   args_H = ( ((intptr_t) taski) >> 32 ) & PIP_MASK32;
   args_L = (  (intptr_t) taski)         & PIP_MASK32;
-  pip_make_context( &ctx, pip_sleep, 4, args_H, args_L );
+  pip_make_context( &ctx, pip_sleep, 2, args_H, args_L );
   /* no need of saving/restoring TLS */
   ASSERT( pip_load_context( &ctx ) );
   NEVER_REACH_HERE;
@@ -424,13 +403,10 @@ void pip_suspend_and_enqueue_generic_( pip_task_internal_t *taski,
   if( !flag_jump ) {
     flag_jump = 1;
     if( nexti != NULL ) {
-      /* the next scheduled task will unprotect the stack */
-      if( queue != NULL ) {
-	/* before enqueue, the stack must be protected */
-	pip_stack_protect( taski, nexti );
-	pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
-      }
       /* context-switch to the next task */
+      pip_stack_protect( taski, nexti );
+      /* before enqueue, the stack must be protected */
+      pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
       DBGF( "PIPID:%d(ctxp:%p) -->> PIPID:%d(CTXP:%p)",
 	    taski->pipid, taski->ctx_suspend,
 	    nexti->pipid, nexti->ctx_suspend );
@@ -438,11 +414,9 @@ void pip_suspend_and_enqueue_generic_( pip_task_internal_t *taski,
 
     } else {
       /* if there is no task to schedule next, block scheduling task */
-      if( queue != NULL ) {
-	/* before enqueue, the stack must be protected */
-	pip_stack_protect( taski, schedi );
-	pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
-      }
+      pip_stack_protect( taski, schedi );
+      /* before enqueue, the stack must be protected */
+      pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
       pip_block_task( schedi );
     }
     NEVER_REACH_HERE;
@@ -499,6 +473,7 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
 	pip_task_sched( nexti );
 	NEVER_REACH_HERE;
       }
+      pip_stack_unprotect( schedi );
       goto try_again;
     } else {
       DBG;
@@ -509,7 +484,11 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
     }
   } else if( taski != schedi ) {
     /* queue is empty and nothing to schedule */
+    pip_stack_protect( taski, schedi );
     pip_wakeup( taski );    /* wake up (if sleeping) to terminate */
+    /* FIXME!! */
+    /* when taski is resumed the current stack is gone and resulting segv */
+    /* we should wait for something.... */
   }
   /* task terminates. the sched is blocked since it has noting to do */
   pip_block_task( schedi );

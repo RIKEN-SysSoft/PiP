@@ -1,0 +1,205 @@
+#!/bin/sh
+
+# $RIKEN_copyright: Riken Center for Computational Sceience,
+# System Software Development Team, 2016, 2017, 2018, 2019$
+# $PIP_VERSION: Version 1.0.0$
+# $PIP_license: <Simplified BSD License>
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation
+# are those of the authors and should not be interpreted as representing
+# official policies, either expressed or implied, of the PiP project.$
+
+### \addtogroup pips pips
+###
+### \brief List or kill running PiP tasks
+###
+### \section synopsis SYNOPSIS
+###
+###	\c \b pips [<b>options<\b>] [<b>pip-command<\b> ...]
+###
+### \section options OPTIONS
+###
+### The following options are avilable. If none of them specified, then
+### this sends TERM signal to all running PiP tasks including PiP root.
+###
+### \subsection signal -s \b SIGNAL
+### Send the specified signal to the specified PiP tasks
+###
+### \subsection kill -k
+### same as \b -s \b TERM
+###
+### \subsection list -l 
+### List (ps command) running PiP tasks specified. This is the default action.
+###
+### \subsection list-long --list
+### same as \b -l
+###
+### \subsection top -t
+### Show running PiP tasks specified by using the top command. 
+### Due to the top command limitation, only 20 PiP tasks will be shown.
+###
+### \subsection top-long --top
+### same as \b -t
+###
+
+isa_pip_program() {
+    prefixes="R- R: R; R| 0: 1: 2: 3: 4: 5: 6: 7: 8: 9:";
+    if [ $# == 3 ]; then
+	for prefix in $prefixes; do
+	    if [ "$prefix$1" == "$2" ]; then
+		return 0;
+	    fi
+	done
+    else
+	for prefix in $prefixes; do
+	    case $1 in
+		$prefix*) return 0;;
+	    esac
+	done
+    fi
+    return 1;
+}
+
+decompose_psout() {
+    while [ $# -ne 0 ]; do
+	cmd=$1;
+	cmd=`printf "%14.14s" "$cmd"`;
+	shift;
+	pid=$1;
+	if [ "$pid" == '<defunct>' ]; then
+	    shift;
+	else 
+	    if isa_pip_program $cmd $pipcmd; then
+		pids="$pid $pids";
+	    fi
+	fi
+	shift;
+    done
+}
+
+top_pids() {
+    case $# in
+	1) new_pids=$1; echo iiii;;
+	*) c=0;
+	    for pid in $@; do 
+		eval "((c = c + 1 ))";
+		if [ $c -gt 19 ]; then
+		    break;
+		fi
+		new_pids="$pid $new_pids" ;
+	    done;
+    esac
+    new_pids=`echo $new_pids | tr ' ' ','`;
+    echo $new_pids;
+}
+
+print_usage() {
+    echo >&2 "Usage: `basename $cmd` OPTION [pip_cmd ...]";
+    echo >&2 "    -s SIGNAL    : kill signal (TERM)"
+    echo >&2 "    -k|--kill    : same as '-s TERM'"
+    echo >&2 "    -l|--list    : list PiP tasks (default action)"
+    echo >&2 "    -t|--top     : top command on PiP tasks"
+    echo >&2 "    -u|--help    : display usage"
+    echo >&2 "    -v|--verbose : show killing processes"
+    exit 2;
+}
+
+cmd=$0;
+user=`whoami`;
+
+flag_list=false;
+flag_top=false;
+flag_verbose=false;
+
+# parse command line option
+while	
+case $1 in
+    -*) true;;
+    *) false;;
+esac
+do
+    case $1 in -s|--signal)	shift; signal=$1;;  esac
+    case $1 in -k|--kill)	shift; signal=TERM;;  esac
+    case $1 in -l|--list)	flag_list=true;;    esac
+    case $1 in -t|--top)	flag_top=true;;    esac
+    case $1 in -v|--verbose)	flag_verbose=true;; esac
+    case $1 in -u|--help)	print_usage;; esac
+    shift
+done
+
+pipcmds=$@
+if [ "x$pipcmds" == x ]; then
+    ps=`ps -no-headers -u $user --format '%c %p'`
+    decompose_psout $ps;
+else
+    for pipcmd in $pipcmds; do
+	ps=`ps -no-headers -u $user --format '%c %p' | grep $pipcmd | grep -v grep`
+	decompose_psout $ps;
+    done
+fi
+
+pids=`echo "$pids" | tr ' ' '\n' | sort -u | tr '\n' ' '`;
+pids=`echo "$pids" | sed -e 's/[ \t]*$//'`;
+
+extval=0;
+
+if [ "x$pids" == x ]; then
+    if [ "x$pipcmds" == x ]; then
+	echo "no PiP task found";
+    else
+	echo "$pipcmds: no PiP task found";
+    fi
+    extval=1;
+else
+    if [ "x$signal" != x ]; then
+	if $flag_verbose; then
+	    for pid in $pids; do
+		echo -n "kill -s $signal $pid -- ";
+		psmsg=`ps h -L -o 'state,comm,command' $pid`;
+		kill -s $signal $pid > /dev/null 2>&1;
+		if [ $? == 0 ]; then
+		    echo "$psmsg";
+		else
+		    echo "no such PiP task";
+		fi
+	    done
+	else
+	    for pid in $pids; do
+		kill -s $signal $pid > /dev/null 2>&1;
+		if [ $? != 0 ]; then
+		    echo "kill $signal $pid -- no such PiP task";
+		fi
+	    done
+	fi
+    elif $flag_top; then
+	tpids=`top_pids $pids`;
+	top -p$tpids;
+	extval=$?;
+    else
+	ps -L -o "pid,ppid,pgid,rss,%cpu,%mem,state,comm,command=ARGS" $pids;
+	extval=$?;
+    fi
+fi
+
+exit $extval;

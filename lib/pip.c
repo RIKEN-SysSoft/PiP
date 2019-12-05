@@ -433,6 +433,7 @@ static void pip_unset_sigmask( void ) {
 static void pip_sighup_handler( int sig, siginfo_t *info, void *extra ) {
   ENTER;
   pip_err_mesg( "Hangup signal !!" );
+  pip_backtrace_fd( 0, 1 );
   fflush( NULL );
   pip_sigterm_handler( sig, info, extra );
   RETURNV;
@@ -597,7 +598,7 @@ int pip_fin( void ) {
   int ntasks, i;
 
   ENTER;
-  if( pip_root_ == NULL ) RETURN( EPERM );
+  if( pip_task_ == NULL ) RETURN( EPERM );
   if( pip_isa_root() ) {		/* root */
     ntasks = pip_root_->ntasks;
     for( i=0; i<ntasks; i++ ) {
@@ -824,6 +825,8 @@ int pip_is_debug_build( void ) {
 #endif
 }
 
+/* locked dl* functions */
+
 void *pip_dlopen( const char *filename, int flag ) {
   void *handle;
   if( pip_is_initialized() ) {
@@ -843,7 +846,9 @@ void *pip_dlmopen( Lmid_t lmid, const char *path, int flag ) {
   if( pip_is_initialized() ) {
     DBGF( ">>" );
     pip_spin_lock( &pip_root_->lock_ldlinux );
+    DBGF( ">>>>" );
     PIP_ACCUM( time_dlmopen, ( handle = dlmopen( lmid, path, flag ) ) == NULL );
+    DBGF( "<<<<" );
     pip_spin_unlock( &pip_root_->lock_ldlinux );
     DBGF( "<<" );
   } else {
@@ -879,6 +884,20 @@ void *pip_dlsym( void *handle, const char *symbol ) {
     addr = dlsym( handle, symbol );
   }
   return addr;
+}
+
+int pip_dladdr( void *addr, Dl_info *info ) {
+  int rv;
+  if( pip_is_initialized() ) {
+    DBGF( ">>" );
+    pip_spin_lock( &pip_root_->lock_ldlinux );
+    rv = dladdr( addr, info );
+    pip_spin_unlock( &pip_root_->lock_ldlinux );
+    DBGF( "<<" );
+  } else {
+    rv = dladdr( addr, info );
+  }
+  return rv;
 }
 
 int pip_dlclose( void *handle ) {

@@ -43,8 +43,6 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
-//#define DEBUG
-
 #include <sys/prctl.h>
 #include <time.h>
 #include <malloc.h> 		/* M_MMAP_THRESHOLD and M_TRIM_THRESHOLD  */
@@ -403,9 +401,8 @@ static int pip_glibc_init( pip_symbols_t *symbols,
   if( symbols->environ != NULL ) {
     *symbols->environ = args->envv;	/* setting environment vars */
   }
-
-  /* heap is not safe to use */
 #ifndef PIP_NO_MALLOPT
+  /* heap (using brk or sbrk) is not safe in PiP */
   if( symbols->mallopt != NULL ) {
 #ifdef M_MMAP_THRESHOLD
     if( symbols->mallopt( M_MMAP_THRESHOLD, 1 ) == 1 ) {
@@ -481,9 +478,12 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
   int 	argc, i;
   int	err, extval;
 
+  /* we need lock on ldlinux. supposedly glibc does someting */
+  pip_spin_lock( &pip_root_->lock_ldlinux );
   argc = pip_glibc_init( &self->annex->symbols,
 			 args,
 			 self->annex->loaded );
+  pip_spin_unlock( &pip_root_->lock_ldlinux );
 
   if( self->annex->hook_before != NULL &&
       ( err = self->annex->hook_before( hook_arg ) ) != 0 ) {
@@ -540,6 +540,8 @@ static void* pip_do_spawn( void *thargs )  {
     /* let root proc know the task is running (or enqueued) */
     taski->annex->tid    = pip_gettid();
     taski->annex->thread = pthread_self();
+    pip_memory_barrier();
+    pip_spin_unlock( &taski->annex->task_root->lock_ldlinux );
   }
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
@@ -606,11 +608,6 @@ static void* pip_do_spawn( void *thargs )  {
   if( !flag_jump ) {
     flag_jump = 1;
     if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
-      void pip_suspend_and_enqueue_generic_( pip_task_internal_t*,
-					     pip_task_queue_t*,
-					     int,
-					     pip_enqueue_callback_t,
-					     void* );
       /* suspend myself */
       PIP_SUSPEND( self );
       pip_suspend_and_enqueue_generic_( self,
@@ -761,7 +758,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   task->type        = PIP_TYPE_TASK;
   task->task_sched  = task;
   task->ntakecare   = 1;
-  task->annex->opts = opts;
+  task->annex->opts      = opts;
+  task->annex->task_root = pip_root_;
   if( hookp != NULL ) {
     task->annex->hook_before = hookp->before;
     task->annex->hook_after  = hookp->after;
@@ -811,8 +809,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   /* must be called before calling dlmopen() */
   pip_gdbif_task_new_( task );	
 
-  pip_gdbif_task_new_( task );
-
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
     /* corebinding should take place before loading solibs,       */
     /* hoping anon maps would be mapped onto the closer numa node */
@@ -835,6 +831,9 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
       SIGCHLD;
     pid_t pid;
 
+    /* we need lock on ldlinux. supposedly glibc does someting */
+    /* before calling main function */
+    pip_spin_lock( &pip_root_->lock_ldlinux );
     err = pip_clone_mostly_pthread_ptr( (pthread_t*) &task->annex->thread,
 					flags,
 					coreno,
@@ -842,6 +841,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 					(void*(*)(void*)) pip_do_spawn,
 					args,
 					&pid );
+    if( err ) pip_spin_unlock( &pip_root_->lock_ldlinux );
+
     DBGF( "pip_clone_mostly_pthread_ptr()=%d", err );
 
   } else {
@@ -865,10 +866,14 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 	pip_spin_lock_wv( &clone_info->lock, tid );
       }
       {
+	/* we need lock on ldlinux. supposedly glibc does someting */
+	/* before calling main function */
+	pip_spin_lock( &pip_root_->lock_ldlinux );
 	err = pthread_create( &thr,
 			      &attr,
 			      (void*(*)(void*)) pip_do_spawn,
 			      (void*) args );
+	if( err ) pip_spin_unlock( &pip_root_->lock_ldlinux );
 	DBGF( "pthread_create()=%d", errno );
       }
       /* unlock is done in the wrapper function */
@@ -877,17 +882,21 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( err == 0 ) {
     struct timespec ts;
     int i;
-
+    /* wait until task starts running or       */
+    /* task is enqueued if to be suspended  */
     ts.tv_sec  = 0;
-    ts.tv_nsec = 100 * 1000;	/* 0.1 msec */
-
-    for( i=0; i<100; i++ ) {
-      /* wait until task starts running or       */
-      /* task is enqueued if to be suspended  */
-      if( task->annex->tid    >  0 &&
-	  task->annex->thread != 0 ) goto done;
+    ts.tv_nsec = 100 * 1000;	/* 100 usec */
+    for( i=0; i<100; i++ ) {	/* 10 msec */
+      if( pip_spin_trylock( &pip_root_->lock_ldlinux ) ) {
+	pip_spin_unlock( &pip_root_->lock_ldlinux );
+	for( ; i<100; i++ ) {	/* 10 msec */
+	  if( task->annex->tid    >  0 &&
+	      task->annex->thread != 0 ) goto done;
+	  nanosleep( &ts, NULL );
+	}
+	break;
+      }
       nanosleep( &ts, NULL );
-      pip_system_yield();
     }
     pip_err_mesg( "Spawning PiP task (PIPID:%d) does not respond "
 		  "(timeout)",

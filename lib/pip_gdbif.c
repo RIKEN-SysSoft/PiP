@@ -34,15 +34,12 @@
  * Atsushi HORI <ahori@riken.jp>, 2018, 2019
  */
 
-#define _GNU_SOURCE
-
-#include <dlfcn.h>
+#include <pip_dlfcn.h>
 #include <elf.h>
 
 #ifdef DEBUG
-//#undef DEBUG
+#undef DEBUG
 #endif
-//#define DEBUG
 
 #include <pip_internal.h>
 #include <pip_machdep.h>
@@ -78,15 +75,24 @@ void pip_gdbif_load_( pip_task_internal_t *task ) {
   ENTER;
 
   if( gdbif_task != NULL ) {
+    void *faddr = NULL;
+
     gdbif_task->handle = task->annex->loaded;
 
-    if( !dladdr( task->annex->symbols.main, &dli ) ) {
-      pip_warn_mesg( "dladdr(%s) failure"
-		     " - PIP-gdb won't work with this PiP task %d",
-		     task->annex->args.prog, task->pipid );
-      gdbif_task->load_address = NULL;
-    } else {
-      gdbif_task->load_address = dli.dli_fbase;
+    if( task->annex->symbols.main != NULL ) {
+      faddr = task->annex->symbols.main;
+    } else if( task->annex->symbols.start != NULL ) {
+      faddr = task->annex->symbols.start;
+    }
+    gdbif_task->load_address = NULL;
+    if( faddr != NULL ) {
+      if( !pip_dladdr( faddr, &dli ) ) {
+	pip_warn_mesg( "dladdr(%s) failure"
+		       " - PIP-gdb won't work with this PiP task %d",
+		       task->annex->args.prog, task->pipid );
+      } else {
+	gdbif_task->load_address = dli.dli_fbase;
+      }
     }
 
     /* dli.dli_fname is same with task->args.prog and may be a relative path */

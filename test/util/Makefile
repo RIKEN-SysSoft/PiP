@@ -35,7 +35,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 CWD = $(shell pwd)
-CFLAGS += -DCWD=\"$(CWD)\"
+CFLAGS += -DCWD=\"$(CWD)\" -DPIPS=\"$(CWD)/../../bin/pips\"
 
 SRCS	= dlmopen_count.c ompnumthread.c timer.c \
 	pip_mode.c pip_is_debug_build.c \

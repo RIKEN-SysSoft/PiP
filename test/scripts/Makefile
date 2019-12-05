@@ -34,23 +34,20 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAMS  = pipcc pipcheck pipkillall pipmode
+PROGRAMS  = pipcc pipcheck pipmode
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
-pipcc: ../../bin/pipcc
+pipcc: ../../bin/pipcc Makefile
 	$(INSTALL_PROGRAM) ../../bin/pipcc .
 
-pipcheck: ../../bin/pipcheck
+pipcheck: ../../bin/pipcheck Makefile
 	$(INSTALL_PROGRAM) ../../bin/pipcheck .
 
-pipkillall: ../../bin/pipkillall
-	$(INSTALL_PROGRAM) ../../bin/pipkillall .
-
-pipmode: ../../bin/pipmode
+pipmode: ../../bin/pipmode Makefile
 	$(INSTALL_PROGRAM) ../../bin/pipmode .
 
 post-clean-hook:

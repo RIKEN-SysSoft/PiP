@@ -41,62 +41,19 @@
 int pip_barrier_init_( pip_barrier_t *barrp, int n ) {
   if( barrp == NULL || n < 1 ) RETURN( EINVAL );
   memset( (void*) barrp, 0, sizeof(pip_barrier_t) );
-  pip_task_queue_init( &barrp->queue[0], NULL );
-  pip_task_queue_init( &barrp->queue[1], NULL );
+  pip_task_queue_init( &barrp->queue, NULL );
   barrp->count      = n;
   barrp->count_init = n;
   RETURN( 0 );
 }
 
 int pip_barrier_wait_( pip_barrier_t *barrp ) {
-  pip_task_queue_t *qp;
+  pip_task_queue_t *qp = &barrp->queue;
   int init = barrp->count_init;
-  int turn = barrp->turn;
   int n, c, err = 0;
 
   ENTER;
   IF_UNLIKELY( init == 1 ) RETURN( 0 );
-  qp = &barrp->queue[turn];
-  c = pip_atomic_sub_and_fetch( &barrp->count, 1 );
-  IF_LIKELY( c > 0 ) {
-    /* noy yet. enqueue the current task */
-    err = pip_suspend_and_enqueue( qp, NULL, NULL );
-
-  } else {
-#ifdef AH
-    /* the last task. we must wait until all tasks are enqueued */
-    do {
-      pip_task_queue_count( qp, &c );
-      pip_yield( PIP_YIELD_DEFAULT );
-    } while ( c < init - 1 );
-#endif
-    /* really done. dequeue all tasks in the queue and resume them */
-    barrp->turn  = turn ^ 1;
-    barrp->count = init;
-    pip_memory_barrier();
-    c = init - 1;  /* the last one (myself) is not in the queue */
-    /* do not call with PIP_TASK_ALL because resumed */
-    /* task(s) might be enqueued for the next round  */
-    do {
-      n = c;			/* number of tasks to resume */
-      err = pip_dequeue_and_resume_N_( qp, NULL, &n );
-      if( err ) break;
-      c -= n;
-    } while( c > 0 );
-  }
-  RETURN( err );
-}
-
-#ifdef AHAH
-int pip_barrier_wait_( pip_barrier_t *barrp ) {
-  pip_task_queue_t *qp;
-  int init = barrp->count_init;
-  int turn = barrp->turn;
-  int n, c, err = 0;
-
-  ENTER;
-  IF_UNLIKELY( init == 1 ) RETURN( 0 );
-  qp = &barrp->queue[turn];
   c = pip_atomic_sub_and_fetch( &barrp->count, 1 );
   IF_LIKELY( c > 0 ) {
     /* noy yet. enqueue the current task */
@@ -111,13 +68,12 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     c = init - 1;  /* the last one (myself) is not in the queue */
     for( i=0; i<c; i++ ) {
       while( 1 ) {
-	{
-	  pip_task_queue_lock( qp );
-	  t = pip_task_queue_dequeue( qp );
-	  pip_task_queue_unlock( qp );
-	}
+	pip_task_queue_lock( qp );
+	t = pip_task_queue_dequeue( qp );
+	pip_task_queue_unlock( qp );
+
 	if( t != NULL ) break;
-	pip_yield( PIP_YIELD_DEFAULT );
+	(void) pip_yield( PIP_YIELD_DEFAULT );
       }
       pip_task_queue_enqueue( &queue, t );
     }
@@ -127,17 +83,15 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     n = PIP_TASK_ALL;			/* number of tasks to resume */
     err = pip_dequeue_and_resume_N_( &queue, NULL, &n );
     DBGF( "n:%d  c:%d", n, c );
-    ASSERT( n != c );
-    ASSERT( !pip_task_queue_isempty( &queue ) );
+    ASSERTD( n != c );
+    ASSERTD( !pip_task_queue_isempty( &queue ) );
   }
   RETURN( err );
 }
-#endif
 
 int pip_barrier_fin_( pip_barrier_t *barrp ) {
-  if( !PIP_TASKQ_ISEMPTY( (pip_task_t*) &(barrp->queue[0]) ) ||
-      !PIP_TASKQ_ISEMPTY( (pip_task_t*) &(barrp->queue[1]) ) ) {
-    RETURN( EBUSY );
+  if( !PIP_TASKQ_ISEMPTY( (pip_task_t*) &barrp->queue ) ) {
+
   }
   RETURN( 0 );
 }
@@ -153,7 +107,7 @@ int pip_mutex_init_( pip_mutex_t *mutex ) {
 int pip_mutex_lock_( pip_mutex_t *mutex ) {
   int err = 0;
   ENTER;
-  if( pip_comp2_and_swap( &mutex->lock, 0, 1 ) ) {
+  if( !pip_comp_and_swap( &mutex->lock, 0, 1 ) ) {
     /* already locked by someone */
     err = pip_suspend_and_enqueue( &mutex->queue, NULL, NULL );
   }
@@ -167,13 +121,15 @@ int pip_mutex_unlock_( pip_mutex_t *mutex ) {
   /* resume the first one in the queue */
   if( err == ENOENT ) {	    /* if the queue is empty, simply unlock */
     mutex->lock = 0;
-    RETURN( 0 );
+    err = 0;
   }
   RETURN( err );
 }
 
 int pip_mutex_fin_( pip_mutex_t *mutex ) {
   ENTER;
-  if( !PIP_TASKQ_ISEMPTY( (pip_task_t*) &mutex->queue ) ) RETURN( EBUSY );
+  if( !pip_task_queue_isempty( (pip_task_t*) &mutex->queue ) ) {
+    RETURN( EBUSY );
+  }
   RETURN( 0 );
 }

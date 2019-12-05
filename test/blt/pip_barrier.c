@@ -45,7 +45,9 @@ int main( int argc, char **argv ) {
     if( ( i % ntasks ) == pipid ) (*countp) ++;
     CHECK( pip_barrier_wait( barrp ), 			       RV, return(EXIT_FAIL) );
   }
-
+  if( pipid == 0 ) {
+    CHECK( count==niters,   				      !RV, return(EXIT_FAIL) );
+  }
   CHECK( pip_fin(), 					       RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }
