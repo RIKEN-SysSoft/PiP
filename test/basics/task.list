@@ -40,7 +40,6 @@ timer 5 ./seek-outin.sh 1
 timer 10 ./seek-file.sh  4
 timer 10 ./seek-pipe.sh  4
 timer 10 ./seek-outin.sh 4
-#
 timer 5 ./pip_barrier  1  10
 timer 10 ./pip_barrier 8  10
 timer 5 ./pip_barrier2 1  10

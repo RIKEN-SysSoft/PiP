@@ -272,36 +272,31 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 }
 
 static int pip_check_task( pip_task_internal_t *taski ) {
-  if(0){
-      struct timespec sp;
-      sp.tv_sec  = 0;
-      sp.tv_nsec = 500*1000*1000;
-      nanosleep( &sp, NULL );
-    }
+  ENTER;
   if( taski->flag_exit == PIP_EXIT_WAITED ) {
-    return 1;
+    RETURN( 1 );
   } else if( taski->annex->tid    == 0 ||
 	     taski->annex->thread == 0 ) {
     /* not yet (empty slot) or terminated already */
-    return 0;
+    RETURN( 0 );
   } else if( taski->type != PIP_TYPE_NONE ) {
     if( pip_is_threaded_() ) {
       if( taski->annex->flag_sigchld ) {
 	/* if sigchld is really raised, then blocking wait */
 	taski->annex->flag_sigchld = 0;
 	if( pip_wait_syscall( taski, 1 ) == 0 ) {
-	  return 1;
+	  RETURN( 1 );
 	}
       } else if( pip_wait_syscall( taski, 0 ) == 0 ) {
-	return 1;
+	RETURN( 1 );
       }
     } else {			/* process mode */
       if( pip_wait_syscall( taski, 0 ) == 0 ) {
-	return 1;
+	RETURN( 1 );
       }
     }
   }
-  return 0;
+  RETURN( 0 );
 }
 
 static int pip_nonblocking_waitany( void ) {
@@ -342,27 +337,22 @@ static int pip_nonblocking_waitany( void ) {
 
 static int pip_blocking_waitany( void ) {
   int	pipid;
-
   DBG;
   while( 1 ) {
     sigset_t	sigset;
     pipid = pip_nonblocking_waitany();
     DBGF( "pip_nonblocking_waitany() = %d", pipid );
-    if( pipid >= 0              ) break;
-    if( pipid == PIP_PIPID_ANY  ) break;
     if( pipid != PIP_PIPID_NULL ) break;
 
     ASSERT( sigemptyset( &sigset ) );
-    DBG;
     (void) sigsuspend( &sigset ); /* always returns EINTR */
-    DBG;
   }
   return( pipid );
 }
 
 int pip_wait( int pipid, int *statusp ) {
   pip_task_internal_t	*taski;
-  int 			id, err;
+  int 			err = 0;
 
   ENTER;
   if( !pip_isa_root() )                           RETURN( EPERM   );
@@ -376,21 +366,17 @@ int pip_wait( int pipid, int *statusp ) {
     err = ESRCH;
   } else {
     while( 1 ) {
-      id = pip_blocking_waitany();
-      if( id == pipid ) {
-	if( statusp != NULL ) *statusp = taski->annex->status;
+      sigset_t	sigset;
+      if( pip_check_task( taski ) ) {
+	if( statusp != NULL ) {
+	  *statusp = taski->annex->status;
+	}
 	pip_finalize_task_RC_( taski );
 	break;
       }
-      if( id == PIP_PIPID_ANY  ) {
-	err = ECHILD;
-	break;
-      }
-      if( id == PIP_PIPID_NULL ) {
-	err = ESRCH;
-	break;
-      }
-    }
+      ASSERT( sigemptyset( &sigset ) );
+      (void) sigsuspend( &sigset ); /* always returns EINTR */
+    }    
   } 
   RETURN( err );
 }

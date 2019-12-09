@@ -860,24 +860,26 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
       DBGF( "pthread_attr_setstacksize( %ld )= %d", stack_size, err );
       if( err ) goto error;
 
-      if( clone_info != NULL ) { /* pip_preload */
-	DBGF( "tid=%d  cloneinfo@%p", tid, clone_info );
-	/* lock is needed, because the preloaded clone()
-	   might also be called from outside of PiP lib. */
-	pip_spin_lock_wv( &clone_info->lock, tid );
-      }
+      /* we need lock on ldlinux. supposedly glibc does someting */
+      /* before calling main function */
+      pip_spin_lock( &pip_root_->lock_ldlinux );
       {
-	/* we need lock on ldlinux. supposedly glibc does someting */
-	/* before calling main function */
-	pip_spin_lock( &pip_root_->lock_ldlinux );
-	err = pthread_create( &thr,
-			      &attr,
-			      (void*(*)(void*)) pip_do_spawn,
-			      (void*) args );
-	if( err ) pip_spin_unlock( &pip_root_->lock_ldlinux );
-	DBGF( "pthread_create()=%d", errno );
+	if( clone_info != NULL ) { /* pip_preload */
+	  DBGF( "tid=%d  cloneinfo@%p", tid, clone_info );
+	  /* lock is needed, because the preloaded clone()
+	     might also be called from outside of PiP lib. */
+	  pip_spin_lock_wv( &clone_info->lock, tid );
+	  /* unlock is done in the wrapper function */
+	}
+	{
+	  err = pthread_create( &thr,
+				&attr,
+				(void*(*)(void*)) pip_do_spawn,
+				(void*) args );
+	  DBGF( "pthread_create()=%d", errno );
+	}
       }
-      /* unlock is done in the wrapper function */
+      if( err ) pip_spin_unlock( &pip_root_->lock_ldlinux );
     }
   }
   if( err == 0 ) {

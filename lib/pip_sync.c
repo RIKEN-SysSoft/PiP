@@ -105,9 +105,10 @@ int pip_mutex_init_( pip_mutex_t *mutex ) {
 }
 
 int pip_mutex_lock_( pip_mutex_t *mutex ) {
-  int err = 0;
+  int c, err = 0;
   ENTER;
-  if( !pip_comp_and_swap( &mutex->lock, 0, 1 ) ) {
+  c = pip_atomic_fetch_and_add( &mutex->count, 1 );
+  IF_LIKELY( c > 0 ) {
     /* already locked by someone */
     err = pip_suspend_and_enqueue( &mutex->queue, NULL, NULL );
   }
@@ -117,11 +118,17 @@ int pip_mutex_lock_( pip_mutex_t *mutex ) {
 int pip_mutex_unlock_( pip_mutex_t *mutex ) {
   int err = 0;
   ENTER;
-  err = pip_dequeue_and_resume_( &mutex->queue, NULL );
-  /* resume the first one in the queue */
-  if( err == ENOENT ) {	    /* if the queue is empty, simply unlock */
-    mutex->lock = 0;
-    err = 0;
+  IF_UNLIKELY( mutex->count == 0 ) RETURN( EPERM );
+  (void) pip_atomic_sub_and_fetch( &mutex->count, 1 );
+  while( mutex->count > 0 ) {
+    err = pip_dequeue_and_resume_( &mutex->queue, NULL );
+    IF_LIKELY( err == 0 ) {
+      break;
+    } else if( err == ENOENT ) {
+      (void) pip_yield( PIP_YIELD_DEFAULT );
+    } else {
+      RETURN( err );
+    }
   }
   RETURN( err );
 }

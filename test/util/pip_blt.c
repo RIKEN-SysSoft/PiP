@@ -119,7 +119,7 @@ int main( int argc, char **argv ) {
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
       if( extval ) {
-	fprintf( stderr, "Task[%d] returns %d\n", i, extval );
+	fprintf( stderr, "Task[%d] returns %d\n", pipid, extval );
       }
     } else {
       extval = EXIT_UNRESOLVED;

@@ -877,7 +877,9 @@ void *pip_dlsym( void *handle, const char *symbol ) {
   if( pip_is_initialized() ) {
     DBGF( ">>" );
     pip_spin_lock( &pip_root_->lock_ldlinux );
+    DBGF( ">>>>" );
     addr = dlsym( handle, symbol );
+    DBGF( "<<<<" );
     pip_spin_unlock( &pip_root_->lock_ldlinux );
     DBGF( "<<" );
   } else {

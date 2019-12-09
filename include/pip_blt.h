@@ -186,16 +186,16 @@ typedef struct pip_task_queue_methods {
   pip_task_queue_fin_t		finalize;
 } pip_task_queue_methods_t;
 
-typedef struct pip_mutex {
-  pip_atomic_t			lock;
-  pip_task_queue_t		queue; /* this must be placed at the end */
-} pip_mutex_t;
-
 typedef struct pip_barrier {
   pip_atomic_t			count_init;
   pip_atomic_t			count;
   pip_task_queue_t		queue; /* this must be placed at the end */
 } pip_barrier_t;
+
+typedef struct pip_mutex {
+  pip_atomic_t			count;
+  pip_task_queue_t		queue; /* this must be placed at the end */
+} pip_mutex_t;
 
 #define PIP_QUEUE_TYPEDEF(N,B)	    \
   typedef struct N {		    \

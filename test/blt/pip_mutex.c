@@ -38,11 +38,16 @@
 
 #define NITERS		(100)
 
+pip_barrier_t	barr;
+pip_mutex_t 	mutex;
+volatile int	count;
+
 int main( int argc, char **argv ) {
-  pip_mutex_t 	mutex, *mutexp;
+  pip_barrier_t	*barrp;
+  pip_mutex_t 	*mutexp;
+  volatile int	*countp;
   int 		ntasks, pipid;
   int 		niters = 0, i;
-  volatile int	count, *countp;
 
   set_sigsegv_watcher();
 
@@ -51,32 +56,45 @@ int main( int argc, char **argv ) {
   }
   niters = ( niters == 0 ) ? NITERS : niters;
 
-  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ),		     RV, return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ),		       RV, return(EXIT_FAIL) );
   if( pipid == 0 ) {
     mutexp = &mutex;
-    CHECK( pip_mutex_init( mutexp ), 		    	     RV, return(EXIT_FAIL) );
-    CHECK( pip_named_export( (void*) mutexp, "MUTEX" ),      RV, return(EXIT_FAIL) );
+    CHECK( pip_mutex_init( mutexp ), 		    	       RV, return(EXIT_FAIL) );
+    CHECK( pip_named_export(       (void*) mutexp, "MUTEX" ),  RV, return(EXIT_FAIL) );
+
+    barrp = &barr;
+    CHECK( pip_barrier_init( barrp, ntasks ), 	    	       RV, return(EXIT_FAIL) );
+    CHECK( pip_named_export(       (void*) barrp, "BARRIER" ), RV, return(EXIT_FAIL) );
+
     count = 0;
     countp = &count;
-    CHECK( pip_named_export( (void*) countp, "COUNT" ),      RV, return(EXIT_FAIL) );
+    CHECK( pip_named_export(       (void*) countp, "COUNT" ),  RV, return(EXIT_FAIL) );
   } else {
     mutexp = NULL;
-    CHECK( pip_named_import( 0, (void**) &mutexp, "MUTEX" ), RV, return(EXIT_FAIL) );
-    CHECK( mutexp==NULL,				     RV, return(EXIT_FAIL) );
+    CHECK( pip_named_import( 0, (void**) &mutexp, "MUTEX" ),   RV, return(EXIT_FAIL) );
+    CHECK( mutexp==NULL,				       RV, return(EXIT_FAIL) );
+
+    barrp = NULL;
+    CHECK( pip_named_import( 0, (void**) &barrp, "BARRIER" ),  RV, return(EXIT_FAIL) );
+    CHECK( barrp==NULL,				               RV, return(EXIT_FAIL) );
+
     countp = NULL;
-    CHECK( pip_named_import( 0, (void**) &countp, "COUNT" ), RV, return(EXIT_FAIL) );
-    CHECK( countp==NULL,			             RV, return(EXIT_FAIL) );
+    CHECK( pip_named_import( 0, (void**) &countp, "COUNT" ),   RV, return(EXIT_FAIL) );
+    CHECK( countp==NULL,			               RV, return(EXIT_FAIL) );
   }
+  CHECK( pip_barrier_wait( barrp ),    RV, return(EXIT_FAIL) );
+  DBGF( "\ncountp:%p  mutexp:%p", countp, mutexp );
   for( i=0; i<niters; i++ ) {
     CHECK( pip_mutex_lock( mutexp ),   RV, return(EXIT_FAIL) );
-    DBGF( "\ncountp:%d\n", *countp );
-    *countp ++;
+    DBGF( "\ncountp(%p):%d\n", countp, *countp );
+    (*countp) ++;
     CHECK( pip_mutex_unlock( mutexp ), RV, return(EXIT_FAIL) );
   }
+  CHECK( pip_barrier_wait( barrp ),    RV, return(EXIT_FAIL) );
   if( pipid == 0 ) {
     DBGF( "\ncount:%d\n", count );
     CHECK( count!=ntasks*niters,       RV, return(EXIT_FAIL) );
   }
-  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  CHECK( pip_fin(),                    RV, return(EXIT_FAIL) );
   return 0;
 }
