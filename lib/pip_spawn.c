@@ -885,20 +885,22 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( err == 0 ) {
     struct timespec ts;
     int i;
-    /* wait until task starts running or       */
-    /* task is enqueued if to be suspended  */
+    /* wait until task starts running or         */
+    /* task is enqueued if it is to be suspended */
     ts.tv_sec  = 0;
-    ts.tv_nsec = 100 * 1000;	/* 100 usec */
-    for( i=0; i<100; i++ ) {	/* 10 msec */
+    ts.tv_nsec = 1000 * 1000;	/* 1 msec */
+    for( i=0; i<1000; i++ ) {	/* 1 sec */
       if( pip_spin_trylock( &pip_root_->lock_ldlinux ) ) {
 	pip_spin_unlock( &pip_root_->lock_ldlinux );
-	for( ; i<100; i++ ) {	/* 10 msec */
+	for( ; i<1000; i++ ) {	/* 10 msec */
 	  if( task->annex->tid    >  0 &&
 	      task->annex->thread != 0 ) goto done;
+	  pip_system_yield();
 	  nanosleep( &ts, NULL );
 	}
 	break;
       }
+      pip_system_yield();
       nanosleep( &ts, NULL );
     }
     pip_err_mesg( "Spawning PiP task (PIPID:%d) does not respond "
