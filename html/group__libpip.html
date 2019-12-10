@@ -144,9 +144,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:ga4a396f38920d94b71dcfd3c898fbb82b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a> (int pipid, int signal)</td></tr>
 <tr class="memdesc:ga4a396f38920d94b71dcfd3c898fbb82b"><td class="mdescLeft">&#160;</td><td class="mdescRight">deliver a signal to a PiP task  <a href="#ga4a396f38920d94b71dcfd3c898fbb82b">More...</a><br/></td></tr>
 <tr class="separator:ga4a396f38920d94b71dcfd3c898fbb82b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3dc0c780c6bc085a6ea194d9485d75b2"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga3dc0c780c6bc085a6ea194d9485d75b2">pip_sigmask</a> (int how, sigset_t *sigmask, sigset_t *oldmask)</td></tr>
-<tr class="memdesc:ga3dc0c780c6bc085a6ea194d9485d75b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">set signal mask of the current PiP task  <a href="#ga3dc0c780c6bc085a6ea194d9485d75b2">More...</a><br/></td></tr>
-<tr class="separator:ga3dc0c780c6bc085a6ea194d9485d75b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf546ee24368b118e937aadd2dbea2217"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaf546ee24368b118e937aadd2dbea2217">pip_sigmask</a> (int how, const sigset_t *sigmask, sigset_t *oldmask)</td></tr>
+<tr class="memdesc:gaf546ee24368b118e937aadd2dbea2217"><td class="mdescLeft">&#160;</td><td class="mdescRight">set signal mask of the current PiP task  <a href="#gaf546ee24368b118e937aadd2dbea2217">More...</a><br/></td></tr>
+<tr class="separator:gaf546ee24368b118e937aadd2dbea2217"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8ed1ba448edbc0f2e0af78abdcc62b7c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga8ed1ba448edbc0f2e0af78abdcc62b7c">pip_get_id</a> (int pipid, intptr_t *idp)</td></tr>
 <tr class="memdesc:ga8ed1ba448edbc0f2e0af78abdcc62b7c"><td class="mdescLeft">&#160;</td><td class="mdescRight">deliver a process or thread ID defined by the system  <a href="#ga8ed1ba448edbc0f2e0af78abdcc62b7c">More...</a><br/></td></tr>
 <tr class="separator:ga8ed1ba448edbc0f2e0af78abdcc62b7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,9 +165,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a> (int pipid)</td></tr>
 <tr class="memdesc:gacefb1f29e5f5d9b21309a1d041e78790"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the specified PiP task is alive or not  <a href="#gacefb1f29e5f5d9b21309a1d041e78790">More...</a><br/></td></tr>
 <tr class="separator:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga49a4a9ee014ffdaf0c26df18adf965ad"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga49a4a9ee014ffdaf0c26df18adf965ad">pip_abort</a> (void)</td></tr>
-<tr class="memdesc:ga49a4a9ee014ffdaf0c26df18adf965ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">abort all PiP tasks and root  <a href="#ga49a4a9ee014ffdaf0c26df18adf965ad">More...</a><br/></td></tr>
-<tr class="separator:ga49a4a9ee014ffdaf0c26df18adf965ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab7ba5cc62101240c68acf07905e36772"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gab7ba5cc62101240c68acf07905e36772">pip_kill_all_tasks</a> (void)</td></tr>
+<tr class="memdesc:gab7ba5cc62101240c68acf07905e36772"><td class="mdescLeft">&#160;</td><td class="mdescRight">kill all PiP tasks  <a href="#gab7ba5cc62101240c68acf07905e36772">More...</a><br/></td></tr>
+<tr class="separator:gab7ba5cc62101240c68acf07905e36772"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d">pip_spawn</a> (char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</td></tr>
 <tr class="memdesc:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP task (ULP API Version 1)  <a href="#gae9187ea22ecf0623fa3ecfba5337f52d">More...</a><br/></td></tr>
 <tr class="separator:gae9187ea22ecf0623fa3ecfba5337f52d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -177,27 +177,33 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:ga180ece8f3f537d84db8e70921f3ae099"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga180ece8f3f537d84db8e70921f3ae099">pip_is_shared_fd</a> (int *flagp)</td></tr>
 <tr class="memdesc:ga180ece8f3f537d84db8e70921f3ae099"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if file descriptors are shared or not  <a href="#ga180ece8f3f537d84db8e70921f3ae099">More...</a><br/></td></tr>
 <tr class="separator:ga180ece8f3f537d84db8e70921f3ae099"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga9c50d9b2b810d97a75a5fe9c332902e0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga9c50d9b2b810d97a75a5fe9c332902e0">pip_task_queue_init</a> (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)</td></tr>
-<tr class="memdesc:ga9c50d9b2b810d97a75a5fe9c332902e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize task queue.  <a href="#ga9c50d9b2b810d97a75a5fe9c332902e0">More...</a><br/></td></tr>
-<tr class="separator:ga9c50d9b2b810d97a75a5fe9c332902e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaceaa2ec686f001439d6ea89d47e71f65"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaceaa2ec686f001439d6ea89d47e71f65">pip_blt_spawn</a> (pip_spawn_program_t *progp, int coreno, uint32_t opts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp)</td></tr>
 <tr class="memdesc:gaceaa2ec686f001439d6ea89d47e71f65"><td class="mdescLeft">&#160;</td><td class="mdescRight">spawn a PiP BLT (Bi-Level Task)  <a href="#gaceaa2ec686f001439d6ea89d47e71f65">More...</a><br/></td></tr>
 <tr class="separator:gaceaa2ec686f001439d6ea89d47e71f65"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5a043af776eb89933bfc0a057790cc82"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga5a043af776eb89933bfc0a057790cc82">pip_task_queue_count</a> (pip_task_queue_t *queue, int *np)</td></tr>
-<tr class="memdesc:ga5a043af776eb89933bfc0a057790cc82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count the length of task queue.  <a href="#ga5a043af776eb89933bfc0a057790cc82">More...</a><br/></td></tr>
-<tr class="separator:ga5a043af776eb89933bfc0a057790cc82"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf7f6e26e29752a148704108bdcc7756f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaf7f6e26e29752a148704108bdcc7756f">pip_task_queue_lock</a> (pip_task_queue_t *queue)</td></tr>
-<tr class="memdesc:gaf7f6e26e29752a148704108bdcc7756f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lock task queue.  <a href="#gaf7f6e26e29752a148704108bdcc7756f">More...</a><br/></td></tr>
-<tr class="separator:gaf7f6e26e29752a148704108bdcc7756f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga50469f21446ce86ea18ddd282cf15894"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga50469f21446ce86ea18ddd282cf15894">pip_yield</a> (int flag)</td></tr>
+<tr class="memdesc:ga50469f21446ce86ea18ddd282cf15894"><td class="mdescLeft">&#160;</td><td class="mdescRight">Yield.  <a href="#ga50469f21446ce86ea18ddd282cf15894">More...</a><br/></td></tr>
+<tr class="separator:ga50469f21446ce86ea18ddd282cf15894"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac30cf124b28a8d80dac34c5e1bdb66ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gac30cf124b28a8d80dac34c5e1bdb66ba">pip_yield_to</a> (pip_task_t *task)</td></tr>
+<tr class="memdesc:gac30cf124b28a8d80dac34c5e1bdb66ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Yield to the specified PiP task.  <a href="#gac30cf124b28a8d80dac34c5e1bdb66ba">More...</a><br/></td></tr>
+<tr class="separator:gac30cf124b28a8d80dac34c5e1bdb66ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9c50d9b2b810d97a75a5fe9c332902e0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga9c50d9b2b810d97a75a5fe9c332902e0">pip_task_queue_init</a> (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)</td></tr>
+<tr class="memdesc:ga9c50d9b2b810d97a75a5fe9c332902e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initialize task queue.  <a href="#ga9c50d9b2b810d97a75a5fe9c332902e0">More...</a><br/></td></tr>
+<tr class="separator:ga9c50d9b2b810d97a75a5fe9c332902e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga20d50746c585f1ede68f2c9aefc39a5c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga20d50746c585f1ede68f2c9aefc39a5c">pip_task_queue_trylock</a> (pip_task_queue_t *queue)</td></tr>
 <tr class="memdesc:ga20d50746c585f1ede68f2c9aefc39a5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Try locking task queue.  <a href="#ga20d50746c585f1ede68f2c9aefc39a5c">More...</a><br/></td></tr>
 <tr class="separator:ga20d50746c585f1ede68f2c9aefc39a5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf7f6e26e29752a148704108bdcc7756f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaf7f6e26e29752a148704108bdcc7756f">pip_task_queue_lock</a> (pip_task_queue_t *queue)</td></tr>
+<tr class="memdesc:gaf7f6e26e29752a148704108bdcc7756f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lock task queue.  <a href="#gaf7f6e26e29752a148704108bdcc7756f">More...</a><br/></td></tr>
+<tr class="separator:gaf7f6e26e29752a148704108bdcc7756f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaf4cfe9905f1862718f65ba2fda961b84"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gaf4cfe9905f1862718f65ba2fda961b84">pip_task_queue_unlock</a> (pip_task_queue_t *queue)</td></tr>
 <tr class="memdesc:gaf4cfe9905f1862718f65ba2fda961b84"><td class="mdescLeft">&#160;</td><td class="mdescRight">Unlock task queue.  <a href="#gaf4cfe9905f1862718f65ba2fda961b84">More...</a><br/></td></tr>
 <tr class="separator:gaf4cfe9905f1862718f65ba2fda961b84"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gabf772cd5ea121458291801a26dea5c9d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gabf772cd5ea121458291801a26dea5c9d">pip_task_queue_isempty</a> (pip_task_queue_t *queue)</td></tr>
 <tr class="memdesc:gabf772cd5ea121458291801a26dea5c9d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query function if the current task has some tasks to be scheduled with.  <a href="#gabf772cd5ea121458291801a26dea5c9d">More...</a><br/></td></tr>
 <tr class="separator:gabf772cd5ea121458291801a26dea5c9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5a043af776eb89933bfc0a057790cc82"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga5a043af776eb89933bfc0a057790cc82">pip_task_queue_count</a> (pip_task_queue_t *queue, int *np)</td></tr>
+<tr class="memdesc:ga5a043af776eb89933bfc0a057790cc82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Count the length of task queue.  <a href="#ga5a043af776eb89933bfc0a057790cc82">More...</a><br/></td></tr>
+<tr class="separator:ga5a043af776eb89933bfc0a057790cc82"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gae0f80336f51c43c3da988dd0467453cf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gae0f80336f51c43c3da988dd0467453cf">pip_task_queue_enqueue</a> (pip_task_queue_t *queue, pip_task_t *task)</td></tr>
 <tr class="memdesc:gae0f80336f51c43c3da988dd0467453cf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enqueue a BLT.  <a href="#gae0f80336f51c43c3da988dd0467453cf">More...</a><br/></td></tr>
 <tr class="separator:gae0f80336f51c43c3da988dd0467453cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -210,12 +216,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:ga45d0eaa7122e459ea19187c148b9da10"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga45d0eaa7122e459ea19187c148b9da10">pip_task_queue_fin</a> (pip_task_queue_t *queue)</td></tr>
 <tr class="memdesc:ga45d0eaa7122e459ea19187c148b9da10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finalize a task.  <a href="#ga45d0eaa7122e459ea19187c148b9da10">More...</a><br/></td></tr>
 <tr class="separator:ga45d0eaa7122e459ea19187c148b9da10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gadcd0fdda9a09a0eac3001556cc1dd5e6"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gadcd0fdda9a09a0eac3001556cc1dd5e6">pip_yield</a> (void)</td></tr>
-<tr class="memdesc:gadcd0fdda9a09a0eac3001556cc1dd5e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Yield.  <a href="#gadcd0fdda9a09a0eac3001556cc1dd5e6">More...</a><br/></td></tr>
-<tr class="separator:gadcd0fdda9a09a0eac3001556cc1dd5e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac30cf124b28a8d80dac34c5e1bdb66ba"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gac30cf124b28a8d80dac34c5e1bdb66ba">pip_yield_to</a> (pip_task_t *task)</td></tr>
-<tr class="memdesc:gac30cf124b28a8d80dac34c5e1bdb66ba"><td class="mdescLeft">&#160;</td><td class="mdescRight">Yield to the specified PiP task.  <a href="#gac30cf124b28a8d80dac34c5e1bdb66ba">More...</a><br/></td></tr>
-<tr class="separator:gac30cf124b28a8d80dac34c5e1bdb66ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga7dbf7e64e78cd00ef62c3bb04f289a68"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga7dbf7e64e78cd00ef62c3bb04f289a68">pip_suspend_and_enqueue</a> (pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg)</td></tr>
 <tr class="memdesc:ga7dbf7e64e78cd00ef62c3bb04f289a68"><td class="mdescLeft">&#160;</td><td class="mdescRight">suspend the curren task and enqueue it  <a href="#ga7dbf7e64e78cd00ef62c3bb04f289a68">More...</a><br/></td></tr>
 <tr class="separator:ga7dbf7e64e78cd00ef62c3bb04f289a68"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -1143,7 +1143,7 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ga3dc0c780c6bc085a6ea194d9485d75b2"></a>
+<a class="anchor" id="gaf546ee24368b118e937aadd2dbea2217"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -1156,7 +1156,7 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">sigset_t *&#160;</td>
+          <td class="paramtype">const sigset_t *&#160;</td>
           <td class="paramname"><em>sigmask</em>, </td>
         </tr>
         <tr>
@@ -1335,12 +1335,12 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ga49a4a9ee014ffdaf0c26df18adf965ad"></a>
+<a class="anchor" id="gab7ba5cc62101240c68acf07905e36772"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void pip_abort </td>
+          <td class="memname">int pip_kill_all_tasks </td>
           <td>(</td>
           <td class="paramtype">void&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -1349,8 +1349,14 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
       </table>
 </div><div class="memdoc">
 
-<p>abort all PiP tasks and root </p>
-<dl class="section return"><dt>Returns</dt><dd>Return true nothing </dd></dl>
+<p>kill all PiP tasks </p>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>Not called from root </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1484,42 +1490,6 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ga9c50d9b2b810d97a75a5fe9c332902e0"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_task_queue_init </td>
-          <td>(</td>
-          <td class="paramtype">pip_task_queue_t *&#160;</td>
-          <td class="paramname"><em>queue</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">pip_task_queue_methods_t *&#160;</td>
-          <td class="paramname"><em>methods</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Initialize task queue. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>A task queue </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">methods</td><td>Usre defined function table. If NULL then default functions will be used.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>This function returns no error </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="gaceaa2ec686f001439d6ea89d47e71f65"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1602,12 +1572,71 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
 
 </div>
 </div>
-<a class="anchor" id="ga5a043af776eb89933bfc0a057790cc82"></a>
+<a class="anchor" id="ga50469f21446ce86ea18ddd282cf15894"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int pip_task_queue_count </td>
+          <td class="memname">int pip_yield </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>flag</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Yield. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">flag</td><td>to specify the behavior of yielding</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_yield_to(3) </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gac30cf124b28a8d80dac34c5e1bdb66ba"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_yield_to </td>
+          <td>(</td>
+          <td class="paramtype">pip_task_t *&#160;</td>
+          <td class="paramname"><em>task</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Yield to the specified PiP task. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">task</td><td>Target PiP task to switch</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Context-switch to the specified PiP task. If <code>task</code> is <code>NULL</code>, then this works the same as <code><a class="el" href="group__libpip.html#ga50469f21446ce86ea18ddd282cf15894" title="Yield. ">pip_yield()</a></code> does.</p>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EPERM</td><td>The specified task belongs to the other scheduling domain.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section see"><dt>See Also</dt><dd>pip_yield(3) </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga9c50d9b2b810d97a75a5fe9c332902e0"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_task_queue_init </td>
           <td>(</td>
           <td class="paramtype">pip_task_queue_t *&#160;</td>
           <td class="paramname"><em>queue</em>, </td>
@@ -1615,8 +1644,8 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int *&#160;</td>
-          <td class="paramname"><em>np</em>&#160;</td>
+          <td class="paramtype">pip_task_queue_methods_t *&#160;</td>
+          <td class="paramname"><em>methods</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1626,42 +1655,11 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
       </table>
 </div><div class="memdoc">
 
-<p>Count the length of task queue. </p>
+<p>Initialize task queue. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>A task queue </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">np</td><td>the queue length returned</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">EINVAL</td><td><code>np</code> is <code>NULL</code> </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="gaf7f6e26e29752a148704108bdcc7756f"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void pip_task_queue_lock </td>
-          <td>(</td>
-          <td class="paramtype">pip_task_queue_t *&#160;</td>
-          <td class="paramname"><em>queue</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Lock task queue. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>A task queue</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">methods</td><td>Usre defined function table. If NULL then default functions will be used.</td></tr>
   </table>
   </dd>
 </dl>
@@ -1691,6 +1689,31 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns true if lock succeeds. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaf7f6e26e29752a148704108bdcc7756f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void pip_task_queue_lock </td>
+          <td>(</td>
+          <td class="paramtype">pip_task_queue_t *&#160;</td>
+          <td class="paramname"><em>queue</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Lock task queue. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>A task queue</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>This function returns no error </dd></dl>
 
 </div>
 </div>
@@ -1740,7 +1763,49 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns true if there is no tasks to schedule. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns true if there is no tasks to in the queue </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga5a043af776eb89933bfc0a057790cc82"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_task_queue_count </td>
+          <td>(</td>
+          <td class="paramtype">pip_task_queue_t *&#160;</td>
+          <td class="paramname"><em>queue</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>np</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Count the length of task queue. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>A task queue </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">np</td><td>the queue length returned</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>np</code> is <code>NULL</code> </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -1772,11 +1837,10 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">queue</td><td>A task queue </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">task</td><td>A task to be enqueued</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">task</td><td>A task to be enqueued </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns true if lock succeeds. </dd></dl>
 
 </div>
 </div>
@@ -1863,59 +1927,6 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>If succeedss, 0 is returned. Otherwise an error code is returned. </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="gadcd0fdda9a09a0eac3001556cc1dd5e6"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_yield </td>
-          <td>(</td>
-          <td class="paramtype">void&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Yield. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error.</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_yield_to(3) </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="gac30cf124b28a8d80dac34c5e1bdb66ba"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_yield_to </td>
-          <td>(</td>
-          <td class="paramtype">pip_task_t *&#160;</td>
-          <td class="paramname"><em>task</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Yield to the specified PiP task. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">task</td><td>Target PiP task to switch</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Context-switch to the specified PiP task. If <code>task</code> is <code>NULL</code>, then this works the same as <code><a class="el" href="group__libpip.html#gadcd0fdda9a09a0eac3001556cc1dd5e6" title="Yield. ">pip_yield()</a></code> does.</p>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">EPERM</td><td>The specified task belongs to the other scheduling domain.</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_yield(3) </dd></dl>
 
 </div>
 </div>

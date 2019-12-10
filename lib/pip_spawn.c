@@ -664,6 +664,8 @@ static void* pip_do_spawn( void *thargs )  {
     return NULL;
     //pthread_exit( NULL );
   } else {			/* process mode */
+    pip_spin_lock( &pip_root_->lock_ldlinux );
+    /* will be unlocked in the SIGCHLD handler */
     exit( WEXITSTATUS(self->annex->status) );
   }
   NEVER_REACH_HERE;
@@ -892,7 +894,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     for( i=0; i<1000; i++ ) {	/* 1 sec */
       if( pip_spin_trylock( &pip_root_->lock_ldlinux ) ) {
 	pip_spin_unlock( &pip_root_->lock_ldlinux );
-	for( ; i<1000; i++ ) {	/* 10 msec */
+	for( ; i<1000; i++ ) {	/* 1 sec */
 	  if( task->annex->tid    >  0 &&
 	      task->annex->thread != 0 ) goto done;
 	  pip_system_yield();

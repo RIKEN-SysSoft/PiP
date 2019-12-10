@@ -7,7 +7,7 @@ testdir=$dir/../..
 
 ./pipcc --TEST $testdir -g -c ../../sample/hello/hello.c -o hello.o;
 ./pipcc --TEST $testdir -g hello.o -o hello;
-./pipcheck -b hello
+./pip-check -b hello
 
 ./hello;
 

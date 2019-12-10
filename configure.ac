@@ -49,11 +49,12 @@ fi
 # Checks for library functions.
 
 AC_CONFIG_FILES([
-	bin/pipcc
-	bin/pipmode
-	bin/pipcheck
 	build/config.mk
 	release/version.conf
+	bin/pipcc
+	bin/pip-mode
+	bin/pip-check
+	bin/pip-man
 	util/piplnlibs
 ])
 AC_OUTPUT

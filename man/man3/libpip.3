@@ -1,4 +1,4 @@
-.TH "libpip" 3 "Thu Jul 11 2019" "PiP - Process-in-Process" \" -*- nroff -*-
+.TH "libpip" 3 "Tue Dec 10 2019" "PiP - Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -132,7 +132,7 @@ the PiP library
 .in -1c
 .in +1c
 .ti -1c
-.RI "int \fBpip_sigmask\fP (int how, sigset_t *sigmask, sigset_t *oldmask)"
+.RI "int \fBpip_sigmask\fP (int how, const sigset_t *sigmask, sigset_t *oldmask)"
 .br
 .RI "\fIset signal mask of the current PiP task \fP"
 .in -1c
@@ -174,9 +174,9 @@ the PiP library
 .in -1c
 .in +1c
 .ti -1c
-.RI "void \fBpip_abort\fP (void)"
+.RI "int \fBpip_kill_all_tasks\fP (void)"
 .br
-.RI "\fIabort all PiP tasks and root \fP"
+.RI "\fIkill all PiP tasks \fP"
 .in -1c
 .in +1c
 .ti -1c
@@ -198,33 +198,39 @@ the PiP library
 .in -1c
 .in +1c
 .ti -1c
-.RI "int \fBpip_task_queue_init\fP (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
-.br
-.RI "\fIInitialize task queue\&. \fP"
-.in -1c
-.in +1c
-.ti -1c
 .RI "int \fBpip_blt_spawn\fP (pip_spawn_program_t *progp, int coreno, uint32_t opts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp)"
 .br
 .RI "\fIspawn a PiP BLT (Bi-Level Task) \fP"
 .in -1c
 .in +1c
 .ti -1c
-.RI "int \fBpip_task_queue_count\fP (pip_task_queue_t *queue, int *np)"
+.RI "int \fBpip_yield\fP (int flag)"
 .br
-.RI "\fICount the length of task queue\&. \fP"
+.RI "\fIYield\&. \fP"
 .in -1c
 .in +1c
 .ti -1c
-.RI "void \fBpip_task_queue_lock\fP (pip_task_queue_t *queue)"
+.RI "int \fBpip_yield_to\fP (pip_task_t *task)"
 .br
-.RI "\fILock task queue\&. \fP"
+.RI "\fIYield to the specified PiP task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_init\fP (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
+.br
+.RI "\fIInitialize task queue\&. \fP"
 .in -1c
 .in +1c
 .ti -1c
 .RI "int \fBpip_task_queue_trylock\fP (pip_task_queue_t *queue)"
 .br
 .RI "\fITry locking task queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_task_queue_lock\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fILock task queue\&. \fP"
 .in -1c
 .in +1c
 .ti -1c
@@ -237,6 +243,12 @@ the PiP library
 .RI "int \fBpip_task_queue_isempty\fP (pip_task_queue_t *queue)"
 .br
 .RI "\fIQuery function if the current task has some tasks to be scheduled with\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_count\fP (pip_task_queue_t *queue, int *np)"
+.br
+.RI "\fICount the length of task queue\&. \fP"
 .in -1c
 .in +1c
 .ti -1c
@@ -261,18 +273,6 @@ the PiP library
 .RI "int \fBpip_task_queue_fin\fP (pip_task_queue_t *queue)"
 .br
 .RI "\fIFinalize a task\&. \fP"
-.in -1c
-.in +1c
-.ti -1c
-.RI "int \fBpip_yield\fP (void)"
-.br
-.RI "\fIYield\&. \fP"
-.in -1c
-.in +1c
-.ti -1c
-.RI "int \fBpip_yield_to\fP (pip_task_t *task)"
-.br
-.RI "\fIYield to the specified PiP task\&. \fP"
 .in -1c
 .in +1c
 .ti -1c
@@ -1037,7 +1037,7 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "int pip_sigmask (inthow, sigset_t *sigmask, sigset_t *oldmask)"
+.SS "int pip_sigmask (inthow, const sigset_t *sigmask, sigset_t *oldmask)"
 
 .PP
 set signal mask of the current PiP task 
@@ -1159,14 +1159,19 @@ Return true if the specified PiP task or ULP is alive (i\&.e\&., not yet termina
 .RE
 .PP
 
-.SS "void pip_abort (void)"
+.SS "int pip_kill_all_tasks (void)"
 
 .PP
-abort all PiP tasks and root 
+kill all PiP tasks 
 .PP
 \fBReturns:\fP
 .RS 4
-Return true nothing 
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP Not called from root 
 .RE
 .PP
 
@@ -1239,24 +1244,6 @@ Return true if FDs are shared
 .RE
 .PP
 
-.SS "int pip_task_queue_init (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
-
-.PP
-Initialize task queue\&. 
-.PP
-\fBParameters:\fP
-.RS 4
-\fIqueue\fP A task queue 
-.br
-\fImethods\fP Usre defined function table\&. If NULL then default functions will be used\&.
-.RE
-.PP
-\fBReturns:\fP
-.RS 4
-This function returns no error 
-.RE
-.PP
-
 .SS "int pip_blt_spawn (pip_spawn_program_t *progp, intcoreno, uint32_topts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp)"
 
 .PP
@@ -1304,17 +1291,38 @@ pip_task_spawn(3), pip_spawn_from_main(3)
 .RE
 .PP
 
-.SS "int pip_task_queue_count (pip_task_queue_t *queue, int *np)"
+.SS "int pip_yield (intflag)"
 
 .PP
-Count the length of task queue\&. 
+Yield\&. 
 .PP
 \fBParameters:\fP
 .RS 4
-\fIqueue\fP A task queue 
-.br
-\fInp\fP the queue length returned
+\fIflag\fP to specify the behavior of yielding
 .RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_yield_to(3) 
+.RE
+.PP
+
+.SS "int pip_yield_to (pip_task_t *task)"
+
+.PP
+Yield to the specified PiP task\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP Target PiP task to switch
+.RE
+.PP
+Context-switch to the specified PiP task\&. If \fCtask\fP is \fCNULL\fP, then this works the same as \fC\fBpip_yield()\fP\fP does\&.
 .PP
 \fBReturns:\fP
 .RS 4
@@ -1323,18 +1331,25 @@ Return 0 on success\&. Return an error code on error\&.
 .PP
 \fBReturn values:\fP
 .RS 4
-\fIEINVAL\fP \fCnp\fP is \fCNULL\fP 
+\fIEPERM\fP The specified task belongs to the other scheduling domain\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_yield(3) 
 .RE
 .PP
 
-.SS "void pip_task_queue_lock (pip_task_queue_t *queue)"
+.SS "int pip_task_queue_init (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
 
 .PP
-Lock task queue\&. 
+Initialize task queue\&. 
 .PP
 \fBParameters:\fP
 .RS 4
-\fIqueue\fP A task queue
+\fIqueue\fP A task queue 
+.br
+\fImethods\fP Usre defined function table\&. If NULL then default functions will be used\&.
 .RE
 .PP
 \fBReturns:\fP
@@ -1356,6 +1371,22 @@ Try locking task queue\&.
 \fBReturns:\fP
 .RS 4
 Returns true if lock succeeds\&. 
+.RE
+.PP
+
+.SS "void pip_task_queue_lock (pip_task_queue_t *queue)"
+
+.PP
+Lock task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
 .RE
 .PP
 
@@ -1387,7 +1418,30 @@ Query function if the current task has some tasks to be scheduled with\&.
 .PP
 \fBReturns:\fP
 .RS 4
-Returns true if there is no tasks to schedule\&. 
+Returns true if there is no tasks to in the queue 
+.RE
+.PP
+
+.SS "int pip_task_queue_count (pip_task_queue_t *queue, int *np)"
+
+.PP
+Count the length of task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fInp\fP the queue length returned
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCnp\fP is \fCNULL\fP 
 .RE
 .PP
 
@@ -1400,12 +1454,7 @@ Enqueue a BLT\&.
 .RS 4
 \fIqueue\fP A task queue 
 .br
-\fItask\fP A task to be enqueued
-.RE
-.PP
-\fBReturns:\fP
-.RS 4
-Returns true if lock succeeds\&. 
+\fItask\fP A task to be enqueued 
 .RE
 .PP
 
@@ -1456,50 +1505,6 @@ Finalize a task\&.
 \fBReturns:\fP
 .RS 4
 If succeedss, 0 is returned\&. Otherwise an error code is returned\&. 
-.RE
-.PP
-
-.SS "int pip_yield (void)"
-
-.PP
-Yield\&. 
-.PP
-\fBReturns:\fP
-.RS 4
-Return 0 on success\&. Return an error code on error\&.
-.RE
-.PP
-\fBSee Also:\fP
-.RS 4
-pip_yield_to(3) 
-.RE
-.PP
-
-.SS "int pip_yield_to (pip_task_t *task)"
-
-.PP
-Yield to the specified PiP task\&. 
-.PP
-\fBParameters:\fP
-.RS 4
-\fItask\fP Target PiP task to switch
-.RE
-.PP
-Context-switch to the specified PiP task\&. If \fCtask\fP is \fCNULL\fP, then this works the same as \fC\fBpip_yield()\fP\fP does\&.
-.PP
-\fBReturns:\fP
-.RS 4
-Return 0 on success\&. Return an error code on error\&. 
-.RE
-.PP
-\fBReturn values:\fP
-.RS 4
-\fIEPERM\fP The specified task belongs to the other scheduling domain\&.
-.RE
-.PP
-\fBSee Also:\fP
-.RS 4
-pip_yield(3) 
 .RE
 .PP
 

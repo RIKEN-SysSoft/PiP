@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAMS  = pipcc pipcheck pipmode
+PROGRAMS  = pipcc pip-check pip-mode
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -44,11 +44,11 @@ include $(srcdir)/../Test.common
 pipcc: ../../bin/pipcc Makefile
 	$(INSTALL_PROGRAM) ../../bin/pipcc .
 
-pipcheck: ../../bin/pipcheck Makefile
-	$(INSTALL_PROGRAM) ../../bin/pipcheck .
+pip-check: ../../bin/pip-check Makefile
+	$(INSTALL_PROGRAM) ../../bin/pip-check .
 
-pipmode: ../../bin/pipmode Makefile
-	$(INSTALL_PROGRAM) ../../bin/pipmode .
+pip-mode: ../../bin/pip-mode Makefile
+	$(INSTALL_PROGRAM) ../../bin/pip-mode .
 
 post-clean-hook:
 	$(RM) -f hello hello.o root task

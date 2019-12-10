@@ -36,7 +36,7 @@
 ###
 ### \section synopsis SYNOPSIS
 ###
-###	\c \b pipcc [<b>pip-options<\b>] [<b>cc-command-options<\b>]
+###	\c \b pipcc [\b pip-options] [\b cc-command-options]
 ###
 ### \section options OPTIONS
 ###

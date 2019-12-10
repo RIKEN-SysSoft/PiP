@@ -30,13 +30,13 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pipcc pipcc
+### \addtogroup pip-mode pip-mode
 ###
-### \brief C compiler driver for PiP
+### \brief Set PiP execution mode
 ###
 ### \section synopsis SYNOPSIS
 ###
-###	\c \b pipenv [<b>pipenv-option\b>] [<b>commands ...</b>]
+###	\c \b pip-mode [\b pipenv-option] [\b commands ...]
 ###
 ### \section options OPTIONS
 ###
@@ -46,17 +46,14 @@
 ### \subsection process	-P
 ### If specified, PiP will run with the 'process' mode
 ###
-### \subsection process	-p
+### \subsection preload	-p
 ### If specified, PiP will run with the 'process' mode (preload)
 ###
-### \subsection process	-c
+### \subsection pipclone	-c
 ### If specified, PiP will run with the 'process' mode (pip clone)
 ###
-### \subsection process	-T
+### \subsection pthread	-t
 ### If specified, PiP will run with the 'thread' mode
-###
-### \subsection process	-c
-### If specified, the current PIP_MODE environment is displayed
 ###
 
 self=$0;
@@ -64,73 +61,69 @@ prefix=@prefix@;
 libdir=${prefix}/lib;
 flag_help=0;
 
+function usage() {
+    echo $self "-P|-p|-c|-t [<command> ...]";
+    echo "    -P: process mode";
+    echo "    -p: process:preload mode";
+    echo "    -c: process:pipclone mode";
+    echo "    -t: pthread mode";
+    exit 1;
+}
+
 if [[ -f ${libdir}/pip_preload.so ]]; then
-    preload=${libdir}/pip_preload.so;
+    preload="${libdir}/pip_preload.so";
 fi
 
 for i; do
     case $i in
 	-P|--process)
 	    if [[ x${preload} == x ]]; then
-		pip_mode=process:pipclone;
+		pip_mode="process:pipclone";
 	    else
-		pip_mode=process:preload;
+		pip_mode="process:preload";
 	    fi;;
 	-p|--process:preload)
-	    if [[ x${preload} == x ]]; then
+	    if [[ "x${preload}" == x ]]; then
 		echo "Unable to find PiP preload library";
 		exit 1;
 	    else
-		pip_mode=process:preload;
+		pip_mode="process:preload";
 	    fi;;
 	-c|--process:pipclone)
-	    pip_mode=process:pipclone;;
+	    pip_mode="process:pipclone";;
 	-t|-T)
 	    pip_mode=pthread;;
 	-u|--help)
-	    flag_help=1;;
+	    usage;;
 	*)
 	    cmd="${cmd} $i";;
     esac
 done
 
-function pipmode_help() {
-    echo $self "-P|-p|-c|-t [<command> ...]";
-    echo "    -P: process mode";
-    echo "    -p: process:preload mode";
-    echo "    -c: process:pipclone mode";
-    echo "    -t: pthread mode";
-}
-
-if [[ ${flag_help} == 1 ]]; then
-    pipmode_help;
-    exit 1;
-fi
-
-if [[ x$pip_mode == x ]]; then
+if [ "x${pip_mode}" == x ]; then
     echo "PIP_MODE=${PIP_MODE}";
     exit 0;
 fi
 
-#echo "CMD: " $cmd 
-
 export PIP_MODE=${pip_mode};
 
-if [[ x${preload} != x ]]; then
-    if [[ x${LD_PRELOAD} == x ]]; then
-	export LD_PRELOAD=${preload};
-    else
-	export LD_PRELOAD=${preload}:${LD_PRELOAD};
+if [ "${pip_mode}" != "pthread" ]; then 
+    if [ "x${preload}" != x ]; then
+	if [[ "x${LD_PRELOAD}" == x ]]; then
+	    export LD_PRELOAD="${preload}";
+	else
+	    export LD_PRELOAD="${preload}:${LD_PRELOAD}";
+	fi
     fi
 fi
 
-if [[ x${cmd} != x ]]; then
+if [ "x${cmd}" != x ]; then
     exec ${cmd};
 else
-    if [[ x${preload} != x ]]; then
-	echo  "LD_PRELOAD=${LD_PRELOAD}";
+    if [ "${pip_mode}" != "pthread" ]; then 
+	if [ "x${preload}" != x ]; then
+	    echo  "LD_PRELOAD=${LD_PRELOAD}";
+	fi
     fi
     echo  "PIP_MODE=${PIP_MODE}";
 fi
-
-exit 0;

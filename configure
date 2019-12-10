@@ -3078,7 +3078,7 @@ fi
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files bin/pipcc bin/pipmode bin/pipcheck build/config.mk release/version.conf util/piplnlibs"
+ac_config_files="$ac_config_files build/config.mk release/version.conf bin/pipcc bin/pip-mode bin/pip-check bin/pip-man util/piplnlibs"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3771,11 +3771,12 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "include/config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/config.h" ;;
-    "bin/pipcc") CONFIG_FILES="$CONFIG_FILES bin/pipcc" ;;
-    "bin/pipmode") CONFIG_FILES="$CONFIG_FILES bin/pipmode" ;;
-    "bin/pipcheck") CONFIG_FILES="$CONFIG_FILES bin/pipcheck" ;;
     "build/config.mk") CONFIG_FILES="$CONFIG_FILES build/config.mk" ;;
     "release/version.conf") CONFIG_FILES="$CONFIG_FILES release/version.conf" ;;
+    "bin/pipcc") CONFIG_FILES="$CONFIG_FILES bin/pipcc" ;;
+    "bin/pip-mode") CONFIG_FILES="$CONFIG_FILES bin/pip-mode" ;;
+    "bin/pip-check") CONFIG_FILES="$CONFIG_FILES bin/pip-check" ;;
+    "bin/pip-man") CONFIG_FILES="$CONFIG_FILES bin/pip-man" ;;
     "util/piplnlibs") CONFIG_FILES="$CONFIG_FILES util/piplnlibs" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;

@@ -338,6 +338,7 @@ static int pip_nonblocking_waitany( void ) {
 static int pip_blocking_waitany( void ) {
   int	pipid;
   DBG;
+  pip_set_sigmask_( SIGCHLD );
   while( 1 ) {
     sigset_t	sigset;
     pipid = pip_nonblocking_waitany();
@@ -347,6 +348,7 @@ static int pip_blocking_waitany( void ) {
     ASSERT( sigemptyset( &sigset ) );
     (void) sigsuspend( &sigset ); /* always returns EINTR */
   }
+  pip_unset_sigmask_();
   return( pipid );
 }
 
@@ -365,6 +367,7 @@ int pip_wait( int pipid, int *statusp ) {
     /* already waited */
     err = ESRCH;
   } else {
+    pip_set_sigmask_( SIGCHLD );
     while( 1 ) {
       sigset_t	sigset;
       if( pip_check_task( taski ) ) {
@@ -377,6 +380,7 @@ int pip_wait( int pipid, int *statusp ) {
       ASSERT( sigemptyset( &sigset ) );
       (void) sigsuspend( &sigset ); /* always returns EINTR */
     }    
+    pip_unset_sigmask_();
   } 
   RETURN( err );
 }

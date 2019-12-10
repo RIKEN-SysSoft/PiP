@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['pip_5fabort',['pip_abort',['../group__libpip.html#ga49a4a9ee014ffdaf0c26df18adf965ad',1,'pip.h']]],
   ['pip_5fbarrier_5ffin',['pip_barrier_fin',['../group__libpip.html#ga70dab15271b84fe05d7088a6cf8bf784',1,'pip_blt.h']]],
   ['pip_5fbarrier_5finit',['pip_barrier_init',['../group__libpip.html#ga84022f9c64f431e7d513342aeed0b61e',1,'pip_blt.h']]],
   ['pip_5fbarrier_5fwait',['pip_barrier_wait',['../group__libpip.html#gaca103c9732a8e28ee8faf79ef4a69e4f',1,'pip_blt.h']]],
@@ -34,6 +33,7 @@ var searchData=
   ['pip_5fisa_5ftask',['pip_isa_task',['../group__libpip.html#gaf0283e47ad2d415206d6a3fa61e8a0a9',1,'pip.h']]],
   ['pip_5fisa_5fulp',['pip_isa_ulp',['../group__libpip.html#gafc11d79f0f63c4c57ccb5c3bb2803241',1,'pip.h']]],
   ['pip_5fkill',['pip_kill',['../group__libpip.html#ga4a396f38920d94b71dcfd3c898fbb82b',1,'pip.h']]],
+  ['pip_5fkill_5fall_5ftasks',['pip_kill_all_tasks',['../group__libpip.html#gab7ba5cc62101240c68acf07905e36772',1,'pip.h']]],
   ['pip_5fmutex_5ffin',['pip_mutex_fin',['../group__libpip.html#ga884fae0413bd07dbdb5f3940129b7b20',1,'pip_blt.h']]],
   ['pip_5fmutex_5finit',['pip_mutex_init',['../group__libpip.html#gaff168395426838d385ad6720c9fb4184',1,'pip_blt.h']]],
   ['pip_5fmutex_5flock',['pip_mutex_lock',['../group__libpip.html#ga14f77d2413590f58d7a45a3b56960c90',1,'pip_blt.h']]],
@@ -42,7 +42,7 @@ var searchData=
   ['pip_5fnamed_5fimport',['pip_named_import',['../group__libpip.html#ga37fed4773558ccab6911785c872bc057',1,'pip.h']]],
   ['pip_5fnamed_5ftryimport',['pip_named_tryimport',['../group__libpip.html#gaa4b5ad0f8227ba1010648718dae04730',1,'pip.h']]],
   ['pip_5fset_5faux',['pip_set_aux',['../group__libpip.html#gacfd984207deedf86edddbb72c5d4e883',1,'pip_blt.h']]],
-  ['pip_5fsigmask',['pip_sigmask',['../group__libpip.html#ga3dc0c780c6bc085a6ea194d9485d75b2',1,'pip.h']]],
+  ['pip_5fsigmask',['pip_sigmask',['../group__libpip.html#gaf546ee24368b118e937aadd2dbea2217',1,'pip.h']]],
   ['pip_5fspawn',['pip_spawn',['../group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d',1,'pip.h']]],
   ['pip_5fsuspend_5fand_5fenqueue',['pip_suspend_and_enqueue',['../group__libpip.html#ga7dbf7e64e78cd00ef62c3bb04f289a68',1,'pip_blt.h']]],
   ['pip_5fsuspend_5fand_5fenqueue_5fnolock',['pip_suspend_and_enqueue_nolock',['../group__libpip.html#gab78d289ab89fa2981f2910849b1b2df7',1,'pip_blt.h']]],
@@ -62,6 +62,6 @@ var searchData=
   ['pip_5ftrywait_5fany',['pip_trywait_any',['../group__libpip.html#ga65731447fedb85cbe4d5c38093383a20',1,'pip.h']]],
   ['pip_5fwait',['pip_wait',['../group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b',1,'pip.h']]],
   ['pip_5fwait_5fany',['pip_wait_any',['../group__libpip.html#gade2b18ac0e11ec827ad68656591c7518',1,'pip.h']]],
-  ['pip_5fyield',['pip_yield',['../group__libpip.html#gadcd0fdda9a09a0eac3001556cc1dd5e6',1,'pip_blt.h']]],
+  ['pip_5fyield',['pip_yield',['../group__libpip.html#ga50469f21446ce86ea18ddd282cf15894',1,'pip_blt.h']]],
   ['pip_5fyield_5fto',['pip_yield_to',['../group__libpip.html#gac30cf124b28a8d80dac34c5e1bdb66ba',1,'pip_blt.h']]]
 ];

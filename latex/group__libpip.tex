@@ -90,7 +90,7 @@ int \hyperlink{group__libpip_ga4a396f38920d94b71dcfd3c898fbb82b}{pip\-\_\-kill} 
 \begin{DoxyCompactList}\small\item\em deliver a signal to a Pi\-P task \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{group__libpip_ga3dc0c780c6bc085a6ea194d9485d75b2}{pip\-\_\-sigmask} (int how, sigset\-\_\-t $\ast$sigmask, sigset\-\_\-t $\ast$oldmask)
+int \hyperlink{group__libpip_gaf546ee24368b118e937aadd2dbea2217}{pip\-\_\-sigmask} (int how, const sigset\-\_\-t $\ast$sigmask, sigset\-\_\-t $\ast$oldmask)
 \begin{DoxyCompactList}\small\item\em set signal mask of the current Pi\-P task \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
@@ -118,8 +118,8 @@ int \hyperlink{group__libpip_gacefb1f29e5f5d9b21309a1d041e78790}{pip\-\_\-is\-\_
 \begin{DoxyCompactList}\small\item\em check if the specified Pi\-P task is alive or not \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-void \hyperlink{group__libpip_ga49a4a9ee014ffdaf0c26df18adf965ad}{pip\-\_\-abort} (void)
-\begin{DoxyCompactList}\small\item\em abort all Pi\-P tasks and root \end{DoxyCompactList}\end{DoxyCompactItemize}
+int \hyperlink{group__libpip_gab7ba5cc62101240c68acf07905e36772}{pip\-\_\-kill\-\_\-all\-\_\-tasks} (void)
+\begin{DoxyCompactList}\small\item\em kill all Pi\-P tasks \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_gae9187ea22ecf0623fa3ecfba5337f52d}{pip\-\_\-spawn} (char $\ast$filename, char $\ast$$\ast$argv, char $\ast$$\ast$envv, int coreno, int $\ast$pipidp, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg)
@@ -134,24 +134,28 @@ int \hyperlink{group__libpip_ga180ece8f3f537d84db8e70921f3ae099}{pip\-\_\-is\-\_
 \begin{DoxyCompactList}\small\item\em check if file descriptors are shared or not \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{group__libpip_ga9c50d9b2b810d97a75a5fe9c332902e0}{pip\-\_\-task\-\_\-queue\-\_\-init} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$methods)
-\begin{DoxyCompactList}\small\item\em Initialize task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
-\begin{DoxyCompactItemize}
-\item 
 int \hyperlink{group__libpip_gaceaa2ec686f001439d6ea89d47e71f65}{pip\-\_\-blt\-\_\-spawn} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, int coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-task\-\_\-t $\ast$$\ast$bltp, pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp)
 \begin{DoxyCompactList}\small\item\em spawn a Pi\-P B\-L\-T (Bi-\/\-Level Task) \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{group__libpip_ga5a043af776eb89933bfc0a057790cc82}{pip\-\_\-task\-\_\-queue\-\_\-count} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np)
-\begin{DoxyCompactList}\small\item\em Count the length of task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
+int \hyperlink{group__libpip_ga50469f21446ce86ea18ddd282cf15894}{pip\-\_\-yield} (int flag)
+\begin{DoxyCompactList}\small\item\em Yield. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-void \hyperlink{group__libpip_gaf7f6e26e29752a148704108bdcc7756f}{pip\-\_\-task\-\_\-queue\-\_\-lock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
-\begin{DoxyCompactList}\small\item\em Lock task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
+int \hyperlink{group__libpip_gac30cf124b28a8d80dac34c5e1bdb66ba}{pip\-\_\-yield\-\_\-to} (pip\-\_\-task\-\_\-t $\ast$task)
+\begin{DoxyCompactList}\small\item\em Yield to the specified Pi\-P task. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{group__libpip_ga9c50d9b2b810d97a75a5fe9c332902e0}{pip\-\_\-task\-\_\-queue\-\_\-init} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$methods)
+\begin{DoxyCompactList}\small\item\em Initialize task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_ga20d50746c585f1ede68f2c9aefc39a5c}{pip\-\_\-task\-\_\-queue\-\_\-trylock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
 \begin{DoxyCompactList}\small\item\em Try locking task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{group__libpip_gaf7f6e26e29752a148704108bdcc7756f}{pip\-\_\-task\-\_\-queue\-\_\-lock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Lock task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 void \hyperlink{group__libpip_gaf4cfe9905f1862718f65ba2fda961b84}{pip\-\_\-task\-\_\-queue\-\_\-unlock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
@@ -160,6 +164,10 @@ void \hyperlink{group__libpip_gaf4cfe9905f1862718f65ba2fda961b84}{pip\-\_\-task\
 \item 
 int \hyperlink{group__libpip_gabf772cd5ea121458291801a26dea5c9d}{pip\-\_\-task\-\_\-queue\-\_\-isempty} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
 \begin{DoxyCompactList}\small\item\em Query function if the current task has some tasks to be scheduled with. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{group__libpip_ga5a043af776eb89933bfc0a057790cc82}{pip\-\_\-task\-\_\-queue\-\_\-count} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np)
+\begin{DoxyCompactList}\small\item\em Count the length of task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 void \hyperlink{group__libpip_gae0f80336f51c43c3da988dd0467453cf}{pip\-\_\-task\-\_\-queue\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$task)
@@ -176,14 +184,6 @@ void \hyperlink{group__libpip_ga7fdea4628abd0c38779276b6cd8ebd3f}{pip\-\_\-task\
 \item 
 int \hyperlink{group__libpip_ga45d0eaa7122e459ea19187c148b9da10}{pip\-\_\-task\-\_\-queue\-\_\-fin} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
 \begin{DoxyCompactList}\small\item\em Finalize a task. \end{DoxyCompactList}\end{DoxyCompactItemize}
-\begin{DoxyCompactItemize}
-\item 
-int \hyperlink{group__libpip_gadcd0fdda9a09a0eac3001556cc1dd5e6}{pip\-\_\-yield} (void)
-\begin{DoxyCompactList}\small\item\em Yield. \end{DoxyCompactList}\end{DoxyCompactItemize}
-\begin{DoxyCompactItemize}
-\item 
-int \hyperlink{group__libpip_gac30cf124b28a8d80dac34c5e1bdb66ba}{pip\-\_\-yield\-\_\-to} (pip\-\_\-task\-\_\-t $\ast$task)
-\begin{DoxyCompactList}\small\item\em Yield to the specified Pi\-P task. \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_ga7dbf7e64e78cd00ef62c3bb04f289a68}{pip\-\_\-suspend\-\_\-and\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg)
@@ -938,15 +938,15 @@ Return 0 on success. Return an error code on error.
 {\em E\-I\-N\-V\-A\-L} & An invalid signal number or invalid Pi\-P I\-D is specified \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{group__libpip_ga3dc0c780c6bc085a6ea194d9485d75b2}{\index{libpip@{libpip}!pip\-\_\-sigmask@{pip\-\_\-sigmask}}
+\hypertarget{group__libpip_gaf546ee24368b118e937aadd2dbea2217}{\index{libpip@{libpip}!pip\-\_\-sigmask@{pip\-\_\-sigmask}}
 \index{pip\-\_\-sigmask@{pip\-\_\-sigmask}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-sigmask}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-sigmask (
 \begin{DoxyParamCaption}
 \item[{int}]{how, }
-\item[{sigset\-\_\-t $\ast$}]{sigmask, }
+\item[{const sigset\-\_\-t $\ast$}]{sigmask, }
 \item[{sigset\-\_\-t $\ast$}]{oldmask}
 \end{DoxyParamCaption}
-)}}\label{group__libpip_ga3dc0c780c6bc085a6ea194d9485d75b2}
+)}}\label{group__libpip_gaf546ee24368b118e937aadd2dbea2217}
 
 
 set signal mask of the current Pi\-P task 
@@ -1078,20 +1078,25 @@ check if the specified Pi\-P task is alive or not
 \begin{DoxyReturn}{Returns}
 Return true if the specified Pi\-P task or U\-L\-P is alive (i.\-e., not yet terminated) and running 
 \end{DoxyReturn}
-\hypertarget{group__libpip_ga49a4a9ee014ffdaf0c26df18adf965ad}{\index{libpip@{libpip}!pip\-\_\-abort@{pip\-\_\-abort}}
-\index{pip\-\_\-abort@{pip\-\_\-abort}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-abort}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-abort (
+\hypertarget{group__libpip_gab7ba5cc62101240c68acf07905e36772}{\index{libpip@{libpip}!pip\-\_\-kill\-\_\-all\-\_\-tasks@{pip\-\_\-kill\-\_\-all\-\_\-tasks}}
+\index{pip\-\_\-kill\-\_\-all\-\_\-tasks@{pip\-\_\-kill\-\_\-all\-\_\-tasks}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-kill\-\_\-all\-\_\-tasks}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-kill\-\_\-all\-\_\-tasks (
 \begin{DoxyParamCaption}
 \item[{void}]{}
 \end{DoxyParamCaption}
-)}}\label{group__libpip_ga49a4a9ee014ffdaf0c26df18adf965ad}
+)}}\label{group__libpip_gab7ba5cc62101240c68acf07905e36772}
 
 
-abort all Pi\-P tasks and root 
+kill all Pi\-P tasks 
 
 \begin{DoxyReturn}{Returns}
-Return true nothing 
+Return 0 on success. Return an error code on error. 
 \end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Not called from root \\
+\hline
+\end{DoxyRetVals}
 \hypertarget{group__libpip_gae9187ea22ecf0623fa3ecfba5337f52d}{\index{libpip@{libpip}!pip\-\_\-spawn@{pip\-\_\-spawn}}
 \index{pip\-\_\-spawn@{pip\-\_\-spawn}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-spawn}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-spawn (
@@ -1175,28 +1180,6 @@ check if file descriptors are shared or not
 \begin{DoxyReturn}{Returns}
 Return true if F\-Ds are shared 
 \end{DoxyReturn}
-\hypertarget{group__libpip_ga9c50d9b2b810d97a75a5fe9c332902e0}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-init@{pip\-\_\-task\-\_\-queue\-\_\-init}}
-\index{pip\-\_\-task\-\_\-queue\-\_\-init@{pip\-\_\-task\-\_\-queue\-\_\-init}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-init (
-\begin{DoxyParamCaption}
-\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
-\item[{pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$}]{methods}
-\end{DoxyParamCaption}
-)}}\label{group__libpip_ga9c50d9b2b810d97a75a5fe9c332902e0}
-
-
-Initialize task queue. 
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em queue} & A task queue \\
-\hline
-\mbox{\tt in}  & {\em methods} & Usre defined function table. If N\-U\-L\-L then default functions will be used.\\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-This function returns no error 
-\end{DoxyReturn}
 \hypertarget{group__libpip_gaceaa2ec686f001439d6ea89d47e71f65}{\index{libpip@{libpip}!pip\-\_\-blt\-\_\-spawn@{pip\-\_\-blt\-\_\-spawn}}
 \index{pip\-\_\-blt\-\_\-spawn@{pip\-\_\-blt\-\_\-spawn}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-blt\-\_\-spawn}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-blt\-\_\-spawn (
@@ -1249,47 +1232,74 @@ zero is returned if this function succeeds. On error, an error number is returne
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-task\-\_\-spawn(3), pip\-\_\-spawn\-\_\-from\-\_\-main(3) 
 \end{DoxySeeAlso}
-\hypertarget{group__libpip_ga5a043af776eb89933bfc0a057790cc82}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-count@{pip\-\_\-task\-\_\-queue\-\_\-count}}
-\index{pip\-\_\-task\-\_\-queue\-\_\-count@{pip\-\_\-task\-\_\-queue\-\_\-count}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-count}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-count (
+\hypertarget{group__libpip_ga50469f21446ce86ea18ddd282cf15894}{\index{libpip@{libpip}!pip\-\_\-yield@{pip\-\_\-yield}}
+\index{pip\-\_\-yield@{pip\-\_\-yield}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-yield}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-yield (
 \begin{DoxyParamCaption}
-\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
-\item[{int $\ast$}]{np}
+\item[{int}]{flag}
 \end{DoxyParamCaption}
-)}}\label{group__libpip_ga5a043af776eb89933bfc0a057790cc82}
+)}}\label{group__libpip_ga50469f21446ce86ea18ddd282cf15894}
 
 
-Count the length of task queue. 
+Yield. 
 
 
 \begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em queue} & A task queue \\
-\hline
-\mbox{\tt out}  & {\em np} & the queue length returned\\
+\mbox{\tt in}  & {\em flag} & to specify the behavior of yielding\\
 \hline
 \end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error.
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-yield\-\_\-to(3) 
+\end{DoxySeeAlso}
+\hypertarget{group__libpip_gac30cf124b28a8d80dac34c5e1bdb66ba}{\index{libpip@{libpip}!pip\-\_\-yield\-\_\-to@{pip\-\_\-yield\-\_\-to}}
+\index{pip\-\_\-yield\-\_\-to@{pip\-\_\-yield\-\_\-to}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-yield\-\_\-to}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-yield\-\_\-to (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{task}
+\end{DoxyParamCaption}
+)}}\label{group__libpip_gac30cf124b28a8d80dac34c5e1bdb66ba}
+
+
+Yield to the specified Pi\-P task. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em task} & Target Pi\-P task to switch\\
+\hline
+\end{DoxyParams}
+Context-\/switch to the specified Pi\-P task. If {\ttfamily task} is {\ttfamily N\-U\-L\-L}, then this works the same as {\ttfamily \hyperlink{group__libpip_ga50469f21446ce86ea18ddd282cf15894}{pip\-\_\-yield()}} does.
+
 \begin{DoxyReturn}{Returns}
 Return 0 on success. Return an error code on error. 
 \end{DoxyReturn}
 
 \begin{DoxyRetVals}{Return values}
-{\em E\-I\-N\-V\-A\-L} & {\ttfamily np} is {\ttfamily N\-U\-L\-L} \\
+{\em E\-P\-E\-R\-M} & The specified task belongs to the other scheduling domain.\\
 \hline
 \end{DoxyRetVals}
-\hypertarget{group__libpip_gaf7f6e26e29752a148704108bdcc7756f}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-lock@{pip\-\_\-task\-\_\-queue\-\_\-lock}}
-\index{pip\-\_\-task\-\_\-queue\-\_\-lock@{pip\-\_\-task\-\_\-queue\-\_\-lock}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-task\-\_\-queue\-\_\-lock (
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-yield(3) 
+\end{DoxySeeAlso}
+\hypertarget{group__libpip_ga9c50d9b2b810d97a75a5fe9c332902e0}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-init@{pip\-\_\-task\-\_\-queue\-\_\-init}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-init@{pip\-\_\-task\-\_\-queue\-\_\-init}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-init (
 \begin{DoxyParamCaption}
-\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$}]{methods}
 \end{DoxyParamCaption}
-)}}\label{group__libpip_gaf7f6e26e29752a148704108bdcc7756f}
+)}}\label{group__libpip_ga9c50d9b2b810d97a75a5fe9c332902e0}
 
 
-Lock task queue. 
+Initialize task queue. 
 
 
 \begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em queue} & A task queue\\
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em methods} & Usre defined function table. If N\-U\-L\-L then default functions will be used.\\
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
@@ -1313,6 +1323,25 @@ Try locking task queue.
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
 Returns true if lock succeeds. 
+\end{DoxyReturn}
+\hypertarget{group__libpip_gaf7f6e26e29752a148704108bdcc7756f}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-lock@{pip\-\_\-task\-\_\-queue\-\_\-lock}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-lock@{pip\-\_\-task\-\_\-queue\-\_\-lock}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-task\-\_\-queue\-\_\-lock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{group__libpip_gaf7f6e26e29752a148704108bdcc7756f}
+
+
+Lock task queue. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+This function returns no error 
 \end{DoxyReturn}
 \hypertarget{group__libpip_gaf4cfe9905f1862718f65ba2fda961b84}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-unlock@{pip\-\_\-task\-\_\-queue\-\_\-unlock}}
 \index{pip\-\_\-task\-\_\-queue\-\_\-unlock@{pip\-\_\-task\-\_\-queue\-\_\-unlock}!libpip@{libpip}}
@@ -1350,8 +1379,35 @@ Query function if the current task has some tasks to be scheduled with.
 \hline
 \end{DoxyParams}
 \begin{DoxyReturn}{Returns}
-Returns true if there is no tasks to schedule. 
+Returns true if there is no tasks to in the queue 
 \end{DoxyReturn}
+\hypertarget{group__libpip_ga5a043af776eb89933bfc0a057790cc82}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-count@{pip\-\_\-task\-\_\-queue\-\_\-count}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-count@{pip\-\_\-task\-\_\-queue\-\_\-count}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-count}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-count (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{int $\ast$}]{np}
+\end{DoxyParamCaption}
+)}}\label{group__libpip_ga5a043af776eb89933bfc0a057790cc82}
+
+
+Count the length of task queue. 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt out}  & {\em np} & the queue length returned\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily np} is {\ttfamily N\-U\-L\-L} \\
+\hline
+\end{DoxyRetVals}
 \hypertarget{group__libpip_gae0f80336f51c43c3da988dd0467453cf}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-enqueue@{pip\-\_\-task\-\_\-queue\-\_\-enqueue}}
 \index{pip\-\_\-task\-\_\-queue\-\_\-enqueue@{pip\-\_\-task\-\_\-queue\-\_\-enqueue}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-enqueue}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-task\-\_\-queue\-\_\-enqueue (
@@ -1368,12 +1424,9 @@ Enqueue a B\-L\-T.
 \begin{DoxyParams}[1]{Parameters}
 \mbox{\tt in}  & {\em queue} & A task queue \\
 \hline
-\mbox{\tt in}  & {\em task} & A task to be enqueued\\
+\mbox{\tt in}  & {\em task} & A task to be enqueued \\
 \hline
 \end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-Returns true if lock succeeds. 
-\end{DoxyReturn}
 \hypertarget{group__libpip_ga943bace202c72533951df9fc43f62277}{\index{libpip@{libpip}!pip\-\_\-task\-\_\-queue\-\_\-dequeue@{pip\-\_\-task\-\_\-queue\-\_\-dequeue}}
 \index{pip\-\_\-task\-\_\-queue\-\_\-dequeue@{pip\-\_\-task\-\_\-queue\-\_\-dequeue}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-dequeue}]{\setlength{\rightskip}{0pt plus 5cm}pip\-\_\-task\-\_\-t$\ast$ pip\-\_\-task\-\_\-queue\-\_\-dequeue (
@@ -1434,52 +1487,6 @@ Finalize a task.
 \begin{DoxyReturn}{Returns}
 If succeedss, 0 is returned. Otherwise an error code is returned. 
 \end{DoxyReturn}
-\hypertarget{group__libpip_gadcd0fdda9a09a0eac3001556cc1dd5e6}{\index{libpip@{libpip}!pip\-\_\-yield@{pip\-\_\-yield}}
-\index{pip\-\_\-yield@{pip\-\_\-yield}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-yield}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-yield (
-\begin{DoxyParamCaption}
-\item[{void}]{}
-\end{DoxyParamCaption}
-)}}\label{group__libpip_gadcd0fdda9a09a0eac3001556cc1dd5e6}
-
-
-Yield. 
-
-\begin{DoxyReturn}{Returns}
-Return 0 on success. Return an error code on error.
-\end{DoxyReturn}
-\begin{DoxySeeAlso}{See Also}
-pip\-\_\-yield\-\_\-to(3) 
-\end{DoxySeeAlso}
-\hypertarget{group__libpip_gac30cf124b28a8d80dac34c5e1bdb66ba}{\index{libpip@{libpip}!pip\-\_\-yield\-\_\-to@{pip\-\_\-yield\-\_\-to}}
-\index{pip\-\_\-yield\-\_\-to@{pip\-\_\-yield\-\_\-to}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-yield\-\_\-to}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-yield\-\_\-to (
-\begin{DoxyParamCaption}
-\item[{pip\-\_\-task\-\_\-t $\ast$}]{task}
-\end{DoxyParamCaption}
-)}}\label{group__libpip_gac30cf124b28a8d80dac34c5e1bdb66ba}
-
-
-Yield to the specified Pi\-P task. 
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em task} & Target Pi\-P task to switch\\
-\hline
-\end{DoxyParams}
-Context-\/switch to the specified Pi\-P task. If {\ttfamily task} is {\ttfamily N\-U\-L\-L}, then this works the same as {\ttfamily \hyperlink{group__libpip_gadcd0fdda9a09a0eac3001556cc1dd5e6}{pip\-\_\-yield()}} does.
-
-\begin{DoxyReturn}{Returns}
-Return 0 on success. Return an error code on error. 
-\end{DoxyReturn}
-
-\begin{DoxyRetVals}{Return values}
-{\em E\-P\-E\-R\-M} & The specified task belongs to the other scheduling domain.\\
-\hline
-\end{DoxyRetVals}
-\begin{DoxySeeAlso}{See Also}
-pip\-\_\-yield(3) 
-\end{DoxySeeAlso}
 \hypertarget{group__libpip_ga7dbf7e64e78cd00ef62c3bb04f289a68}{\index{libpip@{libpip}!pip\-\_\-suspend\-\_\-and\-\_\-enqueue@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}}
 \index{pip\-\_\-suspend\-\_\-and\-\_\-enqueue@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}!libpip@{libpip}}
 \subsubsection[{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-suspend\-\_\-and\-\_\-enqueue (

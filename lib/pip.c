@@ -376,6 +376,9 @@ static void pip_unset_signal_handler( int sig,
 /* signal handlers */
 
 static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {
+  if( pip_root_ != NULL ) {
+    pip_spin_unlock( &pip_root_->lock_ldlinux );
+  }
   DBG;
 }
 
@@ -418,7 +421,7 @@ static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
   RETURNV;
 }
 
-static void pip_set_sigmask( int sig ) {
+void pip_set_sigmask_( int sig ) {
   sigset_t sigmask;
 
   ASSERT( sigemptyset( &sigmask ) );
@@ -426,7 +429,7 @@ static void pip_set_sigmask( int sig ) {
   ASSERT( sigprocmask( SIG_BLOCK, &sigmask, &pip_root_->old_sigmask ) );
 }
 
-static void pip_unset_sigmask( void ) {
+void pip_unset_sigmask_( void ) {
   ASSERT( sigprocmask( SIG_SETMASK, &pip_root_->old_sigmask, NULL ) );
 }
 
@@ -552,7 +555,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
     unsetenv( PIP_ROOT_ENV );
 
-    pip_set_sigmask( SIGCHLD );
+    //pip_set_sigmask( SIGCHLD );
     pip_set_signal_handler_( SIGCHLD, 
 			     pip_sigchld_handler, 
 			     &pip_root_->old_sigchld );
@@ -618,7 +621,7 @@ int pip_fin( void ) {
     PIP_REPORT( time_dlmopen   );
 
     /* SIGCHLD */
-    pip_unset_sigmask();
+    //pip_unset_sigmask_();
     pip_unset_signal_handler( SIGCHLD, 
 			      &pip_root_->old_sigchld );
     /* SIGTERM */

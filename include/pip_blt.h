@@ -237,7 +237,7 @@ extern "C" {
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
    * \param[in] opts option flags
-w   * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
+   * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
    *  \c PIP_PIPID_ANY is specified, then the PiP ID of the spawned PiP
    *  task is up to the PiP library and the assigned PiP ID will be
    *  returned.
@@ -985,10 +985,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #define pip_mutex_fin( M ) \
   pip_mutex_fin_( (pip_mutex_t*)(M) )
 #endif
-
-  void pip_task_describe(  FILE *fp, const char *tag, int pipid );
-  void pip_queue_describe( FILE *fp, const char *tag, pip_task_t *queue);
-
 
 /**
  * @}

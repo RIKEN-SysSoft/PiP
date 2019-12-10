@@ -33,13 +33,13 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-/** \addtogroup piprun piprun
+/** \addtogroup pip-exec pip-exec
  *
  * \brief run programs as PiP tasks
  *
  * \section synopsis SYNOPSIS
  *
- *	\c \b piprun [OPTIONS] &lt;program&gt; ... [ : ... ]
+ *	\c \b pip-exec [OPTIONS] &lt;program&gt; ... [ : ... ]
  *
  * \section description DESCRIPTION
  * \b Run a program as PiP task(s).  Mutiple programs can be specified

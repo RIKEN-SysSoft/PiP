@@ -9,11 +9,11 @@ testdir=$dir/../..
 if [ $? -ne 0 ]; then
     exit $EXIT_FAIL;
 fi
-./pipcheck -r root
+./pip-check -r root
 if [ $? -ne 0 ]; then
     exit $EXIT_FAIL;
 fi
-./pipcheck -t root
+./pip-check -t root
 if [ $? -eq 0 ]; then
     exit $EXIT_FAIL;
 fi
@@ -21,13 +21,13 @@ fi
 if [ $? -ne 0 ]; then
     exit $EXIT_FAIL;
 fi
-./pipcheck -t task
+./pip-check -t task
 if [ $? -ne 0 ]; then
     exit $EXIT_FAIL;
 fi
-ldso=`./pipcheck --ldso`;
+ldso=`./pip-check --ldso`;
 if [ "$ldso" != "" ]; then
-    ./pipcheck -r task
+    ./pip-check -r task
     if [ $? -eq 0 ]; then
 	exit $EXIT_FAIL;
     fi

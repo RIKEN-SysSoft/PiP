@@ -323,6 +323,8 @@ extern void pip_set_extval_( pip_task_internal_t*, int );
 extern void pip_finalize_task_RC_( pip_task_internal_t* );
 
 extern int  pip_raise_signal_( pip_task_internal_t*, int );
+extern void pip_set_sigmask_( int );
+extern void pip_unset_sigmask_( void );
 extern void pip_page_alloc_( size_t, void** );
 extern int  pip_check_sync_flag_( uint32_t );
 

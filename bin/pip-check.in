@@ -30,13 +30,13 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pipcheck pipcheck
+### \addtogroup pip-check pip-check
 ###
 ### \brief PiP binary checking program
 ###
 ### \section synopsis SYNOPSIS
 ###
-###	\c \b pipcheck <b>pip-prog<\b> [...]
+###	\c \b pipcheck \b pip-prog [...]
 ###
 
 ldso="@dynamic_linker@"

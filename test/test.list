@@ -6,6 +6,6 @@
 %include cxx/test.list
 %include fortran/test.list
 %include issues/test.list
-%include piprun.list
+%include pip-exec.list
 %include basics/blt.list
 %include blt/test.list
