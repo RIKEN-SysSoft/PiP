@@ -59,7 +59,7 @@ ompnumthread: ompnumthread.c
 	$(CC) -fopenmp -openmp -O2 $< -o$@
 
 inf : inf.c Makefile
-	../scripts/pipcc --TEST ../.. inf.c --piptask -o inf
+	../scripts/pipcc --pipdir ../.. inf.c --piptask -o inf
 
 debug:
 	CPPFLAGS+="-DDEBUG" make all
