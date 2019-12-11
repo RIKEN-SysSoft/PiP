@@ -51,9 +51,9 @@ debug:
 .PHONY: test-progs
 test-progs:
 	make -C test
+	make -C test/scripts
 	make -C test/util
 	make -C test/prog
-	make -C test/scripts
 	make -C test/basics
 	make -C test/compat
 	make -C test/pthread
