@@ -41,7 +41,5 @@ PROGRAMS  = fflush-ticket518 fflush-ticket518+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
-check: test
-
-test:
-	( cd ../; ./test.sh -A basics/test.list )
+test :
+	../test.sh test.list

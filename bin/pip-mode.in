@@ -59,15 +59,17 @@
 self=$0;
 prefix=@prefix@;
 libdir=${prefix}/lib;
+bindir=${prefix}/bin;
 flag_help=0;
+flag_show=0;
 
 function usage() {
     echo $self "-P|-p|-c|-t [<command> ...]";
-    echo "    -P: process mode";
-    echo "    -p: process:preload mode";
-    echo "    -c: process:pipclone mode";
-    echo "    -t: pthread mode";
-    exit 1;
+    echo "    -P: 'process' mode";
+    echo "    -p: 'process:preload' mode";
+    echo "    -c: 'process:pipclone' mode";
+    echo "    -t: 'pthread' mode";
+    exit 0;
 }
 
 if [[ -f ${libdir}/pip_preload.so ]]; then
@@ -91,10 +93,13 @@ for i; do
 	    fi;;
 	-c|--process:pipclone)
 	    pip_mode="process:pipclone";;
-	-t|-T)
+	-t|-T|--thread|--pthreaad)
 	    pip_mode=pthread;;
 	-u|--help)
 	    usage;;
+	-*)
+	    echo "Unknown option '$1'";
+	    exit 1;;
 	*)
 	    cmd="${cmd} $i";;
     esac
@@ -118,12 +123,12 @@ if [ "${pip_mode}" != "pthread" ]; then
 fi
 
 if [ "x${cmd}" != x ]; then
-    exec ${cmd};
+    ${cmd};
 else
     if [ "${pip_mode}" != "pthread" ]; then 
 	if [ "x${preload}" != x ]; then
-	    echo  "LD_PRELOAD=${LD_PRELOAD}";
+	    echo "LD_PRELOAD=${LD_PRELOAD}";
 	fi
     fi
-    echo  "PIP_MODE=${PIP_MODE}";
+    echo "PIP_MODE=${PIP_MODE}";
 fi

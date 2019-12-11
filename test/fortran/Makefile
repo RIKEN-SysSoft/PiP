@@ -44,3 +44,6 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
+
+test :
+	../test.sh test.list

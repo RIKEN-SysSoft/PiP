@@ -1,4 +1,3 @@
-./timer.sh
 timer 1 ./pip_init
 timer 1 ./pip_init null
 timer 1 ./pip_init preload

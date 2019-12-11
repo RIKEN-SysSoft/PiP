@@ -1,11 +1,12 @@
 #!/bin/sh
 
+tstp=$0
 dir=`dirname $0`
 . $dir/../exit_code.sh.inc
 
-testdir=$dir/../..
+pipdir=$dir/../..
 
-./pipcc --TEST $testdir -g --piproot root.c -o root;
+./pipcc --pipdir $pipdir -g --piproot root.c -o root;
 if [ $? -ne 0 ]; then
     exit $EXIT_FAIL;
 fi
@@ -17,7 +18,7 @@ fi
 if [ $? -eq 0 ]; then
     exit $EXIT_FAIL;
 fi
-./pipcc --TEST $testdir -g --piptask task.c -o task;
+./pipcc --pipdir $pipdir -g --piptask task.c -o task;
 if [ $? -ne 0 ]; then
     exit $EXIT_FAIL;
 fi
@@ -38,4 +39,6 @@ fi
 if [ $? -ne 0 ]; then
     exit $EXIT_FAIL;
 fi
+
+echo $tstp ": PASS"; echo;
 exit $EXIT_PASS;

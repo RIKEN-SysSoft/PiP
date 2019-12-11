@@ -115,14 +115,14 @@ top_pids() {
 }
 
 print_usage() {
-    echo >&2 "Usage: `basename $cmd` OPTION [pip_cmd ...]";
+    echo >&2 "Usage: `basename $cmd` [OPTIONS] [pip_cmd ...]";
     echo >&2 "    -s SIGNAL    : kill signal (TERM)"
     echo >&2 "    -k|--kill    : same as '-s TERM'"
     echo >&2 "    -l|--list    : list PiP tasks (default action)"
     echo >&2 "    -t|--top     : top command on PiP tasks"
     echo >&2 "    -u|--help    : display usage"
-    echo >&2 "    -v|--verbose : show killing processes"
-    exit 2;
+    echo >&2 "    -v|--verbose : show target PiP tasks"
+    exit 0;
 }
 
 cmd=$0;
@@ -139,12 +139,15 @@ case $1 in
     *) false;;
 esac
 do
-    case $1 in -s|--signal)	shift; signal=$1;;  esac
-    case $1 in -k|--kill)	shift; signal=TERM;;  esac
-    case $1 in -l|--list)	flag_list=true;;    esac
-    case $1 in -t|--top)	flag_top=true;;    esac
-    case $1 in -v|--verbose)	flag_verbose=true;; esac
-    case $1 in -u|--help)	print_usage;; esac
+    case $1 in
+	-s|--signal)	shift; signal=$1;;
+	-k|--kill)	shift; signal=TERM;; 
+	-l|--list)	flag_list=true;;
+	-t|--top)	flag_top=true;;
+	-v|--verbose)	flag_verbose=true;; 
+	-u|--help)	print_usage;;
+	-*)		echo "Unkown option '$1'"; exit 1;;	
+	esac
     shift
 done
 

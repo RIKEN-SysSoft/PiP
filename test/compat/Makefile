@@ -47,7 +47,5 @@ PROGRAMS  = fork malloc ctype pip_dlopen gettimeofday \
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
-check: test
-
 test:
 	../test.sh compat/test.list

@@ -39,3 +39,6 @@ PROGRAMS = pip_yield pip_namexp pip_barrier pip_mutex
 
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
+
+test :
+	../test.sh test.list

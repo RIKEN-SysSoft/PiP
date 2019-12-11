@@ -50,5 +50,8 @@ pip-check: ../../bin/pip-check Makefile
 pip-mode: ../../bin/pip-mode Makefile
 	$(INSTALL_PROGRAM) ../../bin/pip-mode .
 
+test :
+	../test.sh test.list
+
 post-clean-hook:
-	$(RM) -f hello hello.o root task
+	$(RM) -f a.out hello hello.o root task

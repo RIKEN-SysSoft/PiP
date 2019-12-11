@@ -51,7 +51,5 @@ include $(srcdir)/../Test.common
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -fpie -pie $< -o $@
 
-check: test
-
-test:
-	( cd ../; ./test.sh -A openmp/test.list )
+test :
+	../test.sh test.list

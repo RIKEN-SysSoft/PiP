@@ -47,7 +47,6 @@ int main( int argc, char **argv ) {
     nth = omp_get_num_threads();
     tid = omp_get_thread_num();
 
-
     printf( "[%s] Hello World from OMP thread = %d/%d\n", pipid, tid, nth );
   }
   return 0;

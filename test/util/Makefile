@@ -39,11 +39,13 @@ CFLAGS += -DCWD=\"$(CWD)\" -DPIPS=\"$(CWD)/../../bin/pips\"
 
 SRCS	= dlmopen_count.c ompnumthread.c timer.c \
 	pip_mode.c pip_is_debug_build.c \
-	pip_task.c pip_blt.c
+	pip_task.c pip_blt.c \
+	inf.c
 
 PROGRAMS = dlmopen_count ompnumthread timer \
 	pip_mode pip_is_debug_build \
-	pip_task pip_blt
+	pip_task pip_blt \
+	inf
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -56,8 +58,14 @@ dlmopen_count: dlmopen_count.c
 ompnumthread: ompnumthread.c
 	$(CC) -fopenmp -openmp -O2 $< -o$@
 
+inf : inf.c Makefile
+	../scripts/pipcc --TEST ../.. inf.c --piptask -o inf
+
 debug:
 	CPPFLAGS+="-DDEBUG" make all
+
+test :
+	../test.sh test.list
 
 include $(top_srcdir)/build/rule.mk
 include ../Test.common

@@ -34,8 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS  = inf.c \
-	pip_init.c \
+SRCS  = pip_init.c \
 	pip_wait.c \
 	pip_wait.c \
 	pip_wait_any.c \
@@ -56,7 +55,6 @@ SRCS  = inf.c \
 	pip_kill.c
 
 PROGRAMS = \
-	inf \
 	pip_init \
 	pip_wait \
 	pip_wait_any \
@@ -84,8 +82,9 @@ PROGRAMS = \
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
-inf : inf.c Makefile
-	../scripts/pipcc --TEST ../.. inf.c --piptask -o inf
+test :
+	../test.sh task.list
+	../test.sh blt.list
 
 prog-noexec : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-noexec

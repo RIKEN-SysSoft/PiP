@@ -40,7 +40,10 @@ PROGRAMS  = cxx
 
 PROGRAMS_TO_INSTALL = # nothing
 
+CXXFLAGS += $(CFLAGS)
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
-CXXFLAGS += $(CFLAGS)
+test :
+	../test.sh test.list

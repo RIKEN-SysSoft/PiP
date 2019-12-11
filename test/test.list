@@ -1,3 +1,4 @@
+%include util/test.list
 %include scripts/test.list
 %include basics/task.list
 %include compat/test.list

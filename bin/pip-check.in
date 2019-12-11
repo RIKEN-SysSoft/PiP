@@ -95,16 +95,16 @@ check () {
 	interp=`readelf -p .interp $target | sed -e "s/  \[     0\]  //" -e "1,2d" -e "4d"`;
 	if [ "$interp" != "$ldso" ]; then
 	    froot=false;
-	    reason_root="(root) not linked with '--dynamic-linker' option"
+	    reason_root="(root) 'ld.so' not specified (not linked with '--dynamic-linker' option)"
 	fi
     fi
     if ! readelf --dyn-syms $target | grep ' main' > /dev/null 2>&1; then
 	ftask=false;
-	reason_task0="(task) not linked with '-rdynamic' option"
+	reason_task0="(task) 'main' symbol not found (not linked with '-rdynamic' option)"
     fi
     if ! readelf -h $target | grep "DYN (Shared object file)" > /dev/null 2>&1; then 
 	ftask=false;
-	reason_task1="(task) not compiled and linked with '-fPIC -pie' options"
+	reason_task1="(task) not PIE (not compiled and linked with '-fPIC -pie' options)"
     fi
 
     if $flag_root; then
@@ -130,6 +130,7 @@ check () {
 	show_msgs "$target" "Task";
     else
 	show_msgs "$target" "not a PiP program";
+	flag_error=true;
     fi
     if $flag_verbose; then
 	if ! $froot; then
@@ -143,14 +144,14 @@ check () {
 
 for i; do
 	case $i in
-	    -r|--root)    flag_root=true;;
-	    -t|--task)    flag_task=true;;
-	    -b|--both)    flag_both=true;;
-	    -v|--verbose) flag_verbose=true;;
-	    -h|--usage)   show_usage;;
-	    --ldlinux|--ldso)	  echo ${ldso}; exit 0;;
-	    -*)		  echo "Invalid option" > /dev/stderr; exit 1;;
-	    *)  	  files="${files} $i";;
+	    -r|--root|--piproot) flag_root=true;;
+	    -t|--task|--piptask) flag_task=true;;
+	    -b|--both) 	         flag_both=true;;
+	    -v|--verbose)  	 flag_verbose=true;;
+	    -h|--usage)   	 show_usage;;
+	    --ldlinux|--ldso)	 echo ${ldso}; exit 0;;
+	    -*)		  	 echo "Invalid option" > /dev/stderr; exit 1;;
+	    *)  	  	 files="${files} $i";;
 	esac
 done
 
