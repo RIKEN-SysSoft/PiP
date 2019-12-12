@@ -100,7 +100,7 @@ decompose_psout() {
 
 top_pids() {
     case $# in
-	1) new_pids=$1; echo iiii;;
+	1) new_pids=$1;;
 	*) c=0;
 	    for pid in $@; do 
 		eval "((c = c + 1 ))";
@@ -153,15 +153,14 @@ done
 
 pipcmds=$@
 if [ "x$pipcmds" == x ]; then
-    ps=`ps -no-headers -u $user --format '%c %p'`
+    ps=`ps H -no-headers -u $user --format '%c %p'`
     decompose_psout $ps;
 else
     for pipcmd in $pipcmds; do
-	ps=`ps -no-headers -u $user --format '%c %p' | grep $pipcmd | grep -v grep`
+	ps=`ps H -no-headers -u $user --format '%c %p' | grep $pipcmd | grep -v grep`
 	decompose_psout $ps;
     done
 fi
-
 pids=`echo "$pids" | tr ' ' '\n' | sort -u | tr '\n' ' '`;
 pids=`echo "$pids" | sed -e 's/[ \t]*$//'`;
 
@@ -197,10 +196,11 @@ else
 	fi
     elif $flag_top; then
 	tpids=`top_pids $pids`;
-	top -p$tpids;
+	echo $tpids
+	top H -p$tpids;
 	extval=$?;
     else
-	ps -L -o "pid,ppid,pgid,rss,%cpu,%mem,state,comm,command=ARGS" $pids;
+	ps -L -o "pid,lwp,ppid,pgid,rss,%cpu,%mem,state,comm,command=ARGS" $pids;
 	extval=$?;
     fi
 fi
