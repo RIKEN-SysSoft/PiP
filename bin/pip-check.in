@@ -90,6 +90,12 @@ check () {
 	flag_error=true;
 	return 1;
     fi
+    readelf -h $target > /dev/null 2>&1;
+    if [ $? != 0 ]; then
+	show_msgs "$target" "not an ELF file";
+	flag_error=true;
+	return 1;
+    fi
 
     if [ "$ldso" != "" ]; then
 	interp=`readelf -p .interp $target | sed -e "s/  \[     0\]  //" -e "1,2d" -e "4d"`;

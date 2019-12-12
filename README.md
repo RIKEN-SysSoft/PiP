@@ -58,30 +58,6 @@ at the top of the source directory after "make install".
 
 ### To compile and link your PiP programs
 
-* PiP root process (spawning PiP tasks)  
-    must be linked with the PiP library and must specify the link
-    option as follows if you have the patched GLIBC,
-
-        --dynamic-linker=<GLIBC_INSTALL_DIR>/lib/ld-2.17.so
-
-    Once you specify this option, PiP root process uses the patched
-    GLIBC libraries, no matter how LD_LIBRARY_PATH is
-    specified. The PiP root process is not required to be PIE.  
-    Note that the other SOLIBs are already symbolic linked into
-    the <GLIBC_INSTALL_DIR>/lib directory by the "piplnlibs" command.
-    The piplnlibs command is automatically invoked by the RPM pakcage
-    installation, or should be manually invoked in the case of
-    source installation.  
-    (In case of the RPM binary distribution, <GLIBC_INSTALL_DIR> is "/opt/pip")
-
-* PiP task (spawned by PiP root process)  
-    must be compiled with "-fPIE -pthread", must be linked with "-pie
-    -rdynamic -pthread" options. PiP task programs are not required to be
-    linked with the PiP library. Thus programs to be ran as PiP tasks
-    are not required to modify their source code. Since PiP root and
-    PiP task(s) share the same (virtual) address space and ld-linux.so
-    is already loaded by PiP root, PiP tasks use the patched GLIBC.
-
 * pipcc(1) command  
 
     You can use pipcc(1) command to compile and link your PiP programs.  
@@ -92,17 +68,54 @@ at the top of the source directory after "make install".
 
 ### To run your PiP programs
 
-* Running PiP programs  
-    Consult [EXECMODE](EXECMODE) file located at the same directory with
-    this file for details.
+* pip-exec(1) command
 
-* How to check if PiP programs run under PiP environment  
-    check if they are shared the same address space by the following
-    command,
+    Let's assume your that have a non-PiP program(s) and wnat to run as PiP 
+    tasks. All you have to do is to compile your program by using the above 
+    pipcc(1) command and to use the pip-exec(1) command to run your program 
+    as PiP tasks.
 
+        $ pipcc myprog.c -o myprog
+	$ pip-exec -n 8 ./myprog
+	$ ./myprog
+
+    In this case, the pip-exec(1) command becomes the PiP root and your program
+    runs as 8 PiP tasks. Your program can also run as a normal (non-PiP) program
+    without using the pip-exec(1) command. Note that the 'myprog.c' may or may not 
+    call any PiP functions. 
+
+    You may write your own PiP programs whcih includes the PiP root programming.
+    In this case, your program can run without using the pip-exec(1) command.
+
+    If you get the following message when you try to run your program;
+
+        PiP-ERR(19673) './myprog' is not PIE
+
+    Then this means that the 'myprog' is not compiled by using the pipcc(1) command
+    properly. You may check if your program(s) can run as a PiP root and/or PiP task
+    by using the pip-check(1) command;
+
+        $ pip-check a.out
+	a.out : Root&Task
+
+    Above example shows that the 'a.out' program can run as a PiP root and PiP tasks.
+
+* pips(1) command
+
+  You can check if your PiP program is running or not by using the pips(1) 
+  command.
+
+    list the PiP tasks via the 'ps' command;
         $ pips -l [<command>]
 
-    Here, <command> is the name of PiP program you are running.
+    or, show the activities of PiP tasks via the 'top' command;
+        $ pips -t [<command>]
+
+    Here <command> is the name of PiP program you are running.
+
+  Additionally you can kill your PiP tasks by using the same pips(1) command;
+
+        $ pips -s KILL [<command>]
 
 ### To debug your PiP programs by the pip-gdb command
 
