@@ -778,15 +778,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   args->pipid     = pipid;
   args->coreno    = coreno;
   args->queue     = queue;
-  {
-    char *p;
-    if( ( p = strrchr( progp->prog, '/' ) ) == NULL) {
-      args->prog = strdup( progp->prog );
-    } else {
-      args->prog = strdup( p + 1 );
-    }
-    if( args->prog == NULL ) ERRJ_ERR( ENOMEM );
-  }
+  args->prog = strdup( progp->prog );
+  if( args->prog == NULL ) ERRJ_ERR( ENOMEM );
   if( ( args->prog_full = realpath( args->prog, NULL ) ) == NULL ) {
     args->prog_full = strdup( args->prog );
     if( args->prog_full == NULL ) ERRJ_ERR( ENOMEM );
