@@ -43,37 +43,40 @@
 #include <pip_internal.h>
 #include <pip_util.h>
 
-void pip_set_name_( char *symbol, char *progname, char *funcname ) {
+void pip_set_name( char *symbol, char *progname, char *funcname ) {
 #ifdef PR_SET_NAME
-  { /* the following code is to set the right */
-    /* name shown by the ps and top commands  */
-    char nam[16];
-
-    if( progname == NULL ) {
-      char prg[16];
-      prctl( PR_GET_NAME, prg, 0, 0, 0 );
-      snprintf( nam, 16, "%s%s",      symbol, prg );
-    } else {
-      if( funcname == NULL ) {
-	snprintf( nam, 16, "%s%s",    symbol, progname );
-      } else {
-	snprintf( nam, 16, "%s%s@%s", symbol, progname, funcname );
-      }
+  /* the following code is to set the right */
+  /* name shown by the ps and top commands  */
+  char nam[16];
+  
+  if( progname == NULL ) {
+    char prg[16];
+    prctl( PR_GET_NAME, prg, 0, 0, 0 );
+    snprintf( nam, 16, "%s%s",      symbol, prg );
+  } else {
+    char *p;
+    if( ( p = strrchr( progname, '/' ) ) != NULL) {
+      progname = p + 1;
     }
-    if( !pip_is_threaded_() ) {
+    if( funcname == NULL ) {
+      snprintf( nam, 16, "%s%s",    symbol, progname );
+    } else {
+      snprintf( nam, 16, "%s%s@%s", symbol, progname, funcname );
+    }
+  }
+  if( !pip_is_threaded_() ) {
 #define FMT "/proc/self/task/%u/comm"
-      char fname[sizeof(FMT)+8];
-      int fd;
-
-      (void) prctl( PR_SET_NAME, nam, 0, 0, 0 );
-      sprintf( fname, FMT, (unsigned int) pip_gettid() );
-      if( ( fd = open( fname, O_RDWR ) ) >= 0 ) {
-	(void) write( fd, nam, strlen(nam) );
-	(void) close( fd );
-      }
-    } else {
-      (void) pthread_setname_np( pthread_self(), nam );
+    char fname[sizeof(FMT)+8];
+    int fd;
+    
+    (void) prctl( PR_SET_NAME, nam, 0, 0, 0 );
+    sprintf( fname, FMT, (unsigned int) pip_gettid() );
+    if( ( fd = open( fname, O_RDWR ) ) >= 0 ) {
+      (void) write( fd, nam, strlen(nam) );
+      (void) close( fd );
     }
+  } else {
+    (void) pthread_setname_np( pthread_self(), nam );
   }
 #endif
 }
@@ -129,7 +132,7 @@ int pip_check_pie( const char *path, int flag_verbose ) {
   return err;
 }
 
-void pip_pipidstr_( pip_task_internal_t *taski, char *buf ) {
+void pip_pipidstr( pip_task_internal_t *taski, char *buf ) {
   switch( taski->pipid ) {
   case PIP_PIPID_ROOT:
     strcpy( buf, "?root?" );
@@ -146,9 +149,9 @@ void pip_pipidstr_( pip_task_internal_t *taski, char *buf ) {
   default:
     if( taski->task_sched == NULL ) {
       (void) sprintf( buf, "%d[-]", taski->pipid );
-    } else if( pip_task_->task_sched == pip_task_ ) {
+    } else if( pip_task->task_sched == pip_task ) {
       (void) sprintf( buf, "%d[*]", taski->pipid );
-    } else if( pip_task_->task_sched != NULL ) {
+    } else if( pip_task->task_sched != NULL ) {
       (void) sprintf( buf, "%d[%d]",
 		      taski->pipid, taski->task_sched->pipid );
     } else {
@@ -184,10 +187,10 @@ static char *pip_type_str_( pip_task_internal_t *taski ) {
 char * pip_type_str( void ) {
   char *typestr;
 
-  if( pip_task_ == NULL ) {
+  if( pip_task == NULL ) {
     typestr = "(NULL)";
   } else {
-    typestr = pip_type_str_( pip_task_ );
+    typestr = pip_type_str_( pip_task );
   }
   return typestr;
 }
@@ -210,26 +213,26 @@ int pip_idstr( char *buf, size_t sz ) {
   char *post = ">";
   int	n = 0;
 
-  if( pip_task_ == NULL ) {
+  if( pip_task == NULL ) {
     n = snprintf( buf, sz, "(%d)", tid );
-  } else if( PIP_ISA_ROOT( pip_task_ ) ) {
-    if( PIP_IS_SUSPENDED( pip_task_ ) ) {
+  } else if( PIP_ISA_ROOT( pip_task ) ) {
+    if( PIP_IS_SUSPENDED( pip_task ) ) {
       n = snprintf( buf, sz, "%sroot:(%d)%s", pre, tid, post );
     } else {
       n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, tid, post );
     }
-  } else if( PIP_ISA_TASK( pip_task_ ) ) {
+  } else if( PIP_ISA_TASK( pip_task ) ) {
     char idstr[64];
 
-    pip_pipidstr_( pip_task_, idstr );
-    if( PIP_IS_SUSPENDED( pip_task_ ) ) {
+    pip_pipidstr( pip_task, idstr );
+    if( PIP_IS_SUSPENDED( pip_task ) ) {
       n = snprintf( buf, sz, "%stask:%s(%d)%s", pre, idstr, tid, post );
     } else {
       n = snprintf( buf, sz, "%sTASK:%s(%d)%s", pre, idstr, tid, post );
     }
   } else {
     n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
-		  pre, pip_task_->type, tid, post );
+		  pre, pip_task->type, tid, post );
   }
   return n;
 }
@@ -272,8 +275,8 @@ void pip_err_mesg( const char *format, ... ) {
 }
 
 void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
-  if( pip_check_pipid_( &pipid ) == 0 ) {
-    pip_task_internal_t *task = pip_get_task_( pipid );
+  if( pip_check_pipid( &pipid ) == 0 ) {
+    pip_task_internal_t *task = pip_get_task( pipid );
     char *typestr = pip_type_str_( task );
     if( tag == NULL ) {
       pip_info_fmesg( fp,
@@ -476,7 +479,7 @@ void pip_fprint_fds( FILE *fp ) {
       if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( ( fd = atoi( de->d_name ) ) != fd_dir ) {
-	  if( pip_isa_coefd_ ( fd ) ) coe = '*';
+	  if( pip_isa_coefd( fd ) ) coe = '*';
 	  fprintf( fp, "%s %s -> %s %c", idstr, fdpath, fdname, coe );
 	} else {
 	  fprintf( fp, "%s %s -> %s  opendir(\"/proc/self/fd\")",
@@ -560,7 +563,7 @@ void pip_print_loaded_solibs( FILE *file ) {
   pip_fprint_loaded_solibs( file );
 }
 
-static int pip_dsos_cb_( struct dl_phdr_info *info, size_t size, void *data ) {
+static int pip_dsos_cb( struct dl_phdr_info *info, size_t size, void *data ) {
   FILE *fp = (FILE*) data;
   int i;
 
@@ -574,12 +577,12 @@ static int pip_dsos_cb_( struct dl_phdr_info *info, size_t size, void *data ) {
 }
 
 void pip_fprint_dsos( FILE *fp ) {
-  dl_iterate_phdr( pip_dsos_cb_, (void*) fp );
+  dl_iterate_phdr( pip_dsos_cb, (void*) fp );
 }
 
 void pip_print_dsos( void ) {
   FILE *fp = stderr;
-  dl_iterate_phdr( pip_dsos_cb_, (void*) fp );
+  dl_iterate_phdr( pip_dsos_cb, (void*) fp );
 }
 
 static char*
@@ -618,8 +621,8 @@ static char *pip_determine_pipid( pip_root_t *root,
   int id, i;
 
   id = 0;
-  if( pip_task_ != NULL ) {
-    id = ( pip_task_->pipid < 0 ) ? 0 : pip_task_->pipid;
+  if( pip_task != NULL ) {
+    id = ( pip_task->pipid < 0 ) ? 0 : pip_task->pipid;
   }
   for( i=id; i<root->ntasks; i++ ) {
     for( lm = (struct link_map*) root->tasks[i].annex->loaded;
@@ -722,10 +725,10 @@ static void pip_stack_end( int sig, siginfo_t *siginfo, void *context ) {
 }
 
 void pip_backtrace_fd( int depth, int fd ) {
-  int pip_is_magic_ok_(   pip_root_t* );
-  int pip_is_version_ok_( pip_root_t* );
+  int pip_is_magic_ok(   pip_root_t* );
+  int pip_is_version_ok( pip_root_t* );
   struct sigaction sigact, sigact_old;
-  pip_root_t	*root = pip_root_;
+  pip_root_t	*root = pip_root;
   volatile int 	flag_jump = 0;	/* must be volatile */
   FILE	 	*fp_maps = NULL;
   FILE		*fp_out  = NULL;
@@ -737,8 +740,8 @@ void pip_backtrace_fd( int depth, int fd ) {
 	*envroot != '\0' ) {
       root = (pip_root_t*) strtoll( envroot, NULL, 16 );
       if( root == NULL ||
-	  !pip_is_magic_ok_( root ) ||
-	  !pip_is_version_ok_( root ) ) {
+	  !pip_is_magic_ok( root ) ||
+	  !pip_is_version_ok( root ) ) {
 	root = NULL;
       }
     }

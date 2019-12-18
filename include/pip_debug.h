@@ -122,7 +122,8 @@ extern int pip_debug_env( void );
 
 #define ASSERTD(X)						       \
   if(DBGSW) { if(X) { EMSG(": <%s> Assertion FAILED !!!!!!\n",#X);       \
-    pip_exit(9); } else { DBGF( ": (%s) -- Assertion OK", #X ); } }
+      sleep(10);pip_exit(9); } else {					\
+      DBGF( ": (%s) -- Assertion OK", #X ); } }
 
 #define DO_CHECK_CTYPE
 

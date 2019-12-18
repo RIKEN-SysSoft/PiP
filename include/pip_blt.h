@@ -747,8 +747,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   int pip_dequeue_and_resume_N_nolock_( pip_task_queue_t *queue,
 					pip_task_t *sched, int *np );
-#define pip_dequeue_and_resume_N_nolock( Q, N ) \
-  pip_dequeue_and_resume_N_nolock_( (pip_task_queue_t*)(Q), (N) )
+#define pip_dequeue_and_resume_N_nolock( Q, S, N )			\
+  pip_dequeue_and_resume_N_nolock_( (pip_task_queue_t*)(Q), (S), (N) )
 #endif
 
   /**

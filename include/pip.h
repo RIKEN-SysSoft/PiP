@@ -837,17 +837,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief check if the specified PiP task is alive or not
-   *  @{
-   * \param[in] pipid PiP ID to check
-   *
-   * \return Return true if the specified PiP task or ULP is alive
-   * (i.e., not yet terminated) and running
-   */
-  int  pip_is_alive( int pipid );
-  /** @}*/
-
-  /**
    * \brief kill all PiP tasks
    *  @{
    * \return Return 0 on success. Return an error code on error.

@@ -35,8 +35,8 @@ print_usage() {
 }
 
 finalize() {
-    $dir_real/scripts/pipkillall -l;
-    $dir_real/scripts/pipkillall -s KILL > /dev/null 2>&1;
+    $dir_real/../bin/pips -s TERM -l;
+    $dir_real/../bin/pips -s KILL > /dev/null 2>&1;
     if [ x"$TMP" != x ]; then
 	if [ -f $TMP ]; then
 	    echo "Logfile: $FILE";

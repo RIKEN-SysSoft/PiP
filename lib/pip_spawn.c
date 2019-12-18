@@ -59,7 +59,7 @@ __thread int pipid_tls;
 #endif
 
 
-int pip_count_vec_( char **vecsrc ) {
+int pip_count_vec( char **vecsrc ) {
   int n = 0;
   if( vecsrc != NULL ) {
     for( ; vecsrc[n]!= NULL; n++ );
@@ -127,8 +127,8 @@ static char **pip_copy_vec( char **vecsrc ) {
 static char **pip_copy_env( char **envsrc, int pipid ) {
   char rootenv[128], taskenv[128];
   char *preload_env = getenv( "LD_PRELOAD" );
-  ASSERT( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root_ ) <= 0 );
-  ASSERT( sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid     ) <= 0 );
+  ASSERT( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
+  ASSERT( sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
   return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
 }
 
@@ -137,7 +137,7 @@ size_t pip_stack_size( void ) {
   size_t 	sz, scale;
   int 		i;
 
-  if( ( sz = pip_root_->stack_size_blt ) == 0 ) {
+  if( ( sz = pip_root->stack_size_blt ) == 0 ) {
     if( ( env = getenv( PIP_ENV_STACKSZ ) ) == NULL &&
 	( env = getenv( "KMP_STACKSIZE" ) ) == NULL &&
 	( env = getenv( "OMP_STACKSIZE" ) ) == NULL ) {
@@ -176,12 +176,12 @@ size_t pip_stack_size( void ) {
 	sz = ( sz < PIP_STACK_SIZE_MIN ) ? PIP_STACK_SIZE_MIN : sz;
       }
     }
-    pip_root_->stack_size_blt = sz;
+    pip_root->stack_size_blt = sz;
   }
   return sz;
 }
 
-int pip_isa_coefd_( int fd ) {
+int pip_isa_coefd( int fd ) {
   int flags = fcntl( fd, F_GETFD );
   return( ( flags > 0 ) && ( flags & FD_CLOEXEC ) );
 }
@@ -201,7 +201,7 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
       if( direntp->d_name[0] != '.' &&
 	  ( fd = atoi( direntp->d_name ) ) >= 0 &&
 	  fd != fd_dir &&
-	  pip_isa_coefd_( fd ) ) {
+	  pip_isa_coefd( fd ) ) {
 	nfds ++;
       }
     }
@@ -215,7 +215,7 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
 	    ( fd = strtol( direntp->d_name, NULL, 10 ) ) >= 0	&&
 	    errno == 0						&&
 	    fd != fd_dir                         		&&
-	    pip_isa_coefd_( fd ) ) {
+	    pip_isa_coefd( fd ) ) {
 	  (*fd_listp)[i++] = fd;
 	}
       }
@@ -318,7 +318,7 @@ static int pip_load_prog( pip_spawn_program_t *progp,
       (void) pip_dlclose( loaded );
     } else {
       taski->annex->loaded = loaded;
-      pip_gdbif_load_( taski );
+      pip_gdbif_load( taski );
     }
   }
   RETURN( err );
@@ -373,8 +373,8 @@ int pip_get_dso( int pipid, void **loaded ) {
   pip_task_internal_t *task;
   int err;
 
-  if( ( err = pip_check_pipid_( &pipid ) ) != 0 ) RETURN( err );
-  task = pip_get_task_( pipid );
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  task = pip_get_task( pipid );
   if( loaded != NULL ) *loaded = task->annex->loaded;
   RETURN( 0 );
 }
@@ -382,7 +382,7 @@ int pip_get_dso( int pipid, void **loaded ) {
 static int pip_glibc_init( pip_symbols_t *symbols,
 			   pip_spawn_args_t *args,
 			   void *loaded ) {
-  int argc = pip_count_vec_( args->argv );
+  int argc = pip_count_vec( args->argv );
 
   if( symbols->prog != NULL ) {
     *symbols->prog = args->prog;
@@ -450,7 +450,7 @@ void pip_exit( int extval ) {
   } else if( pip_isa_root() ) {
     exit( extval );
   } else {
-    return_from_start_func( pip_task_, extval );
+    return_from_start_func( pip_task, extval );
   }
   NEVER_REACH_HERE;
 }
@@ -479,11 +479,11 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
   int	err, extval;
 
   /* we need lock on ldlinux. supposedly glibc does someting */
-  pip_spin_lock( &pip_root_->lock_ldlinux );
+  pip_spin_lock( &pip_root->lock_ldlinux );
   argc = pip_glibc_init( &self->annex->symbols,
 			 args,
 			 self->annex->loaded );
-  pip_spin_unlock( &pip_root_->lock_ldlinux );
+  pip_spin_unlock( &pip_root->lock_ldlinux );
 
   if( self->annex->hook_before != NULL &&
       ( err = self->annex->hook_before( hook_arg ) ) != 0 ) {
@@ -497,7 +497,7 @@ pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
 	(void) close( args->fd_list[i] );
       }
     }
-    pip_gdbif_hook_before_( self );
+    pip_gdbif_hook_before( self );
     if( self->annex->symbols.start == NULL ) {
       /* calling hook function, if any */
       DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
@@ -549,23 +549,20 @@ static void* pip_do_spawn( void *thargs )  {
   pip_spawn_args_t *args = (pip_spawn_args_t*) thargs;
   int	 		pipid  = args->pipid;
   int 			coreno = args->coreno;
-  pip_task_internal_t 	*self  = &pip_root_->tasks[pipid];
+  pip_task_internal_t 	*self  = &pip_root->tasks[pipid];
   pip_task_queue_t	*queue = args->queue;
   int			err    = 0;
 
   ENTER;
 
   if( pip_is_threaded_() ) {
-    void pip_set_signal_handler_( int sig, 
-				  void(*)(), 
-				  struct sigaction* );
     if( self->annex->symbols.pip_set_tid != NULL ) {
       int tid, old;
       tid = pip_gettid();
       self->annex->symbols.pip_set_tid( pthread_self(), tid , &old );
       DBGF( "TID:%d", tid );
     }
-    pip_set_signal_handler_( SIGQUIT, pip_sigquit_handler, NULL );
+    pip_set_signal_handler( SIGQUIT, pip_sigquit_handler, NULL );
   }
 
 #ifdef PIP_SAVE_TLS
@@ -582,18 +579,18 @@ static void* pip_do_spawn( void *thargs )  {
     sym[0] = ( pipid % 10 ) + '0';
     sym[1] = ':';
     sym[2] = '\0';
-    pip_set_name_( sym, args->prog, args->funcname );
+    pip_set_name( sym, args->prog, args->funcname );
   }
-  pip_atomic_fetch_and_add( &pip_root_->ntasks_count, 1 );
+  pip_atomic_fetch_and_add( &pip_root->ntasks_count, 1 );
   DBGF( "nblks:%d ntasks:%d",
-	(int) pip_root_->ntasks_blocking,
-	(int) pip_root_->ntasks_count );
+	(int) pip_root->ntasks_blocking,
+	(int) pip_root->ntasks_count );
 
   if( !pip_is_threaded_() ) {
     pip_reset_signal_handler( SIGCHLD );
     pip_reset_signal_handler( SIGTERM );
     pip_reset_signal_handler( SIGHUP  );
-    (void) setpgid( 0, (pid_t) pip_root_->task_root->annex->tid );
+    (void) setpgid( 0, (pid_t) pip_root->task_root->annex->tid );
   }
 
   if( ( err = pip_do_corebind( 0, coreno, NULL ) ) != 0 ) {
@@ -610,23 +607,18 @@ static void* pip_do_spawn( void *thargs )  {
     if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
       /* suspend myself */
       PIP_SUSPEND( self );
-      pip_suspend_and_enqueue_generic_( self,
-					queue,
-					1, /* lock flag */
-					pip_cb_start,
-					self );
+      pip_suspend_and_enqueue_generic( self,
+				       queue,
+				       1, /* lock flag */
+				       pip_cb_start,
+				       self );
       /* resumed */
 
     } else {			/* active task */
       PIP_RUN( self );
       if( queue != NULL ) {
-	int pip_dequeue_and_resume_multiple_( pip_task_internal_t*,
-					      pip_task_queue_t*,
-					      pip_task_internal_t*,
-					      int* );
-
 	int n = PIP_TASK_ALL;
-	err = pip_dequeue_and_resume_multiple_( self, queue, self, &n );
+	err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
       }
       /* since there is no callback, the cb func is called explicitly */
       pip_cb_start( (void*) self );
@@ -659,12 +651,12 @@ static void* pip_do_spawn( void *thargs )  {
   if( pip_is_threaded_() ) {	/* thread mode */
     self->annex->flag_sigchld = 1;
     pip_memory_barrier();
-    (void) pip_raise_signal_( pip_root_->task_root, SIGCHLD );
+    (void) pip_raise_signal( pip_root->task_root, SIGCHLD );
     /* root might be terminated */
     return NULL;
     //pthread_exit( NULL );
   } else {			/* process mode */
-    pip_spin_lock( &pip_root_->lock_ldlinux );
+    pip_spin_lock( &pip_root->lock_ldlinux );
     /* will be unlocked in the SIGCHLD handler */
     exit( WEXITSTATUS(self->annex->status) );
   }
@@ -676,31 +668,31 @@ static int pip_find_a_free_task( int *pipidp ) {
   int pipid = *pipidp;
   int i, err = 0;
 
-  if( pip_root_->ntasks_accum >= PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
-  if( pipid < PIP_PIPID_ANY || pipid >= pip_root_->ntasks ) {
+  if( pip_root->ntasks_accum >= PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
+  if( pipid < PIP_PIPID_ANY || pipid >= pip_root->ntasks ) {
     DBGF( "pipid=%d", pipid );
     RETURN( EINVAL );
   }
 
-  pip_spin_lock( &pip_root_->lock_tasks );
+  pip_spin_lock( &pip_root->lock_tasks );
   /*** begin lock region ***/
   do {
     DBGF( "pipid:%d  ntasks:%d  pipid_curr:%d",
-	  pipid, pip_root_->ntasks, pip_root_->pipid_curr );
+	  pipid, pip_root->ntasks, pip_root->pipid_curr );
     if( pipid != PIP_PIPID_ANY ) {
-      if( pip_root_->tasks[pipid].pipid != PIP_PIPID_NULL ) {
+      if( pip_root->tasks[pipid].pipid != PIP_PIPID_NULL ) {
 	err = EAGAIN;
 	goto unlock;
       }
     } else {
-      for( i=pip_root_->pipid_curr; i<pip_root_->ntasks; i++ ) {
-	if( pip_root_->tasks[i].pipid == PIP_PIPID_NULL ) {
+      for( i=pip_root->pipid_curr; i<pip_root->ntasks; i++ ) {
+	if( pip_root->tasks[i].pipid == PIP_PIPID_NULL ) {
 	  pipid = i;
 	  goto found;
 	}
       }
-      for( i=0; i<=pip_root_->pipid_curr; i++ ) {
-	if( pip_root_->tasks[i].pipid == PIP_PIPID_NULL ) {
+      for( i=0; i<=pip_root->pipid_curr; i++ ) {
+	if( pip_root->tasks[i].pipid == PIP_PIPID_NULL ) {
 	  pipid = i;
 	  goto found;
 	}
@@ -709,14 +701,14 @@ static int pip_find_a_free_task( int *pipidp ) {
       goto unlock;
     }
   found:
-    pip_root_->tasks[pipid].pipid = pipid;	/* mark it as occupied */
-    pip_root_->pipid_curr = pipid + 1;
+    pip_root->tasks[pipid].pipid = pipid;	/* mark it as occupied */
+    pip_root->pipid_curr = pipid + 1;
     *pipidp = pipid;
 
   } while( 0 );
  unlock:
   /*** end lock region ***/
-  pip_spin_unlock( &pip_root_->lock_tasks );
+  pip_spin_unlock( &pip_root->lock_tasks );
 
   RETURN( err );
 }
@@ -735,7 +727,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   int 			op, err = 0;
 
   ENTER;
-  if( pip_root_       == NULL ) RETURN( EPERM  );
+  if( pip_root        == NULL ) RETURN( EPERM  );
   if( !pip_isa_root()         ) RETURN( EPERM  );
   if( progp           == NULL ) RETURN( EINVAL );
   if( progp->prog     == NULL ) RETURN( EINVAL );
@@ -743,7 +735,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( progp->funcname == NULL &&
       progp->argv     == NULL ) RETURN( EINVAL );
   /* starting from an arbitrary func */
-  if( ( op = pip_check_sync_flag_( opts ) ) < 0 ) RETURN( EINVAL );
+  if( ( op = pip_check_sync_flag( opts ) ) < 0 ) RETURN( EINVAL );
   opts = op;
 
   if( progp->funcname == NULL &&
@@ -751,17 +743,17 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
   if( pipid == PIP_PIPID_MYSELF ) RETURN( EINVAL );
   if( pipid != PIP_PIPID_ANY ) {
-    if( pipid < 0 || pipid > pip_root_->ntasks ) RETURN( EINVAL );
+    if( pipid < 0 || pipid > pip_root->ntasks ) RETURN( EINVAL );
   }
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) ERRJ;
-  task = &pip_root_->tasks[pipid];
-  pip_reset_task_struct_( task );
+  task = &pip_root->tasks[pipid];
+  pip_reset_task_struct( task );
   task->pipid       = pipid;	/* mark it as occupied */
   task->type        = PIP_TYPE_TASK;
   task->task_sched  = task;
   task->ntakecare   = 1;
   task->annex->opts      = opts;
-  task->annex->task_root = pip_root_;
+  task->annex->task_root = pip_root;
   if( hookp != NULL ) {
     task->annex->hook_before = hookp->before;
     task->annex->hook_after  = hookp->after;
@@ -769,7 +761,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   }
   /* allocate stack for sleeping */
   stack_size = pip_stack_size();
-  pip_page_alloc_( pip_root_->stack_size_sleep, &task->annex->sleep_stack );
+  pip_page_alloc( pip_root->stack_size_sleep, &task->annex->sleep_stack );
   if( task->annex->sleep_stack == NULL ) ERRJ_ERR( ENOMEM );
 
   if( progp->envv == NULL ) progp->envv = environ;
@@ -802,7 +794,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     ERRJ_ERR( ENOMEM );
   }
   /* must be called before calling dlmopen() */
-  pip_gdbif_task_new_( task );	
+  pip_gdbif_task_new( task );	
 
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
     /* corebinding should take place before loading solibs,       */
@@ -814,7 +806,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   }
   ERRJ_CHK(err);
 
-  if( ( pip_root_->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
+  if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
     int flags =
       CLONE_VM |
@@ -828,7 +820,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
     /* we need lock on ldlinux. supposedly glibc does someting */
     /* before calling main function */
-    pip_spin_lock( &pip_root_->lock_ldlinux );
+    pip_spin_lock( &pip_root->lock_ldlinux );
     err = pip_clone_mostly_pthread_ptr( (pthread_t*) &task->annex->thread,
 					flags,
 					coreno == PIP_CPUCORE_ASIS ? - 1 :
@@ -837,14 +829,14 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 					(void*(*)(void*)) pip_do_spawn,
 					args,
 					&pid );
-    if( err ) pip_spin_unlock( &pip_root_->lock_ldlinux );
+    if( err ) pip_spin_unlock( &pip_root->lock_ldlinux );
 
     DBGF( "pip_clone_mostly_pthread_ptr()=%d", err );
 
   } else {
     pthread_t		thr;
     pthread_attr_t 	attr;
-    pip_clone_t		*clone_info = pip_root_->cloneinfo;
+    pip_clone_t		*clone_info = pip_root->cloneinfo;
     pid_t		tid = pip_gettid();
 
     if( ( err = pthread_attr_init( &attr ) ) == 0 ) {
@@ -857,7 +849,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
       /* we need lock on ldlinux. supposedly glibc does someting */
       /* before calling main function */
-      pip_spin_lock( &pip_root_->lock_ldlinux );
+      pip_spin_lock( &pip_root->lock_ldlinux );
       {
 	if( clone_info != NULL ) { /* pip_preload */
 	  DBGF( "tid=%d  cloneinfo@%p", tid, clone_info );
@@ -874,7 +866,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 	  DBGF( "pthread_create()=%d", errno );
 	}
       }
-      if( err ) pip_spin_unlock( &pip_root_->lock_ldlinux );
+      if( err ) pip_spin_unlock( &pip_root->lock_ldlinux );
     }
   }
   if( err == 0 ) {
@@ -885,8 +877,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     ts.tv_sec  = 0;
     ts.tv_nsec = 1000 * 1000;	/* 1 msec */
     for( i=0; i<1000; i++ ) {	/* 1 sec */
-      if( pip_spin_trylock( &pip_root_->lock_ldlinux ) ) {
-	pip_spin_unlock( &pip_root_->lock_ldlinux );
+      if( pip_spin_trylock( &pip_root->lock_ldlinux ) ) {
+	pip_spin_unlock( &pip_root->lock_ldlinux );
 	for( ; i<1000; i++ ) {	/* 1 sec */
 	  if( task->annex->tid    >  0 &&
 	      task->annex->thread != 0 ) goto done;
@@ -907,8 +899,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   done:
     DBGF( "task (PIPID:%d,TID:%d) is created and running", 
 	  task->pipid, task->annex->tid );
-    pip_root_->ntasks_accum ++;
-    pip_gdbif_task_commit_( task );
+    pip_root->ntasks_accum ++;
+    pip_gdbif_task_commit( task );
     if( bltp != NULL ) *bltp = (pip_task_t*) task;
 
   } else {
@@ -923,10 +915,10 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     }
     if( task != NULL ) {
       if( task->annex->loaded != NULL ) pip_dlclose( task->annex->loaded );
-      pip_reset_task_struct_( task );
+      pip_reset_task_struct( task );
     }
   }
-  DBGF( "pip_task_spawn_(pipid=%d)", pipid );
+  DBGF( "pip_task_spawn(pipid=%d)", pipid );
   RETURN( err );
 }
 
@@ -1002,10 +994,10 @@ int pip_get_id( int pipid, intptr_t *idp ) {
   pip_task_internal_t *taski;
   int err;
 
-  if( ( err = pip_check_pipid_( &pipid ) ) != 0 ) RETURN( err );
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   if( idp == NULL ) RETURN( EINVAL );
 
-  taski = pip_get_task_( pipid );
+  taski = pip_get_task( pipid );
   if( pip_is_threaded_() ) {
     /* Do not use gettid(). This is a very Linux-specific function */
     /* The reason of supporintg the thread PiP execution mode is   */

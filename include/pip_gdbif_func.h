@@ -38,13 +38,13 @@
 
 #include <pip_internal.h>
 
-void pip_gdbif_load_( pip_task_internal_t* );
-void pip_gdbif_exit_( pip_task_internal_t*, int );
-void pip_gdbif_task_commit_( pip_task_internal_t* );
-void pip_gdbif_task_new_( pip_task_internal_t* );
-void pip_gdbif_initialize_root_( int );
-void pip_gdbif_finalize_task_( pip_task_internal_t* );
-void pip_gdbif_hook_before_( pip_task_internal_t* );
-void pip_gdbif_hook_after_( pip_task_internal_t* );
+void pip_gdbif_load( pip_task_internal_t* ) PIP_PRIVATE;
+void pip_gdbif_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
+void pip_gdbif_task_commit( pip_task_internal_t* ) PIP_PRIVATE;
+void pip_gdbif_task_new( pip_task_internal_t* ) PIP_PRIVATE;
+void pip_gdbif_initialize_root( int ) PIP_PRIVATE;
+void pip_gdbif_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
+void pip_gdbif_hook_before( pip_task_internal_t* ) PIP_PRIVATE;
+void pip_gdbif_hook_after( pip_task_internal_t* ) PIP_PRIVATE;
 
 #endif /* _pip_gdbif_func_h_ */

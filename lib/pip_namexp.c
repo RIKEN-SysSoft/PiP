@@ -88,7 +88,7 @@ static void pip_del_namexp_entry( pip_namexp_entry_t *entry ) {
   PIP_LIST_DEL( (pip_list_t*) entry );
 }
 
-void pip_named_export_init_( pip_task_internal_t *taski ) {
+void pip_named_export_init( pip_task_internal_t *taski ) {
   pip_named_exptab_t 	*namexp;
   pip_namexp_list_t	*hashtab;
   int			i, sz = PIP_HASHTAB_SZ;
@@ -196,9 +196,9 @@ int pip_named_export( void *exp, const char *format, ... ) {
   va_start( ap, format );
   hash = pip_name_hash( &name, format, ap );
   ASSERT( name == NULL );
-  DBGF( "pipid:%d  name:%s  exp:%p", pip_task_->pipid, name, exp );
+  DBGF( "pipid:%d  name:%s  exp:%p", pip_task->pipid, name, exp );
 
-  namexp = (pip_named_exptab_t*) pip_task_->annex->named_exptab;
+  namexp = (pip_named_exptab_t*) pip_task->annex->named_exptab;
   ASSERTD( namexp == NULL );
 
   if( namexp->flag_closed ) RETURN( ECANCELED );
@@ -235,7 +235,7 @@ int pip_named_export( void *exp, const char *format, ... ) {
 	  /* another PiP task and this PiP task must free it in this case */
 	  pip_add_namexp_entry( head, new );
 	  /* resume suspended PiP tasks on this entry */
-	  err = pip_dequeue_and_resume_nolock_( &entry->queue_owner, NULL );
+	  err = pip_dequeue_and_resume_nolock( &entry->queue_owner, NULL );
 	}
       }
     }
@@ -268,8 +268,8 @@ static int pip_named_import_( int pipid,
   int 			n, err = 0;
 
   ENTER;
-  if( ( err = pip_check_pipid_( &pipid ) ) != 0 ) RETURN( err );
-  taski = pip_get_task_( pipid );
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  taski = pip_get_task( pipid );
   namexp = (pip_named_exptab_t*) taski->annex->named_exptab;
 
   if( namexp == NULL      ) RETURN( ECANCELED );
@@ -295,9 +295,9 @@ static int pip_named_import_( int pipid,
 
 	  PIP_LIST_ADD( &entry->list_wait, &wait.list );
 	  DBG;
-	  pip_suspend_and_enqueue_nolock_( &entry->queue_others,
-					   pip_unlock_hashtab,
-					   (void*) head );
+	  pip_suspend_and_enqueue_nolock( &entry->queue_others,
+					  pip_unlock_hashtab,
+					  (void*) head );
 	  /* now, it is exported */
 	  /* note that the lock is unlocked !! */
 	  DBG;
@@ -308,7 +308,7 @@ static int pip_named_import_( int pipid,
 	}
       }
     } else {			/* not found */
-      if( pipid == pip_task_->pipid ) {
+      if( pipid == pip_task->pipid ) {
 	err = EDEADLK;
       } else if( flag_nblk ) {	/* no entry yet */
 	err = EAGAIN;
@@ -321,9 +321,9 @@ static int pip_named_import_( int pipid,
 	  pip_add_namexp_entry( head, entry );
 	  /* add query entry and suspend until it is exported */
 	  /* when the query is enqueued, lock in unlocked */
-	  pip_suspend_and_enqueue_nolock_( &entry->queue_owner,
-					   (void*) pip_unlock_hashtab,
-					   (void*) head );
+	  pip_suspend_and_enqueue_nolock( &entry->queue_owner,
+					  (void*) pip_unlock_hashtab,
+					  (void*) head );
 	  /* now, it is exported */
 	  /* note that the lock has been unlocked and must be locked again */
 	  if( entry->flag_canceled ) {
@@ -341,7 +341,7 @@ static int pip_named_import_( int pipid,
 	  }
 
 	  n = PIP_TASK_ALL;
-	  err = pip_dequeue_and_resume_N_nolock_(&entry->queue_others,NULL,&n);
+	  err = pip_dequeue_and_resume_N_nolock(&entry->queue_others,NULL,&n);
 
 	  PIP_FREE( entry->name );
 	  PIP_FREE( entry );
@@ -378,7 +378,7 @@ int pip_named_tryimport( int pipid, void **expp, const char *format, ... ) {
   RETURN( err );
 }
 
-void pip_named_export_fin_( pip_task_internal_t *taski ) {
+void pip_named_export_fin( pip_task_internal_t *taski ) {
   pip_named_exptab_t	*namexp;
   pip_list_t		*list, *next;
   int 			i, err;
@@ -401,7 +401,7 @@ void pip_named_export_fin_( pip_task_internal_t *taski ) {
 	} else {
 	  /* this is a query entry, it must be free()ed by the query task */
 	  entry->flag_canceled = 1;
-	  err = pip_dequeue_and_resume_nolock_( &entry->queue_owner, NULL );
+	  err = pip_dequeue_and_resume_nolock( &entry->queue_owner, NULL );
 	  ASSERT( err );
 	}
       }
@@ -411,23 +411,23 @@ void pip_named_export_fin_( pip_task_internal_t *taski ) {
   RETURNV;
 }
 
-void pip_named_export_fin_all_( void ) {
+void pip_named_export_fin_all( void ) {
   pip_task_internal_t *taski, *rooti;
   pip_named_exptab_t  *namexp;
   int i;
 
-  ASSERTD( pip_task_ != pip_root_->task_root );
-  DBGF( "pip_root->ntasks:%d", pip_root_->ntasks );
-  for( i=0; i<pip_root_->ntasks; i++ ) {
+  ASSERTD( pip_task != pip_root->task_root );
+  DBGF( "pip_root->ntasks:%d", pip_root->ntasks );
+  for( i=0; i<pip_root->ntasks; i++ ) {
     DBGF( "PiP task: %d", i );
-    taski  = &pip_root_->tasks[i];
+    taski  = &pip_root->tasks[i];
     namexp = taski->annex->named_exptab;
     PIP_FREE( namexp->hash_table );
     PIP_FREE( namexp );
     taski->annex->named_exptab = NULL;
   }
-  rooti = pip_root_->task_root;
-  (void) pip_named_export_fin_( rooti );
+  rooti = pip_root->task_root;
+  (void) pip_named_export_fin( rooti );
   namexp = rooti->annex->named_exptab;
   PIP_FREE( namexp->hash_table );
   PIP_FREE( namexp );

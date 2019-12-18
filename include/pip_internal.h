@@ -148,7 +148,6 @@ typedef int  (*pip_clone_mostly_pthread_t)
 ( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
 typedef void (*pip_set_tid_t)( pthread_t, int, int* );
 
-
 typedef struct {
   /* functions */
   main_func_t		main;	      /* main function address */
@@ -301,6 +300,7 @@ extern void pip_set_thread_id( pthread_t th, int );
 
 #define PIP_MIDLEN		(64)
 
+#define PIP_PRIVATE		__attribute__((visibility ("hidden")))
 #define pip_likely(x)		__builtin_expect((x),1)
 #define pip_unlikely(x)		__builtin_expect((x),0)
 
@@ -314,62 +314,75 @@ extern void pip_set_thread_id( pthread_t th, int );
 
 #define PIP_W_EXITCODE(X,S)	__W_EXITCODE(X,S)
 
-extern pip_root_t		*pip_root_;
-extern pip_task_internal_t	*pip_task_;
+extern pip_root_t		*pip_root;
+extern pip_task_internal_t	*pip_task;
 
-extern void pip_do_exit( pip_task_internal_t*, int );
-extern void pip_reset_task_struct_( pip_task_internal_t* );
-extern void pip_set_extval_( pip_task_internal_t*, int );
-extern void pip_finalize_task_RC_( pip_task_internal_t* );
+extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
+extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_set_extval( pip_task_internal_t*, int ) PIP_PRIVATE;
+extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
 
-extern int  pip_raise_signal_( pip_task_internal_t*, int );
-extern void pip_set_sigmask_( int );
-extern void pip_unset_sigmask_( void );
-extern void pip_page_alloc_( size_t, void** );
-extern int  pip_check_sync_flag_( uint32_t );
+extern void pip_set_signal_handler( int sig, void(*)(), 
+				    struct sigaction* ) PIP_PRIVATE;
+extern int  pip_raise_signal( pip_task_internal_t*, int ) PIP_PRIVATE;
+extern void pip_set_sigmask( int ) PIP_PRIVATE;
+extern void pip_unset_sigmask( void ) PIP_PRIVATE;
+extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
+extern int  pip_check_sync_flag( uint32_t ) PIP_PRIVATE;
 
 extern int  pip_dlclose( void* );
 
-extern void pip_suspend_and_enqueue_generic_( pip_task_internal_t*,
-					      pip_task_queue_t*,
-					      int,
-					      pip_enqueue_callback_t,
-					      void* );
+extern void pip_suspend_and_enqueue_generic( pip_task_internal_t*,
+					     pip_task_queue_t*,
+					     int,
+					     pip_enqueue_callback_t,
+					     void* ) PIP_PRIVATE;
 
-extern void pip_named_export_init_( pip_task_internal_t* );
-extern void pip_named_export_fin_all_( void );
+extern void pip_named_export_init( pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_named_export_fin_all( void ) PIP_PRIVATE;
 
-extern void pip_deadlock_inc_( void );
-extern void pip_deadlock_dec_( void );
+extern void pip_deadlock_inc( void ) PIP_PRIVATE;
+extern void pip_deadlock_dec( void ) PIP_PRIVATE;
 
-extern int  pip_is_threaded_( void );
-extern int  pip_is_shared_fd_( void );
-extern int  pip_is_threaded_( void );
-extern int  pip_isa_coefd_( int );
-extern void pip_set_name_( char*, char*, char* );
+extern int  pip_is_threaded_( void ) PIP_PRIVATE;
+extern int  pip_is_shared_fd_( void ) PIP_PRIVATE;
+extern int  pip_isa_coefd( int ) PIP_PRIVATE;
+extern void pip_set_name( char*, char*, char* ) PIP_PRIVATE;
 
-extern void pip_pipidstr_( pip_task_internal_t *taski, char *buf );
-extern void pip_page_alloc_( size_t, void** );
-extern int  pip_count_vec_( char** );
-extern int  pip_get_dso( int pipid, void **loaded );
-extern int  pip_idstr( char *buf, size_t sz );
+extern void pip_pipidstr( pip_task_internal_t *taski, char *buf ) PIP_PRIVATE;
+extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
+extern int  pip_count_vec( char** ) PIP_PRIVATE;
+extern int  pip_get_dso( int pipid, void **loaded ) PIP_PRIVATE;
 
-inline static int pip_is_alive_( pip_task_internal_t *taski ) {
+extern int  pip_dequeue_and_resume_multiple( pip_task_internal_t*,
+					     pip_task_queue_t*,
+					     pip_task_internal_t*,
+					     int* ) PIP_PRIVATE;
+extern void pip_suspend_and_enqueue_generic( pip_task_internal_t*,
+					     pip_task_queue_t*,
+					     int,
+					     pip_enqueue_callback_t,
+					     void* ) PIP_PRIVATE;
+					    
+
+extern int  pip_idstr( char *buf, size_t sz ); /* donot make this private */
+
+inline static int pip_is_alive( pip_task_internal_t *taski ) {
   return taski->pipid != PIP_TYPE_NONE && !taski->flag_exit;
 }
 
 inline static int pip_get_pipid_( void ) {
-  if( pip_task_ == NULL ) return PIP_PIPID_NULL;
-  return pip_task_->pipid;
+  if( pip_task == NULL ) return PIP_PIPID_NULL;
+  return pip_task->pipid;
 }
 
-inline static int pip_check_pipid_( int *pipidp ) {
+inline static int pip_check_pipid( int *pipidp ) {
   int pipid = *pipidp;
 
-  if( pip_root_ == NULL          ) RETURN( EPERM  );
-  if( pipid >= pip_root_->ntasks ) RETURN( EINVAL );
+  if( pip_root == NULL          ) RETURN( EPERM  );
+  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
   if( pipid != PIP_PIPID_MYSELF &&
-      pipid <  PIP_PIPID_ROOT    ) RETURN( EINVAL );
+      pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
 
   switch( pipid ) {
   case PIP_PIPID_ROOT:
@@ -381,7 +394,7 @@ inline static int pip_check_pipid_( int *pipidp ) {
     if( pip_isa_root() ) {
       *pipidp = PIP_PIPID_ROOT;
     } else if( pip_isa_task() ) {
-      *pipidp = pip_task_->pipid;
+      *pipidp = pip_task->pipid;
     } else {
       RETURN( ENXIO );
     }
@@ -392,22 +405,22 @@ inline static int pip_check_pipid_( int *pipidp ) {
   return 0;
 }
 
-inline static pip_task_internal_t *pip_get_task_( int pipid ) {
+inline static pip_task_internal_t *pip_get_task( int pipid ) {
   pip_task_internal_t 	*taski = NULL;
 
   switch( pipid ) {
   case PIP_PIPID_ROOT:
-    taski = pip_root_->task_root;
+    taski = pip_root->task_root;
     break;
   default:
-    taski = &pip_root_->tasks[pipid];
+    taski = &pip_root->tasks[pipid];
     break;
   }
   return taski;
 }
 
-inline static pip_clone_t *pip_get_cloneinfo_( void ) {
-  return pip_root_->cloneinfo;
+inline static pip_clone_t *pip_get_cloneinfo( void ) {
+  return pip_root->cloneinfo;
 }
 
 inline static void pip_system_yield( void ) {
