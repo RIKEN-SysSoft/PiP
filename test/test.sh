@@ -436,4 +436,4 @@ if [ x"$SUMMARY_FILE" = x ]; then
 fi
 
 case $n_KILLED in 0) :;; *) exit $EXIT_KILLED;; esac
-[ $n_FAIL -eq 0 -a $n_UNRESOLVED -eq 0 ]
+[ $n_FAIL -eq 0 -a $n_UNRESOLVED -eq 0 -a $n_PASS -gt 0 ]
