@@ -369,12 +369,12 @@ while read line; do
 			esac
 			if [ -s $TEST_OUT_STDOUT ]; then
 				printf '    <system-out><![CDATA['
-				cat $TEST_OUT_STDOUT
+				iconv -fISO-8859-1 -tUTF-8 <$TEST_OUT_STDOUT
 				echo ']]></system-out>'
 			fi
 			if [ -s $TEST_OUT_STDERR ]; then
 				printf '    <system-err><![CDATA['
-				cat $TEST_OUT_STDERR
+				iconv -fISO-8859-1 -tUTF-8 <$TEST_OUT_STDERR
 				echo ']]></system-err>'
 			fi
 			echo '  </testcase>'
