@@ -80,7 +80,8 @@ typedef struct pip_queue {
 #define PIP_TASKQ_PREV_NEXT(L)	(((pip_task_t*)(L))->prev->next)
 #define PIP_TASKQ_NEXT_PREV(L)	(((pip_task_t*)(L))->next->prev)
 
-#ifdef DEBUG
+//#ifdef DEBUG
+#ifdef AH
 #define PIP_TASKQ_CHECK(Q)					\
   ASSERTD( PIP_TASKQ_NEXT(Q) != PIP_TASKQ_PREV(Q) )
 #else
@@ -796,6 +797,21 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * finalized
    */
   int pip_get_task_pipid( pip_task_t *task, int *pipidp );
+  /** @}*/
+
+  /**
+   * \brief get PiP task from PiP ID
+   *  @{
+   * \param[in] pipid PiP ID
+   * \param[out] taskp PiP task of the specified PiP ID
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c pipidp is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   * \retval ENOENT No such PiP task
+   */
+  int pip_get_task_from_pipid( int pipid, pip_task_t **taskp );
   /** @}*/
 
   /**

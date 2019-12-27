@@ -80,6 +80,12 @@ extern int  pip_idstr( char *buf, size_t sz );
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(": ");				\
     DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
 
+#define DBG_NN		 do { DBG_PRNT("\n"); } while(0)
+
+#define NNEMSG(...)							\
+  do { DBG_PRTBUF; DBG_NN; DBG_TAG; DBG_PRNT(": ");			\
+    DBG_PRNT(__VA_ARGS__); DBG_NN; DBG_OUTPUT; } while(0)
+
 #ifdef DEBUG
 
 extern int pip_debug_env( void );
@@ -117,13 +123,12 @@ extern int pip_debug_env( void );
     return; } while(0)
 
 #define ASSERT(X)						       \
-  if(X) { EMSG(": <%s> Assertion FAILED !!!!!!\n",#X);		       \
-    pip_exit(9); } else { DBGF( "(%s) -- Assertion OK", #X ); }
+  if(X) { NNEMSG(": <%s> Assertion FAILED !!!!!!",#X);	       \
+    } else { DBGF( "(%s) -- Assertion OK", #X ); }
 
 #define ASSERTD(X)						       \
-  if(DBGSW) { if(X) { EMSG(": <%s> Assertion FAILED !!!!!!\n",#X);       \
-      sleep(10);pip_exit(9); } else {					\
-      DBGF( ": (%s) -- Assertion OK", #X ); } }
+  if(DBGSW) { if(X) { NNEMSG(": <%s> Assertion FAILED !!!!!!",#X);       \
+    } else {DBGF( ": (%s) -- Assertion OK", #X ); } }
 
 #define DO_CHECK_CTYPE
 
@@ -136,25 +141,26 @@ extern int pip_debug_env( void );
   isalnum('a'); isalnum('_'); } while( 0 )
 #endif
 
-#else
+#else  /* !DEBUG */
 
 #define DBG
 #define DBGF(...)
 #define ENTER
 #define ENTERF(...)
-#define RETURN(X)	return(X)
+#define RETURN(X)	return (X)
 #define RETURNV		return
 #define ASSERTD(X)
 
 #define ASSERT(X)						       \
-  if(X) { EMSG(": '%s' Assertion FAILED !!!!!!\n",#X);  pip_exit(9); }
+  do { IF_UNLIKELY(X) { NNEMSG(": '%s' Assertion FAILED !!!!!!",#X);   \
+    } } while(0)
 
 #define PIP_CHECK_CTYPE
 
-#endif
+#endif	/* !DEBUG */
 
 #define NEVER_REACH_HERE						\
-  do { EMSG( ": Should not reach here !!!!!!\n" ); pip_exit(9); } while(0)
+  do { NNEMSG( ": Should not reach here !!!!!!" ); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

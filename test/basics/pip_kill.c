@@ -127,7 +127,7 @@ int main( int argc, char **argv ) {
 	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
       }
     }
-    CHECK( pip_kill( ntasks, SIGUSR1 ), RV!=EINVAL, return(EXIT_FAIL) );
+    CHECK( pip_kill( ntasks, SIGUSR1 ), RV!=ERANGE, return(EXIT_FAIL) );
 
   } else {
     CHECK( block_sigusrs(), RV, return(EXIT_FAIL) );

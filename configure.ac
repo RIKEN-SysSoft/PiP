@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([pip], [1.0.0])
+AC_INIT([pip], [2.0.0], [pip@ml.riken.jp], [], [https://github.com/RIKEN-SysSoft/PiP])
 AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
 AC_CONFIG_MACRO_DIR([build/m4])
@@ -30,6 +30,29 @@ fi
 AC_SUBST(glibc_libdir)
 AC_SUBST(dynamic_linker)
 
+AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--disable-fcontext],
+  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])])
+AS_IF([test "x$enable_fcontext" != "xno"], [
+  AC_CHECK_PROG([AS], [as], [yes])
+  AS_IF([test x"$AS" != x"yes"], [AC_MSG_ERROR([Can't find assmbler (as)])])
+])
+
+boost_fctx_objs=""
+if test "x$enable_fcontext" != "xno"; then
+  boost_fctx_objs="fctx_jump.o fctx_make.o"
+  case $host in
+	x86_64-*-*-*)
+		boost_fctx_arch="x86_64_sysv";;
+	aarch64-*-*-*)
+		boost_fctx_arch="arm64_aapcs";;
+  esac
+  if test "x$enable_fcontext" == "xfpreg"; then
+     boost_fctx_fpreg_flag="-DBOOST_USE_TSX"
+  fi	
+fi
+AC_SUBST(boost_fctx_objs)
+AC_SUBST(boost_fctx_arch)
+AC_SUBST(boost_fctx_fpreg_flag)
 
 # Checks for programs.
 AC_PROG_CC
@@ -39,6 +62,7 @@ AC_PROG_INSTALL
 if test "$GCC" = yes; then
   CFLAGS="$CFLAGS -Wall"
 fi
+
 
 # Checks for libraries.
 
@@ -51,6 +75,7 @@ fi
 AC_CONFIG_FILES([
 	build/config.mk
 	release/version.conf
+	lib/Makefile
 	bin/pipcc
 	bin/pip-mode
 	bin/pip-check

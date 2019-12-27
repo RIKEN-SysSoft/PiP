@@ -718,18 +718,8 @@ static void pip_print_bt( FILE *fp_maps, FILE *fp_out,
 	pip_print_bt( (FM), (FO), (RT), (N), _addr_ );		\
     } else goto done; } while(0)
 
-static pip_ctx_t ctx_bt;
-
-static void pip_stack_end( int sig, siginfo_t *siginfo, void *context ) {
-  pip_load_context( &ctx_bt );
-}
-
 void pip_backtrace_fd( int depth, int fd ) {
-  int pip_is_magic_ok(   pip_root_t* );
-  int pip_is_version_ok( pip_root_t* );
-  struct sigaction sigact, sigact_old;
   pip_root_t	*root = pip_root;
-  volatile int 	flag_jump = 0;	/* must be volatile */
   FILE	 	*fp_maps = NULL;
   FILE		*fp_out  = NULL;
   char		*envroot;
@@ -746,62 +736,54 @@ void pip_backtrace_fd( int depth, int fd ) {
       }
     }
   }
-  if( root != NULL ) pip_spin_lock( &root->lock_bt );
   fflush( NULL );
-
-  memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = pip_stack_end;
-  sigact.sa_flags     = SA_RESETHAND;
-  (void) sigaction( SIGSEGV, &sigact, &sigact_old );
 
   depth = ( depth <= 0 || depth > DEPTH_MAX ) ? DEPTH_MAX : depth;
   if( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) != NULL &&
       ( fp_out  = fdopen( fd, "w" ) ) != NULL ) {
-    pip_save_context( &ctx_bt );
-    if( !flag_jump ) {
-      flag_jump = 1;
-      
-      BACKTRACE(  fp_maps, fp_out, root, depth,  0 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  1 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  2 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  3 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  4 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  5 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  6 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  7 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  8 );
-      BACKTRACE(  fp_maps, fp_out, root, depth,  9 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 10 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 11 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 12 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 13 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 14 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 15 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 16 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 17 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 18 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 19 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 20 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 21 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 22 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 23 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 24 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 25 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 26 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 27 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 28 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 29 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 30 );
-      BACKTRACE(  fp_maps, fp_out, root, depth, 31 );
-    } else {
-      //fprintf( fp_out, "PBT[-] (stack bottom)\n" );
-    }
+    BACKTRACE(  fp_maps, fp_out, root, depth,  0 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  1 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  2 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  3 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  4 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  5 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  6 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  7 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  8 );
+    BACKTRACE(  fp_maps, fp_out, root, depth,  9 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 10 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 11 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 12 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 13 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 14 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 15 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 16 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 17 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 18 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 19 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 20 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 21 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 22 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 23 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 24 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 25 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 26 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 27 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 28 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 29 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 30 );
+    BACKTRACE(  fp_maps, fp_out, root, depth, 31 );
   done:
     fflush( fp_out );
   }
   if( fp_maps != NULL ) fclose( fp_maps );
-  (void) sigaction( SIGSEGV, &sigact_old, NULL );
-
-  if( root != NULL ) pip_spin_unlock( &root->lock_bt );
   RETURNV;
+}
+
+int pip_is_debug_build( void ) {
+#ifdef DEBUG
+  return 1;
+#else
+  return 0;
+#endif
 }

@@ -54,7 +54,8 @@ static int timedout     = 0;
 
 static void cleanup( void ) {
   if( pid > 0 ) {
-    system( PIPS " -s HUP -v" );
+    system( PIPS " -l" );
+    system( PIPS " -s HUP" );
     (void) kill( pid, SIGHUP );
     usleep( 100 * 1000 );
     system( PIPS " -s KILL > /dev/null 2>&1" );

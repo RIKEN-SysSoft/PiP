@@ -63,7 +63,6 @@ inline static void pip_memory_barrier(void) {
 
 
 typedef intptr_t		pip_tls_t;
-#define PIP_TYPE_TLS
 
 #include <asm/prctl.h>
 #include <sys/prctl.h>
@@ -74,12 +73,10 @@ int arch_prctl( int, unsigned long* );
 inline static int pip_save_tls( pip_tls_t *tlsp ) {
   return arch_prctl( ARCH_GET_FS, (unsigned long*) tlsp ) ? errno : 0;
 }
-#define PIP_SAVE_TLS
 
 inline static int pip_load_tls( pip_tls_t tls ) {
   return arch_prctl( ARCH_SET_FS, (unsigned long*) tls) ? errno : 0;
 }
-#define PIP_LOAD_TLS
 
 inline static void pip_print_fs_segreg( void ) {
   intptr_t fsreg;

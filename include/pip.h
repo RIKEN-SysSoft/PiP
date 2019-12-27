@@ -500,7 +500,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EINVAL \c format is \c NULL
    * \retval ENOMEM not enough memory available
    * \retval ECANCELED the target task is terminated during the query
-   * \retval ENOENT there is no export having the specified name
    *
    * \sa pip_named_export(3), pip_export(3), pip_import(3)
    */

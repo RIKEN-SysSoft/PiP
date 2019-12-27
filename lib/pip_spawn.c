@@ -52,13 +52,6 @@
 #include <pip_blt.h>
 #include <pip_gdbif.h>
 
-#define CHECK_TLS
-
-#ifdef CHECK_TLS
-__thread int pipid_tls;
-#endif
-
-
 int pip_count_vec( char **vecsrc ) {
   int n = 0;
   if( vecsrc != NULL ) {
@@ -469,8 +462,8 @@ static void pip_reset_signal_handler( int sig ) {
   }
 }
 
-static void
-pip_jump_into( pip_spawn_args_t *args, pip_task_internal_t *self ) {
+static void pip_start_user_func( pip_spawn_args_t *args, 
+				 pip_task_internal_t *self ) {
   char **argv     = args->argv;
   char **envv     = args->envv;
   void *hook_arg  = self->annex->hook_arg;
@@ -564,16 +557,6 @@ static void* pip_do_spawn( void *thargs )  {
     }
     pip_set_signal_handler( SIGQUIT, pip_sigquit_handler, NULL );
   }
-
-#ifdef PIP_SAVE_TLS
-  pip_save_tls( &self->tls );
-#endif
-  pip_memory_barrier();
-#ifdef CHECK_TLS
-  DBGF( "TLS:0x%lx  pipid_tls@%p", (intptr_t)self->tls, &pipid_tls );
-  pipid_tls = pipid;
-#endif
-
   {
     char sym[3];
     sym[0] = ( pipid % 10 ) + '0';
@@ -581,6 +564,10 @@ static void* pip_do_spawn( void *thargs )  {
     sym[2] = '\0';
     pip_set_name( sym, args->prog, args->funcname );
   }
+
+  pip_save_tls( &self->tls );
+  pip_memory_barrier();
+
   pip_atomic_fetch_and_add( &pip_root->ntasks_count, 1 );
   DBGF( "nblks:%d ntasks:%d",
 	(int) pip_root->ntasks_blocking,
@@ -597,49 +584,39 @@ static void* pip_do_spawn( void *thargs )  {
     pip_warn_mesg( "failed to bound CPU core:%d (%d)", coreno, err );
     err = 0;
   }
-  pip_ctx_t	ctx;
-  volatile int	flag_jump = 0;	/* must be volatile */
-
-  self->annex->ctx_exit = &ctx;
-  pip_save_context( &ctx );
-  if( !flag_jump ) {
-    flag_jump = 1;
-    if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
-      /* suspend myself */
-      PIP_SUSPEND( self );
-      pip_suspend_and_enqueue_generic( self,
-				       queue,
-				       1, /* lock flag */
-				       pip_cb_start,
-				       self );
-      /* resumed */
-
-    } else {			/* active task */
-      PIP_RUN( self );
-      if( queue != NULL ) {
-	int n = PIP_TASK_ALL;
-	err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
-      }
-      /* since there is no callback, the cb func is called explicitly */
-      pip_cb_start( (void*) self );
+  if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
+    /* suspend myself */
+    PIP_SUSPEND( self );
+    pip_suspend_and_enqueue_generic( self,
+				     queue,
+				     1, /* lock flag */
+				     pip_cb_start,
+				     self );
+    /* resumed */
+    
+  } else {			/* active task */
+    PIP_RUN( self );
+    if( queue != NULL ) {
+      int n = PIP_TASK_ALL;
+      err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
     }
-    if( err == 0 ) {
-      pip_jump_into( args, self );
-    } else {
-      pip_do_exit( self, err );
-    }
-    NEVER_REACH_HERE;
+    /* since there is no callback, the cb func is called explicitly */
+    pip_cb_start( (void*) self );
   }
-  /* long jump on ctx_exit to terminate itself */
+  if( err == 0 ) {
+    pip_start_user_func( args, self );
+  } else {
+    pip_do_exit( self, err );
+  }
+  NEVER_REACH_HERE;
+  return NULL;			/* dummy */
+}
 
+void pip_task_finalize( pip_task_internal_t *self ) {
   DBGF( "PIPID:%d  tid:%d (%d)",
 	self->pipid, self->annex->tid, pip_gettid() );
   ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
-#ifdef CHECK_TLS
-  DBGF( "TLS:0x%lx  pipid_tls:%d (%p)  pipid:%d",
-	(intptr_t) self->tls, pipid_tls, &pipid_tls, self->pipid );
-  ASSERT( pipid_tls != self->pipid );
-#endif
+
   /* call fflush() in the target context to flush out std* messages */
   if( self->annex->symbols.libc_fflush != NULL ) {
     self->annex->symbols.libc_fflush( NULL );
@@ -652,16 +629,13 @@ static void* pip_do_spawn( void *thargs )  {
     self->annex->flag_sigchld = 1;
     pip_memory_barrier();
     (void) pip_raise_signal( pip_root->task_root, SIGCHLD );
-    /* root might be terminated */
-    return NULL;
-    //pthread_exit( NULL );
+    pthread_exit( NULL );
   } else {			/* process mode */
     pip_spin_lock( &pip_root->lock_ldlinux );
     /* will be unlocked in the SIGCHLD handler */
     exit( WEXITSTATUS(self->annex->status) );
   }
   NEVER_REACH_HERE;
-  return NULL;			/* dummy */
 }
 
 static int pip_find_a_free_task( int *pipidp ) {
@@ -727,7 +701,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   int 			op, err = 0;
 
   ENTER;
-  if( pip_root        == NULL ) RETURN( EPERM  );
+  if( !pip_is_initialized()   ) RETURN( EPERM  );
   if( !pip_isa_root()         ) RETURN( EPERM  );
   if( progp           == NULL ) RETURN( EINVAL );
   if( progp->prog     == NULL ) RETURN( EINVAL );

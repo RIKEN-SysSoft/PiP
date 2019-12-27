@@ -207,7 +207,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 	/* to make sure if the task is running or not */
 	err = 0;
       } else if( flag_blk ) {
-	while( pip_raise_signal( taski, 18 ) != ESRCH ) {
+	while( pip_raise_signal( taski, 0 ) != ESRCH ) {
 	  struct timespec ts;
 	  ts.tv_sec  = 0;
 	  ts.tv_nsec = 10*1000*1000; /* 10ms */
@@ -340,13 +340,16 @@ static int pip_blocking_waitany( void ) {
   DBG;
   pip_set_sigmask( SIGCHLD );
   while( 1 ) {
-    sigset_t	sigset;
+    //sigset_t	sigset;
     pipid = pip_nonblocking_waitany();
     DBGF( "pip_nonblocking_waitany() = %d", pipid );
     if( pipid != PIP_PIPID_NULL ) break;
 
+#ifdef AH
     ASSERT( sigemptyset( &sigset ) );
     (void) sigsuspend( &sigset ); /* always returns EINTR */
+#endif
+    ASSERT( pip_signal_wait( SIGCHLD ) );
   }
   pip_unset_sigmask();
   return( pipid );
@@ -357,6 +360,7 @@ int pip_wait( int pipid, int *statusp ) {
   int 			err = 0;
 
   ENTER;
+  if( !pip_is_initialized() )                    RETURN( EPERM   );
   if( !pip_isa_root() )                          RETURN( EPERM   );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
@@ -390,6 +394,7 @@ int pip_trywait( int pipid, int *statusp ) {
   int err;
 
   ENTER;
+  if( !pip_is_initialized() )                    RETURN( EPERM   );
   if( !pip_isa_root() )                          RETURN( EPERM   );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
@@ -409,7 +414,8 @@ int pip_wait_any( int *pipidp, int *statusp ) {
   int pipid, err = 0;
 
   ENTER;
-  if( !pip_isa_root() ) RETURN( EPERM   );
+  if( !pip_is_initialized() ) RETURN( EPERM );
+  if( !pip_isa_root() )       RETURN( EPERM );
   
   pipid = pip_blocking_waitany();
   if( pipid == PIP_PIPID_ANY ) {
@@ -431,7 +437,8 @@ int pip_trywait_any( int *pipidp, int *statusp ) {
   int pipid, err = 0;
 
   ENTER;
-  if( !pip_isa_root() ) RETURN( EPERM   );
+  if( !pip_is_initialized() ) RETURN( EPERM );
+  if( !pip_isa_root() )       RETURN( EPERM );
   
   pipid = pip_nonblocking_waitany();
   if( pipid == PIP_PIPID_NULL ) {

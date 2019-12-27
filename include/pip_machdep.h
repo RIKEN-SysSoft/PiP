@@ -162,39 +162,6 @@ pip_atomic_sub_and_fetch( pip_atomic_t *p, pip_atomic_t v ) {
 inline static void pip_print_fs_segreg( void ) {}
 #endif
 
-#ifndef PIP_CTX_T
-#include <ucontext.h>
-typedef struct {
-  ucontext_t		ctx;
-} pip_ctx_t;
-#endif
-
-#ifndef PIP_MAKE_CONTEXT
-#define pip_make_context(CTX,F,C,...)	 \
-  do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)
-#endif
-
-/* I cannot call getcontext() in a function but       */
-/* gcc (4.8.5 20150623) complains it is attributed */
-/* as always_inline. So I make it as a mcro            */
-#ifndef PIP_SAVE_CONTEXT
-#define pip_save_context(ctxp)	 ( getcontext(&(ctxp)->ctx) ? errno : 0 )
-#endif
-
-#ifndef PIP_SWAP_CONTEXT
-inline static int pip_swap_context( pip_ctx_t *oldctx, pip_ctx_t *newctx )
-  __attribute__((always_inline));
-inline static int pip_swap_context( pip_ctx_t *oldctx, pip_ctx_t *newctx ) {
-    return ( swapcontext( &oldctx->ctx, &newctx->ctx ) ? errno : 0 );
-}
-#endif
-
-#ifndef PIP_LOAD_CONTEXT
-inline static int pip_load_context( const pip_ctx_t *ctxp ) {
-    return ( setcontext(&ctxp->ctx) ? errno : 0 );
-}
-#endif
-
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif	/* _pip_machdep_h_ */
