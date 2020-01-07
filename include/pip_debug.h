@@ -160,7 +160,7 @@ extern int pip_debug_env( void );
 #endif	/* !DEBUG */
 
 #define NEVER_REACH_HERE						\
-  do { NNEMSG( ": Should not reach here !!!!!!" ); } while(0)
+  do { NNEMSG( "Should not reach here !!!!!!" ); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

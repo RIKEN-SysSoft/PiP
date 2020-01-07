@@ -5,7 +5,7 @@
  * $PIP_license$
  */
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 
 #define NITERS		(100)

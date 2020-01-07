@@ -420,7 +420,7 @@ static int pip_glibc_init( pip_symbols_t *symbols,
 }
 
 static void
-return_from_start_func( pip_task_internal_t *taski, int extval ) {
+pip_return_from_start_func( pip_task_internal_t *taski, int extval ) {
   ENTER;
   if( taski->annex->hook_after != NULL ) {
     void *hook_arg = taski->annex->hook_arg;
@@ -443,7 +443,7 @@ void pip_exit( int extval ) {
   } else if( pip_isa_root() ) {
     exit( extval );
   } else {
-    return_from_start_func( pip_task, extval );
+    pip_return_from_start_func( pip_task, extval );
   }
   NEVER_REACH_HERE;
 }
@@ -509,14 +509,17 @@ static void pip_start_user_func( pip_spawn_args_t *args,
 	    self->annex->symbols.start, start_arg, extval );
     }
   }
+#ifdef AH
   if( (pid_t) self->task_sched->annex->tid != pip_gettid() ) {
     /* when a pip task call fork() and the forked */
     /* process returns from main, this may happen  */
-    DBGF( "%d : %d", self->task_sched->annex->tid, pip_gettid() );
+    /* XXXXX in BLT this may happen !!!!! */
+    DBGF( "Fork?? (%d : %d)", self->task_sched->annex->tid, pip_gettid() );
     exit( extval );
     NEVER_REACH_HERE;
   }
-  return_from_start_func( self, extval );
+#endif
+  pip_return_from_start_func( self, extval );
   NEVER_REACH_HERE;
 }
 
@@ -612,32 +615,6 @@ static void* pip_do_spawn( void *thargs )  {
   return NULL;			/* dummy */
 }
 
-void pip_task_finalize( pip_task_internal_t *self ) {
-  DBGF( "PIPID:%d  tid:%d (%d)",
-	self->pipid, self->annex->tid, pip_gettid() );
-  ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
-
-  /* call fflush() in the target context to flush out std* messages */
-  if( self->annex->symbols.libc_fflush != NULL ) {
-    self->annex->symbols.libc_fflush( NULL );
-  }
-  if( self->annex->symbols.named_export_fin != NULL ) {
-    self->annex->symbols.named_export_fin( self );
-  }
-  DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
-  if( pip_is_threaded_() ) {	/* thread mode */
-    self->annex->flag_sigchld = 1;
-    pip_memory_barrier();
-    (void) pip_raise_signal( pip_root->task_root, SIGCHLD );
-    pthread_exit( NULL );
-  } else {			/* process mode */
-    pip_spin_lock( &pip_root->lock_ldlinux );
-    /* will be unlocked in the SIGCHLD handler */
-    exit( WEXITSTATUS(self->annex->status) );
-  }
-  NEVER_REACH_HERE;
-}
-
 static int pip_find_a_free_task( int *pipidp ) {
   int pipid = *pipidp;
   int i, err = 0;
@@ -722,10 +699,10 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) ERRJ;
   task = &pip_root->tasks[pipid];
   pip_reset_task_struct( task );
-  task->pipid       = pipid;	/* mark it as occupied */
-  task->type        = PIP_TYPE_TASK;
-  task->task_sched  = task;
-  task->ntakecare   = 1;
+  task->pipid      = pipid;	/* mark it as occupied */
+  task->type       = PIP_TYPE_TASK;
+  task->task_sched = task;
+  task->ntakecare  = 1;
   task->annex->opts      = opts;
   task->annex->task_root = pip_root;
   if( hookp != NULL ) {

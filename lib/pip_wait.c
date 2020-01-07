@@ -264,6 +264,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   }
   if( !err ) {
     DBGF( "PIPID:%d terminated", taski->pipid );
+    pip_stack_unprotect( taski );
     taski->flag_exit     = PIP_EXIT_WAITED;
     taski->annex->thread = 0;
     taski->annex->tid    = 0;
@@ -272,7 +273,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 }
 
 static int pip_check_task( pip_task_internal_t *taski ) {
-  ENTER;
+  ENTERF( "PIPID:%d", taski->pipid );
   if( taski->flag_exit == PIP_EXIT_WAITED ) {
     RETURN( 1 );
   } else if( taski->annex->tid    == 0 ||
@@ -340,15 +341,10 @@ static int pip_blocking_waitany( void ) {
   DBG;
   pip_set_sigmask( SIGCHLD );
   while( 1 ) {
-    //sigset_t	sigset;
     pipid = pip_nonblocking_waitany();
     DBGF( "pip_nonblocking_waitany() = %d", pipid );
     if( pipid != PIP_PIPID_NULL ) break;
 
-#ifdef AH
-    ASSERT( sigemptyset( &sigset ) );
-    (void) sigsuspend( &sigset ); /* always returns EINTR */
-#endif
     ASSERT( pip_signal_wait( SIGCHLD ) );
   }
   pip_unset_sigmask();

@@ -38,75 +38,66 @@
 #include <pip_context.h>
 
 static void pip_do_swap_context( pip_task_internal_t *taski, 
-				 pip_task_internal_t *nexti,
-				 int flag_tls ) {
+				 pip_task_internal_t *nexti ) {
   struct {
     pip_ctx_t *ctxp_new;
     pip_ctx_t ctx_old;		/* must be the last member */
   } lvars;
 
-  DBGF( "PIPID:%d ==>> PIPID:%d", taski->pipid, nexti->pipid );
-
 #ifdef PIP_USE_FCONTEXT
 #else
   lvars.ctxp_new = nexti->ctx_suspend;
   ASSERTD( lvars.ctxp_new == NULL );
   nexti->ctx_suspend = NULL;
   pip_stack_wait( nexti );
-
-  DBG;
   taski->ctx_suspend = &lvars.ctx_old;
-  if( flag_tls ) {
-    ASSERT( pip_load_tls( nexti->tls ) );
-  }
   ASSERT( pip_swap_ctx( &lvars.ctx_old, lvars.ctxp_new ) );
+#endif
   DBG;
   pip_stack_unprotect( taski );
-#endif
+  ASSERTD( (pid_t) taski->task_sched->annex->tid != pip_gettid() );
 }
 
 void pip_swap_context( pip_task_internal_t *taski,
 		       pip_task_internal_t *nexti ) {
-  pip_do_swap_context( taski, nexti, 0 );
+  DBGF( "PIPID:%d ==>> PIPID:%d", taski->pipid, nexti->pipid );
+  pip_do_swap_context( taski, nexti );
 }
 
 void pip_swap_tls_and_context( pip_task_internal_t *taski,
 			       pip_task_internal_t *nexti ) {
-  pip_do_swap_context( taski, nexti, 1 );
+  DBGF( "PIPID:%d ==>> PIPID:%d", taski->pipid, nexti->pipid );
+  ASSERT( pip_load_tls( nexti->tls ) );
+  pip_do_swap_context( taski, nexti );
 }
 
-static void pip_do_jump_context( pip_task_internal_t *taski, 
-				 pip_task_internal_t *nexti,
-				 int flag_tls ) {
+static void pip_do_jump_context( pip_task_internal_t *nexti ) {
   struct {
     pip_ctx_t *ctxp_new;
   } lvars;
 
-  DBGF( "PIPID:%d ==>> PIPID:%d", taski->pipid, nexti->pipid );
-
 #ifdef PIP_USE_FCONTEXT
 #else
+  ASSERTD( nexti->ctx_suspend == NULL );
   lvars.ctxp_new = nexti->ctx_suspend;
-  ASSERTD( lvars.ctxp_new == NULL );
   nexti->ctx_suspend = NULL;
   pip_stack_wait( nexti );
-
-  if( flag_tls ) {
-    ASSERT( pip_load_tls( nexti->tls ) );
-  }
-  pip_load_ctx( lvars.ctxp_new );
+  ASSERT( pip_load_ctx( lvars.ctxp_new ) );
 #endif
   NEVER_REACH_HERE;
 }
 
 void pip_jump_context( pip_task_internal_t *taski,
 		       pip_task_internal_t *nexti ) {
-  pip_do_jump_context( taski, nexti, 0 );
+  DBGF( "PIPID:%d ==>> PIPID:%d", taski->pipid, nexti->pipid );
+  pip_do_jump_context( nexti );
 }
 
 void pip_jump_tls_and_context( pip_task_internal_t *taski,
 			       pip_task_internal_t *nexti ) {
-  pip_do_jump_context( taski, nexti, 1 );
+  DBGF( "PIPID:%d ==>> PIPID:%d", taski->pipid, nexti->pipid );
+  ASSERT( pip_load_tls( nexti->tls ) );
+  pip_do_jump_context( nexti );
 }
 
 void pip_switch_to_sleep_context( pip_task_internal_t *taski,
@@ -137,21 +128,12 @@ void pip_switch_to_sleep_context( pip_task_internal_t *taski,
 		lvars.args_L );
   taski->ctx_suspend = &lvars.ctx_old;
   pip_swap_ctx( &lvars.ctx_old, &lvars.ctx_new );
+#endif
   /* resumed */
   pip_stack_unprotect( taski );
-#endif
-}
-
-void pip_jump_to_sleep_context( pip_task_internal_t *taski,
-				pip_task_internal_t *schedi ) {
-  DBGF( "PIPID:%d ==>> PIPID:%d", taski->pipid, schedi->pipid );
-
-#ifdef PIP_USE_FCONTEXT
-#else
-  pip_switch_to_sleep_context( taski, schedi );
-  pip_task_finalize( taski );
-#endif
-  NEVER_REACH_HERE;
+  if( pip_able_to_terminate_immediately( taski ) ) {
+    pip_finalize_task( taski );
+  }
 }
 
 /* STACK PROTECT */
@@ -197,7 +179,7 @@ void pip_stack_wait( pip_task_internal_t *taski ) {
       pip_system_yield();
       DBGF( "WAITING  pipid:%d (count=%d*%d) ...",
 	    taski->pipid, i, PIP_BUSYWAIT_COUNT );
-      if( i > 1000 ) {
+      if( i > 10000 ) {
 	DBGF( "WAIT-FAILED  pipid:%d (count=%d*%d)",
 	      taski->pipid, i, PIP_BUSYWAIT_COUNT );
 	ASSERT( 1 );

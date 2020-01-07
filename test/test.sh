@@ -3,8 +3,15 @@
 # XXX TO-DO: LC_ALL=en_US.UTF-8 doesn't work if custom-built libc is used
 unset LANG LC_ALL
 
-TEST_TRAP_SIGS='1 2 14 15'
-width=80
+TEST_TRAP_SIGS='1 2 14 15';
+termwidth=`tput cols`;
+longmsg="UNSUPPORTED"
+lmsglen=${#longmsg}
+width=$((termwidth-lmsglen-13))
+
+if [ $width -lt 40 ]; then
+    width=80
+fi
 
 # not to print any debug messages
 export PIP_NODEBUG=1;
