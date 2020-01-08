@@ -114,10 +114,6 @@ int \hyperlink{group__libpip_gafc11d79f0f63c4c57ccb5c3bb2803241}{pip\-\_\-isa\-\
 \begin{DoxyCompactList}\small\item\em check if calling Pi\-P task is a Pi\-P U\-L\-P or not \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
-int \hyperlink{group__libpip_gacefb1f29e5f5d9b21309a1d041e78790}{pip\-\_\-is\-\_\-alive} (int pipid)
-\begin{DoxyCompactList}\small\item\em check if the specified Pi\-P task is alive or not \end{DoxyCompactList}\end{DoxyCompactItemize}
-\begin{DoxyCompactItemize}
-\item 
 int \hyperlink{group__libpip_gab7ba5cc62101240c68acf07905e36772}{pip\-\_\-kill\-\_\-all\-\_\-tasks} (void)
 \begin{DoxyCompactList}\small\item\em kill all Pi\-P tasks \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
@@ -220,6 +216,10 @@ int \hyperlink{group__libpip_gaec396f9ee279cbe2d44f9b2ed239eb4a}{pip\-\_\-count\
 \item 
 int \hyperlink{group__libpip_ga14a1b03ec6564885a5dd97dbc27167aa}{pip\-\_\-get\-\_\-task\-\_\-pipid} (pip\-\_\-task\-\_\-t $\ast$task, int $\ast$pipidp)
 \begin{DoxyCompactList}\small\item\em Return P\-I\-P\-I\-D of a Pi\-P task. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{group__libpip_ga6772c4ea654ccd1e0ca637f729cf3e88}{pip\-\_\-get\-\_\-task\-\_\-from\-\_\-pipid} (int pipid, pip\-\_\-task\-\_\-t $\ast$$\ast$taskp)
+\begin{DoxyCompactList}\small\item\em get Pi\-P task from Pi\-P I\-D \end{DoxyCompactList}\end{DoxyCompactItemize}
 \begin{DoxyCompactItemize}
 \item 
 int \hyperlink{group__libpip_gacfd984207deedf86edddbb72c5d4e883}{pip\-\_\-set\-\_\-aux} (pip\-\_\-task\-\_\-t $\ast$task, void $\ast$aux)
@@ -511,9 +511,7 @@ zero is returned if this function succeeds. On error, an error number is returne
 \hline
 {\em E\-N\-O\-M\-E\-M} & not enough memory available \\
 \hline
-{\em E\-C\-A\-N\-C\-E\-L\-E\-D} & the target task is terminated during the query \\
-\hline
-{\em E\-N\-O\-E\-N\-T} & there is no export having the specified name\\
+{\em E\-C\-A\-N\-C\-E\-L\-E\-D} & the target task is terminated during the query\\
 \hline
 \end{DoxyRetVals}
 \begin{DoxySeeAlso}{See Also}
@@ -1058,25 +1056,6 @@ check if calling Pi\-P task is a Pi\-P U\-L\-P or not
 
 \begin{DoxyReturn}{Returns}
 Return true if the caller is a Pi\-P U\-L\-P 
-\end{DoxyReturn}
-\hypertarget{group__libpip_gacefb1f29e5f5d9b21309a1d041e78790}{\index{libpip@{libpip}!pip\-\_\-is\-\_\-alive@{pip\-\_\-is\-\_\-alive}}
-\index{pip\-\_\-is\-\_\-alive@{pip\-\_\-is\-\_\-alive}!libpip@{libpip}}
-\subsubsection[{pip\-\_\-is\-\_\-alive}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-is\-\_\-alive (
-\begin{DoxyParamCaption}
-\item[{int}]{pipid}
-\end{DoxyParamCaption}
-)}}\label{group__libpip_gacefb1f29e5f5d9b21309a1d041e78790}
-
-
-check if the specified Pi\-P task is alive or not 
-
-
-\begin{DoxyParams}[1]{Parameters}
-\mbox{\tt in}  & {\em pipid} & Pi\-P I\-D to check\\
-\hline
-\end{DoxyParams}
-\begin{DoxyReturn}{Returns}
-Return true if the specified Pi\-P task or U\-L\-P is alive (i.\-e., not yet terminated) and running 
 \end{DoxyReturn}
 \hypertarget{group__libpip_gab7ba5cc62101240c68acf07905e36772}{\index{libpip@{libpip}!pip\-\_\-kill\-\_\-all\-\_\-tasks@{pip\-\_\-kill\-\_\-all\-\_\-tasks}}
 \index{pip\-\_\-kill\-\_\-all\-\_\-tasks@{pip\-\_\-kill\-\_\-all\-\_\-tasks}!libpip@{libpip}}
@@ -1735,6 +1714,37 @@ Return 0 on success. Return an error code on error.
 {\em E\-I\-N\-A\-V\-L} & {\ttfamily task} is {\ttfamily N\-U\-L\-L} \\
 \hline
 {\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{group__libpip_ga6772c4ea654ccd1e0ca637f729cf3e88}{\index{libpip@{libpip}!pip\-\_\-get\-\_\-task\-\_\-from\-\_\-pipid@{pip\-\_\-get\-\_\-task\-\_\-from\-\_\-pipid}}
+\index{pip\-\_\-get\-\_\-task\-\_\-from\-\_\-pipid@{pip\-\_\-get\-\_\-task\-\_\-from\-\_\-pipid}!libpip@{libpip}}
+\subsubsection[{pip\-\_\-get\-\_\-task\-\_\-from\-\_\-pipid}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-task\-\_\-from\-\_\-pipid (
+\begin{DoxyParamCaption}
+\item[{int}]{pipid, }
+\item[{pip\-\_\-task\-\_\-t $\ast$$\ast$}]{taskp}
+\end{DoxyParamCaption}
+)}}\label{group__libpip_ga6772c4ea654ccd1e0ca637f729cf3e88}
+
+
+get Pi\-P task from Pi\-P I\-D 
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & Pi\-P I\-D \\
+\hline
+\mbox{\tt out}  & {\em taskp} & Pi\-P task of the specified Pi\-P I\-D\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily pipidp} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+{\em E\-N\-O\-E\-N\-T} & No such Pi\-P task \\
 \hline
 \end{DoxyRetVals}
 \hypertarget{group__libpip_gacfd984207deedf86edddbb72c5d4e883}{\index{libpip@{libpip}!pip\-\_\-set\-\_\-aux@{pip\-\_\-set\-\_\-aux}}

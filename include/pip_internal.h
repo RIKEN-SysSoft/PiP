@@ -189,8 +189,9 @@ typedef sem_t			pip_blocking_t;
 
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
+  pip_ctx_t			*ctx_sleep; /* context to resume */
   pip_blocking_t		sleep;
-  void				*sleep_stack;
+  void				*stack_sleep;
 
   pip_task_t			oodq;	   /* out-of-damain queue */
   pip_spinlock_t		lock_oodq; /* lock for OOD queue */
@@ -315,27 +316,19 @@ extern pip_task_internal_t	*pip_task;
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_set_extval( pip_task_internal_t*, int ) PIP_PRIVATE;
-extern int pip_able_to_terminate_immediately( pip_task_internal_t* )
+extern int  pip_able_to_terminate_immediately( pip_task_internal_t* )
   PIP_PRIVATE;
 extern void pip_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
 
 extern void pip_swap_context( pip_task_internal_t*,
 			      pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_swap_tls_and_context( pip_task_internal_t*,
-				      pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_switch_to_sleep_context( pip_task_internal_t*,
-					 pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_jump_context( pip_task_internal_t*,
-			      pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_jump_tls_and_context( pip_task_internal_t*,
-				      pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_jump_to_sleep_context( pip_task_internal_t*,
-				       pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_jump_to_exit_context( pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_decouple_context( pip_task_internal_t*,
+				  pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_couple_context( pip_task_internal_t*,
+				pip_task_internal_t* ) PIP_PRIVATE;
 
-extern void pip_sleep( intptr_t, intptr_t ) PIP_PRIVATE;
+extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_stack_protect( pip_task_internal_t*,
 			       pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_stack_unprotect( pip_task_internal_t* ) PIP_PRIVATE;
@@ -346,7 +339,7 @@ extern void pip_set_signal_handler( int sig, void(*)(),
 extern int  pip_raise_signal( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_set_sigmask( int ) PIP_PRIVATE;
 extern void pip_unset_sigmask( void ) PIP_PRIVATE;
-extern int pip_signal_wait( int ) PIP_PRIVATE;
+extern int  pip_signal_wait( int ) PIP_PRIVATE;
 
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
 extern int  pip_check_sync_flag( uint32_t ) PIP_PRIVATE;

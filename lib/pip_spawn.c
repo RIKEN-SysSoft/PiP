@@ -712,8 +712,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   }
   /* allocate stack for sleeping */
   stack_size = pip_stack_size();
-  pip_page_alloc( pip_root->stack_size_sleep, &task->annex->sleep_stack );
-  if( task->annex->sleep_stack == NULL ) ERRJ_ERR( ENOMEM );
+  pip_page_alloc( pip_root->stack_size_sleep, &task->annex->stack_sleep );
+  if( task->annex->stack_sleep == NULL ) ERRJ_ERR( ENOMEM );
 
   if( progp->envv == NULL ) progp->envv = environ;
   args = &task->annex->args;

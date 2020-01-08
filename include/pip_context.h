@@ -54,11 +54,12 @@
 typedef void* 		pip_fcontext;
 typedef pip_transfer {
   pip_fcontext		ctx;
-  void			*argp;
+  void			*data;
 } pip_transfer_t;
 
-pip_fcontext_t make_fcontext( void *sp, size_t size, void (* fn)(pip_transfer_t*) );
-pip_transfer_t jump_fcontext( pip_fcontext_t const ctx, void* argp );
+pip_fcontext_t make_fcontext( void *sp, size_t size, void (*fn)(pip_transfer_t*) );
+
+#define pip_make_fctx(SP,SZ,FUNC)	make_fcontext((SP),(SZ),(FUNC))
 
 #endif	/* PIP_BOOST_COMPILE */
 
@@ -69,7 +70,7 @@ typedef struct {
   ucontext_t		ctx;
 } pip_ctx_t;
 
-#define pip_make_ctx(CTX,F,C,...)	 \
+#define pip_make_uctx(CTX,F,C,...)	 \
   do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)
 
 /* I cannot call getcontext() inside of a function but */

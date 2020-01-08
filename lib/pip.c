@@ -312,7 +312,7 @@ void pip_page_alloc( size_t sz, void **allocp ) {
 
 void pip_reset_task_struct( pip_task_internal_t *taski ) {
   pip_task_annex_t 	*annex = taski->annex;
-  void			*sleep_stack = annex->sleep_stack;
+  void			*stack_sleep = annex->stack_sleep;
   void			*namexp = annex->named_exptab;
 
   memset( (void*) taski, 0, sizeof( pip_task_internal_t ) );
@@ -323,7 +323,7 @@ void pip_reset_task_struct( pip_task_internal_t *taski ) {
   taski->annex = annex;
 
   memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
-  annex->sleep_stack  = sleep_stack;
+  annex->stack_sleep  = stack_sleep;
   annex->named_exptab = namexp;
   annex->tid          = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_TASKQ_INIT(    &taski->annex->oodq );
@@ -530,8 +530,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     }
     pip_root->stack_size_sleep = PIP_SLEEP_STACKSZ;
     pip_page_alloc( pip_root->stack_size_sleep,
-		     &pip_task->annex->sleep_stack );
-    if( pip_task->annex->sleep_stack == NULL ) {
+		     &pip_task->annex->stack_sleep );
+    if( pip_task->annex->stack_sleep == NULL ) {
       free( pip_root );
       RETURN( err );
     }

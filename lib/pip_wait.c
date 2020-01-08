@@ -107,24 +107,6 @@ void pip_deadlock_dec( void ) {
 #endif
 }
 
-void pip_set_extval( pip_task_internal_t *taski, int extval ) {
-  ENTER;
-  if( !taski->flag_exit ) {
-    taski->flag_exit = PIP_EXITED;
-    /* mark myself as exited */
-    DBGF( "PIPID:%d[%d] extval:%d",
-	  taski->pipid, taski->task_sched->pipid, extval );
-    if( taski->annex->status == 0 ) {
-      taski->annex->status = PIP_W_EXITCODE( extval, 0 );
-    }
-    pip_gdbif_exit( taski, extval );
-    pip_memory_barrier();
-    pip_gdbif_hook_after( taski );
-  }
-  DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->status );
-  RETURNV;
-}
-
 static void pip_set_status( pip_task_internal_t *taski, int status ) {
   ENTER;
   if( !taski->flag_exit ) {

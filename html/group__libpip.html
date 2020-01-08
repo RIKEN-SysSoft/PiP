@@ -162,9 +162,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:gafc11d79f0f63c4c57ccb5c3bb2803241"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gafc11d79f0f63c4c57ccb5c3bb2803241">pip_isa_ulp</a> (void)</td></tr>
 <tr class="memdesc:gafc11d79f0f63c4c57ccb5c3bb2803241"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if calling PiP task is a PiP ULP or not  <a href="#gafc11d79f0f63c4c57ccb5c3bb2803241">More...</a><br/></td></tr>
 <tr class="separator:gafc11d79f0f63c4c57ccb5c3bb2803241"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gacefb1f29e5f5d9b21309a1d041e78790">pip_is_alive</a> (int pipid)</td></tr>
-<tr class="memdesc:gacefb1f29e5f5d9b21309a1d041e78790"><td class="mdescLeft">&#160;</td><td class="mdescRight">check if the specified PiP task is alive or not  <a href="#gacefb1f29e5f5d9b21309a1d041e78790">More...</a><br/></td></tr>
-<tr class="separator:gacefb1f29e5f5d9b21309a1d041e78790"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab7ba5cc62101240c68acf07905e36772"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gab7ba5cc62101240c68acf07905e36772">pip_kill_all_tasks</a> (void)</td></tr>
 <tr class="memdesc:gab7ba5cc62101240c68acf07905e36772"><td class="mdescLeft">&#160;</td><td class="mdescRight">kill all PiP tasks  <a href="#gab7ba5cc62101240c68acf07905e36772">More...</a><br/></td></tr>
 <tr class="separator:gab7ba5cc62101240c68acf07905e36772"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -243,6 +240,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <tr class="memitem:ga14a1b03ec6564885a5dd97dbc27167aa"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga14a1b03ec6564885a5dd97dbc27167aa">pip_get_task_pipid</a> (pip_task_t *task, int *pipidp)</td></tr>
 <tr class="memdesc:ga14a1b03ec6564885a5dd97dbc27167aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return PIPID of a PiP task.  <a href="#ga14a1b03ec6564885a5dd97dbc27167aa">More...</a><br/></td></tr>
 <tr class="separator:ga14a1b03ec6564885a5dd97dbc27167aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6772c4ea654ccd1e0ca637f729cf3e88"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#ga6772c4ea654ccd1e0ca637f729cf3e88">pip_get_task_from_pipid</a> (int pipid, pip_task_t **taskp)</td></tr>
+<tr class="memdesc:ga6772c4ea654ccd1e0ca637f729cf3e88"><td class="mdescLeft">&#160;</td><td class="mdescRight">get PiP task from PiP ID  <a href="#ga6772c4ea654ccd1e0ca637f729cf3e88">More...</a><br/></td></tr>
+<tr class="separator:ga6772c4ea654ccd1e0ca637f729cf3e88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacfd984207deedf86edddbb72c5d4e883"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__libpip.html#gacfd984207deedf86edddbb72c5d4e883">pip_set_aux</a> (pip_task_t *task, void *aux)</td></tr>
 <tr class="memdesc:gacfd984207deedf86edddbb72c5d4e883"><td class="mdescLeft">&#160;</td><td class="mdescRight">Associate user data with a PiP task.  <a href="#gacfd984207deedf86edddbb72c5d4e883">More...</a><br/></td></tr>
 <tr class="separator:gacfd984207deedf86edddbb72c5d4e883"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -609,8 +609,7 @@ When the named export cannot be found at the specified task, then this function 
   <table class="retval">
     <tr><td class="paramname">EINVAL</td><td><code>format</code> is <code>NULL</code> </td></tr>
     <tr><td class="paramname">ENOMEM</td><td>not enough memory available </td></tr>
-    <tr><td class="paramname">ECANCELED</td><td>the target task is terminated during the query </td></tr>
-    <tr><td class="paramname">ENOENT</td><td>there is no export having the specified name</td></tr>
+    <tr><td class="paramname">ECANCELED</td><td>the target task is terminated during the query</td></tr>
   </table>
   </dd>
 </dl>
@@ -1307,31 +1306,6 @@ This function can be used regardless to the PiP execution mode.</dd></dl>
 
 <p>check if calling PiP task is a PiP ULP or not </p>
 <dl class="section return"><dt>Returns</dt><dd>Return true if the caller is a PiP ULP </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="gacefb1f29e5f5d9b21309a1d041e78790"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_is_alive </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>pipid</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>check if the specified PiP task is alive or not </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>PiP ID to check</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Return true if the specified PiP task or ULP is alive (i.e., not yet terminated) and running </dd></dl>
 
 </div>
 </div>
@@ -2302,6 +2276,50 @@ In the process mode, the file descriptors set the close-on-exec flag will be clo
   <table class="retval">
     <tr><td class="paramname">EINAVL</td><td><code>task</code> is <code>NULL</code> </td></tr>
     <tr><td class="paramname">EPERM</td><td>PiP library is not yet initialized or already finalized </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a class="anchor" id="ga6772c4ea654ccd1e0ca637f729cf3e88"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int pip_get_task_from_pipid </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>pipid</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">pip_task_t **&#160;</td>
+          <td class="paramname"><em>taskp</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>get PiP task from PiP ID </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">pipid</td><td>PiP ID </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">taskp</td><td>PiP task of the specified PiP ID</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
+<dl class="retval"><dt>Return values</dt><dd>
+  <table class="retval">
+    <tr><td class="paramname">EINVAL</td><td><code>pipidp</code> is <code>NULL</code> </td></tr>
+    <tr><td class="paramname">EPERM</td><td>PiP library is not yet initialized or already finalized </td></tr>
+    <tr><td class="paramname">ENOENT</td><td>No such PiP task </td></tr>
   </table>
   </dd>
 </dl>

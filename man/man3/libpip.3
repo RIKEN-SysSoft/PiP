@@ -1,4 +1,4 @@
-.TH "libpip" 3 "Tue Dec 10 2019" "PiP - Process-in-Process" \" -*- nroff -*-
+.TH "libpip" 3 "Wed Jan 8 2020" "PiP - Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -168,12 +168,6 @@ the PiP library
 .in -1c
 .in +1c
 .ti -1c
-.RI "int \fBpip_is_alive\fP (int pipid)"
-.br
-.RI "\fIcheck if the specified PiP task is alive or not \fP"
-.in -1c
-.in +1c
-.ti -1c
 .RI "int \fBpip_kill_all_tasks\fP (void)"
 .br
 .RI "\fIkill all PiP tasks \fP"
@@ -327,6 +321,12 @@ the PiP library
 .RI "int \fBpip_get_task_pipid\fP (pip_task_t *task, int *pipidp)"
 .br
 .RI "\fIReturn PIPID of a PiP task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_task_from_pipid\fP (int pipid, pip_task_t **taskp)"
+.br
+.RI "\fIget PiP task from PiP ID \fP"
 .in -1c
 .in +1c
 .ti -1c
@@ -626,9 +626,7 @@ zero is returned if this function succeeds\&. On error, an error number is retur
 .br
 \fIENOMEM\fP not enough memory available 
 .br
-\fIECANCELED\fP the target task is terminated during the query 
-.br
-\fIENOENT\fP there is no export having the specified name
+\fIECANCELED\fP the target task is terminated during the query
 .RE
 .PP
 \fBSee Also:\fP
@@ -1140,22 +1138,6 @@ check if calling PiP task is a PiP ULP or not
 \fBReturns:\fP
 .RS 4
 Return true if the caller is a PiP ULP 
-.RE
-.PP
-
-.SS "int pip_is_alive (intpipid)"
-
-.PP
-check if the specified PiP task is alive or not 
-.PP
-\fBParameters:\fP
-.RS 4
-\fIpipid\fP PiP ID to check
-.RE
-.PP
-\fBReturns:\fP
-.RS 4
-Return true if the specified PiP task or ULP is alive (i\&.e\&., not yet terminated) and running 
 .RE
 .PP
 
@@ -1721,6 +1703,33 @@ Return 0 on success\&. Return an error code on error\&.
 \fIEINAVL\fP \fCtask\fP is \fCNULL\fP 
 .br
 \fIEPERM\fP PiP library is not yet initialized or already finalized 
+.RE
+.PP
+
+.SS "int pip_get_task_from_pipid (intpipid, pip_task_t **taskp)"
+
+.PP
+get PiP task from PiP ID 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID 
+.br
+\fItaskp\fP PiP task of the specified PiP ID
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCpipidp\fP is \fCNULL\fP 
+.br
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.br
+\fIENOENT\fP No such PiP task 
 .RE
 .PP
 
