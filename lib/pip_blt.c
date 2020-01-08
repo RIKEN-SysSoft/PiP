@@ -201,7 +201,6 @@ void pip_sleep( pip_task_internal_t *schedi ) {
   ENTERF( "PIPID:%d", schedi->pipid );
   /* now stack is switched and safe to use the prev stack */
   while( 1 ) {
-    pip_stack_unprotect( schedi );
     while( 1 ) {
       pip_takein_ood_task( schedi );
       if( !PIP_TASKQ_ISEMPTY( &schedi->schedq ) ) break;
@@ -322,7 +321,7 @@ void pip_finalize_task( pip_task_internal_t *self ) {
   if( pip_is_threaded_() ) {	/* thread mode */
     self->annex->flag_sigchld = 1;
     pip_memory_barrier();
-    (void) pip_raise_signal( pip_root->task_root, SIGCHLD );
+    ASSERT( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
     pthread_exit( NULL );
   } else {			/* process mode */
     pip_spin_lock( &pip_root->lock_ldlinux );

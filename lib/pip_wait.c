@@ -107,7 +107,8 @@ void pip_deadlock_dec( void ) {
 #endif
 }
 
-static void pip_set_status( pip_task_internal_t *taski, int status ) {
+static void 
+pip_set_exit_status( pip_task_internal_t *taski, int status ) {
   ENTER;
   if( !taski->flag_exit ) {
     taski->flag_exit = PIP_EXITED;
@@ -173,18 +174,30 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   }
   if( pip_is_threaded_() ) {	/* thread mode */
     if( flag_blk ) {
-      err = pthread_join( taski->annex->thread, NULL );
+      struct timespec ts;
+      ts.tv_sec  = 0;
+      ts.tv_nsec = 100*1000*1000;
+      err = pthread_timedjoin_np( taski->annex->thread, NULL, &ts );
+      if( err ) {
+	DBGF( "pthread_timedjoin_np(): %s", strerror(err) );
+      }
     } else {
       err = pthread_tryjoin_np( taski->annex->thread, NULL );
-      DBGF( "err:%d", err );
-      if( err == EBUSY ) err = ECHILD;
+      DBGF( "pthread_tryjoin_np(): %s", strerror(err) );
     }
-    if( !err ) {
-      pip_set_status( taski, 0 );
-
-    } else if( err == ESRCH &&
-	       taski->annex->symbols.pip_set_tid == NULL ) {
-      /* workaround */
+    /* workaround (make sure) */
+    if( err != 0 &&
+	taski->annex->symbols.pip_set_tid == NULL ) {
+      char path[128];
+      struct stat stbuf;
+      snprintf( path, 128, "/proc/%d/%d", getpid(), taski->annex->tid );
+      DBGF( "stat(%s)", path );
+      system( "ls /proc/self/task >> proc.log" );
+      err = errno = 0;
+      if( stat( path, &stbuf ) == 0 ) {
+	err = ECHILD;
+      }
+#ifdef AHH
       if( pip_raise_signal( taski, 0 ) == ESRCH ) {
 	/* to make sure if the task is running or not */
 	err = 0;
@@ -198,7 +211,9 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 	err = 0;
       }
       DBGF( "err:%d", err );
+#endif
     }
+    if( !err ) pip_set_exit_status( taski, 0 );
     
   } else {			/* process mode */
     pid_t tid;
@@ -241,12 +256,11 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
       int sig = WTERMSIG( status );
       pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
 		     taski->pipid, strsignal(sig), sig );
-	pip_set_status( taski, status );
+	pip_set_exit_status( taski, status );
     }
   }
   if( !err ) {
     DBGF( "PIPID:%d terminated", taski->pipid );
-    pip_stack_unprotect( taski );
     taski->flag_exit     = PIP_EXIT_WAITED;
     taski->annex->thread = 0;
     taski->annex->tid    = 0;
@@ -257,29 +271,29 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 static int pip_check_task( pip_task_internal_t *taski ) {
   ENTERF( "PIPID:%d", taski->pipid );
   if( taski->flag_exit == PIP_EXIT_WAITED ) {
-    RETURN( 1 );
-  } else if( taski->annex->tid    == 0 ||
-	     taski->annex->thread == 0 ) {
-    /* not yet (empty slot) or terminated already */
-    RETURN( 0 );
-  } else if( taski->type != PIP_TYPE_NONE ) {
+    goto found;
+  } else if( taski->type != PIP_TYPE_NONE &&
+	     taski->annex->tid    != 0 &&
+	     taski->annex->thread != 0 ) { 
     if( pip_is_threaded_() ) {
       if( taski->annex->flag_sigchld ) {
 	/* if sigchld is really raised, then blocking wait */
 	taski->annex->flag_sigchld = 0;
 	if( pip_wait_syscall( taski, 1 ) == 0 ) {
-	  RETURN( 1 );
+	  goto found;
 	}
       } else if( pip_wait_syscall( taski, 0 ) == 0 ) {
-	RETURN( 1 );
+	goto found;
       }
     } else {			/* process mode */
       if( pip_wait_syscall( taski, 0 ) == 0 ) {
-	RETURN( 1 );
+	goto found;
       }
     }
   }
   RETURN( 0 );
+ found:
+  RETURN( 1 );
 }
 
 static int pip_nonblocking_waitany( void ) {
@@ -379,7 +393,7 @@ int pip_trywait( int pipid, int *statusp ) {
   DBGF( "PIPID:%d", pipid );
 
   taski = pip_get_task( pipid );
-  if( ( err = pip_wait_syscall( taski, 1 ) ) == 0 ) {
+  if( ( err = pip_wait_syscall( taski, 0 ) ) == 0 ) {
     if( statusp != NULL ) {
       *statusp = taski->annex->status;
     }

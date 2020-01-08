@@ -50,7 +50,7 @@ void pip_stack_protect( pip_task_internal_t *taski,
   pip_memory_barrier();
 }
 
-void pip_stack_unprotect( pip_task_internal_t *taski ) {
+static void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
   if( taski->flag_stackpp == NULL ) {
     DBGF( "UNABLE to UN-protect PIPID:%d", taski->pipid );
@@ -126,12 +126,14 @@ void pip_swap_context( pip_task_internal_t *taski,
 #ifdef PIP_USE_FCONTEXT
 static void pip_call_sleep( pip_transfer_t trans ) {
   pip_task_internal_t	*taski = (pip_task_intyernal_t*) trans.data;
+  pip_stack_unprotect( taski );
   pip_sleep( taski );
 }
 #else
 static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
   pip_task_internal_t	*taski = (pip_task_internal_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
+  pip_stack_unprotect( taski );
   pip_sleep( taski );
 }
 #endif

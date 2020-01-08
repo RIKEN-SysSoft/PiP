@@ -331,8 +331,6 @@ extern void pip_couple_context( pip_task_internal_t*,
 extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_stack_protect( pip_task_internal_t*,
 			       pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_stack_unprotect( pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_stack_wait( pip_task_internal_t* ) PIP_PRIVATE;
 
 extern void pip_set_signal_handler( int sig, void(*)(), 
 				    struct sigaction* ) PIP_PRIVATE;
