@@ -1,0 +1,1983 @@
+.TH "libpip" 3 "Wed Jan 15 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+libpip \- 
+.PP
+the PiP library  
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_init\fP (int *pipidp, int *ntasks, void **root_expp, int opts)"
+.br
+.RI "\fIInitialize the PiP library\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_fin\fP (void)"
+.br
+.RI "\fIfinalize the PiP library\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_spawn\fP (pip_spawn_program_t *progp, int coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp)"
+.br
+.RI "\fIspawn a PiP task (PiP API Version 2) \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_named_export\fP (void *exp, const char *format,\&.\&.\&.)"
+.br
+.RI "\fIexport an address of the calling PiP root or a PiP task to the others\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_named_import\fP (int pipid, void **expp, const char *format,\&.\&.\&.)"
+.br
+.RI "\fIimport the exposed memory region of the other\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_named_tryimport\fP (int pipid, void **expp, const char *format,\&.\&.\&.)"
+.br
+.RI "\fInon-blocking version of \fCpip_named_import\fP \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_export\fP (void *exp)"
+.br
+.RI "\fIexport a memory region of the calling PiP root or a PiP task to the others\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_import\fP (int pipid, void **expp)"
+.br
+.RI "\fIimport the exposed memory region of the other\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_pipid\fP (int *pipidp)"
+.br
+.RI "\fIget PiP ID \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_is_initialized\fP (void)"
+.br
+.RI "\fIQuery is PiP library is already initialized\&. \fP"
+.ti -1c
+.RI "int \fBpip_get_ntasks\fP (int *ntasksp)"
+.br
+.RI "\fIget the maximum number of the PiP tasks \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_curr_ntasks\fP (int *ntasksp)"
+.br
+.RI "\fIget the number of the PiP tasks currently created \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_isa_piptask\fP (void)"
+.br
+.RI "\fIcheck if the calling task is a PiP task or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_count_active_tasks\fP (void)"
+.br
+.RI "\fIreturn the number of active tasks \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_mode\fP (int *modep)"
+.br
+.RI "\fIget the PiP execution mode \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_exit\fP (int retval)"
+.br
+.RI "\fIterminate PiP task or ULP \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_wait\fP (int pipid, int *retval)"
+.br
+.RI "\fIwait for the termination of a PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_trywait\fP (int pipid, int *retval)"
+.br
+.RI "\fIwait for the termination of a PiP task in a non-blocking way \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_wait_any\fP (int *pipid, int *retval)"
+.br
+.RI "\fIwait for the termination of any PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_trywait_any\fP (int *pipid, int *retval)"
+.br
+.RI "\fIwait for the termination of any PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_kill\fP (int pipid, int signal)"
+.br
+.RI "\fIdeliver a signal to a PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_sigmask\fP (int how, const sigset_t *sigmask, sigset_t *oldmask)"
+.br
+.RI "\fIset signal mask of the current PiP task \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_id\fP (int pipid, intptr_t *idp)"
+.br
+.RI "\fIdeliver a process or thread ID defined by the system \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "const char * \fBpip_get_mode_str\fP (void)"
+.br
+.RI "\fIget a string of the current execution mode \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_isa_root\fP (void)"
+.br
+.RI "\fIcheck if calling PiP task is PiP root or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_isa_task\fP (void)"
+.br
+.RI "\fIcheck if calling PiP task is a PiP task or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_isa_ulp\fP (void)"
+.br
+.RI "\fIcheck if calling PiP task is a PiP ULP or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_kill_all_tasks\fP (void)"
+.br
+.RI "\fIkill all PiP tasks \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_spawn\fP (char *filename, char **argv, char **envv, int coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)"
+.br
+.RI "\fIspawn a PiP task (ULP API Version 1) \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_is_threaded\fP (int *flagp)"
+.br
+.RI "\fIcheck if PiP execution mode is Pthread or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_is_shared_fd\fP (int *flagp)"
+.br
+.RI "\fIcheck if file descriptors are shared or not \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_blt_spawn\fP (pip_spawn_program_t *progp, int coreno, uint32_t opts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp)"
+.br
+.RI "\fIspawn a PiP BLT (Bi-Level Task) \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_yield\fP (int flag)"
+.br
+.RI "\fIYield\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_yield_to\fP (pip_task_t *task)"
+.br
+.RI "\fIYield to the specified PiP task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_init\fP (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
+.br
+.RI "\fIInitialize task queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_trylock\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fITry locking task queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_task_queue_lock\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fILock task queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_task_queue_unlock\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIUnlock task queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_isempty\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIQuery function if the current task has some tasks to be scheduled with\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_count\fP (pip_task_queue_t *queue, int *np)"
+.br
+.RI "\fICount the length of task queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_task_queue_enqueue\fP (pip_task_queue_t *queue, pip_task_t *task)"
+.br
+.RI "\fIEnqueue a BLT\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "pip_task_t * \fBpip_task_queue_dequeue\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIDequeue a task from a task queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "void \fBpip_task_queue_describe\fP (pip_task_queue_t *queue, FILE *fp)"
+.br
+.RI "\fIDescribe queue\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_fin\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIFinalize a task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_suspend_and_enqueue\fP (pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg)"
+.br
+.RI "\fIsuspend the curren task and enqueue it \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_suspend_and_enqueue_nolock\fP (pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg)"
+.br
+.RI "\fIsuspend the curren task and enqueue it without locking the queue \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_dequeue_and_resume\fP (pip_task_queue_t *queue, pip_task_t *sched)"
+.br
+.RI "\fIdequeue a task and make it runnable \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_dequeue_and_resume_nolock\fP (pip_task_queue_t *queue, pip_task_t *sched)"
+.br
+.RI "\fIdequeue a task and make it runnable \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_dequeue_and_resume_N\fP (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
+.br
+.RI "\fIdequeue tasks and resume the execution of them \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_dequeue_and_resume_N_nolock\fP (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
+.br
+.RI "\fIdequeue tasks and resume the execution of them \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "pip_task_t * \fBpip_task_self\fP (void)"
+.br
+.RI "\fIReturn the current task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_count_runnable_tasks\fP (int *countp)"
+.br
+.RI "\fIcount the number of runnable tasks in the same scheduling domain \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_task_pipid\fP (pip_task_t *task, int *pipidp)"
+.br
+.RI "\fIReturn PIPID of a PiP task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_task_from_pipid\fP (int pipid, pip_task_t **taskp)"
+.br
+.RI "\fIget PiP task from PiP ID \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_set_aux\fP (pip_task_t *task, void *aux)"
+.br
+.RI "\fIAssociate user data with a PiP task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_aux\fP (pip_task_t *task, void **auxp)"
+.br
+.RI "\fIRetrive the user data associated with a PiP task\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_sched_domain\fP (pip_task_t **domainp)"
+.br
+.RI "\fIReturn the task representing the scheduling domain\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_barrier_init\fP (pip_barrier_t *barrp, int n)"
+.br
+.RI "\fIinitialize barrier synchronization structure \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_barrier_wait\fP (pip_barrier_t *barrp)"
+.br
+.RI "\fIwait on barrier synchronization in a busy-wait way \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_barrier_fin\fP (pip_barrier_t *barrp)"
+.br
+.RI "\fIfinalize barrier synchronization structure \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_mutex_init\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fIInitialize PiP mutex\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_mutex_lock\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fILock PiP mutex\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_mutex_unlock\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fIUnlock PiP mutex\&. \fP"
+.in -1c
+.in +1c
+.ti -1c
+.RI "int \fBpip_mutex_fin\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fIFinalize PiP mutex\&. \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+the PiP library 
+
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_init (int *pipidp, int *ntasks, void **root_expp, intopts)"
+
+.PP
+Initialize the PiP library\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipidp\fP When this is called by the PiP root process, then this returns \fCPIP_PIPID_ROOT\fP, otherwise it returns the PiP ID of the calling PiP task\&. 
+.br
+\fIntasks\fP When called by the PiP root, it specifies the maximum number of PiP tasks\&. When called by a PiP task, then it returns the number specified by the PiP root\&. 
+.br
+\fIroot_expp\fP If the root PiP is ready to export a memory region to any PiP task(s), then this parameter points to the variable holding the exporting address of the root PiP\&. If the PiP root is not ready to export or has nothing to export then this variable can be NULL\&. When called by a PiP task, it returns the exporting address of the PiP root, if any\&. 
+.br
+\fIopts\fP This must be zero at the point of this writing\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fInotasks\fP is a negative number, or the option combination is ivalid 
+.br
+\fIEOVERFLOW\fP \fCnotasks\fP is too latrge 
+.br
+\fIENOMEM\fP unable to allocate memory
+.RE
+.PP
+This function initializes the PiP library\&. The PiP root process must call this\&. A PiP task is not required to call this function unless the PiP task calls any PiP functions\&.
+.PP
+Is is NOT guaranteed that users can spawn tasks up to the number specified by the \fIntasks\fP argument\&. There are some limitations come from outside of the PiP library (GLIBC)\&.
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_export(3), pip_fin(3) 
+.RE
+.PP
+
+.SS "int pip_fin (void)"
+
+.PP
+finalize the PiP library\&. 
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEBUSY\fP \fCone\fP or more PiP tasks is yet running
+.RE
+.PP
+This function finalize the PiP library\&.
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_init(3) 
+.RE
+.PP
+
+.SS "int pip_task_spawn (pip_spawn_program_t *progp, intcoreno, uint32_topts, int *pipidp, pip_spawn_hook_t *hookp)"
+
+.PP
+spawn a PiP task (PiP API Version 2) 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIprogp\fP Program information to spawn as a PiP task 
+.br
+\fIcoreno\fP Core number for the PiP task to be bound to\&. If \fCPIP_CPUCORE_ASIS\fP is specified, then the core binding will not take place\&. 
+.br
+\fIopts\fP option flags 
+.br
+\fIpipidp\fP Specify PiP ID of the spawned PiP task\&. If \fCPIP_PIPID_ANY\fP is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned\&. 
+.br
+\fIhookp\fP Hook information to be invoked before and after the program invokation\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+In theory, there is no reason to restrict for a PiP task to spawn another PiP task\&. However, the current implementation fails to do so\&. If the root process is multithreaded, only the main thread can call this function\&. 
+.PP
+In the process mode, the file descriptors set the close-on-exec flag will be closed on the created child task\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP task tries to spawn child task 
+.br
+\fIEBUSY\fP Specified PiP ID is alredy occupied
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_task_spawn(3), pip_spawn_from_main(3) 
+.RE
+.PP
+
+.SS "int pip_named_export (void *exp, const char *format, \&.\&.\&.)"
+
+.PP
+export an address of the calling PiP root or a PiP task to the others\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIexp\fP Starting address of a memory region of the calling process or task so that the other tasks can access\&. 
+.br
+\fIformat\fP a \fCprintf\fP format to give the exported address a name
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+The PiP root or a PiP task can export a memory region only once\&.
+.PP
+\fBNote:\fP
+.RS 4
+The exported address can only be retrieved by \fBpip_named_import(3)\fP\&. 
+.PP
+There is no size parameter to specify the length of the exported region because there is no way to restrict the access outside of the exported region\&. 
+.PP
+The design of this function is prioritized for ease of use and this function works not in an efficient way\&. So, do not use this in a time critical path\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCformat\fP is \fCNULL\fP 
+.br
+\fIENOMEM\fP not enough memory available 
+.br
+\fIEBUSY\fP the specified name is already in use
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_named_import(3) 
+.RE
+.PP
+
+.SS "int pip_named_import (intpipid, void **expp, const char *format, \&.\&.\&.)"
+
+.PP
+import the exposed memory region of the other\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PiP ID to import the exposed address 
+.br
+\fIexpp\fP The starting address of the exposed region of the PiP task specified by the \fIpipid\fP\&. 
+.br
+\fIformat\fP a \fCprintf\fP format to give the exported address a name
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+To avoid deadlock, the corresponding \fBpip_named_export(3)\fP must be called beofre calling \fBpip_named_import(3)\fP; 
+.PP
+Unlike \fBpip_import(3)\fP, this function might be blocked until the target address is exported by the target task\&. Once a name is associated by an address, the address associated with the name cannot be changed\&. 
+.PP
+If this function is called by a task having passive task(s), then this call may result in context switching to the other passive task\&. 
+.PP
+The design of this function is prioritized for ease of use and this function works not in a efficient way\&. So, do not use this in a time critical path\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCformat\fP is \fCNULL\fP 
+.br
+\fIENOMEM\fP not enough memory available 
+.br
+\fIECANCELED\fP the target task is terminated during the query
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_named_export(3), pip_export(3), pip_import(3) 
+.RE
+.PP
+
+.SS "int pip_named_tryimport (intpipid, void **expp, const char *format, \&.\&.\&.)"
+
+.PP
+non-blocking version of \fCpip_named_import\fP 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PiP ID to import the exposed address 
+.br
+\fIexpp\fP The starting address of the exposed region of the PiP task specified by the \fIpipid\fP\&. 
+.br
+\fIformat\fP a \fCprintf\fP format to give the exported address a name
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+The imported address must be exported by \fBpip_named_export(3)\fP\&. 
+.PP
+When the named export cannot be found at the specified task, then this function returns immediately\&. It is guaranteed that the will be no task context switching take place in this function call\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCformat\fP is \fCNULL\fP 
+.br
+\fIENOMEM\fP not enough memory available 
+.br
+\fIECANCELED\fP the target task is terminated during the query
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_named_export(3), pip_export(3), pip_import(3) 
+.RE
+.PP
+
+.SS "int pip_export (void *exp)"
+
+.PP
+export a memory region of the calling PiP root or a PiP task to the others\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIexp\fP Starting address of a memory region of the calling process or task to the others\&. function call\&.
+.RE
+.PP
+The PiP root or a PiP task can export a memory region only once\&.
+.PP
+\fBNote:\fP
+.RS 4
+There is no size parameter to specify the length of the exported region because there is no way to restrict the access outside of the exported region\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_import(3), pip_named_export(3), pip_named_import(3) 
+.RE
+.PP
+
+.SS "int pip_import (intpipid, void **expp)"
+
+.PP
+import the exposed memory region of the other\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PiP ID to import the exposed address 
+.br
+\fIexpp\fP The starting address of the exposed region of the PiP task specified by the \fIpipid\fP\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+It is the users' responsibility to synchronize\&. When the target region is not exported yet , then this function returns NULL\&. If the root exports its region by the \fB\fBpip_init()\fP\fP function call, then it is guaranteed to be imported by PiP tasks at any time\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCexpp\fP is \fCNULL\fP 
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_export(3), pip_named_export(3), pip_named_import(3) 
+.RE
+.PP
+
+.SS "int pip_get_pipid (int *pipidp)"
+
+.PP
+get PiP ID 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipidp\fP This parameter points to the variable which will be set to the PiP ID of the calling process\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCpipidp\fP is \fCNULL\fP 
+.RE
+.PP
+
+.SS "int pip_is_initialized (void)"
+
+.PP
+Query is PiP library is already initialized\&. 
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fI\\c\fP true if it is already initialized 
+.RE
+.PP
+
+.SS "int pip_get_ntasks (int *ntasksp)"
+
+.PP
+get the maximum number of the PiP tasks 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIntasksp\fP This parameter points to the variable which will be set to the maximum number of the PiP tasks\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized 
+.RE
+.PP
+
+.SS "int pip_get_curr_ntasks (int *ntasksp)"
+
+.PP
+get the number of the PiP tasks currently created 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIntasksp\fP This parameter points to the variable which will be set to the maximum number of the PiP tasks\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized 
+.RE
+.PP
+
+.SS "int pip_isa_piptask (void)"
+
+.PP
+check if the calling task is a PiP task or not 
+.PP
+\fBReturns:\fP
+.RS 4
+Return an boolean value\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+Unlike most of the other PiP functions, this can be called BEFORE calling the \fB\fBpip_init()\fP\fP function\&. 
+.RE
+.PP
+
+.SS "int pip_count_active_tasks (void)"
+
+.PP
+return the number of active tasks 
+.PP
+\fBReturns:\fP
+.RS 4
+Return the number of awake tasks 
+.RE
+.PP
+
+.SS "int pip_get_mode (int *modep)"
+
+.PP
+get the PiP execution mode 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImodep\fP This parameter points to the variable which will be set to the PiP execution mode
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized 
+.RE
+.PP
+
+.SS "void pip_exit (intretval)"
+
+.PP
+terminate PiP task or ULP 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIretval\fP Terminate PiP task or ULP with the exit number specified with this parameter\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. 
+.PP
+If this function is called by a PiP task having one or more ULPs then the actual termination of the PiP task is postponed until all the associated (scheduling) ULP(s) terminate(s)\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function does not return if it succeeds\&. It return an error code on error\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3) 
+.RE
+.PP
+
+.SS "int pip_wait (intpipid, int *retval)"
+
+.PP
+wait for the termination of a PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID to wait for\&. 
+.br
+\fIretval\fP Exit value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function blocks until the specified PiP task or ULP terminates\&. 
+.PP
+This function can be used regardless to the PiP execution mode\&. 
+.PP
+Only the least significant 2 bytes of the exit value are effective\&. This is because of the compatibility with the \fCexit\fP glibc function\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The caller is not the PiP root 
+.br
+\fIEDEADLK\fP The specified \fCpipid\fP is the PiP root 
+.br
+\fIEINTR\fP The call was interrupted by a signal
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3) 
+.RE
+.PP
+
+.SS "int pip_trywait (intpipid, int *retval)"
+
+.PP
+wait for the termination of a PiP task in a non-blocking way 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID to wait for\&. 
+.br
+\fIretval\fP Exit value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The caller is not the PiP root 
+.br
+\fIEDEADLK\fP The specified \fCpipid\fP is the PiP root 
+.br
+\fIESRCH\fP There is no running PiP task having the specified PiP ID
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3) 
+.RE
+.PP
+
+.SS "int pip_wait_any (int *pipid, int *retval)"
+
+.PP
+wait for the termination of any PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of terminated PiP task\&. 
+.br
+\fIretval\fP Exit value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function blocks until one of PiP tasks or ULPs terminates\&. 
+.PP
+This function can be used regardless to the PiP execution mode\&. However, only the least significant 2 bytes are effective\&. This is because of the compatibility with the \fCexit\fP glibc function\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The caller is not the PiP root 
+.br
+\fIESRCH\fP There is no running PiP task
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3) 
+.RE
+.PP
+
+.SS "int pip_trywait_any (int *pipid, int *retval)"
+
+.PP
+wait for the termination of any PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of terminated PiP task\&. 
+.br
+\fIretval\fP Exit value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function never blocks\&. 
+.PP
+This function can be used regardless to the PiP execution mode\&. However, only the least significant 2 bytes are effective\&. This is because of the compatibility with the \fCexit\fP glibc function\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The caller is not the PiP root 
+.br
+\fIESRCH\fP There is no running PiP task
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3) 
+.RE
+.PP
+
+.SS "int pip_kill (intpipid, intsignal)"
+
+.PP
+deliver a signal to a PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of a target PiP task 
+.br
+\fIsignal\fP signal number to be delivered
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+Only the PiP task can be the target of the signal delivery\&. 
+.PP
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized 
+.br
+\fIEINVAL\fP An invalid signal number or invalid PiP ID is specified 
+.RE
+.PP
+
+.SS "int pip_sigmask (inthow, const sigset_t *sigmask, sigset_t *oldmask)"
+
+.PP
+set signal mask of the current PiP task 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIhow\fP see \fBsigprogmask\fP or \fBpthread_sigmask\fP 
+.br
+\fIsigmask\fP signal mask 
+.br
+\fIoldmask\fP old signal mask
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized 
+.br
+\fIEINVAL\fP An invalid signal number or invalid PiP ID is specified
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBsigprocmask\fP, \fBpthread_sigmask\fP 
+.RE
+.PP
+
+.SS "int pip_get_id (intpipid, intptr_t *idp)"
+
+.PP
+deliver a process or thread ID defined by the system 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of a target PiP task 
+.br
+\fIidp\fP a pointer to store the ID value
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+The returned object depends on the PiP mode\&. In the process mode it returns PID, in the thread mode it returns thread (\fCpthread_t\fP) associated with the PiP task 
+.PP
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+
+.SS "const char* pip_get_mode_str (void)"
+
+.PP
+get a string of the current execution mode 
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return the name string of the current execution mode 
+.RE
+.PP
+
+.SS "int pip_isa_root (void)"
+
+.PP
+check if calling PiP task is PiP root or not 
+.PP
+\fBReturns:\fP
+.RS 4
+Return true if the caller is the PiP root 
+.RE
+.PP
+
+.SS "int pip_isa_task (void)"
+
+.PP
+check if calling PiP task is a PiP task or not 
+.PP
+\fBReturns:\fP
+.RS 4
+Return true if the caller is a PiP task 
+.RE
+.PP
+
+.SS "int pip_isa_ulp (void)"
+
+.PP
+check if calling PiP task is a PiP ULP or not 
+.PP
+\fBReturns:\fP
+.RS 4
+Return true if the caller is a PiP ULP 
+.RE
+.PP
+
+.SS "int pip_kill_all_tasks (void)"
+
+.PP
+kill all PiP tasks 
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP Not called from root 
+.RE
+.PP
+
+.SS "int pip_spawn (char *filename, char **argv, char **envv, intcoreno, int *pipidp, pip_spawnhook_tbefore, pip_spawnhook_tafter, void *hookarg)"
+
+.PP
+spawn a PiP task (ULP API Version 1) 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIfilename\fP The executable to run as a PiP task 
+.br
+\fIargv\fP Argument(s) for the spawned PiP task 
+.br
+\fIenvv\fP Environment variables for the spawned PiP task 
+.br
+\fIcoreno\fP Core number for the PiP task to be bound to\&. If \fCPIP_CPUCORE_ASIS\fP is specified, then the core binding will not take place\&. 
+.br
+\fIpipidp\fP Specify PiP ID of the spawned PiP task\&. If \fCPIP_PIPID_ANY\fP is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned\&. 
+.br
+\fIbefore\fP Just before the executing of the spawned PiP task, this function is called so that file descriptors inherited from the PiP root, for example, can deal with\&. This is only effective with the PiP process mode\&. This function is called with the argument \fIhookarg\fP described below\&. 
+.br
+\fIafter\fP This function is called when the PiP task terminates for the cleanup purpose\&. This function is called with the argument \fIhookarg\fP described below\&. 
+.br
+\fIhookarg\fP The argument for the \fIbefore\fP and \fIafter\fP function call\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+This function is to spawn a PiP task\&. These functions are introduced to follow the programming style of conventional \fCfork\fP and \fCexec\fP\&. \fIbefore\fP function does the prologue found between the \fCfork\fP and \fCexec\fP\&. \fIafter\fP function is to free the argument if it is \fCmalloc()ed\fP\&. Note that the \fIbefore\fP and \fIafter\fP functions are called in the different \fIcontext\fP from the spawned PiP task\&. More specifically, any variables defined in the spawned PiP task cannot be accessible from the \fIbefore\fP and \fIafter\fP functions\&.
+.PP
+\fBNote:\fP
+.RS 4
+In theory, there is no reason to restrict for a PiP task to spawn another PiP task\&. However, the current implementation fails to do so\&. 
+.RE
+.PP
+
+.SS "int pip_is_threaded (int *flagp)"
+
+.PP
+check if PiP execution mode is Pthread or not 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflagp\fP a pointerto an integer to return
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return true if PiP execution mode is Pthread 
+.RE
+.PP
+
+.SS "int pip_is_shared_fd (int *flagp)"
+
+.PP
+check if file descriptors are shared or not 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflagp\fP a pointerto an integer to return
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return true if FDs are shared 
+.RE
+.PP
+
+.SS "int pip_blt_spawn (pip_spawn_program_t *progp, intcoreno, uint32_topts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp)"
+
+.PP
+spawn a PiP BLT (Bi-Level Task) 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIprogp\fP Program information to spawn as a PiP task 
+.br
+\fIcoreno\fP Core number for the PiP task to be bound to\&. If \fCPIP_CPUCORE_ASIS\fP is specified, then the core binding will not take place\&. 
+.br
+\fIopts\fP option flags 
+.br
+\fIpipidp\fP Specify PiP ID of the spawned PiP task\&. If \fCPIP_PIPID_ANY\fP is specified, then the PiP ID of the spawned PiP task is up to the PiP library and the assigned PiP ID will be returned\&. 
+.br
+\fIbltp\fP returns created BLT 
+.br
+\fIqueue\fP PiP task queue where the created BLT will be added 
+.br
+\fIhookp\fP Hook information to be invoked before and after the program invokation\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+In theory, there is no reason to restrict for a PiP task to spawn another PiP task\&. However, the current implementation fails to do so\&. If the root process is multithreaded, only the main thread can call this function\&. 
+.PP
+In the process mode, the file descriptors set the close-on-exec flag will be closed on the created child task\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP task tries to spawn child task 
+.br
+\fIEBUSY\fP Specified PiP ID is alredy occupied
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_task_spawn(3), pip_spawn_from_main(3) 
+.RE
+.PP
+
+.SS "int pip_yield (intflag)"
+
+.PP
+Yield\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflag\fP to specify the behavior of yielding
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_yield_to(3) 
+.RE
+.PP
+
+.SS "int pip_yield_to (pip_task_t *task)"
+
+.PP
+Yield to the specified PiP task\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP Target PiP task to switch
+.RE
+.PP
+Context-switch to the specified PiP task\&. If \fCtask\fP is \fCNULL\fP, then this works the same as \fC\fBpip_yield()\fP\fP does\&.
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The specified task belongs to the other scheduling domain\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_yield(3) 
+.RE
+.PP
+
+.SS "int pip_task_queue_init (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
+
+.PP
+Initialize task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fImethods\fP Usre defined function table\&. If NULL then default functions will be used\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+
+.SS "int pip_task_queue_trylock (pip_task_queue_t *queue)"
+
+.PP
+Try locking task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Returns true if lock succeeds\&. 
+.RE
+.PP
+
+.SS "void pip_task_queue_lock (pip_task_queue_t *queue)"
+
+.PP
+Lock task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+
+.SS "void pip_task_queue_unlock (pip_task_queue_t *queue)"
+
+.PP
+Unlock task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+
+.SS "int pip_task_queue_isempty (pip_task_queue_t *queue)"
+
+.PP
+Query function if the current task has some tasks to be scheduled with\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Returns true if there is no tasks to in the queue 
+.RE
+.PP
+
+.SS "int pip_task_queue_count (pip_task_queue_t *queue, int *np)"
+
+.PP
+Count the length of task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fInp\fP the queue length returned
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCnp\fP is \fCNULL\fP 
+.RE
+.PP
+
+.SS "void pip_task_queue_enqueue (pip_task_queue_t *queue, pip_task_t *task)"
+
+.PP
+Enqueue a BLT\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fItask\fP A task to be enqueued 
+.RE
+.PP
+
+.SS "pip_task_t* pip_task_queue_dequeue (pip_task_queue_t *queue)"
+
+.PP
+Dequeue a task from a task queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Dequeue a task in the specified task queue and return it\&. If the task queue is empty then \fBNULL\fP is returned\&. 
+.RE
+.PP
+
+.SS "void pip_task_queue_describe (pip_task_queue_t *queue, FILE *fp)"
+
+.PP
+Describe queue\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIfp\fP a file pointer
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+
+.SS "int pip_task_queue_fin (pip_task_queue_t *queue)"
+
+.PP
+Finalize a task\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+If succeedss, 0 is returned\&. Otherwise an error code is returned\&. 
+.RE
+.PP
+
+.SS "int pip_suspend_and_enqueue (pip_task_queue_t *queue, pip_enqueue_callback_tcallback, void *cbarg)"
+
+.PP
+suspend the curren task and enqueue it 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIcallback\fP A callback function which is called when enqueued 
+.br
+\fIcbarg\fP An argument given to the callback function
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+The \fBqueue\fP is locked and unlocked when the current task is enqueued\&. Then the \fBcallback\fP function is called\&.
+.PP
+As the result of suspension, if there is no other tasks to be scheduled then the kernel thread will be blocked until it will be given a task by resuming a suspended task\&.
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_enqueu_and_suspend_nolock(3), pip_dequeue_and_resume(3) 
+.RE
+.PP
+
+.SS "int pip_suspend_and_enqueue_nolock (pip_task_queue_t *queue, pip_enqueue_callback_tcallback, void *cbarg)"
+
+.PP
+suspend the curren task and enqueue it without locking the queue 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIcallback\fP A callback function which is called when enqueued 
+.br
+\fIcbarg\fP An argument given to the callback function
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function\&. When the current task is enqueued the \fBcallback\fP function will be called\&.
+.PP
+As the result of suspension, if there is no other tasks to be scheduled then the kernel thread will be blocked until it will be given a task by resuming a suspended task\&. 
+.SS "int pip_dequeue_and_resume (pip_task_queue_t *queue, pip_task_t *sched)"
+
+.PP
+dequeue a task and make it runnable 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIsched\fP A task to specify a scheduling domain
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+If succeedss, 0 is returned\&. Otherwise an error code is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIENOENT\fP The queue is empty\&.
+.RE
+.PP
+The \fBqueue\fP is locked and unlocked when dequeued\&. 
+.SS "int pip_dequeue_and_resume_nolock (pip_task_queue_t *queue, pip_task_t *sched)"
+
+.PP
+dequeue a task and make it runnable 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIsched\fP A task to specify a scheduling domain
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIENOENT\fP The queue is empty\&.
+.RE
+.PP
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function\&. 
+.SS "int pip_dequeue_and_resume_N (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
+
+.PP
+dequeue tasks and resume the execution of them 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIsched\fP A task to specify a scheduling domain 
+.br
+\fInp\fP A pointer to an interger which spcifies the number of tasks dequeued and actual number of tasks dequeued is returned\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP the specified number of tasks is negative
+.RE
+.PP
+The \fBqueue\fP is locked and unlocked when dequeued\&.
+.PP
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function\&. 
+.SS "int pip_dequeue_and_resume_N_nolock (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
+
+.PP
+dequeue tasks and resume the execution of them 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIsched\fP A task to specify a scheduling domain 
+.br
+\fInp\fP A pointer to an interger which spcifies the number of tasks dequeued and actual number of tasks dequeued is returned\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP the specified number of tasks is negative
+.RE
+.PP
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function\&. 
+.SS "pip_task_t* pip_task_self (void)"
+
+.PP
+Return the current task\&. 
+.PP
+\fBReturns:\fP
+.RS 4
+Return the current task\&. 
+.RE
+.PP
+
+.SS "int pip_count_runnable_tasks (int *countp)"
+
+.PP
+count the number of runnable tasks in the same scheduling domain 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIcountp\fP number of tasks will be returned
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error Return the number of runnable tasks in the current scheduling domain
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIcountp\fP pointer to the counter value returning
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCcountp\fP is \fCNULL\fP 
+.RE
+.PP
+
+.SS "int pip_get_task_pipid (pip_task_t *task, int *pipidp)"
+
+.PP
+Return PIPID of a PiP task\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP a PiP task 
+.br
+\fIpipidp\fP pointer to the PIPID value returning
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCtask\fP is \fCNULL\fP 
+.br
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.RE
+.PP
+
+.SS "int pip_get_task_from_pipid (intpipid, pip_task_t **taskp)"
+
+.PP
+get PiP task from PiP ID 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID 
+.br
+\fItaskp\fP PiP task of the specified PiP ID
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCpipidp\fP is \fCNULL\fP 
+.br
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.br
+\fIENOENT\fP No such PiP task 
+.RE
+.PP
+
+.SS "int pip_set_aux (pip_task_t *task, void *aux)"
+
+.PP
+Associate user data with a PiP task\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP PiP task\&. If \fCNULL\fP, then the data is associated with the current PiP task 
+.br
+\fIaux\fP Pointer to the user dat to assocate with
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.RE
+.PP
+
+.SS "int pip_get_aux (pip_task_t *task, void **auxp)"
+
+.PP
+Retrive the user data associated with a PiP task\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP PiP task\&. If \fCNULL\fP, then the data is associated with the current PiP task 
+.br
+\fIauxp\fP The pointer to the usder data will be stored
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCdomainp\fP is \fCNULL\fP or \fCauxp\fP is \fCNULL\fP 
+.br
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.RE
+.PP
+
+.SS "int pip_get_sched_domain (pip_task_t **domainp)"
+
+.PP
+Return the task representing the scheduling domain\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIdomainp\fP pointer to the domain task returning
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCdomainp\fP is \fCNULL\fP 
+.br
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.RE
+.PP
+
+.SS "int pip_barrier_init (pip_barrier_t *barrp, intn)"
+
+.PP
+initialize barrier synchronization structure 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIbarrp\fP pointer to a PiP barrier structure 
+.br
+\fIn\fP number of participants of this barrier synchronization
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCn\fP is invalid
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This barrier works on PiP tasks only\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_barrier_wait(3), pip_barrier_init(3), pip_barrier_wait(3), 
+.RE
+.PP
+
+.SS "int pip_barrier_wait (pip_barrier_t *barrp)"
+
+.PP
+wait on barrier synchronization in a busy-wait way 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIbarrp\fP pointer to a PiP barrier structure
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_barrier_init(3), pip_barrier_init(3), 
+.RE
+.PP
+
+.SS "int pip_barrier_fin (pip_barrier_t *barrp)"
+
+.PP
+finalize barrier synchronization structure 
+.PP
+\fBParameters:\fP
+.RS 4
+\fIbarrp\fP pointer to a PiP barrier structure
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEBUSY\fP there are some tasks wating for barrier synchronization
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_barrier_wait(3), pip_barrier_init(3), pip_barrier_wait(3), 
+.RE
+.PP
+
+.SS "int pip_mutex_init (pip_mutex_t *mutex)"
+
+.PP
+Initialize PiP mutex\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCmutex\fP is \fCNULL\fP 
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_mutex_lock(3), pip_mutex_unlock(3) 
+.RE
+.PP
+
+.SS "int pip_mutex_lock (pip_mutex_t *mutex)"
+
+.PP
+Lock PiP mutex\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_mutex_init(3), pip_mutex_unlock(3) 
+.RE
+.PP
+
+.SS "int pip_mutex_unlock (pip_mutex_t *mutex)"
+
+.PP
+Unlock PiP mutex\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_mutex_init(3), pip_mutex_lock(3) 
+.RE
+.PP
+
+.SS "int pip_mutex_fin (pip_mutex_t *mutex)"
+
+.PP
+Finalize PiP mutex\&. 
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEBUSY\fP There is one or more waiting PiP task
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_mutex_lock(3), pip_mutex_unlock(3) 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for PiP - Process-in-Process from the source code\&.
