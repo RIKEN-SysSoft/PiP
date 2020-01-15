@@ -4,9 +4,10 @@
 unset LANG LC_ALL
 
 TEST_TRAP_SIGS='1 2 14 15';
-termwidth=`tput cols`;
-if [ $? -ne 0 ]; then
+if [ $TERM == 'dumb' ]; then
     termwidth=80
+else
+    termwidth=`tput cols`;
 fi
 longmsg=" T -- UNSUPPORTED :-/"
 lmsglen=${#longmsg}
