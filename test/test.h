@@ -367,6 +367,7 @@ inline static void set_sigsegv_watcher( void ) {
 	     siginfo->si_pid,
 	     siginfo->si_addr,
 	     sigcode );
+    pip_print_maps();
     pip_backtrace_fd( 0, 2 );	/* fflush is called inside */
     abend(EXIT_UNTESTED);
   }

@@ -55,6 +55,7 @@
 #include <string.h>
 
 #include <pip.h>
+#include <pip_context.h>
 #include <pip_blt.h>
 #include <pip_clone.h>
 #include <pip_machdep.h>
@@ -101,7 +102,7 @@ typedef struct pip_cacheblk {
 } pip_cacheblk_t;
 
 typedef volatile uint8_t	pip_stack_protect_t;
-typedef volatile uint8_t	*pip_stack_protect_p;
+typedef pip_stack_protect_t	*pip_stack_protect_p;
 
 struct pip_task_annex;
 
@@ -112,11 +113,9 @@ typedef struct pip_task_internal {
       pip_task_t		queue; /* !!! DO NOT MOVE THIS AROUND !!! */
       pip_task_t		schedq;	/* scheduling queue */
       struct pip_task_internal	*task_sched; /* scheduling task */
-#ifdef PIP_TYPE_TLS
       pip_tls_t			tls;
-#endif
-      pip_ctx_t			*ctx_suspend; /* context to resume */
-      pip_stack_protect_p	flag_stackpp; /* to unprotect stack (ctxsw) */
+      pip_ctx_p			ctx_suspend; /* context to resume */
+      pip_stack_protect_p	flag_stackpp; /* pointer to unprotect stack */
       /* end of one cache block (64 bytes) */
       /* less frequently accessed part follows */
       pip_atomic_t		ntakecare; /* tasks must be taken care */
@@ -125,12 +124,15 @@ typedef struct pip_task_internal {
 	uint16_t		schedq_len; /* length of schedq */
 	volatile uint16_t	oodq_len; /* indictaes ood task is added */
 	volatile uint8_t	type; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
+	pip_stack_protect_t	flag_stackp; /* stack protection flag */
 	volatile char		state; /* BLT state */
-	pip_stack_protect_t	flag_stackp; /* stack protection (ctxsw) */
 	volatile uint8_t	flag_exit; /* if this task is terminated */
 	volatile uint8_t	flag_wakeup; /* flag to wakeup */
       };
       struct pip_task_annex	*annex;
+#ifdef PIP_USE_FCONTEXT
+      pip_ctx_p			*ctx_savep;
+#endif
     };
     pip_cacheblk_t		__align__[2];
   };
@@ -186,12 +188,13 @@ struct pip_root;
 struct pip_gdbif_task;
 struct pip_gdbif_root;
 
-typedef sem_t			pip_blocking_t;
+typedef sem_t			pip_sem_t;
 
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
-  pip_blocking_t		sleep;
-  void				*sleep_stack;
+  pip_ctx_p			ctx_sleep; /* context to resume */
+  pip_sem_t			sleep;
+  void				*stack_sleep;
 
   pip_task_t			oodq;	   /* out-of-damain queue */
   pip_spinlock_t		lock_oodq; /* lock for OOD queue */
@@ -203,7 +206,6 @@ typedef struct pip_task_annex {
 
   uint32_t			opts;
   volatile int32_t		status;	   /* exit value */
-  pip_ctx_t			*ctx_exit; /* context to exit */
   volatile int			flag_sigchld; /* termination in thread mode */
 
   volatile pid_t		tid; /* TID in process mode at beginning */
@@ -225,7 +227,6 @@ typedef struct pip_task_annex {
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
 
 } pip_task_annex_t;
-
 
 #define PIP_TASKI(TASK)		((pip_task_internal_t*)(TASK))
 #define PIP_TASKQ(TASK)		((pip_task_t*)(TASK))
@@ -265,18 +266,21 @@ typedef struct pip_root {
   pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
   pip_atomic_t		ntasks_blocking;
   pip_atomic_t		ntasks_count;
-  int			ntasks_accum;
+  int			ntasks_accum; /* not used */
   int			ntasks;
   int			pipid_curr;
   uint32_t		opts;
-  uint64_t		yield_iters;
+  int			yield_iters;
   size_t		page_size;
-  pip_clone_t		*cloneinfo;   /* only valid with process:preload */
+  pip_clone_t		*cloneinfo; /* only valid with process:preload */
   pip_task_internal_t	*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
+  /* Spawn synch */
+  pip_sem_t		sync_root;
+  pip_sem_t		sync_task;
   /* BLT related info */
-  size_t		stack_size_blt; /* size for the stack for BLTs */
-  size_t		stack_size_sleep; /* size for the stack for sleeping */
+  size_t		stack_size_blt; /* stack size for BLTs */
+  size_t		stack_size_sleep; /* stack size for sleeping */
   /* signal related members */
   sigset_t		old_sigmask;
   /* for chaining signal handlers */
@@ -300,35 +304,50 @@ extern void pip_set_thread_id( pthread_t th, int );
 
 #define PIP_MIDLEN		(64)
 
+
 #define PIP_PRIVATE		__attribute__((visibility ("hidden")))
 #define pip_likely(x)		__builtin_expect((x),1)
 #define pip_unlikely(x)		__builtin_expect((x),0)
-
 #define IF_LIKELY(C)		if( pip_likely( C ) )
 #define IF_UNLIKELY(C)		if( pip_unlikely( C ) )
-
 
 #ifndef __W_EXITCODE
 #define __W_EXITCODE(retval,signal)	( (retval) << 8 | (signal) )
 #endif
-
 #define PIP_W_EXITCODE(X,S)	__W_EXITCODE(X,S)
+
 
 extern pip_root_t		*pip_root;
 extern pip_task_internal_t	*pip_task;
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_set_extval( pip_task_internal_t*, int ) PIP_PRIVATE;
+extern int  pip_able_to_terminate_immediately( pip_task_internal_t* )
+  PIP_PRIVATE;
+extern void pip_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
+
+extern void pip_swap_context( pip_task_internal_t*,
+			      pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_decouple_context( pip_task_internal_t*,
+				  pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_couple_context( pip_task_internal_t*,
+				pip_task_internal_t* ) PIP_PRIVATE;
+
+extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_stack_protect( pip_task_internal_t*,
+			       pip_task_internal_t* ) PIP_PRIVATE;
 
 extern void pip_set_signal_handler( int sig, void(*)(), 
 				    struct sigaction* ) PIP_PRIVATE;
 extern int  pip_raise_signal( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_set_sigmask( int ) PIP_PRIVATE;
 extern void pip_unset_sigmask( void ) PIP_PRIVATE;
+extern int  pip_signal_wait( int ) PIP_PRIVATE;
+
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
 extern int  pip_check_sync_flag( uint32_t ) PIP_PRIVATE;
+extern int  pip_check_task_flag( uint32_t ) PIP_PRIVATE;
 
 extern int  pip_dlclose( void* );
 
@@ -363,26 +382,41 @@ extern void pip_suspend_and_enqueue_generic( pip_task_internal_t*,
 					     int,
 					     pip_enqueue_callback_t,
 					     void* ) PIP_PRIVATE;
-					    
+extern int pip_is_magic_ok( pip_root_t* ) PIP_PRIVATE;
+extern int pip_is_version_ok( pip_root_t* ) PIP_PRIVATE;
 
 extern int  pip_idstr( char *buf, size_t sz ); /* donot make this private */
 
-inline static int pip_is_alive( pip_task_internal_t *taski ) {
-  return taski->pipid != PIP_TYPE_NONE && !taski->flag_exit;
+/* semaphore */
+
+inline static void pip_sem_init( pip_sem_t *sem ) {
+  (void) sem_init( sem, 1, 0 );
 }
 
+inline static void pip_sem_post( pip_sem_t *sem ) {
+  (void) sem_post( sem );
+}
+
+inline static void pip_sem_wait( pip_sem_t *sem ) {
+  (void) sem_wait( sem );
+}
+
+inline static void pip_sem_fin( pip_sem_t *sem ) {
+  (void) sem_destroy( sem );
+}
+
+
 inline static int pip_get_pipid_( void ) {
-  if( pip_task == NULL ) return PIP_PIPID_NULL;
+  if( !pip_is_initialized() ) return PIP_PIPID_NULL;
   return pip_task->pipid;
 }
 
 inline static int pip_check_pipid( int *pipidp ) {
-  int pipid = *pipidp;
+  int pipid;
 
-  if( pip_root == NULL          ) RETURN( EPERM  );
-  if( pipid >= pip_root->ntasks ) RETURN( EINVAL );
-  if( pipid != PIP_PIPID_MYSELF &&
-      pipid <  PIP_PIPID_ROOT   ) RETURN( EINVAL );
+  if( !pip_is_initialized() ) RETURN( EPERM  );
+  if( pipidp == NULL        ) RETURN( EINVAL );
+  pipid = *pipidp;
 
   switch( pipid ) {
   case PIP_PIPID_ROOT:
@@ -390,17 +424,19 @@ inline static int pip_check_pipid( int *pipidp ) {
   case PIP_PIPID_ANY:
   case PIP_PIPID_NULL:
     RETURN( EINVAL );
+    break;
   case PIP_PIPID_MYSELF:
     if( pip_isa_root() ) {
       *pipidp = PIP_PIPID_ROOT;
     } else if( pip_isa_task() ) {
       *pipidp = pip_task->pipid;
     } else {
-      RETURN( ENXIO );
+      RETURN( ENXIO );		/* ???? */
     }
     break;
   default:
-    if( pipid < 0 ) RETURN( EINVAL );
+    if( pipid <  0                ) RETURN( EINVAL );
+    if( pipid >= pip_root->ntasks ) RETURN( ERANGE );
   }
   return 0;
 }
@@ -417,10 +453,6 @@ inline static pip_task_internal_t *pip_get_task( int pipid ) {
     break;
   }
   return taski;
-}
-
-inline static pip_clone_t *pip_get_cloneinfo( void ) {
-  return pip_root->cloneinfo;
 }
 
 inline static void pip_system_yield( void ) {

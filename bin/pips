@@ -126,6 +126,7 @@ print_usage() {
 }
 
 cmd=$0;
+bcmd=`basename $cmd`;
 user=`whoami`;
 
 flag_list=false;
@@ -168,9 +169,9 @@ extval=0;
 
 if [ "x$pids" == x ]; then
     if [ "x$pipcmds" == x ]; then
-	echo "no PiP task found";
+	echo "$bcmd: no PiP task found";
     else
-	echo "$pipcmds: no PiP task found";
+	echo "$bcmd: no PiP task found ($pipcmds)";
     fi
     extval=1;
 else

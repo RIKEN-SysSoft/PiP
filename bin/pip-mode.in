@@ -101,7 +101,9 @@ for i; do
 	    echo "Unknown option '$1'";
 	    exit 1;;
 	*)
-	    cmd="${cmd} $i";;
+	    shift;
+	    cmd=$@;
+	    break;;
     esac
 done
 

@@ -65,7 +65,7 @@ int main( int argc, char **argv ) {
   niters = ( niters == 0 ) ? NITERS : niters;
   srand( ( pipid + 1 ) * ( pipid + 1 ) );
 
-  expp = &exp;;
+  expp = &exp;
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     CHECK( pip_barrier_init(&exp.barr,ntasks+1), RV, return(EXIT_FAIL) );

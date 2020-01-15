@@ -194,8 +194,6 @@
 
 #define PIP_CPUCORE_ASIS 		(PIP_MAGIC_NUM+1)
 
-#define PIP_TASK_PASSIVE		(0x1000)
-
 #define PIP_WAIT_BLOCKING		(0)
 #define PIP_WAIT_NONBLOCKING		(1)
 
@@ -500,7 +498,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EINVAL \c format is \c NULL
    * \retval ENOMEM not enough memory available
    * \retval ECANCELED the target task is terminated during the query
-   * \retval ENOENT there is no export having the specified name
    *
    * \sa pip_named_export(3), pip_export(3), pip_import(3)
    */

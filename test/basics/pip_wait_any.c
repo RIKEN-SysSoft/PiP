@@ -79,7 +79,7 @@ int main( int argc, char **argv ) {
       }
       status = 0;
       CHECK( pip_wait(pipid,&status), 
-	     ( RV!=ECHILD && RV!=ESRCH ), 
+	     RV!=ECHILD, 
 	     return(EXIT_FAIL) );
     }
     CHECK( pip_wait_any(NULL,NULL), RV!=ECHILD, return(EXIT_FAIL) );

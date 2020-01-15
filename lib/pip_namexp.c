@@ -268,6 +268,7 @@ static int pip_named_import_( int pipid,
   int 			n, err = 0;
 
   ENTER;
+  if( !pip_is_initialized() ) RETURN( EPERM );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   taski = pip_get_task( pipid );
   namexp = (pip_named_exptab_t*) taski->annex->named_exptab;

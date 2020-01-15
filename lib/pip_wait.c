@@ -107,25 +107,8 @@ void pip_deadlock_dec( void ) {
 #endif
 }
 
-void pip_set_extval( pip_task_internal_t *taski, int extval ) {
-  ENTER;
-  if( !taski->flag_exit ) {
-    taski->flag_exit = PIP_EXITED;
-    /* mark myself as exited */
-    DBGF( "PIPID:%d[%d] extval:%d",
-	  taski->pipid, taski->task_sched->pipid, extval );
-    if( taski->annex->status == 0 ) {
-      taski->annex->status = PIP_W_EXITCODE( extval, 0 );
-    }
-    pip_gdbif_exit( taski, extval );
-    pip_memory_barrier();
-    pip_gdbif_hook_after( taski );
-  }
-  DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->status );
-  RETURNV;
-}
-
-static void pip_set_status( pip_task_internal_t *taski, int status ) {
+static void 
+pip_set_exit_status( pip_task_internal_t *taski, int status ) {
   ENTER;
   if( !taski->flag_exit ) {
     taski->flag_exit = PIP_EXITED;
@@ -144,10 +127,6 @@ static void pip_set_status( pip_task_internal_t *taski, int status ) {
 }
 
 void pip_finalize_task_RC( pip_task_internal_t *taski ) {
-  void pip_blocking_fin( pip_blocking_t *blocking ) {
-    //(void) sem_destroy( &blocking->semaphore );
-    (void) sem_destroy( blocking );
-  }
   DBGF( "pipid=%d  status=0x%x", taski->pipid, taski->annex->status );
 
   pip_gdbif_finalize_task( taski );
@@ -175,8 +154,46 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   taski->annex->args.envv = NULL;
   PIP_FREE( taski->annex->args.fd_list );
   taski->annex->args.fd_list = NULL;
-  pip_blocking_fin( &taski->annex->sleep );
+  pip_sem_fin( &taski->annex->sleep );
   pip_reset_task_struct( taski );
+}
+
+static int
+pip_wait_thread( pip_task_internal_t *taski, int flag_blk ) {
+  int err = 0;
+
+  ENTERF( "PIPID:%d", taski->pipid );
+  if( flag_blk ) {
+    err = pthread_join( taski->annex->thread, NULL );
+    if( err ) {
+      DBGF( "pthread_timedjoin_np(): %s", strerror(err) );
+    }
+  } else {
+    err = pthread_tryjoin_np( taski->annex->thread, NULL );
+    DBGF( "pthread_tryjoin_np(): %s", strerror(err) );
+  }
+  /* workaround (make sure) */
+  if( err != 0 &&
+      taski->annex->flag_sigchld ) {
+    struct timespec ts;
+    char path[128];
+    struct stat stbuf;
+
+    snprintf( path, 128, "/proc/%d/task/%d", 
+	      getpid(), taski->annex->tid );
+    while( 1 ) {
+      err = errno = 0;
+      (void) stat( path, &stbuf );
+      DBGF( "stat(%s): %s", path, strerror( errno ) );
+      if( errno == ENOENT ) break;
+      if( !flag_blk ) break;
+      ts.tv_sec  = 0;
+      ts.tv_nsec = 1000*1000;
+      nanosleep( &ts, NULL );
+    }
+  }
+  if( err ) err = ECHILD;
+  RETURN( err );
 }
 
 static int 
@@ -187,36 +204,11 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   if( taski->flag_exit  == PIP_EXIT_WAITED ||
       taski->annex->tid <= 0 ) {
     /* already waited */
-    RETURN( ESRCH );
+    RETURN( ECHILD );
   }
   if( pip_is_threaded_() ) {	/* thread mode */
-    if( flag_blk ) {
-      err = pthread_join( taski->annex->thread, NULL );
-    } else {
-      err = pthread_tryjoin_np( taski->annex->thread, NULL );
-      DBGF( "err:%d", err );
-      if( err == EBUSY ) err = ECHILD;
-    }
-    if( !err ) {
-      pip_set_status( taski, 0 );
-
-    } else if( err == ESRCH &&
-	       taski->annex->symbols.pip_set_tid == NULL ) {
-      /* workaround */
-      if( pip_raise_signal( taski, 0 ) == ESRCH ) {
-	/* to make sure if the task is running or not */
-	err = 0;
-      } else if( flag_blk ) {
-	while( pip_raise_signal( taski, 18 ) != ESRCH ) {
-	  struct timespec ts;
-	  ts.tv_sec  = 0;
-	  ts.tv_nsec = 10*1000*1000; /* 10ms */
-	  nanosleep( &ts, NULL );
-	}
-	err = 0;
-      }
-      DBGF( "err:%d", err );
-    }
+    err = pip_wait_thread( taski, flag_blk );
+    if( !err ) pip_set_exit_status( taski, 0 );
     
   } else {			/* process mode */
     pid_t tid;
@@ -241,6 +233,10 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
       tid = waitpid( taski->annex->tid, &status, options );
       err = errno;
       if( err == EINTR ) continue;
+      if( err == ESRCH ) {
+	err = ECHILD;
+	break;
+      }
       if( err ) break;
       if( tid != taski->annex->tid ) {
 	err = ECHILD;
@@ -259,7 +255,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
       int sig = WTERMSIG( status );
       pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
 		     taski->pipid, strsignal(sig), sig );
-	pip_set_status( taski, status );
+	pip_set_exit_status( taski, status );
     }
   }
   if( !err ) {
@@ -272,31 +268,31 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 }
 
 static int pip_check_task( pip_task_internal_t *taski ) {
-  ENTER;
+  ENTERF( "PIPID:%d", taski->pipid );
   if( taski->flag_exit == PIP_EXIT_WAITED ) {
-    RETURN( 1 );
-  } else if( taski->annex->tid    == 0 ||
-	     taski->annex->thread == 0 ) {
-    /* not yet (empty slot) or terminated already */
-    RETURN( 0 );
-  } else if( taski->type != PIP_TYPE_NONE ) {
+    goto found;
+  } else if( taski->type != PIP_TYPE_NONE &&
+	     taski->annex->tid    != 0 &&
+	     taski->annex->thread != 0 ) { 
     if( pip_is_threaded_() ) {
       if( taski->annex->flag_sigchld ) {
 	/* if sigchld is really raised, then blocking wait */
 	taski->annex->flag_sigchld = 0;
 	if( pip_wait_syscall( taski, 1 ) == 0 ) {
-	  RETURN( 1 );
+	  goto found;
 	}
       } else if( pip_wait_syscall( taski, 0 ) == 0 ) {
-	RETURN( 1 );
+	goto found;
       }
     } else {			/* process mode */
       if( pip_wait_syscall( taski, 0 ) == 0 ) {
-	RETURN( 1 );
+	goto found;
       }
     }
   }
-  RETURN( 0 );
+  RETURN( 0 );			/* not found */
+ found:
+  RETURN( 1 );
 }
 
 static int pip_nonblocking_waitany( void ) {
@@ -337,18 +333,13 @@ static int pip_nonblocking_waitany( void ) {
 
 static int pip_blocking_waitany( void ) {
   int	pipid;
-  DBG;
-  pip_set_sigmask( SIGCHLD );
+
   while( 1 ) {
-    sigset_t	sigset;
     pipid = pip_nonblocking_waitany();
     DBGF( "pip_nonblocking_waitany() = %d", pipid );
     if( pipid != PIP_PIPID_NULL ) break;
-
-    ASSERT( sigemptyset( &sigset ) );
-    (void) sigsuspend( &sigset ); /* always returns EINTR */
+    ASSERT( pip_signal_wait( SIGCHLD ) );
   }
-  pip_unset_sigmask();
   return( pipid );
 }
 
@@ -357,6 +348,7 @@ int pip_wait( int pipid, int *statusp ) {
   int 			err = 0;
 
   ENTER;
+  if( !pip_is_initialized() )                    RETURN( EPERM   );
   if( !pip_isa_root() )                          RETURN( EPERM   );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
@@ -365,11 +357,9 @@ int pip_wait( int pipid, int *statusp ) {
   taski = pip_get_task( pipid );
   if( taski->type == PIP_TYPE_NONE ) {
     /* already waited */
-    err = ESRCH;
+    err = ECHILD;
   } else {
-    pip_set_sigmask( SIGCHLD );
     while( 1 ) {
-      sigset_t	sigset;
       if( pip_check_task( taski ) ) {
 	if( statusp != NULL ) {
 	  *statusp = taski->annex->status;
@@ -377,10 +367,8 @@ int pip_wait( int pipid, int *statusp ) {
 	pip_finalize_task_RC( taski );
 	break;
       }
-      ASSERT( sigemptyset( &sigset ) );
-      (void) sigsuspend( &sigset ); /* always returns EINTR */
+      ASSERT( pip_signal_wait( SIGCHLD ) );
     }    
-    pip_unset_sigmask();
   } 
   RETURN( err );
 }
@@ -390,13 +378,14 @@ int pip_trywait( int pipid, int *statusp ) {
   int err;
 
   ENTER;
+  if( !pip_is_initialized() )                    RETURN( EPERM   );
   if( !pip_isa_root() )                          RETURN( EPERM   );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
   DBGF( "PIPID:%d", pipid );
 
   taski = pip_get_task( pipid );
-  if( ( err = pip_wait_syscall( taski, 1 ) ) == 0 ) {
+  if( ( err = pip_wait_syscall( taski, 0 ) ) == 0 ) {
     if( statusp != NULL ) {
       *statusp = taski->annex->status;
     }
@@ -409,7 +398,8 @@ int pip_wait_any( int *pipidp, int *statusp ) {
   int pipid, err = 0;
 
   ENTER;
-  if( !pip_isa_root() ) RETURN( EPERM   );
+  if( !pip_is_initialized() ) RETURN( EPERM );
+  if( !pip_isa_root() )       RETURN( EPERM );
   
   pipid = pip_blocking_waitany();
   if( pipid == PIP_PIPID_ANY ) {
@@ -431,11 +421,12 @@ int pip_trywait_any( int *pipidp, int *statusp ) {
   int pipid, err = 0;
 
   ENTER;
-  if( !pip_isa_root() ) RETURN( EPERM   );
+  if( !pip_is_initialized() ) RETURN( EPERM );
+  if( !pip_isa_root() )       RETURN( EPERM );
   
   pipid = pip_nonblocking_waitany();
   if( pipid == PIP_PIPID_NULL ) {
-    err = ESRCH;
+    err = ECHILD;
   } else if( pipid == PIP_PIPID_ANY ) {
     err = ECHILD;
   } else {

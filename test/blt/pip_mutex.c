@@ -83,16 +83,16 @@ int main( int argc, char **argv ) {
     CHECK( countp==NULL,			               RV, return(EXIT_FAIL) );
   }
   CHECK( pip_barrier_wait( barrp ),    RV, return(EXIT_FAIL) );
-  DBGF( "\ncountp:%p  mutexp:%p", countp, mutexp );
+  DBGF( "countp:%p  mutexp:%p", countp, mutexp );
   for( i=0; i<niters; i++ ) {
     CHECK( pip_mutex_lock( mutexp ),   RV, return(EXIT_FAIL) );
-    DBGF( "\ncountp(%p):%d\n", countp, *countp );
+    DBGF( "countp(%p):%d", countp, *countp );
     (*countp) ++;
     CHECK( pip_mutex_unlock( mutexp ), RV, return(EXIT_FAIL) );
   }
   CHECK( pip_barrier_wait( barrp ),    RV, return(EXIT_FAIL) );
   if( pipid == 0 ) {
-    DBGF( "\ncount:%d\n", count );
+    DBGF( "count:%d", count );
     CHECK( count!=ntasks*niters,       RV, return(EXIT_FAIL) );
   }
   CHECK( pip_fin(),                    RV, return(EXIT_FAIL) );

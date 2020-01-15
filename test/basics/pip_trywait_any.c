@@ -65,7 +65,7 @@ int main( int argc, char **argv ) {
       while( 1 ) {
 	err = pip_trywait_any( &pipid, &status );
 	if( !err ) break;
-	CHECK( err==ESRCH, !RV, return(EXIT_FAIL) );
+	CHECK( err==ECHILD, !RV, return(EXIT_FAIL) );
       }
       CHECK( i==pipid, !RV, return(EXIT_FAIL) );
       if( sig == 0 ) {
@@ -81,7 +81,7 @@ int main( int argc, char **argv ) {
       }
       status = 0;
       CHECK( pip_wait(pipid,&status), 
-	     ( RV!=ECHILD && RV!=ESRCH ), 
+	     RV!=ECHILD, 
 	     return(EXIT_FAIL) );
     }
   } else {

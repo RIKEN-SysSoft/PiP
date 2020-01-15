@@ -41,6 +41,7 @@
 int pip_barrier_init_( pip_barrier_t *barrp, int n ) {
   if( barrp == NULL || n < 1 ) RETURN( EINVAL );
   memset( (void*) barrp, 0, sizeof(pip_barrier_t) );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   pip_task_queue_init( &barrp->queue, NULL );
   barrp->count      = n;
   barrp->count_init = n;
@@ -52,7 +53,8 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
   int init = barrp->count_init;
   int n, c, err = 0;
 
-  ENTER;
+  ENTERF( "PIPID:%d", pip_task->pipid );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   IF_UNLIKELY( init == 1 ) RETURN( 0 );
   c = pip_atomic_sub_and_fetch( &barrp->count, 1 );
   IF_LIKELY( c > 0 ) {
@@ -90,8 +92,10 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
 }
 
 int pip_barrier_fin_( pip_barrier_t *barrp ) {
+  ENTERF( "PIPID:%d", pip_task->pipid );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   if( !PIP_TASKQ_ISEMPTY( (pip_task_t*) &barrp->queue ) ) {
-
+    RETURN( EBUSY );
   }
   RETURN( 0 );
 }
@@ -99,14 +103,17 @@ int pip_barrier_fin_( pip_barrier_t *barrp ) {
 /* MUTEX */
 
 int pip_mutex_init_( pip_mutex_t *mutex ) {
-  ENTER;
+  ENTERF( "PIPID:%d", pip_task->pipid );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   memset( (void*) mutex, 0, sizeof(pip_mutex_t) );
   RETURN( pip_task_queue_init( &mutex->queue, NULL ) );
 }
 
 int pip_mutex_lock_( pip_mutex_t *mutex ) {
   int c, err = 0;
-  ENTER;
+
+  ENTERF( "PIPID:%d", pip_task->pipid );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   c = pip_atomic_fetch_and_add( &mutex->count, 1 );
   IF_LIKELY( c > 0 ) {
     /* already locked by someone */
@@ -117,7 +124,9 @@ int pip_mutex_lock_( pip_mutex_t *mutex ) {
 
 int pip_mutex_unlock_( pip_mutex_t *mutex ) {
   int err = 0;
-  ENTER;
+
+  ENTERF( "PIPID:%d", pip_task->pipid );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   IF_UNLIKELY( mutex->count == 0 ) RETURN( EPERM );
   (void) pip_atomic_sub_and_fetch( &mutex->count, 1 );
   while( mutex->count > 0 ) {
@@ -134,7 +143,8 @@ int pip_mutex_unlock_( pip_mutex_t *mutex ) {
 }
 
 int pip_mutex_fin_( pip_mutex_t *mutex ) {
-  ENTER;
+  ENTERF( "PIPID:%d", pip_task->pipid );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   if( !pip_task_queue_isempty( (pip_task_t*) &mutex->queue ) ) {
     RETURN( EBUSY );
   }

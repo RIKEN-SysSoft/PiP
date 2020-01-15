@@ -38,8 +38,9 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#define PIP_STACK_DESCENDING
+
 typedef intptr_t		pip_tls_t;
-#define PIP_TYPE_TLS
 
 inline static int pip_save_tls( pip_tls_t *tlsp ) {
   pip_tls_t tls;
@@ -47,13 +48,11 @@ inline static int pip_save_tls( pip_tls_t *tlsp ) {
   *tlsp = tls;
   return 0;
 }
-#define PIP_SAVE_TLS
 
 inline static int pip_load_tls( pip_tls_t tls ) {
   asm volatile ("msr tpidr_el0, %0" : : "r" (tls));
   return 0;
 }
-#define PIP_LOAD_TLS
 
 inline static void pip_pause( void ) {
   asm volatile("wfe" :::"memory");

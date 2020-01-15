@@ -56,7 +56,7 @@ int main( int argc, char **argv ) {
   if( pipid == PIP_PIPID_ROOT ) {
     status = 0;
     CHECK( pip_wait(PIP_PIPID_ROOT,&status), RV!=EDEADLK, return(EXIT_FAIL) );
-    CHECK( pip_wait(0,&status),              RV!=ESRCH,   return(EXIT_FAIL) );
+    CHECK( pip_wait(0,&status),              RV!=ECHILD,  return(EXIT_FAIL) );
 
     core = PIP_CPUCORE_ASIS;
     for( i=0; i<ntasks; i++ ) {
@@ -80,10 +80,10 @@ int main( int argc, char **argv ) {
 	CHECK( (WTERMSIG(status)==sig), !RV, return(EXIT_FAIL) );
       }
       status = 0;
-      CHECK( pip_wait(i,&status), RV!=ESRCH, return(EXIT_FAIL) );
+      CHECK( pip_wait(i,&status), RV!=ECHILD, return(EXIT_FAIL) );
     }
   } else {
-    CHECK( pip_wait(0,&status), RV!=EPERM, return(EXIT_FAIL) );
+    CHECK( pip_wait(0,&status),   RV!=EPERM,  return(EXIT_FAIL) );
     if( sig > 0 ) {
       if( sig != SIGSEGV ) {
 	(void) pip_kill( PIP_PIPID_SELF, sig );

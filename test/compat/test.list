@@ -1,5 +1,7 @@
 timer 1 pip_task 1 ./ctype
 timer 1 pip_task 8 ./ctype
+timer 1 pip_task 1 ./environ
+timer 1 pip_task 8 ./environ
 timer 1 ./pagefault 1
 timer 1 ./pagefault 8
 timer 10 pip_task 1 ./malloc

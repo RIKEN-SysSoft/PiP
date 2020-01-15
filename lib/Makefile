@@ -34,22 +34,33 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+FCTXDIR = ../import/fcontext/boost/fcontext
+
 CPPFLAGS += -I$(PIPINCDIR)
 CFLAGS += $(PICCFLAG)
+FCTXOBJS = fctx_jump.o fctx_make.o
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
-LIBRARY  = libpip.so
-SRCS     = pip.c pip_spawn.c pip_wait.c pip_blt.c pip_sync.c \
-	pip_util.c pip_gdbif.c pip_namexp.c
 
-OBJS	 = pip.o pip_spawn.o pip_wait.o pip_blt.o pip_sync.o \
-	pip_util.o pip_gdbif.o pip_namexp.o
+FCTXCPPFLAG = 
+
+
+LIBRARY  = libpip.so
+SRCS     = pip.c pip_spawn.c pip_wait.c pip_blt.c pip_context.c \
+	pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c pip_dlfcn.c \
+	pip_signal.c
+
+OBJS	 = pip.o pip_spawn.o pip_wait.o pip_blt.o pip_context.o  \
+	pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o pip_dlfcn.o \
+	pip_signal.o $(FCTXOBJS) 
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
+	   $(PIPINCDIR)/pip_context.h		\
 	   $(PIPINCDIR)/pip_blt.h		\
 	   $(PIPINCDIR)/pip_clone.h		\
 	   $(PIPINCDIR)/pip_internal.h 		\
 	   $(PIPINCDIR)/pip_util.h		\
+	   $(PIPINCDIR)/pip_dlfcn.h		\
 	   $(PIPINCDIR)/pip_machdep.h 		\
 	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
 	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
@@ -70,3 +81,12 @@ debug:
 
 TAGS:
 	ctags -Re
+
+
+fctx_jump.o : $(FCTXDIR)/jump_x86_64_sysv_elf_gas.S
+	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \
+	$(AS) $$tmp -o $@; $(RM) $$tmp
+
+fctx_make.o : $(FCTXDIR)/make_x86_64_sysv_elf_gas.S
+	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \
+	$(AS) $$tmp -o $@; $(RM) $$tmp

@@ -17,3 +17,6 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* using fcontext w/ or w/o FPREG */
+#undef enable_fcontext

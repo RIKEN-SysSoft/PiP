@@ -50,8 +50,14 @@
 #define PIP_SYNC_YIELD			(0x0004)
 #define PIP_SYNC_BLOCKING		(0x0008)
 
-#define PIP_SYNC_MASK					\
-  (PIP_SYNC_BUSYWAIT|PIP_SYNC_BLOCKING|PIP_SYNC_YIELD|PIP_SYNC_AUTO)
+#define PIP_SYNC_MASK				\
+  (PIP_SYNC_AUTO|PIP_SYNC_BUSYWAIT|PIP_SYNC_YIELD|PIP_SYNC_BLOCKING)
+
+#define PIP_TASK_PASSIVE		(0x01000)
+#define PIP_TASK_ACTIVE			(0x02000)
+
+#define PIP_TASK_MASK				\
+  (PIP_TASK_PASSIVE|PIP_TASK_ACTIVE)
 
 #define PIP_TASK_ALL			(-1)
 
@@ -80,7 +86,8 @@ typedef struct pip_queue {
 #define PIP_TASKQ_PREV_NEXT(L)	(((pip_task_t*)(L))->prev->next)
 #define PIP_TASKQ_NEXT_PREV(L)	(((pip_task_t*)(L))->next->prev)
 
-#ifdef DEBUG
+//#ifdef DEBUG
+#ifdef AH
 #define PIP_TASKQ_CHECK(Q)					\
   ASSERTD( PIP_TASKQ_NEXT(Q) != PIP_TASKQ_PREV(Q) )
 #else
@@ -796,6 +803,21 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * finalized
    */
   int pip_get_task_pipid( pip_task_t *task, int *pipidp );
+  /** @}*/
+
+  /**
+   * \brief get PiP task from PiP ID
+   *  @{
+   * \param[in] pipid PiP ID
+   * \param[out] taskp PiP task of the specified PiP ID
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c pipidp is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   * \retval ENOENT No such PiP task
+   */
+  int pip_get_task_from_pipid( int pipid, pip_task_t **taskp );
   /** @}*/
 
   /**
