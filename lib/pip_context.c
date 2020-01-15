@@ -109,33 +109,6 @@ typedef struct pip_ctx_data {
   pip_task_internal_t	*new;
 } pip_ctx_data_t;
 
-#ifdef AH
-static void pip_context_wait( pip_task_internal_t *taski ) {
-  int i, j;
-
-  DBGF( "PIPID:%d wait for context ready", taski->pipid );
-  for( i=0; i<pip_root->yield_iters; i++ ) {
-    if( taski->ctx_suspend ) goto done;
-    pip_pause();
-  }
-  for( i=0; PIP_BUSYWAIT_COUNT; i++ ) {
-    for( j=0; j<pip_root->yield_iters; j++ ) {
-      pip_pause();
-    if( taski->ctx_suspend ) goto done;
-    }
-    pip_system_yield();
-    DBGF( "WAITING  pipid:%d (count=%d*%d) ...",
-	  taski->pipid, i, pip_root->yield_iters );
-  }
-  DBGF( "WAIT-FAILED  pipid:%d (count=%d*%d)",
-	taski->pipid, i, pip_root->yield_iters );
-  ASSERT( "TIMED OUT !!!!" != NULL );
-  return;
- done:
-  DBGF( "WAIT-DONE  pipid:%d (count=%d*%d)",
-	taski->pipid, i, PIP_BUSYWAIT_COUNT );
-}
-#endif
 #endif
 
 void pip_swap_context( pip_task_internal_t *taski, 
