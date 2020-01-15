@@ -5,6 +5,9 @@ unset LANG LC_ALL
 
 TEST_TRAP_SIGS='1 2 14 15';
 termwidth=`tput cols`;
+if [ $? -ne 0 ]; then
+    termwidth=80
+fi
 longmsg=" T -- UNSUPPORTED :-/"
 lmsglen=${#longmsg}
 
