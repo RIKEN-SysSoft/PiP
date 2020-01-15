@@ -123,12 +123,12 @@ extern int pip_debug_env( void );
     return; } while(0)
 
 #define ASSERT(X)						       \
-  if(X) { NNEMSG(": <%s> Assertion FAILED !!!!!!",#X);	       \
-    } else { DBGF( "(%s) -- Assertion OK", #X ); }
+  if(X) { NNEMSG("<%s> Assertion FAILED !!!!!!",#X);	       \
+    } else { DBGF( "<%s> -- Assertion OK", #X ); }
 
 #define ASSERTD(X)						       \
-  if(DBGSW) { if(X) { NNEMSG(": <%s> Assertion FAILED !!!!!!",#X);       \
-    } else {DBGF( ": (%s) -- Assertion OK", #X ); } }
+  if(DBGSW) { if(X) { NNEMSG("<%s> Assertion FAILED !!!!!!",#X);       \
+    } else {DBGF( "<%s> -- Assertion OK", #X ); } }
 
 #define DO_CHECK_CTYPE
 
@@ -152,7 +152,7 @@ extern int pip_debug_env( void );
 #define ASSERTD(X)
 
 #define ASSERT(X)						       \
-  do { IF_UNLIKELY(X) { NNEMSG(": '%s' Assertion FAILED !!!!!!",#X);   \
+  do { IF_UNLIKELY(X) { NNEMSG("<%s> Assertion FAILED !!!!!!",#X);   \
     } } while(0)
 
 #define PIP_CHECK_CTYPE

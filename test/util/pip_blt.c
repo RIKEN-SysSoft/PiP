@@ -86,8 +86,9 @@ int main( int argc, char **argv ) {
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
     j = ( j >= nacts ) ? 0 : j;
-    CHECK( pip_blt_spawn( &prog, 0, PIP_TASK_PASSIVE, &pipid,
-			  NULL, &queues[j], NULL ),
+    CHECK( pip_blt_spawn( &prog, 0, 
+			  PIP_TASK_PASSIVE, 
+			  &pipid, NULL, &queues[j], NULL ),
 	   RV,
 	   abend(EXIT_UNTESTED) );
     CHECK( is_taskq_empty( &queues[j]), RV, abend(EXIT_FAIL) );

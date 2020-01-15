@@ -38,37 +38,31 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#include <config.h>
 #include <pip_machdep.h>
 
-#ifdef PIP_USE_FCONTEXT
+#ifdef enable_fcontext
+#define PIP_USE_FCONTEXT
 
-#include <config.h>
-
-#ifdef PIP_BOOST_COMPILE
-#if PIP_USE_CONTEXT > 1
-#define BOOST_USE_TSX
-#endif
-
-#else  /* !PIP_BOOST_COMPILE */
-
-typedef void* 		pip_fcontext;
-typedef pip_transfer {
-  pip_fcontext		ctx;
+typedef void *volatile	pip_ctx_p;
+typedef struct pip_transfer {
+  pip_ctx_p		ctx;
   void			*data;
 } pip_transfer_t;
 
-pip_fcontext_t make_fcontext( void *sp, size_t size, void (*fn)(pip_transfer_t*) );
+pip_transfer_t jump_fcontext( pip_ctx_p, void* );
+pip_ctx_p      make_fcontext( void*, size_t, void (*)(pip_transfer_t) );
 
+#define pip_jump_fctx(CTX,DATA)		jump_fcontext((CTX),(DATA))
 #define pip_make_fctx(SP,SZ,FUNC)	make_fcontext((SP),(SZ),(FUNC))
 
-#endif	/* PIP_BOOST_COMPILE */
-
-#else  /* !PIP_USE_FCONTEXT */
+#else  /* !enable_fcontext */
 
 #include <ucontext.h>
 typedef struct {
   ucontext_t		ctx;
 } pip_ctx_t;
+typedef pip_ctx_t	*pip_ctx_p;
 
 #define pip_make_uctx(CTX,F,C,...)	 \
   do { makecontext(&(CTX)->ctx,(void(*)(void))(F),(C),__VA_ARGS__); } while(0)
@@ -92,7 +86,7 @@ inline static int pip_swap_ctx( pip_ctx_t *oldctx, pip_ctx_t *newctx ) {
   }
 }
 
-#endif	/* PIP_USE_FCONTEXT */
+#endif	/* enable_fcontext */
 
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 

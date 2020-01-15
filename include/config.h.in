@@ -18,5 +18,5 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* using fcontext w/o FPREG */
-#undef PIP_USE_FCONTEXT
+/* using fcontext w/ or w/o FPREG */
+#undef enable_fcontext

@@ -102,7 +102,7 @@ typedef struct pip_cacheblk {
 } pip_cacheblk_t;
 
 typedef volatile uint8_t	pip_stack_protect_t;
-typedef volatile uint8_t	*pip_stack_protect_p;
+typedef pip_stack_protect_t	*pip_stack_protect_p;
 
 struct pip_task_annex;
 
@@ -114,7 +114,7 @@ typedef struct pip_task_internal {
       pip_task_t		schedq;	/* scheduling queue */
       struct pip_task_internal	*task_sched; /* scheduling task */
       pip_tls_t			tls;
-      pip_ctx_t			*ctx_suspend; /* context to resume */
+      pip_ctx_p			ctx_suspend; /* context to resume */
       pip_stack_protect_p	flag_stackpp; /* pointer to unprotect stack */
       /* end of one cache block (64 bytes) */
       /* less frequently accessed part follows */
@@ -130,6 +130,9 @@ typedef struct pip_task_internal {
 	volatile uint8_t	flag_wakeup; /* flag to wakeup */
       };
       struct pip_task_annex	*annex;
+#ifdef PIP_USE_FCONTEXT
+      pip_ctx_p			*ctx_savep;
+#endif
     };
     pip_cacheblk_t		__align__[2];
   };
@@ -185,12 +188,12 @@ struct pip_root;
 struct pip_gdbif_task;
 struct pip_gdbif_root;
 
-typedef sem_t			pip_blocking_t;
+typedef sem_t			pip_sem_t;
 
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
-  pip_ctx_t			*ctx_sleep; /* context to resume */
-  pip_blocking_t		sleep;
+  pip_ctx_p			ctx_sleep; /* context to resume */
+  pip_sem_t			sleep;
   void				*stack_sleep;
 
   pip_task_t			oodq;	   /* out-of-damain queue */
@@ -267,11 +270,14 @@ typedef struct pip_root {
   int			ntasks;
   int			pipid_curr;
   uint32_t		opts;
-  uint64_t		yield_iters;
+  int			yield_iters;
   size_t		page_size;
   pip_clone_t		*cloneinfo; /* only valid with process:preload */
   pip_task_internal_t	*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
+  /* Spawn synch */
+  pip_sem_t		sync_root;
+  pip_sem_t		sync_task;
   /* BLT related info */
   size_t		stack_size_blt; /* stack size for BLTs */
   size_t		stack_size_sleep; /* stack size for sleeping */
@@ -341,6 +347,7 @@ extern int  pip_signal_wait( int ) PIP_PRIVATE;
 
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
 extern int  pip_check_sync_flag( uint32_t ) PIP_PRIVATE;
+extern int  pip_check_task_flag( uint32_t ) PIP_PRIVATE;
 
 extern int  pip_dlclose( void* );
 
@@ -379,6 +386,25 @@ extern int pip_is_magic_ok( pip_root_t* ) PIP_PRIVATE;
 extern int pip_is_version_ok( pip_root_t* ) PIP_PRIVATE;
 
 extern int  pip_idstr( char *buf, size_t sz ); /* donot make this private */
+
+/* semaphore */
+
+inline static void pip_sem_init( pip_sem_t *sem ) {
+  (void) sem_init( sem, 1, 0 );
+}
+
+inline static void pip_sem_post( pip_sem_t *sem ) {
+  (void) sem_post( sem );
+}
+
+inline static void pip_sem_wait( pip_sem_t *sem ) {
+  (void) sem_wait( sem );
+}
+
+inline static void pip_sem_fin( pip_sem_t *sem ) {
+  (void) sem_destroy( sem );
+}
+
 
 inline static int pip_get_pipid_( void ) {
   if( !pip_is_initialized() ) return PIP_PIPID_NULL;

@@ -5,10 +5,10 @@ unset LANG LC_ALL
 
 TEST_TRAP_SIGS='1 2 14 15';
 termwidth=`tput cols`;
-longmsg="UNSUPPORTED"
+longmsg=" T -- UNSUPPORTED :-/"
 lmsglen=${#longmsg}
-width=$((termwidth-lmsglen-13))
 
+width=$((termwidth-lmsglen))
 if [ $width -lt 40 ]; then
     width=80
 fi
@@ -306,6 +306,7 @@ while read line; do
 
 	cmd="$@";
 	CMD=$inc_fn$cmd;
+
         if [ ${#CMD} -ge $width ]; then
 	    short="`printf "%-${width}.${width}s" "${inc_fn}...${cmd}"`"
 	else

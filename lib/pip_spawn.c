@@ -117,11 +117,12 @@ static char **pip_copy_vec( char **vecsrc ) {
   return pip_copy_vec3( NULL, NULL, NULL, vecsrc );
 }
 
+#define ENVLEN	(256)
 static char **pip_copy_env( char **envsrc, int pipid ) {
-  char rootenv[128], taskenv[128];
+  char rootenv[ENVLEN], taskenv[ENVLEN];
   char *preload_env = getenv( "LD_PRELOAD" );
-  ASSERT( sprintf( rootenv, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
-  ASSERT( sprintf( taskenv, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
+  ASSERT( snprintf( rootenv, ENVLEN, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
+  ASSERT( snprintf( taskenv, ENVLEN, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
   return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
 }
 
@@ -530,15 +531,19 @@ static void pip_sigquit_handler( int sig,
   pthread_exit( NULL );
 }
 
+static void pip_start_cb( void *tsk ) {
+  pip_task_internal_t *taski = (pip_task_internal_t*) tsk;
+  /* let root proc know the task is running (or enqueued) */
+  taski->annex->tid    = pip_gettid();
+  taski->annex->thread = pthread_self();
+  pip_spin_unlock( &taski->annex->task_root->lock_ldlinux );
+
+  /* sync with root */
+  pip_sem_post( &taski->annex->task_root->sync_root );
+  pip_sem_wait( &taski->annex->task_root->sync_task );
+}
+
 static void* pip_do_spawn( void *thargs )  {
-  void pip_cb_start( void *tsk ) {
-    pip_task_internal_t *taski = (pip_task_internal_t*) tsk;
-    /* let root proc know the task is running (or enqueued) */
-    taski->annex->tid    = pip_gettid();
-    taski->annex->thread = pthread_self();
-    pip_memory_barrier();
-    pip_spin_unlock( &taski->annex->task_root->lock_ldlinux );
-  }
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
   /* and do not call malloc() and free() in this contxt !!!!         */
@@ -593,7 +598,7 @@ static void* pip_do_spawn( void *thargs )  {
     pip_suspend_and_enqueue_generic( self,
 				     queue,
 				     1, /* lock flag */
-				     pip_cb_start,
+				     pip_start_cb,
 				     self );
     /* resumed */
     
@@ -604,7 +609,7 @@ static void* pip_do_spawn( void *thargs )  {
       err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
     }
     /* since there is no callback, the cb func is called explicitly */
-    pip_cb_start( (void*) self );
+    pip_start_cb( (void*) self );
   }
   if( err == 0 ) {
     pip_start_user_func( args, self );
@@ -686,7 +691,14 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( progp->funcname == NULL &&
       progp->argv     == NULL ) RETURN( EINVAL );
   /* starting from an arbitrary func */
-  if( ( op = pip_check_sync_flag( opts ) ) < 0 ) RETURN( EINVAL );
+  if( ( op = pip_check_sync_flag( opts ) ) < 0 ) {
+    DBGF( "opts:0x%x  op:0x%x", opts, op );
+    RETURN( EINVAL );
+  }
+  if( pip_check_task_flag( opts ) < 0 ) {
+    DBGF( "opts:0x%x  op:0x%x", opts, op );
+    RETURN( EINVAL );
+  }
   opts = op;
 
   if( progp->funcname == NULL &&
@@ -809,47 +821,23 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 	  pip_spin_lock_wv( &clone_info->lock, tid );
 	  /* unlock is done in the wrapper function */
 	}
-	{
-	  err = pthread_create( &thr,
-				&attr,
-				(void*(*)(void*)) pip_do_spawn,
-				(void*) args );
-	  DBGF( "pthread_create()=%d", errno );
-	}
+	err = pthread_create( &thr,
+			      &attr,
+			      (void*(*)(void*)) pip_do_spawn,
+			      (void*) args );
+	DBGF( "pthread_create()=%d", err );
       }
       if( err ) pip_spin_unlock( &pip_root->lock_ldlinux );
     }
   }
   if( err == 0 ) {
-    struct timespec ts;
-    int i;
-    /* wait until task starts running or         */
-    /* task is enqueued if it is to be suspended */
-    ts.tv_sec  = 0;
-    ts.tv_nsec = 1000 * 1000;	/* 1 msec */
-    for( i=0; i<1000; i++ ) {	/* 1 sec */
-      if( pip_spin_trylock( &pip_root->lock_ldlinux ) ) {
-	pip_spin_unlock( &pip_root->lock_ldlinux );
-	for( ; i<1000; i++ ) {	/* 1 sec */
-	  if( task->annex->tid    >  0 &&
-	      task->annex->thread != 0 ) goto done;
-	  pip_system_yield();
-	  nanosleep( &ts, NULL );
-	}
-	break;
-      }
-      pip_system_yield();
-      nanosleep( &ts, NULL );
-    }
-    pip_err_mesg( "Spawning PiP task (PIPID:%d) does not respond "
-		  "(timeout)",
-		  task->pipid );
-    err = ETIMEDOUT;
-    goto error;
+    /* wait until task starts running or enqueues */
+    pip_sem_wait( &pip_root->sync_root );
+    pip_sem_post( &pip_root->sync_task );
 
-  done:
     DBGF( "task (PIPID:%d,TID:%d) is created and running", 
 	  task->pipid, task->annex->tid );
+
     pip_root->ntasks_accum ++;
     pip_gdbif_task_commit( task );
     if( bltp != NULL ) *bltp = (pip_task_t*) task;

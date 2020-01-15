@@ -1987,6 +1987,8 @@ fi
   if test x"$AS" != x"yes"; then :
   as_fn_error $? "Can't find assmbler (as)" "$LINENO" 5
 fi
+  $as_echo "#define enable_fcontext 1" >>confdefs.h
+
 
 fi
 

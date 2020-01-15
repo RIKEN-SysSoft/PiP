@@ -38,6 +38,8 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+#define PIP_STACK_DESCENDING
+
 typedef intptr_t		pip_tls_t;
 
 inline static int pip_save_tls( pip_tls_t *tlsp ) {

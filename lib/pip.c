@@ -106,11 +106,6 @@ static int pip_set_root( char *env ) {
   RETURN( EPROTO );
 }
 
-static void pip_blocking_init( pip_blocking_t *blocking ) {
-  //(void) sem_init( &blocking->semaphore, 1, 0 );
-  (void) sem_init( blocking, 1, 0 );
-}
-
 #define NITERS		(1000)
 #define FACTOR		(10)
 static uint64_t pip_yield_setting( void ) {
@@ -135,7 +130,7 @@ static uint64_t pip_yield_setting( void ) {
     DBGF( "c:%lu  XT:%g  DT:%g", c, xt, dt );
     if( xt > dt ) break;
   }
-  c /= 2;
+  c *= 10;
   DBGF( "yield:%lu", c );
   return c;
 }
@@ -326,33 +321,56 @@ void pip_reset_task_struct( pip_task_internal_t *taski ) {
   annex->stack_sleep  = stack_sleep;
   annex->named_exptab = namexp;
   annex->tid          = -1; /* pip_gdbif_init_task_struct() refers this */
-  PIP_TASKQ_INIT(    &taski->annex->oodq );
-  pip_spin_init(     &taski->annex->lock_oodq );
-  pip_blocking_init( &taski->annex->sleep );
+  PIP_TASKQ_INIT( &taski->annex->oodq      );
+  pip_spin_init(  &taski->annex->lock_oodq );
+  pip_sem_init(   &taski->annex->sleep     );
+}
+
+static int
+pip_is_flag_excl( uint32_t flags, uint32_t val ) {
+  return ( flags & val ) == ( flags | val );
 }
 
 int pip_check_sync_flag( uint32_t flags ) {
-  if( flags & PIP_SYNC_MASK ) {
-    if( ( flags & ~PIP_SYNC_AUTO     ) != ~PIP_SYNC_AUTO     ) return -1;
-    if( ( flags & ~PIP_SYNC_BUSYWAIT ) != ~PIP_SYNC_BUSYWAIT ) return -1;
-    if( ( flags & ~PIP_SYNC_YIELD    ) != ~PIP_SYNC_YIELD    ) return -1;
-    if( ( flags & ~PIP_SYNC_BLOCKING ) != ~PIP_SYNC_BLOCKING ) return -1;
-  } else if( !pip_is_initialized() ) {
+  uint32_t f = flags & PIP_SYNC_MASK;
+
+  DBGF( "flags:0x%x", f );
+  if( f ) {
+    if( pip_is_flag_excl( f, PIP_SYNC_AUTO     ) ) goto OK;
+    if( pip_is_flag_excl( f, PIP_SYNC_BUSYWAIT ) ) goto OK;
+    if( pip_is_flag_excl( f, PIP_SYNC_YIELD    ) ) goto OK;
+    if( pip_is_flag_excl( f, PIP_SYNC_BLOCKING ) ) goto OK;
+    return -1;
+  } else {
     char *env = getenv( PIP_ENV_SYNC );
     if( env == NULL ) {
-      flags |= PIP_SYNC_AUTO;
+      f |= PIP_SYNC_AUTO;
     } else if( strcasecmp( env, PIP_ENV_SYNC_AUTO     ) == 0 ) {
-      flags |= PIP_SYNC_AUTO;
+      f |= PIP_SYNC_AUTO;
     } else if( strcasecmp( env, PIP_ENV_SYNC_BUSY     ) == 0 ||
 	       strcasecmp( env, PIP_ENV_SYNC_BUSYWAIT ) == 0 ) {
-      flags |= PIP_SYNC_BUSYWAIT;
+      f |= PIP_SYNC_BUSYWAIT;
     } else if( strcasecmp( env, PIP_ENV_SYNC_YIELD    ) == 0 ) {
-      flags |= PIP_SYNC_YIELD;
+      f |= PIP_SYNC_YIELD;
     } else if( strcasecmp( env, PIP_ENV_SYNC_BLOCK    ) == 0 ||
 	       strcasecmp( env, PIP_ENV_SYNC_BLOCKING ) == 0 ) {
-      flags |= PIP_SYNC_BLOCKING;
+      f |= PIP_SYNC_BLOCKING;
     }
   }
+ OK:
+  return flags;
+}
+
+int pip_check_task_flag( uint32_t flags ) {
+  uint32_t f = flags & PIP_TASK_MASK;
+
+  DBGF( "flags:0x%x", f );
+  if( f ) {
+    if( pip_is_flag_excl( f, PIP_TASK_ACTIVE  ) ) goto OK;
+    if( pip_is_flag_excl( f, PIP_TASK_PASSIVE ) ) goto OK;
+    return -1;
+  }
+ OK:
   return flags;
 }
 
@@ -471,7 +489,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
     if( ( err  = pip_check_opt_and_env( &opts ) ) != 0 ) RETURN( err );
-    if( ( opts = pip_check_sync_flag(   opts ) )  < 0 ) RETURN( EINVAL );
+    if( ( opts = pip_check_sync_flag(    opts ) )  < 0 ) RETURN( EINVAL );
 
     sz = PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
          PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
@@ -498,6 +516,9 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_spin_init( &pip_root->lock_ldlinux );
     pip_spin_init( &pip_root->lock_tasks   );
     pip_spin_init( &pip_root->lock_bt      );
+
+    pip_sem_init( &pip_root->sync_root );
+    pip_sem_init( &pip_root->sync_task );
 
     pipid = PIP_PIPID_ROOT;
     pip_set_magic( pip_root );
@@ -553,7 +574,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       }
       pip_set_name( sym, NULL, NULL );
     }
-    //pip_set_sigmask( SIGCHLD );
+    pip_set_sigmask( SIGCHLD );
     pip_set_signal_handler( SIGCHLD, 
 			    pip_sigchld_handler, 
 			    &pip_root->old_sigchld );
@@ -618,8 +639,11 @@ int pip_fin( void ) {
     PIP_REPORT( time_load_prog );
     PIP_REPORT( time_dlmopen   );
 
+    pip_sem_fin( &pip_root->sync_root );
+    pip_sem_fin( &pip_root->sync_task );
+
     /* SIGCHLD */
-    //pip_unset_sigmask();
+    pip_unset_sigmask();
     pip_unset_signal_handler( SIGCHLD, 
 			      &pip_root->old_sigchld );
     /* SIGTERM */

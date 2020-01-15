@@ -194,8 +194,6 @@
 
 #define PIP_CPUCORE_ASIS 		(PIP_MAGIC_NUM+1)
 
-#define PIP_TASK_PASSIVE		(0x1000)
-
 #define PIP_WAIT_BLOCKING		(0)
 #define PIP_WAIT_NONBLOCKING		(1)
 

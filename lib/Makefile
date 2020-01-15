@@ -38,7 +38,7 @@ FCTXDIR = ../import/fcontext/boost/fcontext
 
 CPPFLAGS += -I$(PIPINCDIR)
 CFLAGS += $(PICCFLAG)
-FCTXOBJS = 
+FCTXOBJS = fctx_jump.o fctx_make.o
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
 
@@ -83,10 +83,10 @@ TAGS:
 	ctags -Re
 
 
-fctx_jump.o : $(FCTXDIR)/jump__elf_gas.S
+fctx_jump.o : $(FCTXDIR)/jump_x86_64_sysv_elf_gas.S
 	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \
 	$(AS) $$tmp -o $@; $(RM) $$tmp
 
-fctx_make.o : $(FCTXDIR)/make__elf_gas.S
+fctx_make.o : $(FCTXDIR)/make_x86_64_sysv_elf_gas.S
 	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \
 	$(AS) $$tmp -o $@; $(RM) $$tmp

@@ -35,6 +35,7 @@ AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--disable-fcontext],
 AS_IF([test "x$enable_fcontext" != "xno"], [
   AC_CHECK_PROG([AS], [as], [yes])
   AS_IF([test x"$AS" != x"yes"], [AC_MSG_ERROR([Can't find assmbler (as)])])
+  AC_DEFINE(enable_fcontext)
 ])
 
 boost_fctx_objs=""

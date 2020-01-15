@@ -40,6 +40,8 @@
 
 #include <stdint.h>
 
+#define PIP_STACK_DESCENDING
+
 inline static void pip_pause( void ) {
 #if !defined( __KNC__ ) && !defined( __MIC__ )
   asm volatile( "pause" ::: "memory" );

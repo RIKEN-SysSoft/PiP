@@ -57,7 +57,7 @@ int main( int argc, char **argv ) {
 
     status = 0;
     CHECK( pip_trywait(PIP_PIPID_ROOT,&status), RV!=EDEADLK, return(EXIT_FAIL) );
-    CHECK( pip_trywait(0,NULL),                 RV!=ESRCH,   return(EXIT_FAIL) );
+    CHECK( pip_trywait(0,NULL),                 RV!=ECHILD,  return(EXIT_FAIL) );
 
     core = PIP_CPUCORE_ASIS;
     for( i=0; i<ntasks; i++ ) {
@@ -68,9 +68,9 @@ int main( int argc, char **argv ) {
       while( 1 ) {
 	err = pip_trywait( i, &status );
 	if( !err ) break;
-	CHECK( err==ESRCH, !RV, return(EXIT_FAIL) );
+	CHECK( err==ECHILD, !RV, return(EXIT_FAIL) );
       }
-      CHECK( pip_wait( i, &status ), RV!=ESRCH, return(EXIT_FAIL) );
+      CHECK( pip_wait( i, &status ), RV!=ECHILD, return(EXIT_FAIL) );
       if( WIFEXITED( status ) ) {
 	CHECK( ( extval = WEXITSTATUS( status ) ),
 	       RV,

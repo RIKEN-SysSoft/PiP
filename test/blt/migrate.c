@@ -46,7 +46,7 @@ int main( int argc, char **argv ) {
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
       CHECK( pip_blt_spawn( &prog, 0, PIP_TASK_PASSIVE, &pipid,
-			    NULL, queuep[0], NULL ),
+			    NULL, qpp[0], NULL ),
 	     RV,
 	     abend(EXIT_UNTESTED) );
     }
@@ -86,5 +86,5 @@ int main( int argc, char **argv ) {
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
-  return extval;
+  return 0;
 }
