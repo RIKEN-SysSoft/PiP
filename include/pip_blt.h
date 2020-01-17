@@ -726,7 +726,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 				 pip_task_t *sched,
 				 int *np );
 #define pip_dequeue_and_resume_N( Q, S, N )	\
-  pip_dequeue_and_resume_N_( (pip_task_queue_t)(Q), (S), (N) )
+  pip_dequeue_and_resume_N_( (pip_task_queue_t*)(Q), (S), (N) )
 
 #endif
 
@@ -1007,6 +1007,30 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #define pip_mutex_fin( M ) \
   pip_mutex_fin_( (pip_mutex_t*)(M) )
 #endif
+
+  /**
+   * \brief Couple the curren task with the kernel thread
+   *  @{
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * \retval EBUSY the curren task is already coupled with the kernel thread
+   * finalized
+   */
+  int pip_couple();
+  /** @}*/
+
+  /**
+   * \brief Decouple the curren task from the kernel thread
+   *  @{
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * \retval EBUSY the curren task is already decoupled from the kernel thread
+   * finalized
+   */
+  int pip_decouple();
+  /** @}*/
 
 /**
  * @}

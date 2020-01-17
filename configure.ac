@@ -31,7 +31,7 @@ AC_SUBST(glibc_libdir)
 AC_SUBST(dynamic_linker)
 
 AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--disable-fcontext],
-  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])])
+  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])],[yes])
 AS_IF([test "x$enable_fcontext" != "xno"], [
   AC_CHECK_PROG([AS], [as], [yes])
   AS_IF([test x"$AS" != x"yes"], [AC_MSG_ERROR([Can't find assmbler (as)])])

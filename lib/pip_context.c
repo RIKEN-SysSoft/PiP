@@ -56,7 +56,7 @@ void pip_stack_protect( pip_task_internal_t *taski,
   pip_memory_barrier();
 }
 
-static void pip_stack_unprotect( pip_task_internal_t *taski ) {
+void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
   pip_memory_barrier();
   if( taski->flag_stackpp == NULL ) {
@@ -90,6 +90,7 @@ void pip_stack_wait( pip_task_internal_t *taski ) {
     pip_system_yield();
     DBGF( "WAITING  pipid:%d (count=%d*%d) ...",
 	  taski->pipid, i, pip_root->yield_iters );
+    //sleep( 1 );
   }
   DBGF( "WAIT-FAILED  pipid:%d (count=%d*%d)",
 	taski->pipid, i, pip_root->yield_iters );
@@ -97,7 +98,7 @@ void pip_stack_wait( pip_task_internal_t *taski ) {
   return;
  done:
   DBGF( "WAIT-DONE  pipid:%d (count=%d*%d)",
-	taski->pipid, i, PIP_BUSYWAIT_COUNT );
+	taski->pipid, i, pip_root->yield_iters );
 }
 
 /* context switch functions */
@@ -160,7 +161,6 @@ void pip_swap_context( pip_task_internal_t *taski,
   ASSERT( pip_swap_ctx( &lvars.ctx_old, lvars.ctxp_new ) );
   pip_stack_unprotect( taski );
 #endif
-  ASSERTD( (pid_t) taski->task_sched->annex->tid != pip_gettid() );
 }
 
 #ifdef PIP_USE_FCONTEXT
@@ -169,6 +169,7 @@ static void pip_call_sleep( pip_transfer_t tr ) {
   ASSERTD( dp->old->ctx_savep == NULL );
   *dp->old->ctx_savep = tr.ctx;
   dp->old->ctx_savep = NULL;
+  ASSERTD( (pid_t) dp->new->task_sched->annex->tid != pip_gettid() );
   pip_stack_unprotect( dp->new );
   pip_sleep( dp->new );
 }
@@ -176,6 +177,7 @@ static void pip_call_sleep( pip_transfer_t tr ) {
 static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
   pip_task_internal_t	*schedi = (pip_task_internal_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
+  ASSERTD( (pid_t) dp->new->task_sched->annex->tid != pip_gettid() );
   pip_stack_unprotect( schedi );
   pip_sleep( schedi );
 }

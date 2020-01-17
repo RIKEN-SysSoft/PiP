@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#define DEBUG
+//#define DEBUG
 #include <pip.h>
 
 int

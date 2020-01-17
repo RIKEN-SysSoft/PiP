@@ -1942,7 +1942,7 @@ fi
 
 # Check whether --enable-fcontext was given.
 if test "${enable_fcontext+set}" = set; then :
-  enableval=$enable_fcontext;
+  enableval=$enable_fcontext; yes
 fi
 
 if test "x$enable_fcontext" != "xno"; then :

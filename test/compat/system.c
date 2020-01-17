@@ -36,6 +36,10 @@
 #include <test.h>
 
 int main( int argc, char **argv ) {
-  CHECK( system( "hostname" ), RV, return(EXIT_FAIL) );
+  char *command = "hostname";
+  if( argc > 1 ) {
+    command = argv[1];
+  }
+  CHECK( system( command ), RV, return(EXIT_FAIL) );
   return 0;
 }

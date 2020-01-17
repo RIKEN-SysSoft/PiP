@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 
 int main( int argc, char **argv ) {

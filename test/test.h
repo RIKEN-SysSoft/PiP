@@ -85,16 +85,6 @@ typedef struct test_args {
   volatile int	niters;
 } test_args_t;
 
-typedef struct exp {
-  test_args_t		args;
-  naive_barrier_t	nbarr[2];
-  pip_task_queue_t 	queue;
-  pip_atomic_t		npass;
-  pip_barrier_t		pbarr;
-  pip_mutex_t		pmutex;
-  volatile int		tmp;
-} exp_t;
-
 inline static int naive_barrier_init( naive_barrier_t *barrp, int n ) {
   if( n < 1 ) RETURN( EINVAL );
   barrp->count      = n;

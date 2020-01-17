@@ -86,8 +86,9 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
   RETURNV;
 }
 
-static void pip_change_sched( pip_task_internal_t *taski,
-			      pip_task_internal_t *schedi ) {
+static int pip_change_sched( pip_task_internal_t *schedi,
+			     pip_task_internal_t *taski ) {
+  int ntc = -1;
   if( taski->task_sched != schedi ) {
     DBGF( "taski:%d[%d]-NTC:%d  schedi:%d[%d]-NTC:%d",
 	  taski->pipid,
@@ -97,16 +98,13 @@ static void pip_change_sched( pip_task_internal_t *taski,
 	  schedi->task_sched->pipid,
 	  (int) schedi->ntakecare );
 
-#ifdef DEBUG
-    int ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
-    ASSERTD( ntc < 0 );
-#else
-    (void) pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
-#endif
+    ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
     ASSERTD( ntc < 0 );
     taski->task_sched = schedi;
     (void) pip_atomic_fetch_and_add( &schedi->ntakecare, 1 );
   }
+  if( ntc == 0 && taski->task_sched->flag_exit ) return 1;
+  return 0;
 }
 
 static int pip_sched_ood_task( pip_task_internal_t *schedi,
@@ -124,7 +122,8 @@ static int pip_sched_ood_task( pip_task_internal_t *schedi,
     schedi->oodq_len ++;
   }
   pip_spin_unlock( &annex->lock_oodq );
-  RETURN( flag );
+  if( flag ) return 1;
+  return 0;
 }
 
 static void pip_takein_ood_task( pip_task_internal_t *schedi ) {
@@ -184,11 +183,11 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
     default:
       goto sync_auto;
     }
-    DBGF( "PIPID:%d -- WOKEUP ^^^^^^^^", taski->pipid );
   }
  done:
   pip_deadlock_dec();
   taski->flag_wakeup = 0;
+  DBGF( "PIPID:%d -- WOKEUP ^^^^^^^^", taski->pipid );
   RETURNV;
 }
 
@@ -202,7 +201,7 @@ void pip_sleep( pip_task_internal_t *schedi ) {
   pip_task_t 		*next;
 
   ENTERF( "PIPID:%d", schedi->pipid );
-  ASSERTD( schedi->ctx_suspend == NULL );
+  //ASSERTD( schedi->ctx_suspend == NULL );
   /* now stack is switched and safe to use the prev stack */
   while( 1 ) {
     while( 1 ) {
@@ -430,6 +429,8 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
 static int pip_do_resume( pip_task_internal_t *taski,
 			  pip_task_internal_t *resume,
 			  pip_task_internal_t *schedi ) {
+  int flag = 0;
+
 #ifdef DEBUG
   if( schedi != NULL ) {
     ENTERF( "taski(PIPID:%d)  resume(PIPID:%d)  schedi(PIPID:%d)",
@@ -449,7 +450,7 @@ static int pip_do_resume( pip_task_internal_t *taski,
     ASSERTD( schedi == NULL );
   }
   PIP_RUN( resume );
-  pip_change_sched( resume, schedi );
+  flag = pip_change_sched( schedi, resume );
   if( taski->task_sched == schedi ) {
     /* same scheduling domain with the current task */
     DBGF( "RUN(self): %d[%d]", resume->pipid, schedi->pipid );
@@ -458,7 +459,8 @@ static int pip_do_resume( pip_task_internal_t *taski,
   } else {
     /* schedule the task as an OOD (Out Of (scheduling) Domain) task */
     DBGF( "RUN(OOD): %d[%d]", resume->pipid, schedi->pipid );
-    if( pip_sched_ood_task( schedi, resume ) ) pip_wakeup( schedi  );
+    flag += pip_sched_ood_task( schedi, resume );
+    if( flag ) pip_wakeup( schedi );
   }
   RETURN( 0 );
 }
@@ -779,4 +781,60 @@ int pip_get_aux( pip_task_t *task, void **auxp ) {
   }
   *auxp = taski->annex->aux;
   RETURN( 0 );
+}
+
+int pip_couple( void ) {
+  pip_task_internal_t 	*taski = pip_task;
+  pip_task_internal_t 	*nexti, *schedi;
+  pip_task_t		*queue, *next = NULL;
+  int			flag = 0, err = 0;
+
+  ENTER;
+  IF_UNLIKELY( taski                  == NULL  ) RETURN( EPERM );
+  IF_UNLIKELY( taski->task_sched      == taski ) RETURN( EBUSY );
+  IF_UNLIKELY( taski->decoupled_sched != NULL  ) RETURN( EBUSY );
+
+  schedi = taski->task_sched;
+  pip_takein_ood_task( schedi );
+  queue  = &schedi->schedq;
+  if( !PIP_TASKQ_ISEMPTY( queue ) ) {
+    next = PIP_TASKQ_NEXT( queue );
+    PIP_TASKQ_DEQ( next );
+    nexti = PIP_TASKI( next );
+    taski->decoupled_sched = schedi;
+    pip_stack_protect( taski, nexti );
+    flag  = pip_sched_ood_task( taski, taski );
+    flag += pip_change_sched(   taski, taski );
+    if( flag ) pip_wakeup( taski );
+    pip_wakeup( taski );
+    pip_swap_context( taski, nexti );
+    /* has coupled !! */
+    //pip_change_sched( taski, taski );
+  } else {
+    pip_stack_protect( taski, schedi );
+    if( pip_sched_ood_task( taski, taski ) ) pip_wakeup( taski );
+    pip_decouple_context( taski, schedi );
+  }
+  RETURN( err );
+}
+
+int pip_decouple( pip_task_t *task ) {
+  pip_task_internal_t 	*taski  = pip_task;
+  pip_task_internal_t 	*schedi = PIP_TASKI( task );
+  pip_task_internal_t	*couple = taski->decoupled_sched;
+  int			flag = 0, err = 0;
+
+  IF_UNLIKELY( taski  == NULL              ) RETURN( EPERM );
+  IF_UNLIKELY( couple == NULL              ) RETURN( EBUSY );
+  IF_UNLIKELY( taski->task_sched != taski  ) RETURN( EBUSY );
+  if( !PIP_TASKQ_ISEMPTY( &taski->schedq ) ) RETURN( EBUSY );
+
+  taski->decoupled_sched = NULL;
+  if( schedi == NULL ) schedi = couple;
+  pip_stack_protect( taski, taski );
+  flag  = pip_sched_ood_task( schedi, taski );
+  flag += pip_change_sched(   schedi, taski );
+  if( flag ) pip_wakeup( schedi );
+  pip_decouple_context( taski, taski );
+  RETURN( err );
 }

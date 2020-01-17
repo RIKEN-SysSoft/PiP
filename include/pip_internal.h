@@ -129,6 +129,7 @@ typedef struct pip_task_internal {
 	volatile uint8_t	flag_exit; /* if this task is terminated */
 	volatile uint8_t	flag_wakeup; /* flag to wakeup */
       };
+      struct pip_task_internal	*decoupled_sched; /* decoupled sched */
       struct pip_task_annex	*annex;
 #ifdef PIP_USE_FCONTEXT
       pip_ctx_p			*ctx_savep;
