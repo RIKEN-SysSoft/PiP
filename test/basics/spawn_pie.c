@@ -30,15 +30,28 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
-//#define DEBUG
+#define DEBUG
 
 #include <libgen.h>
 #include <test.h>
 
+static int wait_termination( void ) {
+  int status, err;
+
+  err = pip_wait_any( NULL, &status );
+  if( err ) return -err;
+  if( WIFEXITED( status ) ) {
+    return WEXITSTATUS( status );
+  } else if( WIFSIGNALED( status ) ) {
+    return -9999;
+  }
+  return err;
+}
+
 int main( int argc, char **argv ) {
   char *dir;
   char *nargv[2] = { NULL, NULL };
-  int status, extval;
+  int err;
 
   set_sigsegv_watcher();
   dir = dirname( argv[0] );
@@ -59,33 +72,33 @@ int main( int argc, char **argv ) {
 	 return(EXIT_FAIL) );
 
   nargv[0] = "./prog-nordynamic";
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		      NULL, NULL, NULL ),
-	 (RV!=ENOEXEC && RV!=0), /* this MAY depend ... */
+  err = pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+		   NULL, NULL, NULL );
+  /* this MAY succeed depending on system */
+  CHECK( RV=err,
+	 (RV!=ENOEXEC && RV!=0),
 	 return(EXIT_FAIL) );
+  if( !err ) {
+    CHECK( wait_termination(), RV, return(EXIT_FAIL) );
+  }
 
   nargv[0] = "prog-pie";	/* not a path (no slash) */
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		       NULL, NULL, NULL ),
-	 (RV!=ESRCH && RV!=0), 	/* this MAY depend ... */
+  err = pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+		   NULL, NULL, NULL );
+  /* this MAY succeed depending on system */
+  CHECK( RV=err,
+	 (RV!=ENOEXEC && RV!=0),
 	 return(EXIT_FAIL) );
+  if( !err ) {
+    CHECK( wait_termination(), RV, return(EXIT_FAIL) );
+  }
 
   nargv[0] = "./prog-pie";	/* correct one */
   CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		       NULL, NULL, NULL ),
 	 RV,
 	 return(EXIT_FAIL) );
-
-  CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_UNTESTED) );
-
-  if( WIFEXITED( status ) ) {
-	CHECK( ( extval = WEXITSTATUS( status ) ),
-	       RV,
-	       return(EXIT_FAIL) );
-  } else {
-    CHECK( 1, RV, RV=0 );
-    extval = EXIT_UNRESOLVED;
-  }
+  CHECK( wait_termination(), RV, return(EXIT_FAIL) );
 
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
