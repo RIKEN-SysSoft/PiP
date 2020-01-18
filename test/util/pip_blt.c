@@ -83,10 +83,19 @@ int main( int argc, char **argv ) {
 
   for( i=0, j=0; i<npass; i++, j++ ) {
     pipid = i;
+#ifndef DO_COREBIND
+    c = PIP_CPUCORE_ASIS;
+#else
+    if( nc == 0 ) {
+      c = PIP_CPUCORE_ASIS;
+    } else {
+      c = ( i % nc ) + 1;
+    }
+#endif
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
     j = ( j >= nacts ) ? 0 : j;
-    CHECK( pip_blt_spawn( &prog, 0, 
+    CHECK( pip_blt_spawn( &prog, c, 
 			  PIP_TASK_PASSIVE, 
 			  &pipid, NULL, &queues[j], NULL ),
 	   RV,

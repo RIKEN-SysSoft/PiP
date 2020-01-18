@@ -312,7 +312,9 @@ while read line; do
 	CMD=$inc_fn$cmd;
 
         if [ ${#CMD} -ge $width ]; then
-	    short="`printf "%-${width}.${width}s" "${inc_fn}${cmd}"`"
+	    dash="... "
+	    w=$((${width}-${#dash}))
+	    short="`printf "%-${w}.${w}s" "${inc_fn}${cmd}" "${dash}"`"
 	else
 	    short=$CMD;
 	fi
