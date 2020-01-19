@@ -29,9 +29,9 @@ check_command() {
     fi
 }
 
-rprocs=`ps uxw | grep R | wc -l`;
+rprocs=`ps rux | wc -l`;
 if [ $rprocs -gt 3 ]; then
-    echo >&2 'WARNING: some other processes are running ...'
+    echo >&2 "WARNING: some other processes seem to be running ... ($rprocs)"
 fi
 
 check_command "dirname .";
@@ -202,7 +202,7 @@ case $# in
 		case $1 in *$pip_mode_name_C) run_test_C=C;; esac
 		shift
 	done
-	if [ X"${run_test_L}${run_test_C}${run_test_T}" = X ]; then      
+	if [ X"${run_test_L}${run_test_C}${run_test_T}" = X ]; then
 	    pip_mode_list="L C T";
 	else
 	    pip_mode_list="$run_test_L $run_test_C $run_test_T"

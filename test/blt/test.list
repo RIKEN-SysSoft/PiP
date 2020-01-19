@@ -25,4 +25,6 @@ timer 5  pip_blt  8 24 ./pip_mutex 100
 timer 1  ./migrate 2 11
 timer 2  ./migrate 4 17
 timer 8  ./migrate 8 23
-
+timer 1  ./pip_couple 2
+timer 2  ./pip_couple 4
+timer 8  ./pip_couple 8

@@ -106,26 +106,24 @@ static int pip_set_root( char *env ) {
   RETURN( EPROTO );
 }
 
-#define NITERS		(1000)
-#define FACTOR		(10)
-static uint64_t pip_yield_setting( void ) {
+#define NITERS		(100)
+#define FACTOR_INIT	(10)
+static uint64_t pip_measure_yieldtime( void ) {
   double dt, xt;
   uint64_t c;
-  int i, j;
+  int i;
 
-  for( i=0; i<NITERS; i++ ) pip_system_yield();
+  for( i=0; i<NITERS/10; i++ ) pip_system_yield();
   dt = -pip_gettime();
   for( i=0; i<NITERS; i++ ) pip_system_yield();
   dt += pip_gettime();
   DBGF( "DT:%g", dt );
 
-  for( i=0; i<NITERS; i++ ) pip_pause();
+  for( i=0; i<NITERS/10; i++ ) pip_pause();
   xt = 0.0;
-  for( c=FACTOR; ; c*=2 ) {
+  for( c=FACTOR_INIT; ; c*=2 ) {
     xt = -pip_gettime();
-    for( j=0; j<c; j++ ) {
-      for( i=0; i<NITERS; i++ ) pip_pause();
-    }
+    for( i=0; i<NITERS*c; i++ ) pip_pause();
     xt += pip_gettime();
     DBGF( "c:%lu  XT:%g  DT:%g", c, xt, dt );
     if( xt > dt ) break;
@@ -224,7 +222,7 @@ static int pip_check_opt_and_env( int *optsp ) {
   if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
     /* check if the __clone() systemcall wrapper exists or not */
     if( pip_cloneinfo == NULL ) {
-      pip_cloneinfo = 
+      pip_cloneinfo =
 	(pip_clone_t*) pip_dlsym( RTLD_DEFAULT, "pip_clone_info");
     }
     DBGF( "cloneinfo-%p", pip_cloneinfo );
@@ -374,11 +372,11 @@ int pip_check_task_flag( uint32_t flags ) {
   return flags;
 }
 
-void pip_set_signal_handler( int sig, 
-			      void(*handler)(), 
+void pip_set_signal_handler( int sig,
+			      void(*handler)(),
 			      struct sigaction *oldp ) {
   struct sigaction	sigact;
-  
+
   memset( &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = handler;
   ASSERT( sigemptyset( &sigact.sa_mask )    != 0 );
@@ -386,7 +384,7 @@ void pip_set_signal_handler( int sig,
   ASSERT( sigaction( sig, &sigact, oldp )   != 0 );
 }
 
-static void pip_unset_signal_handler( int sig, 
+static void pip_unset_signal_handler( int sig,
 				      struct sigaction *oldp ) {
   ASSERT( sigaction( sig, oldp, NULL ) != 0 );
 }
@@ -527,7 +525,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->ntasks_count = 1; /* root is also a PiP task */
     pip_root->cloneinfo    = pip_cloneinfo;
     pip_root->opts         = opts;
-    pip_root->yield_iters  = pip_yield_setting();
+    pip_root->yield_iters  = pip_measure_yieldtime();
     for( i=0; i<ntasks+1; i++ ) {
       pip_root->tasks[i].annex = &pip_root->annex[i];
       pip_reset_task_struct( &pip_root->tasks[i] );
@@ -575,16 +573,16 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       pip_set_name( sym, NULL, NULL );
     }
     pip_set_sigmask( SIGCHLD );
-    pip_set_signal_handler( SIGCHLD, 
-			    pip_sigchld_handler, 
+    pip_set_signal_handler( SIGCHLD,
+			    pip_sigchld_handler,
 			    &pip_root->old_sigchld );
-    pip_set_signal_handler( SIGTERM, 
-			    pip_sigterm_handler, 
+    pip_set_signal_handler( SIGTERM,
+			    pip_sigterm_handler,
 			    &pip_root->old_sigterm );
-    pip_set_signal_handler( SIGHUP, 
-			    pip_sighup_handler, 
+    pip_set_signal_handler( SIGHUP,
+			    pip_sighup_handler,
 			    &pip_root->old_sighup );
-    
+
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
     pip_gdbif_initialize_root( ntasks );
@@ -644,13 +642,13 @@ int pip_fin( void ) {
 
     /* SIGCHLD */
     pip_unset_sigmask();
-    pip_unset_signal_handler( SIGCHLD, 
+    pip_unset_signal_handler( SIGCHLD,
 			      &pip_root->old_sigchld );
     /* SIGTERM */
-    pip_unset_signal_handler( SIGTERM, 
+    pip_unset_signal_handler( SIGTERM,
 			      &pip_root->old_sigterm );
     /* deadlock? */
-    pip_unset_signal_handler( SIGHUP, 
+    pip_unset_signal_handler( SIGHUP,
 			      &pip_root->old_sighup );
 
     memset( pip_root, 0, pip_root->size_whole );
