@@ -79,7 +79,7 @@ int main( int argc, char **argv ) {
 	     return(EXIT_FAIL) );
       CHECK( pip_dequeue_and_resume_N(&expp->queue,task,&n), RV,
 	     return(EXIT_FAIL) );
-      CHECK( n!=ntasks-1,                          RV, return(EXIT_FAIL) );
+      CHECK( n!=ntasks-1, RV, return(EXIT_FAIL) );
       do {} while( pip_yield(PIP_YIELD_USER) == EINTR );
     }
     CHECK( pip_barrier_wait(&expp->barrier), RV, return(EXIT_FAIL) );
