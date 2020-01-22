@@ -73,15 +73,15 @@ int main( int argc, char **argv ) {
 	CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
 	CHECK( pid==getpid(),            !RV, return(EXIT_FAIL) );
 	CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
-	expp->done ++;
       }
+      expp->done ++;
       t1 = - pip_gettime();
       for( i=0; i<niters; i++ ) {
 	CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
 	CHECK( pid==getpid(),            !RV, return(EXIT_FAIL) );
 	CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
-	expp->done ++;
       }
+      expp->done ++;
       t1 += pip_gettime();
       printf( "t0: %g\n", t0 / ((double) niters) );
       printf( "t1: %g\n", t1 / ((double) niters) );
@@ -96,10 +96,10 @@ int main( int argc, char **argv ) {
       } while( n < 0 );
       do { 
 	pip_yield(PIP_YIELD_USER);
-      } while( expp->done < witers );
+      } while( expp->done < 1 );
       do { 
 	pip_yield(PIP_YIELD_USER);
-      } while( expp->done < witers + niters );
+      } while( expp->done < 2 );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
