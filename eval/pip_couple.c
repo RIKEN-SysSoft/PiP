@@ -55,8 +55,7 @@ int main( int argc, char **argv ) {
     }
   } else {
     if( pipid == 0 ) {
-      pip_tls_t	tls;
-      double 	t0, t1, t2;
+      double 	t0, t1;
       pid_t	pid0, pid1;
       int 	j;
 
@@ -89,19 +88,8 @@ int main( int argc, char **argv ) {
 	}
 	t1 += pip_gettime();
 
-	for( i=0; i<witers; i++ ) {
-	  pip_save_tls( &tls );
-	  pip_load_tls( tls );
-	}
-	t2 = - pip_gettime();
-	for( i=0; i<niters; i++ ) {
-	  pip_load_tls( tls );
-	}
-	t2 += pip_gettime();
-
 	printf( "getpid()  : %g  (%d)\n", t0 / ((double) niters), pid0 );
 	printf( "couple    : %g  (%d)\n", t1 / ((double) niters), pid1 );
-	printf( "load_tls  : %g  (%p)\n", t2 / ((double) niters), (void*) tls );
       }
       expp->done = 1;
 
