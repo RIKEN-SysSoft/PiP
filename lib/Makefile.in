@@ -40,7 +40,7 @@ include $(top_srcdir)/build/var.mk
 
 FCTXDIR = ../import/fcontext/boost/fcontext
 
-CPPFLAGS += -I$(PIPINCDIR)
+CPPFLAGS += -I$(PIPINCDIR) -I.
 CFLAGS += $(PICCFLAG)
 FCTXOBJS = @boost_fctx_objs@
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
@@ -50,11 +50,11 @@ FCTXCPPFLAG = @boost_fctx_fpreg_flag@
 
 
 LIBRARY  = libpip.so
-SRCS     = pip.c pip_spawn.c pip_wait.c pip_blt.c pip_context.c \
+SRCS     = pip.c pip_spawn.c pip_wait.c pip_blt.c \
 	pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c pip_dlfcn.c \
 	pip_signal.c
 
-OBJS	 = pip.o pip_spawn.o pip_wait.o pip_blt.o pip_context.o  \
+OBJS	 = pip.o pip_spawn.o pip_wait.o pip_blt.o \
 	pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o pip_dlfcn.o \
 	pip_signal.o $(FCTXOBJS)
 
