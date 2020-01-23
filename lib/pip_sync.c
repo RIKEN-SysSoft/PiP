@@ -123,20 +123,19 @@ int pip_mutex_lock_( pip_mutex_t *mutex ) {
 }
 
 int pip_mutex_unlock_( pip_mutex_t *mutex ) {
-  int err = 0;
+  int c,  err = 0;
 
   ENTERF( "PIPID:%d", pip_task->pipid );
   if( !pip_is_initialized() ) RETURN( EPERM );
   IF_UNLIKELY( mutex->count == 0 ) RETURN( EPERM );
-  (void) pip_atomic_sub_and_fetch( &mutex->count, 1 );
-  while( mutex->count > 0 ) {
+  c = pip_atomic_sub_and_fetch( &mutex->count, 1 );
+  while( c > 0 ) {
     err = pip_dequeue_and_resume_( &mutex->queue, NULL );
-    IF_LIKELY( err == 0 ) {
-      break;
-    } else if( err == ENOENT ) {
+    IF_LIKELY( err == 0 ) break;
+    if( err == ENOENT ) {
       (void) pip_yield( PIP_YIELD_DEFAULT );
     } else {
-      RETURN( err );
+      break;
     }
   }
   RETURN( err );

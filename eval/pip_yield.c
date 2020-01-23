@@ -21,6 +21,17 @@ typedef struct exp {
   pip_task_queue_t	queue;
 } exp_t;
 
+int bar(int);
+
+int foo( int x ) {
+  if( x > 0 ) x = bar( x - 1 );
+  return x;
+}
+
+int bar( int x ) {
+  if( x > 0 ) x = foo( x - 1 );
+  return x;
+}
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
@@ -28,7 +39,7 @@ int main( int argc, char **argv ) {
   int 	ntasks, pipid;
   int	witers = WITERS, niters = NITERS;
   int	status, i, j, extval = 0;
-  double t0;
+  double t0, t1;
 
   ntasks = NTASKS - 1;
 
@@ -74,6 +85,8 @@ int main( int argc, char **argv ) {
 	}
       }
     } else {
+      int x;
+
       for( j=0; j<10; j++ ) {
 	for( i=0; i<witers; i++ ) {
 	  pip_gettime();
@@ -84,8 +97,20 @@ int main( int argc, char **argv ) {
 	  pip_yield( PIP_YIELD_USER );
 	}
 	t0 += pip_gettime();
+
+	for( i=0; i<witers; i++ ) {
+	  pip_gettime();
+	  x = foo( NTASKS*100 );
+	}
+	t1 = - pip_gettime();
+	for( i=0; i<niters; i++ ) {
+	  x = foo( NTASKS*100 );
+	}
+	t1 += pip_gettime();
+
+	printf( "pip_yield : %g\n", t0 / ((double) niters*NTASKS) );
+	printf( "funcall   : %g  (%d)\n", t1 / ((double) niters*NTASKS*100), x );
       }
-      printf( "pip_yield : %g\n", t0 / ((double) niters*ntasks) );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );

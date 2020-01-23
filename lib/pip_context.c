@@ -59,7 +59,7 @@ void pip_stack_protect( pip_task_internal_t *taski,
 void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
   pip_memory_barrier();
-  if( taski->flag_stackpp == NULL ) {
+  IF_UNLIKELY( taski->flag_stackpp == NULL ) {
     DBGF( "UNABLE to UN-protect PIPID:%d", taski->pipid );
   } else {
 #ifdef DEBUG
@@ -75,7 +75,7 @@ void pip_stack_unprotect( pip_task_internal_t *taski ) {
 }
 
 void pip_stack_wait( pip_task_internal_t *taski ) {
-  int i = 0, j;
+  int i, j;
 
   DBGF( "PIPID:%d wait for unprotect", taski->pipid );
   for( i=0; i<pip_root->yield_iters; i++ ) {
@@ -122,6 +122,7 @@ void pip_swap_context( pip_task_internal_t *taski,
   ENTERF( "PIPID:%d ==>> PIPID:%d", taski->pipid, nexti->pipid );
 
   pip_stack_wait( nexti );
+  /* wait for stack and ctx ready */
   ctx = nexti->ctx_suspend;
   ASSERTD( ctx == NULL );
   nexti->ctx_suspend = NULL;
@@ -140,7 +141,7 @@ void pip_swap_context( pip_task_internal_t *taski,
   ASSERTD( dp->old->ctx_savep == NULL );
   *dp->old->ctx_savep = tr.ctx;
   dp->old->ctx_savep = NULL;
-
+  /* before unprotect stack, old ctx must be saved */
   pip_stack_unprotect( dp->new );
 #else
   struct {
@@ -192,8 +193,8 @@ void pip_decouple_context( pip_task_internal_t *taski,
   pip_ctx_p		ctx = schedi->annex->ctx_sleep;
   pip_transfer_t 	tr;
 
-  if( ctx == NULL ) {
-    /* creating a new context to sleep */
+  IF_UNLIKELY( ctx == NULL ) {
+    /* creating a new context to sleep for the first time */
     ctx = pip_make_fctx( 
 			 schedi->annex->stack_sleep
 #ifdef PIP_STACK_DESCENDING
@@ -227,8 +228,8 @@ void pip_decouple_context( pip_task_internal_t *taski,
     pip_ctx_t	ctx_old, ctx_new; /* must be the last member */
   } lvars;
 
-  if( schedi->annex->ctx_sleep == NULL ) {
-    /* creating a new context to sleep */
+  IF_UNLIKELY( schedi->annex->ctx_sleep == NULL ) {
+    /* creating a new context to sleep for the first time */
     lvars.stk = &lvars.ctx_new.ctx.uc_stack;
     lvars.stk->ss_sp    = schedi->annex->stack_sleep;
     lvars.stk->ss_size  = pip_root->stack_size_sleep;
