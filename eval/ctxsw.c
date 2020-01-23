@@ -47,13 +47,13 @@ int main() {
       pip_load_tls( tls );
     }
     t1 = - pip_gettime();
-    for( i=0; i<niters; i++ ) {
+    for( i=0; i<niters*100; i++ ) {
       pip_load_tls( tls );
     }
     t1 += pip_gettime();
 
     printf( "ctxsw    : %g\n",       t0 / ((double) niters) );
-    printf( "load_tls : %g  (%p)\n", t1 / ((double) niters), (void*) tls );
+    printf( "load_tls : %g  (%p)\n", t1 / ((double) niters*100), (void*) tls );
   }
   return 0;
 }
