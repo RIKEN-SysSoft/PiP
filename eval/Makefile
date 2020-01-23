@@ -4,8 +4,8 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS     = pip_couple.c ctxsw.c
-PROGRAMS = pip_couple ctxsw
+SRCS     = pip_couple.c ctxsw.c sem.c
+PROGRAMS = pip_couple ctxsw sem
 
 include $(top_srcdir)/build/rule.mk
 
