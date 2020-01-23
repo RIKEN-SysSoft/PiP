@@ -328,16 +328,17 @@ extern int  pip_able_to_terminate_immediately( pip_task_internal_t* )
 extern void pip_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
 
+#ifdef AH
 extern void pip_swap_context( pip_task_internal_t*,
 			      pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_decouple_context( pip_task_internal_t*,
 				  pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_couple_context( pip_task_internal_t*,
 				pip_task_internal_t* ) PIP_PRIVATE;
-
-extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_stack_protect( pip_task_internal_t*,
 			       pip_task_internal_t* ) PIP_PRIVATE;
+extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
+#endif
 
 extern void pip_set_signal_handler( int sig, void(*)(), 
 				    struct sigaction* ) PIP_PRIVATE;

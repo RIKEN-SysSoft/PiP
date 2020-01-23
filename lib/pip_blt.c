@@ -37,6 +37,8 @@
 #include <pip_blt.h>
 #include <pip_gdbif_func.h>
 
+#include <pip_context.c>
+
 #ifdef DEBUG
 #define QUEUE_DUMP( queue )				\
   if( PIP_TASKQ_ISEMPTY( queue ) ) {			\
@@ -197,7 +199,7 @@ pip_able_to_terminate_immediately( pip_task_internal_t *taski ) {
   return taski->flag_exit && !taski->ntakecare;
 }
 
-void pip_sleep( pip_task_internal_t *schedi ) {
+static void pip_sleep( pip_task_internal_t *schedi ) {
   pip_task_internal_t 	*nexti;
   pip_task_t 		*next;
 
