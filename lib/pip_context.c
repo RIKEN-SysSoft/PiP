@@ -58,7 +58,6 @@ void pip_stack_protect( pip_task_internal_t *taski,
 
 void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
-  pip_memory_barrier();
   IF_UNLIKELY( taski->flag_stackpp == NULL ) {
     DBGF( "UNABLE to UN-protect PIPID:%d", taski->pipid );
   } else {
@@ -68,9 +67,9 @@ void pip_stack_unprotect( pip_task_internal_t *taski ) {
     DBGF( "PIPID:%d UN-protect pipid:%d", taski->pipid, prev->pipid );
     if( *taski->flag_stackpp == 0 ) DBGF( "ALREADY UN-protected" );
 #endif
+    pip_memory_barrier();
     *taski->flag_stackpp = 0;
     taski->flag_stackpp  = NULL;
-    pip_memory_barrier();
   }
 }
 

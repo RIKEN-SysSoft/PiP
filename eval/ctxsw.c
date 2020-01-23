@@ -10,7 +10,7 @@
 #include <test.h>
 
 #define WITERS		(10)
-#define NITERS		(1000)
+#define NITERS		(10*1000)
 
 #define STKSZ		(1024*1024)
 

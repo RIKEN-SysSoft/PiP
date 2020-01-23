@@ -64,8 +64,8 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
 	  taski->flag_exit );
 
   if( taski->flag_wakeup ) return;
-  taski->flag_wakeup = 1;
   pip_memory_barrier();
+  taski->flag_wakeup = 1;
   DBGF( "sync_opts: 0x%x", taski->annex->opts & PIP_SYNC_MASK );
   switch( taski->annex->opts & PIP_SYNC_MASK ) {
   case PIP_SYNC_BUSYWAIT:
