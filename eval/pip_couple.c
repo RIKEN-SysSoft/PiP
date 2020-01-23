@@ -24,7 +24,6 @@ int main( int argc, char **argv ) {
   int 	ntasks, pipid;
   int	witers = WITERS, niters = NITERS;
   int	status, i, n, extval = 0;
-  pid_t	pid;
   double t0, t1;
 
   ntasks = 2;
@@ -57,35 +56,44 @@ int main( int argc, char **argv ) {
     }
   } else {
     if( pipid == 0 ) {
-      for( i=0; i<witers; i++ ) {
-	t0 = pip_gettime();
-	pid = getpid();
-      }
-      t0 = - pip_gettime();
-      for( i=0; i<niters; i++ ) {
-	pid = getpid();
-      }
-      t0 += pip_gettime();
+      pid_t	pid0, pid1;
+      int 	j;
 
       CHECK( pip_suspend_and_enqueue(&expp->queue,NULL,NULL), RV, return(EXIT_FAIL) );
-      for( i=0; i<witers; i++ ) {
-	t1 = pip_gettime();
-	CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
-	CHECK( pid==getpid(),            !RV, return(EXIT_FAIL) );
-	CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
+
+      for( j=0; j<10; j++ ) {
+
+	for( i=0; i<witers; i++ ) {
+	  pip_gettime();
+	  pid0 = getpid();
+	}
+	t0 = - pip_gettime();
+	for( i=0; i<niters; i++ ) {
+	  pid0 = getpid();
+	}
+	t0 += pip_gettime();
+
+	for( i=0; i<witers; i++ ) {
+	  pip_gettime();
+	  CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
+	  pid1 = getpid();
+	  CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
+	}
+
+	t1 = - pip_gettime();
+	for( i=0; i<niters; i++ ) {
+	  CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
+	  pid1 = getpid();
+	  CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
+	}
+	t1 += pip_gettime();
+
+	printf( "%d t0: %g\n", pid0, t0 / ((double) niters) );
+	printf( "%d t1: %g\n", pid1, t1 / ((double) niters) );
       }
-      expp->done ++;
-      t1 = - pip_gettime();
-      for( i=0; i<niters; i++ ) {
-	CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
-	CHECK( pid==getpid(),            !RV, return(EXIT_FAIL) );
-	CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
-      }
-      expp->done ++;
-      t1 += pip_gettime();
-      printf( "t0: %g\n", t0 / ((double) niters) );
-      printf( "t1: %g\n", t1 / ((double) niters) );
-    } else {			/* pipid ==2 */
+      expp->done = 1;
+
+    } else {			/* pipid == 1 */
       pip_task_t *task;
       CHECK( pip_get_task_from_pipid(PIP_PIPID_MYSELF,&task), RV,
 	     return(EXIT_FAIL) );
@@ -93,13 +101,10 @@ int main( int argc, char **argv ) {
 	n = ntasks - 1;
 	CHECK( pip_dequeue_and_resume_N(&expp->queue,task,&n), RV,
 	       return(EXIT_FAIL) );
-      } while( n < 0 );
+      } while( n < ntasks - 1 );
       do { 
-	pip_yield(PIP_YIELD_USER);
+	pip_yield(0);
       } while( expp->done < 1 );
-      do { 
-	pip_yield(PIP_YIELD_USER);
-      } while( expp->done < 2 );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
