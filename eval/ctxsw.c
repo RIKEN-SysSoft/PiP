@@ -43,6 +43,7 @@ int main() {
     t0 += pip_gettime();
 
     for( i=0; i<witers; i++ ) {
+      pip_gettime();
       pip_save_tls( &tls );
       pip_load_tls( tls );
     }
