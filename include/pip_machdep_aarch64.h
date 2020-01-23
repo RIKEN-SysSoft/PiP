@@ -55,6 +55,7 @@ inline static int pip_load_tls( pip_tls_t tls ) {
 }
 
 inline static void pip_pause( void ) {
+  asm volatile("sevl" :::"memory");
   asm volatile("wfe" :::"memory");
 }
 #define PIP_PAUSE

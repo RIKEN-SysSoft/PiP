@@ -167,6 +167,7 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
       DBGF( "PIPID:%d -- SLEEPING (AUTO)", taski->pipid );
       for( j=0; j<100; j++ ) {
 	for( i=0; i<pip_root->yield_iters; i++ ) {
+	  pip_pause();
 	  if( taski->flag_wakeup ) goto done;
 	}
 	pip_system_yield();
