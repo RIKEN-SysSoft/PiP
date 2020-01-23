@@ -10,12 +10,12 @@
 #include <test.h>
 
 #define WITERS		(10)
-#define NITERS		(1000)
+#define NITERS		(10*1000)
 
 #ifdef NTASKS
 #undef NTASKS
 #endif
-#define NTASKS		(100)
+#define NTASKS		(10)
 
 typedef struct exp {
   pip_task_queue_t	queue;
