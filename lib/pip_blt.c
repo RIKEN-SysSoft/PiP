@@ -711,8 +711,8 @@ int pip_yield( int flag ) {
   ENTER;
   IF_UNLIKELY( taski == NULL ) RETURN( EPERM );
 
-  if( flag == PIP_YIELD_DEFAULT ||
-      flag &  PIP_YIELD_SYSTEM ) {
+  IF_UNLIKELY( flag == PIP_YIELD_DEFAULT ||
+	       flag &  PIP_YIELD_SYSTEM ) {
     pip_system_yield();
   }
 

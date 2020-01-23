@@ -66,10 +66,15 @@ int main( int argc, char **argv ) {
 	 return(EXIT_FAIL) );
 
   nargv[0] = "./prog-nopie";
-  CHECK( pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
-		      NULL, NULL, NULL ),
-	 RV!=ELIBEXEC,
+  err = pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
+		   NULL, NULL, NULL );
+  /* this MAY succeed depending on system */
+  CHECK( RV=err,
+	 (RV!=ELIBEXEC && RV!=0),
 	 return(EXIT_FAIL) );
+  if( !err ) {
+    CHECK( wait_termination(), RV, return(EXIT_FAIL) );
+  }
 
   nargv[0] = "./prog-nordynamic";
   err = pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
@@ -85,9 +90,8 @@ int main( int argc, char **argv ) {
   nargv[0] = "prog-pie";	/* not a path (no slash) */
   err = pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		   NULL, NULL, NULL );
-  /* this MAY succeed depending on system */
   CHECK( RV=err,
-	 (RV!=ENOEXEC && RV!=0),
+	 (RV!=EFAULT && RV!=0),
 	 return(EXIT_FAIL) );
   if( !err ) {
     CHECK( wait_termination(), RV, return(EXIT_FAIL) );
