@@ -223,7 +223,7 @@ static void pip_sleep( pip_task_internal_t *schedi ) {
     next = PIP_TASKQ_NEXT( &schedi->schedq );
     PIP_TASKQ_DEQ( next );
     schedi->schedq_len --;
-    
+
     nexti = PIP_TASKI( next );
     DBGF( "PIPID:%d(ctxp:%p) -->> PIPID:%d(ctxp:%p)",
 	  schedi->pipid, schedi->ctx_suspend,
@@ -268,7 +268,7 @@ static void pip_enqueue_task( pip_task_internal_t *taski,
 			      pip_enqueue_callback_t callback,
 			      void *cbarg ) {
   pip_task_t	*task  = PIP_TASKQ( taski );
-  
+
   if( flag_lock ) {
     pip_task_queue_lock( queue );
     pip_task_queue_enqueue( queue, task );

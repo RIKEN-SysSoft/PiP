@@ -5,9 +5,11 @@
  * $PIP_license$
  */
 
+#include <eval.h>
 #include <test.h>
 #include <semaphore.h>
 
+#define NSAMPLES	(10)
 #define WITERS		(100)
 #define NITERS		(10*1000)
 
@@ -32,7 +34,8 @@ int main() {
   pthread_t 	th0, th1;
   int		witers = WITERS, niters = NITERS;
   int		i, j;
-  double	t0, t1;
+  double	t, t0[NSAMPLES], t1[NSAMPLES];
+  uint64_t	c, c0[NSAMPLES], c1[NSAMPLES];
 
   sem_init( &sem[0], 0, 0 );
   sem_init( &sem[1], 0, 0 );
@@ -44,33 +47,44 @@ int main() {
   pthread_create( &th0, NULL, foo, NULL );
   pthread_create( &th1, NULL, bar, NULL );
 
-  for( j=0; j<10; j++ ) {
+  for( j=0; j<NSAMPLES; j++ ) {
     for( i=0; i<witers; i++ ) {
+      c0[j] = 0;
+      t0[j] = 0.0;
       pip_gettime();
+      get_cycle_counter();
       sem_post( &sem[0] );
       sem_wait( &sem[1] );
-    }  
-    t0 = - pip_gettime();
+    }
+    t = pip_gettime();
+    c = get_cycle_counter();
     for( i=0; i<niters; i++ ) {
       sem_post( &sem[0] );
       sem_wait( &sem[1] );
     }
-    t0 += pip_gettime();
-    
-    for( i=0; i<witers; i++ ) {
-      pip_gettime();
-      pthread_mutex_unlock( &mutex[0] );
-      pthread_mutex_lock(   &mutex[1] );
-    }  
-    t1 = - pip_gettime();
-    for( i=0; i<niters; i++ ) {
-      pthread_mutex_unlock( &mutex[0] );
-      pthread_mutex_lock(   &mutex[1] );
-    }
-    t1 += pip_gettime();
+    c0[j] = get_cycle_counter() - c;
+    t0[j] = pip_gettime() - t;
 
-    printf( "sem   : %g\n", t0 / ((double) niters) );
-    printf( "mutex : %g\n", t1 / ((double) niters) );
+    for( i=0; i<witers; i++ ) {
+      c1[j] = 0;
+      t1[j] = 0.0;
+      pip_gettime();
+      get_cycle_counter();
+      pthread_mutex_unlock( &mutex[0] );
+      pthread_mutex_lock(   &mutex[1] );
+    }
+    t = pip_gettime();
+    c = get_cycle_counter();
+    for( i=0; i<niters; i++ ) {
+      pthread_mutex_unlock( &mutex[0] );
+      pthread_mutex_lock(   &mutex[1] );
+    }
+    c1[j] = get_cycle_counter() - c;
+    t1[j] = pip_gettime() - t;
+  }
+  for( j=0; j<NSAMPLES; j++ ) {
+    printf( "sem   : %g  (%lu)\n", t0[j] / ((double) niters), c0[j] / niters );
+    printf( "mutex : %g  (%lu)\n", t1[j] / ((double) niters), c1[j] / niters );
   }
   return 0;
 }

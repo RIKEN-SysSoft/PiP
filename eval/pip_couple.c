@@ -7,10 +7,12 @@
 
 //#define DEBUG
 
+#include <eval.h>
 #include <test.h>
 
-#define WITERS		(10)
-#define NITERS		(1000)
+#define NSAMPLES	(10)
+#define WITERS		(1000)
+#define NITERS		(10*1000)
 
 #ifdef NTASKS
 #undef NTASKS
@@ -22,11 +24,17 @@ typedef struct exp {
   volatile int		done;
 } exp_t;
 
-int opts[NTASKS] = { PIP_SYNC_BUSYWAIT, 
-		     PIP_SYNC_YIELD, 
-		     PIP_SYNC_BLOCKING, 
-		     PIP_SYNC_AUTO, 
+int opts[NTASKS] = { PIP_SYNC_BUSYWAIT,
+		     PIP_SYNC_YIELD,
+		     PIP_SYNC_BLOCKING,
+		     PIP_SYNC_AUTO,
 		     PIP_SYNC_AUTO };
+
+char *optstr[NTASKS] = { "PIP_SYNC_BUSYWAIT",
+			 "PIP_SYNC_YIELD",
+			 "PIP_SYNC_BLOCKING",
+			 "PIP_SYNC_AUTO",
+			 "PIP_SYNC_AUTO" };
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
@@ -64,45 +72,58 @@ int main( int argc, char **argv ) {
     }
   } else {
     if( pipid < ntasks - 1 ) {
-      double 	t0, t1;
+      double 	t, t0[NSAMPLES], t1[NSAMPLES];
+      uint64_t	c, c0[NSAMPLES], c1[NSAMPLES];
       pid_t	pid0, pid1;
       int 	j;
 
       CHECK( pip_suspend_and_enqueue(&expp->queue,NULL,NULL), RV, return(EXIT_FAIL) );
       n = expp->done;
+
       for( j=0; j<10; j++ ) {
-
 	for( i=0; i<witers; i++ ) {
+	  c0[j] = 0;
+	  t0[j] = 0.0;
 	  pip_gettime();
+	  get_cycle_counter();
 	  pid0 = getpid();
 	}
-	t0 = - pip_gettime();
+	t = pip_gettime();
+	c = get_cycle_counter();
 	for( i=0; i<niters; i++ ) {
 	  pid0 = getpid();
 	}
-	t0 += pip_gettime();
+	c0[j] = get_cycle_counter() - c;
+	t0[j] = pip_gettime() - t;
 
 	for( i=0; i<witers; i++ ) {
+	  c1[j] = 0;
+	  t1[j] = 0.0;
 	  pip_gettime();
+	  get_cycle_counter();
 	  CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
 	  pid1 = getpid();
 	  CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
 	}
 
-	t1 = - pip_gettime();
+	t = pip_gettime();
+	c = get_cycle_counter();
 	for( i=0; i<niters; i++ ) {
 	  CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
 	  pid1 = getpid();
 	  CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
 	}
-	t1 += pip_gettime();
-
-	printf( "[%d] getpid()  : %g  (%d)\n", n, t0 / ((double) niters), pid0 );
-	printf( "[%d] couple    : %g  (%d)\n", n, t1 / ((double) niters), pid1 );
+	c1[j] = get_cycle_counter() - c;
+	t1[j]= pip_gettime() - t;
       }
+      for( j=0; j<NSAMPLES; j++ ) {
+	printf( "getpid()  : %g  (%lu)  %s\n", t0[j] / ((double) niters), c0[j] / niters, optstr[n] );
+	printf( "couple    : %g  (%lu)  %s\n", t1[j] / ((double) niters), c1[j] / niters, optstr[n] );
+      }
+      printf( "--dummy %d %d %d\n", n, pid0, pid1 );
       expp->done ++;
 
-    } else {			/* pipid == 1 */
+    } else {
       pip_task_t *task;
       CHECK( pip_get_task_from_pipid(PIP_PIPID_MYSELF,&task), RV,
 	     return(EXIT_FAIL) );
@@ -110,7 +131,7 @@ int main( int argc, char **argv ) {
       for( i=0; i<ntasks-1; i++ ) {
 	CHECK( pip_dequeue_and_resume(&expp->queue,task), RV,
 	       return(EXIT_FAIL) );
-	do { 
+	do {
 	  pip_yield( PIP_YIELD_USER );
 	} while( expp->done == i );
       }

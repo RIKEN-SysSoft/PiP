@@ -7,15 +7,17 @@
 
 //#define DEBUG
 
+#include <eval.h>
 #include <test.h>
 
+#define NSAMPLES	(10)
 #define WITERS		(10)
 #define NITERS		(10*1000)
 
 #ifdef NTASKS
 #undef NTASKS
 #endif
-#define NTASKS		(10)
+#define NTASKS		(2)
 
 typedef struct exp {
   pip_task_queue_t	queue;
@@ -39,7 +41,6 @@ int main( int argc, char **argv ) {
   int 	ntasks, pipid;
   int	witers = WITERS, niters = NITERS;
   int	status, i, j, extval = 0;
-  double t0, t1;
 
   ntasks = NTASKS - 1;
 
@@ -75,8 +76,12 @@ int main( int argc, char **argv ) {
       }
     }
   } else {
+    double   t, t0[NSAMPLES], t1[NSAMPLES];
+    uint64_t c, c0[NSAMPLES], c1[NSAMPLES];
+    int x;
+
     if( pipid < ntasks ) {
-      for( j=0; j<10; j++ ) {
+      for( j=0; j<NSAMPLES; j++ ) {
 	for( i=0; i<witers; i++ ) {
 	  pip_yield( PIP_YIELD_USER );
 	}
@@ -85,32 +90,44 @@ int main( int argc, char **argv ) {
 	}
       }
     } else {
-      int x;
 
-      for( j=0; j<10; j++ ) {
+      for( j=0; j<NSAMPLES; j++ ) {
 	for( i=0; i<witers; i++ ) {
+	  c0[j] = 0;
+	  t0[j] = 0.0;
 	  pip_gettime();
+	  get_cycle_counter();
 	  pip_yield( PIP_YIELD_USER );
 	}
-	t0 = - pip_gettime();
+	t = pip_gettime();
+	c = get_cycle_counter();
 	for( i=0; i<niters; i++ ) {
 	  pip_yield( PIP_YIELD_USER );
 	}
-	t0 += pip_gettime();
+	c0[j] = get_cycle_counter() - c;
+	t0[j] = pip_gettime() - t;
 
 	for( i=0; i<witers; i++ ) {
+	  c1[j] = 0;
+	  t1[j] = 0.0;
 	  pip_gettime();
+	  get_cycle_counter();
 	  x = foo( NTASKS*100 );
 	}
-	t1 = - pip_gettime();
+	t = pip_gettime();
+	c = get_cycle_counter();
 	for( i=0; i<niters; i++ ) {
 	  x = foo( NTASKS*100 );
 	}
-	t1 += pip_gettime();
-
-	printf( "pip_yield : %g\n", t0 / ((double) niters*NTASKS) );
-	printf( "funcall   : %g  (%d)\n", t1 / ((double) niters*NTASKS*100), x );
+	c1[j] = get_cycle_counter() - c;
+	t1[j] = pip_gettime() - t;
       }
+      double dn = (double) ( niters + NTASKS );
+      for( j=0; j<NSAMPLES; j++ ) {
+	printf( "pip_yield : %g  (%lu)\n", t0[j] / dn,             c0[j] / (niters*NTASKS) );
+	//printf( "funcall   : %g  (%lu)\n", t1[j] / ( dn * 100.0 ), c1[j] / (niters*NTASKS*100) );
+      }
+      printf( " -- dummy (%d)\n", x );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
