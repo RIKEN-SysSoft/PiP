@@ -17,6 +17,13 @@ sem_t 		sem[2];
 pthread_mutex_t mutex[2];
 
 void *foo( void *args ) {
+  {
+    pid_t tid = pip_gettid();
+    cpu_set_t cpuset;
+    CPU_ZERO( &cpuset );
+    CPU_SET( 1, &cpuset );
+    (void) sched_setaffinity( tid, sizeof(cpuset), &cpuset );
+  }
   while( 1 ) {
     sem_wait( &sem[0] );
     sem_post( &sem[1] );
@@ -24,6 +31,13 @@ void *foo( void *args ) {
 }
 
 void *bar( void *args ) {
+  {
+    pid_t tid = pip_gettid();
+    cpu_set_t cpuset;
+    CPU_ZERO( &cpuset );
+    CPU_SET( 2, &cpuset );
+    (void) sched_setaffinity( tid, sizeof(cpuset), &cpuset );
+  }
   while( 1 ) {
     pthread_mutex_lock(   &mutex[0] );
     pthread_mutex_unlock( &mutex[1] );
@@ -47,6 +61,13 @@ int main() {
   pthread_create( &th0, NULL, foo, NULL );
   pthread_create( &th1, NULL, bar, NULL );
 
+  {
+    pid_t tid = pip_gettid();
+    cpu_set_t cpuset;
+    CPU_ZERO( &cpuset );
+    CPU_SET( 0, &cpuset );
+    (void) sched_setaffinity( tid, sizeof(cpuset), &cpuset );
+  }
   for( j=0; j<NSAMPLES; j++ ) {
     for( i=0; i<witers; i++ ) {
       c0[j] = 0;
