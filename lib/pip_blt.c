@@ -809,10 +809,8 @@ int pip_couple( void ) {
     flag  = pip_sched_ood_task( taski, taski );
     flag += pip_change_sched(   taski, taski );
     if( flag ) pip_wakeup( taski );
-    pip_wakeup( taski );
     pip_swap_context( taski, nexti );
     /* has coupled !! */
-    //pip_change_sched( taski, taski );
   } else {
     pip_stack_protect( taski, schedi );
     if( pip_sched_ood_task( taski, taski ) ) pip_wakeup( taski );
