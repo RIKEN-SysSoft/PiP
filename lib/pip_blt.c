@@ -161,7 +161,13 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
       break;
     case PIP_SYNC_YIELD:
       DBGF( "PIPID:%d -- SLEEPING (yield) zzzzzzzz", taski->pipid );
-      while( !taski->flag_wakeup ) pip_system_yield();
+      while( 1 ) {
+	for( i=0; i<pip_root->yield_iters; i++ ) {
+	  pip_pause();
+	  if( taski->flag_wakeup ) goto done;
+	}
+	pip_system_yield();
+      }
       break;
     case 0:
     case PIP_SYNC_AUTO:
