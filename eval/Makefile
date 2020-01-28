@@ -13,7 +13,7 @@ CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/test -I.
 CFLAGS +=  $(PIECFLAG)
 PIPLIBDIR = $(shell (cd $(top_builddir)/lib && pwd))
 
-LDLIBS = -L$(PIPLIBDIR) -L$(libdir) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl -lpapi
+LDLIBS = -L$(PIPLIBDIR) -L$(libdir) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
 
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
 	$(LDLIBS) -pthread $(PIELDFLAG)
