@@ -15,6 +15,10 @@
 #define NSAMPLES	(10)
 #define WITERS		(1000)
 #define NITERS		(10*1000)
+#ifdef AH
+#define WITERS		(10)
+#define NITERS		(100)
+#endif
 
 typedef struct exp {
   pip_barrier_t		barrier;
@@ -25,8 +29,9 @@ typedef struct exp {
 #ifdef NTASKS
 #undef NTASKS
 #endif
-#define NTASKS		(5)
 
+#ifdef AH
+#define NTASKS		(5)
 static int opts[NTASKS] = { PIP_SYNC_BUSYWAIT,
 			    PIP_SYNC_YIELD,
 			    PIP_SYNC_BLOCKING,
@@ -37,6 +42,19 @@ static char *optstr[NTASKS] = { "PIP_SYNC_BUSYWAIT",
 				"PIP_SYNC_YIELD",
 				"PIP_SYNC_BLOCKING",
 				"PIP_SYNC_AUTO",
+				"PIP_SYNC_AUTO" };
+#endif
+
+#define NTASKS		(4)
+
+static int opts[NTASKS] = { PIP_SYNC_AUTO,
+			    PIP_SYNC_BUSYWAIT,
+			    PIP_SYNC_BLOCKING,
+			    PIP_SYNC_AUTO };
+
+static char *optstr[NTASKS] = { "PIP_SYNC_AUTO",
+				"PIP_SYNC_BUSYWAIT",
+				"PIP_SYNC_BLOCKING",
 				"PIP_SYNC_AUTO" };
 
 #define BUFSZ		(4*4096)
@@ -64,19 +82,19 @@ int main( int argc, char **argv ) {
   int 	ntasks, pipid;
   int	witers = WITERS, niters = NITERS;
   int	status, i, extval = 0;
-  
+
   ntasks = NTASKS;
-  
+
   pip_spawn_from_main( &prog, argv[0], argv, NULL );
   expp = &exprt;
-  
+
   CHECK( pip_init(&pipid,&ntasks,(void*)&expp,PIP_MODE_PROCESS), RV,
 	 return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     CHECK( pip_barrier_init(&expp->barrier ,ntasks), RV, return(EXIT_FAIL) );
     CHECK( pip_task_queue_init(&expp->queue ,NULL),  RV, return(EXIT_FAIL) );
     expp->done = 0;
-    
+
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
       CHECK( pip_blt_spawn( &prog, i, 0, &pipid, NULL, NULL, NULL ),
@@ -97,7 +115,7 @@ int main( int argc, char **argv ) {
     if( pipid < ntasks - 1 ) {
       double 	t, t0[NSAMPLES], t1[NSAMPLES], t2[NSAMPLES], t3[NSAMPLES];
       double	tt, t4[NSAMPLES], tt3[NSAMPLES], t5[NSAMPLES], tt5[NSAMPLES];
-      uint64_t	c, c0[NSAMPLES], c1[NSAMPLES], c2[NSAMPLES], c3[NSAMPLES]; 
+      uint64_t	c, c0[NSAMPLES], c1[NSAMPLES], c2[NSAMPLES], c3[NSAMPLES];
       uint64_t	c4[NSAMPLES], c5[NSAMPLES];
 #ifdef MFREQ
       int	freq3[NSAMPLES], freq3e[NSAMPLES], freq5e[NSAMPLES], freq5[NSAMPLES];
@@ -294,21 +312,21 @@ int main( int argc, char **argv ) {
       printf( "SYNC_OPT: %s\n", optstr[pipid] );
       for( j=0; j<NSAMPLES; j++ ) {
 	double nd = (double) niters;
-	printf( "[%d] getpid()     : %g  (%lu)\n", 
+	printf( "[%d] getpid()     : %g  (%lu)\n",
 		j, t0[j] / nd, c0[j] / niters );
-	printf( "[%d] pip:getpid() : %g  (%lu)\n", 
+	printf( "[%d] pip:getpid() : %g  (%lu)\n",
 		j, t1[j] / nd, c1[j] / niters );
-	printf( "[%d] open         : %g  (%lu)\n", 
+	printf( "[%d] open         : %g  (%lu)\n",
 		j, t2[j] / nd, c2[j] / niters );
-	printf( "[%d] pip:open     : %g  %g  (%lu)", 
+	printf( "[%d] pip:open     : %g  %g  (%lu)",
 		j, t3[j] / nd, tt3[j] / nd, c3[j] / niters );
 #ifdef MFREQ
 	printf( "  freq:%d - %d", freq3[j], freq3e[j] );
 #endif
 	printf( "\n" );
-	printf( "[%d] fileio       : %g  (%lu)\n", 
+	printf( "[%d] fileio       : %g  (%lu)\n",
 		j, t4[j] / nd, c4[j] / niters );
-	printf( "[%d] pip:fileio   : %g  %g  (%lu)", 
+	printf( "[%d] pip:fileio   : %g  %g  (%lu)",
 		j, t5[j] / nd, tt5[j] / nd, c5[j] / niters );
 #ifdef MFREQ
 	printf( "  freq:%d - %d\n", freq5[j], freq5e[j] );
@@ -329,7 +347,7 @@ int main( int argc, char **argv ) {
 	CHECK( pip_task_queue_count(&expp->queue,&ql),        RV, return(EXIT_FAIL) );
 	if( ql == ntasks - 1 ) break;
 	pip_yield( PIP_YIELD_DEFAULT );
-      } 
+      }
       for( i=0; i<ntasks-1; i++ ) {
 	CHECK( pip_dequeue_and_resume(&expp->queue,task),     RV, return(EXIT_FAIL) );
 	do {
