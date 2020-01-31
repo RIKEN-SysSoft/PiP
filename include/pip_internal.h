@@ -206,6 +206,7 @@ typedef struct pip_task_annex {
   void				*aux; /* pointer to user data (if provided) */
 
   uint32_t			opts;
+  uint32_t			opts_sync;
   volatile int32_t		status;	   /* exit value */
   volatile int			flag_sigchld; /* termination in thread mode */
 

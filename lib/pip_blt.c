@@ -58,6 +58,8 @@
 #endif
 
 static void pip_wakeup( pip_task_internal_t *taski ) {
+  uint32_t 	opts = taski->annex->opts_sync;
+
   ENTERF( "-- WAKEUP PIPID:%d (PID:%d) vvvvvvvvvv\n"
 	  "  schedq_len:%d  oodq_len:%d  ntakecare:%d"
 	  "  flag_exit:%d",
@@ -68,8 +70,8 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
   if( taski->flag_wakeup ) return;
   pip_memory_barrier();
   taski->flag_wakeup = 1;
-  DBGF( "sync_opts: 0x%x", taski->annex->opts & PIP_SYNC_MASK );
-  switch( taski->annex->opts & PIP_SYNC_MASK ) {
+  DBGF( "sync_opts: 0x%x", opts );
+  switch( opts ) {
   case PIP_SYNC_BUSYWAIT:
   case PIP_SYNC_YIELD:
     DBGF( "PIPID:%d -- WAKEUP (non-blocking)", taski->pipid );
@@ -148,13 +150,15 @@ static void pip_takein_ood_task( pip_task_internal_t *schedi ) {
 }
 
 static void pip_do_sleep( pip_task_internal_t *taski ) {
-  int	i, j;
+  uint32_t 	opts = taski->annex->opts & PIP_SYNC_MASK;
+  int		i, j;
 
   ENTER;
-  DBGF( "sync_opts: 0x%x", taski->annex->opts & PIP_SYNC_MASK );
+  DBGF( "sync_opts: 0x%x", opts );
+  taski->annex->opts_sync = opts;
   pip_deadlock_inc();
   {
-    switch( taski->annex->opts & PIP_SYNC_MASK ) {
+    switch( opts & PIP_SYNC_MASK ) {
     case PIP_SYNC_BUSYWAIT:
       DBGF( "PIPID:%d -- SLEEPING (busywait) zzzzzzzz", taski->pipid );
       while( !taski->flag_wakeup ) pip_pause();
@@ -844,4 +848,15 @@ int pip_decouple( pip_task_t *task ) {
   if( flag ) pip_wakeup( schedi );
   pip_decouple_context( taski, taski );
   RETURN( err );
+}
+
+int pip_set_syncflag( uint32_t flags ) {
+  int err = 0;
+  if( ( flags = pip_check_sync_flag( flags )  ) < 0 ) {
+    err = EINVAL;
+  } else {
+    pip_task->annex->opts = 
+      ( pip_task->annex->opts & ~PIP_SYNC_MASK ) | flags;
+  }
+  return err;
 }

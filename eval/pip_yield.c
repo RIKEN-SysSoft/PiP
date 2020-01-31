@@ -76,9 +76,8 @@ int main( int argc, char **argv ) {
       }
     }
   } else {
-    double   t, t0[NSAMPLES], t1[NSAMPLES];
-    uint64_t c, c0[NSAMPLES], c1[NSAMPLES];
-    int x;
+    double   t, t0[NSAMPLES];
+    uint64_t c, c0[NSAMPLES];
 
     if( pipid < ntasks ) {
       for( j=0; j<NSAMPLES; j++ ) {
@@ -106,28 +105,11 @@ int main( int argc, char **argv ) {
 	}
 	c0[j] = get_cycle_counter() - c;
 	t0[j] = pip_gettime() - t;
-
-	for( i=0; i<witers; i++ ) {
-	  c1[j] = 0;
-	  t1[j] = 0.0;
-	  pip_gettime();
-	  get_cycle_counter();
-	  x = foo( NTASKS*100 );
-	}
-	t = pip_gettime();
-	c = get_cycle_counter();
-	for( i=0; i<niters; i++ ) {
-	  x = foo( NTASKS*100 );
-	}
-	c1[j] = get_cycle_counter() - c;
-	t1[j] = pip_gettime() - t;
       }
       double dn = (double) ( niters + NTASKS );
       for( j=0; j<NSAMPLES; j++ ) {
 	printf( "pip_yield : %g  (%lu)\n", t0[j] / dn,             c0[j] / (niters*NTASKS) );
-	//printf( "funcall   : %g  (%lu)\n", t1[j] / ( dn * 100.0 ), c1[j] / (niters*NTASKS*100) );
       }
-      printf( " -- dummy (%d)\n", x );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
