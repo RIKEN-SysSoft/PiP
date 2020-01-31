@@ -1,4 +1,4 @@
-/*
+ /*
  * $RIKEN_copyright: Riken Center for Computational Sceience,
  * System Software Development Team, 2016, 2017, 2018, 2019$
  * $PIP_VERSION: Version 1.0.0$
@@ -108,7 +108,7 @@ int main( int argc, char **argv ) {
       }
       double dn = (double) ( niters + NTASKS );
       for( j=0; j<NSAMPLES; j++ ) {
-	printf( "pip_yield : %g  (%lu)\n", t0[j] / dn,             c0[j] / (niters*NTASKS) );
+	printf( "pip_yield : %g  (%lu)\n", t0[j] / dn, c0[j] / (niters*NTASKS) );
       }
     }
   }
