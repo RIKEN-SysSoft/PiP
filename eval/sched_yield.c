@@ -47,19 +47,21 @@ int main() {
   int		i, j;
   pthread_t	th[2];
   pthread_attr_t attr[2];
-  cpu_set_t	cpuset;
+  cpu_set_t	cpuset[2];
 
-  pthread_attr_init( &attr[0] );
-  CPU_ZERO( &cpuset );
-  CPU_SET( 1, &cpuset );
-  pthread_attr_setaffinity_np( &attr[0], sizeof(cpuset), &cpuset );
-  CPU_ZERO( &cpuset );
-  CPU_SET( 2, &cpuset );
-  pthread_attr_setaffinity_np( &attr[2], sizeof(cpuset), &cpuset );
+  pthread_attr_init( &(attr[0]) );
+  CPU_ZERO( &(cpuset[0]) );
+  CPU_SET( 1, &(cpuset[0]) );
+  pthread_attr_setaffinity_np( &(attr[0]), sizeof(cpuset), &(cpuset[0]) );
+
+  pthread_attr_init( &(attr[1]) );
+  CPU_ZERO( &(cpuset[1]) );
+  CPU_SET( 2, &(cpuset[1]) );
+  pthread_attr_setaffinity_np( &(attr[1]), sizeof(cpuset), &(cpuset[1]) );
 
   pthread_barrier_init( &barr, NULL, 3 );
-  pthread_create( &th[0], &attr[0], foo, NULL );
-  pthread_create( &th[1], &attr[1], foo, NULL );
+  pthread_create( &(th[0]), &(attr[0]), foo, NULL );
+  pthread_create( &(th[1]), &(attr[1]), foo, NULL );
   pthread_barrier_wait( &barr );
   for( j=0; j<NSAMPLES; j++ ) {  
     for( i=0; i<witers; i++ ) {
@@ -74,8 +76,8 @@ int main() {
   pthread_join( th[1], NULL );
 
   pthread_barrier_init( &barr, NULL, 3 );
-  pthread_create( &th[0], &attr[0], foo, NULL );
-  pthread_create( &th[1], &attr[0], foo, NULL );
+  pthread_create( &(th[0]), &(attr[0]), foo, NULL );
+  pthread_create( &(th[1]), &(attr[0]), foo, NULL );
   pthread_barrier_wait( &barr );
   for( j=0; j<NSAMPLES; j++ ) {  
     for( i=0; i<witers; i++ ) {
