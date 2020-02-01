@@ -11,8 +11,8 @@
 #include <test.h>
 
 #define NSAMPLES	(10)
-#define WITERS		(10)
-#define NITERS		(10*1000)
+#define WITERS		(1000)
+#define NITERS		(1000*1000)
 
 #ifdef NTASKS
 #undef NTASKS
@@ -22,18 +22,6 @@
 typedef struct exp {
   pip_task_queue_t	queue;
 } exp_t;
-
-int bar(int);
-
-int foo( int x ) {
-  if( x > 0 ) x = bar( x - 1 );
-  return x;
-}
-
-int bar( int x ) {
-  if( x > 0 ) x = foo( x - 1 );
-  return x;
-}
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;

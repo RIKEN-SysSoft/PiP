@@ -5,7 +5,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 SRCS     = ctxsw.c lock.c pip_couple.c pip_yield.c 
-PROGRAMS = ctxsw lock pip_couple pip_yield aio-bare
+PROGRAMS = ctxsw lock pip_couple pip_yield \
+	aio-bare sched_yield
 
 include $(top_srcdir)/build/rule.mk
 
@@ -38,5 +39,8 @@ PROGRAMS_TO_INSTALL = # nothing
 
 aio-bare : aio-bare.c Makefile
 	$(CC) -g -O2 -lrt $< -o $@
+
+sched_yield : sched_yield.c Makefile
+	$(CC) -g -O2 -pthread $< -o $@
 
 all : $(PROGRAMS)
