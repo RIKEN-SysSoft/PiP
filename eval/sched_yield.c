@@ -107,8 +107,12 @@ int main() {
   pthread_join( th[1], NULL );
 
   double nd = (double) niters;
+  double min0 = ts0[0], min1 = ts1[0];
   for( j=0; j<NSAMPLES; j++ ) {  
     printf( "[%d] pthread_sched : %g  %g\n", j, ts0[j] / nd, ts1[j] / nd );
+    min0 = ( min0 > ts0[j] ) ? ts0[j] : min0;
+    min1 = ( min1 > ts0[j] ) ? ts0[j] : min1;
   }
+  printf( "[%d] MIN : %g  %g\n", j, min0 / nd, min1 / nd );
   return 0;
 }
