@@ -4,8 +4,8 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS     = ctxsw.c lock.c pip_couple.c pip_yield.c
-PROGRAMS = ctxsw lock pip_couple pip_yield
+SRCS     = ctxsw.c lock.c pip_couple.c pip_yield.c 
+PROGRAMS = ctxsw lock pip_couple pip_yield aio-bare
 
 include $(top_srcdir)/build/rule.mk
 
@@ -16,7 +16,7 @@ PIPLIBDIR = $(shell (cd $(top_builddir)/lib && pwd))
 LDLIBS = -L$(PIPLIBDIR) -L$(libdir) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
 
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
-	$(LDLIBS) -pthread $(PIELDFLAG)
+	$(LDLIBS) -pthread $(PIELDFLAG) -lrt
 
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h  \
 	$(PIPINCDIR)/pip_internal.h $(PIPINCDIR)/pip_machdep.h \
@@ -35,5 +35,8 @@ PROGRAMS_TO_INSTALL = # nothing
 
 %: %.f $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@
+
+aio-bare : aio-bare.c Makefile
+	$(CC) -g -O2 -lrt $< -o $@
 
 all : $(PROGRAMS)
