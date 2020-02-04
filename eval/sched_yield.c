@@ -70,6 +70,7 @@ void *foo2( void *dummy ) {
 
 int main() {
   double 	t, ts0[NSAMPLES], ts1[NSAMPLES];
+  double	nd = (double) ( niters * 2 );
   int		i, j;
   pthread_t	th[2];
   pthread_attr_t attr;
@@ -78,14 +79,14 @@ int main() {
   pthread_create( &(th[0]), NULL, foo1, NULL );
   pthread_create( &(th[1]), NULL, foo1, NULL );
   pthread_barrier_wait( &barr );
-  for( j=0; j<NSAMPLES; j++ ) {  
+  for( j=0; j<NSAMPLES; j++ ) {
     for( i=0; i<witers; i++ ) {
-      pip_gettime();
+      t = pip_gettime();
     }
     pthread_barrier_wait( &barr );
     t = pip_gettime();
     pthread_barrier_wait( &barr );
-    ts0[j] = pip_gettime() - t;
+    ts0[j] = ( pip_gettime() - t ) /nd;
   }
   pthread_join( th[0], NULL );
   pthread_join( th[1], NULL );
@@ -94,25 +95,24 @@ int main() {
   pthread_create( &(th[0]), NULL, foo1, NULL );
   pthread_create( &(th[1]), NULL, foo2, NULL );
   pthread_barrier_wait( &barr );
-  for( j=0; j<NSAMPLES; j++ ) {  
+  for( j=0; j<NSAMPLES; j++ ) {
     for( i=0; i<witers; i++ ) {
-      pip_gettime();
+      t = pip_gettime();
     }
     pthread_barrier_wait( &barr );
     t = pip_gettime();
     pthread_barrier_wait( &barr );
-    ts1[j] = pip_gettime() - t;
+    ts1[j] = ( pip_gettime() - t ) /nd;
   }
   pthread_join( th[0], NULL );
   pthread_join( th[1], NULL );
 
-  double nd = (double) niters;
   double min0 = ts0[0], min1 = ts1[0];
-  for( j=0; j<NSAMPLES; j++ ) {  
-    printf( "[%d] pthread_sched : %g  %g\n", j, ts0[j] / nd, ts1[j] / nd );
+  for( j=0; j<NSAMPLES; j++ ) {
+    printf( "[%d] pthread_sched : %g  %g\n", j, ts0[j], ts1[j] );
     min0 = ( min0 > ts0[j] ) ? ts0[j] : min0;
     min1 = ( min1 > ts0[j] ) ? ts0[j] : min1;
   }
-  printf( "[%d] MIN : %g  %g\n", j, min0 / nd, min1 / nd );
+  printf( "[%d] MIN : %g  %g\n", j, min0, min1 );
   return 0;
 }
