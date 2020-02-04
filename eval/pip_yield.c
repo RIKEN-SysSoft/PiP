@@ -11,8 +11,8 @@
 #include <test.h>
 
 #define NSAMPLES	(10)
-#define WITERS		(1000)
-#define NITERS		(1000*1000)
+#define WITERS		(1000*1000)
+#define NITERS		(10*1000)
 
 #ifdef NTASKS
 #undef NTASKS
@@ -65,9 +65,10 @@ int main( int argc, char **argv ) {
     }
   } else {
     double   t, t0[NSAMPLES];
+    double   dn = (double) ( niters * NTASKS );
     uint64_t c, c0[NSAMPLES];
 
-    if( pipid < ntasks ) {
+    if( pipid == 0 ) {		/* passive */
       for( j=0; j<NSAMPLES; j++ ) {
 	for( i=0; i<witers; i++ ) {
 	  pip_yield( PIP_YIELD_USER );
@@ -77,8 +78,7 @@ int main( int argc, char **argv ) {
 	}
       }
     } else {
-
-      for( j=0; j<NSAMPLES; j++ ) {
+      for( j=0; j<NSAMPLES; j++ ) { /* active */
 	for( i=0; i<witers; i++ ) {
 	  c0[j] = 0;
 	  t0[j] = 0.0;
@@ -91,20 +91,19 @@ int main( int argc, char **argv ) {
 	for( i=0; i<niters; i++ ) {
 	  pip_yield( PIP_YIELD_USER );
 	}
-	c0[j] = get_cycle_counter() - c;
-	t0[j] = pip_gettime() - t;
+	c0[j] = ( get_cycle_counter() - c ) / ( niters * NTASKS );
+	t0[j] = ( pip_gettime() - t ) / dn;
       }
-      double dn = (double) ( niters + NTASKS );
       double min = t0[0];
       int    idx = 0;
       for( j=0; j<NSAMPLES; j++ ) {
-	printf( "[%d] pip_yield : %g  (%lu)\n", j, t0[j] / dn, c0[j] / (niters*NTASKS) );
+	printf( "[%d] pip_yield : %g  (%lu)\n", j, t0[j], c0[j] );
 	if( min > t0[j] ) {
 	  min = t0[j];
 	  idx = j;
 	}
       }
-      printf( "[[%d]] pip_yield : %.3g  (%lu)\n", idx, t0[idx] / dn, c0[idx] / (niters*NTASKS) );
+      printf( "[[%d]] pip_yield : %.3g  (%lu)\n", idx, t0[idx], c0[idx] );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
