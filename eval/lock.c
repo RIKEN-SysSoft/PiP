@@ -10,8 +10,8 @@
 #include <semaphore.h>
 
 #define NSAMPLES	(10)
-#define WITERS		(100)
-#define NITERS		(10*1000)
+#define WITERS		(1000)
+#define NITERS		(1000*1000)
 
 sem_t 		sem[2];
 pthread_mutex_t mutex[2];
@@ -110,9 +110,9 @@ int main() {
   int idx1 = 0;
   for( j=0; j<NSAMPLES; j++ ) {
     printf( "[%d] semaphore : %g  (%lu)\n",
-	    j, t0[j] / dn,  c0[j] / niters );
+	    j, t0[j] / dn / 2.0,  c0[j] / niters / 2 );
     printf( "[%d] mutex     : %g  (%lu)\n",
-	    j, t1[j] / dn, c1[j] / niters );
+	    j, t1[j] / dn / 2.0 , c1[j] / niters / 2 );
     if( min0 > t0[j] ) {
       min0 = t0[j];
       idx0 = j;
