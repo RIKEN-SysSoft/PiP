@@ -40,7 +40,10 @@
 #define _GNU_SOURCE
 #endif
 
+#ifndef __USE_GNU
 #define __USE_GNU
+#endif
+
 #include <dlfcn.h>
 #include <stdbool.h>
 

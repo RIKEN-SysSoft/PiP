@@ -21,7 +21,7 @@ void *foo( void *args ) {
     pid_t tid = pip_gettid();
     cpu_set_t cpuset;
     CPU_ZERO( &cpuset );
-    CPU_SET( 1, &cpuset );
+    CPU_SET( 0, &cpuset );
     (void) sched_setaffinity( tid, sizeof(cpuset), &cpuset );
   }
   while( 1 ) {
@@ -35,7 +35,7 @@ void *bar( void *args ) {
     pid_t tid = pip_gettid();
     cpu_set_t cpuset;
     CPU_ZERO( &cpuset );
-    CPU_SET( 2, &cpuset );
+    CPU_SET( 0, &cpuset );
     (void) sched_setaffinity( tid, sizeof(cpuset), &cpuset );
   }
   while( 1 ) {
@@ -103,9 +103,28 @@ int main() {
     c1[j] = get_cycle_counter() - c;
     t1[j] = pip_gettime() - t;
   }
+  double dn = (double) niters;
+  double min0 = t0[0];
+  double min1 = t1[0];
+  int idx0 = 0;
+  int idx1 = 0;
   for( j=0; j<NSAMPLES; j++ ) {
-    printf( "sem   : %g  (%lu)\n", t0[j] / ((double) niters), c0[j] / niters );
-    printf( "mutex : %g  (%lu)\n", t1[j] / ((double) niters), c1[j] / niters );
+    printf( "[%d] semaphore : %g  (%lu)\n",
+	    j, t0[j] / dn,  c0[j] / niters );
+    printf( "[%d] mutex     : %g  (%lu)\n",
+	    j, t1[j] / dn, c1[j] / niters );
+    if( min0 > t0[j] ) {
+      min0 = t0[j];
+      idx0 = j;
+    }
+    if( min1 > t1[j] ) {
+      min1 = t1[j];
+      idx1 = j;
+    }
   }
+  printf( "[[%d]] semaphore : %.3g  (%lu)\n",
+	  idx0, t0[idx0] / dn / 2.0, c0[idx0] / niters / 2 );
+  printf( "[[%d]] mutex     : %.3g  (%lu)\n",
+	  idx1, t1[idx1] / dn / 2.0, c1[idx1] / niters / 2 );
   return 0;
 }

@@ -95,9 +95,16 @@ int main( int argc, char **argv ) {
 	t0[j] = pip_gettime() - t;
       }
       double dn = (double) ( niters + NTASKS );
+      double min = t0[0];
+      int    idx = 0;
       for( j=0; j<NSAMPLES; j++ ) {
-	printf( "pip_yield : %g  (%lu)\n", t0[j] / dn, c0[j] / (niters*NTASKS) );
+	printf( "[%d] pip_yield : %g  (%lu)\n", j, t0[j] / dn, c0[j] / (niters*NTASKS) );
+	if( min > t0[j] ) {
+	  min = t0[j];
+	  idx = j;
+	}
       }
+      printf( "[[%d]] pip_yield : %.3g  (%lu)\n", idx, t0[idx] / dn, c0[idx] / (niters*NTASKS) );
     }
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );

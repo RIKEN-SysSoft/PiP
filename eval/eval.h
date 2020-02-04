@@ -1,8 +1,15 @@
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <sys/syscall.h>
+#include <sys/types.h>
 #include <time.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sched.h>
 
 #if defined(__x86_64__)
 #define RDTSC(X)\
@@ -34,3 +41,15 @@ static inline uint64_t get_cycle_counter( void ) {
     + (uint64_t) ts.tv_nsec;
 }
 #endif
+
+static inline pid_t gettid( void ) {
+  return (pid_t) syscall( (long int) SYS_gettid );
+}
+
+static inline void bind_core( int core ) {
+  pid_t tid = gettid();
+  cpu_set_t cpuset;
+  CPU_ZERO( &cpuset );
+  CPU_SET( core, &cpuset );
+  (void) sched_setaffinity( tid, sizeof(cpuset), &cpuset );
+}

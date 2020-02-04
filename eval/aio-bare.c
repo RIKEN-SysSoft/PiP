@@ -16,23 +16,24 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define BUFSZ	(4*4096)
+#define BUFSZ	(128*1024)
 char buffer[BUFSZ];
 
 #define NSAMPLES	(10)
-#define WITERS		(1000)
-#define NITERS		(10*1000)
+#define WITERS		(100)
+#define NITERS		(1000)
 
 struct aiocb cb;
 
-char *fname = "/tmp/tmp.del";
+char *fname = "/tmpfs/tmp.del";
 
-void aio( void ) {
+void aio( int sz ) {
   int fd;
 
+  memset( buffer, 123, sz );
   errno = 0;
   memset( &cb, 0, sizeof(cb) );
-  fd = creat( fname, S_IRWXU );
+  fd = open( fname, O_CREAT|O_TRUNC|O_RDWR, S_IRWXU );
   if( errno ) {
     printf( "%d: Err:%d\n", __LINE__, errno );
     exit( 1 );
@@ -40,7 +41,7 @@ void aio( void ) {
   cb.aio_fildes  = fd;
   cb.aio_offset  = 0;
   cb.aio_buf     = buffer;
-  cb.aio_nbytes  = BUFSZ;
+  cb.aio_nbytes  = sz;
   cb.aio_sigevent.sigev_notify = SIGEV_NONE;
   aio_write( &cb );
   if( errno ) {
@@ -61,25 +62,39 @@ double pip_gettime( void ) {
 }
 
 int main() {
-  double 	t, ts[NSAMPLES];
   int		niters = NITERS, witers=WITERS;
-  int		i, j;
-  
-  unlink(fname);
-  for( j=0; j<NSAMPLES; j++ ) {  
-    for( i=0; i<witers; i++ ) {
-      ts[j] = 0.0;
-      pip_gettime();
-      aio();
-    }
-    t = pip_gettime();
-    for( i=0; i<niters; i++ ) aio();
-    ts[j] = pip_gettime() - t;
-  }
+  int		i, j, k;
+  double 	t, ts[NSAMPLES];
+  double	nd = (double) niters;
 
-  double nd = (double) niters;
-  for( j=0; j<NSAMPLES; j++ ) {  
-    printf( "[%d] aio_write : %g\n", j, ts[j] / nd );
+  for( k=4096; k<BUFSZ; k*=2 ) {
+    for( j=0; j<NSAMPLES; j++ ) {
+      for( i=0; i<witers; i++ ) {
+	ts[j] = 0.0;
+	t = pip_gettime();
+	aio( k );
+      }
+      for( i=0; i<niters; i++ ) {
+	t = pip_gettime();
+	aio( k );
+	ts[j] += pip_gettime() - t;
+      }
+      ts[j] = pip_gettime() - t;
+    }
+    ts[j] /= nd;
+
+    double nd = (double) niters;
+    double min = ts[0];
+    int    idx = 0;
+    for( j=0; j<NSAMPLES; j++ ) {
+    printf( "[%d] aio_write : %g\n", j, ts[j] );
+    if( min > ts[j] ) {
+      min = ts[j];
+      idx = j;
+    }
+    }
+    printf( "[[%d]] %d aio_write : %.3g\n", idx, k, ts[idx] );
+    fflush( NULL );
   }
   return 0;
 }
