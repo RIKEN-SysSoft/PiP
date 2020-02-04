@@ -4,12 +4,10 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS     = ctxsw.c lock.c pip_yield.c getpid.c open-close.c \
-	open-write-close-linux.c open-write-close-pip.c open-write-close-nocpuple.c \
-	 pipe-linux.c pipe-pip.c pipe-pip-nd.c
-PROGRAMS = ctxsw lock pip_yield getpid open-close \
+SRCS     = ctxsw.c lock.c pip_yield.c getpid.c pip_getpid.c \
+	open-write-close-linux.c open-write-close-pip.c open-write-close-nocpuple.c
+PROGRAMS = ctxsw lock pip_yield getpid pip_getpid \
 	open-write-close-linux open-write-close-pip open-write-close-nocouple \
-	pipe-linux pipe-pip pipe-pip-nd \
 	aio-bare sched_yield
 
 include $(top_srcdir)/build/rule.mk
