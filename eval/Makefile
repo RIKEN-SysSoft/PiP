@@ -8,7 +8,7 @@ SRCS     = ctxsw.c lock.c pip_yield.c getpid.c pip_getpid.c \
 	open-write-close-linux.c open-write-close-pip.c open-write-close-nocpuple.c
 PROGRAMS = ctxsw lock pip_yield getpid pip_getpid \
 	open-write-close-linux open-write-close-pip open-write-close-nocouple \
-	aio-bare sched_yield
+	linux-bare aio-bare sched_yield
 
 include $(top_srcdir)/build/rule.mk
 
@@ -40,6 +40,9 @@ PROGRAMS_TO_INSTALL = # nothing
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@
 
 aio-bare : aio-bare.c open-write-close.h Makefile
+	$(CC) $(CPPFLAGS) $(CFLAGS) -lrt $< -o $@
+
+linux-bare : linux-bare.c open-write-close.h Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) -lrt $< -o $@
 
 sched_yield : sched_yield.c Makefile
