@@ -12,9 +12,7 @@
 #include <eval.h>
 #include <test.h>
 
-#define NSAMPLES	(10)
-#define WITERS		(100)
-#define NITERS		(1000)
+#include <open-write-close.h>
 
 typedef struct exp {
   pip_barrier_t		barrier;

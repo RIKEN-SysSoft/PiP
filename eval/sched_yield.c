@@ -45,6 +45,7 @@ void *foo1( void *dummy ) {
     }
     pthread_barrier_wait( &barr );
   }
+  return NULL;
 }
 
 void *foo2( void *dummy ) {
@@ -66,6 +67,7 @@ void *foo2( void *dummy ) {
     }
     pthread_barrier_wait( &barr );
   }
+  return NULL;
 }
 
 int main() {
@@ -73,7 +75,6 @@ int main() {
   double	nd = (double) ( niters * 2 );
   int		i, j;
   pthread_t	th[2];
-  pthread_attr_t attr;
 
   pthread_barrier_init( &barr, NULL, 3 );
   pthread_create( &(th[0]), NULL, foo1, NULL );

@@ -24,7 +24,7 @@ LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h  \
 	$(PIPINCDIR)/pip_internal.h $(PIPINCDIR)/pip_machdep.h \
 	$(PIPINCDIR)/pip_debug.h $(PIPINCDIR)/pip_util.h \
-	../test.h
+	../test.h ./open-write-close.h
 
 DEPLIBS += $(PIPLIBDIR)/libpip.so
 
@@ -39,10 +39,10 @@ PROGRAMS_TO_INSTALL = # nothing
 %: %.f $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@
 
-aio-bare : aio-bare.c Makefile
-	$(CC) -g -O2 -lrt $< -o $@
+aio-bare : aio-bare.c open-write-close.h Makefile
+	$(CC) $(CPPFLAGS) $(CFLAGS) -lrt $< -o $@
 
 sched_yield : sched_yield.c Makefile
-	$(CC) -g -O2 -pthread $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 all : $(PROGRAMS)

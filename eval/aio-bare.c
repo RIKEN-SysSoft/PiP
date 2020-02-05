@@ -19,9 +19,7 @@
 #define BUFSZ	(128*1024)
 char buffer[BUFSZ];
 
-#define NSAMPLES	(10)
-#define WITERS		(100)
-#define NITERS		(1000)
+#include <open-write-close.h>
 
 struct aiocb cb;
 
@@ -52,7 +50,6 @@ void aio( int sz ) {
     if( aio_return( &cb ) > 0 ) break;
   }
   close(fd);
-  unlink(fname);
 }
 
 double pip_gettime( void ) {
@@ -79,19 +76,16 @@ int main() {
 	aio( k );
 	ts[j] += pip_gettime() - t;
       }
-      ts[j] = pip_gettime() - t;
+      ts[j] /= nd;
     }
-    ts[j] /= nd;
-
-    double nd = (double) niters;
     double min = ts[0];
     int    idx = 0;
     for( j=0; j<NSAMPLES; j++ ) {
-    printf( "[%d] aio_write : %g\n", j, ts[j] );
-    if( min > ts[j] ) {
-      min = ts[j];
-      idx = j;
-    }
+      printf( "[%d] aio_write : %g\n", j, ts[j] );
+      if( min > ts[j] ) {
+	min = ts[j];
+	idx = j;
+      }
     }
     printf( "[[%d]] %d aio_write : %.3g\n", idx, k, ts[idx] );
     fflush( NULL );
