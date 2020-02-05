@@ -30,20 +30,20 @@ DEPLIBS += $(PIPLIBDIR)/libpip.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+%: %.c $(DEPINCS) $(DEPLIBS) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-%: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+%: %.cxx $(DEPINCS) $(DEPLIBS) Makefile
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)$< -o $@
 
-%: %.f $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+%: %.f $(DEPINCS) $(DEPLIBS) Makefile
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@
 
 aio-bare : aio-bare.c open-write-close.h Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) -lrt $< -o $@
 
 linux-bare : linux-bare.c open-write-close.h Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -lrt $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@
 
 sched_yield : sched_yield.c Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@

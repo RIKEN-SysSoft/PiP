@@ -36,7 +36,6 @@ static char *optstr[] = { "PIP_SYNC_BUSYWAIT",
 
 char *fname = "/tmpfs/tmp.del";
 
-#define BUFSZ	(128*1024)
 char buffer[BUFSZ];
 
 int open_write_close( size_t sz ) {
@@ -103,7 +102,7 @@ int main( int argc, char **argv ) {
       CHECK( pip_suspend_and_enqueue(&expp->queue,NULL,NULL), RV, return(EXIT_FAIL) );
       CHECK( pip_set_syncflag( opts[pipid] ),                 RV, return(EXIT_FAIL) );
 
-      for( sz=4096; sz<BUFSZ; sz*=2 ) {
+      for( sz=IOSZ0; sz<BUFSZ; sz*=2 ) {
 	printf( "SYNC_OPT: %s  SZ:%lu\n", optstr[pipid], sz );
 	fflush( NULL );
 

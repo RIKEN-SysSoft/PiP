@@ -28,7 +28,6 @@ typedef struct exp {
 
 char *fname = "/tmpfs/tmp.del";
 
-#define BUFSZ	(128*1024)
 char buffer[BUFSZ];
 
 int open_write_close( size_t sz ) {
@@ -55,7 +54,7 @@ int main( int argc, char **argv ) {
   int 	idx0;
   size_t	sz;
 
-  for( sz=4096; sz<BUFSZ; sz*=2 ) {
+  for( sz=IOSZ0; sz<BUFSZ; sz*=2 ) {
     printf( "Linux  SZ:%lu\n", sz );
     fflush( NULL );
 

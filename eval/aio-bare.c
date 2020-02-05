@@ -16,16 +16,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define BUFSZ	(128*1024)
-char buffer[BUFSZ];
-
 #include <open-write-close.h>
+
+char buffer[BUFSZ];
 
 struct aiocb cb;
 
 char *fname = "/tmpfs/tmp.del";
 
-void aio( int sz ) {
+static void aio_busywait( int sz ) {
   int fd;
 
   memset( buffer, 123, sz );
@@ -52,6 +51,33 @@ void aio( int sz ) {
   close(fd);
 }
 
+static void aio_block( int sz ) {
+  struct aiocb *cba[1];
+  int fd;
+
+  memset( buffer, 123, sz );
+  errno = 0;
+  memset( &cb, 0, sizeof(cb) );
+  fd = open( fname, O_CREAT|O_TRUNC|O_RDWR, S_IRWXU );
+  if( errno ) {
+    printf( "%d: Err:%d\n", __LINE__, errno );
+    exit( 1 );
+  }
+  cb.aio_fildes  = fd;
+  cb.aio_offset  = 0;
+  cb.aio_buf     = buffer;
+  cb.aio_nbytes  = sz;
+  cb.aio_sigevent.sigev_notify = SIGEV_NONE;
+  aio_write( &cb );
+  cba[0] = &cb;
+  aio_suspend( (const struct aiocb * const*)cba, 1, NULL );
+  if( errno ) {
+    printf( "%d: Err:%d\n", __LINE__, errno );
+    exit( 1 );
+  }
+  close(fd);
+}
+
 double pip_gettime( void ) {
   struct timeval tv;
   gettimeofday( &tv, NULL );
@@ -61,33 +87,52 @@ double pip_gettime( void ) {
 int main() {
   int		niters = NITERS, witers=WITERS;
   int		i, j, k;
-  double 	t, ts[NSAMPLES];
+  double 	t, ts0[NSAMPLES], ts1[NSAMPLES];
   double	nd = (double) niters;
 
-  for( k=4096; k<BUFSZ; k*=2 ) {
+  for( k=IOSZ0; k<BUFSZ; k*=2 ) {
     for( j=0; j<NSAMPLES; j++ ) {
       for( i=0; i<witers; i++ ) {
-	ts[j] = 0.0;
+	ts0[j] = 0.0;
 	t = pip_gettime();
-	aio( k );
+	aio_busywait( k );
       }
       for( i=0; i<niters; i++ ) {
 	t = pip_gettime();
-	aio( k );
-	ts[j] += pip_gettime() - t;
+	aio_busywait( k );
+	ts0[j] += pip_gettime() - t;
       }
-      ts[j] /= nd;
+      ts0[j] /= nd;
     }
-    double min = ts[0];
-    int    idx = 0;
+
     for( j=0; j<NSAMPLES; j++ ) {
-      printf( "[%d] aio_write : %g\n", j, ts[j] );
-      if( min > ts[j] ) {
-	min = ts[j];
-	idx = j;
+      for( i=0; i<witers; i++ ) {
+	ts1[j] = 0.0;
+	t = pip_gettime();
+	aio_block( k );
+      }
+      for( i=0; i<niters; i++ ) {
+	t = pip_gettime();
+	aio_block( k );
+	ts1[j] += pip_gettime() - t;
+      }
+      ts1[j] /= nd;
+    }
+    double min0 = ts0[0], min1 = ts1[0];
+    int    idx0 = 0, idx1 = 0;
+    for( j=0; j<NSAMPLES; j++ ) {
+      printf( "[%d] aio-return : %g  %g\n", j, ts0[j], ts1[j] );
+      if( min0 > ts0[j] ) {
+	min0 = ts0[j];
+	idx0 = j;
+      }
+      if( min1 > ts1[j] ) {
+	min1 = ts1[j];
+	idx1 = j;
       }
     }
-    printf( "[[%d]] %d aio_write : %.3g\n", idx, k, ts[idx] );
+    printf( "[[%d]] %d aio-return  : %.3g\n", idx0, k, ts0[idx0] );
+    printf( "[[%d]] %d aio-suspend : %.3g\n", idx1, k, ts1[idx1] );
     fflush( NULL );
   }
   return 0;

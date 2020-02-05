@@ -16,10 +16,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define BUFSZ	(128*1024)
-char buffer[BUFSZ];
-
 #include <open-write-close.h>
+
+char buffer[BUFSZ];
 
 struct aiocb cb;
 
@@ -56,7 +55,7 @@ int main() {
   double 	t, ts[NSAMPLES];
   double	nd = (double) niters;
 
-  for( k=4096; k<BUFSZ; k*=2 ) {
+  for( k=IOSZ0; k<BUFSZ; k*=2 ) {
     for( j=0; j<NSAMPLES; j++ ) {
       for( i=0; i<witers; i++ ) {
 	ts[j] = 0.0;
