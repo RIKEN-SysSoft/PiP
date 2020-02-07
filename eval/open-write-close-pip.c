@@ -14,12 +14,6 @@
 
 #include <open-write-close.h>
 
-typedef struct exp {
-  pip_barrier_t		barrier;
-  pip_task_queue_t	queue;
-  volatile int		done;
-} exp_t;
-
 #ifdef NTASKS
 #undef NTASKS
 #endif
@@ -33,6 +27,13 @@ static char *optstr[] = { "PIP_SYNC_BUSYWAIT",
 			  "" };
 
 #define NTASKS		(sizeof(opts)/sizeof(int))
+
+typedef struct exp {
+  pip_barrier_t		barrier0;
+  pip_barrier_t		barrier1;
+  pip_task_queue_t	queue;
+  volatile double 	tp0[NSAMPLES], to0[NSAMPLES], tc0[NSAMPLES];
+} exp_t;
 
 char *fname = "/tmpfs/tmp.del";
 
@@ -64,16 +65,16 @@ int main( int argc, char **argv ) {
 
   ntasks = NTASKS;
 
-  pip_spawn_from_main( &prog, argv[0], argv, NULL );
   expp = &exprt;
 
   CHECK( pip_init(&pipid,&ntasks,(void*)&expp,PIP_MODE_PROCESS), RV,
 	 return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( pip_barrier_init(&expp->barrier ,ntasks), RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_init(&expp->barrier0,ntasks), RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_init(&expp->barrier1,2     ), RV, return(EXIT_FAIL) );
     CHECK( pip_task_queue_init(&expp->queue ,NULL),  RV, return(EXIT_FAIL) );
-    expp->done = 0;
 
+    pip_spawn_from_main( &prog, argv[0], argv, NULL );
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
       CHECK( pip_blt_spawn( &prog, i, 0, &pipid, NULL, NULL, NULL ),
@@ -91,12 +92,11 @@ int main( int argc, char **argv ) {
       }
     }
   } else {
-    double 	t, t0[NSAMPLES];
-    double	min0 = t0[0];
+    double	min0;
     int 	idx0 = 0;
     size_t	sz;
 
-    CHECK( pip_barrier_wait(&expp->barrier),                RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_wait(&expp->barrier0),                RV, return(EXIT_FAIL) );
 
     if( pipid < ntasks - 1 ) {
       CHECK( pip_suspend_and_enqueue(&expp->queue,NULL,NULL), RV, return(EXIT_FAIL) );
@@ -108,41 +108,57 @@ int main( int argc, char **argv ) {
 
 	for( j=0; j<NSAMPLES; j++ ) {
 	  for( i=0; i<witers; i++ ) {
-	    t0[j] = 0.0;
-	    t = pip_gettime();
+	    expp->tp0[j] = 0.0;
+	    pip_gettime();
 	    memset( buffer, 123, sz );
-	    CHECK( pip_couple(),                   RV,   return(EXIT_FAIL) );
+	    CHECK( pip_couple(),       RV, return(EXIT_FAIL) );
 	    open_write_close( sz );
-	    CHECK( pip_decouple(NULL),             RV,   return(EXIT_FAIL) );
+	    CHECK( pip_decouple(NULL), RV, return(EXIT_FAIL) );
 	  }
+	  CHECK( pip_barrier_wait(&expp->barrier1),                RV, return(EXIT_FAIL) );
 	  for( i=0; i<niters; i++ ) {
-	    t = pip_gettime();
+	    expp->tp0[j] -= pip_gettime();
 	    memset( buffer, 123, sz );
-	    CHECK( pip_couple(),                   RV,   return(EXIT_FAIL) );
+	    CHECK( pip_couple(),       RV, return(EXIT_FAIL) );
 	    open_write_close( sz );
-	    CHECK( pip_decouple(NULL),             RV,   return(EXIT_FAIL) );
-	    t0[j] += pip_gettime() - t;
+	    CHECK( pip_decouple(NULL), RV, return(EXIT_FAIL) );
+	    expp->tp0[j] += pip_gettime();
 	  }
-	  t0[j] /= nd;
+	  expp->tp0[j] /= nd;
+	  CHECK( pip_barrier_wait(&expp->barrier1),                RV, return(EXIT_FAIL) );
+	  CHECK( pip_barrier_wait(&expp->barrier1),                RV, return(EXIT_FAIL) );
+	  for( i=0; i<niters; i++ ) {
+	    memset( buffer, 123, sz );
+	    double t = pip_gettime();
+	    expp->to0[j] -= t;
+	    CHECK( pip_couple(),       RV, return(EXIT_FAIL) );
+	    open_write_close( sz );
+	    CHECK( pip_decouple(NULL), RV, return(EXIT_FAIL) );
+	    expp->to0[j] += pip_gettime();
+	  }
+	  expp->to0[j] /= nd;
+	  while( pip_yield( PIP_YIELD_DEFAULT ) == 0 );
 	}
-	min0 = t0[0];
+	min0 = expp->tp0[0];
 	idx0 = 0;
 	for( j=0; j<NSAMPLES; j++ ) {
-	  printf( "[%d] pip:open-close : %g\n", j, t0[j] );
-	  if( min0 > t0[j] ) {
-	    min0 = t0[j];
+	  printf( "[%d] pip:open-close : %g\n", j, expp->tp0[j] );
+	  if( min0 > expp->tp0[j] ) {
+	    min0 = expp->tp0[j];
 	    idx0 = j;
 	  }
 	}
-	printf( "[[%d]] %lu pip:open-close : %.3g\n", idx0, sz, t0[idx0] );
+	double ov;
+	printf( "tp:%g  tc:%g  to:%g\n", expp->tp0[idx0], expp->tc0[idx0], expp->to0[idx0] );
+	ov = 100. * max( 0., min( 1., ( expp->tp0[idx0] + expp->tc0[idx0] - expp->to0[idx0] ) /
+				  min( expp->tp0[idx0], expp->tc0[idx0] ) ) );
+	printf( "[[%d]] %lu pip:open-close : %.3g  %.3g\n", idx0, sz, expp->tp0[idx0], ov );
 	fflush( NULL );
       }
-      expp->done ++;
-
 
     } else {
       pip_task_t *task;
-      int ql;
+      int ql, k;
 
       CHECK( pip_get_task_from_pipid(PIP_PIPID_MYSELF,&task), RV, return(EXIT_FAIL) );
       while( 1 ) {
@@ -150,14 +166,39 @@ int main( int argc, char **argv ) {
 	if( ql == ntasks - 1 ) break;
 	pip_yield( PIP_YIELD_DEFAULT );
       }
-      for( i=0; i<ntasks-1; i++ ) {
-	CHECK( pip_dequeue_and_resume(&expp->queue,task),     RV, return(EXIT_FAIL) );
-	do {
-	  pip_yield( PIP_YIELD_DEFAULT );
-	} while( expp->done == i );
+      for( k=0; k<(ntasks-1); k++ ) {
+	printf( ">> k:%d / %d\n", k, ntasks );
+ 	CHECK( pip_dequeue_and_resume(&expp->queue,task),     RV, return(EXIT_FAIL) );
+	for( sz=IOSZ0; sz<BUFSZ; sz*=2 ) {
+	  for( j=0; j<NSAMPLES; j++ ) {
+	    for( i=0; i<witers; i++ ) {
+	      while( pip_yield( PIP_YIELD_DEFAULT ) == 0 );
+	      expp->tc0[j] = 0.0;
+	    }
+	    CHECK( pip_barrier_wait(&expp->barrier1),                RV, return(EXIT_FAIL) );
+	    for( i=0; i<niters; i++ ) {
+	      while( pip_yield( PIP_YIELD_DEFAULT ) == 0 );
+	    }
+	    CHECK( pip_barrier_wait(&expp->barrier1),                RV, return(EXIT_FAIL) );
+	    IMB_cpu_exploit( (float) expp->tp0[j], 1 );
+	    for( i=0; i<witers; i++ ) {
+	      IMB_cpu_exploit( (float) expp->tp0[j], 0 );
+	    }
+	    CHECK( pip_barrier_wait(&expp->barrier1),                RV, return(EXIT_FAIL) );
+	    for( i=0; i<niters; i++ ) {
+	      while( pip_yield( PIP_YIELD_DEFAULT ) == 0 );
+	      expp->tc0[j] -= pip_gettime();
+	      IMB_cpu_exploit( (float) expp->tp0[j], 0 );
+	      expp->tc0[j] += pip_gettime();
+	    }
+	    expp->tc0[j] /= nd;
+	    while( pip_yield( PIP_YIELD_DEFAULT ) == 0 );
+	  }
+	}
       }
     }
   }
+  printf( "[%d] done\n", pipid );
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return 0;
 }

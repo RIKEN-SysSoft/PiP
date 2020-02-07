@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <sched.h>
 
+extern void IMB_cpu_exploit(float , int );
+
 #if defined(__x86_64__)
 #define RDTSC(X)\
   asm volatile ("rdtsc; shlq $32,%%rdx; orq %%rdx,%%rax" : "=a" (X) :: "%rdx")
