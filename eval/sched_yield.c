@@ -72,7 +72,7 @@ void *foo2( void *dummy ) {
 
 int main() {
   double 	t, ts0[NSAMPLES], ts1[NSAMPLES];
-  double	nd = (double) ( niters * 2 );
+  double	nd2 = (double) ( niters * 2 );
   int		i, j;
   pthread_t	th[2];
 
@@ -87,7 +87,7 @@ int main() {
     pthread_barrier_wait( &barr );
     t = pip_gettime();
     pthread_barrier_wait( &barr );
-    ts0[j] = ( pip_gettime() - t ) /nd;
+    ts0[j] = ( pip_gettime() - t ) / nd2;
   }
   pthread_join( th[0], NULL );
   pthread_join( th[1], NULL );
@@ -103,7 +103,7 @@ int main() {
     pthread_barrier_wait( &barr );
     t = pip_gettime();
     pthread_barrier_wait( &barr );
-    ts1[j] = ( pip_gettime() - t ) /nd;
+    ts1[j] = ( pip_gettime() - t ) / nd2;
   }
   pthread_join( th[0], NULL );
   pthread_join( th[1], NULL );

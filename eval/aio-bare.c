@@ -79,9 +79,9 @@ int main() {
   double	to0[NSAMPLES], to1[NSAMPLES];
   double	tc0[NSAMPLES], tc1[NSAMPLES];
   double	nd = (double) niters;
-  cpu_set_t	cpuset;
 
 #ifdef AH
+  cpu_set_t	cpuset;
   CPU_ZERO( &cpuset );
   CPU_SET( 1, &cpuset );
   CPU_SET( 2, &cpuset );

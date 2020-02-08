@@ -92,7 +92,7 @@ int main( int argc, char **argv ) {
 	  pip_yield( PIP_YIELD_USER );
 	}
 	c0[j] = ( get_cycle_counter() - c ) / ( niters * NTASKS );
-	t0[j] = ( pip_gettime() - t ) / dn;
+	t0[j] = ( pip_gettime() - t ) / ( dn * 2.0 );
       }
       double min = t0[0];
       int    idx = 0;
