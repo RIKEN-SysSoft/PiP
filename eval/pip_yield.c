@@ -65,7 +65,7 @@ int main( int argc, char **argv ) {
     }
   } else {
     double   t, t0[NSAMPLES];
-    double   dn = (double) ( niters * NTASKS );
+    double   dn2 = (double) ( niters * NTASKS );
     uint64_t c, c0[NSAMPLES];
 
     if( pipid == 0 ) {		/* passive */
@@ -92,7 +92,7 @@ int main( int argc, char **argv ) {
 	  pip_yield( PIP_YIELD_USER );
 	}
 	c0[j] = ( get_cycle_counter() - c ) / ( niters * NTASKS );
-	t0[j] = ( pip_gettime() - t ) / ( dn * 2.0 );
+	t0[j] = ( pip_gettime() - t ) / dn2;
       }
       double min = t0[0];
       int    idx = 0;
