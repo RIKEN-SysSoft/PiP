@@ -21,7 +21,8 @@
 #endif
 
 typedef struct exp {
-  pip_barrier_t		barrier;
+  pip_barrier_t		barrier0;
+  pip_barrier_t		barrier1;
   pip_task_queue_t	queue;
   volatile int		done;
 } exp_t;
@@ -73,8 +74,9 @@ int main( int argc, char **argv ) {
   CHECK( pip_init(&pipid,&ntasks,(void*)&expp,PIP_MODE_PROCESS), RV,
 	 return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( pip_barrier_init(&expp->barrier ,ntasks), RV, return(EXIT_FAIL) );
-    CHECK( pip_task_queue_init(&expp->queue ,NULL),  RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_init(&expp->barrier0, ntasks), RV, return(EXIT_FAIL) );
+    CHECK( pip_barrier_init(&expp->barrier1, 2     ), RV, return(EXIT_FAIL) );
+    CHECK( pip_task_queue_init(&expp->queue, NULL  ),  RV, return(EXIT_FAIL) );
     expp->done = 0;
 
     for( i=0; i<ntasks; i++ ) {
@@ -100,7 +102,7 @@ int main( int argc, char **argv ) {
       pid_t	pid0, pid1;
       int 	j, idx0, idx1;
 
-      CHECK( pip_barrier_wait(&expp->barrier),                RV, return(EXIT_FAIL) );
+      CHECK( pip_barrier_wait(&expp->barrier0),               RV, return(EXIT_FAIL) );
       CHECK( pip_suspend_and_enqueue(&expp->queue,NULL,NULL), RV, return(EXIT_FAIL) );
       CHECK( pip_set_syncflag( opts[pipid] ),                 RV, return(EXIT_FAIL) );
 
@@ -137,6 +139,7 @@ int main( int argc, char **argv ) {
 	  pid1 = getpid();
 	  CHECK( pip_decouple(NULL), RV, return(EXIT_FAIL) );
 	}
+
 	t = pip_gettime();
 	c = get_cycle_counter();
 	for( i=0; i<niters; i++ ) {
@@ -169,12 +172,14 @@ int main( int argc, char **argv ) {
       printf( "--dummy %d %d\n", pid0, pid1 );
       fflush( NULL );
       expp->done ++;
+      pip_memory_barrier();
+      CHECK( pip_barrier_wait(&expp->barrier1), RV, return(EXIT_FAIL) );
 
     } else {
       pip_task_t *task;
       int ql;
 
-      CHECK( pip_barrier_wait(&expp->barrier),                RV, return(EXIT_FAIL) );
+      CHECK( pip_barrier_wait(&expp->barrier0),               RV, return(EXIT_FAIL) );
       CHECK( pip_get_task_from_pipid(PIP_PIPID_MYSELF,&task), RV, return(EXIT_FAIL) );
       while( 1 ) {
 	CHECK( pip_task_queue_count(&expp->queue,&ql),        RV, return(EXIT_FAIL) );
@@ -186,6 +191,7 @@ int main( int argc, char **argv ) {
 	do {
 	  pip_yield( PIP_YIELD_USER );
 	} while( expp->done == i );
+	CHECK( pip_barrier_wait(&expp->barrier1), RV, return(EXIT_FAIL) );
       }
     }
   }
