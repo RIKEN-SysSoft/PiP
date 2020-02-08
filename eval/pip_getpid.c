@@ -32,31 +32,28 @@ typedef struct exp {
 #endif
 
 #ifdef AH
-#define NTASKS		(5)
-static int opts[NTASKS] = { PIP_SYNC_BUSYWAIT,
-			    PIP_SYNC_YIELD,
-			    PIP_SYNC_BLOCKING,
-			    PIP_SYNC_AUTO,
-			    PIP_SYNC_AUTO };
+static int opts[] = { PIP_SYNC_BUSYWAIT,
+		      PIP_SYNC_YIELD,
+		      PIP_SYNC_BLOCKING,
+		      PIP_SYNC_AUTO,
+		      PIP_SYNC_AUTO };
 
-static char *optstr[NTASKS] = { "PIP_SYNC_BUSYWAIT",
-				"PIP_SYNC_YIELD",
-				"PIP_SYNC_BLOCKING",
-				"PIP_SYNC_AUTO",
-				"PIP_SYNC_AUTO" };
+static char *optstr[] = { "PIP_SYNC_BUSYWAIT",
+			  "PIP_SYNC_YIELD",
+			  "PIP_SYNC_BLOCKING",
+			  "PIP_SYNC_AUTO",
+			  "PIP_SYNC_AUTO" };
 #endif
 
-#define NTASKS		(4)
+static int opts[] = { PIP_SYNC_BUSYWAIT,
+		      PIP_SYNC_BLOCKING,
+		      PIP_SYNC_AUTO };
 
-static int opts[NTASKS] = { PIP_SYNC_AUTO,
-			    PIP_SYNC_BUSYWAIT,
-			    PIP_SYNC_BLOCKING,
-			    PIP_SYNC_AUTO };
+static char *optstr[] = { "PIP_SYNC_BUSYWAIT",
+			  "PIP_SYNC_BLOCKING",
+			  "PIP_SYNC_AUTO" };
 
-static char *optstr[NTASKS] = { "PIP_SYNC_AUTO",
-				"PIP_SYNC_BUSYWAIT",
-				"PIP_SYNC_BLOCKING",
-				"PIP_SYNC_AUTO" };
+#define NTASKS		(sizeof(opts)/sizeof(int))
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
