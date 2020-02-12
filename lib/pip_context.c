@@ -58,6 +58,10 @@ static void pip_stack_protect( pip_task_internal_t *taski,
 
 static void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
+<<<<<<< HEAD
+=======
+  pip_memory_barrier();
+>>>>>>> pip-2-blt
   IF_UNLIKELY( taski->flag_stackpp == NULL ) {
     DBGF( "UNABLE to UN-protect PIPID:%d", taski->pipid );
   } else {
@@ -73,7 +77,11 @@ static void pip_stack_unprotect( pip_task_internal_t *taski ) {
   }
 }
 
+<<<<<<< HEAD
 static void pip_stack_wait( pip_task_internal_t *taski ) {
+=======
+void pip_stack_wait( pip_task_internal_t *taski ) {
+>>>>>>> pip-2-blt
   int i, j;
 
   DBGF( "PIPID:%d wait for unprotect", taski->pipid );
@@ -143,7 +151,10 @@ static void pip_swap_context( pip_task_internal_t *taski,
   *dp->old->ctx_savep = tr.ctx;
 #ifdef DEBUG
   dp->old->ctx_savep = NULL;
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> pip-2-blt
   /* before unprotect stack, old ctx must be saved */
   pip_stack_unprotect( dp->new );
 #else
