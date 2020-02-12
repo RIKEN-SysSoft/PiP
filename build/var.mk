@@ -44,7 +44,9 @@ PIPINCDIR = $(top_srcdir)/include
 PIPLIBDIR = $(top_builddir)/lib
 PIPLIB = $(top_builddir)/lib/libpip.so
 
-PIPLDLIB = -L$(top_builddir)/lib -Wl,-rpath=$(libdir) -lpip
+PIPLDLIB = -L$(top_builddir)/lib \
+	-Wl,-rpath=$(glibc_libdir) -L$(glibc_libdir) \
+	-Wl,-rpath=$(libdir) -lpip
 
 PIPLDFLAGS = -pthread -pie -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
 	$(PIPLDLIB) -ldl $(PIEFLAG)
