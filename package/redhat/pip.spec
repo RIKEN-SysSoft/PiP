@@ -8,8 +8,8 @@
 %define docdir		/usr/share/doc/%{name}-%{version}
 
 Name: pip
-Version: 1.0.0
-Release: 1%{?dist}
+Version: 1.0.2
+Release: 0%{?dist}
 Epoch: 1
 Source: %{name}-%{version}.tar.gz
 
