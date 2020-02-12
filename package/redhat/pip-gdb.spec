@@ -6,7 +6,7 @@
 #	$ rpmbuild -bb ~/rpmbuild/SPECS/pip-gdb.spec
 #
 
-%define	pip_gdb_release		pip0
+%define	pip_gdb_release		pip1
 %define pip_glibc_libdir	/opt/pip/lib
 %define scl_prefix		pip-
 
