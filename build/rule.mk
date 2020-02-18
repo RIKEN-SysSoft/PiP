@@ -5,7 +5,7 @@ all: subdir-all header-all lib-all prog-all post-all-hook
 
 install: all \
 	pre-install-hook \
-	subdir-install header-install lib-install prog-install \
+	subdir-install header-install lib-install prog-install examples-install \
 	post-install-hook
 .PHONY: install
 
@@ -196,6 +196,18 @@ doxygen-here:
 doxygen-distclean:
 	-$(RM) .doxygen_html .doxygen_man1 .doxygen_man3
 .PHONY: doxygen-distclean
+
+### examples rules
+
+examples-install:
+	@for i in -- $(EXAMPLES); do \
+		case $$i in --) continue;; esac; \
+		$(MKDIR_P) $(DESTDIR)$(examplesdir); \
+		echo \
+		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(examplesdir)/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(examplesdir)/$$i; \
+	done
+.PHONY: examples-install
 
 ### common rules
 

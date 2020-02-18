@@ -16,6 +16,8 @@ htmldir = $(default_htmldir)
 sysconfdir = $(default_sysconfdir)
 localedir = $(default_localedir)
 
+examplesdir = $(default_docdir)/examples
+
 PTHREADFLAG = -pthread
 
 CC = $(DEFAULT_CC)
