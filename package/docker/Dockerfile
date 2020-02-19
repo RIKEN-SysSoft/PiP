@@ -36,4 +36,5 @@ RUN set -x && \
 	yum install -y --setopt='tsflags=' pip pip-debuginfo && \
 	yum install -y pip-gdb && \
 	rm -rf /var/cache/yum/* && \
-	yum clean all
+	yum clean all && \
+	rm -f /tmp/ks-script-* /tmp/yum.log
