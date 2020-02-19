@@ -23,6 +23,7 @@ RUN set -x && \
 		intltool \
 		libtool \
 		make \
+		man-db \
 		patch \
 		patchutils \
 		rcs \
