@@ -58,10 +58,7 @@ static void pip_stack_protect( pip_task_internal_t *taski,
 
 static void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
-<<<<<<< HEAD
-=======
   pip_memory_barrier();
->>>>>>> pip-2-blt
   IF_UNLIKELY( taski->flag_stackpp == NULL ) {
     DBGF( "UNABLE to UN-protect PIPID:%d", taski->pipid );
   } else {
@@ -77,11 +74,7 @@ static void pip_stack_unprotect( pip_task_internal_t *taski ) {
   }
 }
 
-<<<<<<< HEAD
 static void pip_stack_wait( pip_task_internal_t *taski ) {
-=======
-void pip_stack_wait( pip_task_internal_t *taski ) {
->>>>>>> pip-2-blt
   int i, j;
 
   DBGF( "PIPID:%d wait for unprotect", taski->pipid );
@@ -119,7 +112,7 @@ typedef struct pip_ctx_data {
 
 #endif
 
-static void pip_swap_context( pip_task_internal_t *taski, 
+static void pip_swap_context( pip_task_internal_t *taski,
 		       pip_task_internal_t *nexti ) {
 #ifdef PIP_USE_FCONTEXT
   pip_ctx_data_t	data, *dp;
@@ -151,10 +144,7 @@ static void pip_swap_context( pip_task_internal_t *taski,
   *dp->old->ctx_savep = tr.ctx;
 #ifdef DEBUG
   dp->old->ctx_savep = NULL;
-<<<<<<< HEAD
 #endif
-=======
->>>>>>> pip-2-blt
   /* before unprotect stack, old ctx must be saved */
   pip_stack_unprotect( dp->new );
 #else
@@ -213,7 +203,7 @@ static void pip_decouple_context( pip_task_internal_t *taski,
 
   IF_UNLIKELY( ctx == NULL ) {
     /* creating a new context to sleep for the first time */
-    ctx = pip_make_fctx( 
+    ctx = pip_make_fctx(
 			 schedi->annex->stack_sleep
 #ifdef PIP_STACK_DESCENDING
 			 + pip_root->stack_size_sleep
@@ -256,12 +246,12 @@ static void pip_decouple_context( pip_task_internal_t *taski,
     lvars.stk->ss_flags = 0;
     lvars.args_H = ( ((intptr_t) schedi) >> 32 ) & PIP_MASK32;
     lvars.args_L = (  (intptr_t) schedi)         & PIP_MASK32;
-    
+
     ASSERT( pip_save_ctx( &lvars.ctx_new ) );
-    pip_make_uctx( &lvars.ctx_new, 
-		   pip_call_sleep, 
-		   2, 
-		   lvars.args_H, 
+    pip_make_uctx( &lvars.ctx_new,
+		   pip_call_sleep,
+		   2,
+		   lvars.args_H,
 		   lvars.args_L );
     schedi->annex->ctx_sleep = &lvars.ctx_new;
   }
@@ -278,7 +268,7 @@ static void pip_decouple_context( pip_task_internal_t *taski,
 static void pip_couple_context( pip_task_internal_t *taski,
 			 pip_task_internal_t *schedi ) {
   /* this must be called from the sleeping context */
-  DBGF( "task PIPID:%d   sched PIPID:%d", 
+  DBGF( "task PIPID:%d   sched PIPID:%d",
 	taski->pipid, schedi->pipid );
 
 #ifdef PIP_USE_FCONTEXT

@@ -56,6 +56,7 @@ exec_prefix=@exec_prefix@
 includedir=@includedir@
 libdir=@libdir@
 dynamic_linker=@dynamic_linker@
+glibc_libdir=@glibc_libdir@
 
 : ${CC:=cc}
 
@@ -63,14 +64,16 @@ is_linking=true
 pip_root=true
 pip_task=true
 no_pip=false;
+dryrun=false;
 
 while [ "$1" != "" ]; do
     case $1 in
 	-c|-E|-S)  is_linking=false; opts="${opts} $1";;
-	--piproot|-piproot) pip_task=false;;
-	--piptask|-piptask) pip_root=false;;
+	--piproot|-piproot|--pip-root|-pip-root) pip_task=false;;
+	--piptask|-piptask|--pip-task|-pip-task) pip_root=false;;
 	--pipdir)  shift; pipdir=$1;;
 	--nopip)   no_pip=true;;
+	--dryrun)  dryrun=true;;
 	*)         opts="${opts} $1";;
     esac
     shift;
@@ -90,8 +93,12 @@ if [ "${dynamic_linker}" != "" ]; then
     PIP_LDLINUX="-Wl,--dynamic-linker=${dynamic_linker}"
 fi
 
+if [ "${glibc_libdir}" != "" ]; then
+    PIP_GLIBC="-Wl,-rpath=${glibc_libdir}"
+fi
+
 PIPC_CFLAGS="-I${includedir} -pthread"
-PIPC_LDFLAGS="-L${libdir} -Wl,-rpath=${libdir}"
+PIPC_LDFLAGS="-L${libdir} -Wl,-rpath=${libdir} ${PIP_GLIBC}"
 PIPC_LDLIBS="-lpip -ldl"
 
 PIP_ROOT_CFLAGS="${PIPC_CFLAGS}"
@@ -126,8 +133,12 @@ fi
 
 if ${is_linking}; then
     echo ${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${opts} ${PIP_LDLIBS};
-    exec ${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${opts} ${PIP_LDLIBS};
+    if [ !${dryrun} ]; then
+	exec ${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${opts} ${PIP_LDLIBS};
+    fi
 else
     echo ${CC} ${PIP_CFLAGS} ${opts};
-    exec ${CC} ${PIP_CFLAGS} ${opts};
+    if [ !${dryrun} ]; then
+	exec ${CC} ${PIP_CFLAGS} ${opts};
+    fi
 fi

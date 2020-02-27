@@ -27,6 +27,10 @@ if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}"; then
 else
   AC_MSG_ERROR([can't find ld.so.])
 fi
+AC_SUBST(prefix)
+AC_SUBST(exec_prefix)
+AC_SUBST(includedir)
+AC_SUBST(libdir)
 AC_SUBST(glibc_libdir)
 AC_SUBST(dynamic_linker)
 
@@ -49,7 +53,7 @@ if test "x$enable_fcontext" != "xno"; then
   esac
   if test "x$enable_fcontext" == "xfpreg"; then
      boost_fctx_fpreg_flag="-DBOOST_USE_TSX"
-  fi	
+  fi
 fi
 AC_SUBST(boost_fctx_objs)
 AC_SUBST(boost_fctx_arch)
