@@ -57,6 +57,8 @@
 
 extern char 		**environ;
 
+extern pip_spinlock_t 	*pip_lock_clone;
+
 /*** note that the following static variables are   ***/
 /*** located at each PIP task and the root process. ***/
 pip_root_t		*pip_root PIP_PRIVATE;
@@ -136,6 +138,7 @@ static uint64_t pip_measure_yieldtime( void ) {
 pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
 
 static int pip_check_opt_and_env( int *optsp ) {
+  extern pip_spinlock_t pip_lock_got_clone;
   int opts   = *optsp;
   int mode   = ( opts & PIP_MODE_MASK );
   int newmod = 0;
@@ -143,8 +146,8 @@ static int pip_check_opt_and_env( int *optsp ) {
 
   enum PIP_MODE_BITS {
     PIP_MODE_PTHREAD_BIT          = 1,
-    PIP_MODE_PROCESS_PRELOAD_BIT  = 2,
-    PIP_MODE_PROCESS_PIPCLONE_BIT = 4
+    PIP_MODE_PROCESS_PRELOAD_BIT  = 4,
+    PIP_MODE_PROCESS_PIPCLONE_BIT = 8
   } desired = 0;
 
   if( ( opts & ~PIP_VALID_OPTS ) != 0 ) {
@@ -173,7 +176,7 @@ static int pip_check_opt_and_env( int *optsp ) {
       desired = PIP_MODE_PTHREAD_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
       desired =
-	PIP_MODE_PROCESS_PRELOAD_BIT|
+	PIP_MODE_PROCESS_PRELOAD_BIT |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
       desired = PIP_MODE_PROCESS_PRELOAD_BIT;
@@ -190,7 +193,7 @@ static int pip_check_opt_and_env( int *optsp ) {
   case PIP_MODE_PROCESS:
     if ( env == NULL ) {
       desired =
-	PIP_MODE_PROCESS_PRELOAD_BIT|
+	PIP_MODE_PROCESS_PRELOAD_BIT |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
       desired = PIP_MODE_PROCESS_PRELOAD_BIT;
@@ -201,7 +204,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 	       strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
       /* ignore PIP_MODE=thread in this case */
       desired =
-	PIP_MODE_PROCESS_PRELOAD_BIT|
+	PIP_MODE_PROCESS_PRELOAD_BIT |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
       pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
@@ -222,12 +225,16 @@ static int pip_check_opt_and_env( int *optsp ) {
   if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
     /* check if the __clone() systemcall wrapper exists or not */
     if( pip_cloneinfo == NULL ) {
-      pip_cloneinfo =
-	(pip_clone_t*) pip_dlsym( RTLD_DEFAULT, "pip_clone_info");
+      pip_cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
     }
     DBGF( "cloneinfo-%p", pip_cloneinfo );
     if( pip_cloneinfo != NULL ) {
       newmod = PIP_MODE_PROCESS_PRELOAD;
+      pip_lock_clone = &pip_cloneinfo->lock;
+      goto done;
+    } else if( pip_replace_clone() == 0 ) {
+      newmod = PIP_MODE_PROCESS_PRELOAD;
+      pip_lock_clone = &pip_lock_got_clone;
       goto done;
     } else if( !( desired & ( PIP_MODE_PTHREAD_BIT |
 			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
@@ -240,38 +247,42 @@ static int pip_check_opt_and_env( int *optsp ) {
 		       "LD_PRELOAD='%s'",
 		       env );
       }
-      RETURN( EOPNOTSUPP );
+      RETURN( EPERM );
     }
   }
+  DBGF( "newmod:0x%x", newmod );
   if( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) {
     if ( pip_clone_mostly_pthread_ptr == NULL )
       pip_clone_mostly_pthread_ptr =
-	pip_dlsym( RTLD_DEFAULT, "pip_clone_mostly_pthread" );
+	dlsym( RTLD_DEFAULT, "pip_clone_mostly_pthread" );
     if ( pip_clone_mostly_pthread_ptr != NULL ) {
       newmod = PIP_MODE_PROCESS_PIPCLONE;
       goto done;
     } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
       if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
-	pip_warn_mesg( "process mode is requested but pip_clone_info symbol "
-		       "is not found in $LD_PRELOAD and "
-		       "pip_clone_mostly_pthread() symbol is not found in "
-		       "glibc" );
+	pip_warn_mesg("process mode is requested but pip_clone_info symbol "
+		            "is not found in $LD_PRELOAD and "
+		            "pip_clone_mostly_pthread() symbol is not found in "
+		      "glibc" );
       } else {
 	pip_warn_mesg( "process:pipclone mode is requested but "
 		       "pip_clone_mostly_pthread() is not found in glibc" );
       }
-      RETURN( EOPNOTSUPP );
+      RETURN( EPERM );
     }
   }
+  DBGF( "newmod:0x%x", newmod );
   if( desired & PIP_MODE_PTHREAD_BIT ) {
     newmod = PIP_MODE_PTHREAD;
     goto done;
   }
+  DBGF( "newmod:0x%x", newmod );
   if( newmod == 0 ) {
     pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x", desired );
     RETURN( EOPNOTSUPP );
   }
  done:
+  DBGF( "newmod:0x%x", newmod );
   *optsp = ( opts & ~PIP_MODE_MASK ) | newmod;
   RETURN( 0 );
 }
@@ -656,6 +667,8 @@ int pip_fin( void ) {
     free( pip_root );
     pip_root = NULL;
     pip_task = NULL;
+
+    pip_undo_reoplace_clone();
   }
   RETURN( 0 );
 }

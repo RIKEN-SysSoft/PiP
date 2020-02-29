@@ -76,7 +76,7 @@ fi
 
 export NTASKS=`$MCEXEC dlmopen_count -p`
 export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
-export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
+#export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
 
 if [ x"$MCEXEC" != x ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then

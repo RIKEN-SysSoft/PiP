@@ -36,7 +36,6 @@
 #define _GNU_SOURCE
 
 //#define PIP_NO_MALLOPT
-//#define PIP_USE_STATIC_CTX  /* this is slower, adds 30ns */
 //#define PRINT_MAPS
 //#define PRINT_FDS
 
@@ -51,6 +50,8 @@
 #include <pip_internal.h>
 #include <pip_blt.h>
 #include <pip_gdbif.h>
+
+pip_spinlock_t *pip_lock_clone PIP_PRIVATE;
 
 int pip_count_vec( char **vecsrc ) {
   int n = 0;
@@ -463,7 +464,7 @@ static void pip_reset_signal_handler( int sig ) {
   }
 }
 
-static void pip_start_user_func( pip_spawn_args_t *args, 
+static void pip_start_user_func( pip_spawn_args_t *args,
 				 pip_task_internal_t *self ) {
   char **argv     = args->argv;
   char **envv     = args->envv;
@@ -524,8 +525,8 @@ static void pip_start_user_func( pip_spawn_args_t *args,
   NEVER_REACH_HERE;
 }
 
-static void pip_sigquit_handler( int sig, 
-				 void(*handler)(), 
+static void pip_sigquit_handler( int sig,
+				 void(*handler)(),
 				 struct sigaction *oldp ) {
   DBG;
   pthread_exit( NULL );
@@ -601,7 +602,7 @@ static void* pip_do_spawn( void *thargs )  {
 				     pip_start_cb,
 				     self );
     /* resumed */
-    
+
   } else {			/* active task */
     PIP_RUN( self );
     if( queue != NULL ) {
@@ -757,7 +758,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     ERRJ_ERR( ENOMEM );
   }
   /* must be called before calling dlmopen() */
-  pip_gdbif_task_new( task );	
+  pip_gdbif_task_new( task );
 
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
     /* corebinding should take place before loading solibs,       */
@@ -799,7 +800,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   } else {
     pthread_t		thr;
     pthread_attr_t 	attr;
-    pip_clone_t		*clone_info = pip_root->cloneinfo;
     pid_t		tid = pip_gettid();
 
     if( ( err = pthread_attr_init( &attr ) ) == 0 ) {
@@ -814,13 +814,12 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
       /* before calling main function */
       pip_spin_lock( &pip_root->lock_ldlinux );
       {
-	if( clone_info != NULL ) { /* pip_preload */
-	  DBGF( "tid=%d  cloneinfo@%p", tid, clone_info );
-	  /* lock is needed, because the preloaded clone()
+	if( pip_lock_clone != NULL ) {
+	  /* lock is needed, because the pip_clone()
 	     might also be called from outside of PiP lib. */
-	  pip_spin_lock_wv( &clone_info->lock, tid );
-	  /* unlock is done in the wrapper function */
+	  pip_spin_lock_wv( pip_lock_clone, tid );
 	}
+	/* unlock is done in the wrapper function */
 	err = pthread_create( &thr,
 			      &attr,
 			      (void*(*)(void*)) pip_do_spawn,
@@ -835,7 +834,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     pip_sem_wait( &pip_root->sync_root );
     pip_sem_post( &pip_root->sync_task );
 
-    DBGF( "task (PIPID:%d,TID:%d) is created and running", 
+    DBGF( "task (PIPID:%d,TID:%d) is created and running",
 	  task->pipid, task->annex->tid );
 
     pip_root->ntasks_accum ++;
