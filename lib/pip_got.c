@@ -133,7 +133,8 @@ pip_replace_clone_syscall( struct dl_phdr_info *info, size_t size, void *notused
 	      dladdr( faddr, &di );
 	      if( di.dli_sname != NULL ) {
 		DBGF( "dli_sname:%s  faddr:%p  GOT:%p", di.dli_sname, faddr, got_entry );
-		if( strcmp( di.dli_sname, "clone" ) == 0 ) {
+		if( strncmp( di.dli_sname, "__clone", strlen("__clone") ) == 0 ||
+		    strncmp( di.dli_sname, "clone",   strlen("clone")   ) == 0 ) {
 		  /* then replace the GOT enntry */
 		  pip_clone_original  = (pip_clone_syscall_t)  faddr;
 		  pip_clone_got_entry = (pip_clone_syscall_t*) got_entry;
