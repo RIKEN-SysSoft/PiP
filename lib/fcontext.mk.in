@@ -32,60 +32,10 @@
 # $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-top_builddir = ..
-top_srcdir = $(top_builddir)
-srcdir = .
-
-include $(top_srcdir)/build/var.mk
 
 FCTXDIR = ../import/fcontext/boost/fcontext
 
-CPPFLAGS += -I$(PIPINCDIR) -I.
-CFLAGS += $(PICCFLAG)
-FCTXOBJS = @boost_fctx_objs@
-LDFLAGS  = -shared -L$(glibc_libdir) -ldl
-
-
 FCTXCPPFLAG = @boost_fctx_fpreg_flag@
-
-
-LIBRARY  = libpip.so
-SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_blt.c \
-	pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c pip_dlfcn.c \
-	pip_signal.c
-
-OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_blt.o \
-	pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o pip_dlfcn.o \
-	pip_signal.o $(FCTXOBJS)
-
-DEPINCS  = $(PIPINCDIR)/pip.h			\
-	   $(PIPINCDIR)/pip_context.h		\
-	   $(PIPINCDIR)/pip_blt.h		\
-	   $(PIPINCDIR)/pip_clone.h		\
-	   $(PIPINCDIR)/pip_internal.h 		\
-	   $(PIPINCDIR)/pip_util.h		\
-	   $(PIPINCDIR)/pip_dlfcn.h		\
-	   $(PIPINCDIR)/pip_machdep.h 		\
-	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
-	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
-	   $(PIPINCDIR)/pip_debug.h 		\
-	   $(PIPINCDIR)/pip_gdbif.h		\
-	   $(PIPINCDIR)/pip_gdbif_func.h	\
-	   $(PIPINCDIR)/pip_gdbif_queue.h
-
-include $(top_srcdir)/build/rule.mk
-
-$(OBJS): $(DEPINCS) Makefile
-
-$(LIBRARY): $(OBJS) Makefile
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
-
-debug:
-	CPPFLAGS+="-DDEBUG" make all;
-
-TAGS:
-	ctags -Re
-
 
 fctx_jump.o : $(FCTXDIR)/jump_@boost_fctx_arch@_elf_gas.S
 	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \

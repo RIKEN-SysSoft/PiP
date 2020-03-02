@@ -80,7 +80,7 @@ fi
 AC_CONFIG_FILES([
 	build/config.mk
 	release/version.conf
-	lib/Makefile
+	lib/fcontext.mk
 	bin/pipcc
 	bin/pip-mode
 	bin/pip-check

@@ -113,7 +113,7 @@ pip_replace_clone_syscall( struct dl_phdr_info *info, size_t size, void *notused
       if( info->dlpi_phdr[i].p_type == PT_DYNAMIC ) {
 	ElfW(Dyn) *dyn = (ElfW(Dyn)*)
 	  ( (void*) (info->dlpi_addr + info->dlpi_phdr[i].p_vaddr) );
-	got_len = -1;
+	got_len = 0;
 	got_top = NULL;
 	/* Obtain GOT address and # GOT entries */
 	for( j=0; dyn[j].d_tag!=0||dyn[j].d_un.d_val!=0; j++ ) {
@@ -128,6 +128,7 @@ pip_replace_clone_syscall( struct dl_phdr_info *info, size_t size, void *notused
 
 	    if( faddr != NULL ) {
 	      Dl_info 	di;
+
 	      memset( &di, 0, sizeof(di) );
 	      dladdr( faddr, &di );
 	      if( di.dli_sname != NULL ) {
