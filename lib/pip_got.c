@@ -120,6 +120,7 @@ pip_replace_clone_syscall( struct dl_phdr_info *info, size_t size, void *notused
 	  if( dyn[j].d_tag == DT_RELAENT ) got_len = (int)   dyn[j].d_un.d_val;
 	  if( dyn[j].d_tag == DT_PLTGOT  ) got_top = (void*) dyn[j].d_un.d_ptr;
 	}
+	DBGF( "got:%p  len:%d", got_top, got_len );
 	if( got_len > 0 && got_top != NULL ) {
 	  /* find target function entry in the GOT */
 	  for( j=0; j<got_len; j++ ) {
@@ -132,13 +133,13 @@ pip_replace_clone_syscall( struct dl_phdr_info *info, size_t size, void *notused
 	      memset( &di, 0, sizeof(di) );
 	      dladdr( faddr, &di );
 	      if( di.dli_sname != NULL ) {
-		DBGF( "dli_sname:%s  faddr:%p  GOT:%p", di.dli_sname, faddr, got_entry );
+		DBGF( "[%d] dli_sname:%s  faddr:%p  GOT:%p", j, di.dli_sname, faddr, got_entry );
 		if( strncmp( di.dli_sname, "__clone", strlen("__clone") ) == 0 ||
 		    strncmp( di.dli_sname, "clone",   strlen("clone")   ) == 0 ) {
 		  /* then replace the GOT enntry */
 		  pip_clone_original  = (pip_clone_syscall_t)  faddr;
 		  pip_clone_got_entry = (pip_clone_syscall_t*) got_entry;
-		  RETURN( 0 );
+		  //RETURN( 0 );
 		}
 	      }
 	    }
@@ -158,9 +159,11 @@ int pip_replace_clone( void ) {
   ENTER;
   if( pip_clone_original  == NULL &&
       pip_clone_got_entry == NULL ) {
-    pthread_t th;
-    pthread_create( &th, NULL, pip_dummy, NULL );
-    pthread_join( th, NULL );
+    {
+      pthread_t th;
+      pthread_create( &th, NULL, pip_dummy, NULL );
+      pthread_join( th, NULL );
+    }
     /* then find the GOT entry of the clone */
     (void) dl_iterate_phdr( pip_replace_clone_syscall, NULL );
 
