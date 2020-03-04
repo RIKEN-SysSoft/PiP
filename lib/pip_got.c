@@ -45,6 +45,13 @@ typedef int(*pip_clone_syscall_t)(int(*)(void*), void*, int, void*, ...);
 static pip_clone_syscall_t  pip_clone_original  = NULL;
 static pip_clone_syscall_t *pip_clone_got_entry = NULL;
 
+typedef struct {
+  char	*dsoname;
+  char 	*symbol;
+} pip_phdr_itr_args;
+
+#define 	PTRSZ		(sizeof(void*))
+
 static int
 pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
   pid_t		 tid = pip_gettid();
@@ -89,58 +96,97 @@ pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
   return retval;
 }
 
-static int
-pip_replace_clone_syscall( struct dl_phdr_info *info, size_t size, void *notused ) {
-  char	*soname, *basename;
-  char	*libcname = "libpthread.so";
+static ElfW(Dyn) *pip_get_dynsec( struct dl_phdr_info *info ) {
+  int i;
+  for( i=0; i<info->dlpi_phnum; i++ ) {
+    /* search DYNAMIC ELF section */
+    if( info->dlpi_phdr[i].p_type == PT_DYNAMIC ) {
+      return ElfW(Dyn)* ( info->dlpi_addr + info->dlpi_phdr[i].p_vaddr );
+    }
+  }
+  return NULL;
+}
+
+static int pip_get_dynent_val( ElfW(Dyn) *dyn, int type ) {
+  int i;
+  for( i=0; dyn[i].d_tag!=0||dyn[i].d_un.d_val!=0; i++ ) {
+    if( dyn[i].d_tag == type ) return dyn[j].d_un.d_val;
+  }
+  return 0;
+}
+
+static void *pip_get_dynent_ptr( ElfW(Dyn) *dyn, int type ) {
+  int i;
+  for( i=0; dyn[i].d_tag!=0||dyn[i].d_un.d_val!=0; i++ ) {
+    if( dyn[i].d_tag == type ) return dyn[j].d_un.d_ptr;
+  }
+  return NULL;
+}
+
+static int pip_replace_clone_itr( struct dl_phdr_info *info,
+				  size_t size,
+				  void *args ) {
+  pip_phdr_itr_args *itr_args = (pip_phdr_itr_args*) args;
+  char	*fname, *bname;
+  char	*dsoname = itr_args->dsoname;
+  char	*symname = itr_args->symbol;
   int	got_len, i, j;
   void	*got_top;
 
-  soname = (char*) info->dlpi_name;
-  if( soname == NULL ) return 0;
-  basename = strrchr( soname, '/' );
-  if( basename == NULL ) {
-    basename = soname;
+  fname = (char*) info->dlpi_name;
+  if( fname == NULL ) return 0;
+  bname = strrchr( fname, '/' );
+  if( banme == NULL ) {
+    bname = fname;
   } else {
-    basename ++;		/* skp '/' */
+    fname ++;		/* skp '/' */
   }
 
-  ENTERF( "basename:%s", basename );
-  if( strncmp( libcname, basename, strlen(libcname) ) == 0 ) {
+  ENTERF( "fname:%s", fname );
+  if( dsoname == NULL ||
+      strncmp( dsoname, fname, strlen(dsoname) ) == 0 ) {
     DBG;
-    for( i=0; i<info->dlpi_phnum; i++ ) {
-      /* search DYNAMIC ELF section */
-      if( info->dlpi_phdr[i].p_type == PT_DYNAMIC ) {
-	ElfW(Dyn) *dyn = (ElfW(Dyn)*)
-	  ( (void*) (info->dlpi_addr + info->dlpi_phdr[i].p_vaddr) );
-	got_len = 0;
-	got_top = NULL;
-	/* Obtain GOT address and # GOT entries */
-	for( j=0; dyn[j].d_tag!=0||dyn[j].d_un.d_val!=0; j++ ) {
-	  if( dyn[j].d_tag == DT_RELAENT ) got_len = (int)   dyn[j].d_un.d_val;
-	  if( dyn[j].d_tag == DT_PLTGOT  ) got_top = (void*) dyn[j].d_un.d_ptr;
+    ElfW(Dyn) *dynsec = pip_get_dynsec( info );
+    ElfW(Rela) *rela  = (ElfW(Rela)*) pip_get_dynent_ptr( dynsec, DT_RELA   );
+    int		nrela = pip_get_dynent_ptr( dynsec, DT_RELASZ ) / sizeof( ElfW(Rela) );
+    ElfW(Sym)	*symtab = (ElfW(Sym)*) pip_get_dynent_ptr( dynsec, DT_SYMTAB );
+    char	*strtab = (char*) pip_get_dynent_ptr( dynsec, DT_STRTAB );
+    void	*secbase = info->dlpi_addr;
+
+    for( i=0; i<nrela; i++ ) {
+#if PTRSZ == 8
+        int symidx = ELF64_R_SYM(rela->r_info);
+#else
+        int symidx = ELF32_R_SYM(rela->r_info);
+#endif
+        char *sym = strtab + symtab[symidx].st_name;
+	DBGF( "SYM[%d] '%s'", i, sym );
+	if( strcmp( sym, symname ) == 0 ) {
+	  DBGF( "    GOT: %p", secbase + rela->offset );
 	}
-	if( got_len > 0 && got_top != NULL ) {
-	  /* find target function entry in the GOT */
-	  for( j=0; j<got_len; j++ ) {
-	    void	**got_entry = (void**) ( got_top + sizeof(void*) * j );
-	    void	*faddr = *got_entry;
+    }
+    /* Obtain GOT address and # GOT entries */
+    got_len = pip_get_dynent_val( dynsec, DT_RELAENT );
+    got_top = pip_get_dynent_ptr( dynsec, DT_PLTGOT  );
 
-	    if( faddr != NULL ) {
-	      Dl_info 	di;
+    if( got_len > 0 && got_top != NULL ) {
+      /* find target function entry in the GOT */
+      for( j=0; j<got_len; j++ ) {
+	void	**got_entry = (void**) ( got_top + sizeof(void*) * j );
+	void	*faddr = *got_entry;
 
-	      memset( &di, 0, sizeof(di) );
-	      dladdr( faddr, &di );
-	      if( di.dli_sname != NULL ) {
-		DBGF( "dli_sname:%s  faddr:%p  GOT:%p", di.dli_sname, faddr, got_entry );
-		if( strncmp( di.dli_sname, "__clone", strlen("__clone") ) == 0 ||
-		    strncmp( di.dli_sname, "clone",   strlen("clone")   ) == 0 ) {
-		  /* then replace the GOT enntry */
-		  pip_clone_original  = (pip_clone_syscall_t)  faddr;
-		  pip_clone_got_entry = (pip_clone_syscall_t*) got_entry;
-		  RETURN( 0 );
-		}
-	      }
+	if( faddr != NULL ) {
+	  Dl_info 	di;
+
+	  memset( &di, 0, sizeof(di) );
+	  dladdr( faddr, &di );
+	  if( di.dli_sname != NULL ) {
+	    DBGF( "dli_sname:%s  faddr:%p  GOT:%p", di.dli_sname, faddr, got_entry );
+	    if( strncmp( di.dli_sname, symname, strlen(symname) ) == 0 ||
+	      /* then replace the GOT enntry */
+	      pip_clone_original  = (pip_clone_syscall_t)  faddr;
+	      pip_clone_got_entry = (pip_clone_syscall_t*) got_entry;
+	      RETURN( 0 );
 	    }
 	  }
 	}
@@ -155,14 +201,20 @@ static void *pip_dummy( void *dummy ) {
 }
 
 int pip_replace_clone( void ) {
+  pip_phdr_itr_args *itr_args;
+
   ENTER;
   if( pip_clone_original  == NULL &&
       pip_clone_got_entry == NULL ) {
-    pthread_t th;
-    pthread_create( &th, NULL, pip_dummy, NULL );
-    pthread_join( th, NULL );
+    {
+      pthread_t th;
+      pthread_create( &th, NULL, pip_dummy, NULL );
+      pthread_join( th, NULL );
+    }
     /* then find the GOT entry of the clone */
-    (void) dl_iterate_phdr( pip_replace_clone_syscall, NULL );
+    itr_args.dsoname = "libpthread.so";
+    itr_args.symbol  = "clone";
+    (void) dl_iterate_phdr( pip_replace_clone_itr, (void*) dsoname );
 
     if( pip_clone_original  != NULL &&
 	pip_clone_got_entry != NULL ) {
