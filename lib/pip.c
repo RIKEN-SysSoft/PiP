@@ -232,7 +232,7 @@ static int pip_check_opt_and_env( int *optsp ) {
       newmod = PIP_MODE_PROCESS_PRELOAD;
       pip_lock_clone = &pip_cloneinfo->lock;
       goto done;
-    } else if( pip_replace_clone() == 0 ) {
+    } else if( pip_replace_GOT( "libpthread.so", "__clone" ) == 0 ) {
       newmod = PIP_MODE_PROCESS_PRELOAD;
       pip_lock_clone = &pip_lock_got_clone;
       goto done;
@@ -667,8 +667,6 @@ int pip_fin( void ) {
     free( pip_root );
     pip_root = NULL;
     pip_task = NULL;
-
-    pip_undo_reoplace_clone();
   }
   RETURN( 0 );
 }

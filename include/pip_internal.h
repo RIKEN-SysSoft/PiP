@@ -329,8 +329,7 @@ extern int  pip_able_to_terminate_immediately( pip_task_internal_t* )
 extern void pip_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
 
-extern int  pip_replace_clone( void ) PIP_PRIVATE;
-extern void pip_undo_reoplace_clone( void ) PIP_PRIVATE;
+extern int  pip_replace_GOT( char*, char* ) PIP_PRIVATE;
 
 #ifdef AH
 extern void pip_swap_context( pip_task_internal_t*,
