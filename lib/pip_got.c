@@ -123,9 +123,9 @@ static void *pip_get_dynent_ptr( ElfW(Dyn) *dyn, int type ) {
   return NULL;
 }
 
-static void pip_unprotect_page( uintptr_t addr ) {
+static void pip_unprotect_page( void *addr ) {
   size_t pgsz  = sysconf( _SC_PAGESIZE );
-  void   *page = (void*) ( addr & ~( pgsz - 1 ) );
+  void   *page = (void*) ( (uintptr_t)addr & ~( pgsz - 1 ) );
   ASSERT( mprotect( page, pgsz, PROT_READ | PROT_WRITE ) );
 }
 
@@ -171,7 +171,7 @@ static int pip_replace_clone_itr( struct dl_phdr_info *info,
 	void	**got_entry = (void**) ( secbase + rela->r_offset );
 
 	DBGF( "SYM[%d] '%s'  GOT:%p", i, sym, got_entry );
-	pip_unprotect_page( (uintptr_t) got_entry );
+	pip_unprotect_page( (void*) got_entry );
 	pip_clone_original  = (pip_clone_syscall_t) *got_entry;
 	pip_clone_got_entry = (pip_clone_syscall_t*) got_entry;
 #ifndef DEBUG
@@ -191,7 +191,7 @@ int pip_replace_GOT( char *dsoname, char *symbol ) {
   ENTER;
   if( pip_clone_original  == NULL &&
       pip_clone_got_entry == NULL ) {
-    if( 0 ) {
+    if( 1 ) {
       void *pip_dummy( void *dummy ) {return NULL;}
       pthread_t th;
       pthread_create( &th, NULL, pip_dummy, NULL );
