@@ -39,8 +39,6 @@ CFLAGS += $(PICCFLAG)
 FCTXOBJS = fctx_jump.o fctx_make.o
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
-include fcontext.mk
-
 LIBRARY  = libpip.so
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_blt.c \
 	pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c pip_dlfcn.c \
@@ -66,6 +64,8 @@ DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_gdbif_queue.h
 
 include $(top_srcdir)/build/rule.mk
+
+include fcontext.mk
 
 $(OBJS): $(DEPINCS) Makefile
 
