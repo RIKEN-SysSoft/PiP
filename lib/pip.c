@@ -604,6 +604,9 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       case PIP_MODE_PROCESS_PIPCLONE:
 	sym = "R;";
 	break;
+      case PIP_MODE_PROCESS_GOT:
+	sym = "R.";
+	break;
       case PIP_MODE_PTHREAD:
 	sym = "R|";
 	break;

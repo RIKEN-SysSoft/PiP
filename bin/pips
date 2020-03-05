@@ -49,14 +49,14 @@
 ### \subsection kill -k
 ### same as \b -s \b TERM
 ###
-### \subsection list -l 
+### \subsection list -l
 ### List (ps command) running PiP tasks specified. This is the default action.
 ###
 ### \subsection list-long --list
 ### same as \b -l
 ###
 ### \subsection top -t
-### Show running PiP tasks specified by using the top command. 
+### Show running PiP tasks specified by using the top command.
 ### Due to the top command limitation, only 20 PiP tasks will be shown.
 ###
 ### \subsection top-long --top
@@ -64,7 +64,7 @@
 ###
 
 isa_pip_program() {
-    prefixes="R- R: R; R| 0: 1: 2: 3: 4: 5: 6: 7: 8: 9:";
+    prefixes="R- R: R; R. R| 0: 1: 2: 3: 4: 5: 6: 7: 8: 9:";
     if [ $# == 3 ]; then
 	for prefix in $prefixes; do
 	    if [ "$prefix$1" == "$2" ]; then
@@ -89,7 +89,7 @@ decompose_psout() {
 	pid=$1;
 	if [ "$pid" == '<defunct>' ]; then
 	    shift;
-	else 
+	else
 	    if isa_pip_program $cmd $pipcmd; then
 		pids="$pid $pids";
 	    fi
@@ -102,7 +102,7 @@ top_pids() {
     case $# in
 	1) new_pids=$1;;
 	*) c=0;
-	    for pid in $@; do 
+	    for pid in $@; do
 		eval "((c = c + 1 ))";
 		if [ $c -gt 19 ]; then
 		    break;
@@ -134,7 +134,7 @@ flag_top=false;
 flag_verbose=false;
 
 # parse command line option
-while	
+while
 case $1 in
     -*) true;;
     *) false;;
@@ -142,12 +142,12 @@ esac
 do
     case $1 in
 	-s|--signal)	shift; signal=$1;;
-	-k|--kill)	shift; signal=TERM;; 
+	-k|--kill)	shift; signal=TERM;;
 	-l|--list)	flag_list=true;;
 	-t|--top)	flag_top=true;;
-	-v|--verbose)	flag_verbose=true;; 
-	-u|--help)	print_usage;;
-	-*)		echo "Unkown option '$1'"; exit 1;;	
+	-v|--verbose)	flag_verbose=true;;
+	-u|-h|--usage|--help)	print_usage;;
+	-*)		echo "Unkown option '$1'"; exit 1;;
 	esac
     shift
 done
