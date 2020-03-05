@@ -36,6 +36,7 @@
 #define _GNU_SOURCE
 
 #include <sys/syscall.h>
+#include <sys/prctl.h>
 #include <stdarg.h>
 #include <elf.h>
 
@@ -48,7 +49,7 @@ void pip_set_name( char *symbol, char *progname, char *funcname ) {
   /* the following code is to set the right */
   /* name shown by the ps and top commands  */
   char nam[16];
-  
+
   if( progname == NULL ) {
     char prg[16];
     prctl( PR_GET_NAME, prg, 0, 0, 0 );
@@ -68,7 +69,7 @@ void pip_set_name( char *symbol, char *progname, char *funcname ) {
 #define FMT "/proc/self/task/%u/comm"
     char fname[sizeof(FMT)+8];
     int fd;
-    
+
     (void) prctl( PR_SET_NAME, nam, 0, 0, 0 );
     sprintf( fname, FMT, (unsigned int) pip_gettid() );
     if( ( fd = open( fname, O_RDWR ) ) >= 0 ) {
@@ -77,6 +78,11 @@ void pip_set_name( char *symbol, char *progname, char *funcname ) {
     }
   } else {
     (void) pthread_setname_np( pthread_self(), nam );
+  }
+  if( 0 ) {
+    char cmd[16];
+    prctl( PR_GET_NAME, cmd, 0, 0, 0 );
+    printf( "CommanndName:'%s'\n", cmd );
   }
 #endif
 }
@@ -611,9 +617,9 @@ pip_check_inside( FILE *fp, void *addr, void *laddr, void **startp ) {
   return NULL;
 }
 
-static char *pip_determine_pipid( pip_root_t *root, 
-				  FILE *fp, 
-				  void *addr, 
+static char *pip_determine_pipid( pip_root_t *root,
+				  FILE *fp,
+				  void *addr,
 				  void **startp,
 				  int *pipidp ) {
   struct link_map *lm;
@@ -658,7 +664,7 @@ static char *pip_determine_pipid( pip_root_t *root,
   return NULL;
 }
 
-static void pip_print_bt( FILE *fp_maps, FILE *fp_out, 
+static void pip_print_bt( FILE *fp_maps, FILE *fp_out,
 			  pip_root_t *root, int depth, void *addr ) {
   Dl_info 	info;
   char	idstr[64], fname[64], sname[64], saddr[64], off[64];
