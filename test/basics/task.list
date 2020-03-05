@@ -1,6 +1,7 @@
 timer 1 ./pip_init
 timer 1 ./pip_init null
 timer 1 ./pip_init preload
+timer 1 ./pip_init got
 timer 1 ./pip_init twice
 timer 1 ./pip_init ntask_is_zero
 timer 1 ./pip_init ntask_too_big

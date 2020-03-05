@@ -40,11 +40,11 @@ FCTXOBJS = fctx_jump.o fctx_make.o
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
 LIBRARY  = libpip.so
-SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_blt.c \
+SRCS     = pip.c pip_spawn.c pip_wait.c pip_clone.c pip_blt.c \
 	pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c pip_dlfcn.c \
 	pip_signal.c
 
-OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_blt.o \
+OBJS	 = pip.o pip_spawn.o pip_wait.o pip_clone.o pip_blt.o \
 	pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o pip_dlfcn.o \
 	pip_signal.o $(FCTXOBJS)
 

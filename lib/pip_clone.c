@@ -34,6 +34,7 @@
  */
 
 #include <pip_internal.h>
+
 #include <sys/mman.h>
 #include <link.h>
 #include <stdarg.h>
@@ -50,11 +51,21 @@ typedef struct {
   char 	*symbol;
 } pip_phdr_itr_args;
 
-static int
-pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
-  pid_t		 tid = pip_gettid();
+static int pip_clone_flags( int flags ) {
+  flags &= ~(CLONE_FS);	 /* 0x00200 */
+  flags &= ~(CLONE_FILES);	 /* 0x00400 */
+  flags &= ~(CLONE_SIGHAND); /* 0x00800 */
+  flags &= ~(CLONE_THREAD);	 /* 0x10000 */
+  flags &= ~0xff;
+  flags |= CLONE_VM;
+  flags |= CLONE_SETTLS;  /* do not reset the CLONE_SETTLS flag */
+  flags |= CLONE_PTRACE;
+  flags |= SIGCHLD;
+  return flags;
+}
+
+static pip_spinlock_t pip_lock_clone( pid_t tid ) {
   pip_spinlock_t oldval;
-  int 		 retval = -1;
 
   while( 1 ) {
     oldval = pip_spin_trylock_wv( &pip_lock_got_clone, PIP_LOCK_OTHERWISE );
@@ -67,32 +78,74 @@ pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
       break;
     }
   }
-  DBG;
+  return oldval;
+}
+
+static int
+pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
+  pid_t		 tid = pip_gettid();
+  pip_spinlock_t oldval;
+  int 		 retval = -1;
+
+  ENTER;
+  oldval = pip_lock_clone( tid );
   {
     va_list ap;
     va_start( ap, args );
-    pid_t *ptid = va_arg( ap, pid_t*);
-    void  *tls  = va_arg( ap, void*);
-    pid_t *ctid = va_arg( ap, pid_t*);
+    pid_t *ptid = va_arg( ap, pid_t* );
+    void  *tls  = va_arg( ap, void*  );
+    pid_t *ctid = va_arg( ap, pid_t* );
 
     if( oldval == tid ) {
-      flags &= ~(CLONE_FS);	 /* 0x00200 */
-      flags &= ~(CLONE_FILES);	 /* 0x00400 */
-      flags &= ~(CLONE_SIGHAND); /* 0x00800 */
-      flags &= ~(CLONE_THREAD);	 /* 0x10000 */
-      flags &= ~0xff;
-      flags |= CLONE_VM;
-      flags |= CLONE_SETTLS;  /* do not reset the CLONE_SETTLS flag */
-      flags |= CLONE_PTRACE;
-      flags |= SIGCHLD;
+      flags = pip_clone_flags( flags );
     }
     retval = pip_clone_original( fn, child_stack, flags, args, ptid, tls, ctid );
-
     va_end( ap );
   }
   pip_spin_unlock( &pip_lock_got_clone );
+  DBGF( "<< retval:%d", retval );
   return retval;
 }
+
+#ifdef UNDO_PACTH
+typedef struct {
+  void 	**got_entry;
+  void	*orig_addr;
+} pip_got_patch_list_t;
+
+static pip_got_patch_list_t 	*pip_got_patch_list = NULL;
+static int			pip_got_patch_size;
+static int			pip_got_patch_currp;
+
+static void pip_add_got_patch( void **got_entry, void *orig_addr ) {
+  if( pip_got_patch_list == NULL ) {
+    size_t pgsz = sysconf(_SC_PAGESIZE);
+    pip_page_alloc( pgsz, (void**) &pip_got_patch_list );
+    pip_got_patch_size  = pgsz / sizeof(pip_got_patch_list_t);
+    pip_got_patch_currp = 0;
+  } else if( pip_got_patch_currp == pip_got_patch_size ) {
+    pip_got_patch_list_t *expanded;
+    int			 newsz = pip_got_patch_size * 2;
+    pip_page_alloc( newsz*sizeof(pip_got_patch_list_t), &expanded );
+    memcpy( expanded, pip_got_patch_list, pip_got_patch_currp );
+    free( pip_got_patch_size );
+    pip_got_patch_list = expanded;
+    pip_got_patch_size = newsz;
+  }
+  pip_got_patch_list[pip_got_patch_currp].got_entry = got_entry;
+  pip_got_patch_list[pip_got_patch_currp].orig_addr = orig_addr;
+  pip_got_patch_currp ++;
+}
+
+static void pip_undo_got_patch( void ) {
+  int i;
+  for( i=0; i<pip_got_patch_currp; i++ ) {
+    void **got_entry = pip_got_patch_list[i].got_entry;
+    void *orig_addr = pip_got_patch_list[i].orig_addr;
+    *got_entry = orig_addr;
+  }
+}
+#endif
 
 static ElfW(Dyn) *pip_get_dynsec( struct dl_phdr_info *info ) {
   int i;
@@ -172,13 +225,12 @@ static int pip_replace_clone_itr( struct dl_phdr_info *info,
 
 	DBGF( "SYM[%d] '%s'  GOT:%p", i, sym, got_entry );
 	pip_unprotect_page( (void*) got_entry );
+#ifdef UNDO_PACTH
+	pip_add_got_patch( got_entry, *got_entry );
+#endif
 	pip_clone_original  = (pip_clone_syscall_t) *got_entry;
 	pip_clone_got_entry = (pip_clone_syscall_t*) got_entry;
-#ifndef DEBUG
 	break;
-#endif
-      } else {
-	DBGF( "SYM[%d] '%s'", i, sym );
       }
     }
   }
@@ -191,12 +243,13 @@ int pip_replace_GOT( char *dsoname, char *symbol ) {
   ENTER;
   if( pip_clone_original  == NULL &&
       pip_clone_got_entry == NULL ) {
-    if( 1 ) {
+    do {
+      /* call clone() to fill the GOT entry */
       void *pip_dummy( void *dummy ) {return NULL;}
       pthread_t th;
       pthread_create( &th, NULL, pip_dummy, NULL );
       pthread_join( th, NULL );
-    }
+    } while( 0 );
     /* then find the GOT entry of the clone */
     itr_args.dsoname = dsoname;
     itr_args.symbol  = symbol;

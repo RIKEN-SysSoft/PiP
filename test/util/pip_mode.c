@@ -44,13 +44,16 @@ main(int argc, char **argv)
   int option_pip_mode = 0;
   int pipid, ntasks;
 
-  while ((c = getopt( argc, argv, "CLPT" )) != -1) {
+  while ((c = getopt( argc, argv, "CLGPT" )) != -1) {
     switch (c) {
     case 'C':
       option_pip_mode = PIP_MODE_PROCESS_PIPCLONE;
       break;
     case 'L':
       option_pip_mode = PIP_MODE_PROCESS_PRELOAD;
+      break;
+    case 'G':
+      option_pip_mode = PIP_MODE_PROCESS_GOT;
       break;
     case 'P':
       option_pip_mode = PIP_MODE_PROCESS;
@@ -59,7 +62,7 @@ main(int argc, char **argv)
       option_pip_mode = PIP_MODE_PTHREAD;
       break;
     default:
-      fprintf(stderr, "Usage: pip_mode [-CLPT]\n");
+      fprintf(stderr, "Usage: pip_mode [-CLGPT]\n");
       exit(2);
     }
   }

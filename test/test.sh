@@ -76,7 +76,7 @@ fi
 
 export NTASKS=`$MCEXEC dlmopen_count -p`
 export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
-#export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
+export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
 
 if [ x"$MCEXEC" != x ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
@@ -159,6 +159,7 @@ reset_summary()
 
 pip_mode_name_P=process
 pip_mode_name_L=$pip_mode_name_P:preload
+pip_mode_name_G=$pip_mode_name_P:got
 pip_mode_name_C=$pip_mode_name_P:pipclone
 pip_mode_name_T=pthread
 
@@ -166,6 +167,7 @@ print_mode_list()
 {
     echo "List of PiP execution modes:"
     echo "  " $pip_mode_name_T "(T)";
+    echo "  " $pip_mode_name_G "(G)";
     echo "  " $pip_mode_name_P "(P)";
     echo "  " $pip_mode_name_L "(L)";
     echo "  " $pip_mode_name_C "(C)";
@@ -174,7 +176,7 @@ print_mode_list()
 
 print_usage()
 {
-    echo >&2 "Usage: `basename $cmd` [-APCLT] [-thread] [-process[:preload|:pipclone]] [<test_list_file>]";
+    echo >&2 "Usage: `basename $cmd` [-APLGCT] [-thread] [-process[:preload|:got|:pipclone]] [<test_list_file>]";
     exit 2;
 }
 
@@ -183,6 +185,7 @@ cmd=$0
 case $# in
 0)	print_usage;;
 *)	run_test_L=''
+	run_test_G=''
 	run_test_C=''
 	run_test_T=''
 	while	case $1 in
@@ -190,22 +193,24 @@ case $# in
 		*) false;;
 		esac
 	do
-		case $1 in *A*)	run_test_L=L; run_test_C=C; run_test_T=T;; esac
-		case $1 in *P*)	run_test_L=L; run_test_C=C;; esac
+		case $1 in *A*)	run_test_L=L; run_test_G=G; run_test_C=C; run_test_T=T;; esac
+		case $1 in *P*)	run_test_L=L; run_test_G=G; run_test_C=C;; esac
 		case $1 in *C*)	run_test_C=C;; esac
 		case $1 in *L*)	run_test_L=L;; esac
+		case $1 in *G*)	run_test_G=G;; esac
 		case $1 in *T*)	run_test_T=T;; esac
 		case $1 in *list*) print_mode_list;; esac
 		case $1 in *thread)    run_test_T=T;; esac
-		case $1 in *process)   run_test_L=L; run_test_C=C;; esac
+		case $1 in *process)   run_test_L=L; run_test_G=G; run_test_C=C;; esac
 		case $1 in *$pip_mode_name_L) run_test_L=L;; esac
+		case $1 in *$pip_mode_name_G) run_test_G=G;; esac
 		case $1 in *$pip_mode_name_C) run_test_C=C;; esac
 		shift
 	done
-	if [ X"${run_test_L}${run_test_C}${run_test_T}" = X ]; then
-	    pip_mode_list="L C T";
+	if [ X"${run_test_L}${run_test_G}${run_test_C}${run_test_T}" = X ]; then
+	    pip_mode_list="L G C T";
 	else
-	    pip_mode_list="$run_test_L $run_test_C $run_test_T"
+	    pip_mode_list="$run_test_L $run_test_G $run_test_C $run_test_T"
 	fi
 	;;
 esac
@@ -236,7 +241,7 @@ if [ -n "$MCEXEC" ]; then
 	echo MCEXEC=$MCEXEC
     fi
 else
-    pip_mode_list_all='L C T';
+    pip_mode_list_all='L G C T';
 fi
 
 if [ x"$SUMMARY_FILE" = x ]; then
@@ -247,6 +252,7 @@ fi
 
 # check whether each $PIP_MODE is testable or not
 run_test_L=''
+run_test_G=''
 run_test_C=''
 run_test_T=''
 for pip_mode in $pip_mode_list
@@ -267,10 +273,13 @@ if [ x"$SUMMARY_FILE" = x ]; then
     echo;
 fi
 
-pip_mode_list="$run_test_L $run_test_C $run_test_T"
+pip_mode_list="$run_test_L $run_test_G $run_test_C $run_test_T"
 
 if [ x"$run_test_L" = x"L" ]; then
     options="-L $options";
+fi
+if [ x"$run_test_G" = x"G" ]; then
+    options="-G $options";
 fi
 if [ x"$run_test_C" = x"C" ]; then
     options="-C $options";

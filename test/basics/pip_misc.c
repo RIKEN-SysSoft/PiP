@@ -69,6 +69,7 @@ int main( int argc, char **argv ) {
   if( strcmp( mode_str, PIP_ENV_MODE_PTHREAD          ) != 0 &&
       strcmp( mode_str, PIP_ENV_MODE_PROCESS          ) != 0 &&
       strcmp( mode_str, PIP_ENV_MODE_PROCESS_PRELOAD  ) != 0 &&
+      strcmp( mode_str, PIP_ENV_MODE_PROCESS_GOT      ) != 0 &&
       strcmp( mode_str, PIP_ENV_MODE_PROCESS_PIPCLONE ) != 0 ) {
     CHECK( 1, RV, return(EXIT_FAIL) );
   }

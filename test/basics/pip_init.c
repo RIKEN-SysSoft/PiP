@@ -62,7 +62,18 @@ static int test_pip_init_preload( char **argv ) {
   CHECK( pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS_PRELOAD ),
 	 RV,
 	 return(EXIT_FAIL) );
+  return EXIT_PASS;
+}
 
+static int test_pip_init_got( char **argv ) {
+  int pipid, ntasks;
+  void *exp;
+
+  ntasks = NTASKS;
+  exp = NULL;
+  CHECK( pip_init( &pipid, &ntasks, &exp, PIP_MODE_PROCESS_GOT ),
+	 RV,
+	 return(EXIT_FAIL) );
   return EXIT_PASS;
 }
 
@@ -174,16 +185,17 @@ int main( int argc, char **argv ) {
     char *name;
     int (*func)( char **argv );
   } tab[] = {
-    { "null", test_pip_init_null },
-    { "preload", test_pip_init_preload },
-    { "twice", test_twice },
-    { "ntask_is_zero", test_ntask_is_zero },
-    { "ntask_too_big", test_ntask_too_big },
-    { "invalid_opts", test_invalid_opts },
-    { "both_pthread_process", test_both_pthread_process },
-    { "both_preload_clone", test_both_preload_clone },
-    { "pip_task_unset", test_pip_task_unset },
-    { "pip_child_task", test_pip_child_task },
+    { "null", 			test_pip_init_null },
+    { "preload", 		test_pip_init_preload },
+    { "got", 			test_pip_init_got },
+    { "twice", 			test_twice },
+    { "ntask_is_zero", 		test_ntask_is_zero },
+    { "ntask_too_big", 		test_ntask_too_big },
+    { "invalid_opts", 		test_invalid_opts },
+    { "both_pthread_process", 	test_both_pthread_process },
+    { "both_preload_clone", 	test_both_preload_clone },
+    { "pip_task_unset", 	test_pip_task_unset },
+    { "pip_child_task", 	test_pip_child_task },
   };
   char *test = argv[1];
   int i;

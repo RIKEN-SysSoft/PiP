@@ -98,7 +98,7 @@ if [ "${glibc_libdir}" != "" ]; then
 fi
 
 PIPC_CFLAGS="-I${includedir} -pthread"
-PIPC_LDFLAGS="-L${libdir} -Wl,-rpath=${libdir} ${PIP_GLIBC}"
+PIPC_LDFLAGS="-L${libdir} -Wl,-rpath=${libdir} ${PIP_GLIBC} -Wl,-wrap=__clone"
 PIPC_LDLIBS="-lpip -ldl"
 
 PIP_ROOT_CFLAGS="${PIPC_CFLAGS}"

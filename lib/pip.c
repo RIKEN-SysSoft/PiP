@@ -146,7 +146,8 @@ static int pip_check_opt_and_env( int *optsp ) {
 
   enum PIP_MODE_BITS {
     PIP_MODE_PTHREAD_BIT          = 1,
-    PIP_MODE_PROCESS_PRELOAD_BIT  = 4,
+    PIP_MODE_PROCESS_PRELOAD_BIT  = 2,
+    PIP_MODE_PROCESS_GOT_BIT      = 4,
     PIP_MODE_PROCESS_PIPCLONE_BIT = 8
   } desired = 0;
 
@@ -155,11 +156,13 @@ static int pip_check_opt_and_env( int *optsp ) {
     RETURN( EINVAL );
   }
 
-  if( opts & PIP_MODE_PTHREAD &&
-      opts & PIP_MODE_PROCESS ) RETURN( EINVAL );
-  if( opts & PIP_MODE_PROCESS ) {
-    if( ( opts & PIP_MODE_PROCESS_PRELOAD  ) == PIP_MODE_PROCESS_PRELOAD &&
-	( opts & PIP_MODE_PROCESS_PIPCLONE ) == PIP_MODE_PROCESS_PIPCLONE){
+  if( mode & PIP_MODE_PTHREAD &&
+      mode & PIP_MODE_PROCESS ) RETURN( EINVAL );
+  if( mode & PIP_MODE_PROCESS ) {
+    if( mode != PIP_MODE_PROCESS_PRELOAD &&
+	mode != PIP_MODE_PROCESS_GOT     &&
+	mode != PIP_MODE_PROCESS_PIPCLONE ) {
+      DBGF( "mode:0x%x", mode );
       RETURN (EINVAL );
     }
   }
@@ -168,8 +171,9 @@ static int pip_check_opt_and_env( int *optsp ) {
   case 0:
     if( env == NULL ) {
       desired =
-	PIP_MODE_PTHREAD_BIT |
+	PIP_MODE_PTHREAD_BIT         |
 	PIP_MODE_PROCESS_PRELOAD_BIT |
+	PIP_MODE_PROCESS_GOT_BIT     |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_THREAD  ) == 0 ||
 	       strcasecmp( env, PIP_ENV_MODE_PTHREAD ) == 0 ) {
@@ -180,6 +184,8 @@ static int pip_check_opt_and_env( int *optsp ) {
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
       desired = PIP_MODE_PROCESS_PRELOAD_BIT;
+    } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_GOT  ) == 0 ) {
+      desired = PIP_MODE_PROCESS_GOT_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
@@ -194,9 +200,12 @@ static int pip_check_opt_and_env( int *optsp ) {
     if ( env == NULL ) {
       desired =
 	PIP_MODE_PROCESS_PRELOAD_BIT |
+	PIP_MODE_PROCESS_GOT_BIT     |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
       desired = PIP_MODE_PROCESS_PRELOAD_BIT;
+    } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_GOT      ) == 0 ) {
+      desired = PIP_MODE_PROCESS_GOT_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_THREAD  ) == 0 ||
@@ -205,6 +214,7 @@ static int pip_check_opt_and_env( int *optsp ) {
       /* ignore PIP_MODE=thread in this case */
       desired =
 	PIP_MODE_PROCESS_PRELOAD_BIT |
+	PIP_MODE_PROCESS_GOT_BIT     |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
       pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
@@ -214,6 +224,9 @@ static int pip_check_opt_and_env( int *optsp ) {
   case PIP_MODE_PROCESS_PRELOAD:
     desired = PIP_MODE_PROCESS_PRELOAD_BIT;
     break;
+  case PIP_MODE_PROCESS_GOT:
+    desired = PIP_MODE_PROCESS_GOT_BIT;
+    break;
   case PIP_MODE_PROCESS_PIPCLONE:
     desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     break;
@@ -222,6 +235,27 @@ static int pip_check_opt_and_env( int *optsp ) {
     RETURN( EINVAL );
   }
 
+  if( desired & PIP_MODE_PROCESS_GOT_BIT ) {
+    /* check if the __clone() systemcall wrapper exists or not */
+    if( pip_replace_GOT( "libpthread.so", "__clone" ) == 0 ) {
+      newmod = PIP_MODE_PROCESS_GOT;
+      pip_lock_clone = &pip_lock_got_clone;
+      goto done;
+    } else if( !( desired & ( PIP_MODE_PTHREAD_BIT         |
+			      PIP_MODE_PROCESS_PRELOAD_BIT |
+			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
+      /* no wrapper found */
+      if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
+	pip_warn_mesg( "process:preload mode is requested but "
+		       "LD_PRELOAD environment variable is empty." );
+      } else {
+	pip_warn_mesg( "process:preload mode is requested but "
+		       "LD_PRELOAD='%s'",
+		       env );
+      }
+      RETURN( EPERM );
+    }
+  }
   if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
     /* check if the __clone() systemcall wrapper exists or not */
     if( pip_cloneinfo == NULL ) {
@@ -231,10 +265,6 @@ static int pip_check_opt_and_env( int *optsp ) {
     if( pip_cloneinfo != NULL ) {
       newmod = PIP_MODE_PROCESS_PRELOAD;
       pip_lock_clone = &pip_cloneinfo->lock;
-      goto done;
-    } else if( pip_replace_GOT( "libpthread.so", "__clone" ) == 0 ) {
-      newmod = PIP_MODE_PROCESS_PRELOAD;
-      pip_lock_clone = &pip_lock_got_clone;
       goto done;
     } else if( !( desired & ( PIP_MODE_PTHREAD_BIT |
 			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
@@ -737,6 +767,9 @@ const char *pip_get_mode_str( void ) {
     break;
   case PIP_MODE_PROCESS_PRELOAD:
     mode = PIP_ENV_MODE_PROCESS_PRELOAD;
+    break;
+  case PIP_MODE_PROCESS_GOT:
+    mode = PIP_ENV_MODE_PROCESS_GOT;
     break;
   case PIP_MODE_PROCESS_PIPCLONE:
     mode = PIP_ENV_MODE_PROCESS_PIPCLONE;
