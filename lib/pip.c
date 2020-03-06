@@ -237,7 +237,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 
   if( desired & PIP_MODE_PROCESS_GOT_BIT ) {
     /* check if the __clone() systemcall wrapper exists or not */
-    if( pip_replace_GOT( "libpthread.so", "__clone" ) == 0 ) {
+    if( pip_wrap_clone() == 0 ) {
       newmod = PIP_MODE_PROCESS_GOT;
       pip_lock_clone = &pip_lock_got_clone;
       goto done;
@@ -280,7 +280,6 @@ static int pip_check_opt_and_env( int *optsp ) {
       RETURN( EPERM );
     }
   }
-  DBGF( "newmod:0x%x", newmod );
   if( desired & PIP_MODE_PROCESS_PIPCLONE_BIT ) {
     if ( pip_clone_mostly_pthread_ptr == NULL )
       pip_clone_mostly_pthread_ptr =
@@ -301,18 +300,15 @@ static int pip_check_opt_and_env( int *optsp ) {
       RETURN( EPERM );
     }
   }
-  DBGF( "newmod:0x%x", newmod );
   if( desired & PIP_MODE_PTHREAD_BIT ) {
     newmod = PIP_MODE_PTHREAD;
     goto done;
   }
-  DBGF( "newmod:0x%x", newmod );
   if( newmod == 0 ) {
     pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x", desired );
     RETURN( EOPNOTSUPP );
   }
  done:
-  DBGF( "newmod:0x%x", newmod );
   *optsp = ( opts & ~PIP_MODE_MASK ) | newmod;
   RETURN( 0 );
 }
@@ -700,6 +696,8 @@ int pip_fin( void ) {
     free( pip_root );
     pip_root = NULL;
     pip_task = NULL;
+
+    pip_undo_patch_GOT();
   }
   RETURN( 0 );
 }

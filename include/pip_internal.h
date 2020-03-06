@@ -329,7 +329,9 @@ extern int  pip_able_to_terminate_immediately( pip_task_internal_t* )
 extern void pip_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
 
-extern int  pip_replace_GOT( char*, char* ) PIP_PRIVATE;
+extern int  pip_patch_GOT( char*, char*, void* ) PIP_PRIVATE;
+extern void pip_undo_patch_GOT( void ) PIP_PRIVATE;
+extern int  pip_wrap_clone( void ) PIP_PRIVATE;
 
 #ifdef AH
 extern void pip_swap_context( pip_task_internal_t*,
@@ -409,7 +411,6 @@ inline static void pip_sem_wait( pip_sem_t *sem ) {
 inline static void pip_sem_fin( pip_sem_t *sem ) {
   (void) sem_destroy( sem );
 }
-
 
 inline static int pip_get_pipid_( void ) {
   if( !pip_is_initialized() ) return PIP_PIPID_NULL;
