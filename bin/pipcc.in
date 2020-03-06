@@ -81,7 +81,9 @@ done
 
 if ${no_pip}; then
     echo ${CC} ${opts};
-    exec ${CC} ${opts};
+    if [ !${dryrun} ]; then
+	exec ${CC} ${opts};
+    fi
 fi
 
 if [ "${pipdir}" != "" ]; then
@@ -98,7 +100,7 @@ if [ "${glibc_libdir}" != "" ]; then
 fi
 
 PIPC_CFLAGS="-I${includedir} -pthread"
-PIPC_LDFLAGS="-L${libdir} -Wl,-rpath=${libdir} ${PIP_GLIBC} -Wl,-wrap=__clone"
+PIPC_LDFLAGS="-L${libdir} -Wl,-rpath=${libdir} ${PIP_GLIBC} -pthread"
 PIPC_LDLIBS="-lpip -ldl"
 
 PIP_ROOT_CFLAGS="${PIPC_CFLAGS}"
