@@ -80,6 +80,8 @@ static void pip_undo_got_patch( void ) {
     void *old_addr   = pip_got_patch_list[i].old_addr;
     *got_entry = old_addr;
   }
+  free( pip_got_patch_list );
+  pip_got_patch_size  = 0;
   pip_got_patch_currp = 0;
 }
 
