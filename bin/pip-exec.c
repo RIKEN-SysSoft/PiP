@@ -54,7 +54,7 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #ifndef DEBUG
-#define DEBUG
+//#define DEBUG
 #endif
 
 #define _GNU_SOURCE
