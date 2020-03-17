@@ -36,25 +36,9 @@
 #ifndef __test_h__
 #define __test_h__
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
-#ifndef __USE_GNU
-#define __USE_GNU
-#endif
-
-#include <dlfcn.h>
-#include <stdbool.h>
-
-#include <pip.h>
-#include <pip_blt.h>
 #include <pip_internal.h>
 
 #define NTASKS			PIP_NTASKS_MAX
-#define EXTVAL_MASK		(127)
-
-#define PIPENV			"PIPENV"
 
 #define PIP_TEST_NTASKS_ENV 	"PIP_TEST_NTASKS"
 #define PIP_TEST_PIPID_ENV 	"PIP_TEST_PIPID"
@@ -70,14 +54,6 @@
 
 extern int pip_id;
 
-typedef struct naive_barrier {
-  struct {
-    int			count_init;
-    pip_atomic_t        count;
-    volatile int        gsense;
-  };
-} naive_barrier_t;
-
 typedef struct test_args {
   int 		argc;
   char 		**argv;
@@ -87,46 +63,6 @@ typedef struct test_args {
   int		timer;
   volatile int	niters;
 } test_args_t;
-
-inline static int naive_barrier_init( naive_barrier_t *barrp, int n ) {
-  if( n < 1 ) RETURN( EINVAL );
-  barrp->count      = n;
-  barrp->count_init = n;
-  barrp->gsense     = 0;
-  return( 0 );
-}
-
-inline static int naive_barrier_wait( naive_barrier_t *barrp ) {
-  if( barrp->count_init > 1 ) {
-    int lsense = !barrp->gsense;
-    if( pip_atomic_sub_and_fetch( &barrp->count, 1 ) == 0 ) {
-      barrp->count  = barrp->count_init;
-      pip_memory_barrier();
-      barrp->gsense = lsense;
-    } else {
-      while( barrp->gsense != lsense ) {
-	pip_yield( PIP_YIELD_DEFAULT );
-      }
-    }
-  }
-  return 0;
-}
-
-typedef pip_spinlock_t		naive_lock_t;
-
-inline static void naive_lock( naive_lock_t *lock ) {
-  while( !pip_spin_trylock( lock ) ) {
-    pip_yield( PIP_YIELD_DEFAULT );
-  }
-}
-
-inline static void naive_unlock( naive_lock_t *lock ) {
-  *lock = 0;
-}
-
-inline static void naive_lock_init( naive_lock_t *lock ) {
-  naive_unlock( lock );
-}
 
 inline static pid_t my_gettid( void ) {
   return (pid_t) syscall( (long int) SYS_gettid );
@@ -446,7 +382,5 @@ inline static unsigned long get_total_memory( void ) {
   if ( ns > 0 ) return memtotal;
   return 0;
 }
-
-extern int pip_is_debug_build( void );
 
 #endif /* __test_h__ */

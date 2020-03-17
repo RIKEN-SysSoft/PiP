@@ -35,7 +35,6 @@
 
 #include <pip_internal.h>
 #include <pip_dlfcn.h>
-#include <stdarg.h>
 
 typedef int(*pip_clone_syscall_t)(int(*)(void*), void*, int, void*, ...);
 

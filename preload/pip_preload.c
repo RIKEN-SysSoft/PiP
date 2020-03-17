@@ -33,21 +33,13 @@
   * Written by Atsushi HORI <ahori@riken.jp>
 */
 
-#define _GNU_SOURCE
+#include <pip_internal.h>
+#include <pip_clone.h>
+
 #include <sys/syscall.h>
-#include <sys/types.h>
 #include <dlfcn.h>
-#include <sched.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <signal.h>
-#include <errno.h>
 
 //#define DEBUG
-
-#include <pip.h>
-#include <pip_blt.h>
-#include <pip_clone.h>
 
 pip_clone_t pip_clone_info = { 0 }; /* refered by piplib */
 

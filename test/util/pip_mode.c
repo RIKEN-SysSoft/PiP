@@ -30,12 +30,12 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 //#define DEBUG
 #include <pip.h>
+
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 
 int
 main(int argc, char **argv)

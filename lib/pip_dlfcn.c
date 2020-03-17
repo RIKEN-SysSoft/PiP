@@ -36,8 +36,8 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
-#include <pip_dlfcn.h>
 #include <pip_internal.h>
+#include <pip_dlfcn.h>
 
 /* locked dl* functions */
 

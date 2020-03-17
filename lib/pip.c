@@ -45,10 +45,9 @@
 #include <limits.h>		/* for PTHREAD_STACK_MIN */
 #define PIP_SLEEP_STACKSZ	PTHREAD_STACK_MIN
 
-#include <pip.h>
-#include <pip_dlfcn.h>
 #include <pip_internal.h>
-#include <pip_gdbif.h>
+#include <pip_dlfcn.h>
+#include <pip_gdbif_func.h>
 
 #define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
 

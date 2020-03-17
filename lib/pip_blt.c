@@ -34,7 +34,6 @@
  */
 
 #include <pip_internal.h>
-#include <pip_blt.h>
 #include <pip_gdbif_func.h>
 
 #include <pip_context.c>
@@ -855,7 +854,7 @@ int pip_set_syncflag( uint32_t flags ) {
   if( ( flags = pip_check_sync_flag( flags )  ) < 0 ) {
     err = EINVAL;
   } else {
-    pip_task->annex->opts = 
+    pip_task->annex->opts =
       ( pip_task->annex->opts & ~PIP_SYNC_MASK ) | flags;
   }
   return err;

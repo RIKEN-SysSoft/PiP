@@ -32,12 +32,11 @@ top_builddir = ..
 top_srcdir = $(top_builddir)
 srcdir = .
 
-HEADERS = pip.h pip_blt.h pip_clone.h pip_internal.h pip_util.h \
+HEADERS = pip.h pip_blt.h pip_util.h pip_dlfcn.h pip_signal.h \
 	pip_machdep.h pip_machdep_x86_64.h pip_machdep_aarch64.h \
-	pip_gdbif.h pip_gdbif_func.h pip_gdbif_queue.h pip_debug.h \
-	pip_context.h xpmem.h
+	xpmem.h
 
-MAN3_SRCS = pip.h pip_blt.h
+MAN3_SRCS = pip.h pip_blt.h pip_signal.h
 
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk

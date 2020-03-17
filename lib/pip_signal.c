@@ -33,18 +33,14 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define _GNU_SOURCE
-
-//#define DEBUG
-
-#include <pip.h>
 #include <pip_internal.h>
 
+/* for internal use */
 int pip_raise_signal( pip_task_internal_t *taski, int sig ) {
   int err = ESRCH;
 
-  DBGF( "raise signal (%s) to PIPID:%d PID:%d TID:%d", 
-	strsignal(sig), 
+  DBGF( "raise signal (%s) to PIPID:%d PID:%d TID:%d",
+	strsignal(sig),
 	taski->pipid,
 	getpid(),
 	taski->annex->tid );

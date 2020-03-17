@@ -42,14 +42,13 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
+#include <pip_internal.h>
+#include <pip_dlfcn.h>
+#include <pip_gdbif_func.h>
+
 #include <sys/prctl.h>
 #include <time.h>
 #include <malloc.h> 		/* M_MMAP_THRESHOLD and M_TRIM_THRESHOLD  */
-
-#include <pip_dlfcn.h>
-#include <pip_internal.h>
-#include <pip_blt.h>
-#include <pip_gdbif.h>
 
 pip_spinlock_t *pip_lock_clone PIP_PRIVATE;
 

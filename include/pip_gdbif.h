@@ -38,7 +38,6 @@
 
 #include <pip_machdep.h> /* for pip_spinlock_t */
 #include <pip_gdbif_queue.h>
-#include <pip_gdbif_func.h>
 
 /* make this independent from <pip.h> */
 enum pip_gdbif_pipid {

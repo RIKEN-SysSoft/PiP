@@ -57,12 +57,11 @@
 //#define DEBUG
 #endif
 
-#define _GNU_SOURCE
+#include <pip_internal.h>
+
 #include <sched.h>
 #include <libgen.h>
-
-#include <pip.h>
-#include <pip_internal.h>
+#include <ctype.h>
 
 #define COREBIND_RR	(-100)
 

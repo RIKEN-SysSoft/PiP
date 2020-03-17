@@ -43,7 +43,8 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <pip.h>
-#include <pip_debug.h>
+#include <pip_machdep.h>
+#include <string.h>
 
 #define PIP_SYNC_AUTO			(0x0001)
 #define PIP_SYNC_BUSYWAIT		(0x0002)
@@ -161,8 +162,8 @@ struct pip_task_queue_methods;
 typedef struct pip_task_queue {
   volatile pip_task_t			queue;
   struct pip_task_queue_methods		*methods;
-  pip_spinlock_t			lock;
   volatile uint32_t			length;
+  pip_spinlock_t			lock;
 } pip_task_queue_t;
 
 typedef void(*pip_enqueue_callback_t)(void*);

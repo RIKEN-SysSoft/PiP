@@ -33,13 +33,9 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define _GNU_SOURCE
-
 //#define PIP_DEADLOCK_WARN
 
-#include <pip.h>
 #include <pip_internal.h>
-#include <pip_util.h>
 #include <pip_gdbif_func.h>
 
 #ifdef PIP_DUMP_TASKS
@@ -107,7 +103,7 @@ void pip_deadlock_dec( void ) {
 #endif
 }
 
-static void 
+static void
 pip_set_exit_status( pip_task_internal_t *taski, int status ) {
   ENTER;
   if( !taski->flag_exit ) {
@@ -179,7 +175,7 @@ pip_wait_thread( pip_task_internal_t *taski, int flag_blk ) {
     char path[128];
     struct stat stbuf;
 
-    snprintf( path, 128, "/proc/%d/task/%d", 
+    snprintf( path, 128, "/proc/%d/task/%d",
 	      getpid(), taski->annex->tid );
     while( 1 ) {
       err = errno = 0;
@@ -196,7 +192,7 @@ pip_wait_thread( pip_task_internal_t *taski, int flag_blk ) {
   RETURN( err );
 }
 
-static int 
+static int
 pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   int err = 0;
 
@@ -209,12 +205,12 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   if( pip_is_threaded_() ) {	/* thread mode */
     err = pip_wait_thread( taski, flag_blk );
     if( !err ) pip_set_exit_status( taski, 0 );
-    
+
   } else {			/* process mode */
     pid_t tid;
     int   status  = 0;
     int   options = 0;
-    
+
 #ifdef __WALL
     /* __WALL: Wait for all children, regardless of type */
     /* ("clone" or "non-clone") [from the man page]      */
@@ -225,7 +221,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
     options |= __WCLONE;
 #endif
     if( !flag_blk ) options |= WNOHANG;
-    
+
     DBGF( "calling waitpid()  task:%p  tid:%d  pipid:%d",
 	  taski, taski->annex->tid, taski->pipid );
     while( 1 ) {
@@ -248,9 +244,9 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
       }
       break;
     }
-    DBGF( "waitpid(tid=%d,status=0x%x)=%d (err=%d)", 
+    DBGF( "waitpid(tid=%d,status=0x%x)=%d (err=%d)",
 	  taski->annex->tid, status, tid, err );
-    
+
     if( !err && WIFSIGNALED( status ) ) {
       int sig = WTERMSIG( status );
       pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
@@ -273,7 +269,7 @@ static int pip_check_task( pip_task_internal_t *taski ) {
     goto found;
   } else if( taski->type != PIP_TYPE_NONE &&
 	     taski->annex->tid    != 0 &&
-	     taski->annex->thread != 0 ) { 
+	     taski->annex->thread != 0 ) {
     if( pip_is_threaded_() ) {
       if( taski->annex->flag_sigchld ) {
 	/* if sigchld is really raised, then blocking wait */
@@ -368,8 +364,8 @@ int pip_wait( int pipid, int *statusp ) {
 	break;
       }
       ASSERT( pip_signal_wait( SIGCHLD ) );
-    }    
-  } 
+    }
+  }
   RETURN( err );
 }
 
@@ -400,7 +396,7 @@ int pip_wait_any( int *pipidp, int *statusp ) {
   ENTER;
   if( !pip_is_initialized() ) RETURN( EPERM );
   if( !pip_isa_root() )       RETURN( EPERM );
-  
+
   pipid = pip_blocking_waitany();
   if( pipid == PIP_PIPID_ANY ) {
     err = ECHILD;
@@ -423,7 +419,7 @@ int pip_trywait_any( int *pipidp, int *statusp ) {
   ENTER;
   if( !pip_is_initialized() ) RETURN( EPERM );
   if( !pip_isa_root() )       RETURN( EPERM );
-  
+
   pipid = pip_nonblocking_waitany();
   if( pipid == PIP_PIPID_NULL ) {
     err = ECHILD;

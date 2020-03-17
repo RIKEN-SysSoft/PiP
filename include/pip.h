@@ -146,20 +146,11 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <pthread.h>
-#include <dirent.h>
-#include <fcntl.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <stddef.h>
+#include <signal.h>
 #include <stdio.h>
-#include <string.h>
 #include <errno.h>
-
-#include <pip_machdep.h>
 
 #define PIP_OPTS_NONE			(0x0)
 

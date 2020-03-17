@@ -34,8 +34,6 @@
  */
 
 #include <pip_internal.h>
-#include <pip_blt.h>
-#include <pip_context.h>
 
 /* STACK PROTECT */
 

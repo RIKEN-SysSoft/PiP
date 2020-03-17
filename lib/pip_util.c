@@ -33,16 +33,12 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define _GNU_SOURCE
+#include <pip_internal.h>
+#include <pip_dlfcn.h>
 
 #include <sys/syscall.h>
 #include <sys/prctl.h>
-#include <stdarg.h>
 #include <elf.h>
-
-#include <pip_dlfcn.h>
-#include <pip_internal.h>
-#include <pip_util.h>
 
 void pip_set_name( char *symbol, char *progname, char *funcname ) {
 #ifdef PR_SET_NAME

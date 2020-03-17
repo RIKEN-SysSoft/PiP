@@ -33,12 +33,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2018
  */
 
-#define _GNU_SOURCE
-#include <stdarg.h>
-#include <ctype.h>
-
-#include <pip.h>
-#include <pip_blt.h>
 #include <pip_internal.h>
 
 #define PIP_HASHTAB_SZ	(1024)	/* must be power of 2 */
@@ -290,7 +284,7 @@ static int pip_named_import_( int pipid,
 	  err = EAGAIN;
 	} else {
 	  pip_namexp_wait_t	wait;
-	  
+
 	  memset( &wait, 0, sizeof(wait) );
 	  PIP_LIST_INIT( &wait.list );
 

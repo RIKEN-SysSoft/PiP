@@ -34,17 +34,16 @@
  * Atsushi HORI <ahori@riken.jp>, 2018, 2019
  */
 
-#include <pip_dlfcn.h>
-#include <elf.h>
-
 #ifdef DEBUG
 #undef DEBUG
 #endif
 
 #include <pip_internal.h>
-#include <pip_machdep.h>
-#include <pip_util.h>
 #include <pip_gdbif.h>
+#include <pip_gdbif_func.h>
+#include <pip_dlfcn.h>
+
+#include <elf.h>
 
 struct pip_gdbif_root	*pip_gdbif_root = NULL;
 
