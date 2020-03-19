@@ -93,7 +93,7 @@ int pip_check_pie( const char *path, int flag_verbose ) {
     if( flag_verbose ) {
       pip_err_mesg( "'%s' is not a path (no slash '/')", path );
     }
-    err = EFAULT;
+    err = ENOENT;
   } else if( ( fd = open( path, O_RDONLY ) ) < 0 ) {
     err = errno;
     if( flag_verbose ) {

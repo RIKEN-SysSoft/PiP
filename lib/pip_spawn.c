@@ -221,32 +221,6 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
   RETURN( err );
 }
 
-static int pip_load_dso( void **handlep, const char *path ) {
-  Lmid_t	lmid;
-  int 		flags = RTLD_NOW | RTLD_LOCAL;
-  /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
-  void 		*loaded;
-  int		err;
-
-  DBGF( "handle=%p", *handlep );
-  if( *handlep == NULL ) {
-    lmid = LM_ID_NEWLM;
-  } else if( pip_dlinfo( *handlep, RTLD_DI_LMID, (void*) &lmid ) != 0 ) {
-    DBGF( "dlinfo(%p): %s", handlep, dlerror() );
-    RETURN( ENXIO );
-  }
-  loaded = pip_dlmopen( lmid, path, flags );
-  if( loaded == NULL ) {
-    if( ( err = pip_check_pie( path, 1 ) ) != 0 ) RETURN( err );
-    pip_warn_mesg( "dlmopen(%s): %s", path, dlerror() );
-    RETURN( ENOEXEC );
-  } else {
-    DBGF( "dlmopen(%s): SUCCEEDED", path );
-    *handlep = loaded;
-  }
-  RETURN( 0 );
-}
-
 static int pip_find_symbols( pip_spawn_program_t *progp,
 			     void *handle,
 			     pip_symbols_t *symp ) {
@@ -273,6 +247,7 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   symp->libc_argcp       = pip_dlsym( handle, "__libc_argc"           );
   symp->prog             = pip_dlsym( handle, "__progname"            );
   symp->prog_full        = pip_dlsym( handle, "__progname_full"       );
+  symp->gdbif_root       = pip_dlsym( handle, "pip_gdbif_root"        );
 
   /* check mandatory symbols */
   DBGF( "env:%p  func(%s):%p   main:%p",
@@ -295,16 +270,74 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   RETURN( err );
 }
 
+static char *pip_find_newer_libpip( void ) {
+  struct stat	stb_inst, stb_make;
+
+  if( stat( PIP_INSTALL_LIBPIPGDB, &stb_inst ) != 0 ) {
+    if( stat( PIP_MAKE_LIBPIPGDB, &stb_make ) != 0 ) {
+      return NULL;
+    }
+    return PIP_MAKE_LIBPIPGDB;
+  }
+  if( stat( PIP_MAKE_LIBPIPGDB, &stb_make ) != 0 ) {
+    return PIP_INSTALL_LIBPIPGDB;
+  }
+  if( stb_inst.st_mtime >= stb_make.st_mtime ) {
+    return PIP_INSTALL_LIBPIPGDB;
+  }
+  return PIP_MAKE_LIBPIPGDB;
+}
+
+static int pip_load_dso( const char *path, void **handle ) {
+  Lmid_t	lmid;
+  int 		flags = RTLD_NOW | RTLD_LOCAL;
+  /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
+  char		*libpipgdb;
+  void 		*loaded;
+  int		err;
+
+  ENTERF( "path:%s", path );
+  lmid   = LM_ID_NEWLM;
+  loaded = pip_dlmopen( lmid, path, flags );
+  if( loaded == NULL ) {
+    if( ( err = pip_check_pie( path, 1 ) ) != 0 ) RETURN( err );
+    pip_warn_mesg( "dlmopen(%s): %s", path, dlerror() );
+    RETURN( ENOEXEC );
+  }
+  if( pip_dlsym( loaded, PIP_GDBIF_ROOT_VARNAME ) == NULL &&
+      ( libpipgdb = pip_find_newer_libpip() )     != NULL ) {
+    /* if libpip is not yet loaded */
+    if( pip_dlinfo( loaded, RTLD_DI_LMID, &lmid ) != 0 ) {
+      pip_warn_mesg( "Unable to obtain Lmid: %s", dlerror() );
+      RETURN( ENXIO );
+    }
+    DBGF( "lmid:%d", (int) lmid );
+    if( pip_dlmopen( lmid, libpipgdb, flags ) == NULL ) {
+      pip_warn_mesg( "Unable to load %s: %s", libpipgdb, dlerror() );
+    } else {
+#ifdef DEBUG
+      if( pip_dlsym( loaded, PIP_GDBIF_ROOT_VARNAME ) == NULL ) {
+	DBGF( "%s found ++++++", PIP_GDBIF_ROOT_VARNAME );
+      } else {
+	DBGF( "%s NOT found xxxxxxxxxxxxxxx", PIP_GDBIF_ROOT_VARNAME );
+      }
+#endif
+    }
+  }
+  if( handle != NULL ) *handle = loaded;
+  RETURN( 0 );
+}
+
 static int pip_load_prog( pip_spawn_program_t *progp,
 			  pip_spawn_args_t *args,
 			  pip_task_internal_t *taski ) {
-  void	*loaded = NULL;
+  void	*loaded;
   int 	err;
 
   DBGF( "prog=%s", progp->prog );
 
   PIP_ACCUM( time_load_dso,
-	     ( err = pip_load_dso( &loaded, progp->prog ) ) == 0 );
+	     ( err = pip_load_dso( progp->prog, &loaded ) ) == 0 );
   if( err == 0 ) {
     pip_symbols_t *symp = &taski->annex->symbols;
     err = pip_find_symbols( progp, loaded, symp );
@@ -407,11 +440,7 @@ static int pip_glibc_init( pip_symbols_t *symbols,
 #endif
   }
 #endif
-  if( symbols->glibc_init != NULL ) {
-    DBGF( ">> glibc_init@%p()", symbols->glibc_init );
-    symbols->glibc_init( argc, args->argv, args->envv );
-    DBGF( "<< glibc_init@%p()", symbols->glibc_init );
-  } else if( symbols->ctype_init != NULL ) {
+  if( symbols->ctype_init != NULL ) {
     DBGF( ">> __ctype_init@%p()", symbols->ctype_init );
     symbols->ctype_init();
     DBGF( "<< __ctype_init@%p()", symbols->ctype_init );
@@ -479,6 +508,10 @@ static void pip_start_user_func( pip_spawn_args_t *args,
 			 self->annex->loaded );
   pip_spin_unlock( &pip_root->lock_ldlinux );
 
+  if( self->annex->symbols.gdbif_root != NULL ) {
+    *self->annex->symbols.gdbif_root = pip_root->gdbif_root;
+  }
+
   if( self->annex->hook_before != NULL &&
       ( err = self->annex->hook_before( hook_arg ) ) != 0 ) {
     pip_warn_mesg( "[%s] before-hook returns %d", argv[0], err );
@@ -537,7 +570,8 @@ static void pip_start_cb( void *tsk ) {
   taski->annex->tid    = pip_gettid();
   taski->annex->thread = pthread_self();
   pip_spin_unlock( &taski->annex->task_root->lock_ldlinux );
-
+  /* let pip-gdb know */
+  pip_gdbif_task_commit( taski );
   /* sync with root */
   pip_sem_post( &taski->annex->task_root->sync_root );
   pip_sem_wait( &taski->annex->task_root->sync_task );
@@ -837,7 +871,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 	  task->pipid, task->annex->tid );
 
     pip_root->ntasks_accum ++;
-    pip_gdbif_task_commit( task );
     if( bltp != NULL ) *bltp = (pip_task_t*) task;
 
   } else {

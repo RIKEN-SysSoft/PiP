@@ -63,6 +63,7 @@
 #include <pip_signal.h>
 #include <pip_util.h>
 #include <pip_debug.h>
+#include <pip_gdbif.h>
 
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
@@ -163,15 +164,14 @@ typedef struct {
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
   /* glibc workaround */
   pip_set_tid_t		pip_set_tid; /* to correct pd->tid */
-  /* Unused functions */
-  free_t		free;	      /* to override free() - EXPERIMENTAL*/
-  glibc_init_t		glibc_init;   /* only in patched Glibc */
   /* glibc variables */
   char			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
   char			**prog;
   char			**prog_full;
   char			***environ;    /* pointer to the environ variable */
+  /* for pip-gdb */
+  struct pip_gdbif_root	**gdbif_root;
 } pip_symbols_t;
 
 typedef struct {

@@ -91,7 +91,7 @@ int main( int argc, char **argv ) {
   err = pip_spawn( nargv[0], nargv, NULL, PIP_CPUCORE_ASIS, NULL,
 		   NULL, NULL, NULL );
   CHECK( RV=err,
-	 (RV!=EFAULT && RV!=0),
+	 (RV!=ENOENT && RV!=0),
 	 return(EXIT_FAIL) );
   if( !err ) {
     CHECK( wait_termination(), RV, return(EXIT_FAIL) );

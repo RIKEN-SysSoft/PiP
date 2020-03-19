@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include bin preload util sample
+SUBDIRS = lib include gdbif bin preload util sample
 
 include $(top_srcdir)/build/rule.mk
 
@@ -64,7 +64,7 @@ test-progs:
 	make -C test/blt
 
 .PHONY: testclean
-testclean: 
+testclean:
 	make -C test testclean
 	make -C test/util testclean
 	make -C test/prog testclean

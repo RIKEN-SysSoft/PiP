@@ -34,19 +34,26 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-CPPFLAGS += -I$(PIPINCDIR) -I.
+LIBRARY  = libpip.so
+LIBRARY_PIPGDB = libpip_gdb.so
+LIBRARIES = $(LIBRARY) $(LIBRARY_PIPGDB)
+
+CPPFLAGS += -I$(PIPINCDIR) -I. \
+	-DPIP_INSTALL_LIBPIPGDB=\"$(default_libdir)/$(LIBRARY_PIPGDB)\" \
+	-DPIP_MAKE_LIBPIPGDB=\"`pwd`/$(LIBRARY_PIPGDB)\"
 CFLAGS += $(PICCFLAG)
 FCTXOBJS = fctx_jump.o fctx_make.o
 LDFLAGS  = -shared -L$(glibc_libdir) -ldl
 
-LIBRARY  = libpip.so
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
-	pip_dlfcn.c pip_signal.c
+	pip_dlfcn.c pip_signal.c pip_gdb.c
 
 OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS)
+
+OBJS_PIPGDB = pip_gdb.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_context.h		\
@@ -71,6 +78,9 @@ $(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
+
+$(LIBRARY_PIPGDB): $(OBJS_PIPGDB) Makefile
+	$(CC) $(LDFLAGS) $(OBJS_PIPGDB) -o $@
 
 debug:
 	CPPFLAGS+="-DDEBUG" make all;

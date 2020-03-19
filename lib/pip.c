@@ -625,6 +625,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
     pip_gdbif_initialize_root( ntasks );
+    pip_gdbif_task_commit( pip_task );
 
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
     /* child task */

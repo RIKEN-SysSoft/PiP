@@ -36,8 +36,10 @@
 #ifndef _pip_gdbif_h_
 #define _pip_gdbif_h_
 
+#ifndef PIP_GDBIF_ENUM_ONLY
 #include <pip_machdep.h> /* for pip_spinlock_t */
 #include <pip_gdbif_queue.h>
+#endif
 
 /* make this independent from <pip.h> */
 enum pip_gdbif_pipid {
@@ -67,6 +69,10 @@ enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this str
   PIP_GDBIF_EXMODE_PROCESS	= 1,
   PIP_GDBIF_EXMODE_THREAD	= 2
 };
+
+#define PIP_GDBIF_ROOT_VARNAME		"pip_gdbif_root"
+
+#ifndef PIP_GDBIF_ENUM_ONLY
 
 struct pip_gdbif_task {
   /* double linked list */
@@ -115,5 +121,7 @@ struct pip_gdbif_root {
 
   struct pip_gdbif_task	tasks[];
 };
+
+#endif /* PIP_GDBIF_ENUM_ONLY */
 
 #endif /* _pip_gdbif_h_ */

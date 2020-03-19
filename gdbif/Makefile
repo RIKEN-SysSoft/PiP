@@ -34,27 +34,27 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAM = pip-exec
-PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
-	pips printpipmode
+HEADERS  = pip_gdbif_defs.h
 
-PROGRAMS  = $(PROGRAM) printpipmode
-MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
-	pips printpipmode.c
+CPPFLAGS = -I../include
 
-CFLAGS   += -pthread
-CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
-LDLIBS   += $(PIPLDLIB) -ldl
+TARGET   = $(HEADERS)
+MYREADELF = pip_readelf
+SRCS     = $(srcdir)/pip_readelf.c
 
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
+DEPINCS  = $(PIPINCDIR)/pip_gdbif.h
+
+$(TARGET) : pip_gdbif.c $(MYREADELF) $(DEPINCS)
+	$(CC) $(CPPFLAGS) -c pip_gdbif.c -o pip_gdbif.o
+	./$(MYREADELF) pip_gdbif.o pip_gdbif_defs.h
+
+$(MYREADELF) : $(SRCS) $(DEPINCS)
+	$(CC) $< -o $@
 
 include $(top_srcdir)/build/rule.mk
 
-pip-exec: pip-exec.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
+clean :
+	$(RM) pip_gdbif.o pip_gdbif_defs.h *~
 
-printpipmode: printpipmode.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
-
-post-clean-hook:
-	$(RM) *.E *.log
+veryclean : clean
+	$(RM) $(MYREADELF)
