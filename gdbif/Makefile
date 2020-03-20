@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-HEADERS  = pip_gdbif_defs.h
+HEADERS  = pip_gdbif_offsets.h
 
 CPPFLAGS = -I../include
 
@@ -46,7 +46,7 @@ DEPINCS  = $(PIPINCDIR)/pip_gdbif.h
 
 $(TARGET) : pip_gdbif.c $(MYREADELF) $(DEPINCS)
 	$(CC) $(CPPFLAGS) -c pip_gdbif.c -o pip_gdbif.o
-	./$(MYREADELF) pip_gdbif.o pip_gdbif_defs.h
+	./$(MYREADELF) pip_gdbif.o pip_gdbif_offsets.h
 
 $(MYREADELF) : $(SRCS) $(DEPINCS)
 	$(CC) $< -o $@
@@ -54,7 +54,7 @@ $(MYREADELF) : $(SRCS) $(DEPINCS)
 include $(top_srcdir)/build/rule.mk
 
 clean :
-	$(RM) pip_gdbif.o pip_gdbif_defs.h *~
+	$(RM) $(TARGET) pip_gdbif.o *~
 
 veryclean : clean
 	$(RM) $(MYREADELF)
