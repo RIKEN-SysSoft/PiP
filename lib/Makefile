@@ -34,7 +34,10 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-LIBRARY  = libpip.so
+LIBNAME  = libpip.so
+
+SO_MAJOR = 0
+LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 LIBRARY_PIPGDB = libpip_gdb.so
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPGDB)
 
@@ -43,7 +46,7 @@ CPPFLAGS += -I$(PIPINCDIR) -I. \
 	-DPIP_MAKE_LIBPIPGDB=\"`pwd`/$(LIBRARY_PIPGDB)\"
 CFLAGS += $(PICCFLAG)
 FCTXOBJS = fctx_jump.o fctx_make.o
-LDFLAGS  = -shared -L$(glibc_libdir) -ldl
+LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY) -L$(glibc_libdir) -ldl
 
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
@@ -78,9 +81,17 @@ $(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
+	rm -f $(LIBNAME)
+	ln -s $(LIBRARY) $(LIBNAME)
 
 $(LIBRARY_PIPGDB): $(OBJS_PIPGDB) Makefile
 	$(CC) $(LDFLAGS) $(OBJS_PIPGDB) -o $@
+
+# chmod is to make rpmbuild happy
+install:
+	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY)
+	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
+	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
 
 debug:
 	CPPFLAGS+="-DDEBUG" make all;

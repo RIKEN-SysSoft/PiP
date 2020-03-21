@@ -247,7 +247,7 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   symp->libc_argcp       = pip_dlsym( handle, "__libc_argc"           );
   symp->prog             = pip_dlsym( handle, "__progname"            );
   symp->prog_full        = pip_dlsym( handle, "__progname_full"       );
-  symp->gdbif_root       = pip_dlsym( handle, "pip_gdbif_root"        );
+  symp->gdbif_root       = pip_dlsym( handle, PIP_GDBIF_ROOT_VARNAME  );
 
   /* check mandatory symbols */
   DBGF( "env:%p  func(%s):%p   main:%p",
