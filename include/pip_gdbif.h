@@ -1,7 +1,7 @@
 /*
-  * $RIKEN_copyright: Riken Center for Computational Sceience,
-  * System Software Development Team, 2016, 2017, 2018, 2019$
-  * $PIP_VERSION: Version 1.0.0$
+  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+  * 	  System Software Devlopment Team. All rights researved$
+  * $PIP_VERSION: Version 1.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
@@ -30,43 +30,15 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2018
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_gdbif_h_
 #define _pip_gdbif_h_
 
 #include <pip_machdep.h> /* for pip_spinlock_t */
-#include <pip_queue.h>
-
-/* make this independent from <pip.h> */
-enum pip_gdbif_pipid {
-  PIP_GDBIF_PIPID_ROOT		= -1,
-  PIP_GDBIF_PIPID_ANY		= -2
-};
-
-enum pip_task_status {
-  PIP_GDBIF_STATUS_NULL		= 0, /* just to make sure, there is nothing in this struct and invalid to access */
-  PIP_GDBIF_STATUS_CREATED	= 1, /* just after pip_spawn() is called and this structure is created */
-  /* Note: the order of state transition of the next two depends on implementation (option) */
-  /* do to rely on the order of the next two. */
-  PIP_GDBIF_STATUS_LOADED	= 2, /* just after calling dlmopen */
-  PIP_GDBIF_STATUS_SPAWNED	= 3, /* just after calling pthread_create() or clone() */
-  PIP_GDBIF_STATUS_TERMINATED	= 4  /* when the task is about to die (killed) */
-};
-
-/* gdb -> libpip */
-enum pip_gdb_status {
-  PIP_GDBIF_GDB_DETACHED	= 0, /* this structure can be freed */
-  PIP_GDBIF_GDB_ATTACHED	= 1  /* gdb is using this, cannot be freed */
-};
-
-enum pip_task_exec_mode {	/* One of the value (except NULL) is set when this structure is created */
-  /* and the value is left unchanged until the structure is put on the free list */
-  PIP_GDBIF_EXMODE_NULL		= 0,
-  PIP_GDBIF_EXMODE_PROCESS	= 1,
-  PIP_GDBIF_EXMODE_THREAD	= 2
-};
+#include <pip_gdbif_queue.h>
+#include <pip_gdbif_enums.h>
 
 struct pip_gdbif_task {
   /* double linked list */
@@ -89,8 +61,7 @@ struct pip_gdbif_task {
   int	pipid;
   /* exit code, this value is set when the PiP task */
   /* gets PIP_GDBIF_STATUS_TERMINATED */
-  int	exit_code;
-
+  volatile int	exit_code;
   /* pip task exec mode */
   enum pip_task_exec_mode	exec_mode;
   /* task status, this is set by PiP lib */
