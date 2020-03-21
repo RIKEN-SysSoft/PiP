@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include bin preload util sample \
+SUBDIRS = lib include gdbif bin preload util sample \
 	test/util \
 	test/basics \
 	test/spawn \
