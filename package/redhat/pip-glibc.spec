@@ -7,7 +7,7 @@
 #
 
 %define	pip_glibc_dir		/opt/pip
-%define	pip_glibc_release	pip0
+%define	pip_glibc_release	pip2
 
 # disable strip, otherwise the pip-gdb shows the following error:
 #	warning: Unable to find libthread_db matching inferior's thread library, thread debugging will not be available.
