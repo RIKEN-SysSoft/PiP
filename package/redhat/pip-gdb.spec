@@ -6,7 +6,7 @@
 #	$ rpmbuild -bb ~/rpmbuild/SPECS/pip-gdb.spec
 #
 
-%define	pip_gdb_release		pip0
+%define	pip_gdb_release		pip1
 %define pip_glibc_libdir	/opt/pip/lib
 %define scl_prefix		pip-
 
@@ -793,7 +793,7 @@ Patch1109: gdb-rhbz1261564-aarch64-hw-watchpoint-2of5.patch
 Patch1110: gdb-rhbz1261564-aarch64-hw-watchpoint-3of5.patch
 Patch1111: gdb-rhbz1261564-aarch64-hw-watchpoint-4of5.patch
 Patch1112: gdb-rhbz1261564-aarch64-hw-watchpoint-5of5.patch
-Patch1113: gdb-rhbz1261564-aarch64-hw-watchpoint-test.patch 
+Patch1113: gdb-rhbz1261564-aarch64-hw-watchpoint-test.patch
 
 # [s390] Import IBM z13 support (RH BZ 1182151).
 Patch1080: gdb-rhbz1182151-ibm-z13-01of22.patch
