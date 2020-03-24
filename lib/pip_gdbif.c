@@ -49,7 +49,6 @@ static int pipid_to_gdbif( int pipid ) {
   case PIP_PIPID_ROOT:
     return( PIP_GDBIF_PIPID_ROOT );
   case PIP_PIPID_ANY:
-    DBGF( "PIPID:ANY --------" );
     return( PIP_GDBIF_PIPID_ANY );
   default:
     return( pipid );
@@ -85,7 +84,7 @@ void pip_gdbif_load( pip_task_internal_t *task ) {
     if( faddr != NULL ) {
       if( !pip_dladdr( faddr, &dli ) ) {
 	pip_warn_mesg( "dladdr(%s) failure"
-		       " - PIP-gdb won't work with this PiP task %d",
+		       " - PiP-gdb won't work with this PiP task %d",
 		       task->annex->args.prog, task->pipid );
       } else {
 	gdbif_task->load_address = dli.dli_fbase;
@@ -96,14 +95,14 @@ void pip_gdbif_load( pip_task_internal_t *task ) {
     if( realpath( task->annex->args.prog, buf ) == NULL ) {
       gdbif_task->realpathname = NULL; /* give up */
       pip_warn_mesg( "realpath(%s): %s"
-		     " - PIP-gdb won't work with this PiP task %d",
+		     " - PiP-gdb won't work with this PiP task %d",
 		     task->annex->args.prog, strerror( errno ), task->pipid );
     } else {
       gdbif_task->realpathname = strdup( buf );
       DBGF( "gdbif_task->realpathname:%p", gdbif_task->realpathname );
       if( gdbif_task->realpathname == NULL ) { /* give up */
 	pip_warn_mesg( "strdup(%s) failure"
-		       " - PIP-gdb won't work with this PiP task %d",
+		       " - PiP-gdb won't work with this PiP task %d",
 		       task->annex->args.prog, task->pipid );
       }
     }
@@ -136,6 +135,7 @@ static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
 					pip_task_internal_t *task ) {
   ENTER;
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
+  task->annex->gdbif_task = gdbif_task;
   gdbif_task->pathname     = task->annex->args.prog;
   gdbif_task->realpathname = NULL; /* filled by pip_gdbif_load() later */
   if ( task->annex->args.argv == NULL ) {
@@ -202,7 +202,6 @@ void pip_gdbif_initialize_root( int ntasks ) {
   pip_gdbif_init_task_struct( &gdbif_root->task_root, pip_root->task_root );
   pip_gdbif_init_root_task_link( &gdbif_root->task_root );
   gdbif_root->task_root.status = PIP_GDBIF_STATUS_CREATED;
-  pip_root->task_root->annex->gdbif_task = &gdbif_root->task_root;
   pip_memory_barrier();
   /* assign after initialization is completed */
   pip_gdbif_root = gdbif_root;

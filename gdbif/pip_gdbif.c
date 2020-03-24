@@ -25,5 +25,6 @@ const int PIP_GDBIF_TASK_GDB_STATUS	= (offsetof(struct pip_gdbif_task,gdb_status
 /* struct pip_gdbif_root */
 
 const int PIP_GDBIF_ROOT_SIZE			= sizeof(struct pip_gdbif_root);
+const int PIP_GDBIF_ROOT_OFFSET_TASK_ROOT	= offsetof(struct pip_gdbif_root,task_root);
 const int PIP_GDBIF_ROOT_OFFSET_BEFOER_MAIN	= offsetof(struct pip_gdbif_root,hook_before_main);
 const int PIP_GDBIF_ROOT_OFFSET_AFTER_MAIN	= offsetof(struct pip_gdbif_root,hook_after_main);
