@@ -5,7 +5,6 @@ AC_PREREQ([2.69])
 AC_INIT([pip], [1.1.0])
 AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
-AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_HEADERS([include/config.h])
 
 # Specialized system macros

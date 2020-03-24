@@ -9,7 +9,7 @@
 
 Name: pip
 Version: 1.1.0
-Release: 1%{?dist}
+Release: 0%{?dist}
 Epoch: 1
 Source: %{name}-%{version}.tar.gz
 
@@ -60,7 +60,7 @@ make DESTDIR="$RPM_BUILD_ROOT" \
 %attr(0755,root,root) %{_bindir}/pipmap
 %attr(0644,root,root) %{_mandir}/man1*/[ABD-Zabcd-z]*
 %attr(0644,root,root) %{_mandir}/man3*/[ABD-Zabcd-z]*
-%attr(0644,root,root) %{docdir}/*
+%doc %{docdir}
 # libs
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/piplnlibs

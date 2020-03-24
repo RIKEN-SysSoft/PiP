@@ -45,6 +45,8 @@ PROGRAMS  = hello
 
 PROGRAMS_TO_INSTALL = # nothing
 
+EXAMPLES = hello.c
+
 include $(top_srcdir)/build/rule.mk
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
