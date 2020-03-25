@@ -618,9 +618,9 @@ static void* pip_do_spawn( void *thargs )  {
   if( !pip_is_threaded_() ) {
     pip_reset_signal_handler( SIGCHLD );
     pip_reset_signal_handler( SIGTERM );
-    pip_reset_signal_handler( SIGHUP  );
     (void) setpgid( 0, (pid_t) pip_root->task_root->annex->tid );
   }
+  pip_debug_on_exceptions();
 
   if( ( err = pip_do_corebind( 0, coreno, NULL ) ) != 0 ) {
     pip_warn_mesg( "failed to bound CPU core:%d (%d)", coreno, err );

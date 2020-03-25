@@ -114,8 +114,10 @@ void pip_gdbif_exit( pip_task_internal_t *task, int extval ) {
   struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
   DBG;
   if( gdbif_task != NULL ) {
+    gdbif_task->pid       = -1;
     gdbif_task->status    = PIP_GDBIF_STATUS_TERMINATED;
     gdbif_task->exit_code = extval;
+    pip_memory_barrier();
   }
 }
 

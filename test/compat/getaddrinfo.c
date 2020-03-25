@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define DEBUG
+//#define DEBUG
 
 #include <netdb.h>
 #include <test.h>
@@ -45,10 +45,8 @@ int my_getaddrinfo( char *hostname ) {
   memset( &hints, 0, sizeof(hints) );
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_family   = AF_INET;
-  DBG;
   rv = getaddrinfo( hostname, NULL, &hints, &res );
-  DBG;
-  freeaddrinfo( res );
+  if( rv == 0 && res != NULL ) freeaddrinfo( res );
   return rv;
 }
 

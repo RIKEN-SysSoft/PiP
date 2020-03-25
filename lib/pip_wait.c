@@ -114,9 +114,6 @@ pip_set_exit_status( pip_task_internal_t *taski, int status ) {
     if( taski->annex->status == 0 ) {
       taski->annex->status = status;
     }
-    pip_gdbif_exit( taski, status );
-    pip_memory_barrier();
-    pip_gdbif_hook_after( taski );
   }
   DBGF( "status: 0x%x(0x%x)", status, taski->annex->status );
   RETURNV;

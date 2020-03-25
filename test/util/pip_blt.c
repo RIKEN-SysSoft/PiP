@@ -31,21 +31,6 @@ static int is_taskq_empty( pip_task_queue_t *queue ) {
   return rv;
 }
 
-static void set_sighup_watcher( void ) {
-  void sighup_watcher( int sig, siginfo_t *info, void* extra ) {
-    fprintf( stderr, "\nSIGHUP !!!!!!\n" );
-    fflush( NULL );
-    abend(EXIT_UNTESTED);
-  }
-  struct sigaction sigact;
-
-  memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = sighup_watcher;
-  sigact.sa_flags     = SA_RESETHAND;
-  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, 
-	 abend(EXIT_UNTESTED) );
-}
-
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
   int 	nacts, npass, ntasks, pipid, extval;
@@ -55,7 +40,6 @@ int main( int argc, char **argv ) {
 
   set_sigsegv_watcher();
   set_sigint_watcher();
-  set_sighup_watcher();
 
   if( argc < 4 ) return EXIT_UNTESTED;
   CHECK( access( argv[3], X_OK ),     RV, abend(EXIT_UNTESTED) );
@@ -95,8 +79,8 @@ int main( int argc, char **argv ) {
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
     j = ( j >= nacts ) ? 0 : j;
-    CHECK( pip_blt_spawn( &prog, c, 
-			  PIP_TASK_PASSIVE, 
+    CHECK( pip_blt_spawn( &prog, c,
+			  PIP_TASK_PASSIVE,
 			  &pipid, NULL, &queues[j], NULL ),
 	   RV,
 	   abend(EXIT_UNTESTED) );

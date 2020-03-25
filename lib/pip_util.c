@@ -788,3 +788,102 @@ int pip_is_debug_build( void ) {
   return 0;
 #endif
 }
+
+void pip_describe( void ) {
+  pid_t tid = pip_gettid();
+  if( pip_isa_root() ) {
+    printf( "<ROOT(%d)>\n", tid );
+  } else if( pip_task != NULL ) {
+    printf( "<TASK:%d(%d)>\n", pip_task->pipid, tid );
+  }
+  printf( "<unknown(%d)>\n", tid );
+  fflush( NULL );
+}
+
+char *pip_desc( void ) {
+  pid_t tid = pip_gettid();
+  char *mesg;
+
+  if( pip_isa_root() ) {
+    asprintf( &mesg, "<ROOT(%d)>", tid );
+  } else if( pip_task != NULL ) {
+    asprintf( &mesg, "<TASK:%d(%d)>", pip_task->pipid, tid );
+  } else {
+    asprintf( &mesg, "<unknown(%d)>", tid );
+  }
+  return( mesg );
+}
+
+static char *pip_path_gdb;
+
+void pip_attach_gdb( void ) {
+  pid_t	target, pid;
+
+  if( pip_path_gdb != NULL ) {
+    target = pip_gettid();
+    if( ( pid = fork() ) == 0 ) {
+      extern char **environ;
+      char attach[32];
+      char *argv[16];
+      int argc = 0;
+
+      snprintf( attach, sizeof(attach), "attach %d", target );
+      argv[argc++] = pip_path_gdb;
+      argv[argc++] = "-quiet";
+      argv[argc++] = "-ex";
+      argv[argc++] = attach;
+      argv[argc++] = "-ex";
+      argv[argc++] = "call pip_describe()";
+      argv[argc++] = "-ex";
+      argv[argc++] = "bt";
+      argv[argc++] = "-ex";
+      argv[argc++] = "detach";
+      argv[argc++] = "-ex";
+      argv[argc++] = "quit";
+      argv[argc++] = NULL;
+      execve( pip_path_gdb, argv, environ );
+      fprintf( stderr, "PiP: Failed to execute PiP-gdb (%s)\n", pip_path_gdb );
+    } else if( pid < 0 ) {
+      fprintf( stderr, "PiP: Failed to fork PiP-gdb (%s)\n", pip_path_gdb );
+    } else {
+      waitpid( pid, NULL, 0 );
+    }
+  }
+}
+
+static void pip_exception_handler( int sig, siginfo_t *info, void *extra ) {
+  pip_err_mesg( "%s !!", strsignal(sig) );
+  if( pip_root != NULL ) {
+    pip_spin_unlock( &pip_root->lock_bt );
+  }
+
+  if( pip_isa_root() ) pip_print_maps();
+  pip_attach_gdb();
+
+  if( pip_root != NULL ) {
+    pip_spin_unlock( &pip_root->lock_bt );
+  }
+  if( pip_is_threaded_() && !pip_isa_root() ) {
+    pthread_exit( NULL );
+  } else {
+    exit( sig );
+  }
+}
+
+void pip_debug_on_exceptions( void ) {
+  struct stat 	stbuf;
+
+  if( !pip_is_threaded_() &&
+      ( pip_path_gdb = getenv( "PIP_GDB" ) ) != NULL ) {
+    if( stat( pip_path_gdb, &stbuf ) != 0 ) {
+      pip_err_mesg( "PiP-gdb not found (%s)\n", pip_path_gdb );
+    } else if( !S_ISREG( stbuf.st_mode ) ) {				\
+      pip_err_mesg( "PiP-gdb is not a regular file (%s)\n", pip_path_gdb );
+    } else if( !( stbuf.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH) ) ) {
+      pip_err_mesg( "PiP-gdb is not executable (%s)\n", pip_path_gdb );
+    } else {
+      pip_set_signal_handler( SIGHUP,  pip_exception_handler, NULL );
+      pip_set_signal_handler( SIGSEGV, pip_exception_handler, NULL );
+    }
+  }
+}

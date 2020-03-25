@@ -93,6 +93,7 @@ extern "C" {
   double pip_gettime( void );
 
   void pip_backtrace_fd( int depth, int fd );
+  void pip_debug_on_exceptions( void );
 
 #ifdef __cplusplus
 }

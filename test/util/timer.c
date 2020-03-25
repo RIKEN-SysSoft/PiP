@@ -57,7 +57,7 @@ static void cleanup( void ) {
     system( PIPS " -l" );
     system( PIPS " -s HUP" );
     (void) kill( pid, SIGHUP );
-    usleep( 100 * 1000 );
+    sleep( 1 );
     system( PIPS " -s KILL > /dev/null 2>&1" );
     (void) kill( pid, SIGKILL );
   }

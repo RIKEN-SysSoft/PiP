@@ -437,38 +437,6 @@ static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {
 static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
   ENTER;
   ASSERTD( pip_task->pipid != PIP_PIPID_ROOT );
-#ifdef AH
-  int i;
-  for( i=0; i<pip_root->ntasks; i++ ) {
-    pip_task_internal_t *taski = &pip_root->tasks[i];
-    char *ststr = "(unknown)";
-    char idstr[64];
-    if( taski->type == PIP_TYPE_NONE ) continue;
-    if( pip_root->tasks[i].flag_exit == PIP_EXITED ) {
-      ststr = "EXITED";
-    } else {
-      if( PIP_IS_RUNNING( taski ) ) {
-	if( taski->task_sched == taski ) {
-	  ststr = "RUNNING";
-	} else if( !taski->flag_semwait ) {
-	  ststr = "running";
-	} else {
-	  ststr = "sleeping";
-	}
-      } else if( PIP_IS_SUSPENDED( taski ) ) {
-	if( taski->task_sched == taski ) {
-	  ststr = "SUSPENDED";
-	} else if( !taski->flag_semwait ) {
-	  ststr = "suspended";
-	} else {
-	  ststr = "sleeping";
-	}
-      }
-    }
-    pip_pipidstr( taski, idstr );
-    DBGF( "%s(PID:%d) %s", idstr, taski->annex->tid, ststr );
-  }
-#endif
   (void) pip_kill_all_tasks();
   RETURNV;
 }
@@ -483,15 +451,6 @@ void pip_set_sigmask( int sig ) {
 
 void pip_unset_sigmask( void ) {
   ASSERT( sigprocmask( SIG_SETMASK, &pip_root->old_sigmask, NULL ) );
-}
-
-static void pip_sighup_handler( int sig, siginfo_t *info, void *extra ) {
-  ENTER;
-  pip_err_mesg( "Hangup signal !!" );
-  pip_backtrace_fd( 0, 1 );
-  fflush( NULL );
-  pip_sigterm_handler( sig, info, extra );
-  RETURNV;
 }
 
 /* API */
@@ -618,9 +577,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_set_signal_handler( SIGTERM,
 			    pip_sigterm_handler,
 			    &pip_root->old_sigterm );
-    pip_set_signal_handler( SIGHUP,
-			    pip_sighup_handler,
-			    &pip_root->old_sighup );
+
+    pip_debug_on_exceptions();
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 

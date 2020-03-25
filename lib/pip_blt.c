@@ -333,6 +333,9 @@ void pip_terminate_task( pip_task_internal_t *self ) {
     self->annex->symbols.named_export_fin( self );
   }
   DBGF( "PIPID:%d -- FORCE EXIT", self->pipid );
+  pip_gdbif_exit( self, WEXITSTATUS(self->annex->status) );
+  pip_gdbif_hook_after( self );
+
   if( pip_is_threaded_() ) {	/* thread mode */
     self->annex->flag_sigchld = 1;
     pip_memory_barrier();
