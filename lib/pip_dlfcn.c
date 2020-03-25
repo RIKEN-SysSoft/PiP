@@ -53,7 +53,7 @@ void *pip_dlopen( const char *filename, int flag ) {
   return handle;
 }
 
-void *pip_dlmopen( Lmid_t lmid, const char *path, int flag ) {
+void *pip_dlmopen( long lmid, const char *path, int flag ) {
   void *handle;
   if( pip_is_initialized() ) {
     pip_spin_lock( &pip_root->lock_ldlinux );
@@ -90,14 +90,15 @@ void *pip_dlsym( void *handle, const char *symbol ) {
   return addr;
 }
 
-int pip_dladdr( void *addr, Dl_info *info ) {
+int pip_dladdr( void *addr, void *info ) {
+  Dl_info *dlinfo = (Dl_info*) info;
   int rv;
   if( pip_is_initialized() ) {
     pip_spin_lock( &pip_root->lock_ldlinux );
     rv = dladdr( addr, info );
     pip_spin_unlock( &pip_root->lock_ldlinux );
   } else {
-    rv = dladdr( addr, info );
+    rv = dladdr( addr, dlinfo );
   }
   return rv;
 }

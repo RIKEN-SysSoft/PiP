@@ -44,17 +44,16 @@ MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 
 CFLAGS   += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
-LDLIBS   += $(PIPLDLIB) -ldl
 
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 
 include $(top_srcdir)/build/rule.mk
 
 pip-exec: pip-exec.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
+	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g $(PIPLDFLAGS_ROOT) $< -o $@ $(LDLIBS)
 
 printpipmode: printpipmode.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -fpie $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
+	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g $(PIPLDFLAGS_ROOT) $< -o $@ $(LDLIBS)
 
 post-clean-hook:
 	$(RM) *.E *.log

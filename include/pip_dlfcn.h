@@ -36,23 +36,16 @@
 #ifndef _pip_dlfcn_h_
 #define _pip_dlfcn_h_
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
-#include <dlfcn.h>
-#include <link.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
   /* locked dl* functions */
   void *pip_dlopen( const char *filename, int flag );
-  void *pip_dlmopen( Lmid_t lmid, const char *path, int flag );
+  void *pip_dlmopen( long lmid, const char *path, int flag );
   int   pip_dlinfo( void *handle, int request, void *info );
   void *pip_dlsym( void *handle, const char *symbol );
-  int   pip_dladdr( void *addr, Dl_info *info );
+  int   pip_dladdr( void *addr, void *info );
   int   pip_dlclose( void *handle );
 
 #ifdef __cplusplus

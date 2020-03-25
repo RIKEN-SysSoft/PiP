@@ -25,24 +25,23 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+# $RIKEN_copyright: 2018-2020 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
 CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS +=  $(PIECFLAG)
+CFLAGS += $(PIECFLAG)
 PIPLIBDIR = $(shell (cd $(top_builddir)/lib && pwd))
 
 LDLIBS = -L$(PIPLIBDIR) -L$(libdir) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
 
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
-	$(LDLIBS) -pthread $(PIELDFLAG) 
+	$(LDLIBS) $(PIELDFLAG)
 
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h  \
-	$(PIPINCDIR)/pip_internal.h $(PIPINCDIR)/pip_machdep.h \
 	$(PIPINCDIR)/pip_debug.h $(PIPINCDIR)/pip_util.h \
 	../test.h
 
-DEPLIBS += $(PIPLIBDIR)/libpip.so
+DEPLIBS += $(PIPLIBDIR)/libpip.so $(PIPLIBDIR)/libpip_gdb.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -50,7 +49,7 @@ PROGRAMS_TO_INSTALL = # nothing
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS)$< -o $@
+	$(CXX) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %: %.f $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@

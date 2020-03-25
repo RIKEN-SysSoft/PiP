@@ -35,10 +35,11 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 LIBNAME  = libpip.so
-
 SO_MAJOR = 0
 LIBRARY  = $(LIBNAME).$(SO_MAJOR)
-LIBRARY_PIPGDB = libpip_gdb.so
+
+LIBNAME_PIPGDB = libpip_gdb.so
+LIBRARY_PIPGDB = $(LIBNAME_PIPGDB).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPGDB)
 
 CPPFLAGS += -I$(PIPINCDIR) -I. \
@@ -86,12 +87,17 @@ $(LIBRARY): $(OBJS) Makefile
 
 $(LIBRARY_PIPGDB): $(OBJS_PIPGDB) Makefile
 	$(CC) $(LDFLAGS) $(OBJS_PIPGDB) -o $@
+	rm -f $(LIBNAME_PIPGDB)
+	ln -s $(LIBRARY_PIPGDB) $(LIBNAME_PIPGDB)
 
 # chmod is to make rpmbuild happy
 install:
-	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY)
-	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
+	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY) \
+	$(DESTDIR)$(libdir)/$(LIBRARY_PIPGDB)
+	rm -f $(DESTDIR)$(libdir)/$(LIBNAME) \
+	$(DESTDIR)$(libdir)/$(LIBNAME_PIPGDB)
 	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
+	ln -s $(LIBRARY_PIPGDB) $(DESTDIR)$(libdir)/$(LIBNAME_PIPGDB)
 
 debug:
 	CPPFLAGS+="-DDEBUG" make all;

@@ -915,4 +915,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
  * @}
  */
 
+#include <pip_blt.h>
+#include <pip_dlfcn.h>
+#include <pip_signal.h>
+
 #endif	/* _pip_h_ */

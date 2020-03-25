@@ -34,7 +34,6 @@
  */
 
 #include <pip_internal.h>
-#include <pip_dlfcn.h>
 
 #include <sys/syscall.h>
 #include <sys/prctl.h>

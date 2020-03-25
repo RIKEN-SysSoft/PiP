@@ -56,6 +56,8 @@
 #include <stdarg.h>
 #include <dirent.h>
 #include <fcntl.h>
+#include <link.h>
+#include <dlfcn.h>
 
 #include <pip_blt.h>
 #include <pip_clone.h>

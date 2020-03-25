@@ -19,8 +19,9 @@ localedir = $(default_localedir)
 PTHREADFLAG = -pthread
 
 CC = $(DEFAULT_CC)
-CFLAGS = $(DEFAULT_CFLAGS) $(PTHREADFLAG)
-LDFLAGS = $(DEFAULT_LDFLAGS)
+CFLAGS  = $(DEFAULT_CFLAGS) $(PTHREADFLAG)
+FFLAGS  = $(DEFAULT_FFLAGS) $(PTHREADFLAG)
+LDFLAGS = $(DEFAULT_LDFLAGS) $(PTHREADFLAG)
 LIBS = $(DEFAULT_LIBS)
 INCLUDE_BUILDDIR = $(top_builddir)/include
 INCLUDE_SRCDIR = $(top_srcdir)/include
@@ -45,7 +46,14 @@ PIPINCDIR = $(top_srcdir)/include
 PIPLIBDIR = $(top_builddir)/lib
 PIPLIB = $(top_builddir)/lib/libpip.so
 
-PIPLDLIB = -L$(top_builddir)/lib -L$(libdir) -Wl,-rpath=$(libdir) -lpip
+PIPRPATH    = -Wl,-rpath=$(libdir)
+PIPDYLINK   = -Wl,--dynamic-linker=$(dynamic_linker)
+PIPRDYNAMIC = -rdynamic
 
-PIPLDFLAGS = -pthread -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
-	$(PIPLDLIB) -ldl $(PIELDFLAG)
+PIPLDLIBS = -L$(top_builddir)/lib -L$(libdir) $(PIPRPATH) -lpip -ldl
+
+PIPLDFLAGS = $(PIELDFLAG) $(PIPRDYNAMIC) $(PIPDYLINK) $(PTHREADFLAG) $(PIPLDLIBS)
+
+PIPLDFLAGS_ROOT = $(PIPLDLIBS) $(PIPDYLINK) $(PTHREADFLAG)
+
+PIPLDFLAGS_TASK = $(PIELDFLAG) $(PIPRDYNAMIC) $(PIPLDLIBS)
