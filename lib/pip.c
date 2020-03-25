@@ -366,8 +366,10 @@ void pip_gdbif_exit( pip_task_t *task, int extval ) {
   struct pip_gdbif_task *gdbif_task = task->gdbif_task;
   DBG;
   if( gdbif_task != NULL ) {
+    gdbif_task->pid       = -1;
     gdbif_task->status    = PIP_GDBIF_STATUS_TERMINATED;
     gdbif_task->exit_code = extval;
+    pip_memory_barrier();
   }
 }
 
@@ -1492,7 +1494,6 @@ static int pip_do_spawn( void *thargs )  {
 #endif
 #endif
     pip_gdbif_exit( self, self->retval );
-    pip_memory_barrier();
     pip_gdbif_hook_after( self );
 
     if( pip_root->opts & PIP_OPT_FORCEEXIT ) {
