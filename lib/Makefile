@@ -38,26 +38,26 @@ LIBNAME  = libpip.so
 SO_MAJOR = 0
 LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 
-LIBNAME_PIPGDB = libpip_gdb.so
-LIBRARY_PIPGDB = $(LIBNAME_PIPGDB).$(SO_MAJOR)
-LIBRARIES = $(LIBRARY) $(LIBRARY_PIPGDB)
+LIBNAME_PIPINIT = libpip_init.so
+LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
+LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
 CPPFLAGS += -I$(PIPINCDIR) -I. \
-	-DPIP_INSTALL_LIBPIPGDB=\"$(default_libdir)/$(LIBRARY_PIPGDB)\" \
-	-DPIP_MAKE_LIBPIPGDB=\"`pwd`/$(LIBRARY_PIPGDB)\"
+	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
+	-DPIP_MAKE_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\"
 CFLAGS += $(PICCFLAG)
 FCTXOBJS = fctx_jump.o fctx_make.o
 LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY) -L$(glibc_libdir) -ldl
 
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
-	pip_dlfcn.c pip_signal.c pip_gdb.c
+	pip_dlfcn.c pip_signal.c pip_init.c
+
+OBJS_PIPINIT = pip_init.o
 
 OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
-	pip_dlfcn.o pip_signal.o $(FCTXOBJS)
-
-OBJS_PIPGDB = pip_gdb.o
+	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT)
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_context.h		\
@@ -85,19 +85,19 @@ $(LIBRARY): $(OBJS) Makefile
 	rm -f $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
-$(LIBRARY_PIPGDB): $(OBJS_PIPGDB) Makefile
-	$(CC) $(LDFLAGS) $(OBJS_PIPGDB) -o $@
-	rm -f $(LIBNAME_PIPGDB)
-	ln -s $(LIBRARY_PIPGDB) $(LIBNAME_PIPGDB)
+$(LIBRARY_PIPINIT): $(OBJS_PIPINIT) Makefile
+	$(CC) $(LDFLAGS) $(OBJS_PIPINIT) -o $@
+	rm -f $(LIBNAME_PIPINIT)
+	ln -s $(LIBRARY_PIPINIT) $(LIBNAME_PIPINIT)
 
 # chmod is to make rpmbuild happy
 install:
 	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY) \
-	$(DESTDIR)$(libdir)/$(LIBRARY_PIPGDB)
+	$(DESTDIR)$(libdir)/$(LIBRARY_PIPINIT)
 	rm -f $(DESTDIR)$(libdir)/$(LIBNAME) \
-	$(DESTDIR)$(libdir)/$(LIBNAME_PIPGDB)
+	$(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
-	ln -s $(LIBRARY_PIPGDB) $(DESTDIR)$(libdir)/$(LIBNAME_PIPGDB)
+	ln -s $(LIBRARY_PIPINIT) $(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
 	CPPFLAGS+="-DDEBUG" make all;

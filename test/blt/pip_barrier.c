@@ -16,8 +16,6 @@ int main( int argc, char **argv ) {
   int 	niters = 0, i;
   volatile int	count, *countp;
 
-  set_sigsegv_watcher();
-
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }

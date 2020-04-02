@@ -53,8 +53,6 @@ int main( int argc, char **argv ) {
   int 		ntasks, pipid;
   int		core, i, extval = 0;
 
-  set_sigsegv_watcher();
-
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }

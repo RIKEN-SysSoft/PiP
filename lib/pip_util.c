@@ -39,46 +39,74 @@
 #include <sys/prctl.h>
 #include <elf.h>
 
-void pip_set_name( char *symbol, char *progname, char *funcname ) {
+void pip_set_name( pip_task_internal_t *task ) {
+  /* this function is to set the right    */
+  /* name shown by the ps and top command */
 #ifdef PR_SET_NAME
-  /* the following code is to set the right */
-  /* name shown by the ps and top commands  */
-  char nam[16];
+  pip_root_t 	*root     = task->annex->task_root;
+  int		pipid     = task->pipid;
+  char		*progname = task->annex->args.prog;
+  char 		*funcname = task->annex->args.funcname;
+  char 		symbol[3], name[16], prg[16];
 
+  symbol[2] = '\0';
+  if( root->task_root == task ) {
+    /* root process */
+    symbol[0] = 'R';
+  } else {
+    symbol[0] = ( pipid % 10 ) + '0';
+  }
+  switch( root->opts & PIP_MODE_MASK ) {
+  case PIP_MODE_PROCESS_PRELOAD:
+    symbol[1] = ':';
+    break;
+  case PIP_MODE_PROCESS_PIPCLONE:
+    symbol[1] = ';';
+    break;
+  case PIP_MODE_PROCESS_GOT:
+    symbol[1] = '.';
+    break;
+  case PIP_MODE_PTHREAD:
+    symbol[1] = '|';
+    break;
+  default:
+    symbol[1] = '?';
+    break;
+  }
   if( progname == NULL ) {
-    char prg[16];
-    prctl( PR_GET_NAME, prg, 0, 0, 0 );
-    snprintf( nam, 16, "%s%s",      symbol, prg );
+    memset( prg, 0, sizeof(prg) );
+    if( !pip_is_threaded_() ) {
+      prctl( PR_GET_NAME, prg, 0, 0, 0 );
+    } else {
+      pthread_getname_np( pthread_self(), prg, sizeof(prg) );
+    }
+    progname = prg;
   } else {
     char *p;
     if( ( p = strrchr( progname, '/' ) ) != NULL) {
       progname = p + 1;
     }
-    if( funcname == NULL ) {
-      snprintf( nam, 16, "%s%s",    symbol, progname );
-    } else {
-      snprintf( nam, 16, "%s%s@%s", symbol, progname, funcname );
-    }
+  }
+  if( funcname == NULL ) {
+    snprintf( name, 16, "%s%s",    symbol, progname );
+  } else {
+    snprintf( name, 16, "%s%s@%s", symbol, progname, funcname );
   }
   if( !pip_is_threaded_() ) {
 #define FMT "/proc/self/task/%u/comm"
     char fname[sizeof(FMT)+8];
     int fd;
 
-    (void) prctl( PR_SET_NAME, nam, 0, 0, 0 );
+    (void) prctl( PR_SET_NAME, name, 0, 0, 0 );
     sprintf( fname, FMT, (unsigned int) pip_gettid() );
     if( ( fd = open( fname, O_RDWR ) ) >= 0 ) {
-      (void) write( fd, nam, strlen(nam) );
+      (void) write( fd, name, strlen(name) );
       (void) close( fd );
     }
   } else {
-    (void) pthread_setname_np( pthread_self(), nam );
+    (void) pthread_setname_np( pthread_self(), name );
   }
-  if( 0 ) {
-    char cmd[16];
-    prctl( PR_GET_NAME, cmd, 0, 0, 0 );
-    printf( "CommanndName:'%s'\n", cmd );
-  }
+  DBGF( "CommanndName:'%s'", name );
 #endif
 }
 
@@ -196,10 +224,6 @@ char * pip_type_str( void ) {
   return typestr;
 }
 
-pid_t pip_gettid( void ) {
-  return (pid_t) syscall( (long int) SYS_gettid );
-}
-
 int pip_tgkill( int tgid, int tid, int signal ) {
   return (int) syscall( (long int) SYS_tgkill, tgid, tid, signal );
 }
@@ -236,43 +260,6 @@ int pip_idstr( char *buf, size_t sz ) {
 		  pre, pip_task->type, tid, post );
   }
   return n;
-}
-
-static void pip_message( FILE *fp, char *tagf, const char *format, va_list ap ) {
-#define PIP_MESGLEN		(512)
-  char mesg[PIP_MESGLEN];
-  char idstr[PIP_MIDLEN];
-  int len;
-
-  len = pip_idstr( idstr, PIP_MIDLEN );
-  len = snprintf( &mesg[0], PIP_MESGLEN-len, tagf, idstr );
-  vsnprintf( &mesg[len], PIP_MESGLEN-len, format, ap );
-  fprintf( stderr, "%s\n", mesg );
-}
-
-void pip_info_fmesg( FILE *fp, const char *format, ... ) {
-  va_list ap;
-  va_start( ap, format );
-  if( fp == NULL ) fp = stderr;
-  pip_message( fp, "PiP-INFO%s ", format, ap );
-}
-
-void pip_info_mesg( const char *format, ... ) {
-  va_list ap;
-  va_start( ap, format );
-  pip_message( stderr, "PiP-INFO%s ", format, ap );
-}
-
-void pip_warn_mesg( const char *format, ... ) {
-  va_list ap;
-  va_start( ap, format );
-  pip_message( stderr, "PiP-WRN%s ", format, ap );
-}
-
-void pip_err_mesg( const char *format, ... ) {
-  va_list ap;
-  va_start( ap, format );
-  pip_message( stderr, "PiP-ERR%s ", format, ap );
 }
 
 void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
@@ -420,30 +407,6 @@ int pip_debug_env( void ) {
   }
   return flag > 0;
 }
-
-#define PIP_DEBUG_BUFSZ		(4096)
-
-void pip_fprint_maps( FILE *fp ) {
-  int fd = open( "/proc/self/maps", O_RDONLY );
-  char buf[PIP_DEBUG_BUFSZ];
-
-  while( 1 ) {
-    ssize_t rc;
-    size_t  wc;
-    char *p;
-
-    if( ( rc = read( fd, buf, PIP_DEBUG_BUFSZ ) ) <= 0 ) break;
-    p = buf;
-    do {
-      wc = fwrite( p, 1, rc, fp );
-      p  += wc;
-      rc -= wc;
-    } while( rc > 0 );
-  }
-  close( fd );
-}
-
-void pip_print_maps( void ) { pip_fprint_maps( stdout ); }
 
 void pip_fprint_fd( FILE *fp, int fd ) {
   char idstr[64];
@@ -730,9 +693,10 @@ void pip_backtrace_fd( int depth, int fd ) {
     if( ( envroot = getenv( PIP_ROOT_ENV ) ) != NULL &&
 	*envroot != '\0' ) {
       root = (pip_root_t*) strtoll( envroot, NULL, 16 );
-      if( root == NULL ||
-	  !pip_is_magic_ok( root ) ||
-	  !pip_is_version_ok( root ) ) {
+      if( root == NULL               ||
+	  !pip_is_magic_ok( root )   ||
+	  !pip_is_version_ok( root ) ||
+	  !pip_are_sizes_ok( root ) ) {
 	root = NULL;
       }
     }
@@ -787,103 +751,4 @@ int pip_is_debug_build( void ) {
 #else
   return 0;
 #endif
-}
-
-void pip_describe( void ) {
-  pid_t tid = pip_gettid();
-  if( pip_isa_root() ) {
-    printf( "<ROOT(%d)>\n", tid );
-  } else if( pip_task != NULL ) {
-    printf( "<TASK:%d(%d)>\n", pip_task->pipid, tid );
-  }
-  printf( "<unknown(%d)>\n", tid );
-  fflush( NULL );
-}
-
-char *pip_desc( void ) {
-  pid_t tid = pip_gettid();
-  char *mesg;
-
-  if( pip_isa_root() ) {
-    asprintf( &mesg, "<ROOT(%d)>", tid );
-  } else if( pip_task != NULL ) {
-    asprintf( &mesg, "<TASK:%d(%d)>", pip_task->pipid, tid );
-  } else {
-    asprintf( &mesg, "<unknown(%d)>", tid );
-  }
-  return( mesg );
-}
-
-static char *pip_path_gdb;
-
-void pip_attach_gdb( void ) {
-  pid_t	target, pid;
-
-  if( pip_path_gdb != NULL ) {
-    target = pip_gettid();
-    if( ( pid = fork() ) == 0 ) {
-      extern char **environ;
-      char attach[32];
-      char *argv[16];
-      int argc = 0;
-
-      snprintf( attach, sizeof(attach), "attach %d", target );
-      argv[argc++] = pip_path_gdb;
-      argv[argc++] = "-quiet";
-      argv[argc++] = "-ex";
-      argv[argc++] = attach;
-      argv[argc++] = "-ex";
-      argv[argc++] = "call pip_describe()";
-      argv[argc++] = "-ex";
-      argv[argc++] = "bt";
-      argv[argc++] = "-ex";
-      argv[argc++] = "detach";
-      argv[argc++] = "-ex";
-      argv[argc++] = "quit";
-      argv[argc++] = NULL;
-      execve( pip_path_gdb, argv, environ );
-      fprintf( stderr, "PiP: Failed to execute PiP-gdb (%s)\n", pip_path_gdb );
-    } else if( pid < 0 ) {
-      fprintf( stderr, "PiP: Failed to fork PiP-gdb (%s)\n", pip_path_gdb );
-    } else {
-      waitpid( pid, NULL, 0 );
-    }
-  }
-}
-
-static void pip_exception_handler( int sig, siginfo_t *info, void *extra ) {
-  pip_err_mesg( "%s !!", strsignal(sig) );
-  if( pip_root != NULL ) {
-    pip_spin_unlock( &pip_root->lock_bt );
-  }
-
-  if( pip_isa_root() ) pip_print_maps();
-  pip_attach_gdb();
-
-  if( pip_root != NULL ) {
-    pip_spin_unlock( &pip_root->lock_bt );
-  }
-  if( pip_is_threaded_() && !pip_isa_root() ) {
-    pthread_exit( NULL );
-  } else {
-    exit( sig );
-  }
-}
-
-void pip_debug_on_exceptions( void ) {
-  struct stat 	stbuf;
-
-  if( !pip_is_threaded_() &&
-      ( pip_path_gdb = getenv( "PIP_GDB" ) ) != NULL ) {
-    if( stat( pip_path_gdb, &stbuf ) != 0 ) {
-      pip_err_mesg( "PiP-gdb not found (%s)\n", pip_path_gdb );
-    } else if( !S_ISREG( stbuf.st_mode ) ) {				\
-      pip_err_mesg( "PiP-gdb is not a regular file (%s)\n", pip_path_gdb );
-    } else if( !( stbuf.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH) ) ) {
-      pip_err_mesg( "PiP-gdb is not executable (%s)\n", pip_path_gdb );
-    } else {
-      pip_set_signal_handler( SIGHUP,  pip_exception_handler, NULL );
-      pip_set_signal_handler( SIGSEGV, pip_exception_handler, NULL );
-    }
-  }
 }

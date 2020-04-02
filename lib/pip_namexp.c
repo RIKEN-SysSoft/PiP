@@ -241,11 +241,11 @@ int pip_named_export( void *exp, const char *format, ... ) {
   RETURN( err );
 }
 
-static int pip_named_import_( int pipid,
-			      void **expp,
-			      int flag_nblk,
-			      const char *format,
-			      va_list ap ) {
+static int pip_do_named_import( int pipid,
+				void **expp,
+				int flag_nblk,
+				const char *format,
+				va_list ap ) {
   void pip_unlock_hashtab( void *arg ) {
     pip_namexp_list_t  	*head = (pip_namexp_list_t*) arg;
     pip_unlock_hashtab_head( head );
@@ -287,9 +287,7 @@ static int pip_named_import_( int pipid,
 
 	  memset( &wait, 0, sizeof(wait) );
 	  PIP_LIST_INIT( &wait.list );
-
 	  PIP_LIST_ADD( &entry->list_wait, &wait.list );
-	  DBG;
 	  pip_suspend_and_enqueue_nolock( &entry->queue_others,
 					  pip_unlock_hashtab,
 					  (void*) head );
@@ -359,7 +357,7 @@ int pip_named_import( int pipid, void **expp, const char *format, ... ) {
   va_list ap;
   int err;
   va_start( ap, format );
-  err = pip_named_import_( pipid, expp, 0, format, ap );
+  err = pip_do_named_import( pipid, expp, 0, format, ap );
   va_end( ap );
   RETURN( err );
 }
@@ -368,7 +366,7 @@ int pip_named_tryimport( int pipid, void **expp, const char *format, ... ) {
   va_list ap;
   int err;
   va_start( ap, format );
-  err = pip_named_import_( pipid, expp, 1, format, ap );
+  err = pip_do_named_import( pipid, expp, 1, format, ap );
   va_end( ap );
   RETURN( err );
 }

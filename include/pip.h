@@ -136,7 +136,24 @@
  * \section gdb-issue GDB issue
  *
  * The normal gdb debugger only works with the PiP root. PiP-aware GDB
- * is also provided and must be used for debugging PiP tasks.
+ * (PiP-gdb) is also provided and must be used for debugging PiP tasks.
+ *
+ * \section debug Debug
+ *
+ * If the PIP_GDB_PATH environment is set to the path to PiP-gdb, then
+ * PiP-gdb is automatically attached when an excetion signal (SIGSEGV
+ * and SIGHUP by default) is delivered. The exception signals can also
+ * be defined by
+ * setting the PIP_GDB_SIGNALS environment. Signal names can be
+ * concatenated by the '+' or '-' symbol. 'all' is reserved to specify most
+ * of the signals. For example, 'ALL-TERM' means all signals excepting
+ * SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If
+ * one of the defined or default signals is delivered, then PiP-gdb will be
+ * attached. The PiP-gdb will show backtrace by default. If users
+ * specify PIP_GDB_COMMAND that contains GDB commands, then those GDB
+ * commands will be executed by the GDB in batch mode.
+ *
+ * \sa pipcc(1)
  *
  * \section author Author
  *  Atsushi Hori (RIKEN, Japan) ahori@riken.jp
@@ -169,6 +186,11 @@
 #define PIP_ENV_MODE_PROCESS_PRELOAD	"process:preload"
 #define PIP_ENV_MODE_PROCESS_PIPCLONE	"process:pipclone"
 #define PIP_ENV_MODE_PROCESS_GOT	"process:got"
+
+#define PIP_ENV_GDB_PATH		"PIP_GDB_PATH"
+#define PIP_ENV_GDB_COMMAND		"PIP_GDB_COMMAND"
+#define PIP_ENV_GDB_SIGNALS		"PIP_GDB_SIGNALS"
+#define PIP_ENV_SHOW_MAPS		"PIP_SHOW_MAPS"
 
 #define PIP_VALID_OPTS	\
   ( PIP_MODE_PTHREAD | PIP_MODE_PROCESS_PRELOAD | \
@@ -522,7 +544,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief import the exposed memory region of the other.
+   * \brief import the exposed memory region of the other PiP task.
    *  @{
    * \param[in] pipid The PiP ID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
@@ -837,7 +859,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief spawn a PiP task (ULP API Version 1)
+   * \brief spawn a PiP task
    *  @{
    * \param[in] filename The executable to run as a PiP task
    * \param[in] argv Argument(s) for the spawned PiP task
@@ -904,6 +926,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
+  void pip_glibc_lock( int nsec100 );
+  void pip_glibc_unlock( void );
 
 #ifdef __cplusplus
 }
@@ -918,5 +942,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 #include <pip_blt.h>
 #include <pip_dlfcn.h>
 #include <pip_signal.h>
+
+void pip_glibc_lock( int );
+void pip_glibc_unlock( void );
 
 #endif	/* _pip_h_ */

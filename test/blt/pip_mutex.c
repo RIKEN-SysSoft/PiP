@@ -49,8 +49,6 @@ int main( int argc, char **argv ) {
   int 		ntasks, pipid;
   int 		niters = 0, i;
 
-  set_sigsegv_watcher();
-
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }

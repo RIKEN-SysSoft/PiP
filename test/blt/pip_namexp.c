@@ -23,8 +23,6 @@ int main( int argc, char **argv ) {
   int 	*countp;
   pip_atomic_t	*donep;
 
-  set_sigsegv_watcher();
-
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }

@@ -65,12 +65,34 @@ extern int  pip_idstr( char *buf, size_t sz );
 #define DBG_PRNT(...)	do {				\
     snprintf(_dbuf+strlen(_dbuf),_nn,__VA_ARGS__);	\
     _nn=DBGBUFLEN-strlen(_dbuf); } while(0)
+
+#ifdef DEBUG_LOCK
+#define DBG_LOCK				\
+  if( pip_root != NULL ) pip_spin_lock( &pip_root->lock_bt )
+#define DBG_UNLOCK				\
+  if( pip_root != NULL ) pip_spin_unlock( &pip_root->lock_bt )
+#else
+#define DBG_LOCK
+#define DBG_UNLOCK
+#endif
+
 #define DBG_OUTPUT	\
   do { int _dbuf_len = strlen( _dbuf ), _dbuf_rv;		\
     _dbuf[ _dbuf_len ] = '\n';					\
+    DBG_LOCK;							\
     _dbuf_rv = write( 2, _dbuf, _dbuf_len + 1 );		\
+    DBG_UNLOCK;							\
     (void)_dbuf_rv;						\
     _dbuf[0]='\0';_nn=DBGBUFLEN;} while(0)
+
+#define DBG_OUTPUT_NNL	\
+  do { int _dbuf_len = strlen( _dbuf ), _dbuf_rv;		\
+    _dbuf_rv = write( 2, _dbuf, _dbuf_len );			\
+    (void)_dbuf_rv;						\
+    _dbuf[0]='\0';_nn=DBGBUFLEN;} while(0)
+
+#define DBG_NN
+
 #define DBG_TAG							\
   do { char __tag[DBGTAGLEN]; pip_idstr(__tag,DBGTAGLEN);	\
     DBG_PRNT("%s %s:%d %s()",__tag,				\
@@ -80,11 +102,13 @@ extern int  pip_idstr( char *buf, size_t sz );
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(": ");				\
     DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
 
-#define DBG_NN		 do { DBG_PRNT("\n"); } while(0)
+#define EMSG_NNL(...)							\
+  do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(": ");				\
+    DBG_PRNT(__VA_ARGS__); DBG_OUTPUT_NNL; } while(0)
 
-#define NNEMSG(...)							\
-  do { DBG_PRTBUF; DBG_NN; DBG_TAG; DBG_PRNT(": ");			\
-    DBG_PRNT(__VA_ARGS__); DBG_NN; DBG_OUTPUT; } while(0)
+#define NL_EMSG(...)							\
+  do { DBG_PRTBUF; DBG_PRNT("\n"); DBG_TAG; DBG_PRNT(": ");		\
+    DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
 
 #ifdef DEBUG
 
@@ -101,14 +125,20 @@ extern int pip_debug_env( void );
 #define DBG						\
   if(DBGSW) { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; }
 
+#define DBG_NL						\
+  if(DBGSW) { DBG_PRTBUF; DBG_PRNT("\n"); DBG_OUTPUT; }
+
 #define DBGF(...)						\
   if(DBGSW) { EMSG(__VA_ARGS__); }
+
+#define DBGF_NNL(...)						\
+  if(DBGSW) { EMSG_NNL(__VA_ARGS__); }
 
 #define ENTER							\
   if(DBGSW) { DBG_PRTBUF; DBG_TAG_ENTER; DBG_OUTPUT; }
 
 #define ENTERF(...)							\
-  if(DBGSW) do { DBG_PRTBUF; DBG_TAG_ENTER; DBG_PRNT(": ");		\
+  if(DBGSW) do { DBG_PRTBUF; DBG_TAG_ENTER; DBG_PRNT(": ");	\
       DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
 
 #define RETURN(X)							\
@@ -123,11 +153,11 @@ extern int pip_debug_env( void );
     return; } while(0)
 
 #define ASSERT(X)						       \
-  if(X) { NNEMSG("<%s> Assertion FAILED !!!!!!",#X);	       \
+  if(X) { NL_EMSG("<%s> Assertion FAILED !!!!!!",#X);	       \
     } else { DBGF( "<%s> -- Assertion OK", #X ); }
 
 #define ASSERTD(X)						       \
-  if(DBGSW) { if(X) { NNEMSG("<%s> Assertion FAILED !!!!!!",#X);       \
+  if(DBGSW) { if(X) { NL_EMSG("<%s> Assertion FAILED !!!!!!",#X);       \
     } else {DBGF( "<%s> -- Assertion OK", #X ); } }
 
 #define DO_CHECK_CTYPE
@@ -144,7 +174,9 @@ extern int pip_debug_env( void );
 #else  /* !DEBUG */
 
 #define DBG
+#define DBG_NL
 #define DBGF(...)
+#define DBGF_NNL(...)
 #define ENTER
 #define ENTERF(...)
 #define RETURN(X)	return (X)
@@ -152,7 +184,7 @@ extern int pip_debug_env( void );
 #define ASSERTD(X)
 
 #define ASSERT(X)						       \
-  do { IF_UNLIKELY(X) { NNEMSG("<%s> Assertion FAILED !!!!!!",#X);   \
+  do { IF_UNLIKELY(X) { NL_EMSG("<%s> Assertion FAILED !!!!!!",#X);   \
     } } while(0)
 
 #define PIP_CHECK_CTYPE
@@ -160,7 +192,7 @@ extern int pip_debug_env( void );
 #endif	/* !DEBUG */
 
 #define NEVER_REACH_HERE						\
-  do { NNEMSG( "Should not reach here !!!!!!" ); } while(0)
+  do { NL_EMSG( "Should never reach here !!!!!!" ); } while(0)
 
 #define TASK_DESCRIBE( ID )			\
   pip_task_describe( stderr, __func__, (ID) );

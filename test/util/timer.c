@@ -33,9 +33,8 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define _GNU_SOURCE
-
 #include <test.h>
+
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <ctype.h>
@@ -73,7 +72,7 @@ static bool ignore_alarm( void ) {
 static void timer_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
   timedout = 1;
   /* XXX - the followings are NOT async-signal-safe */
-  fprintf( stderr, "Timer expired (%d sec)\n", timer_period );
+  fprintf( stderr, "\nTimer expired (%d sec) !!\n\n", timer_period );
   cleanup();
   (void) ignore_alarm();
   //exit( EXIT_UNRESOLVED );

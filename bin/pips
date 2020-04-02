@@ -64,18 +64,25 @@
 ###
 
 isa_pip_program() {
-    prefixes="R- R: R; R. R| 0: 1: 2: 3: 4: 5: 6: 7: 8: 9:";
+    prefixes0="R "`seq -s ' ' 0 9`;
+    prefixes1=": ; . | ?";
     if [ $# == 3 ]; then
-	for prefix in $prefixes; do
-	    if [ "$prefix$1" == "$2" ]; then
-		return 0;
-	    fi
+	for prefix0 in $prefixes0; do
+	    for prefix1 in $prefixes1; do
+		prefix="$prefix0$prefix1"
+		if [ "$prefix$1" == "$2" ]; then
+		    return 0;
+		fi
+	    done
 	done
     else
-	for prefix in $prefixes; do
-	    case $1 in
-		$prefix*) return 0;;
-	    esac
+	for prefix0 in $prefixes0; do
+	    for prefix1 in $prefixes1; do
+		prefix="$prefix0$prefix1"
+		case $1 in
+		    $prefix*) return 0;;
+		esac
+	    done
 	done
     fi
     return 1;
@@ -120,7 +127,7 @@ print_usage() {
     echo >&2 "    -k|--kill    : same as '-s TERM'"
     echo >&2 "    -l|--list    : list PiP tasks (default action)"
     echo >&2 "    -t|--top     : top command on PiP tasks"
-    echo >&2 "    -u|--help    : display usage"
+    echo >&2 "    -u|--help    : display this"
     echo >&2 "    -v|--verbose : show target PiP tasks"
     exit 0;
 }
@@ -197,7 +204,7 @@ else
 	fi
     elif $flag_top; then
 	tpids=`top_pids $pids`;
-	echo $tpids
+	echo top H -p$tpids;
 	top H -p$tpids;
 	extval=$?;
     else

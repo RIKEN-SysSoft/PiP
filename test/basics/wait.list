@@ -1,24 +1,24 @@
 timer 1 ./pip_wait 1
 timer 1 ./pip_wait 8
-skip.sh T UNSUPPORTED timer 1 ./pip_wait 1 1
-skip.sh T UNSUPPORTED timer 1 ./pip_wait 8 1
+skip.sh T UNSUPPORTED timer 1 ./pip_wait 1 2
+skip.sh T UNSUPPORTED timer 1 ./pip_wait 8 2
 skip.sh T UNSUPPORTED timer 1 ./pip_wait 1 15
 skip.sh T UNSUPPORTED timer 1 ./pip_wait 8 15
 timer 1 ./pip_wait_any 1
 timer 1 ./pip_wait_any 8
-skip.sh T UNSUPPORTED timer 1 ./pip_wait_any 1 1
-skip.sh T UNSUPPORTED timer 1 ./pip_wait_any 8 1
+skip.sh T UNSUPPORTED timer 1 ./pip_wait_any 1 2
+skip.sh T UNSUPPORTED timer 1 ./pip_wait_any 8 2
 skip.sh T UNSUPPORTED timer 1 ./pip_wait_any 1 15
 skip.sh T UNSUPPORTED timer 1 ./pip_wait_any 8 15
 timer 1 ./pip_trywait 1
 timer 1 ./pip_trywait 8
-skip.sh T UNSUPPORTED timer 1 ./pip_trywait 1 1
-skip.sh T UNSUPPORTED timer 1 ./pip_trywait 8 1
+skip.sh T UNSUPPORTED timer 1 ./pip_trywait 1 2
+skip.sh T UNSUPPORTED timer 1 ./pip_trywait 8 2
 skip.sh T UNSUPPORTED timer 1 ./pip_trywait 1 15
 skip.sh T UNSUPPORTED timer 1 ./pip_trywait 8 15
 timer 1 ./pip_trywait_any 1
 timer 1 ./pip_trywait_any 8
-skip.sh T UNSUPPORTED timer 1 ./pip_trywait_any 1 1
-skip.sh T UNSUPPORTED timer 1 ./pip_trywait_any 8 1
+skip.sh T UNSUPPORTED timer 1 ./pip_trywait_any 1 2
+skip.sh T UNSUPPORTED timer 1 ./pip_trywait_any 8 2
 skip.sh T UNSUPPORTED timer 1 ./pip_trywait_any 1 15
 skip.sh T UNSUPPORTED timer 1 ./pip_trywait_any 8 15

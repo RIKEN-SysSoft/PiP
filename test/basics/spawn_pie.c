@@ -53,7 +53,6 @@ int main( int argc, char **argv ) {
   char *nargv[2] = { NULL, NULL };
   int err;
 
-  set_sigsegv_watcher();
   dir = dirname( argv[0] );
   chdir( dir );
 

@@ -19,8 +19,6 @@ int main( int argc, char **argv ) {
   int	niters;
   int	i, j, k, l, c, extval = 0;
 
-  set_sigsegv_watcher();
-
   CHECK( pip_task_queue_init(&queue[0],NULL), RV, return(EXIT_FAIL) );
   CHECK( pip_task_queue_init(&queue[1],NULL), RV, return(EXIT_FAIL) );
   pip_spawn_from_main( &prog, argv[0], argv, NULL );
@@ -58,7 +56,7 @@ int main( int argc, char **argv ) {
 	if( c == ntasks ) break;
 	CHECK( pip_yield(PIP_YIELD_SYSTEM),         RV, return(EXIT_FAIL) );
 	usleep( 1000 );	/* 1 ms */
-      } 
+      }
       for( j=0; j<ntasks; j++ ) {
 	k = ( j + i ) % ntasks;
 	CHECK( pip_get_task_from_pipid(k,&task),    RV, return(EXIT_FAIL) );

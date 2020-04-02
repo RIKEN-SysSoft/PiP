@@ -45,8 +45,10 @@ int my_getaddrinfo( char *hostname ) {
   memset( &hints, 0, sizeof(hints) );
   hints.ai_socktype = SOCK_STREAM;
   hints.ai_family   = AF_INET;
+  pip_glibc_lock( 1 );
   rv = getaddrinfo( hostname, NULL, &hints, &res );
   if( rv == 0 && res != NULL ) freeaddrinfo( res );
+  pip_glibc_unlock();
   return rv;
 }
 

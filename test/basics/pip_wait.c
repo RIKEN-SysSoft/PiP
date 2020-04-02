@@ -33,14 +33,12 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
 int main( int argc, char **argv ) {
   int 		ntasks, pipid;
   int		sig, i, core, status;
-
-  set_sigsegv_watcher();
 
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
@@ -71,8 +69,8 @@ int main( int argc, char **argv ) {
       if( sig == 0 ) {
 	CHECK( WIFSIGNALED(status),     RV, return(EXIT_FAIL) );
 	CHECK( WIFEXITED(status),      !RV, return(EXIT_FAIL) );
-	CHECK( (WEXITSTATUS(status)==0), 
-	       !RV,  
+	CHECK( (WEXITSTATUS(status)==0),
+	       !RV,
 	       return(EXIT_FAIL) );
       } else {
 	CHECK( WIFEXITED(status),        RV, return(EXIT_FAIL) );

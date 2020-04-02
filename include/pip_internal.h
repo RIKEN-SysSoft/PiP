@@ -100,7 +100,11 @@
 #define PIP_EXIT_WAITED		(2)
 #define PIP_ABORT		(9)
 
+struct pip_root;
 struct pip_task_internal;
+struct pip_task_annex;
+struct pip_gdbif_task;
+struct pip_gdbif_root;
 
 typedef struct pip_cacheblk {
   char		cacheblk[PIP_CACHEBLK_SZ];
@@ -108,8 +112,6 @@ typedef struct pip_cacheblk {
 
 typedef volatile uint8_t	pip_stack_protect_t;
 typedef pip_stack_protect_t	*pip_stack_protect_p;
-
-struct pip_task_annex;
 
 typedef struct pip_task_internal {
   union {
@@ -172,8 +174,6 @@ typedef struct {
   char			**prog;
   char			**prog_full;
   char			***environ;    /* pointer to the environ variable */
-  /* for pip-gdb */
-  struct pip_gdbif_root	**gdbif_root;
 } pip_symbols_t;
 
 typedef struct {
@@ -188,10 +188,6 @@ typedef struct {
   int			*fd_list; /* list of close-on-exec FDs */
   pip_task_queue_t	*queue;
 } pip_spawn_args_t;
-
-struct pip_root;
-struct pip_gdbif_task;
-struct pip_gdbif_root;
 
 typedef sem_t			pip_sem_t;
 
@@ -224,14 +220,10 @@ typedef struct pip_task_annex {
   pip_spawnhook_t		hook_before; /* before spawning hook */
   pip_spawnhook_t		hook_after;  /* after spawning hook */
   void				*hook_arg;   /* hook arg */
-  /* cleanup */
-  void				**pip_root_p;
-  pip_task_internal_t		**pip_task_p;
-
   /* GDB interface */
   void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
-
+  int				sleep_busy;
 } pip_task_annex_t;
 
 #define PIP_TASKI(TASK)		((pip_task_internal_t*)(TASK))
@@ -269,7 +261,7 @@ typedef struct pip_root {
   size_t		size_task;
   size_t		size_annex;
   /* actual root info */
-  pip_spinlock_t	lock_ldlinux; /* lock for dl*() functions */
+  pip_spinlock_t	lock_glibc;   /* lock for GLIBC functions */
   pip_atomic_t		ntasks_blocking;
   pip_atomic_t		ntasks_count;
   int			ntasks_accum; /* not used */
@@ -304,6 +296,8 @@ typedef struct pip_root {
 
 } pip_root_t;
 
+typedef int  (*pip_init_t)(pip_root_t*,pip_task_internal_t*);
+
 extern pip_clone_mostly_pthread_t 	pip_clone_mostly_pthread_ptr;
 extern int  pip_get_thread_id( pthread_t th );
 extern void pip_set_thread_id( pthread_t th, int );
@@ -322,9 +316,12 @@ extern void pip_set_thread_id( pthread_t th, int );
 #endif
 #define PIP_W_EXITCODE(X,S)	__W_EXITCODE(X,S)
 
-
 extern pip_root_t		*pip_root;
 extern pip_task_internal_t	*pip_task;
+
+extern int __attribute__ ((visibility ("default")))
+pip_init_task_implicitly( pip_root_t *root,
+			  pip_task_internal_t *task );
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
@@ -346,8 +343,8 @@ extern void pip_couple_context( pip_task_internal_t*,
 				pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_stack_protect( pip_task_internal_t*,
 			       pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
 #endif
+extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
 
 extern void pip_set_signal_handler( int sig, void(*)(),
 				    struct sigaction* ) PIP_PRIVATE;
@@ -377,7 +374,7 @@ extern void pip_deadlock_dec( void ) PIP_PRIVATE;
 extern int  pip_is_threaded_( void ) PIP_PRIVATE;
 extern int  pip_is_shared_fd_( void ) PIP_PRIVATE;
 extern int  pip_isa_coefd( int ) PIP_PRIVATE;
-extern void pip_set_name( char*, char*, char* ) PIP_PRIVATE;
+extern void pip_set_name( pip_task_internal_t* ) PIP_PRIVATE;
 
 extern void pip_pipidstr( pip_task_internal_t *taski, char *buf ) PIP_PRIVATE;
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
@@ -393,8 +390,13 @@ extern void pip_suspend_and_enqueue_generic( pip_task_internal_t*,
 					     int,
 					     pip_enqueue_callback_t,
 					     void* ) PIP_PRIVATE;
-extern int pip_is_magic_ok( pip_root_t* ) PIP_PRIVATE;
-extern int pip_is_version_ok( pip_root_t* ) PIP_PRIVATE;
+extern int  pip_is_magic_ok( pip_root_t* ) PIP_PRIVATE;
+extern int  pip_is_version_ok( pip_root_t* ) PIP_PRIVATE;
+extern int  pip_are_sizes_ok( pip_root_t* ) PIP_PRIVATE;
+
+extern void pip_debug_on_exceptions( void ) PIP_PRIVATE;
+
+extern void pip_message( FILE *, char*, const char*, va_list ) PIP_PRIVATE;
 
 extern int  pip_idstr( char *buf, size_t sz ); /* donot make this private */
 
@@ -405,11 +407,15 @@ inline static void pip_sem_init( pip_sem_t *sem ) {
 }
 
 inline static void pip_sem_post( pip_sem_t *sem ) {
+  errno = 0;
   (void) sem_post( sem );
+  ASSERT( errno );
 }
 
 inline static void pip_sem_wait( pip_sem_t *sem ) {
+  errno = 0;
   (void) sem_wait( sem );
+  ASSERT( errno !=0 && errno != EINTR );
 }
 
 inline static void pip_sem_fin( pip_sem_t *sem ) {

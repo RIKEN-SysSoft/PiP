@@ -43,76 +43,49 @@
 
 void *pip_dlopen( const char *filename, int flag ) {
   void *handle;
-  if( pip_is_initialized() ) {
-    pip_spin_lock( &pip_root->lock_ldlinux );
-    handle = dlopen( filename, flag );
-    pip_spin_unlock( &pip_root->lock_ldlinux );
-  } else {
-    handle = dlopen( filename, flag );
-  }
+  pip_glibc_lock( 1 );
+  handle = dlopen( filename, flag );
+  pip_glibc_unlock();
   return handle;
 }
 
 void *pip_dlmopen( long lmid, const char *path, int flag ) {
   void *handle;
-  if( pip_is_initialized() ) {
-    pip_spin_lock( &pip_root->lock_ldlinux );
-    PIP_ACCUM( time_dlmopen, ( handle = dlmopen( lmid, path, flag ) ) == NULL );
-    pip_spin_unlock( &pip_root->lock_ldlinux );
-  } else {
-    handle = pip_dlmopen( lmid, path, flag );
-  }
+  pip_glibc_lock( 1 );
+  handle = dlmopen( lmid, path, flag );
+  pip_glibc_unlock();
   return handle;
 }
 
 int pip_dlinfo( void *handle, int request, void *info ) {
   int rv;
-  if( pip_is_initialized() ) {
-    if( !PIP_ISA_ROOT( pip_task ) ) return( -EPERM );
-    pip_spin_lock( &pip_root->lock_ldlinux );
-    rv = dlinfo( handle, request, info );
-    pip_spin_unlock( &pip_root->lock_ldlinux );
-  } else {
-    rv = dlinfo( handle, request, info );
-  }
+  pip_glibc_lock( 1 );
+  rv = dlinfo( handle, request, info );
+  pip_glibc_unlock();
   return rv;
 }
 
 void *pip_dlsym( void *handle, const char *symbol ) {
   void *addr;
-  if( pip_is_initialized() ) {
-    pip_spin_lock( &pip_root->lock_ldlinux );
-    addr = dlsym( handle, symbol );
-    pip_spin_unlock( &pip_root->lock_ldlinux );
-  } else {
-    addr = dlsym( handle, symbol );
-  }
+  pip_glibc_lock( 1 );
+  addr = dlsym( handle, symbol );
+  pip_glibc_unlock();
   return addr;
 }
 
 int pip_dladdr( void *addr, void *info ) {
   Dl_info *dlinfo = (Dl_info*) info;
   int rv;
-  if( pip_is_initialized() ) {
-    pip_spin_lock( &pip_root->lock_ldlinux );
-    rv = dladdr( addr, info );
-    pip_spin_unlock( &pip_root->lock_ldlinux );
-  } else {
-    rv = dladdr( addr, dlinfo );
-  }
+  pip_glibc_lock( 1 );
+  rv = dladdr( addr, dlinfo );
+  pip_glibc_unlock();
   return rv;
 }
 
 int pip_dlclose( void *handle ) {
   int rv = 0;
-  if( pip_is_initialized() ) {
-#ifdef PIP_DLCLOSE
-    pip_spin_lock( &pip_root->lock_ldlinux );
-    rv = dlclose( handle );
-    pip_spin_unlock( &pip_root->lock_ldlinux );
-#endif
-  } else {
-    rv = dlclose( handle );
-  }
+  pip_glibc_lock( 1 );
+  rv = dlclose( handle );
+  pip_glibc_unlock();
   return rv;
 }

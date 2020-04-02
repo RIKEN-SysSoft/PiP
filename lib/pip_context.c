@@ -38,7 +38,7 @@
 /* STACK PROTECT */
 
 static void pip_stack_protect( pip_task_internal_t *taski,
-			pip_task_internal_t *nexti ) {
+			       pip_task_internal_t *nexti ) {
   /* so that new task can reset the flag */
   DBGF( "protect PIPID:%d released by PIPID:%d",
 	taski->pipid, nexti->pipid );
@@ -46,7 +46,7 @@ static void pip_stack_protect( pip_task_internal_t *taski,
   if( nexti->flag_stackpp ) {
     pip_task_internal_t *prev = (pip_task_internal_t*)
       ( nexti->flag_stackpp - offsetof(pip_task_internal_t,flag_stackp) );
-    DBGF( "UNABLE to set protect pipid:%d  !!!!!!!!!!!!!!", prev->pipid );
+    DBGF( "UNABLE to set protect PIPID:%d  !!!!!!!!!!!!!!", prev->pipid );
   }
 #endif
   taski->flag_stackp  = 1;
@@ -63,7 +63,7 @@ static void pip_stack_unprotect( pip_task_internal_t *taski ) {
 #ifdef DEBUG
     pip_task_internal_t *prev = (pip_task_internal_t*)
       ( taski->flag_stackpp - offsetof(pip_task_internal_t,flag_stackp) );
-    DBGF( "PIPID:%d UN-protect pipid:%d", taski->pipid, prev->pipid );
+    DBGF( "PIPID:%d UN-protect PIPID:%d", taski->pipid, prev->pipid );
     if( *taski->flag_stackpp == 0 ) DBGF( "ALREADY UN-protected" );
 #endif
     pip_memory_barrier();
@@ -73,29 +73,30 @@ static void pip_stack_unprotect( pip_task_internal_t *taski ) {
 }
 
 static void pip_stack_wait( pip_task_internal_t *taski ) {
-  int i, j;
+  int i = 0, j;
 
-  DBGF( "PIPID:%d wait for unprotect", taski->pipid );
+  DBGF( "PIPID:%d waits for unprotect", taski->pipid );
+  if( !taski->flag_stackp ) goto done;
   for( i=0; i<pip_root->yield_iters; i++ ) {
     pip_pause();
     if( !taski->flag_stackp ) goto done;
   }
+  if( !taski->flag_stackp ) goto done;
   for( i=0; i<PIP_BUSYWAIT_COUNT; i++ ) {
     for( j=0; j<pip_root->yield_iters; j++ ) {
       pip_pause();
       if( !taski->flag_stackp ) goto done;
     }
     pip_system_yield();
-    DBGF( "WAITING  pipid:%d (count=%d*%d) ...",
+    DBGF( "PIPID:%d -- WAITING (count=%d*%d) ...",
 	  taski->pipid, i, pip_root->yield_iters );
-    //sleep( 1 );
   }
-  DBGF( "WAIT-FAILED  pipid:%d (count=%d*%d)",
+  DBGF( "PIPID:%d WAIT-FAILED (count=%d*%d)",
 	taski->pipid, i, pip_root->yield_iters );
   ASSERT( "TIMED OUT !!!!" != NULL );
   return;
  done:
-  DBGF( "WAIT-DONE  pipid:%d (count=%d*%d)",
+  DBGF( "PIPID:%d WAIT-DONE (count=%d*%d)",
 	taski->pipid, i, pip_root->yield_iters );
 }
 
@@ -111,7 +112,7 @@ typedef struct pip_ctx_data {
 #endif
 
 static void pip_swap_context( pip_task_internal_t *taski,
-		       pip_task_internal_t *nexti ) {
+			      pip_task_internal_t *nexti ) {
 #ifdef PIP_USE_FCONTEXT
   pip_ctx_data_t	data, *dp;
   pip_ctx_p		ctx;
@@ -145,7 +146,7 @@ static void pip_swap_context( pip_task_internal_t *taski,
 #endif
   /* before unprotect stack, old ctx must be saved */
   pip_stack_unprotect( dp->new );
-#else
+#else  /* ucontext */
   struct {
     pip_ctx_p ctxp_new;
     pip_ctx_t ctx_old;		/* must be the last member */
@@ -167,8 +168,6 @@ static void pip_swap_context( pip_task_internal_t *taski,
 }
 
 #ifdef PIP_USE_FCONTEXT
-static void pip_sleep( pip_task_internal_t* );
-
 static void pip_call_sleep( pip_transfer_t tr ) {
   pip_ctx_data_t 	*dp = (pip_ctx_data_t*) tr.data;
   ASSERTD( dp->old->ctx_savep == NULL );
@@ -180,7 +179,7 @@ static void pip_call_sleep( pip_transfer_t tr ) {
   pip_stack_unprotect( dp->new );
   pip_sleep( dp->new );
 }
-#else
+#else  /* ucontext */
 static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
   pip_task_internal_t	*schedi = (pip_task_internal_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
@@ -191,7 +190,7 @@ static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
 #endif
 
 static void pip_decouple_context( pip_task_internal_t *taski,
-			   pip_task_internal_t *schedi ) {
+				  pip_task_internal_t *schedi ) {
   DBGF( "task PIPID:%d   sched PIPID:%d", taski->pipid, schedi->pipid );
 
 #ifdef PIP_USE_FCONTEXT
@@ -209,11 +208,12 @@ static void pip_decouple_context( pip_task_internal_t *taski,
 			 , 0, 	/* NOT USED !!!! */
 			 /*  pip_root->stack_size_sleep,  */
 			 pip_call_sleep );
+    schedi->annex->ctx_sleep = ctx;
   }
   taski->ctx_savep = &taski->ctx_suspend;
   data.old = taski;
   data.new = schedi;
-  //pip_stack_wait( schedi );
+
   if( taski != schedi ) {
     ASSERT( pip_load_tls( schedi->tls ) );
   }
@@ -227,9 +227,9 @@ static void pip_decouple_context( pip_task_internal_t *taski,
 #ifdef DEBUG
   dp->old->ctx_savep = NULL;
 #endif
-
   pip_stack_unprotect( dp->new );
-#else
+
+#else  /* ucontext */
   struct {
     int 	args_H, args_L;
     stack_t	*stk;
@@ -264,7 +264,7 @@ static void pip_decouple_context( pip_task_internal_t *taski,
 }
 
 static void pip_couple_context( pip_task_internal_t *taski,
-			 pip_task_internal_t *schedi ) {
+				pip_task_internal_t *schedi ) {
   /* this must be called from the sleeping context */
   DBGF( "task PIPID:%d   sched PIPID:%d",
 	taski->pipid, schedi->pipid );
@@ -274,7 +274,6 @@ static void pip_couple_context( pip_task_internal_t *taski,
   pip_ctx_p		ctx;
   pip_transfer_t 	tr;
 
-  //pip_context_wait( taski );
   pip_stack_wait( taski );
   ctx = taski->ctx_suspend;
 #ifdef DEBUG
@@ -298,9 +297,9 @@ static void pip_couple_context( pip_task_internal_t *taski,
 #ifdef DEBUG
   dp->old->ctx_savep = NULL;
 #endif
-
   pip_stack_unprotect( dp->new );
-#else
+
+#else  /* ucontext */
   struct {
     pip_ctx_t	ctx; /* must be the last member */
   } lvars;

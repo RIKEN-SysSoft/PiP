@@ -39,8 +39,6 @@ int main( int argc, char **argv ) {
   int 		ntasks, pipid;
   int		sig, i, core, status, err;
 
-  set_sigsegv_watcher();
-
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
@@ -71,8 +69,8 @@ int main( int argc, char **argv ) {
       if( sig == 0 ) {
 	CHECK( WIFSIGNALED(status),     RV, return(EXIT_FAIL) );
 	CHECK( WIFEXITED(status),      !RV, return(EXIT_FAIL) );
-	CHECK( (WEXITSTATUS(status)==0), 
-	       !RV,  
+	CHECK( (WEXITSTATUS(status)==0),
+	       !RV,
 	       return(EXIT_FAIL) );
       } else {
 	CHECK( WIFEXITED(status),        RV, return(EXIT_FAIL) );
@@ -80,8 +78,8 @@ int main( int argc, char **argv ) {
 	CHECK( (WTERMSIG(status)==sig), !RV, return(EXIT_FAIL) );
       }
       status = 0;
-      CHECK( pip_wait(pipid,&status), 
-	     RV!=ECHILD, 
+      CHECK( pip_wait(pipid,&status),
+	     RV!=ECHILD,
 	     return(EXIT_FAIL) );
     }
   } else {

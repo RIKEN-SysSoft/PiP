@@ -36,6 +36,8 @@
 #ifndef _pip_gdbif_func_h_
 #define _pip_gdbif_func_h_
 
+extern struct pip_gdbif_root	*pip_gdbif_root;
+
 void pip_gdbif_load( pip_task_internal_t* ) PIP_PRIVATE;
 void pip_gdbif_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
 void pip_gdbif_task_commit( pip_task_internal_t* ) PIP_PRIVATE;

@@ -1033,7 +1033,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_decouple();
   /** @}*/
 
-  int pip_set_syncflag( uint32_t );
+  int pip_set_syncflag( uint32_t flags );
 
 /**
  * @}

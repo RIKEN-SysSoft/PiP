@@ -38,7 +38,8 @@ int main( int argc, char **argv ) {
   int mode, ntasks, nt, pipid, id;
   const char *mode_str = NULL;
 
-  set_sigsegv_watcher();
+  /* newer PiP lib. allows to call PiP functions without calling pip_init() */
+#ifdef NO_IMPLICIT_INIT
   /*** before calling pip_init(), this must fail ***/
   CHECK( pip_is_initialized(), 	    RV, 	return(EXIT_FAIL) );
   CHECK( pip_isa_root(), 	    RV, 	return(EXIT_FAIL) );
@@ -52,7 +53,20 @@ int main( int argc, char **argv ) {
   CHECK( ( ( mode_str = pip_get_mode_str() ) != NULL ),
 	 RV,
 	 return(EXIT_FAIL) );
+#else
+  CHECK( pip_is_initialized(), 	    !RV, 	return(EXIT_FAIL) );
+  //CHECK( pip_isa_root(), 	    !RV, 	return(EXIT_FAIL) );
+  //CHECK( pip_isa_task(),	    !RV, 	return(EXIT_FAIL) );
+  CHECK( pip_get_pipid( NULL ),	    RV, 	return(EXIT_FAIL) );
+  CHECK( pip_get_pipid( &pipid ),   RV, 	return(EXIT_FAIL) );
+  CHECK( pip_get_mode( NULL ),	    RV, 	return(EXIT_FAIL) );
+  CHECK( pip_get_mode( &mode ),	    RV, 	return(EXIT_FAIL) );
+  CHECK( pip_get_ntasks( &ntasks ), RV,	return(EXIT_FAIL) );
 
+  CHECK( ( ( mode_str = pip_get_mode_str() ) == NULL ),
+	 RV,
+	 return(EXIT_FAIL) );
+#endif
   ntasks = NTASKS;
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 

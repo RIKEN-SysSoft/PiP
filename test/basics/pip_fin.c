@@ -38,7 +38,6 @@
 int main( int argc, char **argv ) {
   int pipid, ntasks;
 
-  set_sigsegv_watcher();
   CHECK( pip_fin(), RV!=EPERM, return(EXIT_FAIL) );
   ntasks = 1;
   CHECK( pip_init( &pipid, &ntasks, NULL, 0), RV, return(EXIT_FAIL) );

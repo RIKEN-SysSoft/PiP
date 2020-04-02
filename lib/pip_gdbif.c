@@ -38,10 +38,9 @@
 //#undef DEBUG
 #endif
 
-#include <pip_gdb.c>
-
+#include <pip_internal.h>
+#include <pip_gdbif.h>
 #include <pip_gdbif_func.h>
-#include <pip_dlfcn.h>
 
 static int pipid_to_gdbif( int pipid ) {
   DBGF( "PIPID:%d", pipid );

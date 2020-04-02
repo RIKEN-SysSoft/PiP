@@ -79,9 +79,7 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
   case PIP_SYNC_BLOCKING:
     /* if blocked at sem_wait(), call sem_post() */
   sync_auto:
-    errno = 0;
     pip_sem_post( &taski->annex->sleep );
-    ASSERT( errno );
     break;
   default:
     goto sync_auto;
@@ -152,8 +150,7 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
   uint32_t 	opts = taski->annex->opts & PIP_SYNC_MASK;
   int		i, j;
 
-  ENTER;
-  DBGF( "sync_opts: 0x%x", opts );
+  ENTERF( "sync_opts: 0x%x", opts );
   taski->annex->opts_sync = opts;
   pip_deadlock_inc();
   {
@@ -187,9 +184,7 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
     case PIP_SYNC_BLOCKING:
       DBGF( "PIPID:%d -- SLEEPING (blocking) zzzzzzz", taski->pipid );
       while( !taski->flag_wakeup ) {
-	errno = 0;
 	pip_sem_wait( &taski->annex->sleep );
-	ASSERT( errno !=0 && errno != EINTR );
       }
       break;
     default:
@@ -208,11 +203,13 @@ pip_able_to_terminate_immediately( pip_task_internal_t *taski ) {
   return taski->flag_exit && !taski->ntakecare;
 }
 
-static void pip_sleep( pip_task_internal_t *schedi ) {
+void pip_sleep( pip_task_internal_t *schedi ) {
   pip_task_internal_t 	*nexti;
   pip_task_t 		*next;
 
   ENTERF( "PIPID:%d", schedi->pipid );
+  ASSERTD( schedi->annex->sleep_busy );
+  schedi->annex->sleep_busy = 1;
   //ASSERTD( schedi->ctx_suspend == NULL );
   /* now stack is switched and safe to use the prev stack */
   while( 1 ) {
@@ -237,6 +234,7 @@ static void pip_sleep( pip_task_internal_t *schedi ) {
     DBGF( "PIPID:%d(ctxp:%p) -->> PIPID:%d(ctxp:%p)",
 	  schedi->pipid, schedi->ctx_suspend,
 	  nexti->pipid, nexti->ctx_suspend );
+    schedi->annex->sleep_busy = 0;
     pip_couple_context( nexti, schedi );
   }
   NEVER_REACH_HERE;

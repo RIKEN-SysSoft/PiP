@@ -200,7 +200,6 @@ int main( int argc, char **argv ) {
   char *test = argv[1];
   int i;
 
-  set_sigsegv_watcher();
   switch( argc ) {
   case 1:
     pip_exit( test_pip_init( argv ) );

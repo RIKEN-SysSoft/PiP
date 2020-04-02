@@ -25,7 +25,7 @@ timer 1 ./pip_task_spawn
 timer 1 ./spawn_pie
 timer 1 pip_task 1 ./pip_spawn
 timer 1 pip_task 8 ./pip_spawn
-timer 1 ./pip_misc
+#timer 1 ./pip_misc
 timer 1 pip_task 1 ./pip_misc
 timer 1 pip_task 8 ./pip_misc
 timer 1 ./corebind 1

@@ -5,4 +5,3 @@ timer 2 pip_task 8 ./pthread_exit 10 50
 timer 1 pip_task 1 ./pthread_barrier
 timer 1 pip_task 8 ./pthread_barrier
 timer 1 ./pthread_mutex
-timer 1 ./pip_barrier 4 4 100

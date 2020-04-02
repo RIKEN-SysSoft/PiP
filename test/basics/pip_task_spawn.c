@@ -30,6 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
+#define DEBUG
 #include <test.h>
 
 static int static_entry( void *args ) __attribute__ ((unused));
@@ -38,7 +39,11 @@ static int static_entry( void *argp ) {
   int arg = *((int*)argp);
   int pipid = -100;
 
+#ifdef NO_IMPLICIT_INIT
   CHECK( pip_get_pipid( &pipid ), 	  RV!=EPERM, return(1) );
+#else
+  CHECK( pip_get_pipid( &pipid ), 	  RV,        return(1) );
+#endif
   CHECK( pip_init( NULL, NULL, NULL, 0 ), RV, 	     return(1) );
   CHECK( pip_get_pipid( &pipid ),	  RV,	     return(1) );
   CHECK( pipid!=arg, 			  RV,	     return(1) );
@@ -49,7 +54,11 @@ int global_entry( void *argp ) {
   int arg = *((int*)argp);
   int pipid = -100;
 
+#ifdef NO_IMPLICIT_INIT
   CHECK( pip_get_pipid( &pipid ), 	  RV!=EPERM, return(1) );
+#else
+  CHECK( pip_get_pipid( &pipid ), 	  RV,        return(1) );
+#endif
   CHECK( pip_init( NULL, NULL, NULL, 0 ), RV,        return(1) );
   CHECK( pip_get_pipid( &pipid ), 	  RV,        return(1) );
   CHECK( pipid!=arg, 			  RV,        return(1) );
@@ -60,7 +69,6 @@ int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
   int pipid, arg, ntasks;
 
-  set_sigsegv_watcher();
   /* before calling pip_init(), this must fail */
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),

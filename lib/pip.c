@@ -60,51 +60,11 @@ extern pip_spinlock_t 	*pip_lock_clone;
 
 /*** note that the following static variables are   ***/
 /*** located at each PIP task and the root process. ***/
-pip_root_t		*pip_root PIP_PRIVATE;
-pip_task_internal_t	*pip_task PIP_PRIVATE;
 
 static pip_clone_t*	pip_cloneinfo = NULL;
 
 static void pip_set_magic( pip_root_t *root ) {
   memcpy( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_WLEN );
-}
-
-int pip_is_magic_ok( pip_root_t *root ) {
-  return root != NULL &&
-    strncmp( root->magic, PIP_MAGIC_WORD, PIP_MAGIC_WLEN ) == 0;
-}
-
-int pip_is_version_ok( pip_root_t *root ) {
-  if( root            != NULL                           &&
-      root->version    == PIP_API_VERSION               &&
-      root->size_root  == sizeof( pip_root_t )          &&
-      root->size_task  == sizeof( pip_task_internal_t ) &&
-      root->size_annex == sizeof( pip_task_annex_t ) ) {
-    return 1;
-  }
-  return 0;
-}
-
-static int pip_set_root( char *env ) {
-  if( *env == '\0' ) ERRJ;
-  pip_root = (pip_root_t*) strtoll( env, NULL, 16 );
-  if( pip_root == NULL ) {
-    pip_err_mesg( "Invalid PiP root" );
-    ERRJ;
-  }
-  if( !pip_is_magic_ok( pip_root ) ) {
-    pip_err_mesg( "%s environment not found", PIP_ROOT_ENV );
-    ERRJ;
-  }
-  if( !pip_is_version_ok( pip_root ) ) {
-    pip_err_mesg( "Version miss-match between PiP root and task" );
-    ERRJ;
-  }
-  return 0;
-
- error:
-  pip_root = NULL;
-  RETURN( EPROTO );
 }
 
 #define NITERS		(100)
@@ -355,9 +315,9 @@ void pip_reset_task_struct( pip_task_internal_t *taski ) {
   annex->stack_sleep  = stack_sleep;
   annex->named_exptab = namexp;
   annex->tid          = -1; /* pip_gdbif_init_task_struct() refers this */
-  PIP_TASKQ_INIT( &taski->annex->oodq      );
-  pip_spin_init(  &taski->annex->lock_oodq );
-  pip_sem_init(   &taski->annex->sleep     );
+  PIP_TASKQ_INIT( &annex->oodq      );
+  pip_spin_init(  &annex->lock_oodq );
+  pip_sem_init(   &annex->sleep     );
 }
 
 static int
@@ -420,18 +380,14 @@ void pip_set_signal_handler( int sig,
   ASSERT( sigaction( sig, &sigact, oldp )   != 0 );
 }
 
-static void pip_unset_signal_handler( int sig,
-				      struct sigaction *oldp ) {
+void pip_unset_signal_handler( int sig, struct sigaction *oldp ) {
   ASSERT( sigaction( sig, oldp, NULL ) != 0 );
 }
 
 /* signal handlers */
 
 static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {
-  if( pip_root != NULL ) {
-    pip_spin_unlock( &pip_root->lock_ldlinux );
-  }
-  DBG;
+  pip_glibc_unlock();
 }
 
 static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
@@ -460,8 +416,9 @@ void pip_unset_sigmask( void ) {
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   size_t	sz;
-  char		*envroot = NULL;
-  char		*envtask = NULL;
+#ifndef PIP_INIT_IMPLICITLY
+  char		*envroot, *envtask;
+#endif
   int		ntasks, pipid;
   int		i, err = 0;
 
@@ -469,10 +426,15 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
   mcheck( NULL );
 #endif
 
-  if( pip_root != NULL ) RETURN( EBUSY ); /* already initialized */
-  if( ( envroot = getenv( PIP_ROOT_ENV ) ) == NULL ) {
+  if(
+#ifdef PIP_INIT_IMPLICITLY
+     pip_root == NULL && pip_task == NULL
+#else
+     ( envroot = getenv( PIP_ROOT_ENV ) ) == NULL
+#endif
+      ) {
     /* root process */
-
+    if( pip_root != NULL ) RETURN( EBUSY ); /* already initialized */
     if( ntasksp == NULL ) {
       ntasks = PIP_NTASKS_MAX;
     } else {
@@ -485,8 +447,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ( opts = pip_check_sync_flag(    opts ) )  < 0 ) RETURN( EINVAL );
 
     sz = PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
-         PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
-         PIP_CACHE_ALIGN( sizeof( pip_task_annex_t    ) * ( ntasks + 1 ) );
+      PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
+      PIP_CACHE_ALIGN( sizeof( pip_task_annex_t    ) * ( ntasks + 1 ) );
     pip_page_alloc( sz, (void**) &pip_root );
     (void) memset( pip_root, 0, sz );
 
@@ -506,9 +468,9 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     DBGF( "ROOTROOT (%p)", pip_root );
 
-    pip_spin_init( &pip_root->lock_ldlinux );
-    pip_spin_init( &pip_root->lock_tasks   );
-    pip_spin_init( &pip_root->lock_bt      );
+    pip_spin_init( &pip_root->lock_glibc );
+    pip_spin_init( &pip_root->lock_tasks );
+    pip_spin_init( &pip_root->lock_bt    );
 
     pip_sem_init( &pip_root->sync_root );
     pip_sem_init( &pip_root->sync_task );
@@ -521,6 +483,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->cloneinfo    = pip_cloneinfo;
     pip_root->opts         = opts;
     pip_root->yield_iters  = pip_measure_yieldtime();
+    pip_root->stack_size_sleep = PIP_SLEEP_STACKSZ;
     for( i=0; i<ntasks+1; i++ ) {
       pip_root->tasks[i].annex = &pip_root->annex[i];
       pip_reset_task_struct( &pip_root->tasks[i] );
@@ -533,43 +496,24 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_task->type       = PIP_TYPE_ROOT;
     pip_task->task_sched = pip_task;
 
-    pip_task->annex->loaded = dlopen( NULL, RTLD_NOW );
-    pip_task->annex->tid    = pip_gettid();
-    pip_task->annex->thread = pthread_self();
+    pip_task->annex->task_root = pip_root;
+    pip_task->annex->loaded    = dlopen( NULL, RTLD_NOW );
+    pip_task->annex->tid       = pip_gettid();
+    pip_task->annex->thread    = pthread_self();
 #ifdef PIP_SAVE_TLS
     pip_save_tls( &pip_task->tls );
 #endif
     if( rt_expp != NULL ) {
       pip_task->annex->exp = *rt_expp;
     }
-    pip_root->stack_size_sleep = PIP_SLEEP_STACKSZ;
     pip_page_alloc( pip_root->stack_size_sleep,
 		     &pip_task->annex->stack_sleep );
     if( pip_task->annex->stack_sleep == NULL ) {
       free( pip_root );
       RETURN( err );
     }
-    {
-      char *sym;
-      switch( pip_root->opts & PIP_MODE_MASK ) {
-      case PIP_MODE_PROCESS_PRELOAD:
-	sym = "R:";
-	break;
-      case PIP_MODE_PROCESS_PIPCLONE:
-	sym = "R;";
-	break;
-      case PIP_MODE_PROCESS_GOT:
-	sym = "R.";
-	break;
-      case PIP_MODE_PTHREAD:
-	sym = "R|";
-	break;
-      default:
-	sym = "R?";
-	break;
-      }
-      pip_set_name( sym, NULL, NULL );
-    }
+    pip_set_name( pip_task );
+
     pip_set_sigmask( SIGCHLD );
     pip_set_signal_handler( SIGCHLD,
 			    pip_sigchld_handler,
@@ -578,31 +522,50 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 			    pip_sigterm_handler,
 			    &pip_root->old_sigterm );
 
+    pip_gdbif_initialize_root( ntasks );
+    pip_gdbif_task_commit( pip_task );
+
     pip_debug_on_exceptions();
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
-    pip_gdbif_initialize_root( ntasks );
-    pip_gdbif_task_commit( pip_task );
-
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
+    pip_root_t 		*root;
+    pip_task_internal_t *task;
+    int			rv;
     /* child task */
-    if( ( err = pip_set_root( envroot ) ) != 0 ) RETURN( err );
+    root  = (pip_root_t*) strtoll( envroot, NULL, 16 );
     pipid = (int) strtol( envtask, NULL, 10 );
-    if( pipid < 0 || pipid >= pip_root->ntasks ) {
-      RETURN( ERANGE );
+    task  = &pip_root->tasks[pipid];
+    if( ( rv = pip_init_task_implicitly( root, task ) ) == 0 ) {
+      ntasks = pip_root->ntasks;
+      /* succeeded */
+      if( ntasksp != NULL ) *ntasksp = ntasks;
+      if( rt_expp != NULL ) {
+	*rt_expp = (void*) pip_root->task_root->annex->exp;
+      }
+      unsetenv( PIP_ROOT_ENV );
+      unsetenv( PIP_TASK_ENV );
+    } else {
+      switch( rv ) {
+      case 1:
+	pip_err_mesg( "Invalid PiP root" );
+	break;
+      case 2:
+	pip_err_mesg( "Magic number error" );
+	break;
+      case 3:
+	pip_err_mesg( "Version miss-match between PiP root and task" );
+	break;
+      case 4:
+	pip_err_mesg( "Size miss-match between PiP root and task" );
+	break;
+      default:
+	pip_err_mesg( "Something wrong with PiP root and task" );
+	break;
+      }
+      RETURN( EINVAL );
     }
-    pip_task = &pip_root->tasks[pipid];
-    ntasks    = pip_root->ntasks;
-    if( ntasksp != NULL ) *ntasksp = ntasks;
-    if( rt_expp != NULL ) {
-      *rt_expp = (void*) pip_root->task_root->annex->exp;
-    }
-    unsetenv( PIP_ROOT_ENV );
-    unsetenv( PIP_TASK_ENV );
-    pip_task->annex->pip_root_p = (void**) &pip_root;
-    pip_task->annex->pip_task_p = &pip_task;
-
   } else {
     RETURN( EPERM );
   }
@@ -645,9 +608,6 @@ int pip_fin( void ) {
     /* SIGTERM */
     pip_unset_signal_handler( SIGTERM,
 			      &pip_root->old_sigterm );
-    /* deadlock? */
-    pip_unset_signal_handler( SIGHUP,
-			      &pip_root->old_sighup );
 
     memset( pip_root, 0, pip_root->size_whole );
     /* after this point DBG(F) macros cannot be used */
@@ -740,10 +700,6 @@ const char *pip_get_mode_str( void ) {
     mode = "(unknown)";
   }
   return mode;
-}
-
-int pip_is_threaded_( void ) {
-  return pip_root->opts & PIP_MODE_PTHREAD;
 }
 
 int pip_is_threaded( int *flagp ) {

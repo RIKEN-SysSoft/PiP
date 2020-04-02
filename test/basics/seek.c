@@ -93,8 +93,6 @@ int main( int argc, char **argv ) {
   int	fd, len;
   int	i, ii, extval = 0;
 
-  set_sigsegv_watcher();
-
   stdin  = 0;
   stdout = 0;
   fname  = NULL;

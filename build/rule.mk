@@ -48,9 +48,9 @@ distclean-here:
 
 testclean-here:
 	$(RM) *.log.xml
-	$(RM) test.log test.log.* test.out.*
-	$(RM) .test-sum-*.sh
-	$(RM) loop-*.log .loop-*.log
+	$(RM) test.log test.log.* test.out.* .test-sum-*.sh
+	$(RM) loop-*.log loop-*.log~ .loop-*.log \#loop-*.log\# .\#loop-*.log
+	$(RM) core.*
 	$(RM) seek-file.text
 .PHONY: testclean-here
 
@@ -132,12 +132,8 @@ header-distclean:
 	esac
 .PHONY: header-distclean
 
-header-testclean: 
-	$(RM) *.log *.log.xml
-	$(RM) test.log test.log.* test.out.*
-	$(RM) .test-sum-*.sh
-	$(RM) loop-*.log .loop-*.log
-	$(RM) seek-file.text
+header-testclean:
+
 .PHONY: header-testclean
 
 ### lib rules
@@ -170,7 +166,7 @@ lib-veryclean:
 lib-distclean:
 .PHONY: lib-distclean
 
-lib-testclean: 
+lib-testclean:
 	$(RM) *.log *.log.xml
 	$(RM) test.log test.log.* test.out.*
 	$(RM) .test-sum-*.sh
@@ -208,7 +204,7 @@ prog-veryclean:
 prog-distclean:
 .PHONY: prog-distclean
 
-prog-testclean: 
+prog-testclean:
 	$(RM) *.log *.log.xml
 	$(RM) test.log test.log.* test.out.*
 	$(RM) .test-sum-*.sh

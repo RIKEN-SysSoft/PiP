@@ -36,11 +36,9 @@ include $(top_srcdir)/build/var.mk
 
 DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_machdep.h
 
-SRCS    = pthread.c pthread_exit.c \
-	pthread_barrier.c pthread_mutex.c pip_barrier.c
+SRCS    = pthread.c pthread_exit.c pthread_barrier.c pthread_mutex.c
 
-PROGRAM = pthread pthread_exit \
-	pthread_barrier pthread_mutex pip_barrier
+PROGRAM = pthread pthread_exit pthread_barrier pthread_mutex
 
 PROGRAMS_TO_INSTALL = # nothing
 

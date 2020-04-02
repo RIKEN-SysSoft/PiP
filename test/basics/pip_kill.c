@@ -79,8 +79,6 @@ static int wait_signal_task( int pipid ) {
 int main( int argc, char **argv ) {
   int	i, recv_sig, extval = 0;
 
-  set_sigsegv_watcher();
-
   ntasks = 0;
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );

@@ -38,7 +38,6 @@ int main( int argc, char **argv ) {
   char 	env_pipid[128];
   int 	c, nc, i, j, err;
 
-  set_sigsegv_watcher();
   set_sigint_watcher();
 
   if( argc < 4 ) return EXIT_UNTESTED;

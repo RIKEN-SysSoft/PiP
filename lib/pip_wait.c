@@ -120,20 +120,16 @@ pip_set_exit_status( pip_task_internal_t *taski, int status ) {
 }
 
 void pip_finalize_task_RC( pip_task_internal_t *taski ) {
-  DBGF( "pipid=%d  status=0x%x", taski->pipid, taski->annex->status );
+  ENTERF( "pipid=%d  status=0x%x", taski->pipid, taski->annex->status );
 
   pip_gdbif_finalize_task( taski );
+
   /* dlclose() and free() must be called only from the root process since */
   /* corresponding dlmopen() and malloc() is called by the root process   */
   if( taski->annex->loaded != NULL ) {
-    pip_dlclose( taski->annex->loaded );
-    taski->annex->loaded = NULL;
-  }
-  if( taski->annex->pip_root_p != NULL ) {
-    *taski->annex->pip_root_p = NULL;
-  }
-  if( taski->annex->pip_task_p != NULL ) {
-    *taski->annex->pip_task_p = NULL;
+    /***** do not call dlclose() *****/
+    //pip_dlclose( taski->annex->loaded );
+    //taski->annex->loaded = NULL;
   }
   PIP_FREE( taski->annex->args.prog );
   taski->annex->args.prog = NULL;
@@ -148,6 +144,7 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   PIP_FREE( taski->annex->args.fd_list );
   taski->annex->args.fd_list = NULL;
   pip_sem_fin( &taski->annex->sleep );
+
   pip_reset_task_struct( taski );
 }
 
@@ -264,8 +261,8 @@ static int pip_check_task( pip_task_internal_t *taski ) {
   ENTERF( "PIPID:%d", taski->pipid );
   if( taski->flag_exit == PIP_EXIT_WAITED ) {
     goto found;
-  } else if( taski->type != PIP_TYPE_NONE &&
-	     taski->annex->tid    != 0 &&
+  } else if( taski->type          != PIP_TYPE_NONE &&
+	     taski->annex->tid    != 0             &&
 	     taski->annex->thread != 0 ) {
     if( pip_is_threaded_() ) {
       if( taski->annex->flag_sigchld ) {
