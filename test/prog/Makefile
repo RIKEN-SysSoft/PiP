@@ -38,30 +38,30 @@ SRCS = ../../bin/pip-exec.c abc.c
 
 PROGRAMS = pip-exec abc def ghi xyz
 
-CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR)
 LDLIBS += $(PIPLDLIB) -ldl
 
+DEPLIBS = $(PIPLDLIB)
 DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 pip-exec: ../../bin/pip-exec.c $(DEPINCS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 abc: abc.c $(DEPINCS) Makefile
 	$(CC) -DMSG=\"abc\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 def: abc.c $(DEPINCS) Makefile
 	$(CC) -DMSG=\"def\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 ghi: abc.c $(DEPINCS)  Makefile
 	$(CC) -DMSG=\"ghi\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 xyz: abc.c $(DEPINCS) Makefile
 	$(CC) -DMSG=\"xyz\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@ 
+	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
