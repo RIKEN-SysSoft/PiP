@@ -1,12 +1,16 @@
 #!/bin/sh
 
-dir=`dirname $0`
-dir_real=`cd $dir && pwd`
+dir=`dirname $0`;
+dir_real=`cd $dir && pwd`;
+
+dir_util=$dir_real/util;
+dir_bin=$dir_real/../bin;
+dir_script=$dir_real/scripts;
 
 cmdline="$0 $@";
 cmd=`basename $0`;
 ext=0;
-TMP=''
+TMP='';
 
 prt_ext() {
     exit=$1
@@ -35,8 +39,8 @@ print_usage() {
 }
 
 finalize() {
-    $dir_real/../bin/pips -s TERM -l;
-    $dir_real/../bin/pips -s KILL > /dev/null 2>&1;
+    $dir_bin/pips -s TERM -l;
+    $dir_bin/pips -s KILL > /dev/null 2>&1;
     if [ x"$TMP" != x ]; then
 	if [ -f $TMP ]; then
 	    echo "Logfile: $FILE";
@@ -66,6 +70,8 @@ iteration=0;
 quiet=0;
 display=0;
 
+mode_list='-C -L -G -T';
+
 case $# in
     0)	print_usage;;
     *)	while	case $1 in
@@ -73,6 +79,12 @@ case $# in
          *) false;;
                 esac
         do
+	    case $1 in *A) mode_list='-C -L -G -T';; esac
+	    case $1 in *P) mode_list='-P';; esac
+	    case $1 in *L) mode_list='-L';; esac
+	    case $1 in *C) mode_list='-C';; esac
+	    case $1 in *G) mode_list='-G';; esac
+	    case $1 in *T) mode_list='-T';; esac
 	    case $1 in *n) shift; iteration=$1;; esac
 	    case $1 in *t) shift; duration=$1;;  esac
 	    case $1 in *q)        quiet=1;;      esac
@@ -100,31 +112,33 @@ i=0;
 start=`date +%s`;
 
 while true; do
-    date > $TMP;
-    echo "$cmdline" >> $TMP;
-    echo "---------------------------------" >> $TMP;
+    for mode in $mode_list; do
+	date > $TMP;
+	echo "$cmdline" >> $TMP;
+	echo "---------------------------------" >> $TMP;
 
-    if [ $quiet -eq 0 ]; then
-	echo -n $i "";
-    fi
+	if [ $quiet -eq 0 ]; then
+	    echo -n $i$mode "";
+	fi
 
-    if [ $display -eq 0 ]; then
-	"$@" >> $TMP 2>&1;
-    else
-	"$@" 2>&1 | tee -a $TMP;
-    fi
-    ext=$?;
-    if [ $ext != 0 ]; then
-	prt_ext $ext;
-	finalize;
-	exit $ext;
-    else
-	rm -f $TMP
-	touch $TMP
-    fi
+	if [ $display -eq 0 ]; then
+	    $dir_script/pip-mode $mode $@ >> $TMP 2>&1;
+	else
+	    $dir_script/pip-mode $mode $@ 2>&1 | tee -a $TMP;
+	fi
+	ext=$?;
+	if [ $ext != 0 ]; then
+	    prt_ext $ext;
+	    finalize;
+	    exit $ext;
+	else
+	    rm -f $TMP
+	    touch $TMP
+	fi
+    done
 
     i=$((i+1));
-    if [ $iteration -gt 0 -a $i -gt $iteration ]; then
+    if [ $iteration -gt 0 -a $i -ge $iteration ]; then
 	if [ $quiet -eq 0 ]; then
 	    echo;
 	    echo Repeated $iteration times;
