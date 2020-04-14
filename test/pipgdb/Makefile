@@ -37,6 +37,8 @@ include $(top_srcdir)/build/var.mk
 SRCS     = exception.c exception_init.c
 PROGRAMS = exception exception_init
 
+PROGRAMS_TO_INSTALL = # nothing
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 

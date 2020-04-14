@@ -31,7 +31,6 @@
  */
 
 #include <string.h>
-#include <libgen.h>
 
 //#define DEBUG
 #include <test.h>
@@ -213,5 +212,5 @@ int main( int argc, char **argv ) {
     fprintf( stderr, "%s: unknown test type\n", test );
     break;
   }
-  return EXIT_UNTESTED;
+  return EXIT_FAIL;
 }

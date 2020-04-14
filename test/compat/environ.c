@@ -62,23 +62,23 @@ int main( int argc, char **argv ) {
   for( i=0; i<niters; i++ ) {
     sprintf( keystr, "ENV%d", i );
     envval = getenv( keystr );
-    CHECK( envval==NULL, RV, RETURN(EXIT_FAIL) );
+    CHECK( envval==NULL, RV, return(EXIT_FAIL) );
     n = strtol( envval, NULL, 10 );
-    CHECK( n!=foo(i),    RV, RETURN(EXIT_FAIL) );
+    CHECK( n!=foo(i),    RV, return(EXIT_FAIL) );
   }
 
   /* setenv and getenv */
   for( i=0; i<niters; i++ ) {
     sprintf( keystr, "env%d", i );
     sprintf( valstr, "%d", bar( i ) );
-    CHECK( setenv(keystr,valstr,0), RV, RETURN(EXIT_FAIL) );
+    CHECK( setenv(keystr,valstr,0), RV, return(EXIT_FAIL) );
   }
   for( i=0; i<niters; i++ ) {
     sprintf( keystr, "env%d", i );
     envval = getenv( keystr );
-    CHECK( envval==NULL, RV, RETURN(EXIT_FAIL) );
+    CHECK( envval==NULL, RV, return(EXIT_FAIL) );
     n = strtol( envval, NULL, 10 );
-    CHECK( n!=bar(i),    RV, RETURN(EXIT_FAIL) );
+    CHECK( n!=bar(i),    RV, return(EXIT_FAIL) );
   }
 
   return 0;

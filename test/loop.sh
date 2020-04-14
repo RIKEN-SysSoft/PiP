@@ -70,7 +70,7 @@ iteration=0;
 quiet=0;
 display=0;
 
-mode_list='-C -L -G -T';
+mode_list='';
 
 case $# in
     0)	print_usage;;
@@ -80,11 +80,11 @@ case $# in
                 esac
         do
 	    case $1 in *A) mode_list='-C -L -G -T';; esac
-	    case $1 in *P) mode_list='-P';; esac
-	    case $1 in *L) mode_list='-L';; esac
-	    case $1 in *C) mode_list='-C';; esac
-	    case $1 in *G) mode_list='-G';; esac
-	    case $1 in *T) mode_list='-T';; esac
+	    case $1 in *P) mode_list="$mode_list -P";; esac
+	    case $1 in *L) mode_list="$mode_list -L";; esac
+	    case $1 in *C) mode_list="$mode_list -C";; esac
+	    case $1 in *G) mode_list="$mode_list -G";; esac
+	    case $1 in *T) mode_list="$mode_list -T";; esac
 	    case $1 in *n) shift; iteration=$1;; esac
 	    case $1 in *t) shift; duration=$1;;  esac
 	    case $1 in *q)        quiet=1;;      esac
@@ -102,6 +102,10 @@ fi
 if [ ! -x $1 ]; then
     echo "$1 is not executable";
     exit 5;
+fi
+
+if [ "x${mode_list}" = "x" ]; then
+    mode_list='-C -L -G -T';
 fi
 
 PROGNAM=`basename $1`;

@@ -108,7 +108,7 @@ check () {
 	ftask=false;
 	reason_task0="(task) 'main' symbol not found (not linked with '-rdynamic' option)"
     fi
-    if ! readelf -h $target | grep "DYN (Shared object file)" > /dev/null 2>&1; then 
+    if ! readelf -h $target | grep "DYN (Shared object file)" > /dev/null 2>&1; then
 	ftask=false;
 	reason_task1="(task) not PIE (not compiled and linked with '-fPIC -pie' options)"
     fi
@@ -152,7 +152,7 @@ for i; do
 	case $i in
 	    -r|--root|--piproot) flag_root=true;;
 	    -t|--task|--piptask) flag_task=true;;
-	    -b|--both) 	         flag_both=true;;
+	    -b|--both|--pipboth) flag_both=true;;
 	    -v|--verbose)  	 flag_verbose=true;;
 	    -h|--usage)   	 show_usage;;
 	    --ldlinux|--ldso)	 echo ${ldso}; exit 0;;

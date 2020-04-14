@@ -1,26 +1,26 @@
 timer 1  pip_task 1    ./pip_yield
 timer 5  pip_task 8    ./pip_yield
 timer 1  pip_blt  1 1  ./pip_yield
-timer 5  pip_blt  8 8  ./pip_yield
+timer 5  pip_blt  4 4  ./pip_yield
 timer 10 pip_blt  8 24 ./pip_yield
 timer 1  pip_task 2    ./pip_namexp
 timer 5  pip_task 8    ./pip_namexp
 timer 1  pip_blt  1 1  ./pip_namexp
-timer 5  pip_blt  8 8  ./pip_namexp
+timer 5  pip_blt  4 4  ./pip_namexp
 timer 10 pip_blt  8 24 ./pip_namexp
 timer 1  pip_task 1    ./pip_barrier 10
 timer 5  pip_task 8    ./pip_barrier 10
 timer 1  pip_blt  1 1  ./pip_barrier 1
-timer 5  pip_blt  8 8  ./pip_barrier 1
+timer 5  pip_blt  4 4  ./pip_barrier 1
 timer 20 pip_blt  8 24 ./pip_barrier 1
 timer 1  pip_blt  1 1  ./pip_barrier 10
-timer 5  pip_blt  8 8  ./pip_barrier 10
+timer 5  pip_blt  4 4  ./pip_barrier 10
 timer 20 pip_blt  8 24 ./pip_barrier 10
 timer 1  pip_task 1    ./pip_mutex 100
 timer 2  pip_task 8    ./pip_mutex 100
 timer 5  pip_task 24   ./pip_mutex 100
 timer 1  pip_blt  1 1  ./pip_mutex 100
-timer 2  pip_blt  8 8  ./pip_mutex 100
+timer 2  pip_blt  4 4  ./pip_mutex 100
 timer 5  pip_blt  8 24 ./pip_mutex 100
 timer 1  ./migrate 2 11
 timer 2  ./migrate 4 17

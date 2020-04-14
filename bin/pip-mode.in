@@ -56,48 +56,61 @@
 ### If specified, PiP will run with the 'thread' mode
 ###
 
-self=$0;
-prefix=@prefix@;
-libdir=${prefix}/lib;
-bindir=${prefix}/bin;
-flag_help=0;
-flag_show=0;
+INSTALLTOP=@prefix@
+SRCTOP=@srcdir_top@
 
 function usage() {
-    echo $self "-P|-p|-c|-t [<command> ...]";
-    echo "    -P: 'process' mode";
-    echo "    -p: 'process:preload' mode";
+    echo $self "-p|-l|-g|-c|-t [<command> ...]";
+    echo "    -p: 'process' mode";
+    echo "    -l: 'process:preload' mode";
     echo "    -g: 'process:got' mode";
     echo "    -c: 'process:pipclone' mode";
     echo "    -t: 'pthread' mode";
     exit 0;
 }
 
-if [[ -f ${libdir}/pip_preload.so ]]; then
-    preload="${libdir}/pip_preload.so";
+self=$0;
+prefix=@prefix@;
+flag_help=0;
+flag_show=0;
+pipbuild=false;
+preload="";
+
+if $pipbuld ; then
+    predir=${SRCTOP}/preload;
+    bindir=${SRCTOP}/bin;
+else
+    predir=${INSTALLTOP}/preload;
+    bindir=${INSTALLTOP}/bin;
+fi
+
+if [[ -f ${predir}/pip_preload.so ]]; then
+    preload="${predir}/pip_preload.so";
 fi
 
 for i; do
     case $i in
-	-P|--process)
-	    if [[ x${preload} == x ]]; then
+	-p|-P|--process)
+	    if [[ x${preload} == "x" ]]; then
 		pip_mode="process:pipclone";
 	    else
 		pip_mode="process:preload";
 	    fi;;
-	-p|--process:preload)
-	    if [[ "x${preload}" == x ]]; then
+	-l|-L|--process:preload)
+	    if [[ "x${preload}" == "x" ]]; then
 		echo "Unable to find PiP preload library";
 		exit 1;
 	    else
 		pip_mode="process:preload";
 	    fi;;
-	-g|--process:got)
+	-g|-G|--process:got)
 	    pip_mode="process:got";;
-	-c|--process:pipclone)
+	-c|-C|--process:pipclone)
 	    pip_mode="process:pipclone";;
-	-t|-T|--thread|--pthreaad)
+	-t|-T|--thread|--pthread)
 	    pip_mode=pthread;;
+	--pipbuild)
+	    pipbuild=true;;
 	-u|--help)
 	    usage;;
 	-*)
@@ -110,16 +123,11 @@ for i; do
     esac
 done
 
-if [ "x${pip_mode}" == x ]; then
-    echo "PIP_MODE=${PIP_MODE}";
-    exit 0;
-fi
-
 export PIP_MODE=${pip_mode};
 
 if [ "${pip_mode}" != "pthread" ]; then
-    if [ "x${preload}" != x ]; then
-	if [[ "x${LD_PRELOAD}" == x ]]; then
+    if [ "x${preload}" != "x" ]; then
+	if [[ "x${LD_PRELOAD}" == "x" ]]; then
 	    export LD_PRELOAD="${preload}";
 	else
 	    export LD_PRELOAD="${preload}:${LD_PRELOAD}";
@@ -127,11 +135,17 @@ if [ "${pip_mode}" != "pthread" ]; then
     fi
 fi
 
-if [ "x${cmd}" != x ]; then
-    ${cmd};
+if [ "x${cmd}" != "x" ]; then
+    PIP_MODE=${pip_mode} ${cmd};
+elif [ "x${pip_mode}" == "x" ]; then
+    if ${pipbuild} ; then
+	exec ${bindir}/printpipmode --pipbuild;
+    else
+	exec ${bindir}/printpipmode;
+    fi
 else
     if [ "${pip_mode}" != "pthread" ]; then
-	if [ "x${preload}" != x ]; then
+	if [ "x${preload}" != "x" ]; then
 	    echo "LD_PRELOAD=${LD_PRELOAD}";
 	fi
     fi

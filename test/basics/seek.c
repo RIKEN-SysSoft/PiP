@@ -86,9 +86,9 @@ static int my_write( int fd, char *buff, size_t len ) {
 
 int main( int argc, char **argv ) {
   char	*fname;
-  char	buff[128], check[128];
+  char	buff[128], check[128], *env;
   int 	stdin, stdout;
-  int 	ntasks, pipid;
+  int 	ntasks, ntenv, pipid;
   int	niters;
   int	fd, len;
   int	i, ii, extval = 0;
@@ -107,7 +107,7 @@ int main( int argc, char **argv ) {
       fname = argv[1];
     }
   } else {
-    exit( EXIT_UNTESTED );
+    exit( EXIT_FAIL );
   }
 
   ntasks = 0;
@@ -115,6 +115,10 @@ int main( int argc, char **argv ) {
     ntasks = strtol( argv[2], NULL, 10 );
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   niters = 0;
   if( argc > 3 ) {
@@ -140,7 +144,7 @@ int main( int argc, char **argv ) {
     sprintf( buff, "%8s", ROOT );
     len = strlen( buff );
     if( stdin ) {
-      CHECK( fd = open( "/dev/stdin", O_RDONLY ), RV<0,  return(EXIT_UNTESTED) );
+      CHECK( fd = open( "/dev/stdin", O_RDONLY ), RV<0,  return(EXIT_FAIL) );
       expp->fd = fd;
       CHECK( my_read( fd, check, len ),           RV<0,  return(EXIT_FAIL) );
       CHECK( strcmp( buff, check ),               RV!=0, return(EXIT_FAIL) );
@@ -160,9 +164,9 @@ int main( int argc, char **argv ) {
 #endif
       }
     } else if( stdout ) {
-      CHECK( fd = open( "/dev/stdout", O_WRONLY ), RV<0, return(EXIT_UNTESTED) );
+      CHECK( fd = open( "/dev/stdout", O_WRONLY ), RV<0, return(EXIT_FAIL) );
       expp->fd = fd;
-      CHECK( my_write( fd, buff, len ), RV<0, return(EXIT_UNTESTED) );
+      CHECK( my_write( fd, buff, len ), RV<0, return(EXIT_FAIL) );
       for( i=0; i<ntasks; i++ ) {
 	pipid = i;
 	CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
@@ -180,7 +184,7 @@ int main( int argc, char **argv ) {
       }
     } else {			/* file */
       CHECK( fd = open( fname, O_CREAT|O_TRUNC|O_RDWR, S_IRWXU ),
-	       RV<0, return(EXIT_UNTESTED) );
+	       RV<0, return(EXIT_FAIL) );
       expp->fd = fd;
       for( i=0; i<ntasks; i++ ) {
 	pipid = i;
@@ -191,8 +195,8 @@ int main( int argc, char **argv ) {
       }
       for( i=0; i<niters; i++ ) {
 	//fprintf( stderr, "[ROOT]:%d write '%s'\n", i, buff );
-	CHECK( my_write( fd, buff, len ),      RV<0,  return(EXIT_UNTESTED) );
-	CHECK( fsync(fd),                      RV!=0, return(EXIT_UNRESOLVED) );
+	CHECK( my_write( fd, buff, len ),      RV<0,  return(EXIT_FAIL) );
+	CHECK( fsync(fd),                      RV!=0, return(EXIT_FAIL) );
 #ifndef USE_BARRIER
 	expp->sync = 0;
 	while( expp->sync < ntasks );

@@ -38,22 +38,28 @@ PROGRAM = pip-exec
 PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
 	pips printpipmode
 
-PROGRAMS  = $(PROGRAM) printpipmode
+#PROGRAMS  = # do not compile at build, compile at install
+PROGRAMS  = pip-exec printpipmode
+
 MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 	pips printpipmode.c
 
-CFLAGS   += -pthread
-CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
+CPPFLAGS += -I$(GLIBCINCDIR) -I$(top_srcdir)/include
 
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
+DEPINCS = $(top_srcdir)/include
 
 include $(top_srcdir)/build/rule.mk
 
-pip-exec: pip-exec.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g $(PIPLDFLAGS_ROOT) $< -o $@ $(LDLIBS)
+pre-install-hook: pip-exec printpipmode
 
-printpipmode: printpipmode.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g $(PIPLDFLAGS_ROOT) $< -o $@ $(LDLIBS)
+pip-exec: pip-exec.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -O2 $(PIPLDFLAGS_ROOT) $< -o $@
+
+printpipmode: printpipmode.c $(DEPINCS) $(PIPLIB) Makefile
+	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -O2 $(PIPLDFLAGS_ROOT) $< -o $@ $(LDLIBS)
 
 post-clean-hook:
 	$(RM) *.E *.log
+
+post-veryclean-hook: post-clean-hook
+	$(RM) pip-exec pipcc pip-mode pip-check pip-man printpipmode

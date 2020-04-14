@@ -42,12 +42,14 @@ LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
-CPPFLAGS += -I$(PIPINCDIR) -I. \
+CPPFLAGS += -I$(GLIBCINCDIR) -I$(PIPCPPFLAGS) -I. \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
-	-DPIP_MAKE_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\"
-CFLAGS += $(PICCFLAG)
+	-DPIP_MAKE_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\" \
+	-DPIP_INSTALL_BIN_PIPS=\"$(default_bindir)/pips\" \
+	-DPIP_MAKE_BIN_PIPS=\"../bin/pips\"
+CFLAGS += $(PIPCFLAGS_TASK)
 FCTXOBJS = fctx_jump.o fctx_make.o
-LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY) -L$(glibc_libdir) -ldl
+LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY)
 
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
@@ -59,20 +61,22 @@ OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT)
 
-DEPINCS  = $(PIPINCDIR)/pip.h			\
-	   $(PIPINCDIR)/pip_context.h		\
-	   $(PIPINCDIR)/pip_blt.h		\
-	   $(PIPINCDIR)/pip_clone.h		\
-	   $(PIPINCDIR)/pip_internal.h 		\
-	   $(PIPINCDIR)/pip_util.h		\
-	   $(PIPINCDIR)/pip_dlfcn.h		\
-	   $(PIPINCDIR)/pip_machdep.h 		\
-	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
-	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
-	   $(PIPINCDIR)/pip_debug.h 		\
-	   $(PIPINCDIR)/pip_gdbif.h		\
-	   $(PIPINCDIR)/pip_gdbif_func.h	\
-	   $(PIPINCDIR)/pip_gdbif_queue.h
+DEPINCS  = pip_context.c                        	\
+	   $(PIPINCDIR_BUILD)/config.h			\
+	   $(PIPINCDIR_BUILD)/pip.h			\
+	   $(PIPINCDIR_BUILD)/pip_context.h		\
+	   $(PIPINCDIR_BUILD)/pip_blt.h			\
+	   $(PIPINCDIR_BUILD)/pip_clone.h		\
+	   $(PIPINCDIR_BUILD)/pip_internal.h 		\
+	   $(PIPINCDIR_BUILD)/pip_util.h		\
+	   $(PIPINCDIR_BUILD)/pip_dlfcn.h		\
+	   $(PIPINCDIR_BUILD)/pip_machdep.h 		\
+	   $(PIPINCDIR_BUILD)/pip_machdep_aarch64.h 	\
+	   $(PIPINCDIR_BUILD)/pip_machdep_x86_64.h 	\
+	   $(PIPINCDIR_BUILD)/pip_debug.h 		\
+	   $(PIPINCDIR_BUILD)/pip_gdbif.h		\
+	   $(PIPINCDIR_BUILD)/pip_gdbif_func.h		\
+	   $(PIPINCDIR_BUILD)/pip_gdbif_queue.h
 
 include $(top_srcdir)/build/rule.mk
 

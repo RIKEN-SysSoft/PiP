@@ -47,3 +47,9 @@ include $(srcdir)/../Test.common
 
 test :
 	../test.sh test.list
+
+install_test_dir = $(prefix)/test/fortran
+
+install-test :
+	$(MKDIR_P) $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)

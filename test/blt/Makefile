@@ -39,8 +39,16 @@ SRCS     = pip_yield.c migrate.c pip_namexp.c pip_barrier.c pip_mutex.c \
 PROGRAMS = pip_yield migrate pip_namexp pip_barrier pip_mutex \
 	pip_couple
 
+PROGRAMS_TO_INSTALL = # nothing
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 test :
 	../test.sh test.list
+
+install_test_dir = $(prefix)/test/blt
+
+install-test :
+	$(MKDIR_P) $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)

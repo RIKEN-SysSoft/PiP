@@ -34,34 +34,47 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS = ../../bin/pip-exec.c abc.c
+PROGRAMS = pip-exec abc def ghi xyz hello
 
-PROGRAMS = pip-exec abc def ghi xyz
+PROGRAMS_TO_INSTALL = # nothing
 
 CPPFLAGS += -I$(PIPINCDIR)
 LDLIBS += $(PIPLDLIB) -ldl
 
 DEPLIBS = $(PIPLDLIB)
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
+DEPINCS = $(PIPINCDIR)/pip.h
+
+PIPCC = ../scripts/pipcc
 
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
-pip-exec: ../../bin/pip-exec.c $(DEPINCS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+pip-exec : ../../bin/pip-exec
+	rm -f pip-exec
+	ln -s ../../bin/pip-exec
 
 abc: abc.c $(DEPINCS) Makefile
-	$(CC) -DMSG=\"abc\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(PIPCC) -DMSG=\"abc\" $< -o $@
 
 def: abc.c $(DEPINCS) Makefile
-	$(CC) -DMSG=\"def\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(PIPCC) -DMSG=\"def\" $< -o $@
 
-ghi: abc.c $(DEPINCS)  Makefile
-	$(CC) -DMSG=\"ghi\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+ghi: abc.c $(DEPINCS) Makefile
+	$(PIPCC) -DMSG=\"ghi\" $< -o $@
 
 xyz: abc.c $(DEPINCS) Makefile
-	$(CC) -DMSG=\"xyz\" \
-	$(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(PIPCC) -DMSG=\"xyz\" $< -o $@
+
+hello: ../../sample/hello/hello.c
+	$(PIPCC) $< -o $@
+
+test:
+	../test.sh -A pip-exec.list
+
+install_test_dir = $(prefix)/test/prog
+
+install-test:
+	$(MKDIR_P) $(install_test_dir)
+	$(INSTALL) -C -m 744 abc.c pip-exec.list $(install_test_dir)
+
+test-progs: $(PROGRAMS)

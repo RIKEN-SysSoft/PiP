@@ -28,30 +28,24 @@
 # $RIKEN_copyright: 2018-2020 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += $(PIECFLAG)
-PIPLIBDIR = $(shell (cd $(top_builddir)/lib && pwd))
-
-LDLIBS = -L$(PIPLIBDIR) -L$(libdir) -Wl,-rpath=$(PIPLIBDIR) -lpip -ldl
+CPPFLAGS = -I$(srcdir)/.. -I$(GLIBCINCDIR) -I$(PIPINCDIR_BUILD)
+CFLAGS += $(PICCFLAG)
 
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
-	$(LDLIBS) $(PIELDFLAG)
+	$(PIPLDLIBS) $(PIELDFLAG)
 
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_blt.h  \
-	$(PIPINCDIR)/pip_debug.h $(PIPINCDIR)/pip_util.h \
-	../test.h
-
-DEPLIBS += $(PIPLIBDIR)/libpip.so $(PIPLIBDIR)/libpip_gdb.so
+DEPINCS = ../test.h
+DEPLIBS += $(PIPLIBDIR_BUILD)/libpip.so $(PIPLIBDIR_BUILD)/libpip_init.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+%: %.c $(SRCS) $(DEPINCS) $(PIPLIB_BUILD) $(DEPLIBS) Makefile
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(PTHREADFLAG) $< -o $@
 
-%: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $< -o $@
+%: %.cc $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+	$(CXX) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(PTHREADFLAG) $< -o $@
 
 %: %.f $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
-	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $< -o $@
+	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $(PTHREADFLAG) $< -o $@
 
 all : $(PROGRAMS)

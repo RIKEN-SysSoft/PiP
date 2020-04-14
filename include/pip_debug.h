@@ -96,7 +96,7 @@ extern int  pip_idstr( char *buf, size_t sz );
 #define DBG_TAG							\
   do { char __tag[DBGTAGLEN]; pip_idstr(__tag,DBGTAGLEN);	\
     DBG_PRNT("%s %s:%d %s()",__tag,				\
-	     __FILE__, __LINE__, __func__ );	} while(0)
+	     basename(__FILE__), __LINE__, __func__ );	} while(0)
 
 #define EMSG(...)							\
   do { DBG_PRTBUF; DBG_TAG; DBG_PRNT(": ");				\
@@ -110,17 +110,18 @@ extern int  pip_idstr( char *buf, size_t sz );
   do { DBG_PRTBUF; DBG_PRNT("\n"); DBG_TAG; DBG_PRNT(": ");		\
     DBG_PRNT(__VA_ARGS__); DBG_OUTPUT; } while(0)
 
+
 #ifdef DEBUG
 
 extern int pip_debug_env( void );
-#define DBG_TAG_ENTER						\
-  do { char __tag[DBGTAGLEN]; pip_idstr(__tag,DBGTAGLEN);	\
-    DBG_PRNT("%s %s:%d >> %s()",__tag,				\
-	     __FILE__, __LINE__, __func__ );	} while(0)
-#define DBG_TAG_LEAVE						\
-  do { char __tag[DBGTAGLEN]; pip_idstr(__tag,DBGTAGLEN);	\
-    DBG_PRNT("%s %s:%d << %s()",__tag,				\
-	     __FILE__, __LINE__, __func__ );	} while(0)
+#define DBG_TAG_ENTER							\
+  do { char __tag[DBGTAGLEN]; pip_idstr(__tag,DBGTAGLEN);		\
+    DBG_PRNT("%s %s:%d >> %s()",__tag,					\
+	     basename(__FILE__), __LINE__, __func__ );	} while(0)
+#define DBG_TAG_LEAVE							\
+  do { char __tag[DBGTAGLEN]; pip_idstr(__tag,DBGTAGLEN);		\
+    DBG_PRNT("%s %s:%d << %s()",__tag,					\
+	     basename(__FILE__), __LINE__, __func__ );	} while(0)
 
 #define DBG						\
   if(DBGSW) { DBG_PRTBUF; DBG_TAG; DBG_OUTPUT; }
@@ -152,44 +153,36 @@ extern int pip_debug_env( void );
   do { if(DBGSW) { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; }		\
     return; } while(0)
 
-#define ASSERT(X)						       \
-  if(X) { NL_EMSG("<%s> Assertion FAILED !!!!!!",#X);	       \
-    } else { DBGF( "<%s> -- Assertion OK", #X ); }
-
-#define ASSERTD(X)						       \
-  if(DBGSW) { if(X) { NL_EMSG("<%s> Assertion FAILED !!!!!!",#X);       \
-    } else {DBGF( "<%s> -- Assertion OK", #X ); } }
+#define ASSERTD(X)							\
+  if(DBGSW) { if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);	\
+      pip_debug_info(); } } while(0)
 
 #define DO_CHECK_CTYPE
 
-#ifdef DO_CHECK_CTYPE
-#include <ctype.h>
-#define PIP_CHECK_CTYPE					\
-  do{ DBGF( "__ctype_b_loc()=%p", __ctype_b_loc() );			\
-  DBGF( "__ctype_toupper_loc()=%p", __ctype_toupper_loc() );		\
-  DBGF( "__ctype_tolower_loc()=%p", __ctype_tolower_loc() );		\
-  isalnum('a'); isalnum('_'); } while( 0 )
-#endif
-
-#else  /* !DEBUG */
+#else
 
 #define DBG
-#define DBG_NL
 #define DBGF(...)
 #define DBGF_NNL(...)
 #define ENTER
 #define ENTERF(...)
-#define RETURN(X)	return (X)
-#define RETURNV		return
+#define RETURN(X)		return(X)
+#define RETURNV			return
 #define ASSERTD(X)
 
-#define ASSERT(X)						       \
-  do { IF_UNLIKELY(X) { NL_EMSG("<%s> Assertion FAILED !!!!!!",#X);   \
-    } } while(0)
-
-#define PIP_CHECK_CTYPE
-
 #endif	/* !DEBUG */
+
+#ifdef DO_CHECK_CTYPE
+#include <ctype.h>
+#define PIP_CHECK_CTYPE						\
+  do{ DBGF( "isalnum('a')=%d", isalnum('a') ); } while(0)
+#else
+#define PIP_CHECK_CTYPE
+#endif
+
+#define ASSERT(X)							\
+  if(X){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);pip_debug_info();	\
+    } else { DBGF( "{%s} -- Assertion OK", #X ); }
 
 #define NEVER_REACH_HERE						\
   do { NL_EMSG( "Should never reach here !!!!!!" ); } while(0)

@@ -39,14 +39,16 @@ CFLAGS += $(PICCFLAG)
 LDFLAGS  = -shared -ldl
 
 LIBRARY  = pip_preload.so
+LIBRARIES = $(LIBRARY)
+
 SRCS     = $(srcdir)/pip_preload.c
 
-DEPINCS  = $(PIPINCDIR)/pip_debug.h
-
-debug:
-	CPPFLAGS+="-DDEBUG" make all;
+DEPINCS  = $(PIPINCDIR_BUILD)/pip_clone.h
 
 include $(top_srcdir)/build/rule.mk
 
+debug:
+	CPPFLAGS += "-DDEBUG" make all;
+
 $(LIBRARY): $(SRCS) $(DEPINCS) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -shared -o $(LIBRARY)
+	$(CC) $(CPPFLAGS) $(PIPCPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -shared -o $(LIBRARY)

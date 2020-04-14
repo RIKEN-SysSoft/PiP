@@ -50,70 +50,87 @@
 ### If specified, the compile (and link) is done for PiP task
 ###
 
-prefix=@prefix@
-exec_prefix=@exec_prefix@
+INSTALLTOP=@prefix@
+SRCTOP=@srcdir_top@
 
-includedir=@includedir@
-libdir=@libdir@
-dynamic_linker=@dynamic_linker@
+glibc_incdir=@glibc_incdir@
 glibc_libdir=@glibc_libdir@
+dynamic_linker=@dynamic_linker@
 
 : ${CC:=cc}
 
 is_linking=true
 pip_root=true
 pip_task=true
-no_pip=false;
-dryrun=false;
+no_pip=false
+pipbuild=false
+pipinstall=false
+dryrun=false
+silent=false
 
 while [ "$1" != "" ]; do
     case $1 in
 	-c|-E|-S)  is_linking=false; opts="${opts} $1";;
 	--piproot|-piproot|--pip-root|-pip-root) pip_task=false;;
 	--piptask|-piptask|--pip-task|-pip-task) pip_root=false;;
-	--pipdir)  shift; pipdir=$1;;
+	--pipbuild) pipbuild=true;;
+	--pipinstall) pipinstall=true;;
 	--nopip)   no_pip=true;;
+	--silent)  silent=true;;
 	--dryrun)  dryrun=true;;
 	*)         opts="${opts} $1";;
     esac
     shift;
 done
 
-if ${no_pip}; then
-    echo ${CC} ${opts};
-    if [ !${dryrun} ]; then
-	exec ${CC} ${opts};
+do_exec () {
+    if [ !${silent} ]; then
+	echo $@
     fi
+    if [ !${dryrun} ]; then
+	exec $@
+    fi
+}
+
+if ${no_pip}; then
+    do_exec ${CC} ${opts}
 fi
 
-if [ "${pipdir}" != "" ]; then
-    includedir=${pipdir}/include
-    libdir=${pipdir}/lib
+if $pipbuild ; then
+    PIP_INCFLAGS="-I${SRCTOP}/include"
+    PIP_LDFLAGS="-L ${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib"
+elif $pipinstall ; then
+    PIP_INCFLAGS="-I${INSTALLTOP}/include"
+    PIP_LDFLAGS="-L${INSTALLTOP}/lib -Wl,-rpath=${INSTALLTOP}/lib"
+else
+    PIP_INCFLAGS="-I${SRCTOP}/include -I${INSTALLTOP}/include"
+    PIP_LDFLAGS="-L${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib -L${INSTALLTOP}/lib -Wl,-rpath=${INSTALLTOP}/lib"
 fi
 
+GLIBC_CFLAGS=""
+GLIBC_LDFLAGS=""
+GLIBC_LDLINUX=""
 if [ "${dynamic_linker}" != "" ]; then
-    PIP_LDLINUX="-Wl,--dynamic-linker=${dynamic_linker}"
+    GLIBC_CFLAGS="-I${glibc_incdir}"
+    GLIBC_LDFLAGS="-L${glibc_libdir} -Wl,-rpath=${glibc_libdir}"
+    GLIBC_LDLINUX="-Wl,--dynamic-linker=${dynamic_linker}"
 fi
 
-if [ "${glibc_libdir}" != "" ]; then
-    PIP_GLIBC="-Wl,-rpath=${glibc_libdir}"
-fi
+PIP_COMMON_CFLAGS="${PIP_INCFLAGS} ${GLIBC_CFLAGS}"
+PIP_COMMON_LDFLAGS="${PIP_LDFLAGS} ${GLIBC_LDFLAGS}"
+PIP_COMMON_LDLIBS="-lpip -ldl"
 
-PIPC_CFLAGS="-I${includedir} -pthread"
-PIPC_LDFLAGS="-L${libdir} -Wl,-rpath=${libdir} ${PIP_GLIBC} -pthread"
-PIPC_LDLIBS="-lpip -ldl"
+PIP_ROOT_CFLAGS="${PIP_COMMON_CFLAGS}"
+PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
+PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
 
-PIP_ROOT_CFLAGS="${PIPC_CFLAGS}"
-PIP_ROOT_LDFLAGS="${PIPC_LDFLAGS}"
-PIP_ROOT_LDLIBS="${PIPC_LDLIBS} ${PIP_LDLINUX}"
+PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} -fPIC"
+PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} -pie -rdynamic"
+PIP_TASK_LDLIBS="${PIP_COMMON_LDLIBS}"
 
-PIP_TASK_CFLAGS="${PIPC_CFLAGS} -fPIC"
-PIP_TASK_LDFLAGS="${PIPC_LDFLAGS} -pie -rdynamic"
-PIP_TASK_LDLIBS="${PIPC_LDLIBS}"
-
-PIP_BOTH_CFLAGS="${PIP_TASK_CFLAGS}"
-PIP_BOTH_LDFLAGS="${PIP_TASK_LDFLAGS}"
-PIP_BOTH_LDLIBS="${PIP_ROOT_LDLIBS}"
+PIP_BOTH_CFLAGS="${PIP_COMMON_CFLAGS} -fPIC"
+PIP_BOTH_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} -pie -rdynamic"
+PIP_BOTH_LDLIBS="${PIP_COMMON_LDLIBS}"
 
 if ${pip_root} && ${pip_task}; then
     PIP_CFLAGS="${PIP_BOTH_CFLAGS}"
@@ -133,14 +150,10 @@ else
     PIP_LDLIBS="${PIP_BOTH_LDLIBS}"
 fi
 
+PTHREAD_FLAG="-pthread"
+
 if ${is_linking}; then
-    echo ${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${opts} ${PIP_LDLIBS};
-    if [ !${dryrun} ]; then
-	exec ${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${opts} ${PIP_LDLIBS};
-    fi
+    do_exec ${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} ${PTHREAD_FLAG} ${opts}
 else
-    echo ${CC} ${PIP_CFLAGS} ${opts};
-    if [ !${dryrun} ]; then
-	exec ${CC} ${PIP_CFLAGS} ${opts};
-    fi
+    do_exec ${CC} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
 fi

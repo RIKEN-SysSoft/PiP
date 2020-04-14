@@ -31,7 +31,7 @@
  */
 
 //#define DEBUG
-#include <pip.h>
+#include <test.h>
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -73,7 +73,7 @@ main(int argc, char **argv)
     fprintf( stderr, "pip_init: %s\n", strerror( rv ));
     return EXIT_FAILURE;
   }
-  if( pipid != PIP_PIPID_ROOT ) return 0;
+  if( pipid != PIP_PIPID_ROOT ) return EXIT_UNTESTED;
   printf( "%s\n", pip_get_mode_str() );
 
   return EXIT_SUCCESS;

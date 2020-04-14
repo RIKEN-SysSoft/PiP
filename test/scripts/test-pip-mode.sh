@@ -1,28 +1,32 @@
 #!/bin/sh
 
 tstp=$0
-dir=`dirname $0`
-. $dir/../exit_code.sh.inc
+. ../exit_code.sh.inc
 
-testdir=$dir/../..
-
-out=`$dir/pip-mode -p $dir/../../bin/printpipmode`;
+out=`./pip-mode -p ../../bin/printpipmode`;
 if [ "$out" != "process:preload" ]; then
-    echo "./pipmode -p ../util/pip_mode" "FAILS"
+    echo "./pip-mode -p ../../bin/printpipmode" "FAILS"
     echo "Output: $out"
     exit $EXIT_FAIL;
 fi
 
-out=`$dir/pip-mode -c $dir/../../bin/printpipmode`;
-if [ "$out" != "process:pipclone" ]; then
-    echo "./pipmode -c ../util/pip_mode" "FAILS"
+##out=`./pip-mode -c ../../bin/printpipmode`;
+##if [ "$out" != "process:pipclone" ]; then
+##    echo "./pip-mode -c ../../bin/printpipmode" "FAILS"
+##    echo "Output: $out"
+##    exit $EXIT_FAIL;
+##fi
+
+out=`./pip-mode -g ../../bin/printpipmode`;
+if [ "$out" != "process:got" ]; then
+    echo "./pip-mode -c ../../bin/printpipmode" "FAILS"
     echo "Output: $out"
     exit $EXIT_FAIL;
 fi
 
-out=`$dir/pip-mode -t $dir/../../bin/printpipmode`;
+out=`./pip-mode -t ../../bin/printpipmode`;
 if [ "$out" != "pthread" ]; then
-    echo "./pipmode -t ../util/pip_mode" "FAILS"
+    echo "./pip-mode -t ../../bin/printpipmode" "FAILS"
     echo "Output: $out"
     exit $EXIT_FAIL;
 fi

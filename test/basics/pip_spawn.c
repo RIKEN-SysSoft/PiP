@@ -33,7 +33,8 @@
 #include <test.h>
 
 int main( int argc, char **argv ) {
-  int pipid, ntasks;
+  char *env;
+  int pipid, ntasks, ntenv;
 
   /* before calling pip_init(), this must fail */
   pipid = PIP_PIPID_ANY;
@@ -43,6 +44,10 @@ int main( int argc, char **argv ) {
 	 return(EXIT_FAIL) );
 
   ntasks = NTASKS;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    ntasks = ( ntasks > ntenv ) ? ntenv : ntasks;
+  }
   CHECK( pip_init( NULL, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
   /* after calling pip_init() */

@@ -20,9 +20,10 @@ typedef struct exp {
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
   exp_t	exprt, *expp;
-  int 	ntasks, pipid;
+  int 	ntasks, ntenv, pipid;
   int	niters = NITERS;
   int	i, extval = 0;
+  char	*env;
 
   ntasks = 0;
   if( argc > 1 ) {
@@ -31,8 +32,12 @@ int main( int argc, char **argv ) {
   ntasks = ( ntasks <= 0      ) ? NTASKS-1 : ntasks;
   ntasks = ( ntasks >= NTASKS ) ? NTASKS-1 : ntasks;
   ntasks ++;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
-  pip_spawn_from_main( &prog, argv[0], argv, NULL );
+  pip_spawn_from_main( &prog, argv[0], argv, NULL, NULL );
   expp = &exprt;
 
   CHECK( pip_init(&pipid,&ntasks,(void*)&expp,0), RV, return(EXIT_FAIL) );
@@ -44,7 +49,7 @@ int main( int argc, char **argv ) {
       CHECK( pip_blt_spawn( &prog, PIP_CPUCORE_ASIS, PIP_TASK_ACTIVE, &pipid,
 			    NULL, NULL, NULL ),
 	     RV,
-	     abend(EXIT_UNTESTED) );
+	     return(EXIT_FAIL) );
     }
 
     for( i=0; i<ntasks; i++ ) {

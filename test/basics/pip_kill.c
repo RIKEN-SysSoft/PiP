@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
 static struct my_exp	*expp;
@@ -77,6 +77,8 @@ static int wait_signal_task( int pipid ) {
 }
 
 int main( int argc, char **argv ) {
+  char	*env;
+  int	ntenv;
   int	i, recv_sig, extval = 0;
 
   ntasks = 0;
@@ -84,6 +86,10 @@ int main( int argc, char **argv ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   expp = &exp;
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
@@ -96,10 +102,9 @@ int main( int argc, char **argv ) {
       pipid = i;
       CHECK( pip_spawn(argv[0],argv,NULL,PIP_CPUCORE_ASIS,&pipid,
 		       NULL,NULL,NULL),
-	     RV,
-	     return(EXIT_FAIL) );
+	     RV, return(EXIT_FAIL) );
     }
-    CHECK( block_sigusrs(), 		    RV, return(EXIT_FAIL) );
+    CHECK( block_sigusrs(), 		    RV,    return(EXIT_FAIL) );
     CHECK( pthread_barrier_wait( &expp->barr ),
 	   (RV!=0&&RV!=PTHREAD_BARRIER_SERIAL_THREAD), return(EXIT_FAIL) );
 
@@ -116,19 +121,19 @@ int main( int argc, char **argv ) {
 
     for( i=0; i<ntasks; i++ ) {
       int status;
-      CHECK( pip_wait_any( NULL, &status ), RV, return(EXIT_FAIL) );
+      CHECK( pip_wait_any( NULL, &status ),    RV, return(EXIT_FAIL) );
       if( WIFEXITED( status ) ) {
 	CHECK( ( extval = WEXITSTATUS( status ) ),
 	       RV,
 	       return(EXIT_FAIL) );
       } else {
-	CHECK( "Task is signaled", RV, return(EXIT_UNRESOLVED) );
+	CHECK( "Task is signaled",             RV,    return(EXIT_UNRESOLVED) );
       }
     }
-    CHECK( pip_kill( ntasks, SIGUSR1 ), RV!=ERANGE, return(EXIT_FAIL) );
+    CHECK( pip_kill( ntasks, SIGUSR1 ),        RV!=ERANGE, return(EXIT_FAIL) );
 
   } else {
-    CHECK( block_sigusrs(), RV, return(EXIT_FAIL) );
+    CHECK( block_sigusrs(),                    RV,     return(EXIT_FAIL) );
 
     CHECK( pthread_barrier_wait( &expp->barr ),
 	   (RV!=0&&RV!=PTHREAD_BARRIER_SERIAL_THREAD), return(EXIT_FAIL) );

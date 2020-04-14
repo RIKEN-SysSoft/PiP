@@ -299,7 +299,7 @@ pip_load_dso( const char *path, pip_task_internal_t *taski ) {
 #endif
   /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
   char		*libpipinit = NULL;
-  pip_init_t	pip_init    = NULL;
+  pip_init_t	pip_impinit = NULL;
   void 		*loaded     = NULL, *ld;
   int		err = 0;
 
@@ -313,8 +313,8 @@ pip_load_dso( const char *path, pip_task_internal_t *taski ) {
     goto error;
   }
   dlerror();			/* reset dlerror */
-  pip_init = (pip_init_t) pip_dlsym( loaded, "pip_init_task_implicitly" );
-  if( pip_init == NULL ) {
+  pip_impinit = (pip_init_t) pip_dlsym( loaded, "pip_init_task_implicitly" );
+  if( pip_impinit == NULL ) {
     DBGF( "dl_sym: %s", dlerror() );
     if( ( libpipinit = pip_find_newer_libpipinit() ) != NULL ) {
       DBGF( "libpipinit: %s", libpipinit );
@@ -328,15 +328,15 @@ pip_load_dso( const char *path, pip_task_internal_t *taski ) {
 	pip_warn_mesg( "Unable to load %s: %s", libpipinit, dlerror() );
       } else {
 	dlerror();		/* reset dlerror */
-	pip_init = (pip_init_t) pip_dlsym( ld,
+	pip_impinit = (pip_init_t) pip_dlsym( ld,
 					   "pip_init_task_implicitly" );
 	DBGF( "dlsym: %s", dlerror() );
       }
     }
   }
-  DBGF( "pip_init:%p", pip_init );
-  if( pip_init != NULL ) {
-    if( ( err = pip_init( pip_root, taski ) ) != 0 ) goto error;
+  DBGF( "pip_impinit:%p", pip_impinit );
+  if( pip_impinit != NULL ) {
+    if( ( err = pip_impinit( pip_root, taski ) ) != 0 ) goto error;
   }
   taski->annex->loaded = loaded;
   RETURN( 0 );
@@ -519,11 +519,11 @@ static void pip_start_user_func( pip_spawn_args_t *args,
   int	err, extval;
 
   /* we need lock on ldlinux. supposedly glibc does someting */
-  pip_glibc_lock( 0 );
+  //pip_glibc_lock();
   argc = pip_glibc_init( &self->annex->symbols,
 			 args,
 			 self->annex->loaded );
-  pip_glibc_unlock();
+  //pip_glibc_unlock();
 
   if( self->annex->hook_before != NULL &&
       ( err = self->annex->hook_before( hook_arg ) ) != 0 ) {
@@ -587,11 +587,10 @@ static void pip_start_cb( void *tsk ) {
   /* let pip-gdb know */
   pip_gdbif_task_commit( taski );
   /* sync with root */
-  pip_sem_post( &taski->annex->task_root->sync_root );
-  pip_sem_wait( &taski->annex->task_root->sync_task );
+  pip_sem_post( &taski->annex->task_root->sync_spawn );
 }
 
-static void* pip_do_spawn( void *thargs )  {
+static void* pip_spawn_top( void *thargs )  {
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
   /* and do not call malloc() and free() in this contxt !!!!         */
@@ -755,8 +754,13 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   task->type       = PIP_TYPE_TASK;
   task->task_sched = task;
   task->ntakecare  = 1;
-  task->annex->opts      = opts;
-  task->annex->task_root = pip_root;
+  task->annex->opts        = opts;
+  task->annex->task_root   = pip_root;
+  if( progp->exp != NULL ) {
+    task->annex->import_root = progp->exp;
+  } else {
+    task->annex->import_root = pip_root->export_root;
+  }
   if( hookp != NULL ) {
     task->annex->hook_before = hookp->before;
     task->annex->hook_after  = hookp->after;
@@ -767,7 +771,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   pip_page_alloc( pip_root->stack_size_sleep, &task->annex->stack_sleep );
   if( task->annex->stack_sleep == NULL ) ERRJ_ERR( ENOMEM );
 
-  if( progp->envv == NULL ) progp->envv = environ;
   args = &task->annex->args;
   args->start_arg = progp->arg;
   args->pipid     = pipid;
@@ -807,7 +810,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     /* and of course, the corebinding must be undone */
     (void) pip_undo_corebind( 0, coreno, &cpuset );
   }
-  ERRJ_CHK(err);
+  ERRJ_CHK( err );
 
   if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
@@ -823,18 +826,17 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
     /* we need lock on ldlinux. supposedly glibc does someting */
     /* before calling main function */
-    pip_glibc_lock( 1 );
+    pip_glibc_lock();
     err = pip_clone_mostly_pthread_ptr( (pthread_t*) &task->annex->thread,
 					flags,
 					coreno == PIP_CPUCORE_ASIS ? - 1 :
 					coreno,
 					stack_size,
-					(void*(*)(void*)) pip_do_spawn,
+					(void*(*)(void*)) pip_spawn_top,
 					args,
 					&pid );
-    if( err ) pip_glibc_unlock();
-
     DBGF( "pip_clone_mostly_pthread_ptr()=%d", err );
+    if( err ) pip_glibc_unlock();
 
   } else {
     pthread_t		thr;
@@ -851,7 +853,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
       /* we need lock on ldlinux. supposedly glibc does someting */
       /* before calling main function */
-      pip_glibc_lock( 1 );
+      pip_glibc_lock();
       {
 	if( pip_lock_clone != NULL ) {
 	  /* lock is needed, because the pip_clone()
@@ -861,7 +863,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 	/* unlock is done in the wrapper function */
 	err = pthread_create( &thr,
 			      &attr,
-			      (void*(*)(void*)) pip_do_spawn,
+			      (void*(*)(void*)) pip_spawn_top,
 			      (void*) args );
 	DBGF( "pthread_create()=%d", err );
       }
@@ -870,8 +872,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   }
   if( err == 0 ) {
     /* wait until task starts running or enqueues */
-    pip_sem_wait( &pip_root->sync_root );
-    pip_sem_post( &pip_root->sync_task );
+    pip_sem_wait( &pip_root->sync_spawn );
 
     DBGF( "task (PIPID:%d,TID:%d) is created and running",
 	  task->pipid, task->annex->tid );
@@ -961,7 +962,7 @@ int pip_spawn( char *prog,
 
   ENTER;
   if( prog == NULL ) return EINVAL;
-  pip_spawn_from_main( &program, prog, argv, envv );
+  pip_spawn_from_main( &program, prog, argv, envv, NULL );
   pip_spawn_hook( &hook, before, after, hookarg );
   RETURN( pip_task_spawn( &program, coreno, 0, pipidp, &hook ) );
 }

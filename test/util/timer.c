@@ -54,7 +54,6 @@ static int timedout     = 0;
 static void cleanup( void ) {
   if( pid > 0 ) {
     system( PIPS " -l" );
-    system( PIPS " -s HUP" );
     (void) kill( pid, SIGHUP );
     sleep( 1 );
     system( PIPS " -s KILL > /dev/null 2>&1" );
@@ -118,7 +117,6 @@ int main( int argc, char **argv ) {
   int 	time, status, flag_debug = 0;
   char	*pip_test_timer_scale = getenv("PIP_TEST_TIMER_SCALE");
 
-  set_sigsegv_watcher();
   set_sigint_watcher();
 
   prog = basename( argv[0] );

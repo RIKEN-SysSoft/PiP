@@ -44,17 +44,20 @@ struct maps {
 
 int main( int argc, char **argv ) {
   struct maps *export = (void*) &maps;
-  void *map;
-  long pgsz = sysconf( _SC_PAGESIZE );
-  int  i, ntasks, pipid;
-
-  set_signal_watcher( SIGSEGV );
+  void 	*map;
+  long 	pgsz = sysconf( _SC_PAGESIZE );
+  int  	i, ntasks, ntenv, pipid;
+  char	*env;
 
   ntasks = NTASKS;
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   CHECK( pip_init( &pipid, &ntasks, (void*) &export, 0 ),
 	 RV,

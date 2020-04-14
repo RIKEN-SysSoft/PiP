@@ -38,13 +38,18 @@
 
 static int check_sid( int argc, char **argv ) {
   pid_t pid, sid_old, sid_new;
-  int  i, ntasks, pipid;
+  int  	i, ntasks, ntenv, pipid;
+  char	*env;
 
   ntasks = NTASKS;
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   pid = getpid();
   CHECK( ( sid_old = getsid(pid) ), RV<0, return(EXIT_FAIL) );

@@ -34,18 +34,11 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PIPCFLAGS  = -I$(PIPINCDIR) $(CFLAGS) $(PIECFLAG) $(PIPINCFLAGS)
-LDLIBS += $(PIPLDLIB) -ldl
-
-DEPINCS = $(PIPINCDIR)/pip.h
-
-SRCS  = hello.c
-
-PROGRAMS  = hello
-
+SRCS     = hello.c
+PROGRAMS = hello
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(PIPCFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@ $(LDLIBS) -ldl
+%: %.c $(SRCS) Makefile
+	$(CC) $(PIPCPPFLAGS) -fPIE -pie $(PIPLDFLAGS_BOTH) $< -o $@

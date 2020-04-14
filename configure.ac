@@ -11,26 +11,39 @@ AC_CONFIG_HEADERS([include/config.h])
 # Specialized system macros
 AC_CANONICAL_HOST
 
+# srcdir_top
+
+cwd=`dirname $0`;
+srcdir_top=`realpath $cwd`;
+AC_SUBST(srcdir_top)
+
 # Checks for command line options
 
 AC_MSG_CHECKING([for glibc libdir])
 AC_ARG_WITH([glibc-libdir],
   [AS_HELP_STRING([--with-glibc-libdir=DIR],
-                  [glibc lib directory @<:@default=/lib64@:>@])])
+                  [glibc lib directory @<:@default=/usr/lib64@:>@])])
 case "$with_glibc_libdir" in
-""|yes|no) with_glibc_libdir=/lib64;;
+""|yes|no) with_glibc_libdir="/usr/lib64";;
 esac
 dynamic_linker=`ls -d "${with_glibc_libdir}"/ld-@<:@0-9@:>@*.so | sed -n '$p'`
 if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}"; then
   AC_MSG_RESULT([${with_glibc_libdir}])
-  glibc_libdir=${with_glibc_libdir}
+  glibc_libdir="${with_glibc_libdir}"
+  glibc_incdir="`realpath ${with_glibc_libdir}/../include`"
 else
   AC_MSG_ERROR([can't find ld.so.])
 fi
+if ! test -d "${glibc_incdir}" ; then
+  glibc_incdir="/usr/include"
+fi
+AC_MSG_RESULT([${glibc_incdir}])
+
 AC_SUBST(prefix)
 AC_SUBST(exec_prefix)
 AC_SUBST(includedir)
 AC_SUBST(libdir)
+AC_SUBST(glibc_incdir)
 AC_SUBST(glibc_libdir)
 AC_SUBST(dynamic_linker)
 

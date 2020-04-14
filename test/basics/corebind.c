@@ -50,13 +50,18 @@ static int nth_core( int nth, cpu_set_t *cpuset ) {
 int main( int argc, char **argv ) {
   cpu_set_t	init_set, *init_setp;
   void		*exp;
-  int 		ntasks, pipid;
+  char		*env;
+  int 		ntasks, ntenv, pipid;
   int		core, i, extval = 0;
 
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   exp = &init_set;
   CHECK( pip_init(&pipid,&ntasks,(void**)&exp,0), RV, return(EXIT_FAIL) );

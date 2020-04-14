@@ -56,7 +56,7 @@ int main( int argc, char **argv ) {
   p = stpcpy( p, "/../" );
   (void) strcpy( p, LIBNAME );
 
-  //fprintf( stderr, "path:%s\n", path );
+  fprintf( stderr, "path:%s\n", path );
   CHECK( handle = pip_dlopen( path, RTLD_LAZY ),
 	 handle==NULL,
 	 return(EXIT_FAIL) );

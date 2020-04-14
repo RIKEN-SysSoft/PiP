@@ -38,8 +38,16 @@ SRCS  = fflush-ticket518.c fflush-ticket518+.c
 
 PROGRAMS  = fflush-ticket518 fflush-ticket518+
 
+PROGRAMS_TO_INSTALL = # nothing
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 test :
 	../test.sh test.list
+
+install_test_dir = $(prefix)/test/issues
+
+install-test :
+	$(MKDIR_P) $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)

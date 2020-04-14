@@ -34,8 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-CXXFLAGS += $(CFLAGS)
-
+CXXFLAGS += -fpie -pie
 SRCS  = cxx.cc
 
 PROGRAMS  = cxx
@@ -47,3 +46,9 @@ include $(srcdir)/../Test.common
 
 test :
 	../test.sh test.list
+
+install_test_dir = $(prefix)/test/cxx
+
+install-test :
+	$(MKDIR_P) $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)

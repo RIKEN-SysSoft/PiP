@@ -33,38 +33,41 @@ static int is_taskq_empty( pip_task_queue_t *queue ) {
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
-  int 	nacts, npass, ntasks, pipid, extval;
-  char 	env_ntasks[128];
-  char 	env_pipid[128];
+  int 	nacts, npass, ntasks, ntenv, pipid, extval;
+  char 	env_ntasks[128], env_pipid[128], *env;
   int 	c, nc, i, j, err;
 
   set_sigint_watcher();
 
   if( argc < 4 ) return EXIT_UNTESTED;
-  CHECK( access( argv[3], X_OK ),     RV, abend(EXIT_UNTESTED) );
-  CHECK( pip_check_pie( argv[3], 1 ), RV, abend(EXIT_UNTESTED) );
+  CHECK( access( argv[3], X_OK ),     RV, return(EXIT_UNTESTED) );
+  CHECK( pip_check_pie( argv[3], 1 ), RV, return(EXIT_UNTESTED) );
 
   nacts = strtol( argv[1], NULL, 10 );
-  CHECK( nacts,  RV<0||RV>NTASKS,  abend(EXIT_UNTESTED) );
+  CHECK( nacts,  RV<0||RV>NTASKS,  return(EXIT_UNTESTED) );
   npass = strtol( argv[2], NULL, 10 );
-  CHECK( npass,  RV<0||RV>NTASKS,  abend(EXIT_UNTESTED) );
+  CHECK( npass,  RV<0||RV>NTASKS,  return(EXIT_UNTESTED) );
   ntasks = nacts + npass;
-  CHECK( ntasks, RV<=0||RV>NTASKS, abend(EXIT_UNTESTED) );
+  CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   for( i=0; i<nacts+1; i++ ) pip_task_queue_init( &queues[i], NULL );
 
-  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, abend(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
 #ifdef DO_COREBIND
   nc = get_ncpus() - 1;
-  CHECK( pip_do_corebind(0,NULL), RV, abend(EXIT_UNTESTED) );
+  CHECK( pip_do_corebind(0,NULL), RV, return(EXIT_UNTESTED) );
 #endif
 
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );
-  pip_spawn_from_main( &prog, argv[3], &argv[3], NULL );
+  pip_spawn_from_main( &prog, argv[3], &argv[3], NULL, NULL );
 
-  for( i=0, j=0; i<npass; i++, j++ ) {
+  for( i=0,j=0; i<npass; i++,j++ ) {
     pipid = i;
 #ifndef DO_COREBIND
     c = PIP_CPUCORE_ASIS;
@@ -77,15 +80,16 @@ int main( int argc, char **argv ) {
 #endif
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
+
     j = ( j >= nacts ) ? 0 : j;
     CHECK( pip_blt_spawn( &prog, c,
 			  PIP_TASK_PASSIVE,
 			  &pipid, NULL, &queues[j], NULL ),
 	   RV,
-	   abend(EXIT_UNTESTED) );
-    CHECK( is_taskq_empty( &queues[j]), RV, abend(EXIT_FAIL) );
+	   return(EXIT_UNTESTED) );
+    CHECK( is_taskq_empty( &queues[j]), RV, return(EXIT_FAIL) );
   }
-  for( i=npass, j=0; i<ntasks; i++, j++ ) {
+  for( i=npass,j=0; i<ntasks; i++,j++ ) {
     pipid = i;
 #ifndef DO_COREBIND
     c = PIP_CPUCORE_ASIS;
@@ -98,17 +102,18 @@ int main( int argc, char **argv ) {
 #endif
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );
     putenv( env_pipid );
-    CHECK( pip_blt_spawn( &prog, c, 0, &pipid,
-			  NULL, &queues[j], NULL ),
+    CHECK( pip_blt_spawn( &prog, c,
+			  PIP_TASK_ACTIVE,
+			  &pipid, NULL, &queues[j], NULL ),
 	   RV,
-	   abend(EXIT_UNTESTED) );
-    CHECK( is_taskq_empty( &queues[j]), !RV, abend(EXIT_FAIL) );
+	   return(EXIT_UNTESTED) );
+    CHECK( is_taskq_empty( &queues[j]), !RV, return(EXIT_FAIL) );
   }
   err    = 0;
   extval = 0;
   for( i=0; i<ntasks; i++ ) {
     int status = 0;
-    CHECK( pip_wait_any( &pipid, &status ), RV, abend(EXIT_FAIL) );
+    CHECK( pip_wait_any( &pipid, &status ), RV, return(EXIT_FAIL) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
       if( extval ) {
@@ -119,6 +124,6 @@ int main( int argc, char **argv ) {
     }
     if( err == 0 && extval != 0 ) err = extval;
   }
-  CHECK( pip_fin(), RV, abend(EXIT_UNTESTED) );
+  CHECK( pip_fin(), RV, return(EXIT_UNTESTED) );
   return extval;
 }

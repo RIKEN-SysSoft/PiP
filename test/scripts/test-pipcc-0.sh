@@ -6,11 +6,11 @@ dir=`dirname $0`
 
 testdir=$dir/../..
 
-./pipcc --pipdir $testdir -g -c ../../sample/hello/hello.c -o hello.o;
-./pipcc --pipdir $testdir -g hello.o -o hello;
+./pipcc -g -c hello.c -o hello.o;
+./pipcc -g hello.o -o hello;
 ./pip-check -b hello
 
-./hello;
+../util/timer 1 ./hello;
 
 rv=$?;
 if [ $rv -ne 0 ]; then

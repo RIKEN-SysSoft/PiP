@@ -54,9 +54,13 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
   int n, c, err = 0;
 
   ENTERF( "PIPID:%d", pip_task->pipid );
-  if( !pip_is_initialized() ) RETURN( EPERM );
+  IF_UNLIKELY( !pip_is_initialized() ) RETURN( EPERM );
   IF_UNLIKELY( init == 1 ) RETURN( 0 );
+
   c = pip_atomic_sub_and_fetch( &barrp->count, 1 );
+  DBGF( "init:%d:%d c:%d:%d",
+	init, (int) barrp->count_init, c, (int) barrp->count );
+  ASSERTD( c < 0 );
   IF_LIKELY( c > 0 ) {
     /* noy yet. enqueue the current task */
     err = pip_suspend_and_enqueue( qp, NULL, NULL );
@@ -74,8 +78,9 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
 	t = pip_task_queue_dequeue( qp );
 	pip_task_queue_unlock( qp );
 
-	if( t != NULL ) break;
+	IF_LIKELY( t != NULL ) break;
 	(void) pip_yield( PIP_YIELD_DEFAULT );
+	sleep( 1 );
       }
       pip_task_queue_enqueue( &queue, t );
     }
@@ -86,7 +91,6 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     err = pip_dequeue_and_resume_N_( &queue, NULL, &n );
     DBGF( "n:%d  c:%d", n, c );
     ASSERTD( n != c );
-    ASSERTD( !pip_task_queue_isempty( &queue ) );
   }
   RETURN( err );
 }

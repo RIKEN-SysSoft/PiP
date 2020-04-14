@@ -49,8 +49,6 @@
 #include <pip_dlfcn.h>
 #include <pip_gdbif_func.h>
 
-#define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
-
 //#define ATTR_NOINLINE		__attribute__ ((noinline))
 //#define ATTR_NOINLINE
 
@@ -284,21 +282,6 @@ static pip_task_internal_t *pip_get_myself( void ) {
 
 /* internal funcs */
 
-void pip_page_alloc( size_t sz, void **allocp ) {
-  size_t pgsz;
-
-  if( pip_root == NULL ) {	/* no pip_root yet */
-    pgsz = sysconf( _SC_PAGESIZE );
-  } else if( pip_root->page_size == 0 ) {
-    pip_root->page_size = pgsz = sysconf( _SC_PAGESIZE );
-  } else {
-    pgsz = pip_root->page_size;
-  }
-  sz = ROUNDUP( sz, pgsz );
-  ASSERT( posix_memalign( allocp, pgsz, sz ) != 0 &&
-	  *allocp == NULL );
-}
-
 void pip_reset_task_struct( pip_task_internal_t *taski ) {
   pip_task_annex_t 	*annex = taski->annex;
   void			*stack_sleep = annex->stack_sleep;
@@ -386,15 +369,13 @@ void pip_unset_signal_handler( int sig, struct sigaction *oldp ) {
 
 /* signal handlers */
 
-static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {
-  pip_glibc_unlock();
-}
+static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {}
 
 static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
   ENTER;
   ASSERTD( pip_task->pipid != PIP_PIPID_ROOT );
   (void) pip_kill_all_tasks();
-  RETURNV;
+  (void) kill( getpid(), SIGKILL );
 }
 
 void pip_set_sigmask( int sig ) {
@@ -415,6 +396,8 @@ void pip_unset_sigmask( void ) {
   ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
+  pip_root_t		*root;
+  pip_task_internal_t	*taski;
   size_t	sz;
 #ifndef PIP_INIT_IMPLICITLY
   char		*envroot, *envtask;
@@ -449,100 +432,102 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     sz = PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
       PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
       PIP_CACHE_ALIGN( sizeof( pip_task_annex_t    ) * ( ntasks + 1 ) );
-    pip_page_alloc( sz, (void**) &pip_root );
-    (void) memset( pip_root, 0, sz );
+    pip_page_alloc( sz, (void**) &root );
+    (void) memset( root, 0, sz );
 
-    pip_root->size_whole = sz;
-    pip_root->size_root  = sizeof( pip_root_t );
-    pip_root->size_task  = sizeof( pip_task_internal_t );
-    pip_root->size_annex = sizeof( pip_task_annex_t );
+    root->size_whole = sz;
+    root->size_root  = sizeof( pip_root_t );
+    root->size_task  = sizeof( pip_task_internal_t );
+    root->size_annex = sizeof( pip_task_annex_t );
 
     DBGF( "sizeof(root):%d  sizoef(task):%d  sizeof(annex):%d",
-	  (int) pip_root->size_root, (int) pip_root->size_task,
-	  (int) pip_root->size_annex );
+	  (int) root->size_root, (int) root->size_task,
+	  (int) root->size_annex );
 
-    pip_root->annex = (pip_task_annex_t*)
-      ( ((intptr_t)pip_root) +
+    root->annex = (pip_task_annex_t*)
+      ( ((intptr_t)root) +
 	PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
 	PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) );
 
-    DBGF( "ROOTROOT (%p)", pip_root );
+    DBGF( "ROOTROOT (%p)", root );
 
-    pip_spin_init( &pip_root->lock_glibc );
-    pip_spin_init( &pip_root->lock_tasks );
-    pip_spin_init( &pip_root->lock_bt    );
+    pip_spin_init( &root->lock_tasks );
+    pip_spin_init( &root->lock_bt    );
 
-    pip_sem_init( &pip_root->sync_root );
-    pip_sem_init( &pip_root->sync_task );
+    pip_sem_init( &root->lock_glibc );
+    pip_sem_post( &root->lock_glibc );
+    pip_sem_init( &root->sync_spawn );
 
+    DBG;
     pipid = PIP_PIPID_ROOT;
-    pip_set_magic( pip_root );
-    pip_root->version      = PIP_API_VERSION;
-    pip_root->ntasks       = ntasks;
-    pip_root->ntasks_count = 1; /* root is also a PiP task */
-    pip_root->cloneinfo    = pip_cloneinfo;
-    pip_root->opts         = opts;
-    pip_root->yield_iters  = pip_measure_yieldtime();
-    pip_root->stack_size_sleep = PIP_SLEEP_STACKSZ;
-    for( i=0; i<ntasks+1; i++ ) {
-      pip_root->tasks[i].annex = &pip_root->annex[i];
-      pip_reset_task_struct( &pip_root->tasks[i] );
-      pip_named_export_init( &pip_root->tasks[i] );
-    }
-    pip_root->task_root = &pip_root->tasks[ntasks];
-
-    pip_task = pip_root->task_root;
-    pip_task->pipid      = pipid;
-    pip_task->type       = PIP_TYPE_ROOT;
-    pip_task->task_sched = pip_task;
-
-    pip_task->annex->task_root = pip_root;
-    pip_task->annex->loaded    = dlopen( NULL, RTLD_NOW );
-    pip_task->annex->tid       = pip_gettid();
-    pip_task->annex->thread    = pthread_self();
-#ifdef PIP_SAVE_TLS
-    pip_save_tls( &pip_task->tls );
-#endif
+    pip_set_magic( root );
+    root->version          = PIP_API_VERSION;
+    root->ntasks           = ntasks;
+    root->ntasks_count     = 1; /* root is also a PiP task */
+    root->cloneinfo        = pip_cloneinfo;
+    root->opts             = opts;
+    root->yield_iters      = pip_measure_yieldtime();
+    root->stack_size_sleep = PIP_SLEEP_STACKSZ;
+    root->task_root        = &root->tasks[ntasks];
     if( rt_expp != NULL ) {
-      pip_task->annex->exp = *rt_expp;
+      root->export_root    = *rt_expp;
     }
-    pip_page_alloc( pip_root->stack_size_sleep,
-		     &pip_task->annex->stack_sleep );
-    if( pip_task->annex->stack_sleep == NULL ) {
-      free( pip_root );
+    for( i=0; i<ntasks+1; i++ ) {
+      root->tasks[i].annex = &root->annex[i];
+      pip_named_export_init( &root->tasks[i] );
+      pip_reset_task_struct( &root->tasks[i] );
+    }
+
+    taski = root->task_root;
+    taski->pipid      = pipid;
+    taski->type       = PIP_TYPE_ROOT;
+    taski->task_sched = taski;
+
+    taski->annex->task_root = root;
+    taski->annex->loaded    = dlopen( NULL, RTLD_NOW );
+    taski->annex->tid       = pip_gettid();
+    taski->annex->thread    = pthread_self();
+#ifdef PIP_SAVE_TLS
+    pip_save_tls( &taski->tls );
+#endif
+    pip_page_alloc( root->stack_size_sleep,
+		     &taski->annex->stack_sleep );
+    if( taski->annex->stack_sleep == NULL ) {
+      free( root );
       RETURN( err );
     }
-    pip_set_name( pip_task );
+
+    pip_root = root;
+    pip_task = taski;
 
     pip_set_sigmask( SIGCHLD );
     pip_set_signal_handler( SIGCHLD,
 			    pip_sigchld_handler,
-			    &pip_root->old_sigchld );
+			    &root->old_sigchld );
     pip_set_signal_handler( SIGTERM,
 			    pip_sigterm_handler,
-			    &pip_root->old_sigterm );
+			    &root->old_sigterm );
 
+    pip_set_name( taski );
     pip_gdbif_initialize_root( ntasks );
-    pip_gdbif_task_commit( pip_task );
-
+    pip_gdbif_task_commit( taski );
     pip_debug_on_exceptions();
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 
   } else if( ( envtask = getenv( PIP_TASK_ENV ) ) != NULL ) {
-    pip_root_t 		*root;
-    pip_task_internal_t *task;
-    int			rv;
     /* child task */
+    int	rv;
+
     root  = (pip_root_t*) strtoll( envroot, NULL, 16 );
     pipid = (int) strtol( envtask, NULL, 10 );
-    task  = &pip_root->tasks[pipid];
-    if( ( rv = pip_init_task_implicitly( root, task ) ) == 0 ) {
-      ntasks = pip_root->ntasks;
+    taski = &pip_root->tasks[pipid];
+    if( ( rv = pip_init_task_implicitly( root, taski ) ) == 0 ) {
+      ntasks = root->ntasks;
       /* succeeded */
       if( ntasksp != NULL ) *ntasksp = ntasks;
       if( rt_expp != NULL ) {
-	*rt_expp = (void*) pip_root->task_root->annex->exp;
+	*rt_expp = taski->annex->import_root;
       }
       unsetenv( PIP_ROOT_ENV );
       unsetenv( PIP_TASK_ENV );
@@ -598,9 +583,8 @@ int pip_fin( void ) {
     PIP_REPORT( time_load_prog );
     PIP_REPORT( time_dlmopen   );
 
-    pip_sem_fin( &pip_root->sync_root );
-    pip_sem_fin( &pip_root->sync_task );
-
+    pip_sem_fin( &pip_root->lock_glibc );
+    pip_sem_fin( &pip_root->sync_spawn );
     /* SIGCHLD */
     pip_unset_sigmask();
     pip_unset_signal_handler( SIGCHLD,
@@ -625,15 +609,15 @@ int pip_export( void *exp ) {
   RETURN( 0 );
 }
 
-int pip_import( int pipid, void **exportp  ) {
+int pip_import( int pipid, void **expp  ) {
   pip_task_internal_t *taski;
   int err;
 
   ENTER;
-  if( exportp == NULL ) RETURN( EINVAL );
+  if( expp == NULL ) RETURN( EINVAL );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   taski = pip_get_task( pipid );
-  *exportp = (void*) taski->annex->exp;
+  *expp = (void*) taski->annex->exp;
   RETURN( 0 );
 }
 
@@ -725,14 +709,15 @@ int pip_is_shared_fd( int *flagp ) {
 }
 
 int pip_kill_all_tasks( void ) {
-  int pipid, err;
+  int pipid, i, err;
 
   err = 0;
   if( pip_is_initialized() ) {
     if( !pip_isa_root() ) {
       err = EPERM;
     } else {
-      for( pipid=0; pipid<pip_root->ntasks; pipid++ ) {
+      for( i=0; i<pip_root->ntasks; i++ ) {
+	pipid = i;
 	if( pip_check_pipid( &pipid ) == 0 ) {
 	  if( pip_is_threaded_() ) {
 	    pip_task_internal_t *taski = &pip_root->tasks[pipid];
@@ -746,4 +731,13 @@ int pip_kill_all_tasks( void ) {
     }
   }
   return err;
+}
+
+void pip_abort( void ) {
+  ENTER;
+  if( pip_root != NULL ) {
+    (void) pip_raise_signal( pip_root->task_root, SIGTERM );
+  } else {
+    kill( getpid(), SIGTERM );
+  }
 }

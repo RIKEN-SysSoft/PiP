@@ -57,10 +57,17 @@
 //#define DEBUG
 #endif
 
-#include <pip_internal.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 
+#include <pip.h>
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sched.h>
-#include <libgen.h>
 #include <ctype.h>
 
 #define COREBIND_RR	(-100)
@@ -385,14 +392,15 @@ int main( int argc, char **argv ) {
   nt_start = 0;
   for( spawn = head; spawn != NULL; spawn = spawn->next ) {
     for( arg = spawn->args, i = 0; arg != NULL; arg = arg->next ) {
-      DBGF( "%p [%d] %s", spawn, i, arg->arg );
       nargv[i++] = arg->arg;
     }
     nargv[i] = NULL;
     if( spawn->func == NULL ) {
-      pip_spawn_from_main( &prog, nargv[0], nargv, NULL );
+      pip_spawn_from_main( &prog, nargv[0], nargv,
+			   NULL, NULL );
     } else {
-      pip_spawn_from_func( &prog, nargv[0], spawn->func, NULL, NULL );
+      pip_spawn_from_func( &prog, nargv[0], spawn->func, NULL,
+			   NULL, NULL );
     }
     for( i=0; i<spawn->ntasks; i++ ) {
 #ifdef NOT_YET
@@ -424,9 +432,7 @@ int main( int argc, char **argv ) {
   extval = 0;
   for( i=0; i<ntasks; i++ ) {
     int status, ex;
-    DBG;
     if( ( err = pip_wait_any( &pipid, &status ) ) < 0 ) break;
-    DBG;
     if( WIFEXITED( status ) ) {
       ex = WEXITSTATUS( status );
       if( ex > extval ) extval = ex;

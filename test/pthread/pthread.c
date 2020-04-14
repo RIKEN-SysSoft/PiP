@@ -35,27 +35,7 @@
 
 //#define DEBUG
 
-#ifndef AH
 #include <test.h>
-#else
-#include <stdint.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#define EXIT_PASS	0
-#define EXIT_FAIL	1
-#define EXIT_XPASS	2  /* passed, but it's unexpected. fixed recently?   */
-#define EXIT_XFAIL	3  /* failed, but it's expected. i.e. known bug      */
-#define EXIT_UNRESOLVED	4  /* cannot determine whether (X)?PASS or (X)?FAIL  */
-#define EXIT_UNTESTED	5  /* not tested, this test haven't written yet      */
-#define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
-#define EXIT_KILLED	7  /* killed by Control-C or something               */
-
-#define CHECK(F,C,A) \
-  do{ errno=0; long int RV=(intptr_t)(F);	\
-    if(C) { printf("%s=%d",#F,RV); A;} } while(0)
-#endif
 
 #define NTHREADS 10
 #define NITERS 10

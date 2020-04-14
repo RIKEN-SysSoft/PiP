@@ -9,8 +9,9 @@ if [ $TERM == 'dumb' ]; then
 else
     termwidth=`tput cols`;
 fi
-longmsg=" T -- UNSUPPORTED :-/"
-lmsglen=${#longmsg}
+#longestmsg=" T -- UNSUPPORTED"
+longestmsg=" T -- UNRESOLVED :-O"
+lmsglen=${#longestmsg}
 
 width=$((termwidth-lmsglen))
 if [ $width -lt 40 ]; then
@@ -76,7 +77,15 @@ fi
 
 export NTASKS=`$MCEXEC dlmopen_count -p`
 export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
-export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
+
+if test -f "$dir_real/../preload/pip_preload.so"; then
+    export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
+elif test -f "$dir_real/../lib/pip_preload.so"; then
+    export LD_PRELOAD=$dir_real/../lib/pip_preload.so;
+else
+    echo "Unable to find pip_preload.so";
+    exit 2;
+fi
 
 if [ x"$MCEXEC" != x ]; then
     if [ $TEST_PIP_TASKS -gt $OMP_NUM_THREADS ]; then
@@ -429,7 +438,7 @@ while read line; do
 		XFAIL)		msg="$msg :-?";;
 		UNRESOLVED)	msg="$msg :-O";;
 		UNTESTED)	msg="$msg :-|";;
-		UNSUPPORTED)	msg="$msg :-/";;
+		UNSUPPORTED)	msg="$msg";;
 		KILLED)		msg="$msg ^C?";;
 		esac
 

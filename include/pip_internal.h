@@ -51,6 +51,7 @@
 #include <sched.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdarg.h>
@@ -64,7 +65,6 @@
 #include <pip_context.h>
 #include <pip_signal.h>
 #include <pip_util.h>
-#include <pip_debug.h>
 #include <pip_gdbif.h>
 
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
@@ -200,6 +200,7 @@ typedef struct pip_task_annex {
   pip_task_t			oodq;	   /* out-of-damain queue */
   pip_spinlock_t		lock_oodq; /* lock for OOD queue */
 
+  void				*import_root;
   void *volatile		exp;
   void				*named_exptab;
 
@@ -223,7 +224,6 @@ typedef struct pip_task_annex {
   /* GDB interface */
   void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
-  int				sleep_busy;
 } pip_task_annex_t;
 
 #define PIP_TASKI(TASK)		((pip_task_internal_t*)(TASK))
@@ -261,7 +261,7 @@ typedef struct pip_root {
   size_t		size_task;
   size_t		size_annex;
   /* actual root info */
-  pip_spinlock_t	lock_glibc;   /* lock for GLIBC functions */
+  void *volatile	export_root;
   pip_atomic_t		ntasks_blocking;
   pip_atomic_t		ntasks_count;
   int			ntasks_accum; /* not used */
@@ -273,19 +273,16 @@ typedef struct pip_root {
   pip_clone_t		*cloneinfo; /* only valid with process:preload */
   pip_task_internal_t	*task_root; /* points to tasks[ntasks] */
   pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
-  /* Spawn synch */
-  pip_sem_t		sync_root;
-  pip_sem_t		sync_task;
+  pip_sem_t		lock_glibc; /* lock for GLIBC functions */
+  pip_sem_t		sync_spawn; /* Spawn synch */
   /* BLT related info */
   size_t		stack_size_blt; /* stack size for BLTs */
   size_t		stack_size_sleep; /* stack size for sleeping */
   /* signal related members */
   sigset_t		old_sigmask;
   /* for chaining signal handlers */
-  struct sigaction	old_sighup;
   struct sigaction	old_sigterm;
   struct sigaction	old_sigchld;
-  struct sigaction	old_sigsegv;
   /* GDB Interface */
   struct pip_gdbif_root	*gdbif_root;
   /* for backtrace */
@@ -397,8 +394,9 @@ extern int  pip_are_sizes_ok( pip_root_t* ) PIP_PRIVATE;
 extern void pip_debug_on_exceptions( void ) PIP_PRIVATE;
 
 extern void pip_message( FILE *, char*, const char*, va_list ) PIP_PRIVATE;
+extern pip_task_internal_t *pip_current_task( int ) PIP_PRIVATE;
 
-extern int  pip_idstr( char *buf, size_t sz ); /* donot make this private */
+#include <pip_debug.h>
 
 /* semaphore */
 
@@ -472,7 +470,7 @@ inline static pip_task_internal_t *pip_get_task( int pipid ) {
 }
 
 inline static void pip_system_yield( void ) {
-  if( pip_is_threaded_() ) {
+  if( pip_root != NULL && pip_is_threaded_() ) {
     int pthread_yield( void );
     (void) pthread_yield();
   } else {

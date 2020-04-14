@@ -33,6 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
+#define DEBUG
 #include <test.h>
 
 #define NITERS		(1000)
@@ -44,12 +45,13 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
   CHECK( pip_init(NULL,NULL,NULL,0), RV, return(EXIT_FAIL) );
 
   for( i=0; i<niters; i++ ) {
     CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
   }
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return 0;
 }

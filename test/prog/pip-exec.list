@@ -7,7 +7,7 @@ timer 1 NG.sh ./pip-exec -n 10 nosuchfile
 timer 1 OK.sh ./pip-exec -n 1 ./abc
 timer 1 OK.sh ./pip-exec -n 1 ./abc :
 timer 1 NG.sh ./pip-exec -n 1 ./abc : :
-timer 1 OK.sh ./pip-exec -n 8 ../../sample/hello/hello
+timer 1 OK.sh ./pip-exec -n 8 ./hello
 timer 1 OK.sh ./pip-exec -n 8 ./abc
 timer 1 OK.sh ./pip-exec -n 1 ./abc : -n 1 ./def
 timer 1 OK.sh ./pip-exec -n 4 ./abc : -n 4 ./def

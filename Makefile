@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include gdbif bin preload util sample
+SUBDIRS = lib include preload util gdbif bin
 
 include $(top_srcdir)/build/rule.mk
 
@@ -63,12 +63,18 @@ test-progs:
 	make -C test/issues
 	make -C test/blt
 
+.PHONY: test
+test:
+	make all
+	make test-progs
+	test/test.sh test/test.list
+
 .PHONY: testclean
 testclean:
 	make -C test testclean
+	make -C test/scripts testclean
 	make -C test/util testclean
 	make -C test/prog testclean
-	make -C test/scripts testclean
 	make -C test/basics testclean
 	make -C test/compat testclean
 	make -C test/pthread testclean
@@ -78,11 +84,31 @@ testclean:
 	make -C test/issues testclean
 	make -C test/blt testclean
 
-.PHONY: test
-test:
-	make all
-	make test-progs
-	test/test.sh test/test.list
+TEST_MKS = build/config.mk build/var.mk build/rule.mk
+
+test_install_dir = $(prefix)
+test_build_dir = $(test_install_dir)/build
+
+.PHONY: install-test
+install-test: install
+	-$(RM) -r $(test_install_dir)/test
+	$(MKDIR_P) $(test_install_dir)
+	$(MKDIR_P) $(test_build_dir)
+	$(INSTALL) -C -m 744 $(TEST_MKS) $(test_build_dir)
+	make -C test install-test
+	make -C test/scripts install-test
+	make -C test/util install-test
+	make -C test/prog install-test
+	make -C test/basics install-test
+	make -C test/compat install-test
+	make -C test/pthread install-test
+	make -C test/openmp install-test
+	make -C	test/cxx install-test
+	make -C test/fortran install-test
+	make -C test/issues install-test
+	make -C test/blt install-test
+	cp -f test/test.mk $(test_install_dir)/test/
+	make -C $(test_install_dir)/test -f test.mk
 
 ### doxygen
 
@@ -155,5 +181,35 @@ prog-distclean:
 tags:
 	ctags -Re
 
+post-install-hook:
+	make -C sample
+
 post-clean-hook:
 	$(RM) test.log.* test.out.*
+	make -C test clean
+	make -C test/scripts clean
+	make -C test/util clean
+	make -C test/prog clean
+	make -C test/basics clean
+	make -C test/compat clean
+	make -C test/pthread clean
+	make -C test/openmp clean
+	make -C	test/cxx clean
+	make -C test/fortran clean
+	make -C test/issues clean
+	make -C test/blt clean
+
+post-veryclean-hook:
+	make -C sample veryclean
+	make -C test veryclean
+	make -C test/scripts veryclean
+	make -C test/util veryclean
+	make -C test/prog veryclean
+	make -C test/basics veryclean
+	make -C test/compat veryclean
+	make -C test/pthread veryclean
+	make -C test/openmp veryclean
+	make -C	test/cxx veryclean
+	make -C test/fortran veryclean
+	make -C test/issues veryclean
+	make -C test/blt veryclean

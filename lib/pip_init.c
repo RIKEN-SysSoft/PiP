@@ -87,7 +87,8 @@ void pip_message( FILE *fp, char *tagf, const char *format, va_list ap ) {
   len = pip_idstr( idstr, PIP_MIDLEN );
   len = snprintf( &mesg[0], PIP_MESGLEN-len, tagf, idstr );
   vsnprintf( &mesg[len], PIP_MESGLEN-len, format, ap );
-  fprintf( stderr, "%s\n", mesg );
+  fprintf( fp, "%s\n", mesg );
+  fflush( fp );
 }
 
 void pip_info_fmesg( FILE *fp, const char *format, ... ) {
@@ -118,44 +119,66 @@ void pip_err_mesg( const char *format, ... ) {
 static char *pip_path_gdb;
 static char *pip_command_gdb;
 
-void pip_describe( pid_t tid ) {
-  pip_task_internal_t *taski;
-  int   i;
+pip_task_internal_t *pip_current_task( int tid ) {
+  /* do not put any DBG macors in this function */
+  pip_root_t		*root = pip_root;
+  pip_task_internal_t 	*taski;
+  static int		curr = 0;
 
-  DBGF( "tid:%d", tid );
-  if( pip_root != NULL ) {
-    if( tid == pip_root->task_root->annex->tid ) {
-      if( pip_command_gdb == NULL ) {
-	printf( "<PiP-ROOT(%d)> is back-traced\n", tid );
-      } else {
-	printf( "<PiP-ROOT(%d)> is debugged\n", tid );
-      }
-      goto done;
+  if( root != NULL ) {
+    if( tid == root->task_root->annex->tid ) {
+      return root->task_root;
     } else {
-      for( i=0; i<pip_root->ntasks; i++ ) {
-	taski = &pip_root->tasks[i];
-	DBGF( "task-pipid:%d  TID:%d", taski->pipid, taski->annex->tid );
-	if( tid == taski->annex->tid ) {
-	  if( pip_command_gdb == NULL ) {
-	    printf( "<PiP-TASK(%d)> is back-traced\n", tid );
-	  } else {
-	    printf( "<PiP-TASK(%d)> is debugged\n", tid );
+      int i;
+      for( i=curr; i<root->ntasks; i++ ) {
+	taski = &root->tasks[i];
+	if( taski->pipid == PIP_PIPID_ROOT ||
+	    ( taski->pipid >= 0 && taski->pipid < root->ntasks ) ) {
+	  if( tid == taski->annex->tid ) {
+	    curr = i;
+	    return taski;
 	  }
-	  goto done;
+	}
+      }
+      for( i=0; i<curr; i++ ) {
+	taski = &root->tasks[i];
+	if( tid == taski->annex->tid ) {
+	  curr = i;
+	  return taski;
 	}
       }
     }
-    if( pip_command_gdb == NULL ) {
-      printf( "<PiP-unknown(%d)> is back-traced\n", tid );
-    } else {
-      printf( "<PiP-unknown(%d)> is debugged\n", tid );
-    }
   }
- done:
+  return NULL;
+}
+
+void pip_describe( pid_t tid ) {
+  pip_task_internal_t *taski = pip_current_task( tid );
+  char  *backtrace = "back-traced";
+  char  *debugged  = "debugged";
+  char	*trailer;
+
+  if( pip_command_gdb == NULL ) {
+    trailer = backtrace;
+  } else {
+    trailer = debugged;
+  }
+  if( taski != NULL ) {
+    int pipid = taski->pipid;
+    if( pipid == PIP_PIPID_ROOT ) {
+      printf( "\nPiP-ROOT(TID:%d) is %s\n\n", tid, trailer );
+    } else if( pipid >= 0 ) {
+      printf( "\nPiP-TASK(PIPID:%d,TID:%d) is %s\n\n", pipid, tid, trailer );
+    } else {
+      printf( "\nPiP-TASK(PIPID:??,TID:%d) is %s\n\n", tid, trailer );
+    }
+  } else {
+    printf( "\nPiP-unknown(TID:%d) is %s\n\n", tid, trailer );
+  }
   fflush( NULL );
 }
 
-void pip_attach_gdb( void ) {
+static void pip_attach_gdb( void ) {
   pid_t	target = pip_gettid();
   pid_t	pid;
 
@@ -169,37 +192,39 @@ void pip_attach_gdb( void ) {
     snprintf( attach,   sizeof(attach),   "%d", target );
     snprintf( describe, sizeof(describe), "call pip_describe(%d)", target );
     if( pip_command_gdb == NULL ) {
-      argv[argc++] = pip_path_gdb;
-      argv[argc++] = "-quiet";
-      argv[argc++] = "-p";
-      argv[argc++] = attach;
-      argv[argc++] = "-ex";
-      argv[argc++] = "set verbose off";
-      argv[argc++] = "-ex";
-      argv[argc++] = "set complaints 0";
-      argv[argc++] = "-ex";
-      argv[argc++] = "set confirm off";
-      argv[argc++] = "-ex";
-      argv[argc++] = describe;
-      argv[argc++] = "-ex";
-      argv[argc++] = "bt";
-      argv[argc++] = "-ex";
-      argv[argc++] = "detach";
-      argv[argc++] = "-ex";
-      argv[argc++] = "quit";
-      argv[argc++] = NULL;
+      /*  1 */ argv[argc++] = pip_path_gdb;
+      /*  2 */ argv[argc++] = "-quiet";
+      /*  3 */ argv[argc++] = "-ex";
+      /*  4 */ argv[argc++] = "set verbose off";
+      /*  5 */ argv[argc++] = "-ex";
+      /*  6 */ argv[argc++] = "set complaints 0";
+      /*  7 */ argv[argc++] = "-ex";
+      /*  8 */ argv[argc++] = "set confirm off";
+      /*  9 */ argv[argc++] = "-p";
+      /* 10 */ argv[argc++] = attach;
+      /* 11 */ argv[argc++] = "-ex";
+      /* 12 */ argv[argc++] = "info inferiors";
+      /* 13 */ argv[argc++] = "-ex";
+      /* 14 */ argv[argc++] = describe;
+      /* 15 */ argv[argc++] = "-ex";
+      /* 16 */ argv[argc++] = "bt";
+      /* 17 */ argv[argc++] = "-ex";
+      /* 18 */ argv[argc++] = "detach";
+      /* 19 */ argv[argc++] = "-ex";
+      /* 20 */ argv[argc++] = "quit";
+      /* 21 */ argv[argc++] = NULL;
     } else {
-      argv[argc++] = pip_path_gdb;
-      argv[argc++] = "-quiet";
-      argv[argc++] = "-p";
-      argv[argc++] = attach;
-      argv[argc++] = "-x";
-      argv[argc++] = pip_command_gdb;
-      argv[argc++] = "-batch";
-      argv[argc++] = NULL;
+      /*  1 */ argv[argc++] = pip_path_gdb;
+      /*  2 */ argv[argc++] = "-quiet";
+      /*  3 */ argv[argc++] = "-p";
+      /*  4 */ argv[argc++] = attach;
+      /*  5 */ argv[argc++] = "-x";
+      /*  6 */ argv[argc++] = pip_command_gdb;
+      /*  7 */ argv[argc++] = "-batch";
+      /*  8 */ argv[argc++] = NULL;
     }
-    (void) close( 0 );
-#ifdef DEBUG
+    (void) close( 0 );		/* close STDIN */
+#ifdef AH
     {
       int i;
       for( i=0; i<argc; i++ ) {
@@ -244,44 +269,47 @@ void pip_fprint_maps( FILE *fp ) {
   }
 }
 
-void pip_print_maps( void ) { pip_fprint_maps( stdout ); }
-
-static void pip_print_maps_on_exception( void ) {
+static void pip_show_maps( void ) {
   char *env = getenv( PIP_ENV_SHOW_MAPS );
   if( env != NULL && strcasecmp( env, "on" ) == 0 ) {
+    pip_info_mesg( "*** Show MAPS" );
     pip_fprint_maps( stderr );
   }
 }
 
-static void pip_exception_handler( int sig, siginfo_t *info, void *extra ) {
+void pip_show_pips( void ) {
+  char *env = getenv( PIP_ENV_SHOW_PIPS );
+  if( env != NULL && strcasecmp( env, "on" ) == 0 ) {
+    if( access( PIP_INSTALL_BIN_PIPS, X_OK ) == 0 ) {
+      pip_info_mesg( "*** Show PIPS (%s)", PIP_INSTALL_BIN_PIPS );
+      system( PIP_INSTALL_BIN_PIPS );
+    } else {
+      pip_info_mesg( "*** Show PIPS (%s)", PIP_MAKE_BIN_PIPS );
+      system( PIP_MAKE_BIN_PIPS );
+    }
+  }
+}
+
+void pip_debug_info( void ) {
+  pip_show_pips();
+  pip_show_maps();
   if( pip_path_gdb != NULL ) {
-    if( pip_root != NULL ) {
-      pip_spin_lock( &pip_root->lock_bt );
-      pip_err_mesg( "Exception signal: %s (%d) !!\n", strsignal(sig), sig );
-      pip_print_maps_on_exception();
-      pip_attach_gdb();
-      pip_spin_unlock( &pip_root->lock_bt );
-    } else {
-      pip_err_mesg( "Exception signal: %s (%d) !!\n", strsignal(sig), sig );
-      pip_print_maps_on_exception();
-      pip_attach_gdb();
-    }
+    pip_attach_gdb();
   } else {
-    if( pip_root != NULL ) {
-      pip_spin_lock( &pip_root->lock_bt );
-      pip_print_maps_on_exception();
-      pip_err_mesg( "Exception signal: %s (%d) !!\n"
-		    "\tto attach pip-gdb automatically, "
-		    "set %s env. to the pip-gdb path\n",
-		    strsignal(sig), sig, PIP_ENV_GDB_PATH );
-      pip_spin_unlock( &pip_root->lock_bt );
-    } else {
-      pip_print_maps_on_exception();
-      pip_err_mesg( "Exception signal: %s (%d) !!\n"
-		    "\tto attach pip-gdb automatically, "
-		    "set %s env. to the pip-gdb path\n",
-		    strsignal(sig), sig, PIP_ENV_GDB_PATH );
-    }
+    pip_err_mesg( "\tto attach pip-gdb automatically, "
+		  "set %s env. to the pip-gdb path\n",
+		  PIP_ENV_GDB_PATH );
+  }
+}
+
+static void pip_exception_handler( int sig, siginfo_t *info, void *extra ) {
+  pip_err_mesg( "*** Exception signal: %s (%d) !!\n", strsignal(sig), sig );
+  if( pip_root != NULL ) {
+    pip_spin_lock( &pip_root->lock_bt );
+    pip_debug_info();
+    pip_spin_unlock( &pip_root->lock_bt );
+  } else {
+    pip_debug_info();
   }
   kill( pip_gettid(), sig );
 }
@@ -290,39 +318,39 @@ static void
 pip_add_gdb_signal( sigset_t *sigs, char *token, int len ) {
   DBGF( "token:%*s (%d)", len, token, len );
   if( strncasecmp( "ALL",  token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGHUP  ) != 0 );
-    ASSERT( sigaddset( sigs, SIGINT  ) != 0 );
-    ASSERT( sigaddset( sigs, SIGQUIT ) != 0 );
-    ASSERT( sigaddset( sigs, SIGILL  ) != 0 );
-    ASSERT( sigaddset( sigs, SIGABRT ) != 0 );
-    ASSERT( sigaddset( sigs, SIGFPE  ) != 0 );
-    ASSERT( sigaddset( sigs, SIGINT  ) != 0 );
-    ASSERT( sigaddset( sigs, SIGSEGV ) != 0 );
-    ASSERT( sigaddset( sigs, SIGPIPE ) != 0 );
-    ASSERT( sigaddset( sigs, SIGUSR1 ) != 0 );
-    ASSERT( sigaddset( sigs, SIGUSR2 ) != 0 );
+    ASSERT( sigaddset( sigs, SIGHUP  ) );
+    ASSERT( sigaddset( sigs, SIGINT  ) );
+    ASSERT( sigaddset( sigs, SIGQUIT ) );
+    ASSERT( sigaddset( sigs, SIGILL  ) );
+    ASSERT( sigaddset( sigs, SIGABRT ) );
+    ASSERT( sigaddset( sigs, SIGFPE  ) );
+    ASSERT( sigaddset( sigs, SIGINT  ) );
+    ASSERT( sigaddset( sigs, SIGSEGV ) );
+    ASSERT( sigaddset( sigs, SIGPIPE ) );
+    ASSERT( sigaddset( sigs, SIGUSR1 ) );
+    ASSERT( sigaddset( sigs, SIGUSR2 ) );
   } else if( strncasecmp( "HUP",  token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGHUP ) != 0 );
+    ASSERT( sigaddset( sigs, SIGHUP ) );
   } else if( strncasecmp( "INT",  token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGINT ) != 0 );
+    ASSERT( sigaddset( sigs, SIGINT ) );
   } else if( strncasecmp( "QUIT", token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGQUIT ) != 0 );
+    ASSERT( sigaddset( sigs, SIGQUIT ) );
   } else if( strncasecmp( "ILL",  token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGILL ) != 0 );
+    ASSERT( sigaddset( sigs, SIGILL ) );
   } else if( strncasecmp( "ABRT", token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGABRT ) != 0 );
+    ASSERT( sigaddset( sigs, SIGABRT ) );
   } else if( strncasecmp( "FPE",  token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGFPE ) != 0 );
+    ASSERT( sigaddset( sigs, SIGFPE ) );
   } else if( strncasecmp( "INT",  token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGINT ) != 0 );
+    ASSERT( sigaddset( sigs, SIGINT ) );
   } else if( strncasecmp( "SEGV", token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGSEGV ) != 0 );
+    ASSERT( sigaddset( sigs, SIGSEGV ) );
   } else if( strncasecmp( "PIPE", token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGPIPE ) != 0 );
+    ASSERT( sigaddset( sigs, SIGPIPE ) );
   } else if( strncasecmp( "USR1", token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGUSR1 ) != 0 );
+    ASSERT( sigaddset( sigs, SIGUSR1 ) );
   } else if( strncasecmp( "USR2", token, len ) == 0 ) {
-    ASSERT( sigaddset( sigs, SIGUSR2 ) != 0 );
+    ASSERT( sigaddset( sigs, SIGUSR2 ) );
   }
 }
 
@@ -330,39 +358,39 @@ static void
 pip_del_gdb_signal( sigset_t *sigs, char *token, int len ) {
   DBGF( "token:%*s (%d)", len, token, len );
   if( strncasecmp( "ALL",  token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGHUP  ) != 0 );
-    ASSERT( sigdelset( sigs, SIGINT  ) != 0 );
-    ASSERT( sigdelset( sigs, SIGQUIT ) != 0 );
-    ASSERT( sigdelset( sigs, SIGILL  ) != 0 );
-    ASSERT( sigdelset( sigs, SIGABRT ) != 0 );
-    ASSERT( sigdelset( sigs, SIGFPE  ) != 0 );
-    ASSERT( sigdelset( sigs, SIGINT  ) != 0 );
-    ASSERT( sigdelset( sigs, SIGSEGV ) != 0 );
-    ASSERT( sigdelset( sigs, SIGPIPE ) != 0 );
-    ASSERT( sigdelset( sigs, SIGUSR1 ) != 0 );
-    ASSERT( sigdelset( sigs, SIGUSR2 ) != 0 );
+    ASSERT( sigdelset( sigs, SIGHUP  ) );
+    ASSERT( sigdelset( sigs, SIGINT  ) );
+    ASSERT( sigdelset( sigs, SIGQUIT ) );
+    ASSERT( sigdelset( sigs, SIGILL  ) );
+    ASSERT( sigdelset( sigs, SIGABRT ) );
+    ASSERT( sigdelset( sigs, SIGFPE  ) );
+    ASSERT( sigdelset( sigs, SIGINT  ) );
+    ASSERT( sigdelset( sigs, SIGSEGV ) );
+    ASSERT( sigdelset( sigs, SIGPIPE ) );
+    ASSERT( sigdelset( sigs, SIGUSR1 ) );
+    ASSERT( sigdelset( sigs, SIGUSR2 ) );
   } else if( strncasecmp( "HUP",  token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGHUP ) != 0 );
+    ASSERT( sigdelset( sigs, SIGHUP ) );
   } else if( strncasecmp( "INT",  token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGINT ) != 0 );
+    ASSERT( sigdelset( sigs, SIGINT ) );
   } else if( strncasecmp( "QUIT", token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGQUIT ) != 0 );
+    ASSERT( sigdelset( sigs, SIGQUIT ) );
   } else if( strncasecmp( "ILL",  token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGILL ) != 0 );
+    ASSERT( sigdelset( sigs, SIGILL ) );
   } else if( strncasecmp( "ABRT", token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGABRT ) != 0 );
+    ASSERT( sigdelset( sigs, SIGABRT ) );
   } else if( strncasecmp( "FPE",  token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGFPE ) != 0 );
+    ASSERT( sigdelset( sigs, SIGFPE ) );
   } else if( strncasecmp( "INT",  token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGINT ) != 0 );
+    ASSERT( sigdelset( sigs, SIGINT ) );
   } else if( strncasecmp( "SEGV", token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGSEGV ) != 0 );
+    ASSERT( sigdelset( sigs, SIGSEGV ) );
   } else if( strncasecmp( "PIPE", token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGPIPE ) != 0 );
+    ASSERT( sigdelset( sigs, SIGPIPE ) );
   } else if( strncasecmp( "USR1", token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGUSR1 ) != 0 );
+    ASSERT( sigdelset( sigs, SIGUSR1 ) );
   } else if( strncasecmp( "USR2", token, len ) == 0 ) {
-    ASSERT( sigdelset( sigs, SIGUSR2 ) != 0 );
+    ASSERT( sigdelset( sigs, SIGUSR2 ) );
   }
 }
 
@@ -395,28 +423,49 @@ static void pip_set_gdb_sigset( char *env, sigset_t *sigs ) {
   }
 }
 
+#define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
+
+void pip_page_alloc( size_t sz, void **allocp ) {
+  size_t pgsz;
+
+  if( pip_root == NULL ) {	/* no pip_root yet */
+    pgsz = sysconf( _SC_PAGESIZE );
+  } else if( pip_root->page_size == 0 ) {
+    pip_root->page_size = pgsz = sysconf( _SC_PAGESIZE );
+  } else {
+    pgsz = pip_root->page_size;
+  }
+  sz = ROUNDUP( sz, pgsz );
+  ASSERT( posix_memalign( allocp, pgsz, sz ) != 0 &&
+	  *allocp == NULL );
+}
+
+#define PIP_MINSIGSTKSZ 	(MINSIGSTKSZ*2)
+
 void pip_debug_on_exceptions( void ) {
   char			*path, *command, *signals;
   sigset_t 		sigs, sigempty;
   struct sigaction	sigact;
+  void			*altstack;
+  stack_t		sigstack;
   int			i;
 
-  ASSERT( sigemptyset( &sigs )     != 0 );
-  ASSERT( sigemptyset( &sigempty ) != 0 );
+  ASSERT( sigemptyset( &sigs     ) );
+  ASSERT( sigemptyset( &sigempty ) );
 
   if( pip_is_threaded_() && !pip_isa_root() ) {
     if( ( path = getenv( PIP_ENV_GDB_PATH ) ) != NULL &&
 	*path != '\0' ) {
       if( ( signals = getenv( PIP_ENV_GDB_SIGNALS ) ) != NULL ) {
 	pip_set_gdb_sigset( signals, &sigs );
-	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) != 0 ) {
+	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) ) {
 	  ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
 	}
       } else {
 	/* exception signals must be blocked   */
 	/* so that root hanlder can catch them */
-	ASSERT( sigaddset( &sigs, SIGHUP  ) != 0 );
-	ASSERT( sigaddset( &sigs, SIGSEGV ) != 0 );
+	ASSERT( sigaddset( &sigs, SIGHUP  ) );
+	ASSERT( sigaddset( &sigs, SIGSEGV ) );
 	ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
       }
     }
@@ -435,21 +484,31 @@ void pip_debug_on_exceptions( void ) {
 	pip_err_mesg( "PiP-gdb unable to execute (%s)\n", path );
       }
     }
-    if( ( signals = getenv( PIP_ENV_GDB_SIGNALS ) ) != NULL ) {
-      pip_set_gdb_sigset( signals, &sigs );
-    } else {
-      /* default signals */
-      ASSERT( sigaddset( &sigs, SIGHUP  ) != 0 );
-      ASSERT( sigaddset( &sigs, SIGSEGV ) != 0 );
-    }
-    if( memcmp( &sigs, &sigempty, sizeof(sigs) ) != 0 ) {
-      memset( &sigact, 0, sizeof( sigact ) );
-      sigact.sa_sigaction = pip_exception_handler;
-      sigact.sa_flags     = SA_RESETHAND;
-      for( i=1; i<SIGUSR2; i++ ) {
-	if( sigismember( &sigs, i ) ) {
-	  DBGF( "PiP-gdb on signal [%d]: %s ", i, strsignal( i ) );
-	  ASSERT( sigaction( i, &sigact, NULL ) != 0 );
+    if( pip_path_gdb != NULL ) {
+      if( ( signals = getenv( PIP_ENV_GDB_SIGNALS ) ) != NULL ) {
+	pip_set_gdb_sigset( signals, &sigs );
+      } else {
+	/* default signals */
+	ASSERT( sigaddset( &sigs, SIGHUP  ) );
+	ASSERT( sigaddset( &sigs, SIGSEGV ) );
+      }
+      if( memcmp( &sigs, &sigempty, sizeof(sigs) ) != 0 ) {
+	pip_page_alloc( PIP_MINSIGSTKSZ, &altstack );
+	memset( &sigstack, 0, sizeof( sigstack ) );
+	sigstack.ss_sp   = altstack;
+	sigstack.ss_size = PIP_MINSIGSTKSZ;
+	ASSERT( sigaltstack( &sigstack, NULL ) );
+
+	memset( &sigact, 0, sizeof( sigact ) );
+	sigact.sa_sigaction = pip_exception_handler;
+	sigact.sa_mask      = sigs;
+	sigact.sa_flags     = SA_RESETHAND | SA_ONSTACK;
+
+	for( i=SIGHUP; i<=SIGUSR2; i++ ) {
+	  if( sigismember( &sigs, i ) ) {
+	    DBGF( "PiP-gdb on signal [%d]: %s ", i, strsignal( i ) );
+	    ASSERT( sigaction( i, &sigact, NULL ) );
+	  }
 	}
       }
     }
@@ -466,35 +525,25 @@ int pip_init_task_implicitly( pip_root_t *root,
 	( pip_task != NULL && pip_task != task ) ||
 	( pip_gdbif_root != NULL &&
 	  pip_gdbif_root != root->gdbif_root ) ) {
-      err = ENXIO;
+      err = ELIBSCN;
     } else {
       pip_root = root;
       pip_task = task;
       pip_gdbif_root = root->gdbif_root;
       pip_debug_on_exceptions();
     }
+  } else {
+    err = ELIBSCN;
   }
   return err;
 }
 
 /* energy-saving spin-lock */
 
-void pip_glibc_lock( int nsec100 ) {
-  if( pip_root != NULL ) {
-    if( nsec100 > 0 ) {
-      while( !pip_spin_trylock( &pip_root->lock_glibc ) ) {
-	usleep( nsec100 * 100 );
-      }
-    } else {
-      while( !pip_spin_trylock( &pip_root->lock_glibc ) ) {
-	pip_pause();
-      }
-    }
-  }
+void pip_glibc_lock( void ) {
+  if( pip_root != NULL ) pip_sem_wait( &pip_root->lock_glibc );
 }
 
 void pip_glibc_unlock( void ) {
-  if( pip_root != NULL ) {
-    pip_spin_unlock( &pip_root->lock_glibc );
-  }
+  if( pip_root != NULL ) pip_sem_post( &pip_root->lock_glibc );
 }

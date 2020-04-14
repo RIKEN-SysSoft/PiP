@@ -67,7 +67,8 @@ int global_entry( void *argp ) {
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
-  int pipid, arg, ntasks;
+  int pipid, arg, ntasks, ntenv;
+  char	*env;
 
   /* before calling pip_init(), this must fail */
   pipid = PIP_PIPID_ANY;
@@ -81,13 +82,18 @@ int main( int argc, char **argv ) {
 	 RV!=EPERM,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg, NULL );
+  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg,
+		       NULL, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=EPERM,
 	 return(EXIT_FAIL) );
 
   ntasks = NTASKS;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    ntasks = ( ntasks > ntenv ) ? ntenv : ntasks;
+  }
   CHECK( pip_init( NULL, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
 
   /* after calling pip_init(), it must succeed if it is called with right args */
@@ -102,13 +108,15 @@ int main( int argc, char **argv ) {
 	 RV!=EINVAL,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg, NULL );
+  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg,
+		       NULL, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=ENOEXEC,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "global_entry", (void*) &arg, NULL );
+  pip_spawn_from_func( &prog, argv[0], "global_entry", (void*) &arg,
+		       NULL, NULL );
   pipid = PIP_PIPID_ANY;
 
   if( pip_isa_task() ) {
@@ -123,7 +131,7 @@ int main( int argc, char **argv ) {
     CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	   RV,
 	   return(EXIT_FAIL) );
-    CHECK( pip_wait( pipid, &status ), RV, return(EXIT_UNTESTED) );
+    CHECK( pip_wait( pipid, &status ), RV, return(EXIT_FAIL) );
 
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );

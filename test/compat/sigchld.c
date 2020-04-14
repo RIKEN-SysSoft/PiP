@@ -46,8 +46,8 @@ void sigchld_handler( int sig ) {
 }
 
 int main( int argc, char **argv ) {
-  int pipid, ntasks;
-  int i;
+  int 	pipid, ntasks, ntenv, i;
+  char 	*env;
 
   set_signal_watcher( SIGSEGV );
 
@@ -56,6 +56,10 @@ int main( int argc, char **argv ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {

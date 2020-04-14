@@ -36,7 +36,26 @@
 #ifndef __test_h__
 #define __test_h__
 
-#include <pip_internal.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <pip.h>
+
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sched.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <link.h>
+#include <dlfcn.h>
+#include <elf.h>
+#include <time.h>
+#include <pthread.h>
 
 #define NTASKS			PIP_NTASKS_MAX
 
@@ -185,12 +204,8 @@ inline static char *signal_name( int sig ) {
 
 inline static void set_signal_watcher( int signal ) {
   void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    char idstr[64];
-
-    pip_idstr( idstr, 64 );
     fprintf( stderr,
-	     "%s SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
-	     idstr,
+	     "SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
 	     signal_name( siginfo->si_signo ),
 	     siginfo->si_signo,
 	     siginfo->si_addr,
@@ -268,52 +283,9 @@ inline static void ignore_anysignal( void ) {
   ignore_signal( SIGTTOU );
 }
 
-inline static void set_sigsegv_watcher( void ) {
-  void sigsegv_watcher( int sig, siginfo_t *siginfo, void *context ) {
-#ifdef REG_RIP
-    ucontext_t *ctx = (ucontext_t*) context;
-    intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
-#else
-    intptr_t pc = 0;
-#endif
-    char *sigcode;
-    char idstr[64];
-
-    pip_idstr( idstr, 64 );
-    if( siginfo->si_code == SEGV_MAPERR ) {
-      sigcode = "SEGV_MAPERR";
-    } else if( siginfo->si_code == SEGV_ACCERR ) {
-      sigcode = "SEGV_ACCERR";
-    } else {
-      sigcode = "(unknown)";
-    }
-    fprintf( stderr,
-	     "\n"
-	     "%s SIGSEGV  pc:%p  pid:%d  segvaddr:%p  '%s' !!!!!!\n"
-	     "\n",
-	     idstr,
-	     (void*) pc,
-	     siginfo->si_pid,
-	     siginfo->si_addr,
-	     sigcode );
-    pip_print_maps();
-    pip_backtrace_fd( 0, 2 );	/* fflush is called inside */
-    abend(EXIT_UNTESTED);
-  }
-  struct sigaction sigact;
-
-  memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = sigsegv_watcher;
-  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  CHECK( sigaction( SIGSEGV, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
-}
-
 inline static void set_sigint_watcher( void ) {
   void sigint_watcher( int sig, siginfo_t *info, void* extra ) {
-    char idstr[64];
-
-    pip_idstr( idstr, 64 );
-    fprintf( stderr, "\n%s interrupted by user !!!!!!\n", idstr );
+    fprintf( stderr, "\n(^C?) interrupted by user !!!!!!\n" );
     fflush( NULL );
     exit( EXIT_UNRESOLVED );
   }

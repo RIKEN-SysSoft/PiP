@@ -22,26 +22,30 @@ static int get_ncpus( void ) {
 #endif
 
 int main( int argc, char **argv ) {
-  int ntasks, pipid, status, extval;
+  int ntasks, ntenv, pipid, status, extval;
   int i, c, nc, err;
-  char env_ntasks[128];
-  char env_pipid[128];
+  char env_ntasks[128], env_pipid[128];
+  char *env;
 
   set_sigint_watcher();
 
   if( argc < 3 ) return EXIT_UNTESTED;
-  CHECK( access( argv[2], X_OK ),     RV, abend(EXIT_UNTESTED) );
-  CHECK( pip_check_pie( argv[2], 1 ), RV, abend(EXIT_UNTESTED) );
+  CHECK( access( argv[2], X_OK ),     RV, return(EXIT_UNTESTED) );
+  CHECK( pip_check_pie( argv[2], 1 ), RV, return(EXIT_UNTESTED) );
 
   ntasks = strtol( argv[1], NULL, 10 );
-  CHECK( ntasks, RV<=0||RV>NTASKS, abend(EXIT_UNTESTED) );
-  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, abend(EXIT_UNTESTED) );
+  CHECK( ntasks, RV<=0||RV>NTASKS, return(EXIT_UNTESTED) );
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_UNTESTED) );
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );
 
 #ifdef DO_COREBIND
   nc = get_ncpus() - 1;
-  CHECK( pip_do_corebind(0,NULL), RV, abend(EXIT_UNTESTED) );
+  CHECK( pip_do_corebind(0,NULL), RV, return(EXIT_UNTESTED) );
 #endif
 
   for( i=0; i<ntasks; i++ ) {
@@ -60,14 +64,14 @@ int main( int argc, char **argv ) {
     CHECK( pip_spawn( argv[2], &argv[2], NULL, c, &pipid,
 		      NULL, NULL, NULL ),
 	   RV,
-	   abend(EXIT_UNTESTED) );
+	   return(EXIT_UNTESTED) );
     CHECK( pipid, RV!=i, return(EXIT_UNTESTED) );
   }
   err    = 0;
   extval = 0;
   for( i=0; i<ntasks; i++ ) {
     status = 0;
-    CHECK( pip_wait( i, &status ), RV, abend(EXIT_UNTESTED) );
+    CHECK( pip_wait( i, &status ), RV, return(EXIT_UNTESTED) );
     if( WIFEXITED( status ) ) {
       extval = WEXITSTATUS( status );
       if( extval ) {
@@ -79,6 +83,6 @@ int main( int argc, char **argv ) {
     if( err == 0 && extval != 0 ) err = extval;
   }
 
-  CHECK( pip_fin(), RV, abend(EXIT_UNTESTED) );
+  CHECK( pip_fin(), RV, return(EXIT_UNTESTED) );
   return err;
 }

@@ -48,6 +48,7 @@ SRCS  = pip_init.c \
 	pip_task_spawn.c \
 	pip_misc.c \
 	corebind.c \
+	spawn_pie.c \
 	hook_and_coe.c \
 	pip_barrier.c \
 	pip_barrier2.c \
@@ -79,12 +80,13 @@ PROGRAMS = \
 	seek \
 	pip_kill
 
+PROGRAMS_TO_INSTALL = # nothing
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 test :
-	../test.sh task.list
-	../test.sh blt.list
+	../test.sh test.list
 
 prog-noexec : prog.c Makefile
 	$(CC) -g -O2 prog.c -o prog-noexec
@@ -98,3 +100,12 @@ prog-pie : prog.c Makefile
 
 prog-nordynamic : prog.c Makefile
 	$(CC) -g -O2 -fpie -pie prog.c -o prog-nordynamic
+
+install_test_dir = $(prefix)/test/basics
+
+SCRIPTS = task.list wait.list blt.list seek-file.sh seek-outin.sh seek-pipe.sh
+DATFILE = GreatExpectations-Chap1.txt
+
+install-test :
+	$(MKDIR_P) $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile $(SRCS) prog.c $(SCRIPTS) $(DATFILE) $(install_test_dir)

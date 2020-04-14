@@ -36,8 +36,8 @@
 //#define DEBUG
 
 #include <test.h>
-#include <libgen.h>
 #include <limits.h>
+#include <libgen.h>
 
 #ifdef NTASKS
 #undef NTASKS
@@ -117,13 +117,12 @@ static int pipes[PIP_NTASKS_MAX+1][2];
 #define BUFSZ		(1024)
 
 int main( int argc, char **argv ) {
-  char buff[BUFSZ+1];
-  char check[BUFSZ+1];
+  char buff[BUFSZ+1], check[BUFSZ+1], *env;
   ssize_t cc, ccr, ccw, ccc;
   size_t sz;
   char *pr, *pw, *pc;
   int pipid = 999;
-  int ntasks = 0;
+  int ntasks = 0, ntenv;
   int i;
 
   if( argc > 1 ) {
@@ -132,39 +131,32 @@ int main( int argc, char **argv ) {
   if( ntasks < 1 || ntasks > NTASKS ) {
     ntasks = NTASKS;
   }
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    char fname[PATH_MAX];
-    char path[PATH_MAX];
-    char *dir, *p;
     int *pipep;
     int fd_in, fd_out, fd_file;
 
-    dir = dirname( strdup( argv[0] ) );
-    p = fname;
-    p = stpcpy( p, dir );
-    p = stpcpy( p, "/" );
-    (void) strcpy( p, FNAME );
-    fprintf( stderr, "ARGV0:%s  DIR:%s  FILE:%s\n", argv[0], dir, fname );
-    CHECK( realpath( fname, path ), RV==0, return(EXIT_UNTESTED) );
-
-    CHECK( pipe(pipes[0]), RV, return(EXIT_UNTESTED ) );
+    CHECK( pipe(pipes[0]), RV, return(EXIT_FAIL ) );
     fd_out = pipes[0][1];
 #ifndef NO_CLOEXEC
-    CHECK( set_coe_flag( pipes[0][1] ), RV, return(EXIT_UNTESTED) );
+    CHECK( set_coe_flag( pipes[0][1] ), RV, return(EXIT_FAIL) );
 #endif
     for( i=1; i<ntasks; i++ ) {
-      CHECK( pipe(pipes[i]), RV, return(EXIT_UNTESTED ) );
+      CHECK( pipe(pipes[i]), RV, return(EXIT_FAIL ) );
 #ifndef NO_CLOEXEC
-      CHECK( set_coe_flag( pipes[i][0] ), RV, return(EXIT_UNTESTED) );
-      CHECK( set_coe_flag( pipes[i][1] ), RV, return(EXIT_UNTESTED) );
+      CHECK( set_coe_flag( pipes[i][0] ), RV, return(EXIT_FAIL) );
+      CHECK( set_coe_flag( pipes[i][1] ), RV, return(EXIT_FAIL) );
 #endif
     }
-    CHECK( pipe(pipes[ntasks]), RV, return(EXIT_UNTESTED ) );
+    CHECK( pipe(pipes[ntasks]), RV, return(EXIT_FAIL ) );
     fd_in  = pipes[ntasks][0];
 #ifndef NO_CLOEXEC
-    CHECK( set_coe_flag( pipes[ntasks][0] ), RV, return(EXIT_UNTESTED) );
+    CHECK( set_coe_flag( pipes[ntasks][0] ), RV, return(EXIT_FAIL) );
 #endif
 
 #ifdef DEBUG
@@ -180,7 +172,7 @@ int main( int argc, char **argv ) {
 
     CHECK( pipep=(int*)malloc(sizeof(int)*2),
 	   RV == 0,
-	   return(EXIT_UNTESTED) );
+	   return(EXIT_FAIL) );
     pipep[0] = pipes[0][0];
     pipep[1] = pipes[1][1];
     pipid = 0;
@@ -188,13 +180,13 @@ int main( int argc, char **argv ) {
 		      bhook, ahook, (void*) pipep ),
 	   RV,
 	   return(EXIT_FAIL) );
-    CHECK( close(pipes[0][0]), RV, return(EXIT_UNTESTED) );
-    CHECK( close(pipes[1][1]), RV, return(EXIT_UNTESTED) );
+    CHECK( close(pipes[0][0]), RV, return(EXIT_FAIL) );
+    CHECK( close(pipes[1][1]), RV, return(EXIT_FAIL) );
 
     for( i=1; i<ntasks-1; i++ ) {
       CHECK( pipep=(int*)malloc(sizeof(int)*2),
 	     RV == 0,
-	     return(EXIT_UNTESTED) );
+	     return(EXIT_FAIL) );
       pipep[0] = pipes[i][0];
       pipep[1] = pipes[i+1][1];
       pipid = i;
@@ -202,14 +194,14 @@ int main( int argc, char **argv ) {
 			bhook, ahook, (void*) pipep ),
 	     RV,
 	     return(EXIT_FAIL) );
-      CHECK( close(pipes[i][0]),   RV, return(EXIT_UNTESTED) );
-      CHECK( close(pipes[i+1][1]), RV, return(EXIT_UNTESTED) );
+      CHECK( close(pipes[i][0]),   RV, return(EXIT_FAIL) );
+      CHECK( close(pipes[i+1][1]), RV, return(EXIT_FAIL) );
     }
 
     if( ntasks > 1 ) {
       CHECK( pipep=(int*)malloc(sizeof(int)*2),
 	     RV == 0,
-	     return(EXIT_UNTESTED) );
+	     return(EXIT_FAIL) );
       pipep[0] = pipes[ntasks-1][0];
       pipep[1] = pipes[ntasks][1];
       pipid = ntasks-1;
@@ -217,26 +209,26 @@ int main( int argc, char **argv ) {
 			bhook, ahook, (void*) pipep ),
 	     RV,
 	     return(EXIT_FAIL) );
-      CHECK( close(pipes[ntasks-1][0]), RV, return(EXIT_UNTESTED) );
-      CHECK( close(pipes[ntasks][1]),   RV, return(EXIT_UNTESTED) );
+      CHECK( close(pipes[ntasks-1][0]), RV, return(EXIT_FAIL) );
+      CHECK( close(pipes[ntasks][1]),   RV, return(EXIT_FAIL) );
     }
 
-    CHECK( fd_file = open( path, O_RDONLY ), RV<0, return(EXIT_UNTESTED) );
+    CHECK( fd_file = open( FNAME, O_RDONLY ), RV<0, return(EXIT_FAIL) );
     while( 1 ) {
       sz = BUFSZ;
       pr = pw = buff;
-      CHECK( ccr=read(fd_file,pr,sz), RV<0, return(EXIT_UNTESTED) );
+      CHECK( ccr=read(fd_file,pr,sz), RV<0, return(EXIT_FAIL) );
       if( ccr == 0 ) break;
       ccc = cc = ccr;
       while( ccr > 0 ) {
-	CHECK( ccw=write(fd_out,pw,ccr), RV<0, return(EXIT_UNTESTED) );
+	CHECK( ccw=write(fd_out,pw,ccr), RV<0, return(EXIT_FAIL) );
 	ccr -= ccw;
 	pw  += ccw;
       }
       memset( check, 0, sizeof(buff) );
       pc = check;
       while( ccc > 0 ) {
-	CHECK( ccr=read(fd_in,pc,ccc), RV<0, return(EXIT_UNTESTED) );
+	CHECK( ccr=read(fd_in,pc,ccc), RV<0, return(EXIT_FAIL) );
 	if( ccr == 0 ) break;
 	ccc =- ccr;
 	pc  += ccr;
@@ -244,9 +236,9 @@ int main( int argc, char **argv ) {
       //fprintf( stderr, "ROOT: '%s' (%d)\n", check, (int) cc );
       CHECK( strncmp( buff, check, cc ), RV, return(EXIT_FAIL) );
     }
-    CHECK( close(fd_file), RV, return(EXIT_UNTESTED) );
-    CHECK( close(fd_out),  RV, return(EXIT_UNTESTED) );
-    CHECK( close(fd_in),   RV, return(EXIT_UNTESTED) );
+    CHECK( close(fd_file), RV, return(EXIT_FAIL) );
+    CHECK( close(fd_out),  RV, return(EXIT_FAIL) );
+    CHECK( close(fd_in),   RV, return(EXIT_FAIL) );
 
     for( i=0; i<ntasks; i++ ) {
       int status;
@@ -257,17 +249,17 @@ int main( int argc, char **argv ) {
       memset( buff, 0, sizeof(buff) );
       sz = 1024;
       pr = buff;
-      CHECK( ccr=read(0,pr,sz), RV<0, return(EXIT_UNTESTED) );
+      CHECK( ccr=read(0,pr,sz), RV<0, return(EXIT_FAIL) );
       //fprintf( stderr, "READ: '%s' (%d)\n", pr, (int) ccr );
       if( ccr == 0 ) break;
       while( ccr > 0 ) {
-	CHECK( ccw=write(1,pr,ccr), RV<0, return(EXIT_UNTESTED) );
+	CHECK( ccw=write(1,pr,ccr), RV<0, return(EXIT_FAIL) );
 	ccr -= ccw;
 	pr  += ccw;
       }
     }
-    CHECK( close(0), RV, return(EXIT_UNTESTED) );
-    CHECK( close(1), RV, return(EXIT_UNTESTED) );
+    CHECK( close(0), RV, return(EXIT_FAIL) );
+    CHECK( close(1), RV, return(EXIT_FAIL) );
   }
   return 0;
 }

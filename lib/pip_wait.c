@@ -162,6 +162,7 @@ pip_wait_thread( pip_task_internal_t *taski, int flag_blk ) {
     err = pthread_tryjoin_np( taski->annex->thread, NULL );
     DBGF( "pthread_tryjoin_np(): %s", strerror(err) );
   }
+  if( err ) err = ECHILD;
   /* workaround (make sure) */
   if( err != 0 &&
       taski->annex->flag_sigchld ) {
@@ -172,17 +173,21 @@ pip_wait_thread( pip_task_internal_t *taski, int flag_blk ) {
     snprintf( path, 128, "/proc/%d/task/%d",
 	      getpid(), taski->annex->tid );
     while( 1 ) {
-      err = errno = 0;
+      errno = 0;
       (void) stat( path, &stbuf );
-      DBGF( "stat(%s): %s", path, strerror( errno ) );
-      if( errno == ENOENT ) break;
+      err = errno;
+      DBGF( "stat(%s): %s", path, strerror( err ) );
+      if( err == ENOENT ) {
+	err = 0;
+	break;
+      }
       if( !flag_blk ) break;
       ts.tv_sec  = 0;
-      ts.tv_nsec = 1000*1000;
+      ts.tv_nsec = 100*1000;
       nanosleep( &ts, NULL );
     }
   }
-  if( err ) err = ECHILD;
+  if( !err ) pip_glibc_unlock();
   RETURN( err );
 }
 

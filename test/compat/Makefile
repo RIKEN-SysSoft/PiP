@@ -44,8 +44,16 @@ PROGRAMS  = fork malloc ctype pip_dlopen gettimeofday \
 	const_destruct system sigchld pagefault \
 	get_nprocs environ
 
+PROGRAMS_TO_INSTALL = # nothing
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 test:
 	../test.sh compat/test.list
+
+install_test_dir = $(prefix)/test/compat
+
+install-test :
+	$(MKDIR_P) $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)

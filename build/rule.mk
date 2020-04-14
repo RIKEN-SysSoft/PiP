@@ -32,10 +32,9 @@ doxygen: subdir-doxygen doxygen-here
 
 misc-clean:
 	@echo \
-	$(RM) *~ .nfs*; \
-	$(RM) *~ .nfs*
 	$(RM) *.E *.S
-	$(RM) \#*\# .\#*
+	$(RM) \#*\# .\#* *~
+	-$(RM) .nfs*
 .PHONY: misc-clean
 
 distclean-here:

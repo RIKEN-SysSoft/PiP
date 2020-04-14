@@ -33,30 +33,31 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
 #define NTIMES		(100)
 
 struct task_comm {
   pthread_mutex_t	mutex[2];
+  int			count;
 };
 
 int main( int argc, char **argv ) {
   struct task_comm	tc;
-  void 	*exp;
-  int pipid = 999;
-  int ntasks;
-  int i;
+  struct task_comm 	*tcp = &tc;
+  void 		*exp;
+  int 		pipid  = 999;
+  int 		ntasks = 1, i;
 
-  ntasks = 1;
-  exp = (void*) &tc;
-  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ), RV, return(EXIT_FAIL) );
+  exp = (void*) tcp;
+  CHECK( pip_init( &pipid, &ntasks, &exp, 0 ),         RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    CHECK( pthread_mutex_init( &tc.mutex[0], NULL ), RV, return(EXIT_FAIL) );
-    CHECK( pthread_mutex_init( &tc.mutex[1], NULL ), RV, return(EXIT_FAIL) );
-    CHECK( pthread_mutex_lock( &tc.mutex[0] ),       RV, return(EXIT_FAIL) );
-    CHECK( pthread_mutex_lock( &tc.mutex[1] ),       RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_init( &tcp->mutex[0], NULL ), RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_init( &tcp->mutex[1], NULL ), RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_lock( &tcp->mutex[0] ),       RV, return(EXIT_FAIL) );
+    CHECK( pthread_mutex_lock( &tcp->mutex[1] ),       RV, return(EXIT_FAIL) );
+    tc.count = 0;
 
     pipid = 0;
     CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
@@ -73,9 +74,6 @@ int main( int argc, char **argv ) {
     CHECK( pip_wait( 0, NULL ), RV, return(EXIT_FAIL) );
 
   } else {
-    struct task_comm 	*tcp;
-
-    CHECK( pip_import( PIP_PIPID_ROOT, &exp ), RV, return(EXIT_FAIL) );
     tcp = (struct task_comm*) exp;
 
     for( i=0; i<NTIMES; i++ ) {

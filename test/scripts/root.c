@@ -33,21 +33,27 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#include <stdio.h>
 #include <pip.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define NTASKS	(10)
 
 int main() {
-  int pipid, ntasks, i, j, err;
-  char *argv[2] = { "./task", NULL };
+  int 	pipid, ntasks, ntenv, i, j, err;
+  char 	*argv[2] = { "./task", NULL };
+  char	*env;
 
   err = 0;
   ntasks = NTASKS;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    ntasks = ( ntasks > ntenv ) ? ntenv : ntasks;
+  }
   pip_init( &pipid, &ntasks, NULL, 0 );
   for( i=0; i<NTASKS; i++ ) {
     pipid = PIP_PIPID_ANY;
-    err = pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, 
+    err = pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS,
 		     &pipid, NULL, NULL, NULL );
     if( err ) break;
   }

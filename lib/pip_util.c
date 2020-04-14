@@ -161,54 +161,29 @@ int pip_check_pie( const char *path, int flag_verbose ) {
   return err;
 }
 
-void pip_pipidstr( pip_task_internal_t *taski, char *buf ) {
-  switch( taski->pipid ) {
-  case PIP_PIPID_ROOT:
-    strcpy( buf, "?root?" );
-    break;
-  case PIP_PIPID_MYSELF:
-    strcpy( buf, "?myself?" );
-    break;
-  case PIP_PIPID_ANY:
-    strcpy( buf, "?any?" );
-    break;
-  case PIP_PIPID_NULL:
-    strcpy( buf, "?null?" );
-    break;
-  default:
-    if( taski->task_sched == NULL ) {
-      (void) sprintf( buf, "%d[-]", taski->pipid );
-    } else if( pip_task->task_sched == pip_task ) {
-      (void) sprintf( buf, "%d[*]", taski->pipid );
-    } else if( pip_task->task_sched != NULL ) {
-      (void) sprintf( buf, "%d[%d]",
-		      taski->pipid, taski->task_sched->pipid );
-    } else {
-      (void) sprintf( buf, "%d/?", taski->pipid );
-    }
-    break;
-  }
-}
-
 static char *pip_type_str_( pip_task_internal_t *taski ) {
   char *typestr;
 
   if( taski->type == PIP_TYPE_NONE ) {
-    typestr = "none";
+    typestr = "(--)";
   } else if( PIP_ISA_ROOT( taski ) ) {
-    if( PIP_IS_SUSPENDED( taski ) ) {
-      typestr = "root";
-    } else {
+    if( PIP_IS_RUNNING( taski ) ) {
       typestr = "ROOT";
+    } else if( PIP_IS_SUSPENDED( taski ) ){
+      typestr = "Root";
+    } else {
+      typestr = "root";
     }
   } else if( PIP_ISA_TASK( taski ) ) {
-    if( PIP_IS_SUSPENDED( taski ) ) {
-      typestr = "task";
-    } else {
+    if( PIP_IS_RUNNING( taski ) ) {
       typestr = "TASK";
+    } else if( PIP_IS_SUSPENDED( taski ) ){
+      typestr = "Task";
+    } else {
+      typestr = "task";
     }
   } else {
-    typestr = "(**)";
+    typestr = "(\?\?)";
   }
   return typestr;
 }
@@ -233,31 +208,37 @@ int pip_tkill( int tid, int signal ) {
 }
 
 int pip_idstr( char *buf, size_t sz ) {
+  /* do not put any DBG macors in this function */
+  pip_task_internal_t *taski;
   pid_t	tid = pip_gettid();
-  char *pre  = "<";
-  char *post = ">";
+  char *pre="<", *post=">", *ctx="";
   int	n = 0;
 
-  if( pip_task == NULL ) {
+  taski = pip_current_task( tid );
+  if( taski == NULL ) {
     n = snprintf( buf, sz, "(%d)", tid );
-  } else if( PIP_ISA_ROOT( pip_task ) ) {
-    if( PIP_IS_SUSPENDED( pip_task ) ) {
+
+  } else if( PIP_ISA_ROOT( taski ) ) {
+    if( PIP_IS_SUSPENDED( taski ) ) {
       n = snprintf( buf, sz, "%sroot:(%d)%s", pre, tid, post );
     } else {
       n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, tid, post );
     }
-  } else if( PIP_ISA_TASK( pip_task ) ) {
+
+  } else if( PIP_ISA_TASK( taski ) ) {
     char idstr[64];
 
-    pip_pipidstr( pip_task, idstr );
-    if( PIP_IS_SUSPENDED( pip_task ) ) {
-      n = snprintf( buf, sz, "%stask:%s(%d)%s", pre, idstr, tid, post );
+    if( PIP_ISA_ROOT( taski ) ) ctx = "(RC)";
+
+    pip_idstr( idstr, sizeof(idstr) );
+    if( PIP_IS_SUSPENDED( taski ) ) {
+      n = snprintf( buf, sz, "%stask%s:%s(%d)%s", pre, ctx, idstr, tid, post );
     } else {
-      n = snprintf( buf, sz, "%sTASK:%s(%d)%s", pre, idstr, tid, post );
+      n = snprintf( buf, sz, "%sTASK%s:%s(%d)%s", pre, ctx, idstr, tid, post );
     }
   } else {
     n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
-		  pre, pip_task->type, tid, post );
+		  pre, taski->type, tid, post );
   }
   return n;
 }
@@ -414,7 +395,7 @@ void pip_fprint_fd( FILE *fp, int fd ) {
   char fdname[256];
   ssize_t sz;
 
-  pip_idstr( idstr, 64 );
+  pip_idstr( idstr, sizeof(idstr) );
   sprintf( fdpath, "/proc/self/fd/%d", fd );
   if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
     fdname[sz] = '\0';
@@ -433,7 +414,7 @@ void pip_fprint_fds( FILE *fp ) {
   char coe = ' ';
   ssize_t sz;
 
-  pip_idstr( idstr, 64 );
+  pip_idstr( idstr, sizeof(idstr) );
   if( dir != NULL ) {
     int fd_dir = dirfd( dir );
     int fd;
@@ -465,7 +446,7 @@ void pip_check_addr( char *tag, void *addr ) {
   int retval;
 
   if( tag == NULL ) {
-    pip_idstr( idstr, 64 );
+    pip_idstr( idstr, sizeof(idstr) );
     tag = &idstr[0];
   }
   while( maps != NULL ) {
@@ -504,7 +485,7 @@ void pip_fprint_loaded_solibs( FILE *fp ) {
   int err;
 
   /* pip_init() must be called in advance */
-  (void) pip_idstr( idstr, PIP_MIDLEN );
+  (void) pip_idstr( idstr, sizeof(idstr) );
 
   if( ( err = pip_get_dso( PIP_PIPID_MYSELF, &handle ) ) != 0 ) {
     pip_info_fmesg( fp, "%s (no solibs found: %d)\n", idstr, err );

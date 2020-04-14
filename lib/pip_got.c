@@ -50,8 +50,8 @@ typedef struct {
 } pip_got_patch_list_t;
 
 static pip_got_patch_list_t 	*pip_got_patch_list = NULL;
-static int			pip_got_patch_size;
-static int			pip_got_patch_currp;
+static int			pip_got_patch_size  = 0;
+static int			pip_got_patch_currp = 0;
 
 static void pip_add_got_patch( void **got_entry, void *old_addr ) {
   if( pip_got_patch_list == NULL ) {

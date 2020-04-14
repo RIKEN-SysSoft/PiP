@@ -53,3 +53,15 @@ clean:
 .PHONY: test
 test:
 	make -C .. test
+
+test_install_dir = $(prefix)/test
+
+TESTS = bin.list sample.list test.list
+SCRIPTS = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
+HEADERS = test.h
+
+install-test : libnull.so
+	$(INSTALL) -d -m 755 $(test_install_dir)
+	$(INSTALL) -C -m 744 Makefile Test.common $(TESTS) \
+		$(SRCS) $(HEADERS) $(test_install_dir)
+	$(INSTALL) -C -m 755 $(SCRIPTS) $(test_install_dir)

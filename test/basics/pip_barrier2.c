@@ -46,7 +46,8 @@ static struct my_exp {
 static struct my_exp *expp;
 
 int main( int argc, char **argv ) {
-  int 	ntasks, pipid;
+  char	*env;
+  int 	ntasks, ntenv, pipid;
   int	niters;
   int	i, extval = 0;
 
@@ -55,6 +56,10 @@ int main( int argc, char **argv ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
   ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  }
 
   niters = 0;
   if( argc > 2 ) {

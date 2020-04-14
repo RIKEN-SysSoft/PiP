@@ -165,6 +165,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string.h>
 #include <signal.h>
 #include <stdio.h>
 #include <errno.h>
@@ -191,6 +192,7 @@
 #define PIP_ENV_GDB_COMMAND		"PIP_GDB_COMMAND"
 #define PIP_ENV_GDB_SIGNALS		"PIP_GDB_SIGNALS"
 #define PIP_ENV_SHOW_MAPS		"PIP_SHOW_MAPS"
+#define PIP_ENV_SHOW_PIPS		"PIP_SHOW_PIPS"
 
 #define PIP_VALID_OPTS	\
   ( PIP_MODE_PTHREAD | PIP_MODE_PROCESS_PRELOAD | \
@@ -214,12 +216,13 @@
 #define PIP_WAIT_NONBLOCKING		(1)
 
 typedef struct {
-  char			*prog;
-  char			**argv;
-  char			**envv;
-  char			*funcname;
-  void			*arg;
-  void 			*reserved[3];
+  char		*prog;
+  char		**argv;
+  char		**envv;
+  char		*funcname;
+  void		*arg;
+  void		*exp;
+  void		*reserved[2];
 } pip_spawn_program_t;
 
 typedef int (*pip_spawnhook_t)( void* );
@@ -262,16 +265,22 @@ extern "C" {
    *
    */
 static inline void pip_spawn_from_main( pip_spawn_program_t *progp,
-					char *prog, char **argv, char **envv ) {
+					char *prog, char **argv, char **envv,
+					void *exp ) {
+  memset( progp, 0, sizeof(pip_spawn_program_t) );
   if( prog != NULL ) {
     progp->prog   = prog;
   } else {
     progp->prog   = argv[0];
   }
   progp->argv     = argv;
-  progp->envv     = envv;
-  progp->funcname = NULL;
-  progp->arg      = NULL;
+  if( envv == NULL ) {
+    extern char **environ;
+    progp->envv   = environ;
+  } else {
+    progp->envv   = envv;
+  }
+  progp->exp   = exp;
 }
   /** @}*/
 
@@ -295,12 +304,19 @@ static inline void pip_spawn_from_main( pip_spawn_program_t *progp,
    */
 static inline void
 pip_spawn_from_func( pip_spawn_program_t *progp,
-		     char *prog, char *funcname, void *arg, char **envv ) {
+		     char *prog, char *funcname, void *arg, char **envv,
+		     void *exp ) {
+  memset( progp, 0, sizeof(pip_spawn_program_t) );
   progp->prog     = prog;
-  progp->argv     = NULL;
-  progp->envv     = envv;
   progp->funcname = funcname;
   progp->arg      = arg;
+  if( envv == NULL ) {
+    extern char **environ;
+    progp->envv   = environ;
+  } else {
+    progp->envv   = envv;
+  }
+  progp->exp   = exp;
 }
   /** @}*/
 
@@ -852,10 +868,20 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /**
    * \brief kill all PiP tasks
    *  @{
+   * This function must be called from PiP root.
+   *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM Not called from root
    */
   int pip_kill_all_tasks( void );
+  /** @}*/
+
+  /**
+   * \brief abort and kill all PiP tasks
+   *  @{
+   * \return This function returns nothing
+   */
+  void pip_abort(void);
   /** @}*/
 
   /**
@@ -926,24 +952,25 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-  void pip_glibc_lock( int nsec100 );
+  pid_t pip_gettid( void );
+  void pip_glibc_lock( void );
   void pip_glibc_unlock( void );
+  void pip_debug_info( void );
+  int  pip_idstr( char*, size_t );
+  int  pip_check_pie( const char*, int );
 
 #ifdef __cplusplus
 }
 #endif
+
+#include <pip_blt.h>
+#include <pip_dlfcn.h>
+#include <pip_signal.h>
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /**
  * @}
  */
-
-#include <pip_blt.h>
-#include <pip_dlfcn.h>
-#include <pip_signal.h>
-
-void pip_glibc_lock( int );
-void pip_glibc_unlock( void );
 
 #endif	/* _pip_h_ */

@@ -31,6 +31,9 @@
  */
 
 #define _GNU_SOURCE
+
+#include <pip.h>
+
 #include <dlfcn.h>
 #include <limits.h>
 #include <stdio.h>
@@ -38,15 +41,13 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <pip.h>
-
 #define MAX 1024
 
 int
 main(int argc, char **argv)
 {
-  char path[PATH_MAX], *p;
 	void *so;
+	char path[PATH_MAX], *p;
 	int option_pip_mode = 1;
 	int option_verbose  = 0;
 	int c, n = 0, m = MAX;
@@ -70,8 +71,7 @@ main(int argc, char **argv)
 	p = path;
 	p = stpcpy( p, CWD );
 	p = stpcpy( p, "/" );
-	p = stpcpy( p, argv[0] );
-
+	p = stpcpy( p, basename( argv[0] ) );
 	for (;;) {
 		so = dlmopen(LM_ID_NEWLM, path, RTLD_NOW | RTLD_LOCAL);
 		if (so == NULL) {

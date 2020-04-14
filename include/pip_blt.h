@@ -162,24 +162,25 @@ struct pip_task_queue_methods;
 typedef struct pip_task_queue {
   volatile pip_task_t			queue;
   struct pip_task_queue_methods		*methods;
+  void					*annex;
   volatile uint32_t			length;
   pip_spinlock_t			lock;
 } pip_task_queue_t;
 
 typedef void(*pip_enqueue_callback_t)(void*);
 
-#define PIP_CB_UNLOCK_AFTER_ENQUEUE	((void*)1)
+#define PIP_CB_UNLOCK_AFTER_ENQUEUE	((pip_enqueue_callback_t)1)
 
-typedef int(*pip_task_queue_init_t)	(void*);
-typedef void(*pip_task_queue_lock_t)	(void*);
-typedef int(*pip_task_queue_trylock_t)	(void*);
-typedef void(*pip_task_queue_unlock_t)	(void*);
-typedef int(*pip_task_queue_isempty_t)	(void*);
-typedef int(*pip_task_queue_count_t)	(void*, int*);
-typedef void(*pip_task_queue_enqueue_t)	(void*, pip_task_t*);
+typedef int(*pip_task_queue_init_t)		(void*);
+typedef void(*pip_task_queue_lock_t)		(void*);
+typedef int(*pip_task_queue_trylock_t)		(void*);
+typedef void(*pip_task_queue_unlock_t)		(void*);
+typedef int(*pip_task_queue_isempty_t)		(void*);
+typedef int(*pip_task_queue_count_t)		(void*, int*);
+typedef void(*pip_task_queue_enqueue_t)		(void*, pip_task_t*);
 typedef pip_task_t*(*pip_task_queue_dequeue_t)	(void*);
 typedef void(*pip_task_queue_describe_t)	(void*,FILE*);
-typedef int(*pip_task_queue_fin_t)	(void*);
+typedef int(*pip_task_queue_fin_t)		(void*);
 
 typedef struct pip_task_queue_methods {
   pip_task_queue_init_t		init;
@@ -1034,7 +1035,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 
   int pip_set_syncflag( uint32_t flags );
-
+  int pip_migrate( pip_task_t* );
 /**
  * @}
  */
