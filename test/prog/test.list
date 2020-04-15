@@ -1,9 +1,9 @@
 timer 1 NG.sh ./pip-exec
-timer 1 NG.sh ./pip-exec -n 10
+timer 1 NG.sh ./pip-exec -n 8
 timer 1 NG.sh ./pip-exec -n 100000 ./abc
 timer 1 NG.sh ./pip-exec -n 100 ./abc : -n 10000 ./def
 timer 1 NG.sh ./pip-exec -n 200 ./abc : -n 200 ./def
-timer 1 NG.sh ./pip-exec -n 10 nosuchfile
+timer 1 NG.sh ./pip-exec -n 8 nosuchfile
 timer 1 OK.sh ./pip-exec -n 1 ./abc
 timer 1 OK.sh ./pip-exec -n 1 ./abc :
 timer 1 NG.sh ./pip-exec -n 1 ./abc : :

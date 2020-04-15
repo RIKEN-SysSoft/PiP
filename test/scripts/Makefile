@@ -50,8 +50,10 @@ pip-check: ../../bin/pip-check Makefile
 pip-mode: ../../bin/pip-mode Makefile
 	$(INSTALL_PROGRAM) ../../bin/pip-mode .
 
-test :
+hello.c: ../../sample/hello/hello.c Makefile
 	cp -f ../../sample/hello/hello.c .
+
+test: hello.c Makefile
 	../test.sh test.list
 
 post-clean-hook:
@@ -59,11 +61,10 @@ post-clean-hook:
 
 install_test_dir = $(prefix)/test/scripts
 
-TEST_SRCS = a.c root.c task.c
+TEST_SRCS = a.c root.c task.c hello.c
 TEST_SCRIPTS = test-pip-check.sh test-pip-mode.sh test-pipcc-0.sh test-pipcc-1.sh
 
 install-test:
 	$(MKDIR_P) $(install_test_dir)
 	$(INSTALL) -C -m 744 Makefile test.list $(TEST_SRCS) $(TEST_SCRIPTS) $(install_test_dir)
-	ln -f -s ../../bin/pipcc ../../bin/pip-check $(install_test_dir)
-	cp -f ../../sample/hello/hello.c $(install_test_dir)
+	ln -f -s $(prefix)/bin/pipcc $(prefix)/bin/pip-check $(install_test_dir)

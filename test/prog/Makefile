@@ -65,16 +65,19 @@ ghi: abc.c $(DEPINCS) Makefile
 xyz: abc.c $(DEPINCS) Makefile
 	$(PIPCC) -DMSG=\"xyz\" $< -o $@
 
-hello: ../../sample/hello/hello.c
+hello.c: ../scripts/hello.c
+	cp -f ../scripts/hello.c .
+
+hello: hello.c
 	$(PIPCC) $< -o $@
 
 test:
-	../test.sh -A pip-exec.list
+	../test.sh -A test.list
 
 install_test_dir = $(prefix)/test/prog
 
 install-test:
 	$(MKDIR_P) $(install_test_dir)
-	$(INSTALL) -C -m 744 abc.c pip-exec.list $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile abc.c hello.c test.list $(install_test_dir)
 
 test-progs: $(PROGRAMS)

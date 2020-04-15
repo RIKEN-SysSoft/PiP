@@ -108,3 +108,6 @@ debug:
 
 TAGS:
 	ctags -Re
+
+post-clean-hook:
+	$(RM) $(LIBNAME) $(LIBNAME_PIPINIT)
