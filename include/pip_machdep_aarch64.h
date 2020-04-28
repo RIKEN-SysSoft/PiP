@@ -54,6 +54,8 @@
 
 #ifndef DOXYGEN_INPROGRESS
 
+#include <stdint.h>
+
 #define PIP_STACK_DESCENDING
 
 typedef intptr_t		pip_tls_t;
@@ -85,13 +87,6 @@ INLINE void pip_memory_barrier(void) {
   asm volatile("dmb ish" :::"memory");
 }
 #define PIP_MEMORY_BARRIER
-
-INLINE void pip_print_fs_segreg( void ) {
-  register unsigned long result asm ("x0");
-  asm ("mrs %0, tpidr_el0; " : "=r" (result));
-  fprintf( stderr, "TPIDR_EL0 REGISTER: 0x%lx\n", result );
-}
-#define PIP_PRINT_FSREG
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

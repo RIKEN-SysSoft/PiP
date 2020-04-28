@@ -96,16 +96,6 @@ INLINE int pip_load_tls( pip_tls_t tls ) {
   return arch_prctl( ARCH_SET_FS, (unsigned long*) tls) ? errno : 0;
 }
 
-INLINE void pip_print_fs_segreg( void ) {
-  intptr_t fsreg;
-  if( arch_prctl( ARCH_GET_FS, (unsigned long*) &fsreg ) == 0 ) {
-    fprintf( stderr, "FS REGISTER: 0x%lx\n", (intptr_t) fsreg );
-  } else {
-    fprintf( stderr, "FS REGISTER: (unable to get:%d)\n", errno );
-  }
-}
-#define PIP_PRINT_FSREG
-
 typedef volatile uint32_t	pip_spinlock_t;
 #define PIP_LOCK_TYPE
 

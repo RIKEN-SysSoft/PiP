@@ -172,10 +172,6 @@ pip_atomic_sub_and_fetch( pip_atomic_t *p, pip_atomic_t v ) {
 #endif
 #endif
 
-#ifndef PIP_PRINT_FSREG
-INLINE void pip_print_fs_segreg( void ) {}
-#endif
-
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif	/* _pip_machdep_h_ */
