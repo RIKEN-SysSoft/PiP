@@ -19,7 +19,7 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ),		       RV, return(EXIT_FAIL) );
   if( pipid == 0 ) {

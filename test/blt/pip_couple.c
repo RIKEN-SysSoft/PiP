@@ -21,7 +21,7 @@ int main( int argc, char **argv ) {
   pip_spawn_program_t	prog;
   exp_t	exprt, *expp;
   int 	ntasks, ntenv, pipid;
-  int	niters = NITERS;
+  int	niters;
   int	i, extval = 0;
   char	*env;
 
@@ -37,6 +37,12 @@ int main( int argc, char **argv ) {
     if( ntasks > ntenv ) return(EXIT_UNTESTED);
   }
 
+  niters = 0;
+  if( argc > 2 ) {
+    niters = strtol( argv[2], NULL, 10 );
+  }
+  niters = ( niters <= 0 ) ? NITERS : niters;
+
   pip_spawn_from_main( &prog, argv[0], argv, NULL, NULL );
   expp = &exprt;
 
@@ -46,12 +52,11 @@ int main( int argc, char **argv ) {
     CHECK( pip_barrier_init(&expp->barrier,ntasks), RV, return(EXIT_FAIL) );
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      CHECK( pip_blt_spawn( &prog, PIP_CPUCORE_ASIS, PIP_TASK_ACTIVE, &pipid,
-			    NULL, NULL, NULL ),
+      CHECK( pip_blt_spawn( &prog, PIP_CPUCORE_ASIS, PIP_TASK_ACTIVE,
+			    &pipid, NULL, NULL, NULL ),
 	     RV,
 	     return(EXIT_FAIL) );
     }
-
     for( i=0; i<ntasks; i++ ) {
       int status;
       CHECK( pip_wait_any(NULL,&status), RV, return(EXIT_FAIL) );
@@ -64,26 +69,32 @@ int main( int argc, char **argv ) {
       }
     }
   } else {
-    pid_t pid = pip_gettid();
     if( pipid < ntasks-1 ) {
       CHECK( pip_suspend_and_enqueue(&expp->queue,NULL,NULL), RV, return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
 	CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
-	CHECK( pid==pip_gettid(),        !RV, return(EXIT_FAIL) );
+	//CHECK( tid==pip_gettid(),        !RV, return(EXIT_FAIL) );
 	CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
-	CHECK( pid==pip_gettid(),         RV, return(EXIT_FAIL) );
-	CHECK( pip_yield(PIP_YIELD_USER), (RV&&RV!=EINTR), return(EXIT_FAIL) );
+	//CHECK( tid==pip_gettid(),         RV, return(EXIT_FAIL) );
+	//CHECK( pip_yield(PIP_YIELD_USER), (RV&&RV!=EINTR), return(EXIT_FAIL) );
       }
     } else {
       pip_task_t *task;
-      int 	 n = PIP_TASK_ALL;
+      int 	 n, m;
 
       CHECK( pip_get_task_from_pipid(PIP_PIPID_MYSELF,&task), RV,
 	     return(EXIT_FAIL) );
-      CHECK( pip_dequeue_and_resume_N(&expp->queue,task,&n), RV,
-	     return(EXIT_FAIL) );
-      CHECK( n!=ntasks-1, RV, return(EXIT_FAIL) );
-      do {} while( pip_yield(PIP_YIELD_USER) == EINTR );
+      m = ntasks - 1;
+      while( m > 0 ) {
+	sleep( 1 );
+	n = PIP_TASK_ALL;
+	CHECK( pip_dequeue_and_resume_N(&expp->queue,task,&n), RV,
+	       return(EXIT_FAIL) );
+	m -= n;
+      }
+      for( i=0; i<niters; i++ ) {
+	CHECK( pip_yield(PIP_YIELD_USER), (RV&&RV!=EINTR), return(EXIT_FAIL) );
+      }
     }
     CHECK( pip_barrier_wait(&expp->barrier), RV, return(EXIT_FAIL) );
   }

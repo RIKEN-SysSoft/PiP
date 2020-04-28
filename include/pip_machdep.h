@@ -36,7 +36,13 @@
 #ifndef _pip_machdep_h_
 #define _pip_machdep_h_
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 
 #include <stdint.h>
 #include <stdio.h>
@@ -52,6 +58,16 @@
 #define PIP_CACHEBLK_SZ		(64)
 #endif
 
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
+
 #ifndef PIP_LOCK_TYPE
 typedef volatile uint32_t	pip_spinlock_t;
 #endif
@@ -60,43 +76,41 @@ typedef volatile uint32_t	pip_spinlock_t;
 typedef volatile intptr_t	pip_atomic_t;
 
 #ifndef PIP_PAUSE
-inline static void pip_pause( void ) {
+INLINE void pip_pause( void ) {
   /* nop */
 }
 #endif
 
 #ifndef PIP_WRITE_BARRIER
-inline static void pip_write_barrier( void )
+INLINE void pip_write_barrier( void )
   __attribute__((always_inline)); /* this function must be inlined ALWAYS!! */
-inline static void pip_write_barrier( void ) {
+INLINE void pip_write_barrier( void ) {
   __sync_synchronize ();
 }
 #endif
 
 #ifndef PIP_MEMORY_BARRIER
-inline static void pip_memory_barrier( void )
+INLINE void pip_memory_barrier( void )
   __attribute__((always_inline)); /* this function must be inlined ALWAYS!! */
-inline static void pip_memory_barrier( void ) {
+INLINE void pip_memory_barrier( void ) {
   __sync_synchronize ();
 }
 #endif
 
 #ifndef PIP_SPIN_TRYLOCK_WV
-inline static int
-pip_spin_trylock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
+INLINE int pip_spin_trylock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
   return __sync_val_compare_and_swap( lock, 0, lv );
 }
 #endif
 
 #ifndef PIP_SPIN_LOCK_WV
-inline static void
-pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
+INLINE void pip_spin_lock_wv( pip_spinlock_t *lock, pip_spinlock_t lv ) {
   while( pip_spin_trylock_wv( lock, lv ) != 0 ) pip_pause();
 }
 #endif
 
 #ifndef PIP_SPIN_TRYLOCK
-inline static int pip_spin_trylock( pip_spinlock_t *lock ) {
+INLINE int pip_spin_trylock( pip_spinlock_t *lock ) {
   int oldval;
   if( *lock != 0 ) return 0;
   oldval = __sync_val_compare_and_swap( lock, 0, 1 );
@@ -105,38 +119,38 @@ inline static int pip_spin_trylock( pip_spinlock_t *lock ) {
 #endif
 
 #ifndef PIP_SPIN_LOCK
-inline static void pip_spin_lock( pip_spinlock_t *lock ) {
+INLINE void pip_spin_lock( pip_spinlock_t *lock ) {
   while( !pip_spin_trylock( lock ) ) pip_pause();
 }
 #endif
 
 #ifndef PIP_SPIN_UNLOCK
-inline static void pip_spin_unlock( pip_spinlock_t *lock ) {
+INLINE void pip_spin_unlock( pip_spinlock_t *lock ) {
   __sync_lock_release( lock );	/* *lock <= 0 */
 }
 #endif
 
 #ifndef PIP_SPIN_INIT
-inline static void pip_spin_init( pip_spinlock_t *lock ) {
+INLINE void pip_spin_init( pip_spinlock_t *lock ) {
   pip_spin_unlock( lock );
 }
 #endif
 
 #ifndef PIP_SPIN_DESTROY
-inline static void pip_spin_destroy( pip_spinlock_t *lock ) {
+INLINE void pip_spin_destroy( pip_spinlock_t *lock ) {
   /* Nothing to do.  */
 }
 #endif
 
 #ifndef PIP_COMP_AND_SWAP
-inline static int
+INLINE int
 pip_comp_and_swap( pip_atomic_t *lock, pip_atomic_t oldv, pip_atomic_t newv ) {
   return (int) __sync_bool_compare_and_swap( lock, oldv, newv );
 }
 #endif
 
 #ifndef PIP_COMP2_AND_SWAP
-inline static int
+INLINE int
 pip_comp2_and_swap( pip_atomic_t *lock, pip_atomic_t oldv, pip_atomic_t newv ){
   return ( ( *lock ) != oldv ) ? 0 :
      __sync_bool_compare_and_swap( lock, oldv, newv );
@@ -144,14 +158,14 @@ pip_comp2_and_swap( pip_atomic_t *lock, pip_atomic_t oldv, pip_atomic_t newv ){
 #endif
 
 #ifndef PIP_ATOMIC_FETCH_AND_ADD
-inline static pip_atomic_t
+INLINE pip_atomic_t
 pip_atomic_fetch_and_add( pip_atomic_t *p,  pip_atomic_t v ) {
   return __sync_fetch_and_add( p, v );
 }
 #endif
 
 #ifndef PIP_ATOMIC_SUB_AND_FETCH
-inline static pip_atomic_t
+INLINE pip_atomic_t
 pip_atomic_sub_and_fetch( pip_atomic_t *p, pip_atomic_t v ) {
   return __sync_sub_and_fetch( p, v );
 }
@@ -159,7 +173,7 @@ pip_atomic_sub_and_fetch( pip_atomic_t *p, pip_atomic_t v ) {
 #endif
 
 #ifndef PIP_PRINT_FSREG
-inline static void pip_print_fs_segreg( void ) {}
+INLINE void pip_print_fs_segreg( void ) {}
 #endif
 
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */

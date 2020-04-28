@@ -40,13 +40,16 @@ int main( int argc, char **argv ) {
   int 	ntasks, ntenv, pipid;
   int	sig, i, core, extval;
 
+  ntasks = 0;
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
-  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
   if( ( env = getenv( "NTASKS" ) ) != NULL ) {
     ntenv = strtol( env, NULL, 10 );
     if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
   }
 
   sig = 0;

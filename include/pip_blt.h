@@ -37,10 +37,12 @@
 #define _pip_blt_h_
 
 #ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 #define DOXYGEN_INPROGRESS
 #endif
+#endif
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
 #include <pip.h>
 #include <pip_machdep.h>
@@ -54,11 +56,11 @@
 #define PIP_SYNC_MASK				\
   (PIP_SYNC_AUTO|PIP_SYNC_BUSYWAIT|PIP_SYNC_YIELD|PIP_SYNC_BLOCKING)
 
-#define PIP_TASK_PASSIVE		(0x01000)
+#define PIP_TASK_INACTIVE		(0x01000)
 #define PIP_TASK_ACTIVE			(0x02000)
 
 #define PIP_TASK_MASK				\
-  (PIP_TASK_PASSIVE|PIP_TASK_ACTIVE)
+  (PIP_TASK_INACTIVE|PIP_TASK_ACTIVE)
 
 #define PIP_TASK_ALL			(-1)
 
@@ -76,10 +78,9 @@
 
 #define PIP_TOPT_BUSYWAIT		(0x01)
 
-
-typedef struct pip_queue {
-  struct pip_queue	*next;
-  struct pip_queue	*prev;
+typedef struct pip_task {
+  struct pip_task	*next;
+  struct pip_task	*prev;
 } pip_task_t;
 
 #define PIP_TASKQ_NEXT(L)	(((pip_task_t*)(L))->next)
@@ -149,6 +150,7 @@ typedef struct pip_queue {
 
 typedef pip_task_t	pip_list_t;
 
+/* aliases */
 #define PIP_LIST_INIT(L)		PIP_TASKQ_INIT(L)
 #define PIP_LIST_ISEMPTY(L)		PIP_TASKQ_ISEMPTY(L)
 #define PIP_LIST_ADD(L,E)		PIP_TASKQ_ENQ_LAST(L,E)
@@ -162,25 +164,25 @@ struct pip_task_queue_methods;
 typedef struct pip_task_queue {
   volatile pip_task_t			queue;
   struct pip_task_queue_methods		*methods;
-  void					*annex;
-  volatile uint32_t			length;
   pip_spinlock_t			lock;
+  volatile uint32_t			length;
+  void					*aux;
 } pip_task_queue_t;
 
 typedef void(*pip_enqueue_callback_t)(void*);
 
 #define PIP_CB_UNLOCK_AFTER_ENQUEUE	((pip_enqueue_callback_t)1)
 
-typedef int(*pip_task_queue_init_t)		(void*);
-typedef void(*pip_task_queue_lock_t)		(void*);
-typedef int(*pip_task_queue_trylock_t)		(void*);
-typedef void(*pip_task_queue_unlock_t)		(void*);
-typedef int(*pip_task_queue_isempty_t)		(void*);
-typedef int(*pip_task_queue_count_t)		(void*, int*);
-typedef void(*pip_task_queue_enqueue_t)		(void*, pip_task_t*);
-typedef pip_task_t*(*pip_task_queue_dequeue_t)	(void*);
-typedef void(*pip_task_queue_describe_t)	(void*,FILE*);
-typedef int(*pip_task_queue_fin_t)		(void*);
+typedef int  (*pip_task_queue_init_t)		(void*);
+typedef void (*pip_task_queue_lock_t)		(void*);
+typedef int  (*pip_task_queue_trylock_t)	(void*);
+typedef void (*pip_task_queue_unlock_t)		(void*);
+typedef int  (*pip_task_queue_isempty_t)	(void*);
+typedef int  (*pip_task_queue_count_t)		(void*, int*);
+typedef void (*pip_task_queue_enqueue_t)	(void*, pip_task_t*);
+typedef pip_task_t *(*pip_task_queue_dequeue_t)	(void*);
+typedef void (*pip_task_queue_describe_t)	(void*,FILE*);
+typedef int (*pip_task_queue_fin_t)		(void*);
 
 typedef struct pip_task_queue_methods {
   pip_task_queue_init_t		init;
@@ -191,8 +193,8 @@ typedef struct pip_task_queue_methods {
   pip_task_queue_count_t	count;
   pip_task_queue_enqueue_t	enqueue;
   pip_task_queue_dequeue_t	dequeue;
+  pip_task_queue_fin_t		fin;
   pip_task_queue_describe_t	describe;
-  pip_task_queue_fin_t		finalize;
 } pip_task_queue_methods_t;
 
 typedef struct pip_barrier {
@@ -226,13 +228,23 @@ typedef struct pip_mutex {
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
+
 /**
  * @addtogroup libpip libpip
  * \brief the PiP library
  * @{
  */
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -272,7 +284,7 @@ extern "C" {
    */
 #ifdef DOXYGEN_INPROGRESS
 int pip_blt_spawn( pip_spawn_program_t *progp,
-		   int coreno,
+		   uint32_t coreno,
 		   uint32_t opts,
 		   int *pipidp,
 		   pip_task_t **bltp,
@@ -281,7 +293,7 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
   /** @}*/
 #else
 int pip_blt_spawn_( pip_spawn_program_t *progp,
-		    int coreno,
+		    uint32_t coreno,
 		    uint32_t opts,
 		    int *pipidp,
 		    pip_task_t **bltp,
@@ -335,7 +347,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 			   pip_task_queue_methods_t *methods );
   /** @}*/
 #else
-  static inline int pip_task_queue_init_( pip_task_queue_t *queue,
+  INLINE int pip_task_queue_init_( pip_task_queue_t *queue,
 					  pip_task_queue_methods_t *methods ) {
     if( queue == NULL ) return EINVAL;
     queue->methods = methods;
@@ -363,7 +375,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_task_queue_trylock( pip_task_queue_t *queue );
   /** @}*/
 #else
-  static inline int pip_task_queue_trylock_( pip_task_queue_t *queue ) {
+  INLINE int pip_task_queue_trylock_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return EINVAL;
     if( queue->methods == NULL || queue->methods->trylock == NULL ) {
       return pip_spin_trylock( &queue->lock );
@@ -386,7 +398,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   void pip_task_queue_lock( pip_task_queue_t *queue );
   /** @}*/
 #else
-  static inline void pip_task_queue_lock_( pip_task_queue_t *queue ) {
+  INLINE void pip_task_queue_lock_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->lock == NULL ) {
       while( !pip_spin_trylock( &queue->lock ) ) {
@@ -411,7 +423,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   void pip_task_queue_unlock( pip_task_queue_t *queue );
   /** @}*/
 #else
-  static inline void pip_task_queue_unlock_( pip_task_queue_t *queue ) {
+  INLINE void pip_task_queue_unlock_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->unlock == NULL ) {
       pip_spin_unlock( &queue->lock );
@@ -435,7 +447,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_task_queue_isempty( pip_task_queue_t *queue );
   /** @}*/
 #else
-  static inline int pip_task_queue_isempty_( pip_task_queue_t *queue ) {
+  INLINE int pip_task_queue_isempty_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return EINVAL;
     if( queue->methods == NULL || queue->methods->isempty == NULL ) {
       return PIP_TASKQ_ISEMPTY( &queue->queue );
@@ -460,7 +472,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_task_queue_count( pip_task_queue_t *queue, int *np );
   /** @}*/
 #else
-  static inline int
+  INLINE int
   pip_task_queue_count_( pip_task_queue_t *queue, int *np ) {
     int err = 0;
     if( queue == NULL ) return EINVAL;
@@ -487,7 +499,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   void pip_task_queue_enqueue( pip_task_queue_t *queue, pip_task_t *task );
   /** @}*/
 #else
-  static inline void
+  INLINE void
   pip_task_queue_enqueue_( pip_task_queue_t *queue, pip_task_t *task ) {
     if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->enqueue == NULL ) {
@@ -513,7 +525,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   pip_task_t* pip_task_queue_dequeue( pip_task_queue_t *queue );
   /** @}*/
 #else
-  static inline pip_task_t*
+  INLINE pip_task_t*
   pip_task_queue_dequeue_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return NULL;
     if( queue->methods == NULL || queue->methods->dequeue == NULL ) {
@@ -543,20 +555,20 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   void pip_task_queue_describe( pip_task_queue_t *queue, FILE *fp );
   /** @}*/
 #else
-  extern void pip_task_queue_brief( pip_task_t *task, char *msg, size_t len );
-  static inline void
+  INLINE void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
+    extern int pip_task_brief( pip_task_t *task, char *msg, size_t len );
     if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->describe == NULL ) {
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) {
-	fprintf( fp, "%s: (EMPTY)\n", tag );
+	fprintf( fp, "%s: Queue is (EMPTY)\n", tag );
       } else {
 	pip_task_t *task;
-	char msg[512];
+	char msg[256];
 	int i = 0;
 	PIP_TASKQ_FOREACH( &queue->queue, task ) {
-	  pip_task_queue_brief( task, msg, 512 );
-	  fprintf( fp, "%s: [%d/%d]:%s\n", tag, i++, queue->length, msg );
+	  pip_task_brief( task, msg, sizeof(msg) );
+	  fprintf( fp, "%s: Queue[%d/%d]:%s\n", tag, i++, queue->length, msg );
 	}
       }
     } else {
@@ -579,13 +591,13 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_task_queue_fin( pip_task_queue_t *queue );
   /** @}*/
 #else
-  static inline int pip_task_queue_fin_( pip_task_queue_t *queue ) {
+  INLINE int pip_task_queue_fin_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return EINVAL;
-    if( queue->methods == NULL || queue->methods->finalize == NULL ) {
+    if( queue->methods == NULL || queue->methods->fin == NULL ) {
       if( !PIP_TASKQ_ISEMPTY( &queue->queue ) ) return EBUSY;
       return 0;
     } else {
-      return queue->methods->finalize( (void*) queue );
+      return queue->methods->fin( (void*) queue );
     }
   }
 #define pip_task_queue_fin( Q )			\
@@ -1031,16 +1043,19 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EBUSY the curren task is already decoupled from the kernel thread
    * finalized
    */
-  int pip_decouple();
+  int pip_decouple( pip_task_t *task );
   /** @}*/
 
   int pip_set_syncflag( uint32_t flags );
+
+#ifdef PIP_EXPERIMENTAL
   int pip_migrate( pip_task_t* );
+#endif
 /**
  * @}
  */
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus
 }
 #endif

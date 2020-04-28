@@ -36,6 +36,10 @@ case $mode_arg in
 	case $mode_env in
 	    process:preload) 	skip_flag=skip;;
 	esac;;
+    *G*)
+	case $mode_env in
+	    process:got) 	skip_flag=skip;;
+	esac;;
     *T*)
 	case $mode_env in
 	    pthread)	 	skip_flag=skip;;
@@ -44,6 +48,7 @@ case $mode_arg in
 	case $mode_env in
 	    process:pipclone) 	skip_flag=skip;;
 	    process:preload)	skip_flag=skip;;
+	    process:got)	skip_flag=skip;;
 	esac;;
     *process:pipclone*)
 	case $mode_env in
@@ -53,10 +58,15 @@ case $mode_arg in
 	case $mode_env in
 	    process:preload) 	skip_flag=skip;;
 	esac;;
+    *process:got*)
+	case $mode_env in
+	    process:got) 	skip_flag=skip;;
+	esac;;
     *process*)
 	case $mode_env in
 	    process:pipclone) 	skip_flag=skip;;
 	    process:preload)	skip_flag=skip;;
+	    process:got)	skip_flag=skip;;
 	esac;;
     *thread*)
 	case $mode_env in

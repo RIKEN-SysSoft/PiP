@@ -52,7 +52,7 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
   /* putenv and getenv */
   for( i=0; i<niters; i++ ) {

@@ -55,19 +55,22 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
-  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
   if( ( env = getenv( "NTASKS" ) ) != NULL ) {
     ntenv = strtol( env, NULL, 10 );
     if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
   }
 
   niters = 0;
   if( argc > 2 ) {
     niters = strtol( argv[2], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
   expp = &exp;
+  fprintf( stderr, "[[%d]] expp:%p\n", getpid(), expp );
   CHECK( pip_init(&pipid,&ntasks,(void**)&expp,0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     CHECK( pip_barrier_init(&exp.barr,ntasks), RV, return(EXIT_FAIL) );
@@ -93,6 +96,7 @@ int main( int argc, char **argv ) {
     CHECK( expp->count==niters, !RV, return(EXIT_FAIL) );
 
   } else {
+    fprintf( stderr, "<<%d>> expp:%p\n", getpid(), expp );
     srand( ( pipid + 1 ) * ( pipid + 1 ) );
     for( i=0; i<niters; i++ ) {
       CHECK( expp->count!=i, 		      RV, return(EXIT_FAIL) );

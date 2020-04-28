@@ -51,14 +51,16 @@ int main( int argc, char **argv ) {
 
   set_signal_watcher( SIGSEGV );
 
-  ntasks = NTASKS;
+  ntasks = 0;
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
-  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
   if( ( env = getenv( "NTASKS" ) ) != NULL ) {
     ntenv = strtol( env, NULL, 10 );
     if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
   }
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );

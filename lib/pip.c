@@ -343,8 +343,8 @@ int pip_check_task_flag( uint32_t flags ) {
 
   DBGF( "flags:0x%x", f );
   if( f ) {
-    if( pip_is_flag_excl( f, PIP_TASK_ACTIVE  ) ) goto OK;
-    if( pip_is_flag_excl( f, PIP_TASK_PASSIVE ) ) goto OK;
+    if( pip_is_flag_excl( f, PIP_TASK_ACTIVE   ) ) goto OK;
+    if( pip_is_flag_excl( f, PIP_TASK_INACTIVE ) ) goto OK;
     return -1;
   }
  OK:
@@ -482,6 +482,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     taski->pipid      = pipid;
     taski->type       = PIP_TYPE_ROOT;
     taski->task_sched = taski;
+    PIP_RUN( taski );
+    SET_CURR_TASK( taski, taski );
 
     taski->annex->task_root = root;
     taski->annex->loaded    = dlopen( NULL, RTLD_NOW );
@@ -511,7 +513,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_set_name( taski );
     pip_gdbif_initialize_root( ntasks );
     pip_gdbif_task_commit( taski );
-    pip_debug_on_exceptions();
+    pip_debug_on_exceptions( taski );
 
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
 

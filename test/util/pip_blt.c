@@ -10,7 +10,7 @@
 #define DO_COREBIND
 
 #ifdef DO_COREBIND
-extern int pip_do_corebind( int, cpu_set_t* );
+extern int pip_do_corebind( pid_t, uint32_t, cpu_set_t* );
 
 static int get_ncpus( void ) {
   cpu_set_t cpuset;
@@ -60,7 +60,7 @@ int main( int argc, char **argv ) {
 
 #ifdef DO_COREBIND
   nc = get_ncpus() - 1;
-  CHECK( pip_do_corebind(0,NULL), RV, return(EXIT_UNTESTED) );
+  CHECK( pip_do_corebind(0,0,NULL), RV, return(EXIT_UNTESTED) );
 #endif
 
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
@@ -83,7 +83,7 @@ int main( int argc, char **argv ) {
 
     j = ( j >= nacts ) ? 0 : j;
     CHECK( pip_blt_spawn( &prog, c,
-			  PIP_TASK_PASSIVE,
+			  PIP_TASK_INACTIVE | PIP_SYNC_BLOCKING,
 			  &pipid, NULL, &queues[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );

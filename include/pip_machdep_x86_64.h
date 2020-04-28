@@ -36,13 +36,29 @@
 #ifndef _pip_machdep_x86_64_h
 #define _pip_machdep_x86_64_h
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 
 #include <stdint.h>
 
 #define PIP_STACK_DESCENDING
 
-inline static void pip_pause( void ) {
+INLINE void pip_pause( void ) {
 #if !defined( __KNC__ ) && !defined( __MIC__ )
   asm volatile( "pause" ::: "memory" );
 #else  /* Xeon PHI (KNC) */
@@ -53,12 +69,12 @@ inline static void pip_pause( void ) {
 }
 #define PIP_PAUSE
 
-inline static void pip_write_barrier(void) {
+INLINE void pip_write_barrier(void) {
   asm volatile( "sfence":::"memory" );
 }
 #define PIP_WRITE_BARRIER
 
-inline static void pip_memory_barrier(void) {
+INLINE void pip_memory_barrier(void) {
   asm volatile( "mfence":::"memory" );
 }
 #define PIP_MEMORY_BARRIER
@@ -72,15 +88,15 @@ typedef intptr_t		pip_tls_t;
 
 int arch_prctl( int, unsigned long* );
 
-inline static int pip_save_tls( pip_tls_t *tlsp ) {
+INLINE int pip_save_tls( pip_tls_t *tlsp ) {
   return arch_prctl( ARCH_GET_FS, (unsigned long*) tlsp ) ? errno : 0;
 }
 
-inline static int pip_load_tls( pip_tls_t tls ) {
+INLINE int pip_load_tls( pip_tls_t tls ) {
   return arch_prctl( ARCH_SET_FS, (unsigned long*) tls) ? errno : 0;
 }
 
-inline static void pip_print_fs_segreg( void ) {
+INLINE void pip_print_fs_segreg( void ) {
   intptr_t fsreg;
   if( arch_prctl( ARCH_GET_FS, (unsigned long*) &fsreg ) == 0 ) {
     fprintf( stderr, "FS REGISTER: 0x%lx\n", (intptr_t) fsreg );

@@ -35,10 +35,14 @@
 
 #include <pip_internal.h>
 
+#ifdef PIP_USE_FCONTEXT
+//#define PIPFCTX_WORKAROUND
+#endif
+
 /* STACK PROTECT */
 
-static void pip_stack_protect( pip_task_internal_t *taski,
-			       pip_task_internal_t *nexti ) {
+void pip_stack_protect( pip_task_internal_t *taski,
+			pip_task_internal_t *nexti ) {
   /* so that new task can reset the flag */
   DBGF( "protect PIPID:%d released by PIPID:%d",
 	taski->pipid, nexti->pipid );
@@ -109,16 +113,19 @@ typedef struct pip_ctx_data {
   pip_task_internal_t	*new;
 } pip_ctx_data_t;
 
-static inline void pip_pre_ctxsw( pip_ctx_data_t *dp,
-				  pip_task_internal_t *old,
-				  pip_task_internal_t *new,
-				  pip_ctx_p *ctxp ) {
+INLINE void pip_preproc_ctxsw( pip_ctx_data_t *dp,
+			       pip_task_internal_t *old,
+			       pip_task_internal_t *new,
+			       pip_ctx_p *ctxp ) {
   old->ctx_savep = ctxp;
   dp->old = old;
   dp->new = new;
+  if( new != old ) {
+    ASSERT( pip_load_tls( new->tls ) );
+  }
 }
 
-static inline void pip_post_ctxsw( pip_transfer_t tr ) {
+INLINE void pip_postproc_ctxsw( pip_transfer_t tr ) {
   pip_ctx_data_t	*dp = (pip_ctx_data_t*) tr.data;
 
   DBGF( "PIPID:%d <<== PIPID:%d", dp->new->pipid, dp->old->pipid );
@@ -133,8 +140,8 @@ static inline void pip_post_ctxsw( pip_transfer_t tr ) {
 
 #endif	/* PIP_USE_FCONTEXT */
 
-static void pip_swap_context( pip_task_internal_t *taski,
-			      pip_task_internal_t *nexti ) {
+void pip_swap_context( pip_task_internal_t *taski,
+		       pip_task_internal_t *nexti ) {
 #ifdef PIP_USE_FCONTEXT
   pip_ctx_data_t	data;
   pip_ctx_p		ctx;
@@ -149,12 +156,9 @@ static void pip_swap_context( pip_task_internal_t *taski,
   ASSERTD( ctx == NULL );
   nexti->ctx_suspend = NULL;
 #endif
-  pip_pre_ctxsw( &data, taski, nexti, &taski->ctx_suspend );
-  if( taski != nexti ) {
-    ASSERT( pip_load_tls( nexti->tls ) );
-  }
+  pip_preproc_ctxsw( &data, taski, nexti, &taski->ctx_suspend );
   tr = pip_jump_fctx( ctx, (void*) &data );
-  pip_post_ctxsw( tr );
+  pip_postproc_ctxsw( tr );
 
 #else  /* ucontext */
 
@@ -181,8 +185,14 @@ static void pip_swap_context( pip_task_internal_t *taski,
 
 #ifdef PIP_USE_FCONTEXT
 static void pip_call_sleep( pip_transfer_t tr ) {
-  pip_ctx_data_t 	*dp = (pip_ctx_data_t*) tr.data;
+  pip_ctx_data_t *dp;
+
+#ifdef PIPFCTX_WORKAROUND
+  tr = pip_jump_fctx( tr.ctx, NULL );
+#endif
+  dp = (pip_ctx_data_t*) tr.data;
   ASSERTD( dp->old->ctx_savep == NULL );
+
   *dp->old->ctx_savep = tr.ctx;
 #ifdef DEBUG
   dp->old->ctx_savep = NULL;
@@ -201,9 +211,11 @@ static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
 }
 #endif
 
-static void pip_decouple_context( pip_task_internal_t *taski,
-				  pip_task_internal_t *schedi ) {
-  schedi = taski->task_sched;
+void pip_decouple_context( pip_task_internal_t *taski,
+			   pip_task_internal_t *schedi ) {
+  //pip_task_internal_t *schedi = taski->task_sched;
+  //schedi = taski->task_sched;
+
   DBGF( "task PIPID:%d   sched PIPID:%d", taski->pipid, schedi->pipid );
 
 #ifdef PIP_USE_FCONTEXT
@@ -222,13 +234,20 @@ static void pip_decouple_context( pip_task_internal_t *taski,
 			 /*  pip_root->stack_size_sleep,  */
 			 pip_call_sleep );
     schedi->annex->ctx_sleep = ctx;
+#ifdef PIPFCTX_WORKAROUND
+    if( 0 ) {
+      pip_transfer_t tr = pip_jump_fctx( ctx, NULL );
+      ctx = tr.ctx;
+    }
+    pip_sem_t sem;
+    pip_sem_init( &sem );
+    pip_sem_post( &sem );
+    pip_sem_wait( &sem );
+#endif
   }
-  pip_pre_ctxsw( &data, taski, schedi, &taski->ctx_suspend );
-  if( taski != schedi ) {
-    ASSERT( pip_load_tls( schedi->tls ) );
-  }
+  pip_preproc_ctxsw( &data, taski, schedi, &taski->ctx_suspend );
   tr = pip_jump_fctx( ctx, (void*) &data );
-  pip_post_ctxsw( tr );
+  pip_postproc_ctxsw( tr );
 
 #else  /* ucontext */
   struct {
@@ -264,8 +283,8 @@ static void pip_decouple_context( pip_task_internal_t *taski,
   /* resumed */
 }
 
-static void pip_couple_context( pip_task_internal_t *taski,
-				pip_task_internal_t *schedi ) {
+void pip_couple_context( pip_task_internal_t *schedi,
+			 pip_task_internal_t *taski ) {
   /* this must be called from the sleeping context */
   DBGF( "task PIPID:%d   sched PIPID:%d",
 	taski->pipid, schedi->pipid );
@@ -282,12 +301,9 @@ static void pip_couple_context( pip_task_internal_t *taski,
   taski->ctx_suspend = NULL;
 #endif
 
-  pip_pre_ctxsw( &data, schedi, taski, &schedi->annex->ctx_sleep );
-  if( taski != schedi ) {
-    ASSERT( pip_load_tls( taski->tls ) );
-  }
+  pip_preproc_ctxsw( &data, schedi, taski, &schedi->annex->ctx_sleep );
   tr = pip_jump_fctx( ctx, (void*) &data );
-  pip_post_ctxsw( tr );
+  pip_postproc_ctxsw( tr );
 
 #else  /* ucontext */
   struct {

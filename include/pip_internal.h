@@ -36,7 +36,13 @@
 #ifndef _pip_internal_h_
 #define _pip_internal_h_
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -127,20 +133,19 @@ typedef struct pip_task_internal {
       /* less frequently accessed part follows */
       pip_atomic_t		ntakecare; /* tasks must be taken care */
       struct {
+	pip_stack_protect_t	flag_stackp; /* stack protection flag */
 	int16_t			pipid;	    /* PiP ID */
 	uint16_t		schedq_len; /* length of schedq */
 	volatile uint16_t	oodq_len; /* indictaes ood task is added */
 	volatile uint8_t	type; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
-	pip_stack_protect_t	flag_stackp; /* stack protection flag */
 	volatile char		state; /* BLT state */
 	volatile uint8_t	flag_exit; /* if this task is terminated */
 	volatile uint8_t	flag_wakeup; /* flag to wakeup */
       };
-      struct pip_task_internal	*decoupled_sched; /* decoupled sched */
+      struct pip_task_internal	*coupled_sched; /* decoupled sched */
       struct pip_task_annex	*annex;
-#ifdef PIP_USE_FCONTEXT
-      pip_ctx_p			*ctx_savep;
-#endif
+      pip_ctx_p			*ctx_savep; /* only for fcontext */
+      void			*aux; /* pointer to user data (if provided) */
     };
     pip_cacheblk_t		__align__[2];
   };
@@ -148,37 +153,40 @@ typedef struct pip_task_internal {
 
 typedef	int  (*main_func_t)(int,char**,char**);
 typedef	int  (*start_func_t)(void*);
-typedef int  (*mallopt_t)(int,int);
-typedef void (*free_t)(void*);
+typedef void (*libc_init_first_t)(int,char**,char**);
+typedef int  (*res_init_t)(void);
 typedef	void (*ctype_init_t)(void);
-typedef void (*glibc_init_t)(int,char**,char**);
+typedef int  (*mallopt_t)(int,int);
 typedef	void (*fflush_t)(FILE*);
 typedef int  (*named_export_fin_t)(struct pip_task_internal*);
 typedef int  (*pip_clone_mostly_pthread_t)
 ( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
-typedef void (*pip_set_tid_t)( pthread_t, int, int* );
 
-typedef struct {
-  /* functions */
+typedef struct pip_symbol {
   main_func_t		main;	      /* main function address */
   start_func_t		start;	      /* strat function instead of main */
-  ctype_init_t		ctype_init;   /* to call __ctype_init() */
-  fflush_t		libc_fflush;  /* to call fflush() at the end */
-  mallopt_t		mallopt;      /* to call mallopt() */
+  /* PiP init */
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
-  /* glibc workaround */
-  pip_set_tid_t		pip_set_tid; /* to correct pd->tid */
   /* glibc variables */
   char			***libc_argvp; /* to set __libc_argv */
   int			*libc_argcp;   /* to set __libc_argc */
   char			**prog;
   char			**prog_full;
   char			***environ;    /* pointer to the environ variable */
+  /* GLIBC functions */
+  mallopt_t		mallopt;      /* to call GLIBC mallopt() */
+  fflush_t		libc_fflush;  /* to call GLIBC fflush() at the end */
+  /* GLIBC init funcs */
+  libc_init_first_t	libc_init;    /* initialize GLIBC */
+  res_init_t		res_init;     /* to call GLIBC res_init() */
+  ctype_init_t		ctype_init;   /* to call GLIBC __ctype_init() */
+  void			*__reserved__[5]; /* reserved for future use */
 } pip_symbols_t;
 
-typedef struct {
+typedef struct pip_spawn_args {
   int			pipid;
   int			coreno;
+  int			argc;
   char			*prog;
   char			*prog_full;
   char			**argv;
@@ -193,6 +201,7 @@ typedef sem_t			pip_sem_t;
 
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
+  pip_task_internal_t		*task_curr;
   pip_ctx_p			ctx_sleep; /* context to resume */
   pip_sem_t			sleep;
   void				*stack_sleep;
@@ -203,8 +212,6 @@ typedef struct pip_task_annex {
   void				*import_root;
   void *volatile		exp;
   void				*named_exptab;
-
-  void				*aux; /* pointer to user data (if provided) */
 
   uint32_t			opts;
   uint32_t			opts_sync;
@@ -224,6 +231,7 @@ typedef struct pip_task_annex {
   /* GDB interface */
   void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
+  void				*sigalt_stack;
 } pip_task_annex_t;
 
 #define PIP_TASKI(TASK)		((pip_task_internal_t*)(TASK))
@@ -248,7 +256,7 @@ typedef struct pip_task_annex {
 #define PIP_ISA_TASK(T)		\
   ( PIP_TASKI(T)->type & ( PIP_TYPE_ROOT | PIP_TYPE_TASK ) )
 
-#define PIP_BUSYWAIT_COUNT	(10*1000)
+#define PIP_BUSYWAIT_COUNT	(1000)
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
@@ -303,6 +311,7 @@ extern void pip_set_thread_id( pthread_t th, int );
 
 
 #define PIP_PRIVATE		__attribute__((visibility ("hidden")))
+
 #define pip_likely(x)		__builtin_expect((x),1)
 #define pip_unlikely(x)		__builtin_expect((x),0)
 #define IF_LIKELY(C)		if( pip_likely( C ) )
@@ -319,6 +328,15 @@ extern pip_task_internal_t	*pip_task;
 extern int __attribute__ ((visibility ("default")))
 pip_init_task_implicitly( pip_root_t *root,
 			  pip_task_internal_t *task );
+
+extern void pip_decouple_context( pip_task_internal_t *taski,
+				  pip_task_internal_t *schedi ) PIP_PRIVATE;
+extern void pip_couple_context( pip_task_internal_t *schedi,
+				pip_task_internal_t *taski ) PIP_PRIVATE;
+extern void pip_swap_context( pip_task_internal_t *taski,
+			      pip_task_internal_t *nexti ) PIP_PRIVATE;
+extern void pip_stack_protect( pip_task_internal_t *taski,
+			       pip_task_internal_t *nexti ) PIP_PRIVATE;
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
@@ -373,7 +391,9 @@ extern int  pip_is_shared_fd_( void ) PIP_PRIVATE;
 extern int  pip_isa_coefd( int ) PIP_PRIVATE;
 extern void pip_set_name( pip_task_internal_t* ) PIP_PRIVATE;
 
-extern void pip_pipidstr( pip_task_internal_t *taski, char *buf ) PIP_PRIVATE;
+extern int  pip_task_str( char*, size_t, pip_task_internal_t* ) PIP_PRIVATE;
+extern size_t pip_idstr( char*, size_t ) PIP_PRIVATE;
+
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
 extern int  pip_count_vec( char** ) PIP_PRIVATE;
 extern int  pip_get_dso( int pipid, void **loaded ) PIP_PRIVATE;
@@ -391,7 +411,7 @@ extern int  pip_is_magic_ok( pip_root_t* ) PIP_PRIVATE;
 extern int  pip_is_version_ok( pip_root_t* ) PIP_PRIVATE;
 extern int  pip_are_sizes_ok( pip_root_t* ) PIP_PRIVATE;
 
-extern void pip_debug_on_exceptions( void ) PIP_PRIVATE;
+extern void pip_debug_on_exceptions( pip_task_internal_t* ) PIP_PRIVATE;
 
 extern void pip_message( FILE *, char*, const char*, va_list ) PIP_PRIVATE;
 extern pip_task_internal_t *pip_current_task( int ) PIP_PRIVATE;
@@ -400,32 +420,32 @@ extern pip_task_internal_t *pip_current_task( int ) PIP_PRIVATE;
 
 /* semaphore */
 
-inline static void pip_sem_init( pip_sem_t *sem ) {
+INLINE void pip_sem_init( pip_sem_t *sem ) {
   (void) sem_init( sem, 1, 0 );
 }
 
-inline static void pip_sem_post( pip_sem_t *sem ) {
+INLINE void pip_sem_post( pip_sem_t *sem ) {
   errno = 0;
   (void) sem_post( sem );
   ASSERT( errno );
 }
 
-inline static void pip_sem_wait( pip_sem_t *sem ) {
+INLINE void pip_sem_wait( pip_sem_t *sem ) {
   errno = 0;
   (void) sem_wait( sem );
   ASSERT( errno !=0 && errno != EINTR );
 }
 
-inline static void pip_sem_fin( pip_sem_t *sem ) {
+INLINE void pip_sem_fin( pip_sem_t *sem ) {
   (void) sem_destroy( sem );
 }
 
-inline static int pip_get_pipid_( void ) {
+INLINE int pip_get_pipid_( void ) {
   if( !pip_is_initialized() ) return PIP_PIPID_NULL;
   return pip_task->pipid;
 }
 
-inline static int pip_check_pipid( int *pipidp ) {
+INLINE int pip_check_pipid( int *pipidp ) {
   int pipid;
 
   if( !pip_is_initialized() ) RETURN( EPERM  );
@@ -455,7 +475,7 @@ inline static int pip_check_pipid( int *pipidp ) {
   return 0;
 }
 
-inline static pip_task_internal_t *pip_get_task( int pipid ) {
+INLINE pip_task_internal_t *pip_get_task( int pipid ) {
   pip_task_internal_t 	*taski = NULL;
 
   switch( pipid ) {
@@ -469,7 +489,7 @@ inline static pip_task_internal_t *pip_get_task( int pipid ) {
   return taski;
 }
 
-inline static void pip_system_yield( void ) {
+INLINE void pip_system_yield( void ) {
   if( pip_root != NULL && pip_is_threaded_() ) {
     int pthread_yield( void );
     (void) pthread_yield();

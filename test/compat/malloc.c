@@ -70,7 +70,7 @@ int main( int argc, char **argv ) {
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
   CHECK( malloc_loop( niters ), RV, return(EXIT_FAIL) );
   return 0;

@@ -114,17 +114,19 @@ int main( int argc, char **argv ) {
   if( argc > 2 ) {
     ntasks = strtol( argv[2], NULL, 10 );
   }
-  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
   if( ( env = getenv( "NTASKS" ) ) != NULL ) {
     ntenv = strtol( env, NULL, 10 );
     if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
   }
 
   niters = 0;
   if( argc > 3 ) {
     niters = strtol( argv[3], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
   memset( buff,  0, sizeof(buff)  );
   memset( check, 0, sizeof(check) );

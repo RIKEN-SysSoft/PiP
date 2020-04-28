@@ -36,41 +36,57 @@
 #ifndef _pip_machdep_aarch64_h
 #define _pip_machdep_aarch64_h
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 
 #define PIP_STACK_DESCENDING
 
 typedef intptr_t		pip_tls_t;
 
-inline static int pip_save_tls( pip_tls_t *tlsp ) {
+INLINE int pip_save_tls( pip_tls_t *tlsp ) {
   pip_tls_t tls;
   asm volatile ("mrs  %0, tpidr_el0" : "=r" (tls));
   *tlsp = tls;
   return 0;
 }
 
-inline static int pip_load_tls( pip_tls_t tls ) {
+INLINE int pip_load_tls( pip_tls_t tls ) {
   asm volatile ("msr tpidr_el0, %0" : : "r" (tls));
   return 0;
 }
 
-inline static void pip_pause( void ) {
+INLINE void pip_pause( void ) {
   asm volatile("sevl" :::"memory");
   asm volatile("wfe" :::"memory");
 }
 #define PIP_PAUSE
 
-inline static void pip_write_barrier(void) {
+INLINE void pip_write_barrier(void) {
   asm volatile("dmb ishst" :::"memory");
 }
 #define PIP_WRITE_BARRIER
 
-inline static void pip_memory_barrier(void) {
+INLINE void pip_memory_barrier(void) {
   asm volatile("dmb ish" :::"memory");
 }
 #define PIP_MEMORY_BARRIER
 
-inline static void pip_print_fs_segreg( void ) {
+INLINE void pip_print_fs_segreg( void ) {
   register unsigned long result asm ("x0");
   asm ("mrs %0, tpidr_el0; " : "=r" (result));
   fprintf( stderr, "TPIDR_EL0 REGISTER: 0x%lx\n", result );

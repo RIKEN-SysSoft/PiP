@@ -68,7 +68,7 @@ int main( int argc, char **argv ) {
   if( argc > 2 ) {
     niters = strtol( argv[2], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
 #ifdef BARRIER
   CHECK( pthread_barrier_init( &barr, NULL, nthreads ),

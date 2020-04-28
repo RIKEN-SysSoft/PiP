@@ -40,7 +40,13 @@
 /* The following functions are just utilities for debugging */
 /************************************************************/
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 
 #include <stdio.h>
 #include <pip.h>
@@ -60,10 +66,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-  pid_t pip_gettid( void );
-  int   pip_tgkill( int, int, int );
-  int   pip_tkill( int, int );
 
   int  pip_check_pie( const char *path, int );
 
@@ -93,7 +95,6 @@ extern "C" {
   double pip_gettime( void );
 
   void pip_backtrace_fd( int depth, int fd );
-  void pip_debug_on_exceptions( void );
 
 #ifdef __cplusplus
 }

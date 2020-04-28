@@ -36,6 +36,12 @@
 #ifndef _pip_h_
 #define _pip_h_
 
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
 /**
  * @addtogroup pip-overview pip-overview
  * \brief the PiP library
@@ -133,12 +139,14 @@
  * PiP users may have the patched GLIBC provided by the PiP
  * development team.
  *
- * \section gdb-issue GDB issue
+ * \section PiP-GDB PiP-GDB
  *
  * The normal gdb debugger only works with the PiP root. PiP-aware GDB
  * (PiP-gdb) is also provided and must be used for debugging PiP tasks.
+ * In PiP-gdb, PiP tasks and root can be debugged as GDB inferiors.
+ * The current PiP-gdb does not work with the PiP's thread execution mode.
  *
- * \section debug Debug
+ * \section debug Debug on Exception Signals
  *
  * If the PIP_GDB_PATH environment is set to the path to PiP-gdb, then
  * PiP-gdb is automatically attached when an excetion signal (SIGSEGV
@@ -161,7 +169,7 @@
  * @}
  */
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
 #include <stdint.h>
 #include <stddef.h>
@@ -188,6 +196,8 @@
 #define PIP_ENV_MODE_PROCESS_PIPCLONE	"process:pipclone"
 #define PIP_ENV_MODE_PROCESS_GOT	"process:got"
 
+#define PIP_ENV_STOP_ON_START		"PIP_STOP_ON_START"
+
 #define PIP_ENV_GDB_PATH		"PIP_GDB_PATH"
 #define PIP_ENV_GDB_COMMAND		"PIP_GDB_COMMAND"
 #define PIP_ENV_GDB_SIGNALS		"PIP_GDB_SIGNALS"
@@ -210,7 +220,11 @@
 
 #define PIP_NTASKS_MAX			(300)
 
-#define PIP_CPUCORE_ASIS 		(PIP_MAGIC_NUM+1)
+#define PIP_CPUCORE_FLAG_SHIFT		(10)
+#define PIP_CPUCORE_CORENO_MASK		((1<<PIP_CPUCORE_FLAG_SHIFT)-1)
+#define PIP_CPUCORE_CORENO_MAX		PIP_CPUCORE_CORENO_MASK
+#define PIP_CPUCORE_ASIS 		(0x01)
+#define PIP_CPUCORE_NTH 		(0x02)
 
 #define PIP_WAIT_BLOCKING		(0)
 #define PIP_WAIT_NONBLOCKING		(1)
@@ -234,11 +248,23 @@ typedef struct {
   void 			*reserved[5];
 } pip_spawn_hook_t;
 
+typedef intptr_t	pip_id_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
+
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
 
 /**
  * @addtogroup libpip libpip
@@ -264,9 +290,9 @@ extern "C" {
    * \sa pip_task_spawn(3), pip_spawn_from_func(3)
    *
    */
-static inline void pip_spawn_from_main( pip_spawn_program_t *progp,
-					char *prog, char **argv, char **envv,
-					void *exp ) {
+INLINE void pip_spawn_from_main( pip_spawn_program_t *progp,
+				 char *prog, char **argv, char **envv,
+				 void *exp ) {
   memset( progp, 0, sizeof(pip_spawn_program_t) );
   if( prog != NULL ) {
     progp->prog   = prog;
@@ -302,7 +328,7 @@ static inline void pip_spawn_from_main( pip_spawn_program_t *progp,
    * \sa pip_task_spawn(3), pip_spawn_from_main(3)
    *
    */
-static inline void
+INLINE void
 pip_spawn_from_func( pip_spawn_program_t *progp,
 		     char *prog, char *funcname, void *arg, char **envv,
 		     void *exp ) {
@@ -347,10 +373,10 @@ pip_spawn_from_func( pip_spawn_program_t *progp,
    * \sa pip_task_spawn(3)
    *
    */
-static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
-				   pip_spawnhook_t before,
-				   pip_spawnhook_t after,
-				   void *hookarg ) {
+INLINE void pip_spawn_hook( pip_spawn_hook_t *hook,
+			    pip_spawnhook_t before,
+			    pip_spawnhook_t after,
+			    void *hookarg ) {
   hook->before  = before;
   hook->after   = after;
   hook->hookarg = hookarg;
@@ -438,7 +464,7 @@ static inline void pip_spawn_hook( pip_spawn_hook_t *hook,
    *
    */
 int pip_task_spawn( pip_spawn_program_t *progp,
-		    int coreno,
+		    uint32_t coreno,
 		    uint32_t opts,
 		    int *pipidp,
 		    pip_spawn_hook_t *hookp );
@@ -615,39 +641,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief get the number of the PiP tasks currently created
-   *  @{
-   * \param[out] ntasksp This parameter points to the variable which
-   *  will be set to the maximum number of the PiP tasks.
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized
-   *
-   */
-  int pip_get_curr_ntasks( int *ntasksp );
-  /** @}*/
-
-  /**
-   * \brief check if the calling task is a PiP task or not
-   *  @{
-   *
-   * \return Return an boolean value.
-   *
-   * \note Unlike most of the other PiP functions, this can be called
-   * BEFORE calling the \b pip_init() function.
-   */
-  int pip_isa_piptask( void );
-  /** @}*/
-
-  /**
-   * \brief return the number of active tasks
-   *  @{
-   * \return Return the number of awake tasks
-   */
-  int pip_count_active_tasks( void );
-  /** @}*/
-
-  /**
    * \brief get the PiP execution mode
    *  @{
    * \param[out] modep This parameter points to the variable which
@@ -773,41 +766,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief deliver a signal to a PiP task
-   *  @{
-   * \param[out] pipid PiP ID of a target PiP task
-   * \param[out] signal signal number to be delivered
-   *
-   * \note Only the PiP task can be the target of the signal delivery.
-   * \note This function can be used regardless to the PiP execution
-   * mode.
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized
-   * \retval EINVAL An invalid signal number or invalid PiP ID is
-   * specified
-   */
-  int pip_kill( int pipid, int signal );
-  /** @}*/
-
-  /**
-   * \brief set signal mask of the current PiP task
-   *  @{
-   * \param[in] how see \b sigprogmask or \b pthread_sigmask
-   * \param[in] sigmask signal mask
-   * \param[out] oldmask old signal mask
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized
-   * \retval EINVAL An invalid signal number or invalid PiP ID is
-   * specified
-   *
-   * \sa \b sigprocmask, \b pthread_sigmask
-   */
-  int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
-  /** @}*/
-
-  /**
    * \brief deliver a process or thread ID defined by the system
    *  @{
    * \param[out] pipid PiP ID of a target PiP task
@@ -822,7 +780,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    *
    */
-  int pip_get_id( int pipid, intptr_t *idp );
+  int pip_get_id( int pipid, pip_id_t *idp );
   /** @}*/
 
   /**
@@ -857,12 +815,21 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief check if calling PiP task is a PiP ULP or not
+   * \brief deliver a signal to a PiP task
    *  @{
+   * \param[out] pipid PiP ID of a target PiP task
+   * \param[out] signal signal number to be delivered
    *
-   * \return Return true if the caller is a PiP ULP
+   * \note Only the PiP task can be the target of the signal delivery.
+   * \note This function can be used regardless to the PiP execution
+   * mode.
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized
+   * \retval EINVAL An invalid signal number or invalid PiP ID is
+   * specified
    */
-  int  pip_isa_ulp( void );
+  int pip_kill( int pipid, int signal );
   /** @}*/
 
   /**
@@ -926,7 +893,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * to do so.
    */
   int pip_spawn( char *filename, char **argv, char **envv,
-		 int coreno, int *pipidp,
+		 uint32_t coreno, int *pipidp,
 		 pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
   /** @}*/
 
@@ -950,14 +917,14 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_is_shared_fd( int *flagp );
   /** @}*/
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
-  pid_t pip_gettid( void );
-  void pip_glibc_lock( void );
-  void pip_glibc_unlock( void );
-  void pip_debug_info( void );
-  int  pip_idstr( char*, size_t );
-  int  pip_check_pie( const char*, int );
+  pid_t  pip_gettid( void );
+  void   pip_glibc_lock( void );
+  void   pip_glibc_unlock( void );
+  void   pip_debug_info( void );
+  size_t pip_idstr( char*, size_t );
+  int    pip_check_pie( const char*, int );
 
 #ifdef __cplusplus
 }

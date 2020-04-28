@@ -45,7 +45,7 @@ install: doxygen-install
 .PHONY: install
 
 debug:
-	CPPFLAGS+="-DDEBUG" make all;
+	CPPFLAGS+="-DDEBUG" make clean all;
 
 ### build test programs and run them
 .PHONY: test-progs

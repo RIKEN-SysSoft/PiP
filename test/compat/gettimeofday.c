@@ -55,11 +55,12 @@ int main( int argc, char **argv ) {
   double prev = 0.0, now;
   int niters, i;
 
-  niters = NITERS;
+  niters = 0;
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
+
   for( i=0; i<niters; i++ ) {
     now = gettime();
     CHECK( now<prev, RV, return(EXIT_FAIL) );

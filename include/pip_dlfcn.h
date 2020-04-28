@@ -36,6 +36,14 @@
 #ifndef _pip_dlfcn_h_
 #define _pip_dlfcn_h_
 
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,9 +55,12 @@ extern "C" {
   void *pip_dlsym( void *handle, const char *symbol );
   int   pip_dladdr( void *addr, void *info );
   int   pip_dlclose( void *handle );
+  char *pip_dlerror( void );
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

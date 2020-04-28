@@ -36,8 +36,16 @@
 #ifndef _pip_signal_h_
 #define _pip_signal_h_
 
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus
 extern "C" {
+#endif
 #endif
 
 /**
@@ -92,9 +100,15 @@ extern "C" {
    */
   int pip_signal_wait( int signal );
 
+#ifndef DOXYGEN_INPROGRESS
+
+  int  pip_tgkill( int, int, int );
+  int  pip_tkill( int, int );
+
 #ifdef __cplusplus
 }
 #endif
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */
 
 /**
  * @}

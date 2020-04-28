@@ -41,19 +41,6 @@ typedef int(*pip_clone_syscall_t)(int(*)(void*), void*, int, void*, ...);
 pip_clone_syscall_t	pip_clone_orig;
 pip_spinlock_t 		pip_lock_got_clone PIP_PRIVATE;
 
-static int pip_clone_flags( int flags ) {
-  flags &= ~(CLONE_FS);	 /* 0x00200 */
-  flags &= ~(CLONE_FILES);	 /* 0x00400 */
-  flags &= ~(CLONE_SIGHAND); /* 0x00800 */
-  flags &= ~(CLONE_THREAD);	 /* 0x10000 */
-  flags &= ~0xff;
-  flags |= CLONE_VM;
-  flags |= CLONE_SETTLS;  /* do not reset the CLONE_SETTLS flag */
-  flags |= CLONE_PTRACE;
-  flags |= SIGCHLD;
-  return flags;
-}
-
 static pip_spinlock_t pip_lock_clone( pid_t tid ) {
   pip_spinlock_t oldval;
 

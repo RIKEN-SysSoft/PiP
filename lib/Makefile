@@ -43,26 +43,27 @@ LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
 CPPFLAGS += -I$(GLIBCINCDIR) -I$(PIPCPPFLAGS) -I. \
+	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
-	-DPIP_MAKE_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\" \
+	-DPIP_BUILD_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\" \
 	-DPIP_INSTALL_BIN_PIPS=\"$(default_bindir)/pips\" \
-	-DPIP_MAKE_BIN_PIPS=\"../bin/pips\"
+	-DPIP_BUILD_BIN_PIPS=\"../bin/pips\"
 CFLAGS += $(PIPCFLAGS_TASK)
 FCTXOBJS = fctx_jump.o fctx_make.o
 LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY)
 
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
-	pip_dlfcn.c pip_signal.c pip_init.c
+	pip_dlfcn.c pip_signal.c pip_init.c pip_context.c
 
 OBJS_PIPINIT = pip_init.o
 
 OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
-	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT)
+	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
+	pip_context.o
 
-DEPINCS  = pip_context.c                        	\
-	   $(PIPINCDIR_BUILD)/config.h			\
+DEPINCS  = $(PIPINCDIR_BUILD)/config.h			\
 	   $(PIPINCDIR_BUILD)/pip.h			\
 	   $(PIPINCDIR_BUILD)/pip_context.h		\
 	   $(PIPINCDIR_BUILD)/pip_blt.h			\
@@ -104,7 +105,7 @@ install:
 	ln -s $(LIBRARY_PIPINIT) $(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
-	CPPFLAGS+="-DDEBUG" make all;
+	CPPFLAGS+="-DDEBUG" make clean all;
 
 TAGS:
 	ctags -Re

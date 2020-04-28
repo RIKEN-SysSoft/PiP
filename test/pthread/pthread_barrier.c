@@ -63,10 +63,11 @@ int main( int argc, char **argv ) {
   nthreads = ( nthreads == 0       ) ? NTHREADS : nthreads;
   nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
+  niters = 0;
   if( argc > 2 ) {
     niters = strtol( argv[2], NULL, 10 );
   }
-  niters = ( niters == 0 ) ? NITERS : niters;
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
   CHECK( pthread_barrier_init( &barr, NULL, nthreads ),
 	 RV,

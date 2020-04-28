@@ -92,8 +92,13 @@ static void set_timer( int timer ) {
     exit( EXIT_UNTESTED );
   }
   memset( &tv, 0, sizeof(tv) );
-  tv.it_interval.tv_sec = timer;
-  tv.it_value.tv_sec    = timer;
+  if( timer > 0 ) {
+    tv.it_interval.tv_sec = timer;
+    tv.it_value.tv_sec    = timer;
+  } else {
+    tv.it_interval.tv_usec = 10*1000;
+    tv.it_value.tv_usec    = 10*1000;
+  }
   if( setitimer( ITIMER_REAL, &tv, NULL ) != 0 ) {
     fprintf( stderr, "[%s] setitimer(): %d\n", prog, errno );
     cleanup();
@@ -124,7 +129,6 @@ int main( int argc, char **argv ) {
   target = basename( argv[2] );
 
   time = strtol( argv[1], NULL, 10 );
-  if( time == 0 ) usage();
   if( time <  0 ) {
     time = -time;
     flag_debug = 1;

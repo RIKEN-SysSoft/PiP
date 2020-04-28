@@ -36,7 +36,23 @@
 #ifndef _pip_clone_h_
 #define _pip_clone_h_
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -47,10 +63,48 @@
 #define PIP_LOCK_UNLOCKED	(0)
 #define PIP_LOCK_OTHERWISE	(0xFFFFFFFF)
 
+typedef
+int(*clone_syscall_t)(int(*)(void*), void*, int, void*, pid_t*, void*, pid_t*);
+
 typedef struct pip_clone {
   pip_spinlock_t lock;	     /* lock */
 } pip_clone_t;
 
-#endif
+INLINE pip_spinlock_t
+pip_clone_lock( pid_t tid, pip_spinlock_t *lockp ) {
+  pip_spinlock_t oldval;
+
+  while( 1 ) {
+    oldval = pip_spin_trylock_wv( lockp, PIP_LOCK_OTHERWISE );
+    if( oldval == tid ) {
+      /* called and locked by PiP lib */
+      break;
+    }
+    if( oldval == PIP_LOCK_UNLOCKED ) { /* lock succeeds */
+      /* not called by PiP lib */
+      break;
+    }
+  }
+  return oldval;
+}
+
+INLINE void pip_clone_unlock( pip_spinlock_t *lockp ) {
+  pip_spin_unlock( lockp );
+}
+
+INLINE int pip_clone_flags( int flags ) {
+  flags &= ~(CLONE_FS);		/* 0x00200 */
+  flags &= ~(CLONE_FILES);	/* 0x00400 */
+  flags &= ~(CLONE_SIGHAND);	/* 0x00800 */
+  flags &= ~(CLONE_THREAD);	/* 0x10000 */
+  flags &= ~0xff;
+  flags |= CLONE_VM;
+  flags |= CLONE_SETTLS;  /* do not reset the CLONE_SETTLS flag */
+  flags |= CLONE_PTRACE;
+  flags |= SIGCHLD;
+  return flags;
+}
+
+#endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 
 #endif

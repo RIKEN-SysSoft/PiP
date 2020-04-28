@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
+#define DEBUG
 
 #include <test.h>
 #include <limits.h>
@@ -49,24 +49,26 @@
 char *buf_in;
 char *buf_out;
 
-#ifndef NO_CLOEXEC
 static int set_coe_flag( int fd ) {
+  errno = 0;
+#ifndef NO_CLOEXEC
   int flags = fcntl( fd, F_GETFD );
   if( flags >= 0 ) {
     flags |= FD_CLOEXEC;
     if( fcntl( fd, F_SETFD, flags ) < 0 ) return( errno );
     return 0;
   }
+#endif
   return errno;
 }
-#endif
+
+static int get_coe_flag( int fd ) {
+  return fcntl( fd, F_GETFD ) & FD_CLOEXEC;
+}
 
 #define PROCFD_PATH		"/proc/self/fd"
 static void list_fds( void ) {
 #ifdef DEBUG
-  int get_coe_flag( int fd ) {
-    return fcntl( fd, F_GETFD ) & FD_CLOEXEC;
-  }
   DIR *dir;
   struct dirent entry, *direntp;
   int fd, i=0;
@@ -86,8 +88,8 @@ static void list_fds( void ) {
 	}
       }
     }
-    (void) closedir( dir );
     (void) close( fd_dir );
+    (void) closedir( dir );
   }
 #endif
 }
@@ -96,12 +98,16 @@ static int bhook( void *hook_arg ) {
   int *pipes = (int*) hook_arg;
   //fprintf( stderr, "pipe={%d,%d}\n", pipes[0], pipes[1] );
   list_fds();
-  CHECK( close( 0 ),          RV,   return(errno) );
-  CHECK( dup2( pipes[0], 0 ), RV<0, return(errno) );
-  CHECK( close( pipes[0] ),   RV,   return(errno) );
-  CHECK( close( 1 ),          RV,   return(errno) );
-  CHECK( dup2( pipes[1], 1 ), RV<0, return(errno) );
-  CHECK( close( pipes[1] ),   RV,   return(errno) );
+#ifdef DEBUG
+  fprintf( stderr, "[%d] pipes[0]:%d pipes[1]:%d\n",
+	   getpid(), pipes[0], pipes[1] );
+#endif
+  CHECK( close( 0 ),           RV,   return(errno) );
+  CHECK( dup2(  pipes[0], 0 ), RV<0, return(errno) );
+  CHECK( close( pipes[0] ),    RV,   return(errno) );
+  CHECK( close( 1 ),           RV,   return(errno) );
+  CHECK( dup2(  pipes[1], 1 ), RV<0, return(errno) );
+  CHECK( close( pipes[1] ),    RV,   return(errno) );
   list_fds();
   return 0;
 }
@@ -122,18 +128,19 @@ int main( int argc, char **argv ) {
   size_t sz;
   char *pr, *pw, *pc;
   int pipid = 999;
-  int ntasks = 0, ntenv;
+  int ntasks, ntenv;
   int i;
 
+  ntasks = 0;
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
-  if( ntasks < 1 || ntasks > NTASKS ) {
-    ntasks = NTASKS;
-  }
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
   if( ( env = getenv( "NTASKS" ) ) != NULL ) {
     ntenv = strtol( env, NULL, 10 );
     if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
   }
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
@@ -143,21 +150,13 @@ int main( int argc, char **argv ) {
 
     CHECK( pipe(pipes[0]), RV, return(EXIT_FAIL ) );
     fd_out = pipes[0][1];
-#ifndef NO_CLOEXEC
     CHECK( set_coe_flag( pipes[0][1] ), RV, return(EXIT_FAIL) );
-#endif
     for( i=1; i<ntasks; i++ ) {
       CHECK( pipe(pipes[i]), RV, return(EXIT_FAIL ) );
-#ifndef NO_CLOEXEC
-      CHECK( set_coe_flag( pipes[i][0] ), RV, return(EXIT_FAIL) );
-      CHECK( set_coe_flag( pipes[i][1] ), RV, return(EXIT_FAIL) );
-#endif
     }
     CHECK( pipe(pipes[ntasks]), RV, return(EXIT_FAIL ) );
     fd_in  = pipes[ntasks][0];
-#ifndef NO_CLOEXEC
     CHECK( set_coe_flag( pipes[ntasks][0] ), RV, return(EXIT_FAIL) );
-#endif
 
 #ifdef DEBUG
     {
@@ -170,47 +169,40 @@ int main( int argc, char **argv ) {
     fprintf( stderr, "ROOT fd_in:%d fd_out:%d\n", fd_in, fd_out );
 #endif
 
-    CHECK( pipep=(int*)malloc(sizeof(int)*2),
-	   RV == 0,
-	   return(EXIT_FAIL) );
+    CHECK( pipep=(int*)malloc(sizeof(int)*2),RV==0,return(EXIT_FAIL) );
     pipep[0] = pipes[0][0];
     pipep[1] = pipes[1][1];
     pipid = 0;
     CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 		      bhook, ahook, (void*) pipep ),
-	   RV,
-	   return(EXIT_FAIL) );
+	   RV, return(EXIT_FAIL) );
     CHECK( close(pipes[0][0]), RV, return(EXIT_FAIL) );
     CHECK( close(pipes[1][1]), RV, return(EXIT_FAIL) );
 
     for( i=1; i<ntasks-1; i++ ) {
       CHECK( pipep=(int*)malloc(sizeof(int)*2),
-	     RV == 0,
-	     return(EXIT_FAIL) );
-      pipep[0] = pipes[i][0];
+	     RV == 0, return(EXIT_FAIL) );
+      pipep[0] = pipes[i  ][0];
       pipep[1] = pipes[i+1][1];
       pipid = i;
       CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			bhook, ahook, (void*) pipep ),
-	     RV,
-	     return(EXIT_FAIL) );
-      CHECK( close(pipes[i][0]),   RV, return(EXIT_FAIL) );
+	     RV, return(EXIT_FAIL) );
+      CHECK( close(pipes[i  ][0]), RV, return(EXIT_FAIL) );
       CHECK( close(pipes[i+1][1]), RV, return(EXIT_FAIL) );
     }
 
     if( ntasks > 1 ) {
       CHECK( pipep=(int*)malloc(sizeof(int)*2),
-	     RV == 0,
-	     return(EXIT_FAIL) );
+	     RV == 0, return(EXIT_FAIL) );
       pipep[0] = pipes[ntasks-1][0];
-      pipep[1] = pipes[ntasks][1];
+      pipep[1] = pipes[ntasks  ][1];
       pipid = ntasks-1;
       CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
 			bhook, ahook, (void*) pipep ),
-	     RV,
-	     return(EXIT_FAIL) );
+	     RV, return(EXIT_FAIL) );
       CHECK( close(pipes[ntasks-1][0]), RV, return(EXIT_FAIL) );
-      CHECK( close(pipes[ntasks][1]),   RV, return(EXIT_FAIL) );
+      CHECK( close(pipes[ntasks  ][1]), RV, return(EXIT_FAIL) );
     }
 
     CHECK( fd_file = open( FNAME, O_RDONLY ), RV<0, return(EXIT_FAIL) );

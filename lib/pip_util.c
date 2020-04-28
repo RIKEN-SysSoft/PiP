@@ -207,42 +207,6 @@ int pip_tkill( int tid, int signal ) {
   return (int) syscall( (long int) SYS_tkill, tid, signal );
 }
 
-int pip_idstr( char *buf, size_t sz ) {
-  /* do not put any DBG macors in this function */
-  pip_task_internal_t *taski;
-  pid_t	tid = pip_gettid();
-  char *pre="<", *post=">", *ctx="";
-  int	n = 0;
-
-  taski = pip_current_task( tid );
-  if( taski == NULL ) {
-    n = snprintf( buf, sz, "(%d)", tid );
-
-  } else if( PIP_ISA_ROOT( taski ) ) {
-    if( PIP_IS_SUSPENDED( taski ) ) {
-      n = snprintf( buf, sz, "%sroot:(%d)%s", pre, tid, post );
-    } else {
-      n = snprintf( buf, sz, "%sROOT:(%d)%s", pre, tid, post );
-    }
-
-  } else if( PIP_ISA_TASK( taski ) ) {
-    char idstr[64];
-
-    if( PIP_ISA_ROOT( taski ) ) ctx = "(RC)";
-
-    pip_idstr( idstr, sizeof(idstr) );
-    if( PIP_IS_SUSPENDED( taski ) ) {
-      n = snprintf( buf, sz, "%stask%s:%s(%d)%s", pre, ctx, idstr, tid, post );
-    } else {
-      n = snprintf( buf, sz, "%sTASK%s:%s(%d)%s", pre, ctx, idstr, tid, post );
-    }
-  } else {
-    n = snprintf( buf, sz, "%sType:0x%x(%d)%s ",
-		  pre, taski->type, tid, post );
-  }
-  return n;
-}
-
 void pip_task_describe( FILE *fp, const char *tag, int pipid ) {
   if( pip_check_pipid( &pipid ) == 0 ) {
     pip_task_internal_t *task = pip_get_task( pipid );

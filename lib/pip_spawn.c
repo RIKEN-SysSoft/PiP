@@ -238,9 +238,6 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   /* pip_named_export_fin symbol may not be found when the task
      program is not linked with the PiP lib. (due to not calling
      any PiP functions) */
-  /* glibc workaround */
-  symp->pip_set_tid      = pip_dlsym( handle, "pip_set_pthread_tid"   );
-  //symp->pip_set_tid = NULL;
   symp->named_export_fin = pip_dlsym( handle, "pip_named_export_fin_" );
   /* variables */
   symp->environ          = pip_dlsym( handle, "environ"               );
@@ -274,20 +271,20 @@ static char *pip_find_newer_libpipinit( void ) {
   struct stat	stb_inst, stb_make;
 
   DBGF( "%s", PIP_INSTALL_LIBPIPINIT );
-  DBGF( "%s", PIP_MAKE_LIBPIPINIT );
+  DBGF( "%s", PIP_BUILD_LIBPIPINIT );
   if( stat( PIP_INSTALL_LIBPIPINIT, &stb_inst ) != 0 ) {
-    if( stat( PIP_MAKE_LIBPIPINIT, &stb_make ) != 0 ) {
+    if( stat( PIP_BUILD_LIBPIPINIT, &stb_make ) != 0 ) {
       return NULL;
     }
-    return PIP_MAKE_LIBPIPINIT;
+    return PIP_BUILD_LIBPIPINIT;
   }
-  if( stat( PIP_MAKE_LIBPIPINIT, &stb_make ) != 0 ) {
+  if( stat( PIP_BUILD_LIBPIPINIT, &stb_make ) != 0 ) {
     return PIP_INSTALL_LIBPIPINIT;
   }
   if( stb_inst.st_mtime >= stb_make.st_mtime ) {
     return PIP_INSTALL_LIBPIPINIT;
   }
-  return PIP_MAKE_LIBPIPINIT;
+  return PIP_BUILD_LIBPIPINIT;
 }
 
 static int
@@ -463,7 +460,6 @@ static int pip_glibc_init( pip_symbols_t *symbols,
     symbols->ctype_init();
     DBGF( "<< __ctype_init@%p()", symbols->ctype_init );
   }
-  PIP_CHECK_CTYPE;
   return( argc );
 }
 
@@ -602,14 +598,7 @@ static void* pip_spawn_top( void *thargs )  {
   int			err    = 0;
 
   ENTER;
-  if( pip_is_threaded_() ) {
-    if( self->annex->symbols.pip_set_tid != NULL ) {
-      int tid, old;
-      tid = pip_gettid();
-      self->annex->symbols.pip_set_tid( pthread_self(), tid , &old );
-      DBGF( "TID:%d", tid );
-    }
-  } else {
+  if( !pip_is_threaded_() ) {
     pip_set_signal_handler( SIGQUIT, pip_sigquit_handler, NULL );
   }
   pip_set_name( self );
@@ -631,7 +620,7 @@ static void* pip_spawn_top( void *thargs )  {
     pip_warn_mesg( "failed to bound CPU core:%d (%d)", coreno, err );
     err = 0;
   }
-  if( self->annex->opts & PIP_TASK_PASSIVE ) { /* passive task */
+  if( self->annex->opts & PIP_TASK_INACTIVE ) { /* inactive task */
     /* suspend myself */
     PIP_SUSPEND( self );
     pip_suspend_and_enqueue_generic( self,
@@ -904,7 +893,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
  */
 
 int pip_task_spawn( pip_spawn_program_t *progp,
-		    int coreno,
+		    uint32_t coreno,
 		    uint32_t opts,
 		    int *pipidp,
 		    pip_spawn_hook_t *hookp ) {
@@ -926,7 +915,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 }
 
 int pip_blt_spawn_( pip_spawn_program_t *progp,
-		    int coreno,
+		    uint32_t coreno,
 		    uint32_t opts,
 		    int *pipidp,
 		    pip_task_t **bltp,
@@ -952,7 +941,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 int pip_spawn( char *prog,
 	       char **argv,
 	       char **envv,
-	       int  coreno,
+	       uint32_t  coreno,
 	       int  *pipidp,
 	       pip_spawnhook_t before,
 	       pip_spawnhook_t after,

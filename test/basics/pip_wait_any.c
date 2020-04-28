@@ -37,13 +37,21 @@
 #include <test.h>
 
 int main( int argc, char **argv ) {
-  int 		ntasks, pipid;
-  int		sig, core, status, i;
+  char	*env;
+  int	ntasks = 0, ntenv, pipid;
+  int	sig, core, status, i;
 
+  ntasks = 0;
   if( argc > 1 ) {
     ntasks = strtol( argv[1], NULL, 10 );
   }
-  ntasks = ( ntasks == 0 ) ? NTASKS : ntasks;
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
+  }
 
   sig = 0;
   if( argc > 2 ) {

@@ -36,7 +36,13 @@
 #ifndef _pip_debug_h_
 #define _pip_debug_h_
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifdef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
+#define DOXYGEN_INPROGRESS
+#endif
+#endif
+
+#ifndef DOXYGEN_INPROGRESS
 
 /**** debug macros ****/
 
@@ -53,12 +59,12 @@
 
 #include <pip_util.h>
 
-extern int  pip_idstr( char *buf, size_t sz );
+extern size_t pip_idstr( char *buf, size_t sz );
 
 #define DBGSW		pip_debug_env()
 
 #define DBGBUFLEN	(256)
-#define DBGTAGLEN	(32)
+#define DBGTAGLEN	(64)
 
 #define DBG_PRTBUF	char _dbuf[DBGBUFLEN]={'\0'};	\
   			int _nn=DBGBUFLEN;
@@ -155,11 +161,15 @@ extern int pip_debug_env( void );
 
 #define ASSERTD(X)							\
   if(DBGSW) { if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);	\
-      pip_debug_info(); } } while(0)
+      pip_debug_info(); pip_abort(); } } while(0)
 
-#define DO_CHECK_CTYPE
+#define SET_CURR_TASK(sched,task)	(sched)->annex->task_curr = task
 
-#else
+#define DPAUSE	\
+  do { struct timespec __ts; __ts.tv_sec=0; __ts.tv_nsec=1*1000*1000;	\
+    nanosleep( &__ts, NULL ); } while(0)
+
+#else  /* DEBUG */
 
 #define DBG
 #define DBGF(...)
@@ -169,26 +179,18 @@ extern int pip_debug_env( void );
 #define RETURN(X)		return(X)
 #define RETURNV			return
 #define ASSERTD(X)
+#define DPAUSE
+
+#define SET_CURR_TASK(sched,task)
 
 #endif	/* !DEBUG */
 
-#ifdef DO_CHECK_CTYPE
-#include <ctype.h>
-#define PIP_CHECK_CTYPE						\
-  do{ DBGF( "isalnum('a')=%d", isalnum('a') ); } while(0)
-#else
-#define PIP_CHECK_CTYPE
-#endif
-
 #define ASSERT(X)							\
-  if(X){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);pip_debug_info();	\
-    } else { DBGF( "{%s} -- Assertion OK", #X ); }
+  if(X){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
+    pip_debug_info(); pip_abort(); } else { DBGF( "{%s} -- Assertion OK", #X ); }
 
 #define NEVER_REACH_HERE						\
   do { NL_EMSG( "Should never reach here !!!!!!" ); } while(0)
-
-#define TASK_DESCRIBE( ID )			\
-  pip_task_describe( stderr, __func__, (ID) );
 
 #define QUEUE_DESCRIBE( Q )				\
   pip_queue_describe( stderr, __func__, PIP_TASKQ(Q) );
