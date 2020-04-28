@@ -39,6 +39,7 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <stdint.h>
+#include <stdio.h>
 
 typedef volatile uint32_t	pip_spinlock_t;
 #define PIP_LOCK_TYPE
