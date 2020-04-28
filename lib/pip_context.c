@@ -213,9 +213,6 @@ static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
 
 void pip_decouple_context( pip_task_internal_t *taski,
 			   pip_task_internal_t *schedi ) {
-  //pip_task_internal_t *schedi = taski->task_sched;
-  //schedi = taski->task_sched;
-
   DBGF( "task PIPID:%d   sched PIPID:%d", taski->pipid, schedi->pipid );
 
 #ifdef PIP_USE_FCONTEXT

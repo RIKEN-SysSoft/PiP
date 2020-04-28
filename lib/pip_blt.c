@@ -116,8 +116,8 @@ static void pip_wakeup( pip_task_internal_t *taski ) {
   RETURNV;
 }
 
-static int pip_change_sched( pip_task_internal_t *taski,
-			     pip_task_internal_t *schedi ) {
+static void pip_change_sched( pip_task_internal_t *taski,
+			      pip_task_internal_t *schedi ) {
   int ntc = -1;
   if( taski->task_sched != schedi ) {
     DBGF( "taski:%d[%d]-NTC:%d  schedi:%d[%d]-NTC:%d",
@@ -133,12 +133,13 @@ static int pip_change_sched( pip_task_internal_t *taski,
     taski->task_sched = schedi;
     (void) pip_atomic_fetch_and_add( &schedi->ntakecare, 1 );
   }
-  if( ntc == 0 && taski->task_sched->flag_exit ) return 1;
-  return 0;
+  if( ntc == 0 && taski->task_sched->flag_exit ) {
+    pip_wakeup( taski->task_sched );
+  }
 }
 
-static int pip_sched_ood_task( pip_task_internal_t *schedi,
-			       pip_task_internal_t *taski ) {
+static void pip_sched_ood_task( pip_task_internal_t *schedi,
+				pip_task_internal_t *taski ) {
   pip_task_annex_t	*annex = schedi->annex;
   int			flag;
 
@@ -153,8 +154,7 @@ static int pip_sched_ood_task( pip_task_internal_t *schedi,
     DBGF( "< oodq_len:%d", (int) schedi->oodq_len );
   }
   pip_spin_unlock( &annex->lock_oodq );
-  if( flag ) return 1;
-  return 0;
+  if( flag ) pip_wakeup( schedi );
 }
 
 static void pip_takein_ood_task( pip_task_internal_t *schedi ) {
@@ -487,9 +487,6 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
 static int pip_do_resume( pip_task_internal_t *taski,
 			  pip_task_internal_t *resume,
 			  pip_task_internal_t *schedi ) {
-  int flag = 0;
-
-#ifdef DEBUG
   if( schedi != NULL ) {
     ENTERF( "taski(PIPID:%d)  resume(PIPID:%d)  schedi(PIPID:%d)",
 	    taski->pipid, resume->pipid, schedi->pipid );
@@ -497,7 +494,6 @@ static int pip_do_resume( pip_task_internal_t *taski,
     ENTERF( "taski(PIPID:%d)  resume(PIPID:%d)  resume->schedi(PIPID:%d)",
 	    taski->pipid, resume->pipid, resume->task_sched->pipid );
   }
-#endif
 
   if( taski == resume ) RETURN( 0 );
   if( PIP_IS_RUNNING( resume ) ) RETURN( EPERM );
@@ -508,7 +504,7 @@ static int pip_do_resume( pip_task_internal_t *taski,
     ASSERTD( schedi == NULL );
   }
   PIP_RUN( resume );
-  flag = pip_change_sched( resume, schedi );
+  pip_change_sched( resume, schedi );
   if( taski->task_sched == schedi ) {
     /* same scheduling domain with the current task */
     DBGF( "RUN(self): %d[%d]", resume->pipid, schedi->pipid );
@@ -517,8 +513,7 @@ static int pip_do_resume( pip_task_internal_t *taski,
   } else {
     /* schedule the task as an OOD (Out Of (scheduling) Domain) task */
     DBGF( "RUN(OOD): %d[%d]", resume->pipid, schedi->pipid );
-    flag += pip_sched_ood_task( schedi, resume );
-    if( flag ) pip_wakeup( schedi );
+    pip_sched_ood_task( schedi, resume );
   }
   RETURN( 0 );
 }
@@ -650,15 +645,14 @@ int pip_migrate( pip_task_t *target ) {
   pip_task_internal_t	*targeti = PIP_TASKI(target);
   pip_task_internal_t	*nexti;
   pip_task_internal_t	*nschedi = targeti->task_sched;
-  int			flag = 0, err = 0;
+  int			err = 0;
 
   ENTERF( "PIPID:%d target-PIPID:%d", taski->pipid, targeti->pipid );
   if( cschedi != nschedi ) {
     if( ( nexti = pip_schedq_next( cschedi ) ) != NULL ) {
       /* the stack must be protected before migration*/
       pip_stack_protect( taski, nexti );
-      flag += pip_sched_ood_task( nschedi, taski );
-      if( flag ) pip_wakeup( nschedi );
+      pip_sched_ood_task( nschedi, taski );
       /* context-switch to the next task */
       DBGF( "PIPID:%d -->> PIPID:%d", taski->pipid, nexti->pipid );
       SET_CURR_TASK( cschedi, nexti );
@@ -668,12 +662,11 @@ int pip_migrate( pip_task_t *target ) {
     } else { /* if there is no task to schedule next, block scheduling task */
       /* the stack must be protected before migration*/
       pip_stack_protect( taski, cschedi );
-      flag += pip_sched_ood_task( nschedi, taski );
-      if( flag ) pip_wakeup( nschedi );
+      pip_sched_ood_task( nschedi, taski );
       SET_CURR_TASK( cschedi, NULL );
       pip_decouple_context( taski, cschedi );
     }
-    (void) pip_change_sched( taski, nschedi );
+    pip_change_sched( taski, nschedi );
   }
   RETURN( err );
 }
@@ -886,7 +879,7 @@ int pip_get_aux( pip_task_t *task, void **auxp ) {
 int pip_couple( void ) {
   pip_task_internal_t 	*taski = pip_task;
   pip_task_internal_t 	*nexti, *schedi;
-  int			flag = 0, err = 0;
+  int			err = 0;
 
   ENTER;
   IF_UNLIKELY( taski                == NULL  ) RETURN( EPERM );
@@ -898,16 +891,15 @@ int pip_couple( void ) {
   if( ( nexti = pip_schedq_next( schedi ) ) != NULL ) {
     taski->coupled_sched = schedi;
     pip_stack_protect( taski, nexti );
-    flag += pip_sched_ood_task( taski, taski );
-    flag += pip_change_sched(   taski, taski );
-    if( flag ) pip_wakeup( taski );
+    pip_sched_ood_task( taski, taski );
+    pip_change_sched(   taski, taski );
     SET_CURR_TASK( schedi, nexti );
     pip_swap_context( taski, nexti );
     SET_CURR_TASK( taski->task_sched, taski );
     /* has coupled !! */
   } else {
     pip_stack_protect( taski, schedi );
-    if( pip_sched_ood_task( taski, taski ) ) pip_wakeup( taski );
+    pip_sched_ood_task( taski, taski );
     SET_CURR_TASK( schedi, NULL );
     pip_decouple_context( taski, schedi );
   }
@@ -918,7 +910,7 @@ int pip_decouple( pip_task_t *task ) {
   pip_task_internal_t 	*taski  = pip_task;
   pip_task_internal_t 	*schedi = PIP_TASKI( task );
   pip_task_internal_t	*couple = taski->coupled_sched;
-  int			flag = 0, err = 0;
+  int			err = 0;
 
   IF_UNLIKELY( taski  == NULL              ) RETURN( EPERM );
   IF_UNLIKELY( couple == NULL              ) RETURN( EBUSY );
@@ -928,9 +920,8 @@ int pip_decouple( pip_task_t *task ) {
   taski->coupled_sched = NULL;
   if( schedi == NULL ) schedi = couple;
   pip_stack_protect( taski, taski );
-  flag += pip_change_sched(   taski, schedi );
-  flag += pip_sched_ood_task( schedi, taski );
-  if( flag ) pip_wakeup( schedi );
+  pip_change_sched(   taski, schedi );
+  pip_sched_ood_task( schedi, taski );
   SET_CURR_TASK( schedi, NULL );
   pip_decouple_context( taski, taski );
   RETURN( err );
