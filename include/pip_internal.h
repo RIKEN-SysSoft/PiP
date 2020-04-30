@@ -260,6 +260,18 @@ typedef struct pip_task_annex {
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
+/* The following env vars must be copied */
+/* if a PiP may have different env set.  */
+typedef struct pip_env {
+  char	*stop_on_start;
+  char	*gdb_path;
+  char	*gdb_command;
+  char	*gdb_signals;
+  char	*show_maps;
+  char	*show_pips;
+  char	*__reserved__[10];
+} pip_env_t;
+
 typedef struct pip_root {
   /* sanity check info */
   char			magic[PIP_MAGIC_WLEN];
@@ -291,6 +303,8 @@ typedef struct pip_root {
   /* for chaining signal handlers */
   struct sigaction	old_sigterm;
   struct sigaction	old_sigchld;
+  /* environments */
+  pip_env_t		envs;
   /* GDB Interface */
   struct pip_gdbif_root	*gdbif_root;
   /* for backtrace */

@@ -367,6 +367,25 @@ void pip_unset_signal_handler( int sig, struct sigaction *oldp ) {
   ASSERT( sigaction( sig, oldp, NULL ) != 0 );
 }
 
+/* save PiP environments */
+
+static void pip_save_envs( pip_root_t *root ) {
+  char *env;
+
+  if( ( env = getenv( PIP_ENV_STOP_ON_START ) ) != NULL )
+    root->envs.stop_on_start = strdup( env );
+  if( ( env = getenv( PIP_ENV_GDB_PATH     ) ) != NULL )
+    root->envs.gdb_path = strdup( env );
+  if( ( env = getenv( PIP_ENV_GDB_COMMAND  ) ) != NULL )
+    root->envs.gdb_command = strdup( env );
+  if( ( env = getenv( PIP_ENV_GDB_SIGNALS  ) ) != NULL )
+    root->envs.gdb_signals = strdup( env );
+  if( ( env = getenv( PIP_ENV_SHOW_MAPS    ) ) != NULL )
+    root->envs.show_maps = strdup( env );
+  if( ( env = getenv( PIP_ENV_SHOW_PIPS    ) ) != NULL )
+     root->envs.show_pips = strdup( env );
+}
+
 /* signal handlers */
 
 static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {}
@@ -498,9 +517,10 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
       free( root );
       RETURN( err );
     }
-
     pip_root = root;
     pip_task = taski;
+
+    pip_set_name( taski );
 
     pip_set_sigmask( SIGCHLD );
     pip_set_signal_handler( SIGCHLD,
@@ -510,7 +530,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 			    pip_sigterm_handler,
 			    &root->old_sigterm );
 
-    pip_set_name( taski );
+    pip_save_envs( root );
+
     pip_gdbif_initialize_root( ntasks );
     pip_gdbif_task_commit( taski );
     pip_debug_on_exceptions( taski );
@@ -594,6 +615,19 @@ int pip_fin( void ) {
     /* SIGTERM */
     pip_unset_signal_handler( SIGTERM,
 			      &pip_root->old_sigterm );
+
+    if( pip_root->envs.stop_on_start != NULL )
+      free( pip_root->envs.stop_on_start );
+    if( pip_root->envs.gdb_path      != NULL )
+      free( pip_root->envs.gdb_path      );
+    if( pip_root->envs.gdb_command   != NULL )
+      free( pip_root->envs.gdb_command   );
+    if( pip_root->envs.gdb_signals   != NULL )
+      free( pip_root->envs.gdb_signals   );
+    if( pip_root->envs.show_maps     != NULL )
+      free( pip_root->envs.show_maps     );
+    if( pip_root->envs.show_pips     != NULL )
+      free( pip_root->envs.show_pips     );
 
     memset( pip_root, 0, pip_root->size_whole );
     /* after this point DBG(F) macros cannot be used */
@@ -736,10 +770,32 @@ int pip_kill_all_tasks( void ) {
 }
 
 void pip_abort( void ) {
+  /* thin function may be called either root or tasks */
+  /* SIGTERM is delivered to root so that PiP tasks   */
+  /* are forced to ternminate                         */
   ENTER;
   if( pip_root != NULL ) {
     (void) pip_raise_signal( pip_root->task_root, SIGTERM );
   } else {
     kill( getpid(), SIGTERM );
   }
+  NEVER_REACH_HERE;
+}
+
+int pip_get_id( int pipid, pip_id_t *idp ) {
+  pip_task_internal_t *taski;
+  int err;
+
+  if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
+  if( idp == NULL ) RETURN( EINVAL );
+
+  taski = pip_get_task( pipid );
+  if( pip_is_threaded_() ) {
+    /* Do not call gettid(). if a task is a BLT     */
+    /* then gettid() returns the scheduling task ID */
+    *idp = (intptr_t) taski->task_sched->annex->thread;
+  } else {
+    *idp = (intptr_t) taski->annex->tid;
+  }
+  RETURN( 0 );
 }

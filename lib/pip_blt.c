@@ -233,6 +233,8 @@ pip_able_to_terminate_immediately( pip_task_internal_t *taski ) {
   return taski->flag_exit && !taski->ntakecare;
 }
 
+void pip_sleep( pip_task_internal_t *schedi )
+  __attribute__ ((noreturn));
 void pip_sleep( pip_task_internal_t *schedi ) {
   pip_task_internal_t 	*nexti;
   pip_task_t 		*next;
@@ -358,6 +360,8 @@ void pip_suspend_and_enqueue_generic( pip_task_internal_t *taski,
   RETURNV;
 }
 
+void pip_terminate_task( pip_task_internal_t *self )
+  __attribute__ ((noreturn));
 void pip_terminate_task( pip_task_internal_t *self ) {
   DBGF( "PIPID:%d  tid:%d (%d)",
 	self->pipid, self->annex->tid, pip_gettid() );

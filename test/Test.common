@@ -35,7 +35,6 @@ LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
 	$(PIPLDLIBS) $(PIELDFLAG)
 
 DEPINCS = ../test.h
-DEPLIBS += $(PIPLIBDIR_BUILD)/libpip.so $(PIPLIBDIR_BUILD)/libpip_init.so
 
 PROGRAMS_TO_INSTALL = # nothing
 

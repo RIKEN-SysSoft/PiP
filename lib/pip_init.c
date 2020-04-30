@@ -378,15 +378,15 @@ void pip_fprint_maps( FILE *fp ) {
 }
 
 static void pip_show_maps( void ) {
-  char *env = getenv( PIP_ENV_SHOW_MAPS );
+  char *env = pip_root->envs.show_maps;
   if( env != NULL && strcasecmp( env, "on" ) == 0 ) {
     pip_info_mesg( "*** Show MAPS" );
     pip_fprint_maps( stderr );
   }
 }
 
-void pip_show_pips( void ) {
-  char *env = getenv( PIP_ENV_SHOW_PIPS );
+static void pip_show_pips( void ) {
+  char *env = pip_root->envs.show_pips;
   if( env != NULL && strcasecmp( env, "on" ) == 0 ) {
     if( access( PIP_INSTALL_BIN_PIPS, X_OK ) == 0 ) {
       pip_info_mesg( "*** Show PIPS (%s)", PIP_INSTALL_BIN_PIPS );
@@ -560,7 +560,7 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
   if( done ) return;
   done = 1;
 
-  if( ( path = getenv( PIP_ENV_GDB_PATH ) ) != NULL &&
+  if( ( path = pip_root->envs.gdb_path ) != NULL &&
       *path != '\0' ) {
     ASSERT( sigemptyset( &sigs     ) );
     ASSERT( sigemptyset( &sigempty ) );
@@ -570,11 +570,11 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 	  pip_err_mesg( "PiP-gdb unable to execute (%s)\n", path );
       } else {
 	pip_path_gdb = path;
-	if( ( command = getenv( PIP_ENV_GDB_COMMAND ) ) != NULL &&
+	if( ( command = pip_root->envs.gdb_command ) != NULL &&
 	    *command != '\0' ) {
 	  if( access( command, R_OK ) == 0 ) pip_command_gdb = command;
 	}
-	if( ( signals = getenv( PIP_ENV_GDB_SIGNALS ) ) != NULL ) {
+	if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	  pip_set_gdb_sigset( signals, &sigs );
 	} else {
 	  /* default signals */
@@ -610,7 +610,7 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
     } else {
       /* exception signals must be blocked in thread mode */
       /* so that root hanlder can catch them */
-      if( ( signals = getenv( PIP_ENV_GDB_SIGNALS ) ) != NULL ) {
+      if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	pip_set_gdb_sigset( signals, &sigs );
 	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) ) {
 	  ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
