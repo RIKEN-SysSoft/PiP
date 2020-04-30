@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
-#define DEBUG
+//#define DEBUG
 
 #include <libgen.h>
 #include <test.h>
