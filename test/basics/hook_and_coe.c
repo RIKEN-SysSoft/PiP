@@ -62,9 +62,11 @@ static int set_coe_flag( int fd ) {
   return errno;
 }
 
+#ifdef DEBUG
 static int get_coe_flag( int fd ) {
   return fcntl( fd, F_GETFD ) & FD_CLOEXEC;
 }
+#endif
 
 #define PROCFD_PATH		"/proc/self/fd"
 static void list_fds( void ) {

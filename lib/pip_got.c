@@ -119,11 +119,12 @@ static void pip_unprotect_page( void *addr ) {
   FILE	 *fp_maps;
   char	 *line = NULL;
   size_t sz = 0;
-  size_t pgsz  = sysconf( _SC_PAGESIZE );
+  ssize_t pgsz  = sysconf( _SC_PAGESIZE );
   void	 *sta, *end;
   char	 perm[4];
   void   *page = (void*) ( (uintptr_t)addr & ~( pgsz - 1 ) );
 
+  ASSERT( pgsz <= 0 );
   if( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) != NULL ) {
     while( getline( &line, &sz, fp_maps ) > 0 ) {
       if( sscanf( line, "%p-%p %4s", &sta, &end, perm ) > 0 ) {
@@ -199,20 +200,10 @@ int pip_patch_GOT( char *dsoname, char *symname, void *new_addr ) {
   pip_phdr_itr_args itr_args;
 
   ENTER;
-  if( 0 ) {
-    /* call clone() to fill the GOT entry */
-    void *pip_dummy( void *dummy ) {return NULL;}
-    pthread_t th;
-    pthread_create( &th, NULL, pip_dummy, NULL );
-    pthread_join( th, NULL );
-  }
-  /* then find the GOT entry of the clone */
   itr_args.dsoname  = dsoname;
   itr_args.symname  = symname;
   itr_args.new_addr = new_addr;
-
   (void) dl_iterate_phdr( pip_replace_clone_itr, (void*) &itr_args );
-
   RETURN( 0 );
 }
 

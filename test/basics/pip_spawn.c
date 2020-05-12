@@ -30,6 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
+#define DEBUG
 #include <test.h>
 
 int main( int argc, char **argv ) {

@@ -42,6 +42,16 @@
 #endif
 #endif
 
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
+
 #ifndef DOXYGEN_INPROGRESS
 
 #ifndef _GNU_SOURCE
@@ -65,6 +75,7 @@
 #include <fcntl.h>
 #include <link.h>
 #include <dlfcn.h>
+#include <ucontext.h>
 
 #include <pip_blt.h>
 #include <pip_clone.h>
@@ -72,6 +83,7 @@
 #include <pip_signal.h>
 #include <pip_util.h>
 #include <pip_gdbif.h>
+#include <pip_debug.h>
 
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
@@ -126,7 +138,7 @@ typedef struct pip_task_internal {
       pip_task_t		queue; /* !!! DO NOT MOVE THIS AROUND !!! */
       pip_task_t		schedq;	/* scheduling queue */
       struct pip_task_internal	*task_sched; /* scheduling task */
-      pip_tls_t			tls;
+      pip_tls_t			tls;	     /* Thread Local Stiorage */
       pip_ctx_p			ctx_suspend; /* context to resume */
       pip_stack_protect_p	flag_stackpp; /* pointer to unprotect stack */
       /* end of one cache block (64 bytes) */
@@ -228,6 +240,8 @@ typedef struct pip_task_annex {
   pip_spawnhook_t		hook_before; /* before spawning hook */
   pip_spawnhook_t		hook_after;  /* after spawning hook */
   void				*hook_arg;   /* hook arg */
+  /* context to terminate */
+  ucontext_t			*uctx_exit;
   /* GDB interface */
   void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
@@ -343,6 +357,7 @@ extern int __attribute__ ((visibility ("default")))
 pip_init_task_implicitly( pip_root_t *root,
 			  pip_task_internal_t *task );
 
+extern  void pip_terminate_task( pip_task_internal_t *self ) PIP_PRIVATE;
 extern void pip_decouple_context( pip_task_internal_t *taski,
 				  pip_task_internal_t *schedi ) PIP_PRIVATE;
 extern void pip_couple_context( pip_task_internal_t *schedi,
@@ -351,6 +366,8 @@ extern void pip_swap_context( pip_task_internal_t *taski,
 			      pip_task_internal_t *nexti ) PIP_PRIVATE;
 extern void pip_stack_protect( pip_task_internal_t *taski,
 			       pip_task_internal_t *nexti ) PIP_PRIVATE;
+extern void pip_stack_unprotect( pip_task_internal_t *taski ) PIP_PRIVATE;
+extern void pip_stack_wait( pip_task_internal_t *taski ) PIP_PRIVATE;
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
@@ -363,16 +380,6 @@ extern int  pip_patch_GOT( char*, char*, void* ) PIP_PRIVATE;
 extern void pip_undo_patch_GOT( void ) PIP_PRIVATE;
 extern int  pip_wrap_clone( void ) PIP_PRIVATE;
 
-#ifdef AH
-extern void pip_swap_context( pip_task_internal_t*,
-			      pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_decouple_context( pip_task_internal_t*,
-				  pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_couple_context( pip_task_internal_t*,
-				pip_task_internal_t* ) PIP_PRIVATE;
-extern void pip_stack_protect( pip_task_internal_t*,
-			       pip_task_internal_t* ) PIP_PRIVATE;
-#endif
 extern void pip_sleep( pip_task_internal_t* ) PIP_PRIVATE;
 
 extern void pip_set_signal_handler( int sig, void(*)(),
@@ -383,8 +390,7 @@ extern void pip_unset_sigmask( void ) PIP_PRIVATE;
 extern int  pip_signal_wait( int ) PIP_PRIVATE;
 
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
-extern int  pip_check_sync_flag( uint32_t ) PIP_PRIVATE;
-extern int  pip_check_task_flag( uint32_t ) PIP_PRIVATE;
+extern int  pip_check_sync_flag( uint32_t* ) PIP_PRIVATE;
 
 extern int  pip_dlclose( void* );
 
@@ -430,7 +436,10 @@ extern void pip_debug_on_exceptions( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_message( FILE *, char*, const char*, va_list ) PIP_PRIVATE;
 extern pip_task_internal_t *pip_current_task( int ) PIP_PRIVATE;
 
-#include <pip_debug.h>
+
+INLINE int pip_is_flag_excl( uint32_t flags, uint32_t val ) {
+  return ( flags & val ) == ( flags | val );
+}
 
 /* semaphore */
 

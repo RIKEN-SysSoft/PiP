@@ -128,7 +128,7 @@ static char **pip_copy_env( char **envsrc, int pipid ) {
 
 size_t pip_stack_size( void ) {
   char 		*env, *endptr;
-  size_t 	sz, scale;
+  ssize_t 	sz, scale;
   int 		i;
 
   if( ( sz = pip_root->stack_size_blt ) == 0 ) {
@@ -137,7 +137,7 @@ size_t pip_stack_size( void ) {
 	( env = getenv( "OMP_STACKSIZE" ) ) == NULL ) {
       sz = PIP_STACK_SIZE;	/* default */
     } else {
-      if( ( sz = (size_t) strtol( env, &endptr, 10 ) ) <= 0 ) {
+      if( ( sz = (ssize_t) strtol( env, &endptr, 10 ) ) <= 0 ) {
 	pip_err_mesg( "stacksize: '%s' is illegal and "
 		      "default size (%d KiB) is set",
 		      env,
@@ -148,10 +148,13 @@ size_t pip_stack_size( void ) {
 	switch( *endptr ) {
 	case 'T': case 't':
 	  scale *= 1024;
+	  /* fall through */
 	case 'G': case 'g':
 	  scale *= 1024;
+	  /* fall through */
 	case 'M': case 'm':
 	  scale *= 1024;
+	  /* fall through */
 	case 'K': case 'k':
 	case '\0':		/* default is KiB */
 	  scale *= 1024;
@@ -200,7 +203,8 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
       }
     }
     if( nfds > 0 ) {
-      ASSERT( ( *fd_listp = (int*) malloc( sizeof(int) * ( nfds + 1 ) ) ) == NULL );
+      *fd_listp = (int*) malloc( sizeof(int) * ( nfds + 1 ) );
+      ASSERT( fd_listp == NULL );
       rewinddir( dir );
       i = 0;
       while( ( direntp = readdir( dir ) ) != NULL ) {
@@ -412,16 +416,6 @@ int pip_do_corebind( pid_t tid, uint32_t coreno, cpu_set_t *oldsetp ) {
   }
 
   if( flags == 0 ) {
-    CPU_ZERO( &cpuset );
-    CPU_SET( coreno, &cpuset );
-    /* here, do not call pthread_setaffinity(). This MAY fail */
-    /* because pd->tid is NOT set yet.  I do not know why.    */
-    /* But it is OK to call sched_setaffinity() with tid.     */
-    if( sched_setaffinity( tid, sizeof(cpuset), &cpuset ) != 0 ) {
-      RETURN( errno );
-    }
-
-  } else if( ( flags & PIP_CPUCORE_NTH ) == PIP_CPUCORE_NTH ) {
     int ncores, nth;
 
     if( sched_getaffinity( tid, sizeof(cpuset), &cpuset ) != 0 ) {
@@ -441,15 +435,25 @@ int pip_do_corebind( pid_t tid, uint32_t coreno, cpu_set_t *oldsetp ) {
 	break;
       }
     }
+  } else if( ( flags & PIP_CPUCORE_ABS ) == PIP_CPUCORE_ABS ) {
+    CPU_ZERO( &cpuset );
+    CPU_SET( coreno, &cpuset );
+    /* here, do not call pthread_setaffinity(). This MAY fail */
+    /* because pd->tid is NOT set yet.  I do not know why.    */
+    /* But it is OK to call sched_setaffinity() with tid.     */
+    if( sched_setaffinity( tid, sizeof(cpuset), &cpuset ) != 0 ) {
+      RETURN( errno );
+    }
   }
   RETURN( err );
 }
 
 static int pip_undo_corebind( pid_t tid, uint32_t coreno, cpu_set_t *oldsetp ) {
+  int flags = coreno >> PIP_CPUCORE_FLAG_SHIFT;
   int err = 0;
 
   ENTER;
-  if( ( coreno >> PIP_CPUCORE_FLAG_SHIFT ) & PIP_CPUCORE_ASIS ) {
+  if( flags != PIP_CPUCORE_ASIS ) {
     if( tid == 0 ) tid = pip_gettid();
     /* here, do not call pthread_setaffinity().  See above comment. */
     if( sched_setaffinity( tid, sizeof(cpu_set_t), oldsetp ) != 0 ) {
@@ -470,8 +474,7 @@ int pip_get_dso( int pipid, void **loaded ) {
 }
 
 static void pip_glibc_init( pip_symbols_t *symbols,
-			    pip_spawn_args_t *args,
-			    void *loaded ) {
+			    pip_spawn_args_t *args ) {
   /* setting GLIBC variables */
   if( symbols->libc_init != NULL ) {
     DBGF( ">> _init@%p", symbols->libc_init );
@@ -525,19 +528,29 @@ static void pip_glibc_init( pip_symbols_t *symbols,
 #endif
 }
 
-void pip_return_from_start_func( pip_task_internal_t *taski, int extval ) {
-  ENTER;
-  if( taski->annex->hook_after != NULL ) {
-    void *hook_arg = taski->annex->hook_arg;
-    int err;
-    /* the after hook is supposed to free the hook_arg being malloc()ed  */
-    /* by root and this is the reason to call this from the root context */
-    if( ( err = taski->annex->hook_after( hook_arg ) ) != 0 ) {
-      pip_err_mesg( "PIPID:%d after-hook returns %d", taski->pipid, err );
-      if( extval == 0 ) extval = err;
-    }
+static int pip_call_before_hook( pip_task_internal_t *taski ) {
+  int err = 0;
+  if( taski->annex->hook_before != NULL &&
+      ( err = taski->annex->hook_before( taski->annex->hook_arg ) ) != 0 ) {
+    pip_err_mesg( "PIPID:%d before-hook returns %d", taski->pipid, err );
   }
-  pip_do_exit( taski, extval );
+  return err;
+}
+
+int pip_call_after_hook( pip_task_internal_t *taski, int extval ) {
+  int err = 0;
+  if( taski->annex->hook_after != NULL &&
+      ( err = taski->annex->hook_after( taski->annex->hook_arg ) ) != 0 ) {
+    pip_err_mesg( "PIPID:%d after-hook returns %d", taski->pipid, err );
+    if( extval == 0 ) extval = err;
+  }
+  return extval;
+}
+
+static void pip_return_from_start_func( pip_task_internal_t *taski,
+					int extval ) {
+  int err = pip_call_after_hook( taski, extval );
+  pip_do_exit( taski, err );
   NEVER_REACH_HERE;
 }
 
@@ -558,7 +571,7 @@ static void pip_reset_signal_handler( int sig ) {
     struct sigaction	sigact;
     memset( &sigact, 0, sizeof( sigact ) );
     sigact.sa_sigaction = (void(*)(int,siginfo_t*,void*)) SIG_DFL;
-    ASSERT( sigaction( sig, &sigact, NULL )   != 0 );
+    ASSERT( sigaction( sig, &sigact, NULL ) != 0 );
   } else {
     sigset_t sigmask;
     (void) sigemptyset( &sigmask );
@@ -588,82 +601,85 @@ static void pip_start_user_func( pip_spawn_args_t *args,
   char **envv     = args->envv;
   void *start_arg = args->start_arg;
   char *env_stop;
-  int	i, err, extval;
+  ucontext_t	uctx_exit;
+  volatile int	flag = 0;
+  int	extval, i, err = 0;
 
   ENTER;
-  pip_glibc_init( &self->annex->symbols, args, self->annex->loaded );
 
-  DBGF( "fd_list:%p", args->fd_list );
-  if( args->fd_list != NULL ) {
-    for( i=0; args->fd_list[i]>=0; i++ ) { /* Close-on-exec FDs */
-      DBGF( "COE: %d", args->fd_list[i] );
-      (void) close( args->fd_list[i] );
-    }
+  if( pip_is_threaded_() ) {
+    ASSERT( getcontext( &uctx_exit ) );
+    self->annex->uctx_exit = &uctx_exit;
   }
-  pip_gdbif_hook_before( self );
-
-  if( ( env_stop = pip_root->envs.stop_on_start ) != NULL ) {
-    int pipid_stop = strtol( env_stop, NULL, 10 );
-    if( pipid_stop < 0 || pipid_stop == self->pipid ) {
-      pip_info_mesg( "PiP task[%d] is SIGSTOPed (%s=%s)",
-		     self->pipid, PIP_ENV_STOP_ON_START, env_stop );
-      pip_kill( self->pipid, SIGSTOP );
+  if( !flag ) {
+    flag = 1;
+    DBGF( "fd_list:%p", args->fd_list );
+    if( args->fd_list != NULL ) {
+      for( i=0; args->fd_list[i]>=0; i++ ) { /* Close-on-exec FDs */
+	DBGF( "COE: %d", args->fd_list[i] );
+	(void) close( args->fd_list[i] );
+      }
     }
-  }
+    pip_glibc_init( &self->annex->symbols, args );
+    pip_gdbif_hook_before( self );
 
-  if( self->annex->opts & PIP_TASK_INACTIVE ) {
-    /* inactive task: suspend myself */
-    pip_suspend_and_enqueue_generic( self,
-				     queue,
-				     1, /* lock flag */
-				     pip_start_cb,
-				     self );
-    /* resumed */
-  } else {
-    /* active task and take tasks in the queue, if any */
-    if( queue != NULL ) {
-      int n = PIP_TASK_ALL;
-      err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
+    err = pip_call_before_hook( self );
+    if( !err ) {
+      if( self->annex->opts & PIP_TASK_INACTIVE ) {
+	DBGF( "INACTIVE" );
+	pip_suspend_and_enqueue_generic( self,
+					 queue,
+					 1, /* lock flag */
+					 pip_start_cb,
+					 self );
+	/* resumed */
+      } else {
+	DBGF( "ACTIVE" );
+	if( queue != NULL ) {
+	  int n = PIP_TASK_ALL;
+	  err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
+	}
+	/* since there is no callback, the cb func is called explicitly */
+	pip_start_cb( (void*) self );
+      }
     }
-    /* since there is no callback, the cb func is called explicitly */
-    pip_start_cb( (void*) self );
-  }
-
-  if( self->annex->hook_before != NULL &&
-      ( err = self->annex->hook_before( self->annex->hook_arg ) ) != 0 ) {
-    pip_err_mesg( "[%s] before-hook returns %d", argv[0], err );
-    extval = err;
-
-  } else {
-    if( self->annex->symbols.start == NULL ) {
-      /* calling hook function, if any */
-      DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
-	    args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1] );
-      extval = self->annex->symbols.main( args->argc, argv, envv );
-      DBGF( "[%d] << main@%p(%d,%s,%s,...) = %d",
-	    args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1],
-	    extval );
+    if( !err ) {
+      if( ( env_stop = pip_root->envs.stop_on_start ) != NULL ) {
+	int pipid_stop = strtol( env_stop, NULL, 10 );
+	if( pipid_stop < 0 || pipid_stop == self->pipid ) {
+	  pip_info_mesg( "PiP task[%d] is SIGSTOPed (%s=%s)",
+			 self->pipid, PIP_ENV_STOP_ON_START, env_stop );
+	  pip_kill( self->pipid, SIGSTOP );
+	}
+      }
+    }
+    if( !err ) {
+      if( self->annex->symbols.start == NULL ) {
+	/* calling hook function, if any */
+	DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
+	      args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1] );
+	extval = self->annex->symbols.main( args->argc, argv, envv );
+	DBGF( "[%d] << main@%p(%d,%s,%s,...) = %d",
+	      args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1],
+	      extval );
+      } else {
+	DBGF( "[%d] >> %s:%p(%p)",
+	      args->pipid, args->funcname,
+	      self->annex->symbols.start, start_arg );
+	extval = self->annex->symbols.start( start_arg );
+	DBGF( "[%d] << %s:%p(%p) = %d",
+	      args->pipid, args->funcname,
+	      self->annex->symbols.start, start_arg, extval );
+      }
     } else {
-      DBGF( "[%d] >> %s:%p(%p)",
-	    args->pipid, args->funcname,
-	    self->annex->symbols.start, start_arg );
-      extval = self->annex->symbols.start( start_arg );
-      DBGF( "[%d] << %s:%p(%p) = %d",
-	    args->pipid, args->funcname,
-	    self->annex->symbols.start, start_arg, extval );
+      extval = err;
     }
+    pip_return_from_start_func( self, extval );
+  } else {
+    /* only with the thread mode */
+    ASSERT( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
+    pthread_exit( NULL );
   }
-#ifdef AH
-  if( (pid_t) self->task_sched->annex->tid != pip_gettid() ) {
-    /* when a pip task call fork() and the forked */
-    /* process returns from main, this may happen  */
-    /* XXXXX in BLT this may happen !!!!! */
-    DBGF( "Fork?? (%d : %d)", self->task_sched->annex->tid, pip_gettid() );
-    exit( extval );
-    NEVER_REACH_HERE;
-  }
-#endif
-  pip_return_from_start_func( self, extval );
   NEVER_REACH_HERE;
 }
 
@@ -685,9 +701,6 @@ static void* pip_spawn_top( void *thargs )  {
   int			err    = 0;
 
   ENTER;
-  if( !pip_is_threaded_() ) {
-    pip_set_signal_handler( SIGQUIT, pip_sigquit_handler, NULL );
-  }
   pip_set_name( self );
   pip_save_tls( &self->tls );
   pip_memory_barrier();
@@ -696,6 +709,8 @@ static void* pip_spawn_top( void *thargs )  {
     pip_reset_signal_handler( SIGCHLD );
     pip_reset_signal_handler( SIGTERM );
     (void) setpgid( 0, (pid_t) pip_root->task_root->annex->tid );
+  } else {
+    pip_set_signal_handler( SIGQUIT, pip_sigquit_handler, NULL );
   }
   if( ( err = pip_do_corebind( 0, coreno, NULL ) ) != 0 ) {
     pip_warn_mesg( "failed to bound CPU core:%d (%d)", coreno, err );
@@ -760,6 +775,19 @@ static int pip_find_a_free_task( int *pipidp ) {
   RETURN( err );
 }
 
+static int pip_check_active_flag( uint32_t flags ) {
+  uint32_t f = flags & PIP_TASK_MASK;
+
+  DBGF( "flags:0x%x", flags );
+  if( f ) {
+    if( pip_is_flag_excl( f, PIP_TASK_ACTIVE   ) ) goto OK;
+    if( pip_is_flag_excl( f, PIP_TASK_INACTIVE ) ) goto OK;
+    return 1;
+  }
+ OK:
+  return 0;
+}
+
 static int pip_do_task_spawn( pip_spawn_program_t *progp,
 			      int pipid,
 			      int coreno,
@@ -771,7 +799,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   pip_spawn_args_t	*args = NULL;
   pip_task_internal_t	*task = NULL;
   size_t		stack_size;
-  int 			op, err = 0;
+  int 			err = 0;
 
   ENTER;
   if( !pip_is_initialized()   ) RETURN( EPERM  );
@@ -784,15 +812,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     RETURN( EINVAL );
   }
   /* starting from an arbitrary func */
-  if( ( op = pip_check_sync_flag( opts ) ) < 0 ) {
-    DBGF( "opts:0x%x  op:0x%x", opts, op );
-    RETURN( EINVAL );
-  }
-  if( pip_check_task_flag( opts ) < 0 ) {
-    DBGF( "opts:0x%x  op:0x%x", opts, op );
-    RETURN( EINVAL );
-  }
-  opts = op;
+  if( pip_check_sync_flag(   &opts ) ) RETURN( EINVAL );
+  if( pip_check_active_flag(  opts ) ) RETURN( EINVAL );
 
   if( progp->funcname == NULL &&
       progp->prog     == NULL ) progp->prog = progp->argv[0];
@@ -808,8 +829,9 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   task->type       = PIP_TYPE_TASK;
   task->task_sched = task;
   task->ntakecare  = 1;
-  task->annex->opts      = opts;
-  task->annex->task_root = pip_root;
+
+  task->annex->opts          = opts;
+  task->annex->task_root     = pip_root;
   if( progp->exp != NULL ) {
     task->annex->import_root = progp->exp;
   } else {

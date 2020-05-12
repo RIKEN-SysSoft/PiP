@@ -96,24 +96,28 @@ void pip_info_fmesg( FILE *fp, const char *format, ... ) {
   va_start( ap, format );
   if( fp == NULL ) fp = stderr;
   pip_message( fp, "PiP-INFO%s ", format, ap );
+  va_end( ap );
 }
 
 void pip_info_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   pip_message( stderr, "PiP-INFO%s ", format, ap );
+  va_end( ap );
 }
 
 void pip_warn_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   pip_message( stderr, "PiP-WRN%s ", format, ap );
+  va_end( ap );
 }
 
 void pip_err_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   pip_message( stderr, "\nPiP-ERR%s ", format, ap );
+  va_end( ap );
 }
 
 static char *pip_path_gdb;
@@ -154,40 +158,67 @@ pip_task_internal_t *pip_current_task( int tid ) {
 
 static int
 pip_pipid_str( char *p, size_t sz, int pipid, int upper ) {
-  int	n;
+  int	n = 0;
 
-  if( 0 <= pipid ) {
-    if( upper ) {
-      n = snprintf( p, sz, "T%d", pipid );
-    } else {
-      n = snprintf( p, sz, "t%d", pipid );
-    }
-  } else if( pipid == PIP_PIPID_ROOT ) {
-    if( upper ) {
+  /* do not call ctype function here !! */
+  if( upper ) {
+    switch( pipid ) {
+    case PIP_PIPID_ROOT:
       n = snprintf( p, sz, "R" );
-    } else {
-      n = snprintf( p, sz, "r" );
-    }
-  } else if( pipid == PIP_PIPID_MYSELF ) {
-    if( upper ) {
+      break;
+    case PIP_PIPID_MYSELF:
       n = snprintf( p, sz, "S" );
-    } else {
-      n = snprintf( p, sz, "s" );
-    }
-  } else if( pipid == PIP_PIPID_ANY ) {
-    if( upper ) {
+      break;
+    case PIP_PIPID_ANY:
       n = snprintf( p, sz, "A" );
-    } else {
-      n = snprintf( p, sz, "a" );
-    }
-  } else if( pipid == PIP_PIPID_NULL ) {
-    if( upper ) {
+      break;
+    case PIP_PIPID_NULL:
       n = snprintf( p, sz, "N" );
-    } else {
-      n = snprintf( p, sz, "n" );
+      break;
+    default:
+      if( pip_root != NULL && pip_root->ntasks > 0 ) {
+	if( 0 <= pipid && pipid < pip_root->ntasks ) {
+	  n = snprintf( p, sz, "T%d", pipid );
+	} else {
+	  n = snprintf( p, sz, "?" );
+	}
+      } else {
+	if( 0 <= pipid ) {
+	  n = snprintf( p, sz, "T%d", pipid );
+	} else {
+	  n = snprintf( p, sz, "?" );
+	}
+      }
     }
   } else {
-    n = snprintf( p, sz, "X" );
+    switch( pipid ) {
+    case PIP_PIPID_ROOT:
+      n = snprintf( p, sz, "r" );
+      break;
+    case PIP_PIPID_MYSELF:
+      n = snprintf( p, sz, "s" );
+      break;
+    case PIP_PIPID_ANY:
+      n = snprintf( p, sz, "a" );
+      break;
+    case PIP_PIPID_NULL:
+      n = snprintf( p, sz, "n" );
+      break;
+    default:
+      if( pip_root != NULL && pip_root->ntasks > 0 ) {
+	if( 0 <= pipid && pipid < pip_root->ntasks ) {
+	  n = snprintf( p, sz, "t%d", pipid );
+	} else {
+	  n = snprintf( p, sz, "?" );
+	}
+      } else {
+	if( 0 <= pipid ) {
+	  n = snprintf( p, sz, "t%d", pipid );
+	} else {
+	  n = snprintf( p, sz, "?" );
+	}
+      }
+    }
   }
   return n;
 }
@@ -212,14 +243,12 @@ size_t pip_idstr( char *p, size_t s ) {
   pid_t			tid  = pip_gettid();
   pip_task_internal_t	*ctx = pip_task;
   pip_task_internal_t	*kc  = pip_current_task( tid );
-  char 			*opn = "[", *cls = "]", *delim = "|";
+  char 			*opn = "[", *cls = "]", *delim = ":";
   int			n;
 
 #ifdef DEBUG
   pip_task_internal_t	*uc  =
     ( kc == NULL ) ? NULL : kc->annex->task_curr;
-  char 			*same  = "<";
-
   pip_task_internal_t	*schd =
     ( uc == NULL ) ? NULL : uc->task_sched;
   char 			*sched = "/";
@@ -227,33 +256,16 @@ size_t pip_idstr( char *p, size_t s ) {
 
   n = snprintf( p, s, "%s", opn ); 	s -= n; p += n;
   {
-    n = snprintf( p, s, "%d:", tid ); 	s -= n; p += n;
+    n = snprintf( p, s, "%d(", tid ); 	s -= n; p += n;
     n = pip_task_str( p, s, kc ); 	s -= n; p += n;
+    n = snprintf( p, s, ")%s", delim );	s -= n; p += n;
 #ifdef DEBUG
-    if( uc != kc || ctx != kc ) {
-      n = snprintf( p, s, delim ); 	s -= n; p += n;
-      if( uc != kc ) {
-	n = pip_task_str( p, s, uc );	s -= n; p += n;
-      } else {
-	n = snprintf( p, s, same ); 	s -= n; p += n;
-      }
-      if( uc != schd ) {
-	n = snprintf( p, s, sched ); 	s -= n; p += n;
-	n = pip_task_str( p, s, schd );	s -= n; p += n;
-      }
-      n = snprintf( p, s, delim ); 	s -= n; p += n;
-      if( ctx == NULL || ctx != uc ) {
-	n = pip_task_str( p, s, ctx );	s -= n; p += n;
-      } else {
-	n = snprintf( p, s, same ); 	s -= n; p += n;
-      }
-    }
-#else
-    if( ctx != kc ) {
-      n = snprintf( p, s, delim ); 	s -= n; p += n;
-      n = pip_task_str( p, s, ctx );	s -= n; p += n;
-    }
+    n = pip_task_str( p, s, uc );	s -= n; p += n;
+    n = snprintf( p, s, sched ); 	s -= n; p += n;
+    n = pip_task_str( p, s, schd );	s -= n; p += n;
 #endif
+    n = snprintf( p, s, delim ); 	s -= n; p += n;
+    n = pip_task_str( p, s, ctx );	s -= n; p += n;
   }
   n = snprintf( p, s, "%s", cls ); 	s -= n; p += n;
 

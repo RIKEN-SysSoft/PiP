@@ -35,10 +35,6 @@
 
 #include <pip_internal.h>
 
-#ifdef PIP_USE_FCONTEXT
-//#define PIPFCTX_WORKAROUND
-#endif
-
 /* STACK PROTECT */
 
 void pip_stack_protect( pip_task_internal_t *taski,
@@ -54,11 +50,11 @@ void pip_stack_protect( pip_task_internal_t *taski,
   }
 #endif
   taski->flag_stackp  = 1;
-  nexti->flag_stackpp = &taski->flag_stackp;
   pip_memory_barrier();
+  nexti->flag_stackpp = &taski->flag_stackp;
 }
 
-static void pip_stack_unprotect( pip_task_internal_t *taski ) {
+void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
   pip_memory_barrier();
   IF_UNLIKELY( taski->flag_stackpp == NULL ) {
@@ -70,28 +66,29 @@ static void pip_stack_unprotect( pip_task_internal_t *taski ) {
     DBGF( "PIPID:%d UN-protect PIPID:%d", taski->pipid, prev->pipid );
     if( *taski->flag_stackpp == 0 ) DBGF( "ALREADY UN-protected" );
 #endif
-    pip_memory_barrier();
     *taski->flag_stackpp = 0;
     taski->flag_stackpp  = NULL;
   }
 }
 
-static void pip_stack_wait( pip_task_internal_t *taski ) {
+void pip_stack_wait( pip_task_internal_t *taski ) {
   int i = 0, j;
 
-  DBGF( "PIPID:%d waits for unprotect", taski->pipid );
+  pip_memory_barrier();
   if( !taski->flag_stackp ) goto done;
+  DBGF( "PIPID:%d waits for unprotect", taski->pipid );
   for( i=0; i<pip_root->yield_iters; i++ ) {
+    pip_memory_barrier();
     pip_pause();
     if( !taski->flag_stackp ) goto done;
   }
-  if( !taski->flag_stackp ) goto done;
   for( i=0; i<PIP_BUSYWAIT_COUNT; i++ ) {
-    for( j=0; j<pip_root->yield_iters; j++ ) {
-      pip_pause();
-      if( !taski->flag_stackp ) goto done;
-    }
     pip_system_yield();
+    for( j=0; j<pip_root->yield_iters; j++ ) {
+      if( !taski->flag_stackp ) goto done;
+      pip_pause();
+      DPAUSE;
+    }
     DBGF( "PIPID:%d -- WAITING (count=%d*%d) ...",
 	  taski->pipid, i, pip_root->yield_iters );
   }
@@ -187,9 +184,6 @@ void pip_swap_context( pip_task_internal_t *taski,
 static void pip_call_sleep( pip_transfer_t tr ) {
   pip_ctx_data_t *dp;
 
-#ifdef PIPFCTX_WORKAROUND
-  tr = pip_jump_fctx( tr.ctx, NULL );
-#endif
   dp = (pip_ctx_data_t*) tr.data;
   ASSERTD( dp->old->ctx_savep == NULL );
 
@@ -231,16 +225,6 @@ void pip_decouple_context( pip_task_internal_t *taski,
 			 /*  pip_root->stack_size_sleep,  */
 			 pip_call_sleep );
     schedi->annex->ctx_sleep = ctx;
-#ifdef PIPFCTX_WORKAROUND
-    if( 0 ) {
-      pip_transfer_t tr = pip_jump_fctx( ctx, NULL );
-      ctx = tr.ctx;
-    }
-    pip_sem_t sem;
-    pip_sem_init( &sem );
-    pip_sem_post( &sem );
-    pip_sem_wait( &sem );
-#endif
   }
   pip_preproc_ctxsw( &data, taski, schedi, &taski->ctx_suspend );
   tr = pip_jump_fctx( ctx, (void*) &data );
@@ -292,6 +276,7 @@ void pip_couple_context( pip_task_internal_t *schedi,
   pip_transfer_t 	tr;
 
   pip_stack_wait( taski );
+
   ctx = taski->ctx_suspend;
 #ifdef DEBUG
   ASSERTD( ctx == NULL );

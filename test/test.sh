@@ -45,7 +45,7 @@ myself=$dir_real/$base;
 
 export PATH=$dir_real:$dir_real/util:$PATH
 
-check_command "pip_mode";
+check_command "pip_mode_check";
 check_command "dlmopen_count";
 check_command "ompnumthread";
 
@@ -267,7 +267,7 @@ run_test_T=''
 for pip_mode in $pip_mode_list
 do
 	eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
-	case `PIP_MODE=$pip_mode_name $dir/util/pip_mode 2>/dev/null | grep -e process -e thread` in
+	case `PIP_MODE=$pip_mode_name $dir/util/pip_mode_check 2>/dev/null | grep -e process -e thread` in
 	$pip_mode_name)
 		eval "run_test_${pip_mode}=${pip_mode}"
 		if [ x"$SUMMARY_FILE" = x ]; then

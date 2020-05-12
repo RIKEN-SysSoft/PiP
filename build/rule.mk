@@ -34,6 +34,7 @@ misc-clean:
 	@echo \
 	$(RM) *.E *.S
 	$(RM) \#*\# .\#* *~
+	$(RM) core.*
 	-$(RM) .nfs*
 .PHONY: misc-clean
 

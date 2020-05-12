@@ -73,10 +73,7 @@ int main( int argc, char **argv ) {
       CHECK( pip_suspend_and_enqueue(&expp->queue,NULL,NULL), RV, return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
 	CHECK( pip_couple(),              RV, return(EXIT_FAIL) );
-	//CHECK( tid==pip_gettid(),        !RV, return(EXIT_FAIL) );
 	CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
-	//CHECK( tid==pip_gettid(),         RV, return(EXIT_FAIL) );
-	//CHECK( pip_yield(PIP_YIELD_USER), (RV&&RV!=EINTR), return(EXIT_FAIL) );
       }
     } else {
       pip_task_t *task;

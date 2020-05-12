@@ -94,7 +94,7 @@ static uint64_t pip_measure_yieldtime( void ) {
 
 pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
 
-static int pip_check_opt_and_env( int *optsp ) {
+static int pip_check_opt_and_env( uint32_t *optsp ) {
   extern pip_spinlock_t pip_lock_got_clone;
   int opts   = *optsp;
   int mode   = ( opts & PIP_MODE_MASK );
@@ -303,13 +303,9 @@ void pip_reset_task_struct( pip_task_internal_t *taski ) {
   pip_sem_init(   &annex->sleep     );
 }
 
-static int
-pip_is_flag_excl( uint32_t flags, uint32_t val ) {
-  return ( flags & val ) == ( flags | val );
-}
-
-int pip_check_sync_flag( uint32_t flags ) {
-  uint32_t f = flags & PIP_SYNC_MASK;
+int pip_check_sync_flag( uint32_t *optsp ) {
+  int opts = *optsp;
+  uint32_t f = opts & PIP_SYNC_MASK;
 
   DBGF( "flags:0x%x", f );
   if( f ) {
@@ -321,34 +317,23 @@ int pip_check_sync_flag( uint32_t flags ) {
   } else {
     char *env = getenv( PIP_ENV_SYNC );
     if( env == NULL ) {
-      f |= PIP_SYNC_AUTO;
+      f = PIP_SYNC_AUTO;
     } else if( strcasecmp( env, PIP_ENV_SYNC_AUTO     ) == 0 ) {
-      f |= PIP_SYNC_AUTO;
+      f = PIP_SYNC_AUTO;
     } else if( strcasecmp( env, PIP_ENV_SYNC_BUSY     ) == 0 ||
 	       strcasecmp( env, PIP_ENV_SYNC_BUSYWAIT ) == 0 ) {
-      f |= PIP_SYNC_BUSYWAIT;
+      f = PIP_SYNC_BUSYWAIT;
     } else if( strcasecmp( env, PIP_ENV_SYNC_YIELD    ) == 0 ) {
-      f |= PIP_SYNC_YIELD;
+      f = PIP_SYNC_YIELD;
     } else if( strcasecmp( env, PIP_ENV_SYNC_BLOCK    ) == 0 ||
 	       strcasecmp( env, PIP_ENV_SYNC_BLOCKING ) == 0 ) {
-      f |= PIP_SYNC_BLOCKING;
+      f = PIP_SYNC_BLOCKING;
     }
   }
  OK:
-  return flags;
-}
-
-int pip_check_task_flag( uint32_t flags ) {
-  uint32_t f = flags & PIP_TASK_MASK;
-
-  DBGF( "flags:0x%x", f );
-  if( f ) {
-    if( pip_is_flag_excl( f, PIP_TASK_ACTIVE   ) ) goto OK;
-    if( pip_is_flag_excl( f, PIP_TASK_INACTIVE ) ) goto OK;
-    return -1;
-  }
- OK:
-  return flags;
+  *optsp = ( opts & ~PIP_SYNC_MASK ) | f;
+  DBGF( "sync-flag %x | %x => %x", f, opts, *optsp );
+  return 0;
 }
 
 void pip_set_signal_handler( int sig,
@@ -414,15 +399,15 @@ void pip_unset_sigmask( void ) {
 #define PIP_CACHE_ALIGN(X) \
   ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
 
-int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
+int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
   pip_root_t		*root;
   pip_task_internal_t	*taski;
-  size_t	sz;
+  size_t		sz;
+  int			ntasks, pipid;
+  int			i, err = 0;
 #ifndef PIP_INIT_IMPLICITLY
-  char		*envroot, *envtask;
+  char			*envroot, *envtask;
 #endif
-  int		ntasks, pipid;
-  int		i, err = 0;
 
 #ifdef MCHECK
   mcheck( NULL );
@@ -445,8 +430,8 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     if( ntasks <= 0             ) RETURN( EINVAL );
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
-    if( ( err  = pip_check_opt_and_env( &opts ) ) != 0 ) RETURN( err );
-    if( ( opts = pip_check_sync_flag(    opts ) )  < 0 ) RETURN( EINVAL );
+    if( pip_check_opt_and_env( &opts ) != 0 ) RETURN( EINVAL );
+    if( pip_check_sync_flag(   &opts )  < 0 ) RETURN( EINVAL );
 
     sz = PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
       PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
@@ -477,7 +462,6 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_sem_post( &root->lock_glibc );
     pip_sem_init( &root->sync_spawn );
 
-    DBG;
     pipid = PIP_PIPID_ROOT;
     pip_set_magic( root );
     root->version          = PIP_API_VERSION;
@@ -544,6 +528,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
 
     root  = (pip_root_t*) strtoll( envroot, NULL, 16 );
     pipid = (int) strtol( envtask, NULL, 10 );
+    ASSERT( pipid < 0 || pipid > root->ntasks );
     taski = &pip_root->tasks[pipid];
     if( ( rv = pip_init_task_implicitly( root, taski ) ) == 0 ) {
       ntasks = root->ntasks;
@@ -776,6 +761,7 @@ void pip_abort( void ) {
   ENTER;
   if( pip_root != NULL ) {
     (void) pip_raise_signal( pip_root->task_root, SIGTERM );
+    while( 1 ) sleep( 1 );
   } else {
     kill( getpid(), SIGTERM );
   }

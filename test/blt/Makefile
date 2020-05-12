@@ -34,10 +34,8 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS     = pip_yield.c migrate.c pip_namexp.c pip_barrier.c pip_mutex.c \
-	pip_couple.c
-PROGRAMS = pip_yield migrate pip_namexp pip_barrier pip_mutex \
-	pip_couple
+SRCS     = pip_yield.c pip_namexp.c pip_barrier.c pip_mutex.c pip_couple.c
+PROGRAMS = pip_yield   pip_namexp   pip_barrier   pip_mutex   pip_couple
 
 PROGRAMS_TO_INSTALL = # nothing
 
