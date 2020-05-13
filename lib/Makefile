@@ -105,6 +105,9 @@ install:
 	ln -s $(LIBRARY_PIPINIT) $(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
+	CPPFLAGS+="-DDEBUG" make all;
+
+cdebug:
 	CPPFLAGS+="-DDEBUG" make clean all;
 
 TAGS:

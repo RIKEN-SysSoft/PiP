@@ -34,17 +34,17 @@ CFLAGS += $(PICCFLAG)
 LDFLAGS = -rdynamic -Wl,--dynamic-linker=$(dynamic_linker) \
 	$(PIPLDLIBS) $(PIELDFLAG)
 
-DEPINCS = ../test.h
+DEPINCS = ../test.h $(PIPINCDIR_BUILD)/pip.h  $(PIPINCDIR_BUILD)/pip_blt.h
 
 PROGRAMS_TO_INSTALL = # nothing
 
-%: %.c $(SRCS) $(DEPINCS) $(PIPLIB_BUILD) $(DEPLIBS) Makefile
+%: %.c $(SRCS) $(DEPINCS) $(PIPLIB_BUILD) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(PTHREADFLAG) $< -o $@
 
-%: %.cc $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+%: %.cc $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CXX) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(PTHREADFLAG) $< -o $@
 
-%: %.f $(SRCS) $(DEPINCS) $(PIPLIB) $(DEPLIBS) Makefile
+%: %.f $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(FC) $(CPPFLAGS) $(FFLAGS) $(LDFLAGS) $(PTHREADFLAG) $< -o $@
 
 all : $(PROGRAMS)

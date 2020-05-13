@@ -121,6 +121,7 @@ fi
 
 if [ $klean -ne 0 ]; then
     rm -f loop-*.log;
+    rm -f loop-*.log~;
 fi
 
 if [ $nodebug -ne 0 ]; then

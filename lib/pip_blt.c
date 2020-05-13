@@ -129,13 +129,14 @@ static void pip_change_sched( pip_task_internal_t *taski,
 	  schedi->pipid,
 	  schedi->task_sched->pipid,
 	  (int) schedi->ntakecare );
-    if( schedi != taski ) {
-      ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
-      ASSERTD( ntc < 0 );
-      (void) pip_atomic_fetch_and_add( &schedi->ntakecare, 1 );
-    }
+    ASSERT( schedi == taski );
+    ntc = pip_atomic_sub_and_fetch( &taski->task_sched->ntakecare, 1 );
+    ASSERTD( ntc < 0 );
+    (void) pip_atomic_fetch_and_add( &schedi->ntakecare, 1 );
     taski->task_sched = schedi;
-    if( ntc == 0 && schedi->flag_exit ) pip_wakeup( schedi );
+    if( ntc == 0 && taski->task_sched->flag_exit ) {
+      pip_wakeup( taski->task_sched );
+    }
   }
 }
 
@@ -502,7 +503,7 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
       /* stack must be protected not to proceed with */
       /* this stack until this switches to the other */
       //pip_wakeup( taski );
-      pip_stack_protect( taski, taski );
+      pip_stack_protect( taski, schedi );
       pip_sched_ood_self( taski );
     } else if( pip_able_to_terminate_immediately( schedi ) ) {
       DBG;
@@ -521,6 +522,7 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
 static int pip_do_resume( pip_task_internal_t *taski,
 			  pip_task_internal_t *resume,
 			  pip_task_internal_t *schedi ) {
+#ifdef DEBUG
   if( schedi != NULL ) {
     ENTERF( "taski(PIPID:%d)  resume(PIPID:%d)  schedi(PIPID:%d)",
 	    taski->pipid, resume->pipid, schedi->pipid );
@@ -528,7 +530,7 @@ static int pip_do_resume( pip_task_internal_t *taski,
     ENTERF( "taski(PIPID:%d)  resume(PIPID:%d)  resume->schedi(PIPID:%d)",
 	    taski->pipid, resume->pipid, resume->task_sched->pipid );
   }
-
+#endif
   if( taski == resume ) RETURN( 0 );
   if( PIP_IS_RUNNING( resume ) ) RETURN( EPERM );
 
@@ -923,9 +925,9 @@ int pip_couple( void ) {
   IF_UNLIKELY( taski->coupled_sched != NULL  ) RETURN( EBUSY );
 
   schedi = taski->task_sched;
+  taski->coupled_sched = schedi;
   pip_takein_ood_task( schedi );
   if( ( nexti = pip_schedq_next( schedi ) ) != NULL ) {
-    taski->coupled_sched = schedi;
     pip_stack_protect( taski, nexti );
     pip_sched_ood_self( taski );
     SET_CURR_TASK( schedi, nexti );
@@ -940,22 +942,29 @@ int pip_couple( void ) {
   RETURN( err );
 }
 
-int pip_decouple( pip_task_t *task ) {
-  pip_task_internal_t 	*taski  = pip_task;
-  pip_task_internal_t 	*schedi = PIP_TASKI( task );
-  pip_task_internal_t	*couple = taski->coupled_sched;
+int pip_decouple( pip_task_t *sched ) {
+  pip_task_internal_t 	*taski   = pip_task;
+  pip_task_internal_t  	*schedi  = PIP_TASKI( sched );
+  pip_task_internal_t  	*coupled = taski->coupled_sched;
   int			err = 0;
 
-  IF_UNLIKELY( taski  == NULL              ) RETURN( EPERM );
-  IF_UNLIKELY( couple == NULL              ) RETURN( EBUSY );
-  IF_UNLIKELY( taski->task_sched != taski  ) RETURN( EBUSY );
-  if( !PIP_TASKQ_ISEMPTY( &taski->schedq ) ) RETURN( EBUSY );
+  ENTER;
+  IF_UNLIKELY( taski             == NULL  ) RETURN( EPERM );
+  IF_UNLIKELY( taski->task_sched != taski ) RETURN( EBUSY );
+  IF_UNLIKELY( schedi == NULL && coupled == NULL ) RETURN( EBUSY );
+  IF_UNLIKELY( !PIP_TASKQ_ISEMPTY( &taski->schedq ) ) {
+    RETURN( EBUSY );
+  }
 
   taski->coupled_sched = NULL;
-  if( schedi == NULL ) schedi = couple;
-  pip_stack_protect(  taski,  taski  );
-  pip_change_sched(   taski,  schedi );
-  pip_sched_ood_task( schedi, taski  );
+  if( schedi == NULL ) schedi = coupled;
+  pip_stack_protect(  taski, taski);
+  if( taski != schedi ) {
+    pip_change_sched(   taski,  schedi );
+    pip_sched_ood_task( schedi, taski  );
+  } else {
+    pip_sched_ood_self( taski );
+  }
   SET_CURR_TASK( schedi, NULL );
   pip_decouple_context( taski, taski );
   RETURN( err );

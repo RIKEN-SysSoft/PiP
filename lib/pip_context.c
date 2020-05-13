@@ -78,16 +78,14 @@ void pip_stack_wait( pip_task_internal_t *taski ) {
   if( !taski->flag_stackp ) goto done;
   DBGF( "PIPID:%d waits for unprotect", taski->pipid );
   for( i=0; i<pip_root->yield_iters; i++ ) {
-    pip_memory_barrier();
     pip_pause();
     if( !taski->flag_stackp ) goto done;
   }
   for( i=0; i<PIP_BUSYWAIT_COUNT; i++ ) {
     pip_system_yield();
-    for( j=0; j<pip_root->yield_iters; j++ ) {
+    for( j=0; j<pip_root->yield_iters*10; j++ ) {
       if( !taski->flag_stackp ) goto done;
       pip_pause();
-      DPAUSE;
     }
     DBGF( "PIPID:%d -- WAITING (count=%d*%d) ...",
 	  taski->pipid, i, pip_root->yield_iters );

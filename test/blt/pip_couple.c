@@ -5,7 +5,7 @@
  * $PIP_license$
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
 //#define NITERS		(100)
@@ -76,19 +76,25 @@ int main( int argc, char **argv ) {
 	CHECK( pip_decouple(NULL),        RV, return(EXIT_FAIL) );
       }
     } else {
-      pip_task_t *task;
-      int 	 n, m;
+      pip_task_t 	*task, *t;
+      pip_task_queue_t 	queue;
+      int 	 	m = ntasks - 1, n, i;
 
       CHECK( pip_get_task_from_pipid(PIP_PIPID_MYSELF,&task), RV,
 	     return(EXIT_FAIL) );
-      m = ntasks - 1;
-      while( m > 0 ) {
-	sleep( 1 );
-	n = PIP_TASK_ALL;
-	CHECK( pip_dequeue_and_resume_N(&expp->queue,task,&n), RV,
-	       return(EXIT_FAIL) );
-	m -= n;
+      pip_task_queue_init( &queue, NULL );
+
+      for( i=0; i<m; i++ ) {
+	while( 1 ) {
+	  t = pip_task_queue_dequeue( &expp->queue );
+	  if( t != NULL ) break;
+	  (void) pip_yield( PIP_YIELD_DEFAULT );
+	}
+	pip_task_queue_enqueue( &queue, t );
       }
+
+      n = PIP_TASK_ALL;
+      CHECK( pip_dequeue_and_resume_N(&queue,task,&n), RV, return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
 	CHECK( pip_yield(PIP_YIELD_USER), (RV&&RV!=EINTR), return(EXIT_FAIL) );
       }
