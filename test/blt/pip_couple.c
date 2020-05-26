@@ -5,11 +5,10 @@
  * $PIP_license$
  */
 
-#define DEBUG
+//#define DEBUG
 #include <test.h>
 
-//#define NITERS		(100)
-#define NITERS		(1)
+#define NITERS		(100)
 
 typedef struct exp {
   pip_task_queue_t	queue;

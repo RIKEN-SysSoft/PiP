@@ -601,16 +601,11 @@ static void pip_start_user_func( pip_spawn_args_t *args,
   char **envv     = args->envv;
   void *start_arg = args->start_arg;
   char *env_stop;
-  ucontext_t	uctx_exit;
   volatile int	flag = 0;
   int	extval, i, err = 0;
 
   ENTER;
 
-  if( pip_is_threaded_() ) {
-    ASSERT( getcontext( &uctx_exit ) );
-    self->annex->uctx_exit = &uctx_exit;
-  }
   if( !flag ) {
     flag = 1;
     DBGF( "fd_list:%p", args->fd_list );
@@ -828,7 +823,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   task->pipid      = pipid;	/* mark it as occupied */
   task->type       = PIP_TYPE_TASK;
   task->task_sched = task;
-  task->ntakecare  = 1;
+  task->refcount   = 1;
 
   task->annex->opts          = opts;
   task->annex->task_root     = pip_root;

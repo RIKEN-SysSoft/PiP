@@ -344,7 +344,7 @@ static void pip_attach_gdb( void ) {
       /*  8 */ argv[argc++] = NULL;
     }
     (void) close( 0 );		/* close STDIN */
-#ifdef AH
+#ifdef DEBUG
     {
       int i;
       for( i=0; i<argc; i++ ) {
@@ -423,15 +423,14 @@ void pip_debug_info( void ) {
 }
 
 static void pip_exception_handler( int sig, siginfo_t *info, void *extra ) {
-  pip_err_mesg( "*** Exception signal: %s (%d) !!\n", strsignal(sig), sig );
-  if( pip_root != NULL ) {
-    pip_spin_lock( &pip_root->lock_bt );
-    pip_debug_info();
-    pip_spin_unlock( &pip_root->lock_bt );
-  } else {
+  if( pip_root != NULL ) pip_spin_lock( &pip_root->lock_bt );
+  {
+    pip_err_mesg( "*** Exception signal: %s (%d) !!\n", strsignal(sig), sig );
     pip_debug_info();
   }
-  kill( pip_gettid(), sig );
+  if( pip_root != NULL ) pip_spin_unlock( &pip_root->lock_bt );
+  (void) kill( pip_gettid(), sig );
+  NEVER_REACH_HERE;
 }
 
 static void

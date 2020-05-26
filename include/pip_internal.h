@@ -143,7 +143,7 @@ typedef struct pip_task_internal {
       pip_stack_protect_p	flag_stackpp; /* pointer to unprotect stack */
       /* end of one cache block (64 bytes) */
       /* less frequently accessed part follows */
-      pip_atomic_t		ntakecare; /* tasks must be taken care */
+      pip_atomic_t		refcount; /* reference count */
       struct {
 	pip_stack_protect_t	flag_stackp; /* stack protection flag */
 	int16_t			pipid;	    /* PiP ID */
@@ -240,8 +240,6 @@ typedef struct pip_task_annex {
   pip_spawnhook_t		hook_before; /* before spawning hook */
   pip_spawnhook_t		hook_after;  /* after spawning hook */
   void				*hook_arg;   /* hook arg */
-  /* context to terminate */
-  ucontext_t			*uctx_exit;
   /* GDB interface */
   void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */

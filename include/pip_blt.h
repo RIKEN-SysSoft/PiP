@@ -329,6 +329,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The specified task belongs to the other scheduling
    * domain.
+   * \retval EPERM PiP library is not yet initialized or already
    *
    * \sa pip_yield(3)
    */
@@ -1025,13 +1026,12 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief Couple the curren task with the kernel thread
+   * \brief Couple the curren task with the original kernel thread
    *  @{
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized or already
-   * \retval EBUSY the curren task is already coupled with the kernel thread
-   * finalized
+   * \retval EPERM PiP library is not yet initialized or already finalized
+   * \retval EBUSY the curren task is already coupled with a kernel thread
    */
   int pip_couple();
   /** @}*/
@@ -1039,11 +1039,12 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /**
    * \brief Decouple the curren task from the kernel thread
    *  @{
+   * \param[in] task specify the scheduling task to schedule the decoupled task
+   * (calling this function)
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized or already
-   * \retval EBUSY the curren task is already decoupled from the kernel thread
-   * finalized
+   * \retval EPERM PiP library is not yet initialized or already finalized
+   * \retval EBUSY the curren task is already decoupled from a kernel thread
    */
   int pip_decouple( pip_task_t *task );
   /** @}*/
