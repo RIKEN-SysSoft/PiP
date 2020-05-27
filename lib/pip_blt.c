@@ -55,7 +55,6 @@ int pip_task_brief( pip_task_t *task, char *msg, size_t len ) {
 }
 
 #ifdef DEBUG
-
 #define QUEUE_DUMP(taski,queue)					\
   do {								\
     char msg[512];						\
@@ -82,9 +81,7 @@ int pip_task_brief( pip_task_t *task, char *msg, size_t len ) {
     DBGF( "QDUMP %s: %s", #queue, msg );			\
   } while( 0 )
 #else
-
 #define QUEUE_DUMP( taski, queue )
-
 #endif
 
 static void pip_wakeup( pip_task_internal_t *taski ) {
@@ -243,9 +240,9 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
   RETURNV;
 }
 
-int
+static int
 pip_able_to_terminate_immediately( pip_task_internal_t *taski ) {
-  return taski->flag_exit && !taski->refcount;
+  return taski->flag_exit && taski->refcount == 0;
 }
 
 void pip_terminate_task( pip_task_internal_t *self ) {

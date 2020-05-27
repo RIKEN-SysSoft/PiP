@@ -4,19 +4,32 @@
 unset LANG LC_ALL
 
 TEST_TRAP_SIGS='1 2 14 15';
-if [ $TERM == 'dumb' ]; then
-    termwidth=80
-else
-    termwidth=`tput cols`;
-fi
-#longestmsg=" T -- UNSUPPORTED"
-longestmsg=" T -- UNRESOLVED :-O"
-lmsglen=${#longestmsg}
 
-width=$((termwidth-lmsglen))
-if [ $width -lt 40 ]; then
-    width=80
-fi
+longestmsg=" T -- UNRESOLVED :-O";
+width=60;
+
+set_term_width() {
+    if which resize > /dev/null 2>&1; then
+	RESIZE=`resize | grep COLUMNS | grep -v export | sed -e "s/;//" 2> /dev/null`;
+	case $RESIZE in
+	    COLUMNS*) export $RESIZE;
+	esac
+	if [ "x$COLUMNS" != "x" ]; then
+	    termwidth=$COLUMNS;
+	fi
+    else
+	if [ "x$TERM" != "xdumb" ]; then
+	    termwidth=`tput cols`;
+	else
+	    termwidth=80;
+	fi
+    fi
+    lmsglen=${#longestmsg};
+    width=$((termwidth-lmsglen));
+    if [ $width -lt 40 ]; then
+	width=60;
+    fi
+}
 
 # not to print any debug messages
 export PIP_NODEBUG=1;
@@ -307,6 +320,7 @@ fi
 cd  `dirname $TEST_LIST`
 
 while read line; do
+    set_term_width;
 	set x $line
 	shift
 	case $# in 0) continue;; esac

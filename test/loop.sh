@@ -44,7 +44,7 @@ print_usage() {
     echo >&2 "    -s: show stdout/stderr";
     echo >&2 "    -k: clean loop-*.log files before running test proram";
     echo >&2 "    -d: Supress debug output (may affects timing)";
-    echo >&2 "    -q: Quiet mode";
+    echo >&2 "    -S: Silent mode";
     exit 2;
 }
 
@@ -103,7 +103,7 @@ case $# in
 	    case $1 in *s)        display=1;;    esac
 	    case $1 in *k)        klean=1;;      esac
 	    case $1 in *d)        nodebug=1;;    esac
-	    case $1 in *q)        quiet=1;;      esac
+	    case $1 in *S)        quiet=1;;      esac
 	    case $1 in *h | *u)   print_usage;;  esac
 	    shift;
         done
@@ -142,17 +142,15 @@ start=`date +%s`;
 while true; do
     if [ $nomode -eq 0 ]; then
 	for mode in $mode_list; do
-	    date > $TMP;
-	    echo "$cmdline" >> $TMP;
-	    echo "---------------------------------" >> $TMP;
-
-	    if [ $quiet -eq 0 ]; then
-		echo -n $i$mode "";
-	    fi
+	    echo "" > $TMP #rewind
 	    if [ $display -eq 0 ]; then
+		echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;
+		if [ $quiet -eq 0 ]; then
+		    echo -n $i$mode "";
+		fi
 		$dir_script/pip-mode $mode $@ >> $TMP 2>&1;
 	    else
-		echo;
+		echo "[[" "$i$mode" "]]" "$cmdline" `date` | tee -a $TMP;
 		$dir_script/pip-mode $mode $@ 2>&1 | tee -a $TMP;
 	    fi
 	    ext=$?;
@@ -166,16 +164,16 @@ while true; do
 	    fi
 	done
     else
-	date > $TMP;
-	echo "$cmdline" >> $TMP;
-	echo "---------------------------------" >> $TMP;
-
-	if [ $quiet -eq 0 ]; then
-	    echo -n $i "";
-	fi
+	echo "" > $TMP;
 	if [ $display -eq 0 ]; then
+	    echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;
+	    if [ $quiet -eq 0 ]; then
+		echo -n $i "";
+	    fi
 	    $@ >> $TMP 2>&1;
 	else
+	    echo;
+	    echo "[[" "$i$mode" "]]" "$cmdline" `date` | tee -a $TMP;
 	    echo;
 	    $@ 2>&1 | tee -a $TMP;
 	fi

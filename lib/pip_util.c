@@ -361,7 +361,7 @@ void pip_fprint_fd( FILE *fp, int fd ) {
 
   pip_idstr( idstr, sizeof(idstr) );
   sprintf( fdpath, "/proc/self/fd/%d", fd );
-  if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+  if( ( sz = readlink( fdpath, fdname, PIP_READLINK_BUFLEN ) ) > 0 ) {
     fdname[sz] = '\0';
     fprintf( fp, "%s %d -> %s", idstr, fd, fdname );
   }
@@ -385,7 +385,7 @@ void pip_fprint_fds( FILE *fp ) {
 
     while( ( de = readdir( dir ) ) != NULL ) {
       sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
-      if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+      if( ( sz = readlink( fdpath, fdname, PIP_READLINK_BUFLEN ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( ( fd = atoi( de->d_name ) ) != fd_dir ) {
 	  if( pip_isa_coefd( fd ) ) coe = '*';
