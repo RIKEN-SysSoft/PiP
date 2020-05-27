@@ -118,31 +118,32 @@ static void *pip_get_dynent_ptr( ElfW(Dyn) *dyn, int type ) {
 static void pip_unprotect_page( void *addr ) {
   FILE	 *fp_maps;
   char	 *line = NULL;
-  size_t sz = 0;
-  ssize_t pgsz  = sysconf( _SC_PAGESIZE );
+  size_t sz = 0, l;
+  ssize_t pgsz = sysconf( _SC_PAGESIZE );
   void	 *sta, *end;
   char	 perm[4];
   void   *page = (void*) ( (uintptr_t)addr & ~( pgsz - 1 ) );
 
   ASSERT( pgsz <= 0 );
+  sz = 256;
+  ASSERT( ( line = (char*) malloc( sz ) ) == NULL );
   if( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) != NULL ) {
-    while( getline( &line, &sz, fp_maps ) > 0 ) {
-      if( sscanf( line, "%p-%p %4s", &sta, &end, perm ) > 0 ) {
+    while( ( l = getline( &line, &sz, fp_maps ) ) > 0 ) {
+      line[l] = '\0';
+      if( sscanf( line, "%p-%p %4s", &sta, &end, perm ) == 3 ) {
 	if( sta <= addr  &&  addr < end ) {
-	  fclose( fp_maps );
 	  if( perm[0] == 'r' && perm[1] == 'w' ) {
 	    /* the target page is already readable and writable */
-	    return;
+	    break;
 	  }
-	  goto unprotect;
+	  ASSERT( mprotect( page, pgsz, PROT_READ | PROT_WRITE ) );
+	  break;
 	}
       }
     }
     /* for some reason (??), the segment cannot be found */
     fclose( fp_maps );
   }
- unprotect:
-  ASSERT( mprotect( page, pgsz, PROT_READ | PROT_WRITE ) );
 }
 
 static int pip_replace_clone_itr( struct dl_phdr_info *info,

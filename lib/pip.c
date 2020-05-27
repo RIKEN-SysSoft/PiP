@@ -52,6 +52,12 @@
 //#define ATTR_NOINLINE		__attribute__ ((noinline))
 //#define ATTR_NOINLINE
 
+#define MCHECK
+
+#ifdef MCHECK
+#include <mcheck.h>
+#endif
+
 extern char 		**environ;
 
 extern pip_spinlock_t 	*pip_lock_clone;
@@ -489,7 +495,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
     SET_CURR_TASK( taski, taski );
 
     taski->annex->task_root = root;
-    taski->annex->loaded    = dlopen( NULL, RTLD_NOW );
+    taski->annex->loaded    = dlopen( NULL, 0 );
     taski->annex->tid       = pip_gettid();
     taski->annex->thread    = pthread_self();
 #ifdef PIP_SAVE_TLS

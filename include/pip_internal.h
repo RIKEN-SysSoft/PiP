@@ -371,8 +371,6 @@ extern void pip_stack_wait( pip_task_internal_t *taski ) PIP_PRIVATE;
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
 extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
-extern int  pip_able_to_terminate_immediately( pip_task_internal_t* )
-  PIP_PRIVATE;
 extern void pip_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
 

@@ -351,13 +351,15 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 #else
   INLINE int pip_task_queue_init_( pip_task_queue_t *queue,
-					  pip_task_queue_methods_t *methods ) {
+				   pip_task_queue_methods_t *methods ) {
     if( queue == NULL ) return EINVAL;
     queue->methods = methods;
     if( methods == NULL || methods->init == NULL) {
-      memset( queue, 0, sizeof(pip_task_queue_t) );
       PIP_TASKQ_INIT( &queue->queue );
       pip_spin_init( &queue->lock );
+      queue->methods = NULL;
+      queue->length  = 0;
+      queue->aux     = NULL;
       return 0;
     } else {
       return methods->init( queue );

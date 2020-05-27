@@ -140,6 +140,12 @@ flag_list=false;
 flag_top=false;
 flag_verbose=false;
 
+if ps --no-headers > /dev/null 2>&1; then
+    NOHEADER_OPT="--no-headers";
+else
+    NOHEADER_OPT="--no-headings";
+fi
+
 # parse command line option
 while
 case $1 in
@@ -161,11 +167,13 @@ done
 
 pipcmds=$@
 if [ "x$pipcmds" == x ]; then
-    ps=`ps H -no-headers -u $user --format '%c %p'`
+    ##echo "ps H -no-headers -u $user --format '%c %p'"
+    ps=`ps H $NOHEADER_OPT -u $user --format '%c %p'`
     decompose_psout $ps;
 else
     for pipcmd in $pipcmds; do
-	ps=`ps H -no-headers -u $user --format '%c %p' | grep $pipcmd | grep -v grep`
+	##echo "ps H -no-headers -u $user --format '%c %p' | grep $pipcmd | grep -v grep"
+	ps=`ps H $NOHEADER_OPT -u $user --format '%c %p' | grep $pipcmd | grep -v grep`
 	decompose_psout $ps;
     done
 fi
