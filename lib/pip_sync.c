@@ -80,7 +80,6 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
 
 	IF_LIKELY( t != NULL ) break;
 	(void) pip_yield( PIP_YIELD_DEFAULT );
-	sleep( 1 );
       }
       pip_task_queue_enqueue( &queue, t );
     }

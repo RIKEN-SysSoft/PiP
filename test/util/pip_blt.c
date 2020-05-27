@@ -83,7 +83,7 @@ int main( int argc, char **argv ) {
 
     j = ( j >= nacts ) ? 0 : j;
     CHECK( pip_blt_spawn( &prog, c,
-			  PIP_TASK_INACTIVE | PIP_SYNC_BLOCKING,
+			  PIP_TASK_INACTIVE,
 			  &pipid, NULL, &queues[j], NULL ),
 	   RV,
 	   return(EXIT_UNTESTED) );
@@ -119,6 +119,10 @@ int main( int argc, char **argv ) {
       if( extval ) {
 	fprintf( stderr, "Task[%d] returns %d\n", pipid, extval );
       }
+    } else if( WIFSIGNALED( status ) ) {
+      extval = WTERMSIG( status );
+      fprintf( stderr, "Task[%d] is signaled %d\n", pipid, extval );
+      extval = EXIT_UNRESOLVED;
     } else {
       extval = EXIT_UNRESOLVED;
     }

@@ -28,7 +28,9 @@ int main( int argc, char **argv ) {
   }
   niters = ( niters <= 0 ) ? NITERS : niters;
 
-  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
+  CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL)     );
+  CHECK( pipid==PIP_PIPID_ROOT,                RV, return(EXIT_UNTESTED) );
+  CHECK( ntasks<2,                             RV, return(EXIT_UNTESTED) );
 
   srand( ( pipid + 1 ) * ( pipid + 1 ) );
   count = conv( pipid );
@@ -53,7 +55,8 @@ int main( int argc, char **argv ) {
       CHECK( pip_named_import( i, (void**) &donep, "DONE" ),
 	     RV, return(EXIT_FAIL) );
       CHECK( donep==NULL, RV, return(EXIT_FAIL) );
-      *donep = 1;
+      CHECK( *donep!=i,   RV, return(EXIT_FAIL) );
+      *donep = -1;
     }
     done = 1;
     CHECK( pip_named_export( (void*) &done, "DONE" ), RV,    return(EXIT_FAIL) );
@@ -61,9 +64,9 @@ int main( int argc, char **argv ) {
       CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
     }
   } else {
-    done = 0;
+    done = pipid;
     CHECK( pip_named_export( (void*) &done, "DONE" ), RV,    return(EXIT_FAIL) );
-    while( done == 0 ) {
+    while( done >= 0 ) {
       CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
     }
     donep = NULL;

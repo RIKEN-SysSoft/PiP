@@ -31,10 +31,20 @@ prt_ext() {
 }
 
 print_usage() {
-    echo >&2 "Usage: $cmd [-n <NITER>] [-t <SEC>] [-q] [<test_prog> ...]";
+    echo >&2 "Usage: $cmd [OPTIONS] [<test_prog> ...]";
+    echo >&2 "    -A: all PiP execution modes (default)";
+    echo >&2 "    -P: process modes";
+    echo >&2 "    -L: process:preload modes";
+    echo >&2 "    -C: process:clone modes";
+    echo >&2 "    -G: process:got modes";
+    echo >&2 "    -T: pthread modes";
+    echo >&2 "    -N: not specifyng execution mode";
     echo >&2 "    -n <NITER>: Number of iterations";
-    echo >&2 "    -t <SEC>: Duration limit of one loop [seconds]";
-    echo >&2 "    -q: Quiet mode";
+    echo >&2 "    -t <SEC>: time limit of one loop [seconds]";
+    echo >&2 "    -s: show stdout/stderr";
+    echo >&2 "    -k: clean loop-*.log files before running test proram";
+    echo >&2 "    -d: Supress debug output (may affects timing)";
+    echo >&2 "    -S: Silent mode";
     exit 2;
 }
 
@@ -69,8 +79,10 @@ duration=0;
 iteration=0;
 quiet=0;
 display=0;
-
+klean=0;
+nodebug=0;
 mode_list='';
+nomode=0;
 
 case $# in
     0)	print_usage;;
@@ -87,8 +99,11 @@ case $# in
 	    case $1 in *T) mode_list="$mode_list -T";; esac
 	    case $1 in *n) shift; iteration=$1;; esac
 	    case $1 in *t) shift; duration=$1;;  esac
-	    case $1 in *q)        quiet=1;;      esac
-	    case $1 in *D)        display=1;;    esac
+	    case $1 in *N)        nomode=1;;     esac
+	    case $1 in *s)        display=1;;    esac
+	    case $1 in *k)        klean=1;;      esac
+	    case $1 in *d)        nodebug=1;;    esac
+	    case $1 in *S)        quiet=1;;      esac
 	    case $1 in *h | *u)   print_usage;;  esac
 	    shift;
         done
@@ -104,6 +119,15 @@ if [ ! -x $1 ]; then
     exit 5;
 fi
 
+if [ $klean -ne 0 ]; then
+    rm -f loop-*.log;
+    rm -f loop-*.log~;
+fi
+
+if [ $nodebug -ne 0 ]; then
+    export PIP_NODEBUG=1;
+fi
+
 if [ "x${mode_list}" = "x" ]; then
     mode_list='-C -L -G -T';
 fi
@@ -116,19 +140,42 @@ i=0;
 start=`date +%s`;
 
 while true; do
-    for mode in $mode_list; do
-	date > $TMP;
-	echo "$cmdline" >> $TMP;
-	echo "---------------------------------" >> $TMP;
-
-	if [ $quiet -eq 0 ]; then
-	    echo -n $i$mode "";
-	fi
-
+    if [ $nomode -eq 0 ]; then
+	for mode in $mode_list; do
+	    echo "" > $TMP #rewind
+	    if [ $display -eq 0 ]; then
+		echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;
+		if [ $quiet -eq 0 ]; then
+		    echo -n $i$mode "";
+		fi
+		$dir_script/pip-mode $mode $@ >> $TMP 2>&1;
+	    else
+		echo "[[" "$i$mode" "]]" "$cmdline" `date` | tee -a $TMP;
+		$dir_script/pip-mode $mode $@ 2>&1 | tee -a $TMP;
+	    fi
+	    ext=$?;
+	    if [ $ext != 0 ]; then
+		prt_ext $ext;
+		finalize;
+		exit $ext;
+	    else
+		rm -f $TMP
+		touch $TMP
+	    fi
+	done
+    else
+	echo "" > $TMP;
 	if [ $display -eq 0 ]; then
-	    $dir_script/pip-mode $mode $@ >> $TMP 2>&1;
+	    echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;
+	    if [ $quiet -eq 0 ]; then
+		echo -n $i "";
+	    fi
+	    $@ >> $TMP 2>&1;
 	else
-	    $dir_script/pip-mode $mode $@ 2>&1 | tee -a $TMP;
+	    echo;
+	    echo "[[" "$i$mode" "]]" "$cmdline" `date` | tee -a $TMP;
+	    echo;
+	    $@ 2>&1 | tee -a $TMP;
 	fi
 	ext=$?;
 	if [ $ext != 0 ]; then
@@ -139,7 +186,7 @@ while true; do
 	    rm -f $TMP
 	    touch $TMP
 	fi
-    done
+    fi
 
     i=$((i+1));
     if [ $iteration -gt 0 -a $i -ge $iteration ]; then

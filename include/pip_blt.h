@@ -53,8 +53,10 @@
 #define PIP_SYNC_YIELD			(0x0004)
 #define PIP_SYNC_BLOCKING		(0x0008)
 
-#define PIP_SYNC_MASK				\
-  (PIP_SYNC_AUTO|PIP_SYNC_BUSYWAIT|PIP_SYNC_YIELD|PIP_SYNC_BLOCKING)
+#define PIP_SYNC_MASK			(PIP_SYNC_AUTO     |	\
+					 PIP_SYNC_BUSYWAIT |	\
+					 PIP_SYNC_YIELD    |	\
+					 PIP_SYNC_BLOCKING)
 
 #define PIP_TASK_INACTIVE		(0x01000)
 #define PIP_TASK_ACTIVE			(0x02000)
@@ -327,6 +329,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The specified task belongs to the other scheduling
    * domain.
+   * \retval EPERM PiP library is not yet initialized or already
    *
    * \sa pip_yield(3)
    */
@@ -1023,13 +1026,12 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief Couple the curren task with the kernel thread
+   * \brief Couple the curren task with the original kernel thread
    *  @{
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized or already
-   * \retval EBUSY the curren task is already coupled with the kernel thread
-   * finalized
+   * \retval EPERM PiP library is not yet initialized or already finalized
+   * \retval EBUSY the curren task is already coupled with a kernel thread
    */
   int pip_couple();
   /** @}*/
@@ -1037,11 +1039,12 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /**
    * \brief Decouple the curren task from the kernel thread
    *  @{
+   * \param[in] task specify the scheduling task to schedule the decoupled task
+   * (calling this function)
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized or already
-   * \retval EBUSY the curren task is already decoupled from the kernel thread
-   * finalized
+   * \retval EPERM PiP library is not yet initialized or already finalized
+   * \retval EBUSY the curren task is already decoupled from a kernel thread
    */
   int pip_decouple( pip_task_t *task );
   /** @}*/

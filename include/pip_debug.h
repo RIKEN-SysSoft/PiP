@@ -190,7 +190,7 @@ extern int pip_debug_env( void );
     pip_debug_info(); pip_abort(); } else { DBGF( "{%s} -- Assertion OK", #X ); }
 
 #define NEVER_REACH_HERE						\
-  do { NL_EMSG( "Should never reach here !!!!!!" ); } while(0)
+  do { NL_EMSG( "Should never reach here !!!!!!\n" ); } while(0)
 
 #define QUEUE_DESCRIBE( Q )				\
   pip_queue_describe( stderr, __func__, PIP_TASKQ(Q) );

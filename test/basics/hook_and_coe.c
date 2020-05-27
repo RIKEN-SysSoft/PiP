@@ -33,7 +33,7 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define DEBUG
+//#define DEBUG
 
 #include <test.h>
 #include <limits.h>
@@ -62,20 +62,22 @@ static int set_coe_flag( int fd ) {
   return errno;
 }
 
+#ifdef DEBUG
 static int get_coe_flag( int fd ) {
   return fcntl( fd, F_GETFD ) & FD_CLOEXEC;
 }
+#endif
 
 #define PROCFD_PATH		"/proc/self/fd"
 static void list_fds( void ) {
 #ifdef DEBUG
   DIR *dir;
-  struct dirent entry, *direntp;
+  struct dirent *direntp;
   int fd, i=0;
 
   if( ( dir = opendir( PROCFD_PATH ) ) != NULL ) {
     int fd_dir = dirfd( dir );
-    while( readdir_r( dir, &entry, &direntp ) == 0 && direntp != NULL ) {
+    while( ( direntp = readdir( dir) ) != NULL ) {
       if( direntp->d_name[0] != '.' &&
 	  ( fd = strtol( direntp->d_name, NULL, 10 ) ) >= 0 &&
 	  fd != fd_dir ) {
@@ -88,8 +90,7 @@ static void list_fds( void ) {
 	}
       }
     }
-    (void) close( fd_dir );
-    (void) closedir( dir );
+    (void) closedir( dir );	/* fd_dir is closed */
   }
 #endif
 }

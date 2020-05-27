@@ -224,10 +224,8 @@
 #define PIP_CPUCORE_CORENO_MASK		((1<<PIP_CPUCORE_FLAG_SHIFT)-1)
 #define PIP_CPUCORE_CORENO_MAX		PIP_CPUCORE_CORENO_MASK
 #define PIP_CPUCORE_ASIS 		(0x01)
-#define PIP_CPUCORE_NTH 		(0x02)
-
-#define PIP_WAIT_BLOCKING		(0)
-#define PIP_WAIT_NONBLOCKING		(1)
+#define PIP_CPUCORE_ABS 		(0x02)
+#define PIP_CPUCORE_CORENO_MASK		((1<<PIP_CPUCORE_FLAG_SHIFT)-1)
 
 typedef struct {
   char		*prog;
@@ -302,11 +300,11 @@ INLINE void pip_spawn_from_main( pip_spawn_program_t *progp,
   progp->argv     = argv;
   if( envv == NULL ) {
     extern char **environ;
-    progp->envv   = environ;
+    progp->envv = environ;
   } else {
-    progp->envv   = envv;
+    progp->envv = envv;
   }
-  progp->exp   = exp;
+  progp->exp = exp;
 }
   /** @}*/
 
@@ -338,11 +336,11 @@ pip_spawn_from_func( pip_spawn_program_t *progp,
   progp->arg      = arg;
   if( envv == NULL ) {
     extern char **environ;
-    progp->envv   = environ;
+    progp->envv = environ;
   } else {
-    progp->envv   = envv;
+    progp->envv = envv;
   }
-  progp->exp   = exp;
+  progp->exp = exp;
 }
   /** @}*/
 
@@ -417,7 +415,7 @@ INLINE void pip_spawn_hook( pip_spawn_hook_t *hook,
    *
    * \sa pip_export(3), pip_fin(3)
    */
-  int pip_init( int *pipidp, int *ntasks, void **root_expp, int opts );
+  int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
   /** @}*/
 
   /**

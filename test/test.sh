@@ -4,19 +4,32 @@
 unset LANG LC_ALL
 
 TEST_TRAP_SIGS='1 2 14 15';
-if [ $TERM == 'dumb' ]; then
-    termwidth=80
-else
-    termwidth=`tput cols`;
-fi
-#longestmsg=" T -- UNSUPPORTED"
-longestmsg=" T -- UNRESOLVED :-O"
-lmsglen=${#longestmsg}
 
-width=$((termwidth-lmsglen))
-if [ $width -lt 40 ]; then
-    width=80
-fi
+longestmsg=" T -- UNRESOLVED :-O";
+width=60;
+
+set_term_width() {
+    if which resize > /dev/null 2>&1; then
+	RESIZE=`resize | grep COLUMNS | grep -v export | sed -e "s/;//" 2> /dev/null`;
+	case $RESIZE in
+	    COLUMNS*) export $RESIZE;
+	esac
+	if [ "x$COLUMNS" != "x" ]; then
+	    termwidth=$COLUMNS;
+	fi
+    else
+	if [ "x$TERM" != "xdumb" ]; then
+	    termwidth=`tput cols`;
+	else
+	    termwidth=80;
+	fi
+    fi
+    lmsglen=${#longestmsg};
+    width=$((termwidth-lmsglen));
+    if [ $width -lt 40 ]; then
+	width=60;
+    fi
+}
 
 # not to print any debug messages
 export PIP_NODEBUG=1;
@@ -45,7 +58,7 @@ myself=$dir_real/$base;
 
 export PATH=$dir_real:$dir_real/util:$PATH
 
-check_command "pip_mode";
+check_command "pip_mode_check";
 check_command "dlmopen_count";
 check_command "ompnumthread";
 
@@ -267,7 +280,7 @@ run_test_T=''
 for pip_mode in $pip_mode_list
 do
 	eval 'pip_mode_name=$pip_mode_name_'${pip_mode}
-	case `PIP_MODE=$pip_mode_name $dir/util/pip_mode 2>/dev/null | grep -e process -e thread` in
+	case `PIP_MODE=$pip_mode_name $dir/util/pip_mode_check 2>/dev/null | grep -e process -e thread` in
 	$pip_mode_name)
 		eval "run_test_${pip_mode}=${pip_mode}"
 		if [ x"$SUMMARY_FILE" = x ]; then
@@ -307,6 +320,7 @@ fi
 cd  `dirname $TEST_LIST`
 
 while read line; do
+    set_term_width;
 	set x $line
 	shift
 	case $# in 0) continue;; esac

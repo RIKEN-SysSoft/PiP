@@ -38,10 +38,10 @@ CWD = $(shell pwd)
 CFLAGS += -DCWD=\"$(CWD)\" -DPIPS=\"$(CWD)/../../bin/pips\"
 
 SRCS	= dlmopen_count.c ompnumthread.c timer.c inf.c \
-	pip_mode.c pip_is_debug_build.c pip_task.c pip_blt.c
+	pip_mode_check.c pip_is_debug_build.c pip_task.c pip_blt.c
 
 PROGRAMS = dlmopen_count ompnumthread timer inf \
-	pip_mode pip_is_debug_build pip_task pip_blt
+	pip_mode_check pip_is_debug_build pip_task pip_blt
 
 PROGRAMS_TO_INSTALL = # nothing
 

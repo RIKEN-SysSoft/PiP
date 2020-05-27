@@ -202,7 +202,7 @@ int pip_named_export( void *exp, const char *format, ... ) {
     if( ( entry = pip_find_namexp( head, hash, name ) ) == NULL ) {
       /* no entry yet */
       entry = pip_new_entry( namexp, name, hash );
-      name = NULL;
+      name = NULL;		/* not to free since name is in use */
       if( entry == NULL ) {
 	err = ENOMEM;
       } else {
@@ -217,7 +217,7 @@ int pip_named_export( void *exp, const char *format, ... ) {
       } else {
 	/* this is a query entry */
 	new = pip_new_entry( namexp, name, hash );
-	name = NULL;
+	name = NULL;		/* not to free since name is in use */
 	if( new == NULL ) {
 	  err = ENOMEM;
 	} else {
@@ -241,15 +241,16 @@ int pip_named_export( void *exp, const char *format, ... ) {
   RETURN( err );
 }
 
+static void pip_unlock_hashtab( void *arg ) {
+  pip_namexp_list_t  	*head = (pip_namexp_list_t*) arg;
+  pip_unlock_hashtab_head( head );
+}
+
 static int pip_do_named_import( int pipid,
 				void **expp,
 				int flag_nblk,
 				const char *format,
 				va_list ap ) {
-  void pip_unlock_hashtab( void *arg ) {
-    pip_namexp_list_t  	*head = (pip_namexp_list_t*) arg;
-    pip_unlock_hashtab_head( head );
-  }
   pip_task_internal_t	*taski;
   pip_named_exptab_t 	*namexp;
   pip_namexp_entry_t 	*entry;

@@ -39,32 +39,33 @@
 #include <pip_gdbif_func.h>
 
 #ifdef PIP_DUMP_TASKS
-static void pip_dump_tasks( FILE *fp ) {
-  void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
-    char st;
-    if( taski->flag_exit ) {
-      st = 'E';
-    } else if( PIP_IS_RUNNING( taski ) ) {
-      st = 'R';
-    } else {
-      st = 'S';
-    }
-    fprintf( fp,
-	     "%d[%d] %c  SchedQL:%d  OODQ:%d  NTC:%d  StkP:%d[%d]  WU:%d  SM:%d\n",
-	     taski->pipid,
-	     (taski->task_sched!=NULL)?taski->task_sched->pipid:-1,
-	     st,
-	     (int) taski->schedq_len,
-	     (int) taski->oodq_len,
-	     (int) taski->ntakecare,
-	     (int) taski->flag_stackp,
-	     ( taski->flag_stackpp != NULL ) ?
-	     ( (pip_task_internal_t*)
-	       ( taski->flag_stackpp -
-		 offsetof(pip_task_internal_t,flag_stackpp) ) )->pipid : -1,
-	     (int) taski->flag_wakeup,
-	     (int) taski->flag_semwait );
+void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
+  char st;
+  if( taski->flag_exit ) {
+    st = 'E';
+  } else if( PIP_IS_RUNNING( taski ) ) {
+    st = 'R';
+  } else {
+    st = 'S';
   }
+  fprintf( fp,
+	   "%d[%d] %c  SchedQL:%d  OODQ:%d  NTC:%d  StkP:%d[%d]  WU:%d  SM:%d\n",
+	   taski->pipid,
+	   (taski->task_sched!=NULL)?taski->task_sched->pipid:-1,
+	   st,
+	   (int) taski->schedq_len,
+	   (int) taski->oodq_len,
+	   (int) taski->refcount,
+	   (int) taski->flag_stackp,
+	   ( taski->flag_stackpp != NULL ) ?
+	   ( (pip_task_internal_t*)
+	     ( taski->flag_stackpp -
+	       offsetof(pip_task_internal_t,flag_stackpp) ) )->pipid : -1,
+	   (int) taski->flag_wakeup,
+	   (int) taski->flag_semwait );
+}
+
+static void pip_dump_all_tasks( FILE *fp ) {
   int i;
 
   fflush( NULL );
