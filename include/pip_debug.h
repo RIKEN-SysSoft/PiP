@@ -63,8 +63,8 @@ extern size_t pip_idstr( char *buf, size_t sz );
 
 #define DBGSW		pip_debug_env()
 
-#define DBGBUFLEN	(256)
-#define DBGTAGLEN	(64)
+#define DBGBUFLEN	(512)
+#define DBGTAGLEN	(128)
 
 #define DBG_PRTBUF	char _dbuf[DBGBUFLEN]={'\0'};	\
   			int _nn=DBGBUFLEN;

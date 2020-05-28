@@ -224,7 +224,7 @@ pip_pipid_str( char *p, size_t sz, int pipid, int upper ) {
 }
 
 int
-pip_task_str( char *p, size_t sz, pip_task_internal_t *taski ) {
+pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
   int 	n = 0;
 
   if( taski == NULL ) {
@@ -237,6 +237,10 @@ pip_task_str( char *p, size_t sz, pip_task_internal_t *taski ) {
     n = snprintf( p, sz, "!" );
   }
   return n;
+}
+
+int pip_task_str( char *p, size_t sz, pip_task_t *task ) {
+  return pip_taski_str( p, sz, PIP_TASKI(task) );
 }
 
 size_t pip_idstr( char *p, size_t s ) {
@@ -257,21 +261,22 @@ size_t pip_idstr( char *p, size_t s ) {
   n = snprintf( p, s, "%s", opn ); 	s -= n; p += n;
   {
     n = snprintf( p, s, "%d(", tid ); 	s -= n; p += n;
-    n = pip_task_str( p, s, kc ); 	s -= n; p += n;
+    n = pip_taski_str( p, s, kc ); 	s -= n; p += n;
     n = snprintf( p, s, ")%s", delim );	s -= n; p += n;
 #ifdef DEBUG
-    n = pip_task_str( p, s, uc );	s -= n; p += n;
+    n = pip_taski_str( p, s, uc );	s -= n; p += n;
     n = snprintf( p, s, sched ); 	s -= n; p += n;
-    n = pip_task_str( p, s, schd );	s -= n; p += n;
+    n = pip_taski_str( p, s, schd );	s -= n; p += n;
 #endif
     n = snprintf( p, s, delim ); 	s -= n; p += n;
-    n = pip_task_str( p, s, ctx );	s -= n; p += n;
+    n = pip_taski_str( p, s, ctx );	s -= n; p += n;
   }
   n = snprintf( p, s, "%s", cls ); 	s -= n; p += n;
 
   return s;
 }
 
+void pip_describe( pid_t tid ) __attribute__ ((unused));
 void pip_describe( pid_t tid ) {
   pip_task_internal_t *taski = pip_current_task( tid );
   char  *backtrace = "back-traced";
@@ -638,6 +643,9 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 /* the following function will be called implicitly */
 /* this function is called by PiP tasks only        */
 int pip_init_task_implicitly( pip_root_t *root,
+			      pip_task_internal_t *task )
+  __attribute__ ((unused));
+int pip_init_task_implicitly( pip_root_t *root,
 			      pip_task_internal_t *task ) {
   int err = pip_check_root( root );
   if( !err ) {
@@ -659,11 +667,12 @@ int pip_init_task_implicitly( pip_root_t *root,
 }
 
 /* energy-saving spin-lock */
-
+void pip_glibc_lock( void ) __attribute__ ((unused));
 void pip_glibc_lock( void ) {
   if( pip_root != NULL ) pip_sem_wait( &pip_root->lock_glibc );
 }
 
+void pip_glibc_unlock( void ) __attribute__ ((unused));
 void pip_glibc_unlock( void ) {
   if( pip_root != NULL ) pip_sem_post( &pip_root->lock_glibc );
 }

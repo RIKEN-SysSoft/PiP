@@ -117,33 +117,37 @@ static void *pip_get_dynent_ptr( ElfW(Dyn) *dyn, int type ) {
 
 static void pip_unprotect_page( void *addr ) {
   FILE	 *fp_maps;
-  char	 *line = NULL;
-  size_t sz = 0, l;
+  size_t sz, l;
   ssize_t pgsz = sysconf( _SC_PAGESIZE );
-  void	 *sta, *end;
+  char	 *line;
   char	 perm[4];
+  void	 *sta, *end;
   void   *page = (void*) ( (uintptr_t)addr & ~( pgsz - 1 ) );
 
   ASSERT( pgsz <= 0 );
-  sz = 256;
-  ASSERT( ( line = (char*) malloc( sz ) ) == NULL );
-  if( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) != NULL ) {
-    while( ( l = getline( &line, &sz, fp_maps ) ) > 0 ) {
-      line[l] = '\0';
-      if( sscanf( line, "%p-%p %4s", &sta, &end, perm ) == 3 ) {
-	if( sta <= addr  &&  addr < end ) {
-	  if( perm[0] == 'r' && perm[1] == 'w' ) {
-	    /* the target page is already readable and writable */
-	    break;
-	  }
+  ASSERT( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) == NULL );
+
+  line = NULL;
+  sz   = 0;
+  while( ( l = getline( &line, &sz, fp_maps ) ) > 0 ) {
+    //DBGF( "l:%d sz:%d line(%p):%s", (int)l, (int)sz, line, line );
+    if( l == sz ) {
+      ASSERT( ( line = (char*)realloc(line,l+1) ) == NULL );
+    }
+    line[l] = '\0';
+    if( sscanf( line, "%p-%p %4s", &sta, &end, perm ) == 3 ) {
+      if( sta <= addr  &&  addr < end ) {
+	if( perm[0] == 'r' && perm[1] == 'w' ) {
+	  /* the target page is already readable and writable */
+	} else {
 	  ASSERT( mprotect( page, pgsz, PROT_READ | PROT_WRITE ) );
-	  break;
 	}
+	break;
       }
     }
-    /* for some reason (??), the segment cannot be found */
-    fclose( fp_maps );
   }
+  if( line != NULL ) free( line );
+  fclose( fp_maps );
 }
 
 static int pip_replace_clone_itr( struct dl_phdr_info *info,

@@ -138,10 +138,18 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   taski->annex->args.prog_full = NULL;
   PIP_FREE( taski->annex->args.funcname );
   taski->annex->args.funcname = NULL;
-  PIP_FREE( taski->annex->args.argv );
-  taski->annex->args.argv = NULL;
-  PIP_FREE( taski->annex->args.envv );
-  taski->annex->args.envv = NULL;
+
+  /* it might be dangerous to free argv and envv ??? */
+  PIP_FREE( taski->annex->args.argvec.vec );
+  taski->annex->args.argvec.vec  = NULL;
+  PIP_FREE( taski->annex->args.argvec.strs );
+  taski->annex->args.argvec.strs = NULL;
+  PIP_FREE( taski->annex->args.envvec.vec );
+  taski->annex->args.envvec.vec  = NULL;
+  PIP_FREE( taski->annex->args.envvec.strs );
+  taski->annex->args.envvec.strs = NULL;
+  /* it might be dangerous to free argv and envv ??? */
+
   PIP_FREE( taski->annex->args.fd_list );
   taski->annex->args.fd_list = NULL;
   pip_sem_fin( &taski->annex->sleep );

@@ -192,8 +192,14 @@ typedef struct pip_symbol {
   libc_init_first_t	libc_init;    /* initialize GLIBC */
   res_init_t		res_init;     /* to call GLIBC res_init() */
   ctype_init_t		ctype_init;   /* to call GLIBC __ctype_init() */
-  void			*__reserved__[5]; /* reserved for future use */
+  long long		*malloc_hook;
+  void			*__reserved__[4]; /* reserved for future use */
 } pip_symbols_t;
+
+typedef struct pip_char_vec {
+  char			**vec;
+  char			*strs;
+} pip_char_vec_t;
 
 typedef struct pip_spawn_args {
   int			pipid;
@@ -201,10 +207,10 @@ typedef struct pip_spawn_args {
   int			argc;
   char			*prog;
   char			*prog_full;
-  char			**argv;
   char			*funcname;
   void			*start_arg;
-  char			**envv;
+  pip_char_vec_t	argvec;
+  pip_char_vec_t	envvec;
   int			*fd_list; /* list of close-on-exec FDs */
   pip_task_queue_t	*queue;
 } pip_spawn_args_t;
@@ -409,7 +415,7 @@ extern int  pip_is_shared_fd_( void ) PIP_PRIVATE;
 extern int  pip_isa_coefd( int ) PIP_PRIVATE;
 extern void pip_set_name( pip_task_internal_t* ) PIP_PRIVATE;
 
-extern int  pip_task_str( char*, size_t, pip_task_internal_t* ) PIP_PRIVATE;
+extern int  pip_taski_str( char*, size_t, pip_task_internal_t* ) PIP_PRIVATE;
 extern size_t pip_idstr( char*, size_t ) PIP_PRIVATE;
 
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;

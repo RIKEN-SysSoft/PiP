@@ -36,32 +36,14 @@
 #include <pip_internal.h>
 #include <pip_gdbif_func.h>
 
-int pip_task_brief( pip_task_t *task, char *msg, size_t len ) {
-  pip_task_internal_t	*taski  = PIP_TASKI(task);
-  pip_task_internal_t	*schedi = taski->task_sched;
-  pip_task_internal_t	*ctx    = pip_task;
-  char 			*opn = "<", *cls = ">";
-  char			*sched = "/", *delim = ":";
-  int 			n, l = len;
-
-  n = snprintf( msg, l, opn );		msg += n; l -= n;
-  n = pip_task_str( msg, l, taski ); 	msg += n; l -= n;
-  n = snprintf( msg, l, sched );	msg += n; l -= n;
-  n = pip_task_str( msg, l, schedi );	msg += n; l -= n;
-  n = snprintf( msg, l, delim );	msg += n; l -= n;
-  n = pip_task_str( msg, l, ctx );	msg += n; l -= n;
-  n = snprintf( msg, l, cls );		l -= n;
-  return len - l;
-}
-
 #ifdef DEBUG
 #define QUEUE_DUMP(taski,queue)					\
   do {								\
-    char msg[512];						\
+    char msg[256];						\
     char *p = msg;						\
     int l = sizeof(msg), n;					\
     if( taski != NULL ) {					\
-      n = pip_task_brief( PIP_TASKQ(taski), p, l );		\
+      n = pip_taski_str( p, l, taski );				\
       p += n; l -= n;						\
     }								\
     n = snprintf( p, l, ":" );					\
@@ -74,15 +56,15 @@ int pip_task_brief( pip_task_t *task, char *msg, size_t len ) {
       PIP_TASKQ_FOREACH( queue, task ) {			\
 	n = snprintf( p, l, " [%d]:", iii++ );			\
 	p += n; l -= n;						\
-	n = pip_task_brief( task, p, l );			\
+	n = pip_task_str( p, l, task );				\
 	p += n; l -= n;						\
       }								\
     }								\
     DBGF( "QDUMP %s: %s", #queue, msg );			\
   } while( 0 )
-#else
+#else  /* DEBUG */
 #define QUEUE_DUMP( taski, queue )
-#endif
+#endif	/* DEBUG */
 
 static void pip_wakeup( pip_task_internal_t *taski ) {
   uint32_t 	opts = taski->annex->opts_sync;

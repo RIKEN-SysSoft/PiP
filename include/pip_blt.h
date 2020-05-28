@@ -246,6 +246,8 @@ typedef struct pip_mutex {
  * @{
  */
 
+extern int pip_task_str( char*, size_t, pip_task_t* );
+
 #ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus
 extern "C" {
@@ -562,7 +564,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   INLINE void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
-    extern int pip_task_brief( pip_task_t *task, char *msg, size_t len );
     if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->describe == NULL ) {
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) {
@@ -572,7 +573,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 	char msg[256];
 	int i = 0;
 	PIP_TASKQ_FOREACH( &queue->queue, task ) {
-	  pip_task_brief( task, msg, sizeof(msg) );
+	  (void) pip_task_str( msg, sizeof(msg), task );
 	  fprintf( fp, "%s: Queue[%d/%d]:%s\n", tag, i++, queue->length, msg );
 	}
       }

@@ -52,9 +52,7 @@
 //#define ATTR_NOINLINE		__attribute__ ((noinline))
 //#define ATTR_NOINLINE
 
-#define MCHECK
-
-#ifdef MCHECK
+#ifdef DEBUG
 #include <mcheck.h>
 #endif
 
@@ -415,7 +413,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
   char			*envroot, *envtask;
 #endif
 
-#ifdef MCHECK
+#ifdef DEBUG
   mcheck( NULL );
 #endif
 

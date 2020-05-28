@@ -139,13 +139,13 @@ static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
   task->annex->gdbif_task = gdbif_task;
   gdbif_task->pathname     = task->annex->args.prog;
   gdbif_task->realpathname = NULL; /* filled by pip_gdbif_load() later */
-  if ( task->annex->args.argv == NULL ) {
+  if ( task->annex->args.argvec.vec == NULL ) {
     gdbif_task->argc = 0;
   } else {
-    gdbif_task->argc = pip_count_vec( task->annex->args.argv );
+    gdbif_task->argc = pip_count_vec( task->annex->args.argvec.vec );
   }
-  gdbif_task->argv         = task->annex->args.argv;
-  gdbif_task->envv         = task->annex->args.envv;
+  gdbif_task->argv         = task->annex->args.argvec.vec;
+  gdbif_task->envv         = task->annex->args.envvec.vec;
   gdbif_task->handle       = NULL; /* filled by pip_gdbif_load() later*/
   gdbif_task->load_address = NULL; /* filled by pip_gdbif_load() later */
   gdbif_task->exit_code    = -1;

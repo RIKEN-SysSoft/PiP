@@ -60,70 +60,68 @@ int pip_count_vec( char **vecsrc ) {
   return( n );
 }
 
-static char **pip_copy_vec3( char *addition0,
-			     char *addition1,
-			     char *addition2,
-			     char **vecsrc ) {
-  char 		**vecdst, *p;
-  size_t	vecln, veccc, sz;
-  int 		i, j;
+static int
+pip_copy_vec( char **vecadd, char **vecsrc, /* input */
+	      pip_char_vec_t *cvecp ) {	    /* output */
+  char 		**vecdst, *p, *strs;
+  size_t	veccc, sz;
+  int 		vecln, i, j;
 
   vecln = 0;
   veccc = 0;
-  if( addition0 != NULL ) {
-    vecln ++;
-    veccc += strlen( addition0 ) + 1;
-  }
-  if( addition1 != NULL ) {
-    vecln ++;
-    veccc += strlen( addition1 ) + 1;
-  }
-  if( addition2 != NULL ) {
-    vecln ++;
-    veccc += strlen( addition2 ) + 1;
+  if( vecadd != NULL ) {
+    for( i=0; vecadd[i]!=NULL; i++ ) {
+      vecln ++;
+      veccc += strlen( vecadd[i] ) + 1;
+    }
   }
   for( i=0; vecsrc[i]!=NULL; i++ ) {
     vecln ++;
     veccc += strlen( vecsrc[i] ) + 1;
+    DBGF( "VEC[%d]: '%s'", i, vecsrc[i] );
   }
   vecln ++;		/* plus final NULL */
 
-  sz = ( sizeof(char*) * vecln ) + veccc;
-  if( ( vecdst = (char**) PIP_MALLOC( sz ) ) == NULL ) return NULL;
-  p = ((char*)vecdst) + ( sizeof(char*) * vecln );
-  i = j = 0;
-  if( addition0 != NULL ) {
-    vecdst[j++] = p;
-    p = stpcpy( p, addition0 ) + 1;
+  sz = sizeof(char*) * vecln;
+  if( ( vecdst = (char**) PIP_MALLOC( sz    ) ) == NULL ) {
+    return ENOMEM;
   }
-  if( addition1 != NULL ) {
-    vecdst[j++] = p;
-    p = stpcpy( p, addition1 ) + 1;
+  if( ( strs   = (char*)  PIP_MALLOC( veccc ) ) == NULL ) {
+    PIP_FREE( strs );
+    return ENOMEM;
   }
-  if( addition2 != NULL ) {
-    vecdst[j++] = p;
-    p = stpcpy( p, addition2 ) + 1;
+  p = strs;
+  j = 0;
+  if( vecadd != NULL ) {
+    for( i=0; vecadd[i]!=NULL; i++ ) {
+      vecdst[j++] = p;
+      p = stpcpy( p, vecadd[i] ) + 1;
+    }
   }
   for( i=0; vecsrc[i]!=NULL; i++ ) {
+    char *q = p;
     vecdst[j++] = p;
     p = stpcpy( p, vecsrc[i] ) + 1;
+    DBGF( "VEC[%d/%d]: '%s' : '%s'", i, vecln, vecsrc[i], q );
+    ASSERT( j>vecln );
+    ASSERT( p-strs>veccc );
   }
   vecdst[j] = NULL;
-
-  return( vecdst );
+  cvecp->vec  = vecdst;
+  cvecp->strs = strs;
+  return 0;
 }
 
-static char **pip_copy_vec( char **vecsrc ) {
-  return pip_copy_vec3( NULL, NULL, NULL, vecsrc );
-}
-
-#define ENVLEN	(256)
-static char **pip_copy_env( char **envsrc, int pipid ) {
+#define ENVLEN	(64)
+static int pip_copy_env( char **envsrc, int pipid,
+			 pip_char_vec_t *vecp ) {
   char rootenv[ENVLEN], taskenv[ENVLEN];
   char *preload_env = getenv( "LD_PRELOAD" );
+  char *addenv[4] = { rootenv, taskenv, preload_env, NULL };
+
   ASSERT( snprintf( rootenv, ENVLEN, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
   ASSERT( snprintf( taskenv, ENVLEN, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
-  return pip_copy_vec3( rootenv, taskenv, preload_env, envsrc );
+  return pip_copy_vec( addenv, envsrc, vecp );
 }
 
 size_t pip_stack_size( void ) {
@@ -245,7 +243,7 @@ static int pip_find_symbols( pip_spawn_program_t *progp,
   symp->ctype_init       = dlsym( handle, "__ctype_init"          );
   symp->mallopt          = dlsym( handle, "mallopt"               );
   symp->libc_fflush      = dlsym( handle, "fflush"                );
-
+  symp->malloc_hook      = dlsym( handle, "__malloc_hook"         );
   if( symp->libc_init == NULL ) {
     /* GLIBC variables */
     symp->libc_argcp     = dlsym( handle, "__libc_argc"           );
@@ -478,7 +476,9 @@ static void pip_glibc_init( pip_symbols_t *symbols,
   /* setting GLIBC variables */
   if( symbols->libc_init != NULL ) {
     DBGF( ">> _init@%p", symbols->libc_init );
-    symbols->libc_init( args->argc, args->argv, args->envv );
+    symbols->libc_init( args->argc,
+			args->argvec.vec,
+			args->envvec.vec );
     DBGF( "<< _init@%p", symbols->libc_init );
   } else {
     if( symbols->libc_argcp != NULL ) {
@@ -487,10 +487,10 @@ static void pip_glibc_init( pip_symbols_t *symbols,
     }
     if( symbols->libc_argvp != NULL ) {
       DBGF( "&__libc_argv=%p", symbols->libc_argvp );
-      *symbols->libc_argvp = args->argv;
+      *symbols->libc_argvp = args->argvec.vec;
     }
     if( symbols->environ != NULL ) {
-      *symbols->environ = args->envv;	/* setting environment vars */
+      *symbols->environ = args->envvec.vec;	/* setting environment vars */
     }
     if( symbols->prog != NULL ) {
       *symbols->prog = args->prog;
@@ -526,6 +526,9 @@ static void pip_glibc_init( pip_symbols_t *symbols,
 #endif
   }
 #endif
+  if( symbols->malloc_hook != NULL ) { /* Kaiming Patch */
+    *symbols->malloc_hook = 0x0;
+  }
 }
 
 static int pip_call_before_hook( pip_task_internal_t *taski ) {
@@ -597,8 +600,8 @@ static void pip_start_cb( void *tsk ) {
 static void pip_start_user_func( pip_spawn_args_t *args,
 				 pip_task_internal_t *self ) {
   pip_task_queue_t *queue = args->queue;
-  char **argv     = args->argv;
-  char **envv     = args->envv;
+  char **argv     = args->argvec.vec;
+  char **envv     = args->envvec.vec;
   void *start_arg = args->start_arg;
   char *env_stop;
   volatile int	flag = 0;
@@ -854,14 +857,13 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     args->prog_full = strdup( args->prog );
     if( args->prog_full == NULL ) ERRJ_ERR( ENOMEM );
   }
-  if( ( args->envv = pip_copy_env( progp->envv, pipid ) ) == NULL ) {
-    ERRJ_ERR( ENOMEM );
-  }
+  err = pip_copy_env( progp->envv, pipid, &args->envvec );
+  if( err ) ERRJ_ERR( err );
+
   if( progp->funcname == NULL ) {
-    if( ( args->argv = pip_copy_vec( progp->argv ) ) == NULL ) {
-      ERRJ_ERR( ENOMEM );
-    }
-    args->argc = pip_count_vec( args->argv );
+    err = pip_copy_vec( NULL, progp->argv, &args->argvec );
+    if( err ) ERRJ_ERR( err );
+    args->argc = pip_count_vec( args->argvec.vec );
   } else {
     if( ( args->funcname = strdup( progp->funcname ) ) == NULL ) {
       ERRJ_ERR( ENOMEM );
@@ -956,12 +958,14 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   } else {
   error:			/* undo */
     if( args != NULL ) {
-      PIP_FREE( args->prog );
-      PIP_FREE( args->prog_full );
-      PIP_FREE( args->funcname );
-      PIP_FREE( args->argv );
-      PIP_FREE( args->envv );
-      PIP_FREE( args->fd_list );
+      PIP_FREE( args->prog        );
+      PIP_FREE( args->prog_full   );
+      PIP_FREE( args->funcname    );
+      PIP_FREE( args->argvec.vec  );
+      PIP_FREE( args->argvec.strs );
+      PIP_FREE( args->envvec.vec  );
+      PIP_FREE( args->envvec.strs );
+      PIP_FREE( args->fd_list     );
     }
     if( task != NULL ) {
       if( task->annex->loaded != NULL ) pip_dlclose( task->annex->loaded );
