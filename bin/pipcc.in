@@ -59,6 +59,13 @@ dynamic_linker=@dynamic_linker@
 
 : ${CC:=cc}
 
+self=$0;
+
+err_nostatic() {
+    echo "$self does not support static linking" >&2;
+    exit 1;
+}
+
 is_linking=true
 pip_root=true
 pip_task=true
@@ -78,6 +85,7 @@ while [ "$1" != "" ]; do
 	--nopip)   no_pip=true;;
 	--silent)  silent=true;;
 	--dryrun)  dryrun=true;;
+	-Bstatic|-static) err_nostatic;;
 	*)         opts="${opts} $1";;
     esac
     shift;
