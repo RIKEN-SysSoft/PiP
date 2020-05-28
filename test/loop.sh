@@ -128,16 +128,17 @@ if [ $nodebug -ne 0 ]; then
     export PIP_NODEBUG=1;
 fi
 
-if [ "x${mode_list}" = "x" ]; then
-    mode_list='-C -L -G -T';
-fi
-
-for mode in $mode_list
-do
-    if $dir/scripts/pip-mode $mode $dir/util/pip_mode_check> /dev/null 2>&1; then
-	mlist="$mode $mlist";
+if [ $nomode -eq 0 ]; then
+    if [ "x${mode_list}" = "x" ]; then
+	mode_list='-C -L -G -T';
     fi
-done
+    for mode in $mode_list
+    do
+	if $dir/scripts/pip-mode $mode $dir/util/pip_mode_check > /dev/null 2>&1; then
+	    mlist="$mode $mlist";
+	fi
+    done
+fi
 
 PROGNAM=`basename $1`;
 FILE="loop-$$.log";
@@ -170,17 +171,17 @@ while true; do
 		touch $TMP
 	    fi
 	done
-    else
+    else			# nomode
 	echo "" > $TMP;
 	if [ $display -eq 0 ]; then
-	    echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;
+	    echo "[[" "$i" "]]" "$cmdline" `date` >> $TMP;
 	    if [ $quiet -eq 0 ]; then
 		echo -n $i "";
 	    fi
 	    $@ >> $TMP 2>&1;
 	else
 	    echo;
-	    echo "[[" "$i$mode" "]]" "$cmdline" `date` | tee -a $TMP;
+	    echo "[[" "$i" "]]" "$cmdline" `date` | tee -a $TMP;
 	    echo;
 	    $@ 2>&1 | tee -a $TMP;
 	fi
