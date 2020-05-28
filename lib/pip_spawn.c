@@ -78,7 +78,6 @@ pip_copy_vec( char **vecadd, char **vecsrc, /* input */
   for( i=0; vecsrc[i]!=NULL; i++ ) {
     vecln ++;
     veccc += strlen( vecsrc[i] ) + 1;
-    DBGF( "VEC[%d]: '%s'", i, vecsrc[i] );
   }
   vecln ++;		/* plus final NULL */
 
@@ -99,10 +98,8 @@ pip_copy_vec( char **vecadd, char **vecsrc, /* input */
     }
   }
   for( i=0; vecsrc[i]!=NULL; i++ ) {
-    char *q = p;
     vecdst[j++] = p;
     p = stpcpy( p, vecsrc[i] ) + 1;
-    DBGF( "VEC[%d/%d]: '%s' : '%s'", i, vecln, vecsrc[i], q );
     ASSERT( j>vecln );
     ASSERT( p-strs>veccc );
   }

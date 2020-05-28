@@ -132,6 +132,13 @@ if [ "x${mode_list}" = "x" ]; then
     mode_list='-C -L -G -T';
 fi
 
+for mode in $mode_list
+do
+    if $dir/scripts/pip-mode $mode $dir/util/pip_mode_check> /dev/null 2>&1; then
+	mlist="$mode $mlist";
+    fi
+done
+
 PROGNAM=`basename $1`;
 FILE="loop-$$.log";
 TMP=.$FILE;
@@ -141,7 +148,7 @@ start=`date +%s`;
 
 while true; do
     if [ $nomode -eq 0 ]; then
-	for mode in $mode_list; do
+	for mode in $mlist; do
 	    echo "" > $TMP #rewind
 	    if [ $display -eq 0 ]; then
 		echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;

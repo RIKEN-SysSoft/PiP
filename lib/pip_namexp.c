@@ -202,10 +202,10 @@ int pip_named_export( void *exp, const char *format, ... ) {
     if( ( entry = pip_find_namexp( head, hash, name ) ) == NULL ) {
       /* no entry yet */
       entry = pip_new_entry( namexp, name, hash );
-      name = NULL;		/* not to free since name is in use */
       if( entry == NULL ) {
 	err = ENOMEM;
       } else {
+	name = NULL;		/* not to free since name is in use */
 	entry->address       = exp;
 	entry->flag_exported = 1;
 	pip_add_namexp_entry( head, entry );
@@ -217,10 +217,10 @@ int pip_named_export( void *exp, const char *format, ... ) {
       } else {
 	/* this is a query entry */
 	new = pip_new_entry( namexp, name, hash );
-	name = NULL;		/* not to free since name is in use */
 	if( new == NULL ) {
 	  err = ENOMEM;
 	} else {
+	  name = NULL;		/* not to free since name is in use */
 	  pip_del_namexp_entry( entry );
 	  entry->address     = exp;
 	  new->address       = exp;
@@ -294,7 +294,6 @@ static int pip_do_named_import( int pipid,
 					  (void*) head );
 	  /* now, it is exported */
 	  /* note that the lock is unlocked !! */
-	  DBG;
 	  err     = wait.err;
 	  address = wait.address;
 	  DBGF( "address:%p  err:%d", address, err );
@@ -308,10 +307,10 @@ static int pip_do_named_import( int pipid,
 	err = EAGAIN;
       } else {
 	entry = pip_new_entry( namexp, name, hash );
-	name = NULL;
 	if( entry == NULL ) {
 	  err = ENOMEM;
 	} else {
+	  name = NULL;		/* not to free since name is in use */
 	  pip_add_namexp_entry( head, entry );
 	  /* add query entry and suspend until it is exported */
 	  /* when the query is enqueued, lock in unlocked */
