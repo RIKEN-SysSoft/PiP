@@ -109,7 +109,8 @@ static pid_t pip_gettid( void ) {
 }
 
 int pip_root_p_( void ) {
-  return pip_root != NULL && pip_task == NULL;
+  return pip_root != NULL && pip_task != NULL &&
+    pip_root->task_root == pip_task;
 }
 
 int pip_idstr( char *buf, size_t sz ) {
