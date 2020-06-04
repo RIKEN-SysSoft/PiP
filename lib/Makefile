@@ -83,7 +83,7 @@ include $(top_srcdir)/build/rule.mk
 
 include fcontext.mk
 
-$(OBJS): $(DEPINCS) Makefile
+$(OBJS): $(DEPINCS) Makefile fcontext.mk
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@

@@ -91,6 +91,7 @@ fi
 # Checks for library functions.
 
 AC_CONFIG_FILES([
+	config.sh
 	build/config.mk
 	release/version.conf
 	lib/fcontext.mk
