@@ -192,9 +192,6 @@ extern int pip_debug_env( void );
 #define NEVER_REACH_HERE						\
   do { NL_EMSG( "Should never reach here !!!!!!\n" ); } while(0)
 
-#define QUEUE_DESCRIBE( Q )				\
-  pip_queue_describe( stderr, __func__, PIP_TASKQ(Q) );
-
 #define ERRJ		{ DBG;                goto error; }
 #define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }
 #define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
