@@ -26,6 +26,7 @@ default_localedir = @localedir@
 
 glibc_incdir = @glibc_incdir@
 glibc_libdir = @glibc_libdir@
+glibc_lib = @glibc_lib@
 dynamic_linker = @dynamic_linker@
 
 DEFAULT_CC = @CC@

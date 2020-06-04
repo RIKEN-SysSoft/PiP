@@ -52,7 +52,7 @@
 //#define ATTR_NOINLINE		__attribute__ ((noinline))
 //#define ATTR_NOINLINE
 
-#ifdef DEBUG
+#ifdef DO_MCHECK
 #include <mcheck.h>
 #endif
 
@@ -106,10 +106,10 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
   char *env  = getenv( PIP_ENV_MODE );
 
   enum PIP_MODE_BITS {
-    PIP_MODE_PTHREAD_BIT          = 1,
-    PIP_MODE_PROCESS_PRELOAD_BIT  = 2,
-    PIP_MODE_PROCESS_GOT_BIT      = 4,
-    PIP_MODE_PROCESS_PIPCLONE_BIT = 8
+		      PIP_MODE_PTHREAD_BIT          = 1,
+		      PIP_MODE_PROCESS_PRELOAD_BIT  = 2,
+		      PIP_MODE_PROCESS_GOT_BIT      = 4,
+		      PIP_MODE_PROCESS_PIPCLONE_BIT = 8
   } desired = 0;
 
   if( ( opts & ~PIP_VALID_OPTS ) != 0 ) {
@@ -251,8 +251,8 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
     } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
       if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
 	pip_warn_mesg("process mode is requested but pip_clone_info symbol "
-		            "is not found in $LD_PRELOAD and "
-		            "pip_clone_mostly_pthread() symbol is not found in "
+		      "is not found in $LD_PRELOAD and "
+		      "pip_clone_mostly_pthread() symbol is not found in "
 		      "glibc" );
       } else {
 	pip_warn_mesg( "process:pipclone mode is requested but "
@@ -341,8 +341,8 @@ int pip_check_sync_flag( uint32_t *optsp ) {
 }
 
 void pip_set_signal_handler( int sig,
-			      void(*handler)(),
-			      struct sigaction *oldp ) {
+			     void(*handler)(),
+			     struct sigaction *oldp ) {
   struct sigaction	sigact;
 
   memset( &sigact, 0, sizeof( sigact ) );
@@ -358,21 +358,21 @@ void pip_unset_signal_handler( int sig, struct sigaction *oldp ) {
 
 /* save PiP environments */
 
-static void pip_save_envs( pip_root_t *root ) {
+static void pip_save_debug_envs( pip_root_t *root ) {
   char *env;
 
   if( ( env = getenv( PIP_ENV_STOP_ON_START ) ) != NULL )
     root->envs.stop_on_start = strdup( env );
-  if( ( env = getenv( PIP_ENV_GDB_PATH     ) ) != NULL )
-    root->envs.gdb_path = strdup( env );
-  if( ( env = getenv( PIP_ENV_GDB_COMMAND  ) ) != NULL )
-    root->envs.gdb_command = strdup( env );
-  if( ( env = getenv( PIP_ENV_GDB_SIGNALS  ) ) != NULL )
-    root->envs.gdb_signals = strdup( env );
-  if( ( env = getenv( PIP_ENV_SHOW_MAPS    ) ) != NULL )
-    root->envs.show_maps = strdup( env );
-  if( ( env = getenv( PIP_ENV_SHOW_PIPS    ) ) != NULL )
-     root->envs.show_pips = strdup( env );
+  if( ( env = getenv( PIP_ENV_GDB_PATH      ) ) != NULL )
+    root->envs.gdb_path      = strdup( env );
+  if( ( env = getenv( PIP_ENV_GDB_COMMAND   ) ) != NULL )
+    root->envs.gdb_command   = strdup( env );
+  if( ( env = getenv( PIP_ENV_GDB_SIGNALS   ) ) != NULL )
+    root->envs.gdb_signals   = strdup( env );
+  if( ( env = getenv( PIP_ENV_SHOW_MAPS     ) ) != NULL )
+    root->envs.show_maps     = strdup( env );
+  if( ( env = getenv( PIP_ENV_SHOW_PIPS     ) ) != NULL )
+    root->envs.show_pips    = strdup( env );
 }
 
 /* signal handlers */
@@ -400,7 +400,7 @@ void pip_unset_sigmask( void ) {
 
 /* API */
 
-#define PIP_CACHE_ALIGN(X) \
+#define PIP_CACHE_ALIGN(X)					\
   ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
 
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
@@ -409,21 +409,13 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
   size_t		sz;
   int			ntasks, pipid;
   int			i, err = 0;
-#ifndef PIP_INIT_IMPLICITLY
   char			*envroot, *envtask;
-#endif
 
-#ifdef DEBUG
+#ifdef DO_MCHECK
   mcheck( NULL );
 #endif
 
-  if(
-#ifdef PIP_INIT_IMPLICITLY
-     pip_root == NULL && pip_task == NULL
-#else
-     ( envroot = getenv( PIP_ROOT_ENV ) ) == NULL
-#endif
-      ) {
+  if(( envroot = getenv( PIP_ROOT_ENV ) ) == NULL ) {
     /* root process */
     if( pip_root != NULL ) RETURN( EBUSY ); /* already initialized */
     if( ntasksp == NULL ) {
@@ -518,7 +510,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
 			    pip_sigterm_handler,
 			    &root->old_sigterm );
 
-    pip_save_envs( root );
+    pip_save_debug_envs( root );
 
     pip_gdbif_initialize_root( ntasks );
     pip_gdbif_task_commit( taski );
@@ -648,10 +640,6 @@ int pip_import( int pipid, void **expp  ) {
 
 int pip_is_initialized( void ) {
   return pip_task != NULL && pip_root != NULL;
-}
-
-int pip_isa_root( void ) {
-  return pip_is_initialized() && PIP_ISA_ROOT( pip_task );
 }
 
 int pip_isa_task( void ) {

@@ -66,7 +66,6 @@ static int pipid_to_gdbif( int pipid ) {
 void pip_gdbif_load( pip_task_internal_t *task ) {
   struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
   Dl_info dli;
-  char buf[PATH_MAX];
 
   ENTER;
   if( gdbif_task != NULL ) {
@@ -91,27 +90,14 @@ void pip_gdbif_load( pip_task_internal_t *task ) {
     }
     /* dli.dli_fname is same with task->args.prog and may be a relative path */
     DBGF( "[%d] task:%p gdbif_task:%p", task->pipid, task, gdbif_task );
-    if( realpath( task->annex->args.prog, buf ) == NULL ) {
-      gdbif_task->realpathname = NULL; /* give up */
-      pip_warn_mesg( "realpath(%s): %s"
-		     " - PiP-gdb won't work with this PiP task %d",
-		     task->annex->args.prog, strerror( errno ), task->pipid );
-    } else {
-      gdbif_task->realpathname = strdup( buf );
-      DBGF( "gdbif_task->realpathname:%p", gdbif_task->realpathname );
-      if( gdbif_task->realpathname == NULL ) { /* give up */
-	pip_warn_mesg( "strdup(%s) failure"
-		       " - PiP-gdb won't work with this PiP task %d",
-		       task->annex->args.prog, task->pipid );
-      }
-    }
+    gdbif_task->realpathname = task->annex->args.prog_full;
   }
   RETURNV;
 }
 
 void pip_gdbif_exit( pip_task_internal_t *task, int extval ) {
   struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
-  DBG;
+
   if( gdbif_task != NULL ) {
     gdbif_task->pid       = -1;
     gdbif_task->status    = PIP_GDBIF_STATUS_TERMINATED;
@@ -122,7 +108,7 @@ void pip_gdbif_exit( pip_task_internal_t *task, int extval ) {
 
 void pip_gdbif_task_commit( pip_task_internal_t *task ) {
   struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
-  DBG;
+
   gdbif_task->pid = task->annex->tid;
   pip_memory_barrier();
   gdbif_task->status = PIP_GDBIF_STATUS_CREATED;
@@ -139,11 +125,7 @@ static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
   task->annex->gdbif_task = gdbif_task;
   gdbif_task->pathname     = task->annex->args.prog;
   gdbif_task->realpathname = NULL; /* filled by pip_gdbif_load() later */
-  if ( task->annex->args.argvec.vec == NULL ) {
-    gdbif_task->argc = 0;
-  } else {
-    gdbif_task->argc = pip_count_vec( task->annex->args.argvec.vec );
-  }
+  gdbif_task->argc         = task->annex->args.argc;
   gdbif_task->argv         = task->annex->args.argvec.vec;
   gdbif_task->envv         = task->annex->args.envvec.vec;
   gdbif_task->handle       = NULL; /* filled by pip_gdbif_load() later*/
@@ -242,17 +224,12 @@ void pip_gdbif_finalize_task( pip_task_internal_t *task ) {
   if( gdbif_task != NULL ) {
     gdbif_task->status   = PIP_GDBIF_STATUS_TERMINATED;
     pip_memory_barrier();
-    gdbif_task->pathname = NULL;
-    gdbif_task->argc     = 0;
-    gdbif_task->argv     = NULL;
-    gdbif_task->envv     = NULL;
-    if( gdbif_task->realpathname  != NULL ) {
-      char *p = gdbif_task->realpathname;
-      DBGF( "p:%p", p );
-      gdbif_task->realpathname = NULL; /* do this before free() for PIP-gdb */
-      pip_memory_barrier();
-      free( p );
-    }
+    gdbif_task->pathname     = NULL;
+    gdbif_task->argc         = 0;
+    gdbif_task->argv         = NULL;
+    gdbif_task->envv         = NULL;
+    gdbif_task->realpathname = NULL;
+
     pip_spin_lock( &gdbif_root->lock_free );
     {
       PIP_SLIST_INSERT_HEAD(&gdbif_root->task_free, gdbif_task, free_list);

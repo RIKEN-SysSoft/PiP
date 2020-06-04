@@ -27,7 +27,8 @@ case "$with_glibc_libdir" in
 ""|yes|no) with_glibc_libdir="/usr/lib64";;
 esac
 dynamic_linker=`ls -d "${with_glibc_libdir}"/ld-@<:@0-9@:>@*.so | sed -n '$p'`
-if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}"; then
+glibc_lib=`ls -d "${with_glibc_libdir}"/libc-@<:@0-9@:>@*.so | sed -n '$p'`
+if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}" -a -f "${glibc_lib}"; then
   AC_MSG_RESULT([${with_glibc_libdir}])
   glibc_libdir="${with_glibc_libdir}"
   glibc_incdir="`realpath ${with_glibc_libdir}/../include`"
@@ -45,6 +46,7 @@ AC_SUBST(includedir)
 AC_SUBST(libdir)
 AC_SUBST(glibc_incdir)
 AC_SUBST(glibc_libdir)
+AC_SUBST(glibc_lib)
 AC_SUBST(dynamic_linker)
 
 AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--disable-fcontext],
@@ -91,6 +93,7 @@ fi
 # Checks for library functions.
 
 AC_CONFIG_FILES([
+	config.sh
 	build/config.mk
 	release/version.conf
 	lib/fcontext.mk

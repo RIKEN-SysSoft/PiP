@@ -173,11 +173,13 @@ typedef	void (*fflush_t)(FILE*);
 typedef int  (*named_export_fin_t)(struct pip_task_internal*);
 typedef int  (*pip_clone_mostly_pthread_t)
 ( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
+typedef int  (*pip_init_t)(struct pip_root*,pip_task_internal_t*);
 
 typedef struct pip_symbol {
   main_func_t		main;	      /* main function address */
   start_func_t		start;	      /* strat function instead of main */
-  /* PiP init */
+  /* PiP init functions */
+  pip_init_t		pip_init;     /* implicit initialization */
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
   /* glibc variables */
   char			***libc_argvp; /* to set __libc_argv */
@@ -185,15 +187,15 @@ typedef struct pip_symbol {
   char			**prog;
   char			**prog_full;
   char			***environ;    /* pointer to the environ variable */
-  /* GLIBC functions */
-  mallopt_t		mallopt;      /* to call GLIBC mallopt() */
-  fflush_t		libc_fflush;  /* to call GLIBC fflush() at the end */
   /* GLIBC init funcs */
   libc_init_first_t	libc_init;    /* initialize GLIBC */
   res_init_t		res_init;     /* to call GLIBC res_init() */
   ctype_init_t		ctype_init;   /* to call GLIBC __ctype_init() */
   long long		*malloc_hook;
-  void			*__reserved__[4]; /* reserved for future use */
+  /* GLIBC functions */
+  mallopt_t		mallopt;      /* to call GLIBC mallopt() */
+  fflush_t		libc_fflush;  /* to call GLIBC fflush() at the end */
+  void			*__reserved__[3]; /* reserved for future use */
 } pip_symbols_t;
 
 typedef struct pip_char_vec {
@@ -335,8 +337,6 @@ typedef struct pip_root {
 
 } pip_root_t;
 
-typedef int  (*pip_init_t)(pip_root_t*,pip_task_internal_t*);
-
 extern pip_clone_mostly_pthread_t 	pip_clone_mostly_pthread_ptr;
 extern int  pip_get_thread_id( pthread_t th );
 extern void pip_set_thread_id( pthread_t th, int );
@@ -437,7 +437,6 @@ extern int  pip_are_sizes_ok( pip_root_t* ) PIP_PRIVATE;
 
 extern void pip_debug_on_exceptions( pip_task_internal_t* ) PIP_PRIVATE;
 
-extern void pip_message( FILE *, char*, const char*, va_list ) PIP_PRIVATE;
 extern pip_task_internal_t *pip_current_task( int ) PIP_PRIVATE;
 
 

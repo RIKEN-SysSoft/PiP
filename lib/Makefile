@@ -42,15 +42,17 @@ LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
-CPPFLAGS += -I$(GLIBCINCDIR) -I$(PIPCPPFLAGS) -I. \
+CPPFLAGS += $(PIPCPPFLAGS) -I. \
 	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
+	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
 	-DPIP_BUILD_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\" \
 	-DPIP_INSTALL_BIN_PIPS=\"$(default_bindir)/pips\" \
-	-DPIP_BUILD_BIN_PIPS=\"../bin/pips\"
-CFLAGS += $(PIPCFLAGS_TASK)
-FCTXOBJS = fctx_jump.o fctx_make.o
-LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY)
+	-DPIP_BUILD_BIN_PIPS=\"../bin/pips\" \
+	$(CPPFLAGS_DEBUG)
+CFLAGS   += $(PIPCFLAGS_TASK)
+FCTXOBJS  = fctx_jump.o fctx_make.o
+LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
 
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
@@ -83,7 +85,7 @@ include $(top_srcdir)/build/rule.mk
 
 include fcontext.mk
 
-$(OBJS): $(DEPINCS) Makefile
+$(OBJS): $(DEPINCS) Makefile ../build/config.mk
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS) -o $@
@@ -105,10 +107,10 @@ install:
 	ln -s $(LIBRARY_PIPINIT) $(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
-	CPPFLAGS+="-DDEBUG" make all;
+	CPPFLAGS_DEBUG="-DDEBUG" make all;
 
 cdebug:
-	CPPFLAGS+="-DDEBUG" make clean all;
+	make clean debug;
 
 TAGS:
 	ctags -Re

@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAMS  = pipcc pip-check pip-mode
+PROGRAMS = pipcc pip-check pip-mode
 
 PROGRAMS_TO_INSTALL = # nothing
 
@@ -57,7 +57,7 @@ test: hello.c Makefile
 	../test.sh test.list
 
 post-clean-hook:
-	$(RM) -f a.out hello hello.o piproot piptask pipboth
+	$(RM) $(PROGRAMS) a.out hello hello.o root task
 
 install_test_dir = $(prefix)/test/scripts
 

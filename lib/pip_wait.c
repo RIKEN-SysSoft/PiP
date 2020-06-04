@@ -132,16 +132,22 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
     //pip_dlclose( taski->annex->loaded );
     //taski->annex->loaded = NULL;
   }
+#ifdef AH
   PIP_FREE( taski->annex->args.prog );
   taski->annex->args.prog = NULL;
   PIP_FREE( taski->annex->args.prog_full );
   taski->annex->args.prog_full = NULL;
   PIP_FREE( taski->annex->args.funcname );
   taski->annex->args.funcname = NULL;
+  PIP_FREE( taski->annex->args.start_arg );
+  taski->annex->args.start_arg = NULL;
+#endif
+#ifdef AH
   PIP_FREE( taski->annex->args.argvec.vec );
   taski->annex->args.argvec.vec  = NULL;
   PIP_FREE( taski->annex->args.argvec.strs );
   taski->annex->args.argvec.strs = NULL;
+#endif
   /* since envvec might be free()ed by calling realloc() */
   /* in glibc and envvec cannot be free()ed here         */
   PIP_FREE( taski->annex->args.fd_list );
@@ -265,7 +271,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   RETURN( err );
 }
 
-static int pip_check_task( pip_task_internal_t *taski ) {
+static int pip_wait_task( pip_task_internal_t *taski ) {
   ENTERF( "PIPID:%d", taski->pipid );
   if( taski->flag_exit == PIP_EXIT_WAITED ) {
     goto found;
@@ -288,7 +294,7 @@ static int pip_check_task( pip_task_internal_t *taski ) {
       }
     }
   }
-  RETURN( 0 );			/* not found */
+  RETURN( 0 );			/* not yet */
  found:
   RETURN( 1 );
 }
@@ -298,16 +304,15 @@ static int pip_nonblocking_waitany( void ) {
   static int		start = 0;
   int			id, pipid = PIP_PIPID_NULL;
 
-  DBG;
   pip_spin_lock( &pip_root->lock_tasks );
   /*** start lock region ***/
   for( id=start; id<pip_root->ntasks; id++ ) {
     taski = &pip_root->tasks[id];
-    if( pip_check_task( taski ) ) goto found;
+    if( pip_wait_task( taski ) ) goto found;
   }
   for( id=0; id<start; id++ ) {
     taski = &pip_root->tasks[id];
-    if( pip_check_task( taski ) ) goto found;
+    if( pip_wait_task( taski ) ) goto found;
   }
   goto unlock;
  found:
@@ -358,7 +363,7 @@ int pip_wait( int pipid, int *statusp ) {
     err = ECHILD;
   } else {
     while( 1 ) {
-      if( pip_check_task( taski ) ) {
+      if( pip_wait_task( taski ) ) {
 	if( statusp != NULL ) {
 	  *statusp = taski->annex->status;
 	}
