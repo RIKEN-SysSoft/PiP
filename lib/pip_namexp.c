@@ -270,7 +270,7 @@ static int pip_do_named_import( int pipid,
 
   if( namexp == NULL      ) RETURN( ECANCELED );
   if( namexp->flag_closed ) RETURN( ECANCELED );
-  DBG;
+
   hash = pip_name_hash( &name, format, ap );
   if( name == NULL ) RETURN( ENOMEM );
 

@@ -605,6 +605,7 @@ boost_fctx_arch
 boost_fctx_objs
 AS
 dynamic_linker
+glibc_lib
 glibc_libdir
 glibc_incdir
 srcdir_top
@@ -1938,7 +1939,8 @@ case "$with_glibc_libdir" in
 ""|yes|no) with_glibc_libdir="/usr/lib64";;
 esac
 dynamic_linker=`ls -d "${with_glibc_libdir}"/ld-[0-9]*.so | sed -n '$p'`
-if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}"; then
+glibc_lib=`ls -d "${with_glibc_libdir}"/libc-[0-9]*.so | sed -n '$p'`
+if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}" -a -f "${glibc_lib}"; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${with_glibc_libdir}" >&5
 $as_echo "${with_glibc_libdir}" >&6; }
   glibc_libdir="${with_glibc_libdir}"
@@ -1951,6 +1953,7 @@ if ! test -d "${glibc_incdir}" ; then
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${glibc_incdir}" >&5
 $as_echo "${glibc_incdir}" >&6; }
+
 
 
 
@@ -3183,7 +3186,7 @@ fi
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files build/config.mk release/version.conf lib/fcontext.mk bin/pipcc bin/pip-mode bin/pip-check bin/pip-man util/piplnlibs"
+ac_config_files="$ac_config_files config.sh build/config.mk release/version.conf lib/fcontext.mk bin/pipcc bin/pip-mode bin/pip-check bin/pip-man util/piplnlibs"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3877,6 +3880,7 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "include/config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/config.h" ;;
+    "config.sh") CONFIG_FILES="$CONFIG_FILES config.sh" ;;
     "build/config.mk") CONFIG_FILES="$CONFIG_FILES build/config.mk" ;;
     "release/version.conf") CONFIG_FILES="$CONFIG_FILES release/version.conf" ;;
     "lib/fcontext.mk") CONFIG_FILES="$CONFIG_FILES lib/fcontext.mk" ;;

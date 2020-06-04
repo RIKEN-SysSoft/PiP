@@ -200,6 +200,7 @@ post-clean-hook:
 	make -C test/blt clean
 
 post-veryclean-hook:
+	$(RM) config.sh lib/fcontext.mk
 	make -C sample veryclean
 	make -C test veryclean
 	make -C test/scripts veryclean

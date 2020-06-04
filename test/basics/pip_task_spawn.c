@@ -30,13 +30,13 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
 
-static int static_entry( void *args ) __attribute__ ((unused));
-static int static_entry( void *argp ) {
+static int static_user_func( void *args ) __attribute__ ((unused));
+static int static_user_func( void *argp ) {
   /* indeed, this function is not reachable */
-  int arg = *((int*)argp);
+  int arg;
   int pipid = -100;
 
 #ifdef NO_IMPLICIT_INIT
@@ -46,11 +46,13 @@ static int static_entry( void *argp ) {
 #endif
   CHECK( pip_init( NULL, NULL, NULL, 0 ), RV, 	     return(1) );
   CHECK( pip_get_pipid( &pipid ),	  RV,	     return(1) );
+  CHECK( argp==NULL,                      RV,        return(1) );
+  arg = *((int*) argp);
   CHECK( pipid!=arg, 			  RV,	     return(1) );
   return 0;
 }
 
-int global_entry( void *argp ) {
+int global_user_func( void *argp ) {
   int arg = *((int*)argp);
   int pipid = -100;
 
@@ -68,9 +70,10 @@ int global_entry( void *argp ) {
 int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
   int pipid, arg, ntasks, ntenv;
-  char	*env;
+  int status = 0, extval = 0;
+  char*env;
 
-  /* before calling pip_init(), this must fail */
+  /* before calling pip_init(), following tests must fail */
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( NULL, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=EPERM,
@@ -82,7 +85,7 @@ int main( int argc, char **argv ) {
 	 RV!=EPERM,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg,
+  pip_spawn_from_func( &prog, argv[0], "static_user_func", (void*) &arg,
 		       NULL, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
@@ -108,39 +111,28 @@ int main( int argc, char **argv ) {
 	 RV!=EINVAL,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "static_entry", (void*) &arg,
+  memset( &prog, 0, sizeof(prog) );
+  pip_spawn_from_func( &prog, argv[0], "static_user_func", (void*) &arg,
 		       NULL, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=ENOEXEC,
 	 return(EXIT_FAIL) );
 
-  pip_spawn_from_func( &prog, argv[0], "global_entry", (void*) &arg,
+  memset( &prog, 0, sizeof(prog) );
+  pipid = arg = 8;
+  pip_spawn_from_func( &prog, argv[0], "global_user_func", (void*) &arg,
 		       NULL, NULL );
-  pipid = PIP_PIPID_ANY;
+  CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	 RV,
+	 return(EXIT_FAIL) );
+  CHECK( pip_wait( pipid, &status ), RV, return(EXIT_FAIL) );
 
-  if( pip_isa_task() ) {
-    CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	   RV!=EPERM,
-	   return(EXIT_FAIL) );
-
+  if( WIFEXITED( status ) ) {
+    extval = WEXITSTATUS( status );
+    CHECK( extval!=0, RV, return(EXIT_FAIL) );
   } else {
-    int status = 0, extval = 0;
-
-    pipid = arg = 8;
-    CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
-	   RV,
-	   return(EXIT_FAIL) );
-    CHECK( pip_wait( pipid, &status ), RV, return(EXIT_FAIL) );
-
-    if( WIFEXITED( status ) ) {
-      extval = WEXITSTATUS( status );
-      CHECK( extval!=0, RV, return(EXIT_FAIL) );
-
-    } else {
-      CHECK( 1, RV, return(EXIT_UNRESOLVED) );
-    }
-    return extval;
+    CHECK( 1, RV, return(EXIT_UNRESOLVED) );
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;

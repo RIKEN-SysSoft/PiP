@@ -340,12 +340,9 @@ static void pip_enqueue_task( pip_task_internal_t *taski,
     pip_task_queue_enqueue( queue, task );
   }
   if( callback != NULL ) {
-    DBG;
     if( callback == PIP_CB_UNLOCK_AFTER_ENQUEUE ) {
-    DBG;
       pip_task_queue_unlock( queue );
     } else {
-    DBG;
       callback( cbarg );
     }
   }
@@ -437,13 +434,11 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
     if( taski != schedi ) {
       /* if taski is NOT scheduling, then wakeup taski */
       /* to terminate and  */
-      DBG;
       schedi->schedq_len --;
       ASSERTD( schedi->schedq_len < 0 );
       //AH//pip_wakeup( taski );	/* wakeup to terminate taski */
       pip_sched_ood_self( taski );
     } else {
-      DBG;
       PIP_TASKQ_ENQ_LAST( queue, PIP_TASKQ(taski) );
     }
     /* schedi schedules the rests */
@@ -465,11 +460,9 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
       pip_stack_protect( taski, schedi );
       pip_sched_ood_self( taski );
     } else if( pip_able_to_terminate_immediately( schedi ) ) {
-      DBG;
       pip_terminate_task( schedi );
       NEVER_REACH_HERE;
     }
-    DBG;
     SET_CURR_TASK( schedi, NULL );
     pip_decouple_context( taski, schedi );
     DBGF( "TRY-AGAIN" );
