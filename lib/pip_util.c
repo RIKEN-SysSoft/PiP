@@ -161,44 +161,6 @@ int pip_check_pie( const char *path, int flag_verbose ) {
   return err;
 }
 
-static char *pip_type_str_( pip_task_internal_t *taski ) {
-  char *typestr;
-
-  if( taski->type == PIP_TYPE_NONE ) {
-    typestr = "(--)";
-  } else if( PIP_ISA_ROOT( taski ) ) {
-    if( PIP_IS_RUNNING( taski ) ) {
-      typestr = "ROOT";
-    } else if( PIP_IS_SUSPENDED( taski ) ){
-      typestr = "Root";
-    } else {
-      typestr = "root";
-    }
-  } else if( PIP_ISA_TASK( taski ) ) {
-    if( PIP_IS_RUNNING( taski ) ) {
-      typestr = "TASK";
-    } else if( PIP_IS_SUSPENDED( taski ) ){
-      typestr = "Task";
-    } else {
-      typestr = "task";
-    }
-  } else {
-    typestr = "(\?\?)";
-  }
-  return typestr;
-}
-
-char * pip_type_str( void ) {
-  char *typestr;
-
-  if( pip_task == NULL ) {
-    typestr = "(NULL)";
-  } else {
-    typestr = pip_type_str_( pip_task );
-  }
-  return typestr;
-}
-
 int pip_tgkill( int tgid, int tid, int signal ) {
   return (int) syscall( (long int) SYS_tgkill, tgid, tid, signal );
 }
