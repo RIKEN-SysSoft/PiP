@@ -183,15 +183,19 @@ int pip_debug_env( void ) {
   return flag > 0;
 }
 
+#define FDPATH_LEN	(512)
+#define RDLINK_BUF	(256)
+#define RDLINK_BUF_SP	(RDLINK_BUF+8)
+
 void pip_fprint_fd( FILE *fp, int fd ) {
   char idstr[64];
-  char fdpath[512];
-  char fdname[256];
+  char fdpath[FDPATH_LEN];
+  char fdname[RDLINK_BUF_SP];
   ssize_t sz;
 
-  pip_idstr( idstr, sizeof(idstr) );
-  sprintf( fdpath, "/proc/self/fd/%d", fd );
-  if( ( sz = readlink( fdpath, fdname, PIP_READLINK_BUFLEN ) ) > 0 ) {
+  (void) pip_idstr( idstr, sizeof(idstr) );
+  snprintf( fdpath, FDPATH_LEN, "/proc/self/fd/%d", fd );
+  if( ( sz = readlink( fdpath, fdname, RDLINK_BUF ) ) > 0 ) {
     fdname[sz] = '\0';
     fprintf( fp, "%s %d -> %s", idstr, fd, fdname );
   }
@@ -203,19 +207,19 @@ void pip_fprint_fds( FILE *fp ) {
   DIR *dir = opendir( "/proc/self/fd" );
   struct dirent *de;
   char idstr[64];
-  char fdpath[512];
-  char fdname[256];
+  char fdpath[FDPATH_LEN];
+  char fdname[RDLINK_BUF_SP];
   char coe = ' ';
   ssize_t sz;
 
-  pip_idstr( idstr, sizeof(idstr) );
+  (void) pip_idstr( idstr, sizeof(idstr) );
   if( dir != NULL ) {
     int fd_dir = dirfd( dir );
     int fd;
 
     while( ( de = readdir( dir ) ) != NULL ) {
-      sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
-      if( ( sz = readlink( fdpath, fdname, PIP_READLINK_BUFLEN ) ) > 0 ) {
+      snprintf( fdpath, FDPATH_LEN, "/proc/self/fd/%s", de->d_name );
+      if( ( sz = readlink( fdpath, fdname, RDLINK_BUF ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( ( fd = atoi( de->d_name ) ) != fd_dir ) {
 	  if( pip_isa_coefd( fd ) ) coe = '*';
@@ -240,7 +244,7 @@ void pip_check_addr( char *tag, void *addr ) {
   int retval;
 
   if( tag == NULL ) {
-    pip_idstr( idstr, sizeof(idstr) );
+    (void) pip_idstr( idstr, sizeof(idstr) );
     tag = &idstr[0];
   }
   while( maps != NULL ) {

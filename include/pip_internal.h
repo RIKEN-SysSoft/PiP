@@ -280,8 +280,6 @@ typedef struct pip_task_annex {
 
 #define PIP_MASK32		(0xFFFFFFFF)
 
-#define PIP_READLINK_BUFLEN	(256+8)
-
 /* The following env vars must be copied */
 /* if a PiP may have different env set.  */
 typedef struct pip_env {
