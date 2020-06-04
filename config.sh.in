@@ -1,0 +1,1 @@
+PIP_GLIBC_LIBDIR=@glibc_libdir@
