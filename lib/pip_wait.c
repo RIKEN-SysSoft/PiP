@@ -322,6 +322,7 @@ static int pip_nonblocking_waitany( void ) {
   /*** end lock region ***/
   pip_spin_unlock( &pip_root->lock_tasks );
 
+  /* chekc if there is a live task or not */
   if( pipid == PIP_PIPID_NULL ) {
     for( id=0; id<pip_root->ntasks; id++ ) {
       taski = &pip_root->tasks[id];
