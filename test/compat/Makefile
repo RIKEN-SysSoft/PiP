@@ -42,12 +42,15 @@ SRCS  = fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
 PROGRAMS  = fork malloc ctype pip_dlopen gettimeofday \
 	gethostname gethostbyname getaddrinfo \
 	const_destruct system sigchld pagefault \
-	get_nprocs environ
+	get_nprocs environ libnull.so
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
+
+libnull.so: libnull.c Makefile
+	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so
 
 test:
 	../test.sh compat/test.list

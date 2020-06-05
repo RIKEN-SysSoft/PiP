@@ -34,6 +34,8 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+SUBDIRS = scripts util prog basics compat pthread openmp cxx fortran issues blt
+
 SRCS = libnull.c
 OBJS = libnull.so
 
@@ -41,9 +43,6 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 include ./Test.common
-
-libnull.so: libnull.c Makefile
-	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so
 
 all : $(OBJS)
 
@@ -60,7 +59,7 @@ TESTS = bin.list sample.list test.list
 SCRIPTS = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
 HEADERS = test.h
 
-install-test : libnull.so
+install-test :
 	$(INSTALL) -d -m 755 $(test_install_dir)
 	$(INSTALL) -C -m 744 Makefile Test.common $(TESTS) \
 		$(SRCS) $(HEADERS) $(test_install_dir)
