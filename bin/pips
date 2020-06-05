@@ -167,7 +167,7 @@ done
 
 pipcmds=$@
 if [ "x$pipcmds" == x ]; then
-    ##echo "ps H -no-headers -u $user --format '%c %p'"
+    echo "ps H $NOHEADER_OPT -u $user --format '%c %p'"
     ps=`ps H $NOHEADER_OPT -u $user --format '%c %p'`
     decompose_psout $ps;
 else
