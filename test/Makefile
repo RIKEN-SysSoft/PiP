@@ -46,6 +46,8 @@ include ./Test.common
 
 all : $(OBJS)
 
+test-progs: all
+
 clean:
 	rm -f $(OBJS)
 

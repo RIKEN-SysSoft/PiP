@@ -50,18 +50,7 @@ debug:
 ### build test programs and run them
 .PHONY: test-progs
 test-progs:
-	make -C test
-	make -C test/scripts
-	make -C test/util
-	make -C test/prog
-	make -C test/basics
-	make -C test/compat
-	make -C test/pthread
-	make -C test/openmp
-	make -C	test/cxx
-	make -C test/fortran
-	make -C test/issues
-	make -C test/blt
+	make -C test test-progs
 
 .PHONY: test
 test:
@@ -72,17 +61,6 @@ test:
 .PHONY: testclean
 testclean:
 	make -C test testclean
-	make -C test/scripts testclean
-	make -C test/util testclean
-	make -C test/prog testclean
-	make -C test/basics testclean
-	make -C test/compat testclean
-	make -C test/pthread testclean
-	make -C test/openmp testclean
-	make -C	test/cxx testclean
-	make -C test/fortran testclean
-	make -C test/issues testclean
-	make -C test/blt testclean
 
 TEST_MKS = build/config.mk build/var.mk build/rule.mk
 
