@@ -50,17 +50,18 @@ debug:
 ### build test programs and run
 .PHONY: test-progs
 test-progs:
-	make
-	make -C test all
+	make -C test test-progs
 
 .PHONY: test
-test:
+test: all
 	make test-progs
 	make -C test test
 
 .PHONY: testclean
 testclean:
 	make -C test testclean
+
+TEST_MKS = build/config.mk build/var.mk build/rule.mk
 
 ### install test programs and run
 CONFIG_MKS = build/config.mk build/var-install.mk

@@ -34,6 +34,8 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+SUBDIRS = scripts util prog basics compat pthread openmp cxx fortran issues blt
+
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
@@ -65,6 +67,8 @@ all :
 	make -C issues
 	make -C blt
 
+test-progs: all
+
 clean:
 	rm -f $(OBJS)
 
@@ -90,8 +94,11 @@ SCRIPTS   = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
 HEADERS   = test.h
 
 install-test :
-	$(INSTALL) -C -m 744 Makefile Test.common $(TESTLISTS) $(HEADERS) $(install_test_dir)
+	$(INSTALL) -d -m 755 $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile Test.common $(TESTLISTS) $(HEADERS) \
+		$(install_test_dir)
 	$(INSTALL) -C -m 755 $(SCRIPTS) $(install_test_dir)
+	$(INSTALL) -C -m 744 Makefile Test.common $(TESTLISTS) $(HEADERS) $(install_test_dir)
 	make -C scripts install-test
 	make -C util install-test
 	make -C prog install-test

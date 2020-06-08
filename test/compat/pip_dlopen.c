@@ -37,7 +37,7 @@
 #include <limits.h>
 #include <test.h>
 
-#define LIBNAME 	"libnull.so"
+#define LIBNAME 	"./libnull.so"
 
 void *pip_dlopen( const char*, int );
 void *pip_dlsym( void*, const char* );
