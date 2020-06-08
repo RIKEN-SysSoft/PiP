@@ -44,7 +44,7 @@ PROGRAMS  = pip-exec printpipmode
 MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 	pips printpipmode.c
 
-CPPFLAGS += -I$(GLIBCINCDIR) -I$(top_srcdir)/include
+CPPFLAGS += $(PIP_CPPFLAGS)
 
 DEPINCS = $(top_srcdir)/include
 
@@ -52,11 +52,11 @@ include $(top_srcdir)/build/rule.mk
 
 pre-install-hook: pip-exec printpipmode
 
-pip-exec: pip-exec.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -O2 $(PIPLDFLAGS_ROOT) $< -o $@
+pip-exec: pip-exec.c $(DEPINCS) $(PIP_LIBS) Makefile
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
-printpipmode: printpipmode.c $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCFLAGS) -g -O2 $(PIPLDFLAGS_ROOT) $< -o $@ $(LDLIBS)
+printpipmode: printpipmode.c $(DEPINCS) $(PIP_LIBS) Makefile
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log

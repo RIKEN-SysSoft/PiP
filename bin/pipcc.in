@@ -50,7 +50,7 @@
 ### If specified, the compile (and link) is done for PiP task
 ###
 
-INSTALLTOP=@prefix@
+PREFIX=@prefix@
 SRCTOP=@srcdir_top@
 
 glibc_incdir=@glibc_incdir@
@@ -60,6 +60,8 @@ dynamic_linker=@dynamic_linker@
 : ${CC:=cc}
 
 self=$0;
+pipccdir=`dirname $self`;
+pipccdir=`cd $pipccdir; pwd`;
 
 err_nostatic() {
     echo "$self does not support static linking" >&2;
@@ -105,14 +107,20 @@ if ${no_pip}; then
 fi
 
 if $pipbuild ; then
-    PIP_INCFLAGS="-I${SRCTOP}/include"
-    PIP_LDFLAGS="-L ${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib"
+    PIP_INCFLAGS="-I${SRCTOP}/include";
+    PIP_LDFLAGS="-L ${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib";
 elif $pipinstall ; then
-    PIP_INCFLAGS="-I${INSTALLTOP}/include"
-    PIP_LDFLAGS="-L${INSTALLTOP}/lib -Wl,-rpath=${INSTALLTOP}/lib"
+    PIP_INCFLAGS="-I${PREFIX}/include";
+    PIP_LDFLAGS="-L${PREFIX}/lib -Wl,-rpath=${PREFIX}/lib";
 else
-    PIP_INCFLAGS="-I${SRCTOP}/include -I${INSTALLTOP}/include"
-    PIP_LDFLAGS="-L${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib -L${INSTALLTOP}/lib -Wl,-rpath=${INSTALLTOP}/lib"
+    case $pipccdir in
+	${SRCTOP}/*)
+	    PIP_INCFLAGS="-I${SRCTOP}/include";
+	    PIP_LDFLAGS="-L${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib";;
+	${PREFIX}/*)
+	    PIP_INCFLAGS="-I${PREFIX}/include";
+	    PIP_LDFLAGS="-L${PREFIX}/lib -Wl,-rpath=${PREFIX}/lib";;
+    esac
 fi
 
 GLIBC_CFLAGS=""

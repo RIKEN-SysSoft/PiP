@@ -42,7 +42,7 @@ LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
-CPPFLAGS += $(PIPCPPFLAGS) -I. \
+CPPFLAGS += $(PIP_CPPFLAGS) -I. \
 	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
 	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
@@ -50,7 +50,7 @@ CPPFLAGS += $(PIPCPPFLAGS) -I. \
 	-DPIP_INSTALL_BIN_PIPS=\"$(default_bindir)/pips\" \
 	-DPIP_BUILD_BIN_PIPS=\"../bin/pips\" \
 	$(CPPFLAGS_DEBUG)
-CFLAGS   += $(PIPCFLAGS_TASK)
+CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
 FCTXOBJS  = fctx_jump.o fctx_make.o
 LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
 
@@ -65,21 +65,21 @@ OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
 	pip_context.o
 
-DEPINCS  = $(PIPINCDIR_BUILD)/config.h			\
-	   $(PIPINCDIR_BUILD)/pip.h			\
-	   $(PIPINCDIR_BUILD)/pip_context.h		\
-	   $(PIPINCDIR_BUILD)/pip_blt.h			\
-	   $(PIPINCDIR_BUILD)/pip_clone.h		\
-	   $(PIPINCDIR_BUILD)/pip_internal.h 		\
-	   $(PIPINCDIR_BUILD)/pip_util.h		\
-	   $(PIPINCDIR_BUILD)/pip_dlfcn.h		\
-	   $(PIPINCDIR_BUILD)/pip_machdep.h 		\
-	   $(PIPINCDIR_BUILD)/pip_machdep_aarch64.h 	\
-	   $(PIPINCDIR_BUILD)/pip_machdep_x86_64.h 	\
-	   $(PIPINCDIR_BUILD)/pip_debug.h 		\
-	   $(PIPINCDIR_BUILD)/pip_gdbif.h		\
-	   $(PIPINCDIR_BUILD)/pip_gdbif_func.h		\
-	   $(PIPINCDIR_BUILD)/pip_gdbif_queue.h
+DEPINCS  = $(PIP_INCDIR)/config.h		\
+	   $(PIP_INCDIR)/pip.h			\
+	   $(PIP_INCDIR)/pip_context.h		\
+	   $(PIP_INCDIR)/pip_blt.h		\
+	   $(PIP_INCDIR)/pip_clone.h		\
+	   $(PIP_INCDIR)/pip_internal.h		\
+	   $(PIP_INCDIR)/pip_util.h		\
+	   $(PIP_INCDIR)/pip_dlfcn.h		\
+	   $(PIP_INCDIR)/pip_machdep.h 		\
+	   $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
+	   $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
+	   $(PIP_INCDIR)/pip_debug.h 		\
+	   $(PIP_INCDIR)/pip_gdbif.h		\
+	   $(PIP_INCDIR)/pip_gdbif_func.h	\
+	   $(PIP_INCDIR)/pip_gdbif_queue.h
 
 include $(top_srcdir)/build/rule.mk
 

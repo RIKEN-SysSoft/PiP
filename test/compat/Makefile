@@ -34,12 +34,12 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS  = fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
+SRCS  = libnull.c fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
 	gethostname.c gethostbyname.c getaddrinfo.c \
 	const_destruct.c system.c sigchld.c pagefault.c \
 	get_nprocs.c environ.c
 
-PROGRAMS  = fork malloc ctype pip_dlopen gettimeofday \
+PROGRAMS  = libnull.so fork malloc ctype pip_dlopen gettimeofday \
 	gethostname gethostbyname getaddrinfo \
 	const_destruct system sigchld pagefault \
 	get_nprocs environ
@@ -49,11 +49,14 @@ PROGRAMS_TO_INSTALL = # nothing
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
+libnull.so: libnull.c Makefile
+	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so
+
 test:
 	../test.sh compat/test.list
 
-install_test_dir = $(prefix)/test/compat
+install_test_compat = $(install_test_dir)/compat
 
 install-test :
-	$(MKDIR_P) $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)
+	$(MKDIR_P) $(install_test_compat)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_compat)

@@ -34,8 +34,8 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-CPPFLAGS = -I$(PIPINCDIR)
-CFLAGS += $(PICCFLAG)
+CPPFLAGS = -I$(PIP_INCDIR)
+CFLAGS += $(PIC_CFLAG)
 LDFLAGS  = -shared -ldl
 
 LIBRARY  = pip_preload.so
@@ -43,7 +43,7 @@ LIBRARIES = $(LIBRARY)
 
 SRCS     = $(srcdir)/pip_preload.c
 
-DEPINCS  = $(PIPINCDIR_BUILD)/pip_clone.h
+DEPINCS  = $(PIP_INCDIR)/pip_clone.h
 
 include $(top_srcdir)/build/rule.mk
 
@@ -51,4 +51,4 @@ debug:
 	CPPFLAGS += "-DDEBUG" make all;
 
 $(LIBRARY): $(SRCS) $(DEPINCS) Makefile
-	$(CC) $(CPPFLAGS) $(PIPCPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -shared -o $(LIBRARY)
+	$(CC) $(CPPFLAGS) $(PIP_CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -shared -o $(LIBRARY)

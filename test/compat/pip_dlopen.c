@@ -44,20 +44,11 @@ void *pip_dlsym( void*, const char* );
 int   pip_dlclose( void* );
 
 int main( int argc, char **argv ) {
-  char path[PATH_MAX], *dir, *p;
   void *handle;
   int(*foo)(void);
 
   CHECK( pip_init(NULL,NULL,NULL,0), RV, return(EXIT_FAIL) );
-
-  dir = dirname( strdup( argv[0] ) );
-  p = path;
-  p = stpcpy( p, dir );
-  p = stpcpy( p, "/../" );
-  (void) strcpy( p, LIBNAME );
-
-  fprintf( stderr, "path:%s\n", path );
-  CHECK( handle = pip_dlopen( path, RTLD_LAZY ),
+  CHECK( handle = pip_dlopen( LIBNAME, RTLD_LAZY ),
 	 handle==NULL,
 	 return(EXIT_FAIL) );
   CHECK( ( foo = pip_dlsym( handle, "foo" ) ), foo==0, return(EXIT_FAIL) );

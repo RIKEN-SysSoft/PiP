@@ -33,6 +33,7 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
+include ../Test.common
 
 CWD = $(shell pwd)
 CFLAGS += -DCWD=\"$(CWD)\" -DPIPS=\"$(CWD)/../../bin/pips\"
@@ -48,16 +49,19 @@ PROGRAMS_TO_INSTALL = # nothing
 all: $(PROGRAMS)
 
 dlmopen_count: dlmopen_count.c Makefile
-	$(CC) -g -O2 -I../../include $(CFLAGS) -fpie -pie $(PIPDYLINKER) $< -o $@ -ldl
+	$(CC) -I$(PIP_INCDIR) $(CFLAGS) -fpie -pie $(DYLINKER_FLAG) $< -o $@ -ldl
 
 ompnumthread: ompnumthread.c Makefile
-	$(CC) -g -O2 -fopenmp -openmp $< -o$@
+	$(CC) -fopenmp -openmp $< -o $@
 
 timer: timer.c Makefile
-	$(CC) -g -O2 -I.. -I../../include $(CFLAGS) $(PIPLDFLAGS_TASK) $< -o $@
+	$(CC) -I.. $(PIP_CFLAGS_TASK) $(CFLAGS) $(PIP_LDFLAGS_TASK) $< -o $@
 
 pip_is_debug_build : pip_is_debug_build.c Makefile
 	../scripts/pipcc -g -O2 $< -o $@
+
+pip_mode_check : pip_mode_check.c Makefile
+	../scripts/pipcc -g -O2 -I.. $< --piptask -o $@
 
 pip_task : pip_task.c Makefile
 	../scripts/pipcc -g -O2 -I.. $< --piptask -o $@
@@ -74,11 +78,11 @@ debug:
 test :
 	../test.sh test.list
 
-install_test_dir = $(prefix)/test/util
+install_test_util = $(install_test_dir)/util
 
 install-test:
-	$(MKDIR_P) $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list test-timer.sh $(install_test_dir)
+	$(MKDIR_P) $(install_test_util)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_util)
+	$(INSTALL) -C -m 744 test-timer.sh $(install_test_util)
 
 include $(top_srcdir)/build/rule.mk
-include ../Test.common

@@ -41,4 +41,4 @@ PROGRAMS_TO_INSTALL = # nothing
 include $(top_srcdir)/build/rule.mk
 
 %: %.c $(SRCS) Makefile
-	$(CC) $(PIPCPPFLAGS) -fPIE -pie $(PIPLDFLAGS_BOTH) $< -o $@
+	$(CC) $(PIP_CPPFLAGS) -fPIE -pie $(PIP_LDFLAGS_BOTH) $< -o $@

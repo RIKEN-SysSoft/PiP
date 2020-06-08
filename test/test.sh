@@ -93,8 +93,8 @@ export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
 
 if test -f "$dir_real/../preload/pip_preload.so"; then
     export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
-elif test -f "$dir_real/../lib/pip_preload.so"; then
-    export LD_PRELOAD=$dir_real/../lib/pip_preload.so;
+elif test -f "$dir_real/../../lib/pip_preload.so"; then
+    export LD_PRELOAD=$dir_real/../../lib/pip_preload.so;
 else
     echo "Unable to find pip_preload.so";
     exit 2;

@@ -47,8 +47,8 @@ include $(srcdir)/../Test.common
 test :
 	../test.sh test.list
 
-install_test_dir = $(prefix)/test/cxx
+install_test_cxx = $(install_test_dir)/cxx
 
 install-test :
-	$(MKDIR_P) $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)
+	$(MKDIR_P) $(install_test_cxx)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_cxx)

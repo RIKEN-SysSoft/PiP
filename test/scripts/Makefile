@@ -59,12 +59,13 @@ test: hello.c Makefile
 post-clean-hook:
 	$(RM) $(PROGRAMS) a.out hello hello.o root task
 
-install_test_dir = $(prefix)/test/scripts
+install_test_scripts = $(install_test_dir)/scripts
 
 TEST_SRCS = a.c root.c task.c hello.c
 TEST_SCRIPTS = test-pip-check.sh test-pip-mode.sh test-pipcc-0.sh test-pipcc-1.sh
 
 install-test:
-	$(MKDIR_P) $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile test.list $(TEST_SRCS) $(TEST_SCRIPTS) $(install_test_dir)
-	ln -f -s $(prefix)/bin/pipcc $(prefix)/bin/pip-check $(install_test_dir)
+	$(MKDIR_P) $(install_test_scripts)
+	$(INSTALL) -C -m 644 Makefile test.list $(TEST_SRCS) $(install_test_scripts)
+	$(INSTALL) -C -m 744 $(TEST_SCRIPTS) $(install_test_scripts)
+	ln -f -s $(prefix)/bin/pipcc $(prefix)/bin/pip-check $(prefix)/bin/pip-mode $(install_test_scripts)

@@ -101,11 +101,13 @@ prog-pie : prog.c Makefile
 prog-nordynamic : prog.c Makefile
 	$(CC) -g -O2 -fpie -pie prog.c -o prog-nordynamic
 
-install_test_dir = $(prefix)/test/basics
+install_test_basics = $(install_test_dir)/basics
 
-SCRIPTS = task.list wait.list blt.list seek-file.sh seek-outin.sh seek-pipe.sh
+TESTS   = task.list wait.list blt.list
+SCRIPTS = seek-file.sh seek-outin.sh seek-pipe.sh
 DATFILE = GreatExpectations-Chap1.txt
 
 install-test :
-	$(MKDIR_P) $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile $(SRCS) prog.c $(SCRIPTS) $(DATFILE) $(install_test_dir)
+	$(MKDIR_P) $(install_test_basics)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) prog.c $(TESTS) $(DATFILE) $(install_test_basics)
+	$(INSTALL) -C -m 744 $(SCRIPTS) $(install_test_basics)

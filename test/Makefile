@@ -34,34 +34,72 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS = libnull.c
-OBJS = libnull.so
-
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 include ./Test.common
 
-libnull.so: libnull.c Makefile
-	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so
+install-test-all:
+	make -C util
+	make -C prog install-test-all
+	make -C basics
+	make -C compat
+	make -C pthread
+	make -C openmp
+	make -C cxx
+	make -C fortran
+	make -C issues
+	make -C blt
 
-all : $(OBJS)
+all :
+	make -C scripts
+	make -C prog
+	make -C util
+	make -C prog
+	make -C basics
+	make -C compat
+	make -C pthread
+	make -C openmp
+	make -C cxx
+	make -C fortran
+	make -C issues
+	make -C blt
 
 clean:
 	rm -f $(OBJS)
 
 .PHONY: test
 test:
-	make -C .. test
+	./test.sh -A test.list
 
-test_install_dir = $(prefix)/test
+testclean:
+	make -C scripts testclean
+	make -C util testclean
+	make -C prog testclean
+	make -C basics testclean
+	make -C compat testclean
+	make -C pthread testclean
+	make -C openmp testclean
+	make -C	cxx testclean
+	make -C fortran testclean
+	make -C issues testclean
+	make -C blt testclean
 
-TESTS = bin.list sample.list test.list
-SCRIPTS = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
-HEADERS = test.h
+TESTLISTS = bin.list sample.list test.list
+SCRIPTS   = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
+HEADERS   = test.h
 
-install-test : libnull.so
-	$(INSTALL) -d -m 755 $(test_install_dir)
-	$(INSTALL) -C -m 744 Makefile Test.common $(TESTS) \
-		$(SRCS) $(HEADERS) $(test_install_dir)
-	$(INSTALL) -C -m 755 $(SCRIPTS) $(test_install_dir)
+install-test :
+	$(INSTALL) -C -m 744 Makefile Test.common $(TESTLISTS) $(HEADERS) $(install_test_dir)
+	$(INSTALL) -C -m 755 $(SCRIPTS) $(install_test_dir)
+	make -C scripts install-test
+	make -C util install-test
+	make -C prog install-test
+	make -C basics install-test
+	make -C compat install-test
+	make -C pthread install-test
+	make -C openmp install-test
+	make -C cxx install-test
+	make -C fortran install-test
+	make -C issues install-test
+	make -C blt install-test

@@ -47,68 +47,50 @@ install: doxygen-install
 debug:
 	CPPFLAGS+="-DDEBUG" make clean all;
 
-### build test programs and run them
+### build test programs and run
 .PHONY: test-progs
 test-progs:
-	make -C test
-	make -C test/scripts
-	make -C test/util
-	make -C test/prog
-	make -C test/basics
-	make -C test/compat
-	make -C test/pthread
-	make -C test/openmp
-	make -C	test/cxx
-	make -C test/fortran
-	make -C test/issues
-	make -C test/blt
+	make
+	make -C test all
 
 .PHONY: test
 test:
-	make all
 	make test-progs
-	test/test.sh test/test.list
+	make -C test test
 
 .PHONY: testclean
 testclean:
 	make -C test testclean
-	make -C test/scripts testclean
-	make -C test/util testclean
-	make -C test/prog testclean
-	make -C test/basics testclean
-	make -C test/compat testclean
-	make -C test/pthread testclean
-	make -C test/openmp testclean
-	make -C	test/cxx testclean
-	make -C test/fortran testclean
-	make -C test/issues testclean
-	make -C test/blt testclean
 
-TEST_MKS = build/config.mk build/var.mk build/rule.mk
+### install test programs and run
+CONFIG_MKS = build/config.mk build/var-install.mk
+RULES_MKS  = build/rule.mk
 
-test_install_dir = $(prefix)
-test_build_dir = $(test_install_dir)/build
+install_test_dirtop = $(prefix)/pip-test
+install_test_dir = $(prefix)/pip-test/test
+test_build_dir = $(install_test_dirtop)/build
+
+.PHONY: install-test-prepare
+install-test-prepare: install
+	-$(RM) -r $(install_test_dirtop)
+	$(MKDIR_P) $(install_test_dirtop)
+	$(MKDIR_P) $(test_build_dir)
+	cat $(CONFIG_MKS) > $(test_build_dir)/var.mk
+	$(INSTALL) -C -m 744 $(RULES_MKS) $(test_build_dir)
+	$(MKDIR_P) $(install_test_dir)
+	ln -f -s $(prefix)/bin $(install_test_dirtop)
+
+.PHONY: install-test-programs
+install-test-programs: install-test-prepare
+	install_test_dir=$(install_test_dir) make -C test install-test
+
+.PHONY: do-install-test
+do-install-test: install-test-programs
+	install_test_dir=$(install_test_dir) make -C $(install_test_dir) install-test-all
+	install_test_dir=$(install_test_dir) make -C $(install_test_dir) test
 
 .PHONY: install-test
-install-test: install
-	-$(RM) -r $(test_install_dir)/test
-	$(MKDIR_P) $(test_install_dir)
-	$(MKDIR_P) $(test_build_dir)
-	$(INSTALL) -C -m 744 $(TEST_MKS) $(test_build_dir)
-	make -C test install-test
-	make -C test/scripts install-test
-	make -C test/util install-test
-	make -C test/prog install-test
-	make -C test/basics install-test
-	make -C test/compat install-test
-	make -C test/pthread install-test
-	make -C test/openmp install-test
-	make -C	test/cxx install-test
-	make -C test/fortran install-test
-	make -C test/issues install-test
-	make -C test/blt install-test
-	cp -f test/test.mk $(test_install_dir)/test/
-	make -C $(test_install_dir)/test -f test.mk
+install-test: do-install-test
 
 ### doxygen
 

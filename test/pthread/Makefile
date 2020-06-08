@@ -48,8 +48,8 @@ include $(srcdir)/../Test.common
 test :
 	../test.sh test.list
 
-install_test_dir = $(prefix)/test/pthread
+install_test_pthread = $(install_test_dir)/pthread
 
 install-test :
-	$(MKDIR_P) $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile $(SRCS) test.list $(install_test_dir)
+	$(MKDIR_P) $(install_test_pthread)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_pthread)
