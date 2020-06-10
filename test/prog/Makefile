@@ -50,7 +50,7 @@ include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 pip-exec : ../../bin/pip-exec
-	rm -f pip-exec
+	$(RM) pip-exec
 	ln -s ../../bin/pip-exec
 
 abc: abc.c $(DEPINCS) Makefile
@@ -80,5 +80,3 @@ install-test:
 	$(MKDIR_P) $(install_test_prog)
 	$(INSTALL) -C -m 644 Makefile abc.c hello.c test.list $(install_test_prog)
 	ln -f -s $(prefix)/bin/pip-exec $(install_test_prog)
-
-install-test-all: abc def ghi xyz hello

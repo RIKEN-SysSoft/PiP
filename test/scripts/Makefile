@@ -50,11 +50,10 @@ pip-check: ../../bin/pip-check Makefile
 pip-mode: ../../bin/pip-mode Makefile
 	$(INSTALL_PROGRAM) ../../bin/pip-mode .
 
-hello.c: ../../sample/hello/hello.c Makefile
-	cp -f ../../sample/hello/hello.c .
-
-test: hello.c Makefile
+test: Makefile
 	../test.sh test.list
+
+all: $(PROGRAMS) hello.c
 
 post-clean-hook:
 	$(RM) $(PROGRAMS) a.out hello hello.o root task

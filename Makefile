@@ -45,21 +45,21 @@ install: doxygen-install
 .PHONY: install
 
 debug:
-	CPPFLAGS+="-DDEBUG" make clean all;
+	CPPFLAGS+="-DDEBUG" $(MAKE) clean all;
 
 ### build test programs and run
 .PHONY: test-progs
 test-progs:
-	make -C test test-progs
+	$(MAKE) -C test test-progs
 
 .PHONY: test
 test: all
-	make test-progs
-	make -C test test
+	$(MAKE) test-progs
+	$(MAKE) -C test test
 
 .PHONY: testclean
 testclean:
-	make -C test testclean
+	$(MAKE) -C test testclean
 
 TEST_MKS = build/config.mk build/var.mk build/rule.mk
 
@@ -75,20 +75,18 @@ test_build_dir = $(install_test_dirtop)/build
 install-test-prepare: install
 	-$(RM) -r $(install_test_dirtop)
 	$(MKDIR_P) $(install_test_dirtop)
+	ln -f -s $(prefix)/bin $(install_test_dirtop)
 	$(MKDIR_P) $(test_build_dir)
 	cat $(CONFIG_MKS) > $(test_build_dir)/var.mk
-	$(INSTALL) -C -m 744 $(RULES_MKS) $(test_build_dir)
-	$(MKDIR_P) $(install_test_dir)
-	ln -f -s $(prefix)/bin $(install_test_dirtop)
+	$(INSTALL) -C -m 644 $(RULES_MKS) $(test_build_dir)
 
 .PHONY: install-test-programs
 install-test-programs: install-test-prepare
-	install_test_dir=$(install_test_dir) make -C test install-test
+	install_test_dir=$(install_test_dir) $(MAKE) -C test do-install-test
 
 .PHONY: do-install-test
 do-install-test: install-test-programs
-	install_test_dir=$(install_test_dir) make -C $(install_test_dir) install-test-all
-	install_test_dir=$(install_test_dir) make -C $(install_test_dir) test
+	install_test_dir=$(install_test_dir) $(MAKE) -C $(install_test_dir) test
 
 .PHONY: install-test
 install-test: do-install-test
@@ -148,11 +146,11 @@ post-distclean-hook:
 ###
 
 check:
-	make test
+	$(MAKE) test
 .PHONY: check
 
 eval:
-	( cd eval && make && ./eval.sh )
+	( cd eval && $(MAKE) && ./eval.sh )
 .PHONY: eval
 
 prog-distclean:
@@ -165,22 +163,11 @@ tags:
 	ctags -Re
 
 post-install-hook:
-	make -C sample
+	$(MAKE) -C sample
 
 post-clean-hook:
 	$(RM) test.log.* test.out.*
 	make -C test clean
-	make -C test/scripts clean
-	make -C test/util clean
-	make -C test/prog clean
-	make -C test/basics clean
-	make -C test/compat clean
-	make -C test/pthread clean
-	make -C test/openmp clean
-	make -C	test/cxx clean
-	make -C test/fortran clean
-	make -C test/issues clean
-	make -C test/blt clean
 
 post-veryclean-hook:
 	$(RM) config.sh lib/fcontext.mk

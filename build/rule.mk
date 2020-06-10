@@ -54,10 +54,13 @@ testclean-here:
 	$(RM) seek-file.text
 .PHONY: testclean-here
 
+.PHONY: install-test
+
 ### subdir rules
 
 subdir-all subdir-install \
-subdir-clean subdir-veryclean subdir-distclean subdir-testclean \
+subdir-clean subdir-veryclean subdir-distclean \
+subdir-testclean subdir-install-test \
 subdir-doxygen:
 	@target=`expr $@ : 'subdir-\(.*\)'`; \
 	for dir in -- $(SUBDIRS); do \

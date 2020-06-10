@@ -36,7 +36,7 @@
 #include <stdio.h>
 #include <pip.h>
 
-int pipid, ntasks;
+int pipid, ntasks = 4;
 
 int main( int argc, char **argv ) {
   pip_init( &pipid, &ntasks, NULL, 0 );

@@ -34,79 +34,36 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = scripts util prog basics compat pthread openmp cxx fortran issues blt
+SUBDIRS = scripts prog util basics compat pthread openmp cxx fortran issues blt
 
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 include ./Test.common
 
-install-test-all:
-	make -C util
-	make -C prog install-test-all
-	make -C basics
-	make -C compat
-	make -C pthread
-	make -C openmp
-	make -C cxx
-	make -C fortran
-	make -C issues
-	make -C blt
-
-all :
-	make -C scripts
-	make -C prog
-	make -C util
-	make -C prog
-	make -C basics
-	make -C compat
-	make -C pthread
-	make -C openmp
-	make -C cxx
-	make -C fortran
-	make -C issues
-	make -C blt
-
 test-progs: all
 
 clean:
-	rm -f $(OBJS)
+	$(MAKE) subdir-clean
+
+veryclean:
+	$(MAKE) subdir-testclean
+	$(MAKE) subdir-veryclean
 
 .PHONY: test
-test:
+test: all
 	./test.sh -A test.list
 
-testclean:
-	make -C scripts testclean
-	make -C util testclean
-	make -C prog testclean
-	make -C basics testclean
-	make -C compat testclean
-	make -C pthread testclean
-	make -C openmp testclean
-	make -C	cxx testclean
-	make -C fortran testclean
-	make -C issues testclean
-	make -C blt testclean
+## install-test
 
 TESTLISTS = bin.list sample.list test.list
-SCRIPTS   = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
 HEADERS   = test.h
+SCRIPTS   = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
 
-install-test :
+do-install-test:
+	$(MKDIR_P) $(install_test_dir)
 	$(INSTALL) -d -m 755 $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile Test.common $(TESTLISTS) $(HEADERS) \
+	$(INSTALL) -C -m 644 Makefile Test.common $(TESTLISTS) $(HEADERS) \
 		$(install_test_dir)
 	$(INSTALL) -C -m 755 $(SCRIPTS) $(install_test_dir)
-	$(INSTALL) -C -m 744 Makefile Test.common $(TESTLISTS) $(HEADERS) $(install_test_dir)
-	make -C scripts install-test
-	make -C util install-test
-	make -C prog install-test
-	make -C basics install-test
-	make -C compat install-test
-	make -C pthread install-test
-	make -C openmp install-test
-	make -C cxx install-test
-	make -C fortran install-test
-	make -C issues install-test
-	make -C blt install-test
+	$(MAKE) subdir-install-test
