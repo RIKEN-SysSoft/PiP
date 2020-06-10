@@ -38,12 +38,6 @@ PROGRAMS = pip-exec abc def ghi xyz hello
 
 PROGRAMS_TO_INSTALL = # nothing
 
-CPPFLAGS += -I$(PIPINCDIR)
-LDLIBS += $(PIPLDLIB) -ldl
-
-DEPLIBS = $(PIPLDLIB)
-DEPINCS = $(PIPINCDIR)/pip.h
-
 PIPCC = ../scripts/pipcc
 
 include $(top_srcdir)/build/rule.mk

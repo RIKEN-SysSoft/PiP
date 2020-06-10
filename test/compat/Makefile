@@ -42,7 +42,7 @@ SRCS  = libnull.c fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
 PROGRAMS  = libnull.so fork malloc ctype pip_dlopen gettimeofday \
 	gethostname gethostbyname getaddrinfo \
 	const_destruct system sigchld pagefault \
-	get_nprocs environ libnull.so
+	get_nprocs environ
 
 PROGRAMS_TO_INSTALL = # nothing
 

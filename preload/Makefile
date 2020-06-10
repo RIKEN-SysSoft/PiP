@@ -48,7 +48,7 @@ DEPINCS  = $(PIP_INCDIR)/pip_clone.h
 include $(top_srcdir)/build/rule.mk
 
 debug:
-	CPPFLAGS += "-DDEBUG" make all;
+	CPPFLAGS += "-DDEBUG" $(MAKE) all;
 
 $(LIBRARY): $(SRCS) $(DEPINCS) Makefile
 	$(CC) $(CPPFLAGS) $(PIP_CPPFLAGS) $(CFLAGS) $(LDFLAGS) $(SRCS) -shared -o $(LIBRARY)

@@ -73,7 +73,7 @@ inf : inf.c Makefile
 	../scripts/pipcc -g -O2 -I.. $< --piptask -o $@
 
 debug:
-	CPPFLAGS+="-DDEBUG" make all
+	CPPFLAGS+="-DDEBUG" $(MAKE) all
 
 test :
 	../test.sh test.list

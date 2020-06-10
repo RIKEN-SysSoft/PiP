@@ -42,7 +42,7 @@ LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
-CPPFLAGS += $(PIP_CPPFLAGS) -I. \
+CPPFLAGS += $(PIP_CPPFLAGS) \
 	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
 	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
@@ -107,10 +107,10 @@ install:
 	ln -s $(LIBRARY_PIPINIT) $(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
-	CPPFLAGS_DEBUG="-DDEBUG" make all;
+	CPPFLAGS_DEBUG="-DDEBUG" $(MAKE) all;
 
 cdebug:
-	make clean debug;
+	$(make) clean debug;
 
 TAGS:
 	ctags -Re

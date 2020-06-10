@@ -149,17 +149,12 @@ check:
 	$(MAKE) test
 .PHONY: check
 
-eval:
-	( cd eval && $(MAKE) && ./eval.sh )
-.PHONY: eval
-
 prog-distclean:
 	$(RM) config.log config.status include/config.h build/config.mk
 .PHONY: prog-distclean
 
 .PHONY: TAGS
-
-tags:
+TAGS:
 	ctags -Re
 
 post-install-hook:
@@ -167,20 +162,9 @@ post-install-hook:
 
 post-clean-hook:
 	$(RM) test.log.* test.out.*
-	make -C test clean
+	$(MAKE) -C test clean
 
 post-veryclean-hook:
 	$(RM) config.sh lib/fcontext.mk
-	make -C sample veryclean
-	make -C test veryclean
-	make -C test/scripts veryclean
-	make -C test/util veryclean
-	make -C test/prog veryclean
-	make -C test/basics veryclean
-	make -C test/compat veryclean
-	make -C test/pthread veryclean
-	make -C test/openmp veryclean
-	make -C	test/cxx veryclean
-	make -C test/fortran veryclean
-	make -C test/issues veryclean
-	make -C test/blt veryclean
+	$(MAKE) -C sample veryclean
+	$(make) -C test veryclean
