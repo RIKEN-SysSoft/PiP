@@ -89,7 +89,16 @@ fi
 . $dir/exit_code.sh.inc
 
 export NTASKS=`$MCEXEC dlmopen_count -p`
+if [ $NTASKS -lt 8 ]; then
+    echo "dlmopen_count:$NTASKS is not enough"
+    exit 1;
+fi
+
 export OMP_NUM_THREADS=`$MCEXEC ompnumthread`;
+if [ $OMP_NUM_THREADS -lt 4 ]; then
+    echo "ompnumthread:$OMP_NUM_THREADS is not enough"
+    exit 1;
+fi
 
 if test -f "$dir_real/../preload/pip_preload.so"; then
     export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
@@ -161,10 +170,14 @@ reset_summary()
 {
     TEST_TOP_DIR=$dir_real;
     TEST_LOG_FILE=test.log;
-    : ${TEST_LOG_XML:=$TEST_TOP_DIR/test.log.xml};
-    TEST_OUT_STDOUT=$TEST_TOP_DIR/test.out.stdout;
-    TEST_OUT_STDERR=$TEST_TOP_DIR/test.out.err;
-    TEST_OUT_TIME=$TEST_TOP_DIR/test.out.time;
+##    : ${TEST_LOG_XML:=$TEST_TOP_DIR/test.log.xml};
+##    TEST_OUT_STDOUT=$TEST_TOP_DIR/test.out.stdout;
+##    TEST_OUT_STDERR=$TEST_TOP_DIR/test.out.err;
+##    TEST_OUT_TIME=$TEST_TOP_DIR/test.out.time;
+    : ${TEST_LOG_XML:=test.log.xml};
+    TEST_OUT_STDOUT=test.out.stdout;
+    TEST_OUT_STDERR=test.out.err;
+    TEST_OUT_TIME=test.out.time;
 
     n_PASS=0;
     n_FAIL=0;
@@ -364,13 +377,12 @@ while read line; do
 		) >>$TEST_LOG_FILE
 		rm -f $TEST_OUT_STDOUT $TEST_OUT_STDERR $TEST_OUT_TIME
 
-		PIP_MODE=$pip_mode_name time -p sh -c "
-						$cmd \
-						< /dev/null \
-						> $TEST_OUT_STDOUT \
-						2>$TEST_OUT_STDERR" \
-						    2>$TEST_OUT_TIME
+		SECONDS=0
+		PIP_MODE=${pip_mode_name} \
+		    ${cmd} > ${TEST_OUT_STDOUT} 2> ${TEST_OUT_STDERR} \
+		    < /dev/null;
 		test_exit_status=$?
+		t=$SECONDS
 
 		msg=
 		case $test_exit_status in
@@ -382,16 +394,11 @@ while read line; do
 		$EXIT_UNTESTED)		status=UNTESTED;;
 		$EXIT_UNSUPPORTED)	status=UNSUPPORTED;;
 		$EXIT_KILLED)		status=KILLED;;
-		*)			status=UNRESOLVED
+		*)			status=UNRESOLVED;
 					msg="exit status $test_exit_status";;
 		esac
 		eval "((n_$status=n_$status + 1))"
 
-		if [ -s $TEST_OUT_TIME ]; then
-			t=$(awk '$1 == "real" {print $2 + 0}' $TEST_OUT_TIME)
-		else
-			t=0
-		fi
 		# floating point expression
 		TOTAL_TIME=$(awk 'BEGIN {print '"$TOTAL_TIMME"'+'"$t"'; exit}')
 		(

@@ -35,7 +35,7 @@ misc-clean:
 	$(RM) *.E *.S
 	$(RM) \#*\# .\#* *~
 	$(RM) core.*
-	-$(RM) .nfs*
+	$(RM) .nfs*
 .PHONY: misc-clean
 
 distclean-here:

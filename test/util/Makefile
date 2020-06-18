@@ -36,7 +36,7 @@ include $(top_srcdir)/build/var.mk
 include ../Test.common
 
 CWD = $(shell pwd)
-CFLAGS += -DCWD=\"$(CWD)\" -DPIPS=\"$(CWD)/../../bin/pips\"
+CPPFLAGS += -I.. -I../../include  -DCWD=\"$(CWD)\" -DPIPS=\"$(CWD)/../../bin/pips\"
 
 SRCS	= dlmopen_count.c ompnumthread.c timer.c inf.c \
 	pip_mode_check.c pip_is_debug_build.c pip_task.c pip_blt.c
@@ -49,13 +49,13 @@ PROGRAMS_TO_INSTALL = # nothing
 all: $(PROGRAMS)
 
 dlmopen_count: dlmopen_count.c Makefile
-	$(CC) -I$(PIP_INCDIR) $(CFLAGS) -fpie -pie $(DYLINKER_FLAG) $< -o $@ -ldl
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
 ompnumthread: ompnumthread.c Makefile
 	$(CC) -fopenmp -openmp $< -o $@
 
 timer: timer.c Makefile
-	$(CC) -I.. $(PIP_CFLAGS_TASK) $(CFLAGS) $(PIP_LDFLAGS_TASK) $< -o $@
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 pip_is_debug_build : pip_is_debug_build.c Makefile
 	../scripts/pipcc -g -O2 $< -o $@
