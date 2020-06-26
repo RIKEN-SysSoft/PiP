@@ -227,7 +227,7 @@ comopatibility between any of those versions.
 
 ### PiP v3 will be another stable version having Bi-Level Thread (BLT) and User-Level Process (ULP) features
 
-    Details can be found in [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf) in addition to the features introduced in the above v2.
+Details can be found in [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf) in addition to the features introduced in the above v2.
 
 ### PiP v2 and v3 will be able to install by using Spack (https://github.com/spack/spack)
 
