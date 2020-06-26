@@ -4,22 +4,23 @@ Process-in-Process
 
 ## Description
 
-PiP is a user-level library to have the best of the both worlds
-of multi-process and multi-thread parallel execution models. PiP
-allows a process to create sub-processes into the same virtual address
-space where the parent process runs. The parent process and
-sub-processes share the same address space, however, each process has
-its own variable set. So, each process runs independently from the
-other process. If some or all processes agree, then data own by a
-process can be accessed by the other processes. Those processes share
-the same address space, just like pthreads, and each process has its
-own variables like a process. The parent process is called PiP process
-and a sub-process are called a PiP task. 
+Process-in-Process (PiP) is a user-level library to have the best of
+the both worlds of multi-process and multi-thread parallel execution
+models. PiP allows a process to create sub-processes into the same
+virtual address space where the parent process runs. So the parent
+process and sub-processes share the same address space, and every
+process is able to access the data owned by the other
+processes. Unlike multi-thread model, each process has its own
+variable set and each process runs independently from the other
+process. The parent process is called PiP process and a sub-process
+are called a PiP task. PiP is implemented as a user-level library
+running on Linux. There is no need to have dedicated OS kernel,
+patched OS kernel, nor the dedicated language system.
 
 ## License
 
 This project is licensed under the 2-clause simplified BSD License -
-see the [LICENSE](LICENSE) file for details. 
+see the [LICENSE](LICENSE) file for details.
 
 ## Installation
 
@@ -28,7 +29,9 @@ see the [LICENSE](LICENSE) file for details.
 * [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
 * [PiP](https://github.com/RIKEN-SysSoft/PiP) - Process in Process (this package)
 * [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
-* [MPICH over PIP environment](https://github.com/pmodels/mpich-pip/wiki) - patched MPICH for PiP
+<!-- * [MPICH over PIP
+ environment](https://github.com/pmodels/mpich-pip/wiki) - patched
+ MPICH for PiP -->
 
 Before installing PiP, we strongly recommend you to install PiP-glibc.
 
@@ -58,7 +61,7 @@ at the top of the source directory after "make install".
 
 ### To compile and link your PiP programs
 
-* PiP root process (spawning PiP tasks)  
+* PiP root process (spawning PiP tasks)
     must be linked with the PiP library and must specify the link
     option as follows if you have the patched GLIBC,
 
@@ -66,15 +69,15 @@ at the top of the source directory after "make install".
 
     Once you specify this option, PiP root process uses the patched
     GLIBC libraries, no matter how LD_LIBRARY_PATH is
-    specified. The PiP root process is not required to be PIE.  
+    specified. The PiP root process is not required to be PIE.
     Note that the other SOLIBs are already symbolic linked into
     the <GLIBC_INSTALL_DIR>/lib directory by the "piplnlibs" command.
     The piplnlibs command is automatically invoked by the RPM pakcage
     installation, or should be manually invoked in the case of
-    source installation.  
+    source installation.
     (In case of the RPM binary distribution, <GLIBC_INSTALL_DIR> is "/opt/pip")
 
-* PiP task (spawned by PiP root process)  
+* PiP task (spawned by PiP root process)
     must be compiled with "-fPIE -pthread", must be linked with "-pie
     -rdynamic -pthread" options. PiP task programs are not required to be
     linked with the PiP library. Thus programs to be ran as PiP tasks
@@ -82,9 +85,9 @@ at the top of the source directory after "make install".
     PiP task(s) share the same (virtual) address space and ld-linux.so
     is already loaded by PiP root, PiP tasks use the patched GLIBC.
 
-* pipcc(1) command  
+* pipcc(1) command
 
-    You can use pipcc(1) command to compile and link your PiP programs.  
+    You can use pipcc(1) command to compile and link your PiP programs.
     e.g.
 
         $ pipcc -Wall -O2 -g -c pipmodule.c
@@ -92,11 +95,11 @@ at the top of the source directory after "make install".
 
 ### To run your PiP programs
 
-* Running PiP programs  
+* Running PiP programs
     Consult [EXECMODE](EXECMODE) file located at the same directory with
     this file for details.
 
-* How to check if PiP programs run under PiP environment  
+* How to check if PiP programs run under PiP environment
     check if they are shared the same address space by the following
     command,
 
@@ -131,7 +134,7 @@ You can select and debug an inferior by the following GDB command:
 When an already-attached program calls pip_spawn() and becomes
 a PiP root task, the newly created PiP child tasks aren't attached
 automatically, but you can add empty inferiors and then attach
-the PiP child tasks to the inferiors.  
+the PiP child tasks to the inferiors.
 e.g.
 
     .... type Control-Z to stop the root task.
@@ -142,17 +145,17 @@ e.g.
     Added inferior 2
     (gdb) inferior 2
     (gdb) attach 1902
-    
+
     (gdb) add-inferior
     Added inferior 3
     (gdb) inferior 3
     (gdb) attach 1903
-    
+
     (gdb) add-inferior
     Added inferior 4
     (gdb) inferior 4
     (gdb) attach 1904
-    
+
     (gdb) info inferiors
       Num  Description              Executable
     * 4    process 1904 (pip 2)     /somewhere/pip-task-2
@@ -168,16 +171,24 @@ In that case, you can attach all relevant PiP tasks by:
 
     $ pip-gdb -p <PID-of-your-PiP-program>
 
+### Docker image
+
+    PiP, PiP-glibc and PiP-gdb can also be installed by using a Docker
+    image.
+
+	$ docker pull rikenpip/pip-v1
+	$ sudo docker run -it rikenpip/pip-v1 /bin/bash
+
 ## Documents
 
 ### FAQ
 
-* Does MPI with PiP exist?  
+* Does MPI with PiP exist?
     Currently, we are working with ANL to develop MPICH using PiP.
     This repository, located at ANL, is not yet open to public
     at the time of writing.
 
-* After installation, any commands aborted with SIGSEGV  
+* After installation, any commands aborted with SIGSEGV
     This can happen when you specify LD_PRELOAD to include the installed
     PiP library. The LD_PRELOAD environment must be specified only when
     running PiP program with the "process:preload" running mode.
@@ -188,7 +199,7 @@ In that case, you can attach all relevant PiP tasks by:
 
 Man pages will be installed at <PIP_INSTALL_DIR>/share/man.
 
-    man -M <PIP_INSTALL_DIR>/share/man libpip
+    $ man -M <PIP_INSTALL_DIR>/share/man libpip
 
 ### HTML
 
@@ -204,6 +215,24 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 
 * [HPDC'18](presentation/HPDC18-PiP.key.pdf)
 * [ROSS'18](presentation/Ross-2018-PiP.key.pdf)
+* [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf)
+
+## Coming soon ...
+
+Newer PiP versions will be released as branches of this repo. The
+current one (v1) will be deprecated. There will be no ABI
+comopatibilities between those versions.
+
+### PiP v2 will be the stable version of v1 with some new features.
+
+### PiP v3 will be another stable version having Bi-Level Thread (BLT)
+    and User-Level Process (ULP) features
+    (can be found in
+    [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf)) in addition
+    to the features introduced in the above v2.
+
+### PiP v2 and v3 will be able to install by using Spack
+    (https://github.com/spack/spack).
 
 ## Query
 
@@ -211,4 +240,4 @@ Send e-mails to pip@ml.riken.jp
 
 Enjoy !
 
- Atsushi Hori
+ Atsushi Hori (R-CCS)

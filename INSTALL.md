@@ -34,8 +34,7 @@ as <GLIBC_INSTALL_DIR>.
 
     $ mkdir PiP-glibc.build
     $ cd PiP-glibc.build
-    $ ../PiP-glibc/build.sh -b <GLIBC_INSTALL_DIR>
-    $ ../PiP-glibc/build.sh -i
+    $ ../PiP-glibc/build.sh <GLIBC_INSTALL_DIR>
 
 ### Building PiP
 
@@ -61,5 +60,4 @@ as <PIP_GDB_INSTALL_DIR>/bin/pip-gdb :
 
     $ git clone https://github.com/RIKEN-SysSoft/PiP-gdb
     $ cd PiP-gdb
-    $ ./build.sh -b --prefix=<PIP_GDB_INSTALL_DIR> --with-glibc-libdir=<GLIBC_INSTALL_DIR>/lib --with-pip=<PIP_INSTALL_DIR>
-    $ ./build.sh -i
+    $ ./build.sh --prefix=<PIP_GDB_INSTALL_DIR> --with-pip=<PIP_INSTALL_DIR>
