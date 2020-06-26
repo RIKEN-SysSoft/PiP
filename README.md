@@ -223,17 +223,16 @@ Newer PiP versions will be released as branches of this repo. The
 current one (v1) will be deprecated. There will be no ABI
 comopatibility between any of those versions.
 
-### PiP v2 will be the stable version of v1 with some new features.
+### PiP v2 will be the stable version of v1 with some new features
 
-### PiP v3 will be another stable version having Bi-Level Thread (BLT)
+### PiP v3 will be another stable version having Bi-Level Thread (BLT) \
     and User-Level Process (ULP) features
 
-    Details can be found in
-    [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf) in addition
+    Details can be found in \
+    [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf) in addition \
     to the features introduced in the above v2.
 
-### PiP v2 and v3 will be able to install by using Spack
-    (https://github.com/spack/spack).
+### PiP v2 and v3 will be able to install by using Spack (https://github.com/spack/spack)
 
 ## Query
 
