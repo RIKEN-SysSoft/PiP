@@ -22,6 +22,10 @@ patched OS kernel, nor the dedicated language system.
 This project is licensed under the 2-clause simplified BSD License -
 see the [LICENSE](LICENSE) file for details.
 
+## Prerequisite
+
+PiP (PiP-glibc and PiP-gdb) has been tested on x86_64 and AArch64 and CentOS7 (RedHat7).
+
 ## Installation
 
 ### Software Packages
@@ -33,14 +37,14 @@ see the [LICENSE](LICENSE) file for details.
  environment](https://github.com/pmodels/mpich-pip/wiki) - patched
  MPICH for PiP -->
 
-Before installing PiP, we strongly recommend you to install PiP-glibc.
+Installing PiP-glibc is not mandatory, we strongly recommend you to install PiP-glibc. PiP can only create up to 10 PiP tasks with the normal glibc.  The PiP-glibc relaxes this limitation up to 300 PiP tasks.
 
 After installing PiP, PiP-gdb can be installed too.
 
 ### Installation from the source code.
 
 * PiP-glibc, PiP and PiP-gdb - see the [INSTALL.md](INSTALL.md) file
-* MPICH over PIP environment - see the [mpich-pip official wiki](https://github.com/pmodels/mpich-pip/wiki)
+<!-- * MPICH over PIP environment - see the [mpich-pip official wiki](https://github.com/pmodels/mpich-pip/wiki) -->
 
 ### Installation from the binary packages
 
@@ -230,6 +234,8 @@ comopatibility between any of those versions.
 Details can be found in [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf) in addition to the features introduced in the above v2.
 
 ### PiP v2 and v3 will be able to install by using Spack (https://github.com/spack/spack)
+
+### PiP-glibc and PiP-gdb based on CentOS8/RedHat8 (x86_64 and AArch64) will also be released
 
 ## Query
 
