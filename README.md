@@ -217,18 +217,19 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 * [ROSS'18](presentation/Ross-2018-PiP.key.pdf)
 * [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf)
 
-## Coming soon ...
+## Coming soon ... (no later than the end of 2020)
 
 Newer PiP versions will be released as branches of this repo. The
 current one (v1) will be deprecated. There will be no ABI
-comopatibilities between those versions.
+comopatibility between any of those versions.
 
 ### PiP v2 will be the stable version of v1 with some new features.
 
 ### PiP v3 will be another stable version having Bi-Level Thread (BLT)
     and User-Level Process (ULP) features
-    (can be found in
-    [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf)) in addition
+
+    Details can be found in
+    [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf) in addition
     to the features introduced in the above v2.
 
 ### PiP v2 and v3 will be able to install by using Spack
