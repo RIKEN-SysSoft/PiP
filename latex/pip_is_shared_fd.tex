@@ -1,0 +1,18 @@
+check if file descriptors are shared or not. This is equivalent with the {\ttfamily pip\-\_\-is\-\_\-threaded} function.
+
+\begin{DoxyParagraph}{Synopsis\-:}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ int pip\-\_\-is\-\_\-shared\-\_\-fd( int $\ast$flagp );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em set} & to a non-\/zero value if F\-Ds are shared\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+\end{DoxyRetVals}

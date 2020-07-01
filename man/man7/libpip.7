@@ -1,0 +1,387 @@
+.TH "libpip" 7 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+libpip \- (This is a Doxygen directive and just ignore) 
+
+.SH "Process-in-Process (PiP)"
+.PP
+.PP
+.SH "Description"
+.PP
+.PP
+PiP is a user-level library to have the best of the both worlds of multi-process and multi-thread parallel execution models\&. PiP allows a process to create sub-processes into the same virtual address space where the parent process runs\&. The parent process and sub-processes share the same address space, however, each process has its own variable set\&. So, each process runs independently from the other process\&. If some or all processes agree, then data own by a process can be accessed by the other processes\&. Those processes share the same address space, just like pthreads, and each process has its own variables like a process\&. The parent process is called PiP process and a sub-process are called a PiP task\&.
+.PP
+.SS "PiP Versions"
+.PP
+Currently there are three PiP library versions:
+.PP
+.IP "\(bu" 2
+Version 1 - Deprecated
+.IP "\(bu" 2
+Version 2 - Stable version
+.IP "\(bu" 2
+Version 3 - Stable version supporting BLT and ULP
+.PP
+.PP
+In this document, \fBN\fP denotes the PiP version number\&.
+.PP
+.SS "Bi-Level Thread (BLT, from v3)"
+.PP
+PiP also provides new thread implementation named 'Bi-Level Thread
+(BLT)', again, to take the best of two worlds, Kernel-Level Thread (KLT) and User-Level Thread (ULT) here\&. A BLT is a PiP task\&. When a PiP task is created it runs as a KLT\&. At any point the KLT can becomme a ULT by decoupling the associated kernel thread from the KLT\&. The decoupled kernel thread becommes idle\&. Later, the ULT can become KLT again by coupling with the kernel thread\&.
+.PP
+.SS "User-Level Process (ULP, from v3)"
+.PP
+As described, PiP allows PiP tasks to share the same virtual address space\&. This mans that a PiP task can context-switch to the other PiP task at user-level\&. This is called User-Level Process where processes may be derived from the same program or different programs\&. Threads basically share most of the kernel resources, such as address space, file descriptors, a process id, and so on whilst processes do not\&. Every process has its ows file descriptor space, for example\&. When a ULP is scheduled by a KLT having PID 1000, then the getpid() is called by the ULP returns 1000\&. Further, when the ULT is migrated to be scheduled by the other KLT, then the returned PID is different\&. So, when implemnting a ULP system, this systemcall consistency must be preserved\&. In ULP on PiP, the consistency can be maintained by utilizing the above BLT mechanism\&. When a ULT tries to call a system call, it is coupled with its kernel thread which was created at the beginning as a KLT\&. It should be note that Thread Local Storage (TLS) regions are also switched when switching ULP (and BLT) contexts\&.
+.PP
+.SS "Execution Mode"
+.PP
+There are several PiP implementation modes which can be selected at the runtime\&. These implementations can be categorized into two according to the behavior of PiP tasks,
+.PP
+.IP "\(bu" 2
+Process and
+.IP "\(bu" 2
+(P)Thread
+.PP
+.PP
+In the pthread mode, although each PiP task has its own variables unlike thread, PiP task behaves more like PThread, having a TID, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on\&. In the process mode, PiP task behaves more like a process, having a PID, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on\&. The above mentioned ULP can only work with the process mode\&.
+.PP
+When the \fCPIP_MODE\fP environment variable set to 'thread' or 'pthread' then the PiP library runs based on the pthread mode, and it is set to 'process' then it runs with the process mode\&. There are also three implementations in the process mode; 'process:preload,' 'process:pipclone' and 'process:got\&.' The 'process:preload' mode must be with the LD_PRELOAD environment variable setting so that the clone() system call wrapper can work with\&. The 'process:pipclone' mode can only be specified with the PIP-patched glibc library (see below: GLIBC issues)\&.
+.PP
+There several function provided by the PiP library to absorb the difference due to the execution mode
+.PP
+.SH "License"
+.PP
+.PP
+This project is licensed under the 2-clause simplified BSD License - see the [LICENSE](LICENSE) file for details\&.
+.PP
+.SH "Installation"
+.PP
+.PP
+.SS "PiP Trial by using Docker image"
+.PP
+Download and run the PiP Docker image\&. 
+.PP
+.nf
+$ docker pull rikenpip/pip-vN
+$ sudo docker run -it rikenpip/pip-vN /bin/bash
+
+.fi
+.PP
+.PP
+.SS "Source Repositories"
+.PP
+The installation of PiP related packages must follow the order below;
+.PP
+.IP "1." 4
+Build PiP-glibc (optional)
+.IP "2." 4
+Build PiP
+.IP "3." 4
+Build PiP-gdb (optional)
+.PP
+.PP
+Note that if PiP-gdb will not work at all without PiP-glibc\&. Further, PiP can only create up to around ten PiP tasks without installing PiP-glibc\&.
+.PP
+.IP "\(bu" 2
+\fCPiP-glibc\fP - patched GNU libc for PiP
+.IP "\(bu" 2
+\fCPiP\fP - Process in Process (this package)
+.IP "\(bu" 2
+\fCPiP-gdb\fP - patched gdb to debug PiP root and PiP tasks\&.
+.PP
+.PP
+Before installing PiP, we strongly recommend you to install PiP-glibc\&.
+.PP
+After installing PiP, PiP-gdb can be installed too\&.
+.PP
+.SS "Installation from the source code\&."
+.PP
+.IP "1." 4
+Building PiP-glibc (optional)
+.PP
+Fetch source tree (CentOS7 or RHEL7):
+.PP
+$ git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-glibc
+.PP
+Fetch source tree (CentOS8 or RHEL8):
+.PP
+$ git clone -b pip-centos8 git@git.sys.aics.riken.jp:software/PIP-glibc
+.PP
+Build PiP-glibc
+.PP
+$ mkdir GLIBC_BUILD_DIR $ cd GLIBC_BUILD_DIR $ GLIBC_SRC_DIR/build\&.sh --prefix=GLIBC_INSTALL_DIR
+.IP "2." 4
+Build PiP library
+.PP
+The same source code can be ussed for CentOS7 and CentOS8 (RHEL7 and RHEL8)\&.
+.PP
+$ git clone -b pip-N git@git.sys.aics.riken.jp:software/PiP $ cd PIP_SRC_DIR $ \&./configure --prefix=PIP_INSTALL_DIR [ --with-glibc-libdir=GLIBC_INSTALL_DIR/lib ] $ make install doxgyen-install $ cd PIP_INSTALL_DIR/bin $ \&./piplnlibs
+.PP
+If you want to make sure if the PiP library is correctly installed, then do the following;
+.PP
+$ cd PIP_SRC_DIR $ make install-test
+.PP
+Important note: The prefix directory of PiP-glibc and the prefix directory of PiP itself must NOT be the same\&.
+.IP "3." 4
+Build PiP-gdb (optional)
+.PP
+Fetch source tree (CentOS7 or RHEL7):
+.PP
+$ git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-gdb
+.PP
+Ftech source tree (CentOS8 or RHEL8):
+.PP
+$ git clone -b pip-centos8 git@git.sys.aics.riken.jp:software/PIP-gdb
+.PP
+Build PiP-gdb
+.PP
+$ cd GLIBC_SRC_DIR $ \&./build\&.sh --prefix=GLIBC_INSTALL_DIR --with-pip=PIP_INSTALL_DIR
+.PP
+The prefix directory of PiP-gdb can be the same with the prefix directory of PiP library\&.
+.PP
+.PP
+.SS "Installation from RPMs"
+.PP
+RPM packages and their yum repository are also available for CentOS 7 / RHEL7\&. 
+.PP
+.nf
+$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
+$ sudo yum install pip-glibc
+$ sudo yum install pip pip-debuginfo
+$ sudo yum install pip-gdb
+
+.fi
+.PP
+.PP
+If PiP packages are installed by the above RPMs, \fBPIP_INSTALL_DIR\fP is '/usr\&.'
+.PP
+.SH "PiP documents"
+.PP
+.PP
+The following PiP documents are created by using \fCDoxygen\fP\&.
+.PP
+.SS "Man pages"
+.PP
+Man pages will be installed at \fBPIP_INSTALL_DIR\fP/share/man\&. 
+.PP
+.nf
+$ man -M PIP_INSTALL_DIR/share/man 7 libpip
+
+.fi
+.PP
+.PP
+Or, use the pip-man command (fromm v2)\&. 
+.PP
+.nf
+$ PIP_INSTALL_DIR/bin/pip-man 7 libpip
+
+.fi
+.PP
+.PP
+The above two exammples will show you the same document you are reading\&.
+.PP
+.SS "HTML"
+.PP
+HTML documents will be installed at \fBPIP_INSTALL_DIR\fP/share/doc/pip\&.
+.PP
+.SH "Getting Started"
+.PP
+.PP
+.SS "To compile and link your PiP programs"
+.PP
+.IP "\(bu" 2
+pipcc(1) command (since v2)
+.PP
+.PP
+You can use pipcc(1) command to compile and link your PiP programs\&. 
+.PP
+.nf
+$ pipcc -Wall -O2 -g -c pipmodule.c
+$ pipcc -Wall -O2 -g -o pipprog pipprog.c
+
+.fi
+.PP
+.PP
+.SS "To run your PiP programs"
+.PP
+.IP "\(bu" 2
+pip-exec(1) command (in v1, piprun)
+.PP
+.PP
+Let's assume your that have a non-PiP program(s) and wnat to run as PiP tasks\&. All you have to do is to compile your program by using the above pipcc(1) command and to use the pip-exec(1) command to run your program as PiP tasks\&. 
+.PP
+.nf
+$ pipcc myprog.c -o myprog
+$ pip-exec -n 8 ./myprog
+$ ./myprog
+
+.fi
+.PP
+.PP
+In this case, the pip-exec(1) command becomes the PiP root and your program runs as 8 PiP tasks\&. Your program can also run as a normal (non-PiP) program without using the pip-exec(1) command\&. Note that the 'myprog\&.c' may or may not call any PiP functions\&.
+.PP
+You may write your own PiP programs whcih includes the PiP root programming\&. In this case, your program can run without using the pip-exec(1) command\&.
+.PP
+If you get the following message when you try to run your program; 
+.PP
+.nf
+PiP-ERR(19673) './myprog' is not PIE
+
+.fi
+.PP
+.PP
+Then this means that the 'myprog' is not compiled by using the pipcc(1) command properly\&. You may check if your program(s) can run as a PiP root and/or PiP task by using the pip-check(1) command (fromm v2); 
+.PP
+.nf
+$ pip-check a.out
+a.out : Root&Task
+
+.fi
+.PP
+.PP
+Above example shows that the 'a\&.out' program can run as a PiP root and PiP tasks\&.
+.PP
+.IP "\(bu" 2
+pips(1) command (fromm v2)
+.PP
+You can check if your PiP program is running or not by using the pips(1) command\&.
+.PP
+.PP
+List the PiP tasks via the 'ps' command; 
+.PP
+.nf
+$ pips -l [ COMMAND ]
+
+.fi
+.PP
+.PP
+or, show the activities of PiP tasks via the 'top' command; 
+.PP
+.nf
+$ pips -t [ COMMAND ]
+
+.fi
+.PP
+.PP
+Here \fBCOMMAND\fP is the name (not a path) of PiP program you are running\&.
+.PP
+Additionally you can kill all of your PiP tasks by using the same pips(1) command; 
+.PP
+.nf
+$ pips -s KILL [ COMMAND ]
+
+.fi
+.PP
+.PP
+.SS "Debugging your PiP programs by the pip-gdb command"
+.PP
+The following procedure attaches all PiP tasks, which are created by same PiP root task, as GDB inferiors\&. 
+.PP
+.nf
+$ pip-gdb
+(gdb) attach PID
+
+.fi
+.PP
+.PP
+The attached inferiors can be seen by the following GDB command: 
+.PP
+.nf
+(gdb) info inferiors
+  Num  Description              Executable
+  4    process 6453 (pip 2)     /somewhere/pip-task-2
+  3    process 6452 (pip 1)     /somewhere/pip-task-1
+  2    process 6451 (pip 0)     /somewhere/pip-task-0
+* 1    process 6450 (pip root)  /somewhere/pip-root
+
+.fi
+.PP
+.PP
+You can select and debug an inferior by the following GDB command: 
+.PP
+.nf
+(gdb) inferior 2
+[Switching to inferior 2 [process 6451 (pip 0)] (/somewhere/pip-task-0)]
+
+.fi
+.PP
+.PP
+When an already-attached program calls 'pip_spawn()' and becomes a PiP root task, the newly created PiP child tasks aren't attached automatically, but you can add empty inferiors and then attach the PiP child tasks to the inferiors\&. e\&.g\&. 
+.PP
+.nf
+.... type Control-Z to stop the root task.
+^Z
+Program received signal SIGTSTP, Stopped (user).
+
+(gdb) add-inferior
+Added inferior 2
+(gdb) inferior 2
+(gdb) attach 1902
+
+(gdb) add-inferior
+Added inferior 3
+(gdb) inferior 3
+(gdb) attach 1903
+
+(gdb) add-inferior
+Added inferior 4
+(gdb) inferior 4
+(gdb) attach 1904
+
+(gdb) info inferiors
+  Num  Description              Executable
+* 4    process 1904 (pip 2)     /somewhere/pip-task-2
+  3    process 1903 (pip 1)     /somewhere/pip-task-1
+  2    process 1902 (pip 0)     /somewhere/pip-task-0
+  1    process 1897 (pip root)  /somewhere/pip-root
+
+.fi
+.PP
+.PP
+You can attach all relevant PiP tasks by: 
+.PP
+.nf
+$ pip-gdb -p PID-of-your-PiP-program
+
+.fi
+.PP
+.PP
+(from v2)
+.PP
+If the PIP_GDB_PATH environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered\&. The exception signals can also be defined by setting the PIP_GDB_SIGNALS environment\&. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol\&. 'all' is reserved to specify most of the signals\&. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT\&. If one of the defined or default signals is delivered, then PiP-gdb will be attached\&. The PiP-gdb will show backtrace by default\&. If users specify PIP_GDB_COMMAND that a filename containing some GDB commands, then those GDB commands will be executed by the GDB, instead of backtrace, in batch mode\&. If the PIP_STOP_ON_START environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program\&.
+.PP
+.SH "FAQ"
+.PP
+.PP
+.IP "\(bu" 2
+Does MPI with PiP exist? Currently, we are working with ANL to develop MPICH using PiP\&. This repository, located at ANL, is not yet open to public at the time of this writing\&.
+.PP
+.PP
+.SH "Publications"
+.PP
+.PP
+.SS "Research papers"
+.PP
+A\&. Hori, M\&. Si, B\&. Gerofi, M\&. Takagi, J\&. Dayal, P\&. Balaji, and Y\&. Ishikawa\&. 'Process-in-process: techniques for practical address-space sharing,' In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18)\&. ACM, New York, NY, USA, 131-143\&. DOI: https://doi.org/10.1145/3208040.3208045
+.PP
+.SS "Presentation Slides"
+.PP
+.IP "\(bu" 2
+\fCHPDC'18\fP
+.IP "\(bu" 2
+\fCROSS'18\fP
+.IP "\(bu" 2
+\fCIPDPS/RADR'20\fP
+.PP
+.PP
+.SH "Query"
+.PP
+.PP
+Send e-mails to pip@ml.riken.jp
+.PP
+.SH "Author"
+.PP
+.PP
+Atsushi Hori Riken Center for Commputational Science (R-CCS) Japan 

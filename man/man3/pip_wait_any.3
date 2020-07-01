@@ -1,0 +1,44 @@
+.TH "pip_wait_any" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_wait_any \- pip_wait_any 
+Wait for the termination of any PiP task
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> int pip_wait_any( int *pipid, int *status );
+.RE
+.PP
+\fBDescription:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. This function blocks until any of PiP tasks terminates\&. The macros such as \fCWIFEXITED\fP and so on defined in Glibc can be applied to the returned \fCstatus\fP value\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of terminated PiP task\&. 
+.br
+\fIstatus\fP Exit value of the terminated PiP task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet 
+.br
+\fIEPERM\fP This function is called other than PiP root 
+.br
+\fIECHILD\fP The target PiP task does not exist or it was already terminated and waited for
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3) 
+.RE
+.PP
+

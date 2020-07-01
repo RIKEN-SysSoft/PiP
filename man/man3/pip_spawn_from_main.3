@@ -1,0 +1,38 @@
+.TH "pip_spawn_from_main" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_spawn_from_main \- pip_spawn_from_main 
+Setting information to invoke a PiP task starting from the main function
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp )
+.RE
+.PP
+\fBDescription:\fP
+.RS 4
+This function sets up the \fCpip_spawn_program_t\fP structure for spawning a PiP task, starting from the mmain function\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIprogp\fP Pointer to the \fCpip_spawn_program_t\fP structure in which the program invokation information will be set 
+.br
+\fIprog\fP Path to the executiable file\&. 
+.br
+\fIargv\fP Argument vector\&. 
+.br
+\fIenvv\fP Environment variables\&. If this is \fCNULL\fP, then the \fCenviron\fP variable is used for the spawning PiP task\&. 
+.br
+\fIexp\fP Export value to the spawning PiP task
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_task_spawn(3), pip_spawn_from_func(3) 
+.RE
+.PP
+

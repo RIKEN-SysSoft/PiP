@@ -86,7 +86,7 @@ int main( int argc, char **argv ) {
       CHECK( pip_wait( i, NULL ), RV, return(EXIT_FAIL) );
     }
   } else {
-    intptr_t id;
+    uintptr_t id;
 
     CHECK( PIP::xxx, RV!=MAGIC, return(EXIT_FAIL) );
     for( i=0; i<ntasks; i++ ) {
@@ -94,7 +94,7 @@ int main( int argc, char **argv ) {
       delete objs[i];
       objs[i] = NULL;
     }
-    CHECK( pip_get_id( PIP_PIPID_MYSELF, &id ), RV, return(EXIT_FAIL) );
+    CHECK( pip_get_system_id( PIP_PIPID_MYSELF, &id ), RV, return(EXIT_FAIL) );
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return 0;

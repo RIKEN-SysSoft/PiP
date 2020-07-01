@@ -1,0 +1,70 @@
+.TH "pip-overview" 7 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip-overview \- 
+.PP
+the PiP library  
+the PiP library 
+
+
+.SH "Overview"
+.PP
+PiP is a user-level library which allows a process to create sub-processes into the same virtual address space where the parent process runs\&. The parent process and sub-processes share the same address space, however, each process has its own static variables\&. So, each process runs independently from the other process\&. If some or all processes agreed, then data own by a process can be accessed by the other processes\&.
+.PP
+Those processes share the same address space, just like pthreads, but each process has its own variables like processes\&. The parent process is called \fIPiP\fP \fIprocess\fP and sub-processes are called \fIPiP\fP \fItask\fP since it has the best of the both worlds of processes and pthreads\&.
+.PP
+PiP root can spawn one or more number of PiP tasks\&. The executable of the PiP task must be compiled (with the '-fpie' or '-pic' compile option) and linked (with the '-pie' linker option) to be a PIE (Position Independent Executable)\&.
+.PP
+When a PiP root or PiP task is willing to be accessed the its own data by the other(s), firstly a memory region where the data to be accessed are located must be \fIexported\fP\&. Then the exported memory region is \fIimported\fP so that the exported and imported data can be accessed\&. The PiP library supports the functions to export and import the pointers to memory regions\&.
+.PP
+Unlike shared memory techniques (shared mmap, POSIX-shmem, SYSV-shmem, and XPMEM), PiP allows PiP root and PiP tasks share the entire virtual address space fromm the beginning\&. So, any pointers can be dereferenced as they are\&. Additionally there is no need to cast a spell to share a memory region\&. All users have to do is passing pointers\&.
+.SH "Thread"
+.PP
+.SS "Thread"
+PiP also provides new thread implementation named 'Bi-Level Thread
+(BLT)', again, to take the best of two worlds, Kernel-Level Thread (KLT) and User-Level Thread (ULT) here\&. A BLT is a PiP task\&. When a PiP task is created it runs as a KLT\&. At any point the KLT can becomme a ULT by decoupling the associated kernel thread from the KLT\&. The decoupled kernel thread becommes idle\&. Later, the ULT can become KLT again by coupling with the kernel thread\&.
+.SS "Process"
+As described, PiP allows PiP tasks to share the same virtual address space\&. This mans that a PiP task can context-switch to the other PiP task at user-level\&. This is called User-Level Process where processes may be derived from the same program or different programs\&. Threads basically share most of the kernel resources, such as address space, file descriptors, a process id, and so on whilst processes do not\&. Every process has its ows file descriptor space, for example\&. When a ULP is scheduled by a KLT having PID 1000, then the \fBgetpid()\fP \fBis\fP called by the ULP returns 1000\&. Further, when the ULT is migrated to be scheduled by the other KLT, then the returned PID is different\&. So, when implemnting a ULP system, this systemcall consistency must be preserved\&. In ULP on PiP, the consistency can be maintained by utilizing the above BLT mechanism\&. When a ULT tries to call a system call, it is coupled with its kernel thread which was created at the beginning as a KLT\&.
+.SH "Execution mode"
+.PP
+There are several PiP implementation modes which can be selected at the runtime\&. These implementations can be categorized into two according to the behavior of PiP tasks,
+.PP
+.IP "\(bu" 2
+\fCPthread\fP, and
+.IP "\(bu" 2
+\fCProcess\fP\&.
+.PP
+.PP
+In the pthread mode, although each PiP task has its own variables unlike thread, PiP task behaves more like Pthread, having a TID, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on\&. In the process mode, PiP task behaves more like a process, having a PID, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on\&. The above mentioned ULP can only work with the process mode\&.
+.PP
+When the \fCPIP_MODE\fP environment variable set to "thread" then the PiP library runs based on the pthread mode, and it is set to "process" then it runs with the process mode\&. There are also two implementations in the \fBprocess\fP mode; "process:preload" and "process:pipclone" The former one must be with the \fBLD_PRELOAD\fP environment variable setting so that the \fBclone()\fP system call wrapper can work with\&. The latter one can only be specified with the PIP-patched glibc library (see below: \fBGLIBC\fP issues)\&.
+.PP
+There several function provided by the PiP library to absorb the difference due to the execution mode
+.SH "Limitation"
+.PP
+PiP allows PiP root and PiP tasks to share the data, so the function pointer can be passed to the others\&. However, jumping into the code owned by the other may not work properly for some reasons\&.
+.SH "Compile and Link User programs"
+.PP
+The PiP root ust be linked with the PiP library and libpthread\&. The programs able to run as a PiP task must be compiled with the "-fpie" compile option and the "-pie -rdynamic" linker options\&.
+.SH "GLIBC issues"
+.PP
+The PiP library is implemented at the user-level, i\&.e\&. no need of kernel patches nor kernel modules\&. Due to the novel usage of combining \fCdlmopn()\fP GLIBC function and \fCclone()\fP systemcall, there are some issues found in the GLIBC\&. To avoid this issues, PiP users are recommenmded to have the patched GLIBC provided by the PiP development team\&.
+.SH "PiP-GDB"
+.PP
+The normal gdb debugger only works with the PiP root\&. PiP-aware GDB (PiP-gdb) is also provided and must be used for debugging PiP tasks\&. In PiP-gdb, PiP tasks and root can be debugged as GDB inferiors\&. The current PiP-gdb does not work with the PiP's thread execution mode\&.
+.SH "Debug on Exception Signals"
+.PP
+If the PIP_GDB_PATH environment is set to the path to PiP-gdb, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered\&. The exception signals can also be defined by setting the PIP_GDB_SIGNALS environment\&. Signal names can be concatenated by the '+' or '-' symbol\&. 'all' is reserved to specify most of the signals\&. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT\&. If one of the defined or default signals is delivered, then PiP-gdb will be attached\&. The PiP-gdb will show backtrace by default\&. If users specify PIP_GDB_COMMAND that contains GDB commands, then those GDB commands will be executed by the GDB in batch mode\&.
+.PP
+\fBSee Also:\fP
+.RS 4
+pipcc(1)
+.RE
+.PP
+.SH "Author"
+.PP
+Atsushi Hori (RIKEN, Japan) ahori@riken.jp 
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for PiP - Process-in-Process from the source code\&.

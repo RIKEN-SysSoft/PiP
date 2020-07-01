@@ -36,9 +36,9 @@
 ###
 ### \section synopsis SYNOPSIS
 ###
-###	\c \b pip-mode [\b pipenv-option] [\b commands ...]
+###	\c \b pip-mode [\b OPTION] [\b COMMANDS ...]
 ###
-### \section options OPTIONS
+### \section options OPTION
 ###
 ### The following options are avilable. If no of them specified, then
 ### the compiled output file can be used as both PiP root and PiP task.
@@ -46,14 +46,24 @@
 ### \subsection process	-P
 ### If specified, PiP will run with the 'process' mode
 ###
-### \subsection preload	-p
+### \subsection preload	-L
 ### If specified, PiP will run with the 'process' mode (preload)
 ###
-### \subsection pipclone	-c
-### If specified, PiP will run with the 'process' mode (pip clone)
+### \subsection pipclone -C
+### If specified, PiP will run with the 'process' mode (pip_clone)
 ###
-### \subsection pthread	-t
+### \subsection pipclone -G
+### If specified, PiP will run with the 'process' mode (GOT)
+###
+### \subsection pthread	-T
 ### If specified, PiP will run with the 'thread' mode
+###
+### \subsection pthread	-u
+### Show usage
+###
+### \section seealso See Also
+### pip-exec(1)
+###
 ###
 
 INSTALLTOP=@prefix@
@@ -61,11 +71,11 @@ SRCTOP=@srcdir_top@
 
 function usage() {
     echo $self "-p|-l|-g|-c|-t [<command> ...]";
-    echo "    -p: 'process' mode";
-    echo "    -l: 'process:preload' mode";
-    echo "    -g: 'process:got' mode";
-    echo "    -c: 'process:pipclone' mode";
-    echo "    -t: 'pthread' mode";
+    echo "    -P: 'process' mode";
+    echo "    -L: 'process:preload' mode";
+    echo "    -G: 'process:got' mode";
+    echo "    -C: 'process:pipclone' mode";
+    echo "    -T: 'pthread' mode";
     exit 0;
 }
 

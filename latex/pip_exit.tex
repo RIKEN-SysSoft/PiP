@@ -1,0 +1,19 @@
+terminate the calling Pi\-P task
+
+\begin{DoxyParagraph}{Synopsis\-:}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ void pip\-\_\-exit( int status );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description\-:}
+When the main function or the start function of a Pi\-P task returns with an integer value, then it has the same effect of calling {\ttfamily pip\-\_\-exit} with the returned value.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em status} & This status is returned to Pi\-P root.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+This function can be used regardless to the Pi\-P execution mode. {\ttfamily exit(3)} is called in the process mode and {\ttfamily pthread\-\_\-exit(3)} is called in the pthread mode.
+\end{DoxyNote}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-wait(3), pip\-\_\-trywait(3), pip\-\_\-wait\-\_\-any(3), pip\-\_\-trywait\-\_\-any(3) 
+\end{DoxySeeAlso}

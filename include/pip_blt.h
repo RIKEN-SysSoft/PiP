@@ -90,7 +90,6 @@ typedef struct pip_task {
 #define PIP_TASKQ_PREV_NEXT(L)	(((pip_task_t*)(L))->prev->next)
 #define PIP_TASKQ_NEXT_PREV(L)	(((pip_task_t*)(L))->next->prev)
 
-//#ifdef DEBUG
 #ifdef AH
 #define PIP_TASKQ_CHECK(Q)					\
   ASSERTD( PIP_TASKQ_NEXT(Q) != PIP_TASKQ_PREV(Q) )
@@ -239,14 +238,6 @@ typedef struct pip_mutex {
 #define INLINE			inline static
 #endif
 #endif
-
-/**
- * @addtogroup libpip libpip
- * \brief the PiP library
- * @{
- */
-
-extern int pip_task_str( char*, size_t, pip_task_t* );
 
 #ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus
@@ -564,6 +555,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #else
   INLINE void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
+    extern int pip_task_str( char*, size_t, pip_task_t* );
     if( queue == NULL ) return;
     if( queue->methods == NULL || queue->methods->describe == NULL ) {
       if( PIP_TASKQ_ISEMPTY( &queue->queue ) ) {
@@ -1040,6 +1032,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
+   * \page pip_decouple pip_decouple
+   *
    * \brief Decouple the curren task from the kernel thread
    *  @{
    * \param[in] task specify the scheduling task to schedule the decoupled task
@@ -1050,16 +1044,10 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EBUSY the curren task is already decoupled from a kernel thread
    */
   int pip_decouple( pip_task_t *task );
-  /** @}*/
-
-  int pip_set_syncflag( uint32_t flags );
 
 #ifdef PIP_EXPERIMENTAL
   int pip_migrate( pip_task_t* );
 #endif
-/**
- * @}
- */
 
 #ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus

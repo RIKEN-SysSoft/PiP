@@ -42,133 +42,6 @@
 #endif
 #endif
 
-/**
- * @addtogroup pip-overview pip-overview
- * \brief the PiP library
- * @{
- *
- * \section overview Overview
- *
- * PiP is a user-level library which allows a process to
- * create sub-processes into the same virtual address space where the
- * parent process runs. The parent process and sub-processes share the
- * same address space, however, each process has its own
- * variables. So, each process runs independently from the other
- * process. If some or all processes agreed, then data own by a
- * process can be accessed by the other processes.
- *
- * Those processes share the same address space, just like pthreads,
- * and each process has its own variables like a process. The parent
- * process is called \e PiP \e process and sub-processes are called
- * \e PiP \e task since it has the best of the both worlds of
- * processes and pthreads.
- *
- * PiP root can spawn one or more number of PiP tasks. The PiP root
- * and PiP tasks shared the
- * same address space. The executable of the PiP task must be
- * compiled (with the "-fpie" compile option) and linked (with the
- * "-pie" linker option) as PIE (Position Independent Executable).
- *
- * When a PiP root or PiP task wants to be accessed the its own data
- * by the other(s), firstly a memory region where the data to be
- * accessed are located must be \e exported. Then the exported memory
- * region is \e imported so that the exported and imported data can be
- * accessed. The PiP library supports the functions to export and
- * import the memory region to be accessible.
- *
- * \section PiP User-Level Process (ULP)
- *
- * PiP also supports ULPs which are explicitly scheduled by PiP
- * tasks. Unlike the other user-level thread libraries, PiP ULPs can
- * run with different programs. Due to the GLIBC constraints, ULPs can
- * be created by the PiP root process. The created ULPs are associated
- * with a PiP task by specifying ULPs when the task is created by
- * calling \b pip_task_spawn(). A ULP can yield, suspend, and resume its
- * execution by calling PiP ULP functions. A PiP task will be
- * terminated only when all ULPs scheduled by the task terminate.
- *
- * \section execution-mode Execution mode
- *
- * There are several PiP implementation modes which can be selected at
- * the runtime. These implementations can be categorized into two
- * according to the behavior of PiP tasks,
- *
- * - \c Pthread, and
- * - \c Process.
- *
- * In the pthread mode, although each PiP task has its own variables
- * unlike thread, PiP task behaves more like Pthread, having a TID,
- * having the same file descriptor space, having the same signal
- * delivery semantics as Pthread does, and so on.
- * In the process mode, PiP task behaves more like a process, having
- * a PID, having an independent file descriptor space, having the same
- * signal delivery semantics as Linux process does, and so on.
- *
- * When the \c PIP_MODE environment variable set to \"thread\" then
- * the PiP library runs based on the pthread mode, and it is set to
- * \"process\" then it runs with the process mode. There are also two
- * implementations in the \b process mode; \"process:preload\" and
- * \"process:pipclone\" The former one must be with the \b LD_PRELOAD
- * environment variable setting so that the \b clone() system call
- * wrapper can work with. The latter one can only be specified with
- * the PIP-patched glibc library (see below: \b GLIBC issues).
- *
- * There several function provided by the PiP library to absorb the
- * difference due to the execution mode
- *
- * \section limitation Limitation
- *
- * PiP allows PiP root and PiP tasks to share the data, so the
- * function pointer can be passed to the others. However, jumping into
- * the code owned by the other may not work properly for some
- * reasons.
- *
- * \section compile-and-link Compile and Link User programs
- *
- * The PiP root ust be linked with the PiP library and libpthread. The
- * programs able to run as a PiP task must be compiled with the
- * \"-fpie\" compile option and the \"-pie -rdynamic\" linker
- * options.
- *
- * \section glibc-issues GLIBC issues
- *
- * The PiP library is implemented at the user-level, i.e. no need of
- * kernel patches nor kernel modules. Due to the novel usage of
- * combining \c dlmopn() GLIBC function and \c clone() systemcall,
- * there are some issues found in the GLIBC. To avoid this issues,
- * PiP users may have the patched GLIBC provided by the PiP
- * development team.
- *
- * \section PiP-GDB PiP-GDB
- *
- * The normal gdb debugger only works with the PiP root. PiP-aware GDB
- * (PiP-gdb) is also provided and must be used for debugging PiP tasks.
- * In PiP-gdb, PiP tasks and root can be debugged as GDB inferiors.
- * The current PiP-gdb does not work with the PiP's thread execution mode.
- *
- * \section debug Debug on Exception Signals
- *
- * If the PIP_GDB_PATH environment is set to the path to PiP-gdb, then
- * PiP-gdb is automatically attached when an excetion signal (SIGSEGV
- * and SIGHUP by default) is delivered. The exception signals can also
- * be defined by
- * setting the PIP_GDB_SIGNALS environment. Signal names can be
- * concatenated by the '+' or '-' symbol. 'all' is reserved to specify most
- * of the signals. For example, 'ALL-TERM' means all signals excepting
- * SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If
- * one of the defined or default signals is delivered, then PiP-gdb will be
- * attached. The PiP-gdb will show backtrace by default. If users
- * specify PIP_GDB_COMMAND that contains GDB commands, then those GDB
- * commands will be executed by the GDB in batch mode.
- *
- * \sa pipcc(1)
- *
- * \section author Author
- *  Atsushi Hori (RIKEN, Japan) ahori@riken.jp
- *
- * @}
- */
-
 #ifndef DOXYGEN_INPROGRESS
 
 #include <stdint.h>
@@ -246,7 +119,7 @@ typedef struct {
   void 			*reserved[5];
 } pip_spawn_hook_t;
 
-typedef intptr_t	pip_id_t;
+typedef uintptr_t	pip_id_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -263,27 +136,153 @@ extern "C" {
 #define INLINE			inline static
 #endif
 #endif
-
 /**
- * @addtogroup libpip libpip
  * \brief the PiP library
  * @{
  */
 
   /**
+   * \page   pip_init pip_init
+   *
+   * \brief Initialize the PiP library
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
+   *
+   * \description
+   * This function initializes the PiP library. The PiP root process
+   * must call this. A PiP task is not required to call this function
+   * unless the PiP task calls any PiP functions.
+   * \par
+   * When this function is called by a PiP root, \c ntasks, and \c root_expp
+   * are input parameters. If this is called by a PiP task, then those parameters are output
+   * returning the same values input by the root.
+   * \par
+   * A PiP task may or may not call this function. If \c pip_init is not called by a PiP task
+   * explicitly, then \c pip_init is called magically and implicitly even if the PiP task program
+   * is NOT linked with the PiP library.
+   *
+   * \param[out] pipidp When this is called by the PiP root
+   *  process, then this returns \c PIP_PIPID_ROOT, otherwise it returns
+   *  the PiP ID of the calling PiP task.
+   * \param[in,out] ntasks When called by the PiP root, it specifies
+   *  the maximum number of PiP tasks. When called by a PiP task, then
+   *  it returns the number specified by the PiP root.
+   * \param[in,out] root_expp If the root PiP is ready to export a
+   *  memory region to any PiP task(s), then this parameter is to pass
+   *  the exporting address. If
+   *  the PiP root is not ready to export or has nothing to export
+   *  then this variable can be NULL. When called by a PiP task, it
+   *  returns the exported address by the PiP root, if any.
+   * \param[in] opts Specifying the PiP execution mode and See below.
+   *
+   * \notes
+   * The \c opts may have one of the values \c PIP_MODE_PTHREAD,
+   * \c PIP_MODE_PROCESS, \c PIP_MODE_PROCESS_PRELOAD,
+   * \c PIP_MODE_PROCESS_PIPCLONE and \c PIP_MODE_PROCESS_GOT, or
+   * any combination (bit-wise or) of them. If combined or \c opts is zero,
+   * then an
+   * appropriate one is chosen by the library. This PiP execution mode
+   * can be specified by an environment variable described below.
+   *
+   * \return Zero is returned if this function succeeds. Otherwise an
+   * error number is returned.
+   *
+   * \retval EINVAL \a ntasks is negative
+   * \retval EBUSY PiP root called this function twice or more without calling \c
+   * pip_fin(1).
+   * \retval EPERM \a opts is invalid or unacceptable
+   * \retval EOVERFLOW \a ntasks is too large
+   * \retval ELIBSCN verssion miss-match between PiP root and PiP task
+   *
+   * \environment
+   * \li \a PIP_MODE Specifying the PiP execution mmode. Its value can be
+   * one of \c thread, \c pthread, \c process, \c process:preload,
+   * \c process:pipclone, or \c process:got.
+   * \li \a LD_PRELOAD This is required to set appropriately to hold the path
+   * to \c pip_preload.so file, if the PiP execution mode is
+   * \c PIP_MODE_PROCESS_PRELOAD (the \c opts in \c pip_init) and/or
+   * the PIP_MODE ennvironment is set to \c process:preload. See also
+   * the pip_mode(1) command to set the environment variable appropriately and
+   * easily.
+   * \li \a PIP_GDB_PATH If thisenvironment is set to the path pointing to the PiP-gdb
+   * executable file, then PiP-gdb is automatically attached when an
+   * excetion signal (SIGSEGV and SIGHUP by default) is delivered. The signals which
+   * triggers the PiP-gdb invokation can be specified the
+   * \c PIP_GDB_SIGNALS environment described below.
+   * \li \a PIP_GDB_COMMAND If this PIP_GDB_COMMAND is set to a filename
+   * containing some GDB commands, then those GDB commands will be executed by the GDB
+   * in batch mode, instead of backtrace.
+   * \li \a PIP_GDB_SIGNALS Specifying the signal(s) resulting automatic PiP-gdb attach.
+   * Signal names (case insensitive) can be concatenated by the '+' or '-' symbol.
+   * 'all' is reserved to specify most of the signals. For example, 'ALL-TERM'
+   * means all signals excepting \c SIGTERM, another example, 'PIPE+INT' means \c SIGPIPE
+   * and \c SIGINT. Some signals such as SIGKILL and SIGCONT cannot be specified.
+   * \li \a PIP_SHOW_MAPS If the value is 'on' and one of the above exection signals is delivered,
+   * then the memory map will be shown.
+   * \li \a PIP_SHOW_PIPS If the value is 'on' and one of the above exection signals is delivered,
+   * then the process status by using the \c pips command (see also pips(1)) will be shown.
+   *
+   * \bugs
+   * Is is NOT guaranteed that users can spawn tasks up to the number
+   * specified by the \a ntasks argument. There are some limitations
+   * come from outside of the PiP library (from GLIBC).
+   * \n\n
+   * \sa pip_named_export(3), pip_export(3), pip_fin(3), pip-mode(1), pips(1)
+   * \n\n
+   */
+  int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
+
+  /**
+   * \page pip_fin pip_fin
+   *
+   * \brief Finalize the PiP library
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_fin( void );
+   *
+   * \description
+   * This function finalizes the PiP library. After calling this, most
+   * of the PiP functions will return the error code \c EPERM.
+   *
+   * \return zero is returned if this function succeeds. On error, error number is returned.
+   * \retval EPERM \c pip_init is not yet called
+   * \retval EBUSY \c one or more PiP tasks are not yet terminated
+   *
+   * \notes
+   * The behavior of calling \c pip_init after calling this \c pip_fin
+   * is note defined and recommended to do so.
+   *
+   * \n\n
+   * \sa pip_init(3)
+   */
+  int pip_fin( void );
+
+  /**
+   * \page pip_spawn_from_main pip_spawn_from_main
+   *
    * \brief Setting information to invoke a PiP task starting from the
    *  main function
-   *  @{
-   * \param[in,out] progp Pointer to the \c pip_spawn_program_t
-   *  structure in which the program invokation information is set
-   * \param[in] prog Filename of the program
-   * \param[in] argv Argument vector
-   * \param[in] envv Environment variables
    *
-   * This function sets the required information to invoke a program,
-   * starting from the \c main() function.
+   * \synopsis
+   * \#include <pip.h> \n
+   * void pip_spawn_from_main( pip_spawn_program_t *progp,
+   *			       char *prog, char **argv, char **envv,
+   *		               void *exp )
    *
-   * \return This function does not return any error code.
+   * \description
+   * This function sets up the \c pip_spawn_program_t structure for
+   * spawning a PiP task, starting from the mmain function.
+   *
+   * \param[out] progp Pointer to the \c pip_spawn_program_t
+   *  structure in which the program invokation information will be set
+   * \param[in] prog Path to the executiable file.
+   * \param[in] argv Argument vector.
+   * \param[in] envv Environment variables. If this is \c NULL, then
+   * the \c environ variable is used for the spawning PiP task.
+   * \param[in] exp Export value to the spawning PiP task
    *
    * \sa pip_task_spawn(3), pip_spawn_from_func(3)
    *
@@ -306,22 +305,40 @@ INLINE void pip_spawn_from_main( pip_spawn_program_t *progp,
   }
   progp->exp = exp;
 }
-  /** @}*/
 
   /**
-   * \brief Setting information to invoke a PiP task starting from
-   *  any global function
-   *  @{
-   * \param[in,out] progp Pointer to the \c pip_spawn_program_t
-   *  structure in which the program invokation information is set
-   * \param[in] prog Filename of the program
-   * \param[in] funcname Function name to be started
-   * \param[in] envv Environment variables
+   * \page pip_spawn_from_func pip_spawn_from_func
    *
+   * \brief Setting information to invoke a PiP task starting from a
+   * function defined in a program
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * pip_spawn_from_func( pip_spawn_program_t *progp,
+   *		     char *prog, char *funcname, void *arg, char **envv,
+   *		     void *exp );
+   *
+   * \description
    * This function sets the required information to invoke a program,
-   * starting from the \c main() function.
+   * starting from the \c main() function. The function should have
+   * the function prototype as shown below;
+     \code
+     int start_func( void *arg )
+     \endcode
+   * This start function must be globally defined in the program..
+   * The returned integer of the start function will be treated in the
+   * same way as the \c main function. This implies that the
+   * \c pip_wait function family called from the PiP root can retrieve
+   * the return code.
    *
-   * \return This function does not return any error code.
+   * \param[out] progp Pointer to the \c pip_spawn_program_t
+   *  structure in which the program invokation information will be set
+   * \param[in] prog Path to the executiable file.
+   * \param[in] funcname Function name to be started
+   * \param[in] arg Argument which will be passed to the start function
+   * \param[in] envv Environment variables. If this is \c NULL, then
+   * the \c environ variable is used for the spawning PiP task.
+   * \param[in] exp Export value to the spawning PiP task
    *
    * \sa pip_task_spawn(3), pip_spawn_from_main(3)
    *
@@ -345,8 +362,40 @@ pip_spawn_from_func( pip_spawn_program_t *progp,
   /** @}*/
 
   /**
-   * \brief Setting invokation hook information
-   *  @{
+   * \page pip_spawn_hook pip_spawn_hook
+   *
+   * \brief Setting invocation hook information
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * void pip_spawn_hook( pip_spawn_hook_t *hook,
+   *                      pip_spawnhook_t before,
+   *			  pip_spawnhook_t after,
+   *			  void *hookarg );
+   *
+   * \description
+   *
+   * The \a before and \a after functions are introduced to follow the
+   * programming model of the \c fork and \c exec.
+   * \a before function does the prologue found between the
+   * \c fork and \c exec. \a after function is to free the argument if
+   * it is \c malloc()ed, for example.
+   * \pre
+   * It should be noted that the \a before and \a after
+   * functions are called in the \e context of PiP root, although they
+   * are running as a part of PiP task (i.e., having PID of the
+   * spawning PiP task). Conversely
+   * speaking, those functions cannot access the variables defined in
+   * the spawning PiP task.
+   * \pre
+   * The before and after hook functions  should have
+   * the function prototype as shown below;
+     \code
+     int hook_func( void *hookarg )
+     \endcode
+   *
+   * \param[out] hook Pointer to the \c pip_spawn_hook_t
+   *  structure in which the invocation hook information will be set
    * \param[in] before Just before the executing of the spawned PiP
    *  task, this function is called so that file descriptors inherited
    *  from the PiP root, for example, can deal with. This is only
@@ -358,15 +407,10 @@ pip_spawn_from_func( pip_spawn_program_t *progp,
    * \param[in] hookarg The argument for the \a before and \a after
    *  function call.
    *
-   * The \a before and \a after functions are introduced to follow the
-   * programming style of conventional \c fork and \c
-   * exec. \a before function does the prologue found between the
-   * \c fork and \c exec. \a after function is to free the argument if
-   * it is \c malloc()ed. Note that the \a before and \a after
-   * functions are called in the different \e context from the spawned
-   * PiP task. More specifically, any variables defined in the spawned
-   * PiP task cannot be accessible from the \a before and \a after
-   * functions.
+   * \note
+   * Note that the file descriptors and signal
+   * handlers are shared between PiP root and PiP tasks in the pthread
+   * execution mode.
    *
    * \sa pip_task_spawn(3)
    *
@@ -379,61 +423,28 @@ INLINE void pip_spawn_hook( pip_spawn_hook_t *hook,
   hook->after   = after;
   hook->hookarg = hookarg;
 }
-  /** @}*/
 
   /**
-   * \brief Initialize the PiP library.
-   *  @{
-   * \param[out] pipidp When this is called by the PiP root
-   *  process, then this returns \c PIP_PIPID_ROOT, otherwise it returns
-   *  the PiP ID of the calling PiP task.
-   * \param[in,out] ntasks When called by the PiP root, it specifies
-   *  the maximum number of PiP tasks. When called by a PiP task, then
-   *  it returns the number specified by the PiP root.
-   * \param[in,out] root_expp If the root PiP is ready to export a
-   *  memory region to any PiP task(s), then this parameter points to
-   *  the variable holding the exporting address of the root PiP. If
-   *  the PiP root is not ready to export or has nothing to export
-   *  then this variable can be NULL. When called by a PiP task, it
-   *  returns the exporting address of the PiP root, if any.
-   * \param[in] opts This must be zero at the point of this writing.
+   * \page pip_task_spawn pip_task_spawn
    *
-   * \return zero is returned if this function succeeds. On error, an
-   * error number is returned.
-   * \retval EINVAL \e notasks is a negative number, or the option
-   * combination is ivalid
-   * \retval EOVERFLOW \c notasks is too latrge
-   * \retval ENOMEM unable to allocate memory
+   * \brief Spawning a PiP task
    *
-   * This function initializes the PiP library. The PiP root process
-   * must call this. A PiP task is not required to call this function
-   * unless the PiP task calls any PiP functions.
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_task_spawn( pip_spawn_program_t *progp,
+   * 		    uint32_t coreno,
+   *		    uint32_t opts,
+   *		    int *pipidp,
+   *		    pip_spawn_hook_t *hookp );
    *
-   * Is is NOT guaranteed that users can spawn tasks up to the number
-   * specified by the \a ntasks argument. There are some limitations
-   * come from outside of the PiP library (GLIBC).
+   * \description
+   * This function spawns a PiP task specified by \c progp.
+   * \par
+   * In the process execution mode, the file descriptors having the
+   * \c FD_CLOEXEC flag is closed and will not be passed to the spawned
+   * PiP task. This simulated close-on-exec will not take place in the
+   * pthread execution mode.
    *
-   * \sa pip_export(3), pip_fin(3)
-   */
-  int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
-  /** @}*/
-
-  /**
-   * \brief finalize the PiP library.
-   *  @{
-   * \return zero is returned if this function succeeds. On error, error number is returned.
-   * \retval EBUSY \c one or more PiP tasks is yet running
-   *
-   * This function finalize the PiP library.
-   *
-   * \sa pip_init(3)
-   */
-  int pip_fin( void );
-  /** @}*/
-
-  /**
-   * \brief spawn a PiP task (PiP API Version 2)
-   *  @{
    * \param[in] progp Program information to spawn as a PiP task
    * \param[in] coreno Core number for the PiP task to be bound to. If
    *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
@@ -446,19 +457,35 @@ INLINE void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \param[in] hookp Hook information to be invoked before and after
    *  the program invokation.
    *
-   * \note In theory, there is no reason to restrict for a PiP task to
-   * spawn another PiP task. However, the current implementation fails
-   * to do so. If the root process is multithreaded, only the main
-   * thread can call this function.
-   * \note In the process mode, the file descriptors set the
-   * close-on-exec flag will be closed on the created child task.
-   *
-   * \return zero is returned if this function succeeds. On error, an
+   * \return Zero is returned if this function succeeds. On error, an
    * error number is returned.
+   * \retval EPERM PiP library is not yet initialized
    * \retval EPERM PiP task tries to spawn child task
-   * \retval EBUSY Specified PiP ID is alredy occupied
+   * \retval EINVAL \c progp is \c NULL
+   * \retval EINVAL \c opts is invalid and/or unacceptable
+   * \retval EINVAL the value off \c pipidp is invalid
+   * \retval EBUSY specified PiP ID is alredy occupied
+   * \retval ENOMEM not enough memory
+   * \retval ENXIO \c dlmopen failss
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   * \note
+   * In the process execution mode, each PiP task may have its own
+   * file descriptors, signal handlers, and so on, just like a
+   * process. Contrastingly, in the pthread executionn mode, file
+   * descriptors and signal handlers are shared among PiP root and PiP
+   * tasks while maintaining the privatized variables.
+   *
+   * \bugs
+   * In theory, there is no reason to restrict for a PiP task to
+   * spawn another PiP task. However, the current glibc implementation
+   * does not allow to do so.
+   * \par
+   * If the root process is multithreaded, only the main
+   * thread can call this function.
+   *
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3),
+   * pip_spawn_from_func(3), pip_spawn_hook(3)
+   *
    *
    */
 int pip_task_spawn( pip_spawn_program_t *progp,
@@ -466,392 +493,494 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 		    uint32_t opts,
 		    int *pipidp,
 		    pip_spawn_hook_t *hookp );
-  /** @}*/
 
   /**
+   * \page pip_named_export pip_named_export
+   *
    * \brief export an address of the calling PiP root or a PiP task to
    * the others.
-   *  @{
-   * \param[in] exp Starting address of a memory region of the calling
-   *  process or task so that the other tasks can access.
-   * \param[in] format a \c printf format to give the exported address a name
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_named_export( void *exp, const char *format, ... )
+   *
+   * \description
+   * Pass an address of a memory region to the other PiP task. Unlike
+   * the simmple \p pip_export and \p pip_import
+   * functions which can only export one address per task,
+   * \p pip_named_export and \p pip_named_import can associate a name
+   * with an address so that PiP root or PiP task can exchange
+   * arbitrary number of addressess.
+   *
+   * \param[in] exp an address to be passed to the other PiP task
+   * \param[in] format a \c printf format to give the exported address
+   * a name. If this is \p NULL, then the name is assumed to be "".
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM \p pip_init is not yet called.
+   * \retval EBUSY The name is already registered.
+   * \retval ENOMEM Not enough memory
    *
-   * The PiP root or a PiP task can export a memory region only
-   * once.
-   *
-   * \note The exported address can only be retrieved by
-   * \b pip_named_import(3).
-   * \note There is no size parameter to specify the length of the
-   * exported region because there is no way to restrict the access
-   * outside of the exported region.
-   * \note The design of this function is prioritized for ease of use
-   * and this function works not in an efficient way. So, do not use
-   * this in a time critical path.
-   *
-   * \return zero is returned if this function succeeds. On error, an
-   * error number is returned.
-   * \retval EINVAL \c format is \c NULL
-   * \retval ENOMEM not enough memory available
-   * \retval EBUSY the specified name is already in use
+   * \note
+   * The addresses exported by \p pip_named_export cannot be imported
+   * by calling \p pip_import, and vice versa.
    *
    * \sa pip_named_import(3)
    */
   int pip_named_export( void *exp, const char *format, ... )
     __attribute__ ((format (printf, 2, 3)));
-  /** @}*/
 
   /**
-   * \brief import the exposed memory region of the other.
-   *  @{
+   * \page pip_named_import pip_named_import
+   *
+   * \brief import the named exported address
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_named_import( int pipid, void **expp, const char
+   * *format, ... )
+   *
+   * \description
+   * Import an address exported by the specified PiP task and having
+   * the specified name. If it is not exported yet, the calling task
+   * will be blocked. The
+   *
    * \param[in] pipid The PiP ID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
    *  the PiP task specified by the \a pipid.
    * \param[in] format a \c printf format to give the exported address a name
    *
-   * \note To avoid deadlock, the corresponding \b pip_named_export(3)
-   * must be called beofre calling \b pip_named_import(3);
-   * \note Unlike \b pip_import(3), this function might be blocked until the
-   * target address is exported by the target task. Once a name is
-   * associated by an address, the address associated with the name
-   * cannot be changed.
-   * \note If this function is called by a task having passive
-   * task(s), then this call may result in context switching to the
-   * other passive task.
-   * \note The design of this function is prioritized for ease of use
-   * and this function works not in a efficient way. So, do not use
-   * this in a time critical path.
+   * \note
+   * There is possibility of deadlock when two or more tasks are
+   * mutually waiting for exported addresses.
+   * \par
+   * The addresses exported by \p pip_export cannot be imported
+   * by calling \p pip_named_import, and vice versa.
    *
    * \return zero is returned if this function succeeds. On error, an
    * error number is returned.
-   * \retval EINVAL \c format is \c NULL
-   * \retval ENOMEM not enough memory available
-   * \retval ECANCELED the target task is terminated during the query
+   * \retval EPERM \p pip_init is not yet called.
+   * \retval EINVAL The specified \p pipid is invalid
+   * \retval ENOMEM Not enough memory
+   * \retval ECANCELED The target task is terminated
+   * \retval EDEADLK \p pipid is the calling task and tries to block
+   * itself
    *
-   * \sa pip_named_export(3), pip_export(3), pip_import(3)
+   * \sa pip_named_export(3), pip_named_tryimport(3), pip_export(3), pip_import(3)
    */
   int pip_named_import( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
-  /** @}*/
 
   /**
-   * \brief non-blocking version of \c pip_named_import
-   *  @{
+   * \page pip_named_tryimport pip_named_tryimport
+   *
+   * \brief import the named exported address (non-blocking)
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_named_tryimport( int pipid, void **expp, const char
+   * *format, ... )
+   *
+   * \description
+   * Import an address exported by the specified PiP task and having
+   * the specified name. If it is not exported yet, this returns \p EAGAIN.
+   *
    * \param[in] pipid The PiP ID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
    *  the PiP task specified by the \a pipid.
    * \param[in] format a \c printf format to give the exported address a name
    *
-   * \note The imported address must be exported by \b pip_named_export(3).
-   * \note When the named export cannot be found at the specified
-   * task, then this function returns immediately. It is guaranteed
-   * that the will be no task context switching take place in this
-   * function call.
+   * \note
+   * The addresses exported by \p pip_export cannot be imported
+   * by calling \p pip_named_import, and vice versa.
    *
-   * \return zero is returned if this function succeeds. On error, an
+   * \return Zero is returned if this function succeeds. On error, an
    * error number is returned.
-   * \retval EINVAL \c format is \c NULL
-   * \retval ENOMEM not enough memory available
-   * \retval ECANCELED the target task is terminated during the query
+   * \retval EPERM \p pip_init is not yet called.
+   * \retval EINVAL The specified \p pipid is invalid
+   * \retval ENOMEM Not enough memory
+   * \retval ECANCELED The target task is terminated
+   * \retval EAGAIN Target is not exported yet
    *
-   * \sa pip_named_export(3), pip_export(3), pip_import(3)
+   * \sa pip_named_export(3), pip_named_import(3), pip_export(3), pip_import(3)
    */
   int pip_named_tryimport( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
-  /** @}*/
 
   /**
-   * \brief export a memory region of the calling PiP root or a PiP task to
-   * the others.
-   *  @{
-   * \param[in] exp Starting address of a memory region of the calling
-   *  process or task to the others.
-   *  function call.
+   * \page pip_export pip_export
    *
-   * The PiP root or a PiP task can export a memory region only
-   * once.
+   * \brief export an address
    *
-   * \note There is no size parameter to specify the length of the
-   * exported region because there is no way to restrict the access
-   * outside of the exported region.
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_export( void *exp );
+   *
+   * \description
+   * Pass an address of a memory region to the other PiP task. This is
+   * a very naive implementation in PiP v1 and deprecated. Once a task
+   * export an address, there is no way to change the exported address
+   * or undo export.
+   *
+   * \param[in] exp An addresss
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not initialized yet
    *
-   * \sa pip_import(3), pip_named_export(3), pip_named_import(3)
+   * \sa pip_import(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3)
    */
   int pip_export( void *exp );
-  /** @}*/
 
   /**
-   * \brief import the exposed memory region of the other PiP task.
-   *  @{
-   * \param[in] pipid The PiP ID to import the exposed address
-   * \param[out] expp The starting address of the exposed region of
-   *  the PiP task specified by the \a pipid.
+   * \page pip_import pip_import
    *
-   * \note It is the users' responsibility to synchronize. When the
-   * target region is not exported yet , then this function returns
-   * NULL. If the root exports its region by the \b pip_init() function
-   * call, then it is guaranteed to be imported by PiP tasks at any
-   * time.
+   * \brief import exported address of a PiP task
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_export( void **expp );
+   *
+   * \description
+   * Get an address exported by the specified PiP task. This is
+   * a very naive implementation in PiP v1 and deprecated. If the
+   * address is not yet exported at the time of calling this function,
+   * then \p NULL is returned.
+   *
+   * \param[in] pipid The PiP ID to import the exportedaddress
+   * \param[out] expp The exported address
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINVAL \c expp is \c NULL
+   * \retval EPERM PiP library is not initialized yet
    *
-   * \sa pip_export(3), pip_named_export(3), pip_named_import(3)
+   * \sa pip_export(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3)
    */
   int pip_import( int pipid, void **expp );
-  /** @}*/
 
   /**
-   * \brief get PiP ID
-   *  @{
+   * \page pip_get_pipid pip_get_pipid
+   *
+   * \brief get PiP ID of the calling task
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_get_pipid( int *pipidp );
+   *
    * \param[out] pipidp This parameter points to the variable which
-   *  will be set to the PiP ID of the calling process.
+   *  will be set to the PiP ID of the calling task
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINVAL \c pipidp is \c NULL
+   * \retval EPERM PiP library is not initialized yet
    */
   int pip_get_pipid( int *pipidp );
-  /** @}*/
 
   /**
-   * \brief Query is PiP library is already initialized
-   *  @{
+   * \page pip_is_initialized pip_is_initialized
    *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval \c true if it is already initialized
+   * \brief Query is PiP library is already initialized
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_is_initialized( void );
+   *
+   * \return Return a non-zero value if PiP is already
+   * initialized. Otherwise this returns zero.
    */
   int pip_is_initialized( void );
 
   /**
+   * \page pip_get_ntasks pip_get_ntasks
+   *
    * \brief get the maximum number of the PiP tasks
-   *  @{
-   * \param[out] ntasksp This parameter points to the variable which
-   *  will be set to the maximum number of the PiP tasks.
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_get_ntasks( int *ntasksp );
+   *
+   * \param[out] ntasksp Maximum number of PiP tasks is returned
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
    *
    */
   int pip_get_ntasks( int *ntasksp );
-  /** @}*/
 
   /**
+   * \page pip_get_mode pip_get_mode
+   *
    * \brief get the PiP execution mode
-   *  @{
-   * \param[out] modep This parameter points to the variable which
-   *  will be set to the PiP execution mode
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  int pip_get_mode( int *modep );
+   *
+   * \param[out] modep Returned PiP execution mode
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
    *
+   * \sa pip_get_mode_str(3)
    */
   int pip_get_mode( int *modep );
-  /** @}*/
 
   /**
-   * \brief terminate PiP task or ULP
-   *  @{
-   * \param[in] retval Terminate PiP task or ULP with the exit number
-   * specified with this parameter.
+   * \page pip_get_mode_str pip_get_mode_str
    *
-   * \note This function can be used regardless to the PiP execution
-   * mode.
-   * \note If this function is called by a PiP task having one or more
-   * ULPs then the actual termination of the PiP task is postponed
-   * until all the associated (scheduling) ULP(s) terminate(s).
+   * \brief get a character string of the current execution mode
    *
-   * \return This function does not return if it succeeds. It return an
-   * error code on error.
+   * \synopsis
+   * \#include <pip.h>
+   *  char *pip_get_mode_str( void );
+   *
+   * \return Return the name string of the current execution mode. If
+   * PiP library is note initialized yet, then thiss return \p NULL.
+   *
+   */
+  const char *pip_get_mode_str( void );
+
+  /**
+   * \page pip_exit pip_exit
+   *
+   * \brief terminate the calling PiP task
+   *
+   * \synopsis
+   * \#include <pip.h>
+   *  void pip_exit( int status );
+   *
+   * \description
+   * When the main function or the start function of a PiP task
+   * returns with an integer value, then it has the same effect of
+   * calling \p pip_exit with the returned value.
+   *
+   * \param[in] status This status is returned to PiP root.
+   *
+   * \note
+   * This function can be used regardless to the PiP execution mode.
+   * \p exit(3) is called in the process mode and \p pthread_exit(3)
+   * is called in the pthread mode.
    *
    * \sa pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
    *
    */
-  void pip_exit( int retval );
-  /** @}*/
+  void pip_exit( int status );
 
   /**
-   * \brief wait for the termination of a PiP task
-   *  @{
-   * \param[in] pipid PiP ID to wait for.
-   * \param[out] retval Exit value of the terminated PiP task
+   * \page pip_wait pip_wait
    *
-   * \note This function blocks until the specified PiP task or ULP
-   * terminates.
-   * \note This function can be used regardless to the PiP execution
-   * mode.
-   * \note Only the least significant 2 bytes of the exit value are
-   * effective. This is because of the compatibility with the
-   * \c exit glibc function.
+   * \brief wait for the termination of a PiP task
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_wait( int pipid, int *status );
+   *
+   * \description
+   * This function can be used regardless to the PiP execution mode.
+   * This function blocks until the specified PiP task terminates.
+   * The
+   * macros such as \p WIFEXITED and so on defined in Glibc can be
+   * applied to the returned \p status value.
+   *
+   * \param[in] pipid PiP ID to wait for.
+   * \param[out] status Status value of the terminated PiP task
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM The caller is not the PiP root
-   * \retval EDEADLK The specified \c pipid is the PiP root
-   * \retval EINTR The call was interrupted by a signal
+   * \retval EPERM PiP library is not initialized yet
+   * \retval EPERM This function is called other than PiP root
+   * \retval EDEADLK The specified \c pipid is the one of PiP root
+   * \retval ECHILD The target PiP task does not exist or it was already
+   * terminated and waited for
    *
    * \sa pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
-   *
    */
-  int pip_wait( int pipid, int *retval );
-  /** @}*/
+  int pip_wait( int pipid, int *status );
 
   /**
+   * \page pip_trywait pip_trywait
+   *
    * \brief wait for the termination of a PiP task in a non-blocking way
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_trywait( int pipid, int *status );
+   *
+   * \description
+   * This function can be used regardless to the PiP execution mode.
+   * This function behaves like the \p wait function of glibc and the
+   * macros such as \p WIFEXITED and so on can be applied to the
+   * returned \p status value.
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_trywait( int pipid, int *status );
+   *
    * \param[in] pipid PiP ID to wait for.
-   * \param[out] retval Exit value of the terminated PiP task
+   * \param[out] status Status value of the terminated PiP task
    *
    * \note This function can be used regardless to the PiP execution
    * mode.
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM The caller is not the PiP root
-   * \retval EDEADLK The specified \c pipid is the PiP root
-   * \retval ESRCH There is no running PiP task having the specified
-   * 	     PiP ID
+   * \retval EPERM The PiP library is not initialized yet
+   * \retval EPERM This function is called other than PiP root
+   * \retval EDEADLK The specified \c pipid is the one of PiP root
+   * \retval ECHILD The target PiP task does not exist or it was already
+   * terminated and waited for
    *
    * \sa pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3)
-   *
    */
-  int pip_trywait( int pipid, int *retval );
-  /** @}*/
+  int pip_trywait( int pipid, int *status );
 
   /**
-   * \brief wait for the termination of any PiP task
-   *  @{
-   * \param[out] pipid PiP ID of terminated PiP task.
-   * \param[out] retval Exit value of the terminated PiP task
+   * \page pip_wait_any pip_wait_any
    *
-   * \note This function blocks until one of PiP tasks or ULPs
-   * terminates.
-   * \note This function can be used regardless to the PiP execution
-   * mode. However, only the least significant 2 bytes are
-   * effective. This is because of the compatibility with the
-   * \c exit glibc function.
+   * \brief Wait for the termination of any PiP task
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_wait_any( int *pipid, int *status );
+   *
+   * \description
+   * This function can be used regardless to the PiP execution mode.
+   * This function blocks until any of PiP tasks terminates.
+   * The macros such as \p WIFEXITED and so on defined in Glibc can be
+   * applied to the returned \p status value.
+   *
+   * \param[out] pipid PiP ID of terminated PiP task.
+   * \param[out] status Exit value of the terminated PiP task
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM The caller is not the PiP root
-   * \retval ESRCH There is no running PiP task
+   * \retval EPERM The PiP library is not initialized yet
+   * \retval EPERM This function is called other than PiP root
+   * \retval ECHILD The target PiP task does not exist or it was already
+   * terminated and waited for
    *
    * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3)
    *
    */
-  int pip_wait_any( int *pipid, int *retval );
-  /** @}*/
+  int pip_wait_any( int *pipid, int *status );
 
   /**
-   * \brief wait for the termination of any PiP task
-   *  @{
-   * \param[out] pipid PiP ID of terminated PiP task.
-   * \param[out] retval Exit value of the terminated PiP task
+   * \page pip_trywait_any pip_trywait_any
    *
-   * \note This function never blocks.
-   * \note This function can be used regardless to the PiP execution
-   * mode. However, only the least significant 2 bytes are
-   * effective. This is because of the compatibility with the
-   * \c exit glibc function.
+   * \brief non-blocking version of \p pip_wait_any
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_trywait_any( int *pipid, int *status );
+   *
+   * \description
+   * This function can be used regardless to the PiP execution mode.
+   * This function blocks until any of PiP tasks terminates.
+   * The macros such as \p WIFEXITED and so on defined in Glibc can be
+   * applied to the returned \p status value.
+   *
+   * \param[out] pipid PiP ID of terminated PiP task.
+   * \param[out] status Exit value of the terminated PiP task
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM The caller is not the PiP root
-   * \retval ESRCH There is no running PiP task
+   * \retval EPERM The PiP library is not initialized yet
+   * \retval EPERM This function is called other than PiP root
+   * \retval ECHILD There is no PiP task to wait for
    *
    * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3)
-   *
    */
   int pip_trywait_any( int *pipid, int *retval );
-  /** @}*/
 
   /**
+   * \page pip_get_system_id pip_get_system_id
+   *
    * \brief deliver a process or thread ID defined by the system
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_get_system_id( int *pipid, uintptr_t *idp );
+   *
+   * \description
+   * The returned object depends on the PiP execution mode. In the process
+   * mode it returns TID (Thread ID, not PID) and in the thread mode
+   * it returns thread (\p pthread_t) associated with the PiP task
+   * This function can be used regardless to the PiP execution
+   * mode.
+   *
    * \param[out] pipid PiP ID of a target PiP task
    * \param[out] idp a pointer to store the ID value
    *
-   * \note The returned object depends on the PiP mode. In the process
-   * mode it returns PID, in the thread mode it returns thread
-   * (`pthread_t`) associated with the PiP task
-   * \note This function can be used regardless to the PiP execution
-   * mode.
-   *
    * \return Return 0 on success. Return an error code on error.
-   *
+   * \retval EPERM The PiP library is not initialized yet
    */
-  int pip_get_id( int pipid, pip_id_t *idp );
-  /** @}*/
+  int pip_get_system_id( int pipid, pip_id_t *idp );
 
   /**
-   * \brief get a string of the current execution mode
-   *  @{
+   * \page pip_isa_root pip_isa_root
    *
-   * \note This function can be used regardless to the PiP execution
-   * mode.
+   * \brief check if calling PiP task is a PiP root or not
    *
-   * \return Return the name string of the current execution mode
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_isa_root( void );
    *
-   */
-  const char *pip_get_mode_str( void );
-  /** @}*/
-
-  /**
-   * \brief check if calling PiP task is PiP root or not
-   *  @{
-   *
-   * \return Return true if the caller is the PiP root
+   * \return Return a non-zero value if the caller is the PiP
+   * root. Otherwise this returns zero.
    */
   int  pip_isa_root( void );
   /** @}*/
 
   /**
-   * \brief check if calling PiP task is a PiP task or not
-   *  @{
+   * \page pip_isa_task pip_isa_task
    *
-   * \return Return true if the caller is a PiP task
+   * \brief check if calling PiP task is a PiP task or not
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_isa_task( void );
+   *
+   * \return Return a non-zero value if the caller is the PiP
+   * task. Otherwise this returns zero.
    */
   int  pip_isa_task( void );
-  /** @}*/
 
   /**
-   * \brief deliver a signal to a PiP task
-   *  @{
-   * \param[out] pipid PiP ID of a target PiP task
-   * \param[out] signal signal number to be delivered
+   * \page pip_kill_all_tasks pip_kill_all_tasks
    *
-   * \note Only the PiP task can be the target of the signal delivery.
-   * \note This function can be used regardless to the PiP execution
-   * mode.
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized
-   * \retval EINVAL An invalid signal number or invalid PiP ID is
-   * specified
-   */
-  int pip_kill( int pipid, int signal );
-  /** @}*/
-
-  /**
    * \brief kill all PiP tasks
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_kill_all_tasks( void );
+   *
+   * \note
    * This function must be called from PiP root.
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The PiP library is not initialized yet
    * \retval EPERM Not called from root
    */
   int pip_kill_all_tasks( void );
-  /** @}*/
 
   /**
-   * \brief abort and kill all PiP tasks
-   *  @{
-   * \return This function returns nothing
+   * \page pip_abort pip_abort
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_abort( void );
+   *
+   * \brief kill all PiP tasks and PiP root
    */
   void pip_abort(void);
-  /** @}*/
 
   /**
-   * \brief spawn a PiP task
-   *  @{
+   * \page pip_spawn pip_spawn
+   *
+   * \brief spawn a PiP task (PiP v1 API and deprecated)
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_spawn( char *filename, char **argv, char **envv,
+   *		 uint32_t coreno, int *pipidp,
+   *		 pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
+   *
+   * \description
+   * This function spawns a PiP task.
+   *
    * \param[in] filename The executable to run as a PiP task
    * \param[in] argv Argument(s) for the spawned PiP task
    * \param[in] envv Environment variables for the spawned PiP task
@@ -874,46 +1003,44 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  function call.
    *
    * \return Return 0 on success. Return an error code on error.
-   *
-   * This function is to spawn
-   * a PiP task. These functions are introduced to follow the
-   * programming style of conventional \c fork and \c
-   * exec. \a before function does the prologue found between the
-   * \c fork and \c exec. \a after function is to free the argument if
-   * it is \c malloc()ed. Note that the \a before and \a after
-   * functions are called in the different \e context from the spawned
-   * PiP task. More specifically, any variables defined in the spawned
-   * PiP task cannot be accessible from the \a before and \a after
-   * functions.
-   *
-   * \note In theory, there is no reason to restrict for a PiP task to
-   * spawn another PiP task. However, the current implementation fails
-   * to do so.
    */
   int pip_spawn( char *filename, char **argv, char **envv,
 		 uint32_t coreno, int *pipidp,
 		 pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
-  /** @}*/
 
   /**
-   * \brief check if PiP execution mode is Pthread or not
-   *  @{
-   * \param[in] flagp a pointerto an integer to return
+   * \page pip_is_threaded pip_is_threaded
    *
-   * \return Return true if PiP execution mode is Pthread
+   * \brief check if PiP execution mode is pthread or not
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_is_threaded( int *flagp );
+   *
+   * \param[out] set to a non-zero value if PiP execution mode is
+   * Pthread
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The PiP library is not initialized yet
    */
   int pip_is_threaded( int *flagp );
-  /** @}*/
 
   /**
-   * \brief check if file descriptors are shared or not
-   *  @{
-   * \param[in] flagp a pointerto an integer to return
+   * \page pip_is_shared_fd pip_is_shared_fd
    *
-   * \return Return true if FDs are shared
+   * \brief check if file descriptors are shared or not.
+   * This is equivalent with the \p pip_is_threaded function.
+   *
+   * \synopsis
+   * \#include <pip.h>
+   * int pip_is_shared_fd( int *flagp );
+   *
+   * \param[out] set to a non-zero value if FDs are shared
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM The PiP library is not initialized yet
    */
   int pip_is_shared_fd( int *flagp );
-  /** @}*/
 
 #ifndef DOXYGEN_INPROGRESS
 

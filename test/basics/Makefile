@@ -36,7 +36,6 @@ include $(top_srcdir)/build/var.mk
 
 SRCS  = pip_init.c \
 	pip_wait.c \
-	pip_wait.c \
 	pip_wait_any.c \
 	pip_trywait.c \
 	pip_trywait_any.c \

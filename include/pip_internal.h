@@ -174,6 +174,8 @@ typedef int  (*named_export_fin_t)(struct pip_task_internal*);
 typedef int  (*pip_clone_mostly_pthread_t)
 ( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
 typedef int  (*pip_init_t)(struct pip_root*,pip_task_internal_t*);
+typedef
+int(*clone_syscall_t)(int(*)(void*), void*, int, void*, pid_t*, void*, pid_t*);
 
 typedef struct pip_symbol {
   main_func_t		main;	      /* main function address */
@@ -521,6 +523,8 @@ INLINE void pip_system_yield( void ) {
     sched_yield();
   }
 }
+
+int pip_set_syncflag( uint32_t flags );
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

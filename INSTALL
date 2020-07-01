@@ -11,7 +11,7 @@ Process-in-Process (PiP) Installation
 * Patched GLIBC
   You can download the patched GLIBC from the following URL.
 
-git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-glibc
+    git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-glibc
 
   With the GLIB which Linux distribution provides, the number of PiP
   tasks (see below) is limited to 15 or so. This limitation comes from

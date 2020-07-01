@@ -1,0 +1,17 @@
+Decouple the curren task from the kernel thread
+
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em task} & specify the scheduling task to schedule the decoupled task (calling this function)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+{\em E\-B\-U\-S\-Y} & the curren task is already decoupled from a kernel thread \\
+\hline
+\end{DoxyRetVals}

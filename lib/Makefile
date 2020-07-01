@@ -99,18 +99,18 @@ $(LIBRARY_PIPINIT): $(OBJS_PIPINIT) Makefile
 
 # chmod is to make rpmbuild happy
 install:
-	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY) \
-	$(DESTDIR)$(libdir)/$(LIBRARY_PIPINIT)
-	rm -f $(DESTDIR)$(libdir)/$(LIBNAME) \
-	$(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
-	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
-	ln -s $(LIBRARY_PIPINIT) $(DESTDIR)$(libdir)/$(LIBNAME_PIPINIT)
+	chmod 0755 $(libdir)/$(LIBRARY) \
+	$(libdir)/$(LIBRARY_PIPINIT)
+	rm -f $(libdir)/$(LIBNAME) \
+	$(libdir)/$(LIBNAME_PIPINIT)
+	ln -s $(LIBRARY) $(libdir)/$(LIBNAME)
+	ln -s $(LIBRARY_PIPINIT) $(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
 	CPPFLAGS_DEBUG="-DDEBUG" $(MAKE) all;
 
 cdebug:
-	$(make) clean debug;
+	$(MAKE) clean debug;
 
 TAGS:
 	ctags -Re

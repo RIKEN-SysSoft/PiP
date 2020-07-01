@@ -56,7 +56,7 @@ pip-exec: pip-exec.c $(DEPINCS) $(PIP_LIBS) Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 printpipmode: printpipmode.c $(DEPINCS) $(PIP_LIBS) Makefile
-	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log

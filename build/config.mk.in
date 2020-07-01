@@ -21,6 +21,7 @@ default_datarootdir = @datarootdir@
 default_mandir = @mandir@
 default_docdir = @docdir@
 default_htmldir = @htmldir@
+default_pdfdir = @pdfdir@
 default_sysconfdir= @sysconfdir@
 default_localedir = @localedir@
 

@@ -42,6 +42,16 @@
 #endif
 #endif
 
+#ifdef DOXYGEN_INPROGRESS
+#ifndef INLINE
+#define INLINE
+#endif
+#else
+#ifndef INLINE
+#define INLINE			inline static
+#endif
+#endif
+
 #ifndef DOXYGEN_INPROGRESS
 
 #include <stdint.h>
@@ -58,22 +68,13 @@
 #define PIP_CACHEBLK_SZ		(64)
 #endif
 
-#ifdef DOXYGEN_INPROGRESS
-#ifndef INLINE
-#define INLINE
-#endif
-#else
-#ifndef INLINE
-#define INLINE			inline static
-#endif
-#endif
-
 #ifndef PIP_LOCK_TYPE
 typedef volatile uint32_t	pip_spinlock_t;
 #endif
 
 #ifndef PIP_ATOMIC_TYPE
 typedef volatile intptr_t	pip_atomic_t;
+#endif
 
 #ifndef PIP_PAUSE
 INLINE void pip_pause( void ) {
@@ -169,7 +170,6 @@ INLINE pip_atomic_t
 pip_atomic_sub_and_fetch( pip_atomic_t *p, pip_atomic_t v ) {
   return __sync_sub_and_fetch( p, v );
 }
-#endif
 #endif
 
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */

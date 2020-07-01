@@ -49,6 +49,12 @@
 ### \subsection task -piptask
 ### If specified, the compile (and link) is done for PiP task
 ###
+### \section environment Environment
+### if \p CC is set then \p \$(CC) will be used as a C compiler
+###
+### \section seealso See Also
+### pip-exec(1), pip-mode(1)
+###
 
 PREFIX=@prefix@
 SRCTOP=@srcdir_top@

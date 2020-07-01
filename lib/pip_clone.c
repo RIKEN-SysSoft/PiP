@@ -89,5 +89,4 @@ int pip_wrap_clone( void ) {
   pip_clone_orig = pip_dlsym( RTLD_DEFAULT, "__clone" );
   if( pip_clone_orig == NULL ) RETURN( ENOSYS );
   RETURN( pip_patch_GOT( "libpthread.so", "__clone", pip_clone ) );
-
 }

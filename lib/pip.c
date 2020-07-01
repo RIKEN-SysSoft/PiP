@@ -49,15 +49,7 @@
 #include <pip_dlfcn.h>
 #include <pip_gdbif_func.h>
 
-//#define ATTR_NOINLINE		__attribute__ ((noinline))
-//#define ATTR_NOINLINE
-
-#ifdef DO_MCHECK
-#include <mcheck.h>
-#endif
-
 extern char 		**environ;
-
 extern pip_spinlock_t 	*pip_lock_clone;
 
 /*** note that the following static variables are   ***/
@@ -265,6 +257,7 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
     newmod = PIP_MODE_PTHREAD;
     goto done;
   }
+
   if( newmod == 0 ) {
     pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x", desired );
     RETURN( EOPNOTSUPP );
@@ -622,6 +615,7 @@ int pip_fin( void ) {
 }
 
 int pip_export( void *exp ) {
+  if( !pip_is_initialized() ) RETURN( EPERM );
   pip_get_myself()->annex->exp = exp;
   RETURN( 0 );
 }
@@ -630,11 +624,9 @@ int pip_import( int pipid, void **expp  ) {
   pip_task_internal_t *taski;
   int err;
 
-  ENTER;
-  if( expp == NULL ) RETURN( EINVAL );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   taski = pip_get_task( pipid );
-  *expp = (void*) taski->annex->exp;
+  if( expp != NULL ) *expp = (void*) taski->annex->exp;
   RETURN( 0 );
 }
 
@@ -713,32 +705,32 @@ int pip_is_shared_fd_( void ) {
 }
 
 int pip_is_shared_fd( int *flagp ) {
+  if( pip_root == NULL ) RETURN( EPERM  );
   if( pip_is_shared_fd_() ) {
-    *flagp = 1;
+    if( flagp != NULL ) *flagp = 1;
   } else {
-    *flagp = 0;
+    if( flagp != NULL ) *flagp = 0;
   }
   return 0;
 }
 
 int pip_kill_all_tasks( void ) {
-  int pipid, i, err;
+  int pipid, i, err = 0;
 
-  err = 0;
-  if( pip_is_initialized() ) {
-    if( !pip_isa_root() ) {
-      err = EPERM;
-    } else {
-      for( i=0; i<pip_root->ntasks; i++ ) {
-	pipid = i;
-	if( pip_check_pipid( &pipid ) == 0 ) {
-	  if( pip_is_threaded_() ) {
-	    pip_task_internal_t *taski = &pip_root->tasks[pipid];
-	    taski->annex->status = PIP_W_EXITCODE( 0, SIGTERM );
+  if( !pip_is_initialized() ) {
+    err = EPERM;
+  } else if( !pip_isa_root() ) {
+    err = EPERM;
+  } else {
+    for( i=0; i<pip_root->ntasks; i++ ) {
+      pipid = i;
+      if( pip_check_pipid( &pipid ) == 0 ) {
+	if( pip_is_threaded_() ) {
+	  pip_task_internal_t *taski = &pip_root->tasks[pipid];
+	  taski->annex->status = PIP_W_EXITCODE( 0, SIGTERM );
 	    (void) pip_kill( pipid, SIGQUIT );
-	  } else {
-	    (void) pip_kill( pipid, SIGKILL );
-	  }
+	} else {
+	  (void) pip_kill( pipid, SIGKILL );
 	}
       }
     }
@@ -760,20 +752,20 @@ void pip_abort( void ) {
   NEVER_REACH_HERE;
 }
 
-int pip_get_id( int pipid, pip_id_t *idp ) {
+int pip_get_system_id( int pipid, pip_id_t *idp ) {
   pip_task_internal_t *taski;
   int err;
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
-  if( idp == NULL ) RETURN( EINVAL );
-
-  taski = pip_get_task( pipid );
-  if( pip_is_threaded_() ) {
-    /* Do not call gettid(). if a task is a BLT     */
-    /* then gettid() returns the scheduling task ID */
-    *idp = (intptr_t) taski->task_sched->annex->thread;
-  } else {
-    *idp = (intptr_t) taski->annex->tid;
+  if( idp != NULL ) {
+    taski = pip_get_task( pipid );
+    /* Do not call gettid() nor pthread_self() for tbis                */
+    /* if a task is a BLT then gettid() returns the scheduling task ID */
+    if( pip_is_threaded_() ) {
+      *idp = (intptr_t) taski->task_sched->annex->thread;
+    } else {
+      *idp = (intptr_t) taski->annex->tid;
+    }
   }
   RETURN( 0 );
 }

@@ -137,7 +137,8 @@ pip_task_internal_t *pip_current_task( int tid ) {
   static int		curr = 0;
 
   if( root != NULL ) {
-    if( tid == root->task_root->annex->tid ) {
+    if( root->task_root != NULL &&
+	tid == root->task_root->annex->tid ) {
       return root->task_root;
     } else {
       int i;
@@ -633,20 +634,18 @@ int pip_init_task_implicitly( pip_root_t *root,
 int pip_init_task_implicitly( pip_root_t *root,
 			      pip_task_internal_t *task ) {
   int err = pip_check_root( root );
-  if( !err ) {
-    if( ( pip_root != NULL && pip_root != root ) ||
-	( pip_task != NULL && pip_task != task ) ||
-	( pip_gdbif_root != NULL &&
-	  pip_gdbif_root != root->gdbif_root ) ) {
-      err = ELIBSCN;
-    } else {
-      pip_root = root;
-      pip_task = task;
-      pip_gdbif_root = root->gdbif_root;
-      pip_debug_on_exceptions( task );
-    }
-  } else {
+  if( err ) {
     err = ELIBSCN;
+  } else if( ( pip_root != NULL && pip_root != root ) ||
+	     ( pip_task != NULL && pip_task != task ) ||
+	     ( pip_gdbif_root != NULL &&
+	       pip_gdbif_root != root->gdbif_root ) ) {
+    err = ELIBSCN;
+  } else {
+    pip_root = root;
+    pip_task = task;
+    pip_gdbif_root = root->gdbif_root;
+    pip_debug_on_exceptions( task );
   }
   return err;
 }

@@ -41,8 +41,8 @@ misc-clean:
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
 		echo \
-		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3; \
-		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3; \
+		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3 .doxygen_man7; \
+		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3 .doxygen_man7; \
 	fi
 .PHONY: distclean-here
 
@@ -106,17 +106,17 @@ header-all: $(HEADERS)
 header-install:
 	@for i in -- $(HEADERS); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(includedir); \
+		$(MKDIR_P) $(includedir); \
 		echo \
-		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(includedir)/$$i; \
-		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(includedir)/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/$$i; \
 	done
 	@for i in -- $(EXEC_HEADERS); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(exec_includedir); \
+		$(MKDIR_P) $(exec_includedir); \
 		echo \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(includedir)/$$i; \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(includedir)/$$i; \
+		$(INSTALL_DATA) $$i $(includedir)/$$i; \
+		$(INSTALL_DATA) $$i $(includedir)/$$i; \
 	done
 .PHONY: header-install
 
@@ -147,10 +147,10 @@ lib-all: $(LIBRARIES)
 lib-install:
 	@for i in -- $(LIBRARIES); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(libdir); \
+		$(MKDIR_P) $(libdir); \
 		echo \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(libdir)/$$i; \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(libdir)/$$i; \
+		$(INSTALL_DATA) $$i $(libdir)/$$i; \
+		$(INSTALL_DATA) $$i $(libdir)/$$i; \
 	done
 .PHONY: lib-install
 
@@ -185,10 +185,10 @@ prog-all: $(PROGRAMS)
 prog-install:
 	@for i in -- $(PROGRAMS_TO_INSTALL); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(bindir); \
+		$(MKDIR_P) $(bindir); \
 		echo \
-		$(INSTALL_PROGRAM) $$i $(DESTDIR)$(bindir)/$$i; \
-		$(INSTALL_PROGRAM) $$i $(DESTDIR)$(bindir)/$$i; \
+		$(INSTALL_PROGRAM) $$i $(bindir)/$$i; \
+		$(INSTALL_PROGRAM) $$i $(bindir)/$$i; \
 	done
 .PHONY: prog-install
 
@@ -229,10 +229,15 @@ doxygen-here:
 	*)	for i in $(MAN3_SRCS); do echo $$i; done > .doxygen_man3; \
 		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_html;; \
 	esac
-.PHONY: doxygen-all
+	-@case "$(MAN7_SRCS)" in \
+	'')	;; \
+	*)	for i in $(MAN7_SRCS); do echo $$i; done > .doxygen_man7; \
+		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_html;; \
+	esac
+.PHONY: doxygen-here
 
 doxygen-distclean:
-	-$(RM) .doxygen_html .doxygen_man1 .doxygen_man3
+	-$(RM) .doxygen_html .doxygen_man1 .doxygen_man3 .doxygen_man7
 .PHONY: doxygen-distclean
 
 ### common rules
@@ -259,3 +264,4 @@ post-testclean-hook:
 .PHONY: post-all-hook pre-install-hook post-install-hook
 .PHONY: post-clean-hook post-veryclean-hook post-distclean-hook
 .PHONY: post-testclean-hook
+.PHONY: debug cdebug

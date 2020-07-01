@@ -1,0 +1,40 @@
+.TH "pip_import" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_import \- pip_import 
+import exported address of a PiP task
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> int pip_export( void **expp );
+.RE
+.PP
+\fBDescription:\fP
+.RS 4
+Get an address exported by the specified PiP task\&. This is a very naive implementation in PiP v1 and deprecated\&. If the address is not yet exported at the time of calling this function, then \fCNULL\fP is returned\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PiP ID to import the exportedaddress 
+.br
+\fIexpp\fP The exported address
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not initialized yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_export(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3) 
+.RE
+.PP
+

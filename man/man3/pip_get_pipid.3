@@ -1,0 +1,28 @@
+.TH "pip_get_pipid" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_get_pipid \- pip_get_pipid 
+get PiP ID of the calling task
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> int pip_get_pipid( int *pipidp );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipidp\fP This parameter points to the variable which will be set to the PiP ID of the calling task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not initialized yet 
+.RE
+.PP
+

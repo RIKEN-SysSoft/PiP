@@ -99,6 +99,7 @@ extern "C" {
    * \sa \b sigwait, \b sigsuspend
    */
   int pip_signal_wait( int signal );
+  /** @}*/
 
 #ifndef DOXYGEN_INPROGRESS
 

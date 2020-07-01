@@ -1,0 +1,56 @@
+.TH "pip_trywait" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_trywait \- pip_trywait 
+wait for the termination of a PiP task in a non-blocking way
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> int pip_trywait( int pipid, int *status );
+.RE
+.PP
+\fBDescription:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. This function behaves like the \fCwait\fP function of glibc and the macros such as \fCWIFEXITED\fP and so on can be applied to the returned \fCstatus\fP value\&.
+.RE
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> int pip_trywait( int pipid, int *status );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID to wait for\&. 
+.br
+\fIstatus\fP Status value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet 
+.br
+\fIEPERM\fP This function is called other than PiP root 
+.br
+\fIEDEADLK\fP The specified \fCpipid\fP is the one of PiP root 
+.br
+\fIECHILD\fP The target PiP task does not exist or it was already terminated and waited for
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3) 
+.RE
+.PP
+

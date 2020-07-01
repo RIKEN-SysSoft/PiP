@@ -1,0 +1,27 @@
+Finalize the Pi\-P library
+
+\begin{DoxyParagraph}{Synopsis\-:}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-fin( void );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description\-:}
+This function finalizes the Pi\-P library. After calling this, most of the Pi\-P functions will return the error code {\ttfamily E\-P\-E\-R\-M}.
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+zero is returned if this function succeeds. On error, error number is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & {\ttfamily pip\-\_\-init} is not yet called \\
+\hline
+{\em E\-B\-U\-S\-Y} & {\ttfamily one} or more Pi\-P tasks are not yet terminated\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Notes\-:}
+The behavior of calling {\ttfamily pip\-\_\-init} after calling this {\ttfamily pip\-\_\-fin} is note defined and recommended to do so.
+\end{DoxyParagraph}
+\par
+\par
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-init(3) 
+\end{DoxySeeAlso}

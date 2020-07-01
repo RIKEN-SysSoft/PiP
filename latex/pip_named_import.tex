@@ -1,0 +1,42 @@
+import the named exported address
+
+\begin{DoxyParagraph}{Synopsis\-:}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ int pip\-\_\-named\-\_\-import( int pipid, void $\ast$$\ast$expp, const char $\ast$format, ... )
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description\-:}
+Import an address exported by the specified Pi\-P task and having the specified name. If it is not exported yet, the calling task will be blocked. The
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & The Pi\-P I\-D to import the exposed address \\
+\hline
+\mbox{\tt out}  & {\em expp} & The starting address of the exposed region of the Pi\-P task specified by the {\itshape pipid}. \\
+\hline
+\mbox{\tt in}  & {\em format} & a {\ttfamily printf} format to give the exported address a name\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+There is possibility of deadlock when two or more tasks are mutually waiting for exported addresses. 
+\end{DoxyNote}
+\begin{DoxyParagraph}{}
+The addresses exported by {\ttfamily pip\-\_\-export} cannot be imported by calling {\ttfamily pip\-\_\-named\-\_\-import}, and vice versa.
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+zero is returned if this function succeeds. On error, an error number is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & {\ttfamily pip\-\_\-init} is not yet called. \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & The specified {\ttfamily pipid} is invalid \\
+\hline
+{\em E\-N\-O\-M\-E\-M} & Not enough memory \\
+\hline
+{\em E\-C\-A\-N\-C\-E\-L\-E\-D} & The target task is terminated \\
+\hline
+{\em E\-D\-E\-A\-D\-L\-K} & {\ttfamily pipid} is the calling task and tries to block itself\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-tryimport(3), pip\-\_\-export(3), pip\-\_\-import(3) 
+\end{DoxySeeAlso}

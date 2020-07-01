@@ -202,15 +202,16 @@ inline static char *signal_name( int sig ) {
   return signam_tab[sig];
 }
 
+static void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
+  fprintf( stderr,
+	   "SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
+	   signal_name( siginfo->si_signo ),
+	   siginfo->si_signo,
+	   siginfo->si_addr,
+	   my_gettid() );
+}
+
 inline static void set_signal_watcher( int signal ) {
-  void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    fprintf( stderr,
-	     "SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
-	     signal_name( siginfo->si_signo ),
-	     siginfo->si_signo,
-	     siginfo->si_addr,
-	     my_gettid() );
-  }
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_watcher;

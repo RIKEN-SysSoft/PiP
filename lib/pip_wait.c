@@ -352,9 +352,8 @@ int pip_wait( int pipid, int *statusp ) {
   int 			err = 0;
 
   ENTER;
-  if( !pip_is_initialized() )                    RETURN( EPERM   );
-  if( !pip_isa_root() )                          RETURN( EPERM   );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
+  if( !pip_isa_root() )                          RETURN( EPERM   );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
   DBGF( "PIPID:%d", pipid );
 
@@ -382,9 +381,8 @@ int pip_trywait( int pipid, int *statusp ) {
   int err;
 
   ENTER;
-  if( !pip_is_initialized() )                    RETURN( EPERM   );
-  if( !pip_isa_root() )                          RETURN( EPERM   );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
+  if( !pip_isa_root() )                          RETURN( EPERM   );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
   DBGF( "PIPID:%d", pipid );
 

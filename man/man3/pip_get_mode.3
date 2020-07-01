@@ -1,0 +1,33 @@
+.TH "pip_get_mode" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_get_mode \- pip_get_mode 
+get the PiP execution mode
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> int pip_get_mode( int *modep );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fImodep\fP Returned PiP execution mode
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_get_mode_str(3) 
+.RE
+.PP
+

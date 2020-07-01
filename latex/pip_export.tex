@@ -1,0 +1,24 @@
+export an address
+
+\begin{DoxyParagraph}{Synopsis\-:}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ int pip\-\_\-export( void $\ast$exp );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description\-:}
+Pass an address of a memory region to the other Pi\-P task. This is a very naive implementation in Pi\-P v1 and deprecated. Once a task export an address, there is no way to change the exported address or undo export.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em exp} & An addresss\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-import(3), pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-import(3), pip\-\_\-named\-\_\-tryimport(3) 
+\end{DoxySeeAlso}

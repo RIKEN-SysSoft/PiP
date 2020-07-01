@@ -385,7 +385,7 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_internal_t *taski ) {
   }
   taski->annex->symbols.pip_init = impinit;
   taski->annex->symbols.named_export_fin =
-    pip_dlsym( loaded, "pip_named_export_fin_" );
+    pip_dlsym( loaded, "pip_named_export_fin" );
   taski->annex->loaded = loaded;
   RETURN( 0 );
 
@@ -637,10 +637,29 @@ static void pip_start_user_func( pip_spawn_args_t *args,
 
     DBGF( "pip_impinit:%p", self->annex->symbols.pip_init );
     if( self->annex->symbols.pip_init != NULL ) {
-      err = self->annex->symbols.pip_init( self->annex->task_root,
-					   self );
+      int rv = self->annex->symbols.pip_init( self->annex->task_root,
+					      self );
+      if( rv ) {
+	err = EPERM;
+	switch( rv ) {
+	case 1:
+	  pip_err_mesg( "Invalid PiP root" );
+	  break;
+	case 2:
+	  pip_err_mesg( "Magic number error" );
+	  break;
+	case 3:
+	  pip_err_mesg( "Version miss-match between PiP root and task" );
+	  break;
+	case 4:
+	  pip_err_mesg( "Size miss-match between PiP root and task" );
+	  break;
+	default:
+	  pip_err_mesg( "Something wrong with PiP root and task" );
+	  break;
+	}
+      }
     }
-
     if( !err ) {
       err = pip_call_before_hook( self );
       if( !err ) {
@@ -840,7 +859,10 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( progp->funcname == NULL && progp->prog == NULL ) {
     progp->prog = progp->argv[0];
   }
-  if( pipid == PIP_PIPID_MYSELF ) RETURN( EINVAL );
+  if( pipid == PIP_PIPID_MYSELF ||
+      pipid == PIP_PIPID_NULL ) {
+    RETURN( EINVAL );
+  }
   if( pipid != PIP_PIPID_ANY ) {
     if( pipid < 0 || pipid > pip_root->ntasks ) RETURN( EINVAL );
   }
@@ -911,14 +933,10 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
   if( ( pip_root->opts & PIP_MODE_PROCESS_PIPCLONE ) ==
       PIP_MODE_PROCESS_PIPCLONE ) {
-    int flags =
-      CLONE_VM |
-      CLONE_SETTLS |
-      CLONE_PARENT_SETTID |
-      CLONE_CHILD_CLEARTID |
-      CLONE_SYSVSEM |
-      CLONE_PTRACE |
-      SIGCHLD;
+    int flags = pip_clone_flags( CLONE_PARENT_SETTID |
+				 CLONE_CHILD_CLEARTID |
+				 CLONE_SYSVSEM |
+				 CLONE_PTRACE );
     pid_t pid;
 
     /* we need lock on ldlinux. supposedly glibc does someting */

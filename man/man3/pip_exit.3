@@ -1,0 +1,33 @@
+.TH "pip_exit" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_exit \- pip_exit 
+terminate the calling PiP task
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> void pip_exit( int status );
+.RE
+.PP
+\fBDescription:\fP
+.RS 4
+When the main function or the start function of a PiP task returns with an integer value, then it has the same effect of calling \fCpip_exit\fP with the returned value\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIstatus\fP This status is returned to PiP root\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. \fCexit(3)\fP is called in the process mode and \fCpthread_exit(3)\fP is called in the pthread mode\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3) 
+.RE
+.PP
+

@@ -35,9 +35,9 @@
 
 /** \addtogroup pip-exec pip-exec
  *
- * \brief run programs as PiP tasks
+ * \brief run program(s) as PiP tasks
  *
- * \section synopsis SYNOPSIS
+ * \synopsis
  *
  *	\c \b pip-exec [OPTIONS] &lt;program&gt; ... [ : ... ]
  *

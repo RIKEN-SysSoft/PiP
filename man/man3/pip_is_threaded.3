@@ -1,0 +1,28 @@
+.TH "pip_is_threaded" 3 "Wed Jul 1 2020" "PiP - Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+pip_is_threaded \- pip_is_threaded 
+check if PiP execution mode is pthread or not
+.PP
+\fBSynopsis:\fP
+.RS 4
+#include <\fBpip\&.h\fP> int pip_is_threaded( int *flagp );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIset\fP to a non-zero value if PiP execution mode is Pthread
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet 
+.RE
+.PP
+
