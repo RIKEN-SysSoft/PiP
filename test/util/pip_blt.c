@@ -9,17 +9,6 @@
 
 #define DO_COREBIND
 
-#ifdef DO_COREBIND
-extern int pip_do_corebind( pid_t, uint32_t, cpu_set_t* );
-
-static int get_ncpus( void ) {
-  cpu_set_t cpuset;
-  CHECK( sched_getaffinity( 0, sizeof(cpuset), &cpuset ),
-	 RV, abend(EXIT_UNTESTED) );
-  return CPU_COUNT( &cpuset );
-}
-#endif
-
 static pip_task_queue_t	queues[NTASKS+1];
 
 static int is_taskq_empty( pip_task_queue_t *queue ) {
@@ -57,11 +46,6 @@ int main( int argc, char **argv ) {
   for( i=0; i<nacts+1; i++ ) pip_task_queue_init( &queues[i], NULL );
 
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
-
-#ifdef DO_COREBIND
-  nc = get_ncpus() - 1;
-  CHECK( pip_do_corebind(0,0,NULL), RV, return(EXIT_UNTESTED) );
-#endif
 
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );

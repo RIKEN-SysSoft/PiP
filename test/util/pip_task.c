@@ -10,17 +10,6 @@
 
 #define DO_COREBIND
 
-#ifdef DO_COREBIND
-extern int pip_do_corebind( int, cpu_set_t* );
-
-static int get_ncpus( void ) {
-  cpu_set_t cpuset;
-  CHECK( sched_getaffinity( 0, sizeof(cpuset), &cpuset ),
-	 RV, exit(EXIT_UNTESTED) );
-  return CPU_COUNT( &cpuset );
-}
-#endif
-
 int main( int argc, char **argv ) {
   int ntasks, ntenv, pipid, status, extval;
   int i, c, nc, err;
@@ -42,11 +31,6 @@ int main( int argc, char **argv ) {
   CHECK( pip_init( &pipid, &ntasks, NULL, 0 ), RV, return(EXIT_UNTESTED) );
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );
-
-#ifdef DO_COREBIND
-  nc = get_ncpus() - 1;
-  CHECK( pip_do_corebind(0,NULL), RV, return(EXIT_UNTESTED) );
-#endif
 
   for( i=0; i<ntasks; i++ ) {
     pipid = i;

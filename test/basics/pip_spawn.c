@@ -73,7 +73,7 @@ int main( int argc, char **argv ) {
 	   RV!=EINVAL,
 	   return(EXIT_FAIL) );
 
-    coreno = 100000;
+    coreno = PIP_CPUCORE_CORENO_MAX + 1;
     CHECK( pip_spawn( argv[0], argv, NULL, coreno, &pipid,
 			 NULL, NULL, NULL ),
 	   RV!=EINVAL,
