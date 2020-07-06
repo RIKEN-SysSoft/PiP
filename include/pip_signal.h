@@ -36,45 +36,51 @@
 #ifndef _pip_signal_h_
 #define _pip_signal_h_
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus
 extern "C" {
 #endif
 #endif
 
-/**
- * @addtogroup libpip libpip
- * \brief the PiP library
- * @{
- */
-
+  /** \defgroup pip-signal PiP Signaling Functions
+   * @{
+   * \page pip-signal PiP signaling functions
+   * \description Signal manupilating functions. All functions listed
+   * here are agnostic to the PiP execution mode.
+   */
   /**
-   * \brief deliver a signal to a PiP task
-   *  @{
-   * \param[out] pipid PiP ID of a target PiP task
-   * \param[out] signal signal number to be delivered
+   * \page pip_kill pip_kill
    *
-   * \note Only the PiP task can be the target of the signal delivery.
-   * \note This function can be used regardless to the PiP execution
-   * mode.
+   * \brief deliver a signal to PiP task
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_kill( int pipid, int signal );
+   *
+   * \param[out] pipid PiP ID of a target PiP task to deliver the signal
+   * \param[out] signal signal number to be delivered
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
+   *
+   * \sa tkill(2)
    */
   int pip_kill( int pipid, int signal );
-  /** @}*/
 
   /**
+   * \page pip_sigmask pip_sigmask
+   *
    * \brief set signal mask of the current PiP task
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
+   *
+   * \description
+   * This function is agnostic to the PiP execution mode.
+   *
    * \param[in] how see \b sigprogmask or \b pthread_sigmask
    * \param[in] sigmask signal mask
    * \param[out] oldmask old signal mask
@@ -84,22 +90,36 @@ extern "C" {
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
    *
-   * \sa \b sigprocmask, \b pthread_sigmask
+   * \sa sigprocmask, pthread_sigmask
    */
   int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
-  /** @}*/
 
   /**
+   * \page pip_signal_wait pip_signal_wait
+   *
    * \brief wait for a signal
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_signal_wait( int signal );
+   *
+   * \description
+   * This function is agnostic to the PiP execution mode.
+   *
    * \param[in] signal signal to wait
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \sa \b sigwait, \b sigsuspend
+   * \note This function does NOT return the \p EINTR error. This case
+   * is treated as normal return;
+   *
+   * \sa sigwait, sigsuspend
    */
   int pip_signal_wait( int signal );
-  /** @}*/
+
+  /**
+   *   @}
+   */
 
 #ifndef DOXYGEN_INPROGRESS
 
@@ -109,10 +129,6 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
-
-/**
- * @}
- */
+#endif /* DOXYGEN */
 
 #endif	/* _pip_signal_h_ */

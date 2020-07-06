@@ -1,0 +1,107 @@
+.TH "Yielding Functionns" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Yielding Functionns \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_yield\fP (int flag)"
+.br
+.ti -1c
+.RI "int \fBpip_yield_to\fP (pip_task_t *task)"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+Yielding functions
+
+.PP
+\fBDescription\fP
+.RS 4
+Yielding execution of the calling BLT/ULP 
+.RE
+.PP
+
+.SS "pip_yield"
+Yield
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_yield( int flag );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflag\fP to specify the behavior of yielding\&. See below\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+No context-switch takes place during the call, then this returns zero\&. If the context-switch to the other BLT happens, then this returns \fCEINTR\fP\&.
+.RE
+.PP
+\fBFag\fP
+.RS 4
+
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIPIP_YIELD_USER\fP If the calling task is scheduling PiP task(s) then the calling task switch to the next eligible-to-run BLT\&. 
+.br
+\fIPIP_YIELD_SYSTEM\fP Regardless if the calling task is active or inactive, it calls \fCsched_yield\fP\&. 
+.br
+\fIPIP_YIELD_DEFAULT\fP 
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_yield_to(3) 
+.RE
+.PP
+
+.SS "pip_yield_to"
+Yield to the specified PiP task
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_yield( pip_task_t *task );
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+Context-switch to the specified PiP task\&. If \fCtask\fP is \fCNULL\fP, then this works the same as what \fCpip_yield(3)\fP does with \fCPIP_YIELD_DEFAULT\fP\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP Target PiP task to switch\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return \fCZero\fP or EINTR on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already 
+.br
+\fIEPERM\fP The specified task belongs to the other scheduling domain\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_yield(3) 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

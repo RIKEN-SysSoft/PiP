@@ -1,0 +1,164 @@
+\hypertarget{group__pip-3-wait}{\section{Waiting for Pi\-P task termination}
+\label{group__pip-3-wait}\index{Waiting for Pi\-P task termination@{Waiting for Pi\-P task termination}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__pip-3-wait_gae04520bc29d3ec85d7090f7e645de27d}{int {\bfseries pip\-\_\-wait} (int pipid, int $\ast$status)}\label{group__pip-3-wait_gae04520bc29d3ec85d7090f7e645de27d}
+
+\item 
+\hypertarget{group__pip-3-wait_ga9e786d15401af041842f3f503c962a4b}{int {\bfseries pip\-\_\-trywait} (int pipid, int $\ast$status)}\label{group__pip-3-wait_ga9e786d15401af041842f3f503c962a4b}
+
+\item 
+\hypertarget{group__pip-3-wait_ga621bba73fda6b2bbe3c04e0c65006d36}{int {\bfseries pip\-\_\-wait\-\_\-any} (int $\ast$pipid, int $\ast$status)}\label{group__pip-3-wait_ga621bba73fda6b2bbe3c04e0c65006d36}
+
+\item 
+\hypertarget{group__pip-3-wait_ga65731447fedb85cbe4d5c38093383a20}{int {\bfseries pip\-\_\-trywait\-\_\-any} (int $\ast$pipid, int $\ast$retval)}\label{group__pip-3-wait_ga65731447fedb85cbe4d5c38093383a20}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-wait}{}\subsubsection{Waiting for Pi\-P task termination}\label{pip-wait}
+\begin{DoxyParagraph}{Description}
+Functions to wait for Pi\-P task termination. All functions listed here must only be called from Pi\-P root. 
+\end{DoxyParagraph}
+\hypertarget{pip_wait}{}\subsubsection{pip\-\_\-wait}\label{pip_wait}
+wait for the termination of a Pi\-P task
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-wait( int pipid, int $\ast$status );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+This function can be used regardless to the Pi\-P execution mode. This function blocks until the specified Pi\-P task terminates. The macros such as {\ttfamily W\-I\-F\-E\-X\-I\-T\-E\-D} and so on defined in Glibc can be applied to the returned {\ttfamily status} value.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & Pi\-P I\-D to wait for. \\
+\hline
+\mbox{\tt out}  & {\em status} & Status value of the terminated Pi\-P task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+{\em E\-P\-E\-R\-M} & This function is called other than Pi\-P root \\
+\hline
+{\em E\-D\-E\-A\-D\-L\-K} & The specified {\ttfamily pipid} is the one of Pi\-P root \\
+\hline
+{\em E\-C\-H\-I\-L\-D} & The target Pi\-P task does not exist or it was already terminated and waited for\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-exit(3), pip\-\_\-trywait(3), pip\-\_\-wait\-\_\-any(3), pip\-\_\-trywait\-\_\-any(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_trywait}{}\subsubsection{pip\-\_\-trywait}\label{pip_trywait}
+wait for the termination of a Pi\-P task in a non-\/blocking way
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-trywait( int pipid, int $\ast$status );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+This function can be used regardless to the Pi\-P execution mode. This function behaves like the {\ttfamily wait} function of glibc and the macros such as {\ttfamily W\-I\-F\-E\-X\-I\-T\-E\-D} and so on can be applied to the returned {\ttfamily status} value.
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-trywait( int pipid, int $\ast$status );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & Pi\-P I\-D to wait for. \\
+\hline
+\mbox{\tt out}  & {\em status} & Status value of the terminated Pi\-P task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+This function can be used regardless to the Pi\-P execution mode.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+{\em E\-P\-E\-R\-M} & This function is called other than Pi\-P root \\
+\hline
+{\em E\-D\-E\-A\-D\-L\-K} & The specified {\ttfamily pipid} is the one of Pi\-P root \\
+\hline
+{\em E\-C\-H\-I\-L\-D} & The target Pi\-P task does not exist or it was already terminated and waited for\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-exit(3), pip\-\_\-wait(3), pip\-\_\-wait\-\_\-any(3), pip\-\_\-trywait\-\_\-any(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_wait_any}{}\subsubsection{pip\-\_\-wait\-\_\-any}\label{pip_wait_any}
+Wait for the termination of any Pi\-P task
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-wait\-\_\-any( int $\ast$pipid, int $\ast$status );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+This function can be used regardless to the Pi\-P execution mode. This function blocks until any of Pi\-P tasks terminates. The macros such as {\ttfamily W\-I\-F\-E\-X\-I\-T\-E\-D} and so on defined in Glibc can be applied to the returned {\ttfamily status} value.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em pipid} & Pi\-P I\-D of terminated Pi\-P task. \\
+\hline
+\mbox{\tt out}  & {\em status} & Exit value of the terminated Pi\-P task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+{\em E\-P\-E\-R\-M} & This function is called other than Pi\-P root \\
+\hline
+{\em E\-C\-H\-I\-L\-D} & The target Pi\-P task does not exist or it was already terminated and waited for\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-exit(3), pip\-\_\-wait(3), pip\-\_\-trywait(3), pip\-\_\-trywait\-\_\-any(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_trywait_any}{}\subsubsection{pip\-\_\-trywait\-\_\-any}\label{pip_trywait_any}
+non-\/blocking version of {\ttfamily pip\-\_\-wait\-\_\-any} 
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-trywait\-\_\-any( int $\ast$pipid, int $\ast$status );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+This function can be used regardless to the Pi\-P execution mode. This function blocks until any of Pi\-P tasks terminates. The macros such as {\ttfamily W\-I\-F\-E\-X\-I\-T\-E\-D} and so on defined in Glibc can be applied to the returned {\ttfamily status} value.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em pipid} & Pi\-P I\-D of terminated Pi\-P task. \\
+\hline
+\mbox{\tt out}  & {\em status} & Exit value of the terminated Pi\-P task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+{\em E\-P\-E\-R\-M} & This function is called other than Pi\-P root \\
+\hline
+{\em E\-C\-H\-I\-L\-D} & There is no Pi\-P task to wait for\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-exit(3), pip\-\_\-wait(3), pip\-\_\-trywait(3), pip\-\_\-wait\-\_\-any(3) 
+\end{DoxySeeAlso}

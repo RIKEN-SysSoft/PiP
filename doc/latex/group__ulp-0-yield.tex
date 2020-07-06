@@ -1,0 +1,77 @@
+\hypertarget{group__ulp-0-yield}{\section{Yielding Functionns}
+\label{group__ulp-0-yield}\index{Yielding Functionns@{Yielding Functionns}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__ulp-0-yield_ga50469f21446ce86ea18ddd282cf15894}{int {\bfseries pip\-\_\-yield} (int flag)}\label{group__ulp-0-yield_ga50469f21446ce86ea18ddd282cf15894}
+
+\item 
+\hypertarget{group__ulp-0-yield_gac30cf124b28a8d80dac34c5e1bdb66ba}{int {\bfseries pip\-\_\-yield\-\_\-to} (pip\-\_\-task\-\_\-t $\ast$task)}\label{group__ulp-0-yield_gac30cf124b28a8d80dac34c5e1bdb66ba}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-yield}{}\subsubsection{Yielding functions}\label{pip-yield}
+\begin{DoxyParagraph}{Description}
+Yielding execution of the calling B\-L\-T/\-U\-L\-P 
+\end{DoxyParagraph}
+\hypertarget{pip_yield}{}\subsubsection{pip\-\_\-yield}\label{pip_yield}
+Yield
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-yield( int flag );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em flag} & to specify the behavior of yielding. See below.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+No context-\/switch takes place during the call, then this returns zero. If the context-\/switch to the other B\-L\-T happens, then this returns {\ttfamily E\-I\-N\-T\-R}.
+\end{DoxyReturn}
+\begin{DoxyParagraph}{Fag}
+
+\end{DoxyParagraph}
+
+\begin{DoxyParams}{Parameters}
+{\em P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-U\-S\-E\-R} & If the calling task is scheduling Pi\-P task(s) then the calling task switch to the next eligible-\/to-\/run B\-L\-T. \\
+\hline
+{\em P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-S\-Y\-S\-T\-E\-M} & Regardless if the calling task is active or inactive, it calls {\ttfamily sched\-\_\-yield}. \\
+\hline
+{\em P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-D\-E\-F\-A\-U\-L\-T} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-yield\-\_\-to(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_yield_to}{}\subsubsection{pip\-\_\-yield\-\_\-to}\label{pip_yield_to}
+Yield to the specified Pi\-P task
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-yield( pip\-\_\-task\-\_\-t $\ast$task );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Context-\/switch to the specified Pi\-P task. If {\ttfamily task} is {\ttfamily N\-U\-L\-L}, then this works the same as what {\ttfamily pip\-\_\-yield(3)} does with {\ttfamily P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-D\-E\-F\-A\-U\-L\-T}.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em task} & Target Pi\-P task to switch.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return {\ttfamily Zero} or E\-I\-N\-T\-R on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already \\
+\hline
+{\em E\-P\-E\-R\-M} & The specified task belongs to the other scheduling domain.\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-yield(3) 
+\end{DoxySeeAlso}

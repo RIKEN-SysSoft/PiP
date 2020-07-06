@@ -30,13 +30,17 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pip-man pip-man
+### \page pip-man pip-man
 ###
 ### \brief show PiP man page
 ###
-### \section synopsis SYNOPSIS
+### \synopsis
+### pip-man [MAN-OPT] MAN-TOPIC
 ###
-###	\c \b pip-man [ \b MAN_OPTS ] [ \b PIP_TOPIC ]
+### \description
+### Show PiP man pages. It can also accept the man command options.
+###
+### \sa man(1)
 ###
 prefix=@prefix@;
 mandir=${prefix}/share/man

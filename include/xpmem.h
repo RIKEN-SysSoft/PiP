@@ -36,7 +36,7 @@
 #ifndef _XPMEM_H
 #define _XPMEM_H
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
 #include <sys/types.h>
 
@@ -100,6 +100,6 @@ int xpmem_detach( void *vaddr ) {
   return 0;
 }
 
-#endif
+#endif	/* DOXYGEN */
 
 #endif

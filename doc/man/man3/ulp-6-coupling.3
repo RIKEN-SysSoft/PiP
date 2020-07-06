@@ -1,0 +1,71 @@
+.TH "BLT/ULP Coupling/Decoupling Functions" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+BLT/ULP Coupling/Decoupling Functions \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_couple\fP (void)"
+.br
+.ti -1c
+.RI "int \fBpip_decouple\fP (pip_task_t *task)"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+pip_couple
+Couple the curren task with the original kernel thread
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_couple( void );
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.br
+\fIEBUSY\fP the curren task is already coupled with a kernel thread 
+.RE
+.PP
+
+.SS "pip_decouple"
+Decouple the curren task from the kernel thread
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_decouple( pip_task_t *sched )
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP specify the scheduling task to schedule the decoupled task (calling this function)\&. If \fCNULL\fP, then the previously coupled pip_task takes place\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.br
+\fIEBUSY\fP the curren task is already decoupled from a kernel thread 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

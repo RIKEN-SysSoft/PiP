@@ -38,14 +38,6 @@ SUBDIRS = lib include preload util gdbif bin
 
 include $(top_srcdir)/build/rule.mk
 
-MAN7_SRCS = README.md pip-overview.c
-
-doc: doxygen
-.PHONY: doc
-
-install: doxygen-install
-.PHONY: install
-
 debug:
 	CPPFLAGS+="-DDEBUG" $(MAKE) clean all;
 
@@ -93,71 +85,26 @@ do-install-test: install-test-programs
 .PHONY: install-test
 install-test: do-install-test
 
-### doxygen
+### doc
 
-doxygen:
-	-@$(RM) -r man html latex
-	@doxy_dirs=$$(find . -name .doxygen_html -print | while read file; do \
-		dir=$$(dirname $$file); \
-		while read src; do \
-			[ -f $$dir/$$src ] && echo $$dir || \
-			echo $$top_srcdir/$$dir; \
-		done <$$file; done | sort -u | tr '\012' ' ' ); \
-	( \
-	echo "man1 NO  NO YES 1"; \
-	echo "man3 YES NO YES 3"; \
-	echo "man7 YES NO YES 7"; \
-	echo "html YES YES NO 3"; \
-	) | while read type repeat_brief html man man_ext; do \
-		echo ==== $$type =====; \
-		( \
-		cat $(top_srcdir)/build/common.doxy; \
-		echo "REPEAT_BRIEF = $$repeat_brief"; \
-		echo "STRIP_FROM_PATH = $$doxy_dirs"; \
-		echo "GENERATE_LATEX = $$html"; \
-		echo "GENERATE_HTML = $$html"; \
-		echo "GENERATE_MAN = $$man"; \
-		echo "MAN_EXTENSION = $$man_ext"; \
-		echo "COMPACT_LATEX = NO"; \
-		echo "LATEX_BATCHMODE = YES"; \
-		echo 'ALIASES = "synopsis=@par Synopsis:\n" "description=@par Description:\n" "notes=@par Notes:\n" \
-				"example=@par Example:\n" "bugs=@par Bugs:\n" "environment=@par Environment:\n"'; \
-		printf "INPUT = "; \
-		find . -name .doxygen_$$type -print | while read file; do \
-			dir=$$(dirname $$file); \
-			while read src; do \
-				[ -f $$dir/$$src ] && echo $$dir/$$src || \
-				echo $$top_srcdir/$$dir/$$src; \
-			done <$$file; \
-		done | tr '\012' ' '; \
-		echo ""; \
-		) | doxygen -; \
-	done
-	if which mandb; then mandb ./man -c -u; fi
-	cp latex-style/*.sty latex/
-	( cd latex; make )
-.PHONY: doxygen
+doxygen : doc
+	$(MAKE) -C doc
+.PHONY: doc
 
-doxygen-install:
-	$(MKDIR_P) $(mandir);
-	(cd ./man  && tar cf - . ) | (cd $(mandir)  && tar xf -)
-	$(MKDIR_P) $(htmldir);
-	(cd ./html && tar cf - . ) | (cd $(htmldir) && tar xf -)
-	$(MKDIR_P) $(pdfdir);
-	cp ./latex/refman.pdf $(pdfdir)/libpip-manpages.pdf
-.PHONY: doxygen-install
+doc-install :
+	$(MAKE) -C doc install
+.PHONY: doc-install
 
-# clean generated documents before "git commit"
+doc-reset:
+	$(MAKE) -C doc doc-reset
+.PHONE: doc-reset
+
 docclean:
-	git checkout man html latex
+	$(MAKE) -C doc docclean
 .PHONE: docclean
 
-docveryclean:
-	$(RM) -r man html latex
-.PHONE: docveryclean
-
 post-distclean-hook:
-	$(RM) -r man html latex
+	$(MAKE) -C doc post-distclean-hook
 .PHONY: post-distclean-hook
 
 ###

@@ -40,12 +40,6 @@
 /* The following functions are just utilities for debugging */
 /************************************************************/
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifndef DOXYGEN_INPROGRESS
 
 #include <stdio.h>
@@ -100,6 +94,6 @@ extern "C" {
 }
 #endif
 
-#endif
+#endif	/* DOXYGEN */
 
 #endif

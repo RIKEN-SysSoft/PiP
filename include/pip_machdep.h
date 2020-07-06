@@ -36,12 +36,6 @@
 #ifndef _pip_machdep_h_
 #define _pip_machdep_h_
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifdef DOXYGEN_INPROGRESS
 #ifndef INLINE
 #define INLINE
@@ -172,6 +166,6 @@ pip_atomic_sub_and_fetch( pip_atomic_t *p, pip_atomic_t v ) {
 }
 #endif
 
-#endif	/* DOXYGEN_SHOULD_SKIP_THIS */
+#endif	/* DOXYGEN */
 
 #endif	/* _pip_machdep_h_ */

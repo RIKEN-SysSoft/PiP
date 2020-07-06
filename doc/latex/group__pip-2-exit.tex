@@ -1,0 +1,70 @@
+\hypertarget{group__pip-2-exit}{\section{Terminating Pi\-P Task}
+\label{group__pip-2-exit}\index{Terminating Pi\-P Task@{Terminating Pi\-P Task}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__pip-2-exit_ga55171ea8db2c2693f005560e427485c2}{void {\bfseries pip\-\_\-exit} (int status)}\label{group__pip-2-exit_ga55171ea8db2c2693f005560e427485c2}
+
+\item 
+\hypertarget{group__pip-2-exit_gab7ba5cc62101240c68acf07905e36772}{int {\bfseries pip\-\_\-kill\-\_\-all\-\_\-tasks} (void)}\label{group__pip-2-exit_gab7ba5cc62101240c68acf07905e36772}
+
+\item 
+\hypertarget{group__pip-2-exit_ga49a4a9ee014ffdaf0c26df18adf965ad}{void {\bfseries pip\-\_\-abort} (void)}\label{group__pip-2-exit_ga49a4a9ee014ffdaf0c26df18adf965ad}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-exit}{}\subsubsection{Terminating Pi\-P task}\label{pip-exit}
+\begin{DoxyParagraph}{Description}
+Function to ternminate Pi\-P task normally or abnormally (abort). 
+\end{DoxyParagraph}
+\hypertarget{pip_exit}{}\subsubsection{pip\-\_\-exit}\label{pip_exit}
+terminate the calling Pi\-P task
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ void pip\-\_\-exit( int status );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+When the main function or the start function of a Pi\-P task returns with an integer value, then it has the same effect of calling {\ttfamily pip\-\_\-exit} with the returned value.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em status} & This status is returned to Pi\-P root.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+This function can be used regardless to the Pi\-P execution mode. {\ttfamily exit(3)} is called in the process mode and {\ttfamily pthread\-\_\-exit(3)} is called in the pthread mode.
+\end{DoxyNote}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-wait(3), pip\-\_\-trywait(3), pip\-\_\-wait\-\_\-any(3), pip\-\_\-trywait\-\_\-any(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_kill_all_tasks}{}\subsubsection{pip\-\_\-kill\-\_\-all\-\_\-tasks}\label{pip_kill_all_tasks}
+kill all Pi\-P tasks
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-kill\-\_\-all\-\_\-tasks( void );
+\end{DoxyParagraph}
+\begin{DoxyNote}{Note}
+This function must be called from Pi\-P root.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+{\em E\-P\-E\-R\-M} & Not called from root \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_abort}{}\subsubsection{pip\-\_\-abort}\label{pip_abort}
+Kill all Pi\-P tasks and then kill Pi\-P root
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+void pip\-\_\-abort( void ); 
+\end{DoxyParagraph}

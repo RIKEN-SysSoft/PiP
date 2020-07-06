@@ -36,12 +36,6 @@
 #ifndef _pip_blt_h_
 #define _pip_blt_h_
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifndef DOXYGEN_INPROGRESS
 
 #include <pip.h>
@@ -227,7 +221,7 @@ typedef struct pip_mutex {
     B;				     \
   } N;
 
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#endif /* DOXYGEN */
 
 #ifdef DOXYGEN_INPROGRESS
 #ifndef INLINE
@@ -246,19 +240,55 @@ extern "C" {
 #endif
 
   /**
-   * \brief spawn a PiP BLT (Bi-Level Task)
-   *  @{
-   * \param[in] progp Program information to spawn as a PiP task
-   * \param[in] coreno Core number for the PiP task to be bound to. If
-   *  \c PIP_CPUCORE_ASIS is specified, then the core binding will not
+   * \addtogroup pip-1-spawn
+   * @{
+   */
+
+  /**
+   * \page pip_blt_spawn pip_blt_spawn
+   *
+   * \brief spawn a PiP BLT/ULP (Bi-Level Task / User-Level Process)
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_blt_spawn( pip_spawn_program_t *progp,
+   *		   uint32_t coreno,
+   *		   uint32_t opts,
+   *		   int *pipidp,
+   *		   pip_task_t **bltp,
+   *		   pip_task_queue_t *queue,
+   *		   pip_spawn_hook_t *hookp );
+   *
+   * \description
+   * This function spawns a BLT (PiP task) specified by \c progp. The
+   * created annd returned BLT is another form of a PiP task. It is an
+   * opaque object, essentially a double-linked list. Thus created BLT
+   * can be enqueued or dequeued to/from a \p pip_task_queue_t.
+   * \par
+   * In the process execution mode, the file descriptors having the
+   * \c FD_CLOEXEC flag is closed and will not be passed to the spawned
+   * PiP task. This simulated close-on-exec will not take place in the
+   * pthread execution mode.
+   *
+   * \param[out] hook Pointer to the \c pip_spawn_hook_t
+   *  structure in which the invocation hook information is set
+   * \param[in] coreno CPU core number for the PiP task to be bound to. By
+   *  default, \p coreno is set to zero, for example, then the calling
+   *  task will be bound to the first core available. This is in mind
+   *  that the available core numbers are not contiguous. To specify
+   *  an absolute core number, \p coreno must be bitwise-ORed with
+   *  \p PIP_CPUCORE_ABS. If
+   *  \p PIP_CPUCORE_ASIS is specified, then the core binding will not
    *  take place.
-   * \param[in] opts option flags
+   * \param[in] opts option flags. If \p PIP_TASK_INACTIVE is set, the
+   *  created BLT is suspended and enqueued to the specified
+   *  \p queue. Otherwise the BLT will schedules the BLTs in \p queue.
    * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
    *  \c PIP_PIPID_ANY is specified, then the PiP ID of the spawned PiP
    *  task is up to the PiP library and the assigned PiP ID will be
    *  returned.
    * \param[in,out] bltp returns created BLT
-   * \param[in] queue PiP task queue where the created BLT will be added
+   * \param[in] queue PiP task queue. See the above \p opts description.
    * \param[in] hookp Hook information to be invoked before and after
    *  the program invokation.
    *
@@ -269,13 +299,32 @@ extern "C" {
    * \note In the process mode, the file descriptors set the
    * close-on-exec flag will be closed on the created child task.
    *
-   * \return zero is returned if this function succeeds. On error, an
-   * error number is returned.
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized
    * \retval EPERM PiP task tries to spawn child task
-   * \retval EBUSY Specified PiP ID is alredy occupied
+   * \retval EINVAL \c progp is \c NULL
+   * \retval EINVAL \c opts is invalid and/or unacceptable
+   * \retval EINVAL the value off \c pipidp is invalid
+   * \retval EBUSY specified PiP ID is alredy occupied
+   * \retval ENOMEM not enough memory
+   * \retval ENXIO \c dlmopen failss
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   * \environment
+   * \arg \b PIP_STOP_ON_START Specifying the PIP ID to stop on start
+   * PiP task program to debug from the beginning. If the
+   * before hook is specified, then the PiP task will be stopped just
+   * before calling the before hook.
    *
+   * \bugs
+   * In theory, there is no reason to restrict for a PiP task to
+   * spawn another PiP task. However, the current glibc implementation
+   * does not allow to do so.
+   * \par
+   * If the root process is multithreaded, only the main
+   * thread can call this function.
+   *
+   * \sa pip_task_spawn(3), pip_spawn_from_main(3),
+   * pip_spawn_from_func(3), pip_spawn_hook(3), pip_task_spawn(3), pip_spawn(3)
    */
 #ifdef DOXYGEN_INPROGRESS
 int pip_blt_spawn( pip_spawn_program_t *progp,
@@ -285,7 +334,6 @@ int pip_blt_spawn( pip_spawn_program_t *progp,
 		   pip_task_t **bltp,
 		   pip_task_queue_t *queue,
 		   pip_spawn_hook_t *hookp );
-  /** @}*/
 #else
 int pip_blt_spawn_( pip_spawn_program_t *progp,
 		    uint32_t coreno,
@@ -300,48 +348,98 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief Yield
-   *  @{
-   * \param[in] flag to specify the behavior of yielding
+   * @}
+   */
+
+  /**
+   * \defgroup ulp-0-yield Yielding Functionns
+   * @{
+   * \page pip-yield Yielding functions
+   * \description Yielding execution of the calling BLT/ULP
+   */
+
+  /**
+   * \page pip_yield pip_yield
    *
-   * \return Return 0 on success. Return an error code on error.
+   * \brief Yield
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_yield( int flag );
+   *
+   * \param[in] flag to specify the behavior of yielding. See below.
+   *
+   * \return No context-switch takes place during the call, then this
+   * returns zero. If the context-switch to the other BLT happens,
+   * then this returns \p EINTR.
+   *
+   * @par Fag
+   * \param PIP_YIELD_USER If the calling task is scheduling PiP
+   * task(s) then the calling task switch to the next eligible-to-run
+   * BLT.
+   * \param PIP_YIELD_SYSTEM Regardless if the calling task is active
+   * or inactive, it calls \p sched_yield.
+   * \param PIP_YIELD_DEFAULT
    *
    * \sa pip_yield_to(3)
    */
   int pip_yield( int flag );
-  /** @}*/
 
   /**
+   * \page pip_yield_to pip_yield_to
+   *
    * \brief Yield to the specified PiP task
-   *  @{
-   * \param[in] task Target PiP task to switch
    *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_yield( pip_task_t *task );
+   *
+   * \description
    * Context-switch to the specified PiP task. If \c task is \c NULL, then
-   * this works the same as \c pip_yield() does.
+   * this works the same as what \c pip_yield(3) does with
+   * \p PIP_YIELD_DEFAULT.
    *
-   * \return Return 0 on success. Return an error code on error.
+   * \param[in] task Target PiP task to switch.
+   *
+   * \return Return \p Zero or EINTR on success. Return an error code
+   * on error.
+   * \retval EPERM PiP library is not yet initialized or already
    * \retval EPERM The specified task belongs to the other scheduling
    * domain.
-   * \retval EPERM PiP library is not yet initialized or already
    *
    * \sa pip_yield(3)
    */
   int pip_yield_to( pip_task_t *task );
-  /** @}*/
 
   /**
-   * \brief Initialize task queue
-   *  @{
-   * \param[in] queue A task queue
-   * \param[in] methods Usre defined function table. If NULL then
-   *  default functions will be used.
+   * @}
+   */
+
+  /**
+   * \defgroup ulp-1-task-queue Task Queue Operations
+   * @{
+   * \page ulp-task-queue Task queue operations
+   * \description Manipulating ULP/BLT task queue functions
+   */
+
+  /**
+   * \page pip_task_queue_init pip_task_queue_init
    *
-   * \return This function returns no error
+   * \brief Initialize task queue
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   *  int pip_task_queue_init( pip_task_queue_t *queue,
+   *			   pip_task_queue_methods_t *methods );
+   *
+   * \param[in] queue A task queue
+   * \param[in] methods Must be set to \p NULL. Researved for future use.
+   *
+   * \return Always return 0.
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_init( pip_task_queue_t *queue,
 			   pip_task_queue_methods_t *methods );
-  /** @}*/
 #else
   INLINE int pip_task_queue_init_( pip_task_queue_t *queue,
 				   pip_task_queue_methods_t *methods ) {
@@ -363,15 +461,20 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_task_queue_trylock pip_task_queue_trylock
+   *
    * \brief Try locking task queue
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_task_queue_trylock( pip_task_queue_t *queue );
+   *
    * \param[in] queue A task queue
    *
-   * \return Returns true if lock succeeds.
+   * \return Returns a non-zero value if lock succeeds.
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_trylock( pip_task_queue_t *queue );
-  /** @}*/
 #else
   INLINE int pip_task_queue_trylock_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return EINVAL;
@@ -386,15 +489,20 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_task_queue_lock pip_task_queue_lock
+   *
    * \brief Lock task queue
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_task_queue_lock( pip_task_queue_t *queue );
+   *
    * \param[in] queue A task queue
    *
    * \return This function returns no error
    */
 #ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_lock( pip_task_queue_t *queue );
-  /** @}*/
 #else
   INLINE void pip_task_queue_lock_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return;
@@ -411,15 +519,20 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_task_queue_unlock pip_task_queue_unlock
+   *
    * \brief Unlock task queue
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_task_queue_unlock( pip_task_queue_t *queue );
+   *
    * \param[in] queue A task queue
    *
    * \return This function returns no error
    */
 #ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_unlock( pip_task_queue_t *queue );
-  /** @}*/
 #else
   INLINE void pip_task_queue_unlock_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return;
@@ -434,19 +547,23 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_task_queue_isempty pip_task_queue_isempty
+   *
    * \brief Query function if the current task has some tasks to be
    *  scheduled with.
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_task_queue_isempty( pip_task_queue_t *queue );
+   *
    * \param[in] queue A task queue
    *
-   * \return Returns true if there is no tasks to in the queue
+   * \return Returns a non-zero value if the queue is empty
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_isempty( pip_task_queue_t *queue );
-  /** @}*/
 #else
   INLINE int pip_task_queue_isempty_( pip_task_queue_t *queue ) {
-    if( queue == NULL ) return EINVAL;
     if( queue->methods == NULL || queue->methods->isempty == NULL ) {
       return PIP_TASKQ_ISEMPTY( &queue->queue );
     } else {
@@ -458,17 +575,23 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_task_queue_count pip_task_queue_count
+   *
    * \brief Count the length of task queue
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_task_queue_count( pip_task_queue_t *queue, int *np );
+   *
    * \param[in] queue A task queue
    * \param[out] np the queue length returned
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EINVAL \c queue is \c NULL
    * \retval EINVAL \c np is \c NULL
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_count( pip_task_queue_t *queue, int *np );
-  /** @}*/
 #else
   INLINE int
   pip_task_queue_count_( pip_task_queue_t *queue, int *np ) {
@@ -487,15 +610,23 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_task_queue_enqueue pip_task_queue_enqueue
+   *
    * \brief Enqueue a BLT
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * void pip_task_queue_enqueue( pip_task_queue_t *queue,
+   * pip_task_t *task );
+   *
    * \param[in] queue A task queue
    * \param[in] task A task to be enqueued
    *
+   * \note
+   * It is the user responsibility to lock (and unlock) the queue.
    */
 #ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_enqueue( pip_task_queue_t *queue, pip_task_t *task );
-  /** @}*/
 #else
   INLINE void
   pip_task_queue_enqueue_( pip_task_queue_t *queue, pip_task_t *task ) {
@@ -512,16 +643,24 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_task_queue_dequeue pip_task_queue_dequeue
+   *
    * \brief Dequeue a task from a task queue
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * pip_task_t* pip_task_queue_dequeue( pip_task_queue_t *queue );
+   *
    * \param[in] queue A task queue
    *
-   * \return Dequeue a task in the specified task queue and return
-   * it. If the task queue is empty then \b NULL is returned.
+   * \return Dequeued task iss returned. If the queue is empty
+   * then \p NULL is returned.
+   *
+   * \note
+   * It is the user responsibility to lock (and unlock) the queue.
    */
 #ifdef DOXYGEN_INPROGRESS
   pip_task_t* pip_task_queue_dequeue( pip_task_queue_t *queue );
-  /** @}*/
 #else
   INLINE pip_task_t*
   pip_task_queue_dequeue_( pip_task_queue_t *queue ) {
@@ -542,16 +681,19 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief Describe queue
-   *  @{
-   * \param[in] queue A task queue
-   * \param[in] fp a file pointer
+   * \page pip_task_queue_describe pip_task_queue_describe
    *
-   * \return This function returns no error
+   * \brief Describe queue
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * void pip_task_queue_describe( pip_task_queue_t *queue, FILE *fp );
+   *
+   * \param[in] queue A task queue
+   * \param[in] fp a File pointer
    */
 #ifdef DOXYGEN_INPROGRESS
   void pip_task_queue_describe( pip_task_queue_t *queue, FILE *fp );
-  /** @}*/
 #else
   INLINE void
   pip_task_queue_describe_( pip_task_queue_t *queue, char *tag, FILE *fp ) {
@@ -578,16 +720,20 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief Finalize a task
-   *  @{
+   * \page pip_task_queue_fin pip_task_queue_fin
+   *
+   * \brief Finalize a task queue
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   *  int pip_task_queue_fin( pip_task_queue_t *queue );
+   *
    * \param[in] queue A task queue
    *
-   * \return If succeedss, 0 is returned. Otherwise an error code is
-   * returned.
+   * \return Zero is returned always
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_task_queue_fin( pip_task_queue_t *queue );
-  /** @}*/
 #else
   INLINE int pip_task_queue_fin_( pip_task_queue_t *queue ) {
     if( queue == NULL ) return EINVAL;
@@ -603,20 +749,45 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief suspend the curren task and enqueue it
-   *  @{
+   * @}
+   */
+
+  /**
+   * \defgroup ulp-2-suspension Suspending and Resuming BLT/ULP
+   * @{
+   * \page ulp-suspension Suspending and resuming BLT/ULP
+   * \description Suspending and resuming BLT/ULP
+   */
+
+  /**
+   * \page pip_suspend_and_enqueue pip_suspend_and_enqueue
+   *
+   * \brief suspend the curren task and enqueue it with lock
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   *  int pip_suspend_and_enqueue( pip_task_queue_t *queue,
+   *			       pip_enqueue_callback_t callback,
+   *			       void *cbarg );
+   *
+   * \description
+   * The \b queue is locked just before the calling task is enqueued and
+   * unlocked after the calling task is
+   * enqueued. After then the \b callback function is called.
+   * \par
+   * As the result of this suspension, a context-switch takes place if
+   * there is at least one elgible-to-run task in the scheduling queue
+   * (this is hidden from users). If there is no other task to schedule
+   * then the kernel thread of the current task will be blocked.
+   *
    * \param[in] queue A task queue
-   * \param[in] callback A callback function which is called when enqueued
+   * \param[in] callback A callback function which is called
+   * immediately after the task is enqueued
    * \param[in] cbarg An argument given to the callback function
    *
    * \return Return 0 on success. Return an error code on error.
-   *
-   * The \b queue is locked and unlocked when the current task is
-   * enqueued. Then the \b callback function is called.
-   *
-   * As the result of suspension, if there is no other tasks to be
-   * scheduled then the kernel thread will be blocked until it will be
-   * given a task by resuming a suspended task.
+   * \retval EPERM  PiP library is not initialized yet
+   * \retval EINVAL \p queue is \p NULL
    *
    * \sa pip_enqueu_and_suspend_nolock(3), pip_dequeue_and_resume(3)
    */
@@ -624,7 +795,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_suspend_and_enqueue( pip_task_queue_t *queue,
 			       pip_enqueue_callback_t callback,
 			       void *cbarg );
-  /** @}*/
 #else
   int pip_suspend_and_enqueue_( pip_task_queue_t *queue,
 				pip_enqueue_callback_t callback,
@@ -634,29 +804,39 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page  pip_suspend_and_enqueue_nolock pip_suspend_and_enqueue_nolock
+   *
    * \brief suspend the curren task and enqueue it without locking the queue
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   *  int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
+   *			       pip_enqueue_callback_t callback,
+   *			       void *cbarg );
+   *
+   * \description
+   * Unlike \p pip_suspend_and_enqueue, this function never locks the queue.
+   * It is the user's responsibility to lock the queue beofre calling
+   * this function and unlock the queue after calling this
+   * function. The \b callback function can be used for unlocking.
+   * \par
+   * As the result of this suspension, a context-switch takes place if
+   * there is at least one elgible-to-run task in the scheduling queue
+   * (this is hidden from users). If there is no other task to schedule
+   * then the kernel thread of the current task will be blocked.
+   *
    * \param[in] queue A task queue
    * \param[in] callback A callback function which is called when enqueued
    * \param[in] cbarg An argument given to the callback function
    *
    * \return Return 0 on success. Return an error code on error.
-   *
-   * It is the user's responsibility to lock the queue beofre calling
-   * this function and unlock the queue after calling this
-   * function. When the current task is enqueued the \b callback
-   * function will be called.
-   *
-   * As the result of suspension, if there is no other tasks to be
-   * scheduled then the kernel thread will be blocked until it will be
-   * given a task by resuming a suspended task.
-   *
+   * \retval EPERM  PiP library is not initialized yet
+   * \retval EINVAL \p queue is \p NULL
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue,
 				      pip_enqueue_callback_t callback,
 				      void *cbarg );
-  /** @}*/
 #else
   int pip_suspend_and_enqueue_nolock_( pip_task_queue_t *queue,
 				       pip_enqueue_callback_t callback,
@@ -666,20 +846,28 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_dequeue_and_resume pip_dequeue_and_resume
+   *
    * \brief dequeue a task and make it runnable
-   *  @{
+   *
+   * \description
+   * The \b queue is locked and then unlocked when to dequeued a task.
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched );
+   *
    * \param[in] queue A task queue
    * \param[in] sched A task to specify a scheduling domain
    *
    * \return If succeedss, 0 is returned. Otherwise an error code is
    * returned.
-   * \retval ENOENT The queue is empty.
-   *
-   * The \b queue is locked and unlocked when dequeued.
+   * \retval EPERM  PiP library is not initialized yet
+   * \retval EINVAL \p queue is \p NULL
+   * \retval ENOENT \p queue is empty.
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched );
-  /** @}*/
 #else
   int pip_dequeue_and_resume_( pip_task_queue_t *queue, pip_task_t *sched );
 #define pip_dequeue_and_resume( Q, S )		\
@@ -687,22 +875,35 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_dequeue_and_resume_nolock pip_dequeue_and_resume_nolock
+   *
    * \brief dequeue a task and make it runnable
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched );
+   *
+   * \description
+   * Task in the queue is dequeued and
+   * scheduled by the specified \p sched. If
+   * \p sched is NULL, then the task is enqueued into the scheduling
+   * queue of calling task.
+   * \par
+   * It is the user's responsibility to lock the queue beofre calling
+   * this function and unlock the queue after calling this
+   * function.
+   *
    * \param[in] queue A task queue
    * \param[in] sched A task to specify a scheduling domain
    *
    * \return This function returns no error
-   * \retval ENOENT The queue is empty.
-   *
-   * It is the user's responsibility to lock the queue beofre calling
-   * this function and unlock the queue after calling this
-   * function.
+   * \retval EPERM  PiP library is not initialized yet
+   * \retval EINVAL \p queue is \p NULL
+   * \retval ENOENT \p queue is empty.
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_dequeue_and_resume_nolock( pip_task_queue_t *queue,
 				     pip_task_t *sched );
-  /** @}*/
 #else
   int pip_dequeue_and_resume_nolock_( pip_task_queue_t *queue,
 				      pip_task_t *sched );
@@ -711,18 +912,35 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \brief dequeue tasks and resume the execution of them
-   *  @{
+   * \page pip_dequeue_and_resume_N pip_dequeue_and_resume_N
+   *
+   * \brief dequeue multiple tasks and resume the execution of them
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   *  int pip_dequeue_and_resume_N( pip_task_queue_t *queue,
+   *				pip_task_t *sched,
+   *				int *np );
+   *
+   * \description
+   * The specified number of tasks are dequeued and scheduled by the
+   * specified \p sched. If \p sched is NULL, then the task is
+   * enqueued into the scheduling queue of calling task.
+   * \par
+   * The \b queue is locked and unlocked when dequeued.
+   *
    * \param[in] queue A task queue
    * \param[in] sched A task to specify a scheduling domain
-   * \param[inout] np A pointer to an interger which spcifies the
+   * \param[in,out] np A pointer to an interger which spcifies the
    *  number of tasks dequeued and actual number of tasks dequeued is
-   *  returned.
+   *  returned. When \p PIP_TASK_ALL is specified, then all tasks in
+   * the queue will be resumed.
    *
    * \return This function returns no error
-   * \retval EINVAL the specified number of tasks is negative
-   *
-   * The \b queue is locked and unlocked when dequeued.
+   * \retval EPERM  PiP library is not initialized yet
+   * \retval EINVAL \p queue is \p NULL
+   * \retval EINVAL the specified number of tasks is invalid
+   * \retval ENOENT \p queue is empty.
    *
    * It is the user's responsibility to lock the queue beofre calling
    * this function and unlock the queue after calling this
@@ -732,7 +950,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_dequeue_and_resume_N( pip_task_queue_t *queue,
 				pip_task_t *sched,
 				int *np );
-  /** @}*/
 #else
   int pip_dequeue_and_resume_N_( pip_task_queue_t *queue,
 				 pip_task_t *sched,
@@ -743,26 +960,41 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_dequeue_and_resume_N_nolock pip_dequeue_and_resume_N_nolock
+   *
    * \brief dequeue tasks and resume the execution of them
-   *  @{
-   * \param[in] queue A task queue
-   * \param[in] sched A task to specify a scheduling domain
-   * \param[inout] np A pointer to an interger which spcifies the
-   *  number of tasks dequeued and actual number of tasks dequeued is
-   *  returned.
    *
-   * \return This function returns no error
-   * \retval EINVAL the specified number of tasks is negative
+   * \synopsis
+   * \#include <pip.h> \n
+   *  int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue,
+   *				pip_task_t *sched, int *np );
    *
+   * \description
+   * The specified number of tasks are dequeued and scheduled by the
+   * specified \p sched. If \p sched is NULL, then the task is
+   * enqueued into the scheduling queue of calling task.
+   * \par
    * It is the user's responsibility to lock the queue beofre calling
    * this function and unlock the queue after calling this
    * function.
+   *
+   * \param[in] queue A task queue
+   * \param[in] sched A task to specify a scheduling domain
+   * \param[in,out] np A pointer to an interger which spcifies the
+   *  number of tasks dequeued and actual number of tasks dequeued is
+   *  returned. When \p PIP_TASK_ALL is specified, then all tasks in
+   * the queue will be resumed.
+   *
+   * \return This function returns no error
+   * \retval EPERM  PiP library is not initialized yet
+   * \retval EINVAL \p queue is \p NULL
+   * \retval EINVAL the specified number of tasks is invalid
+   * \retval ENOENT \p queue is empty.
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue,
 				       pip_task_t *sched,
 				       int *np );
-  /** @}*/
 #else
   int pip_dequeue_and_resume_N_nolock_( pip_task_queue_t *queue,
 					pip_task_t *sched, int *np );
@@ -771,43 +1003,41 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * @}
+   */
+
+  /**
+   * \defgroup ulp-6-misc BLT/ULP Miscellaneous Function
+   * @{
+   * \page ulp-misc BLT/ULP miscellaneous function
+   * \description BLT/ULP miscellaneous function
+   */
+
+  /**
+   * \page pip_task_self pip_task_self
+   *
    * \brief Return the current task
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * pip_task_t *pip_task_self( void );
    *
    * \return Return the current task.
    *
    */
   pip_task_t *pip_task_self( void );
-  /** @}*/
 
   /**
-   * \brief count the number of runnable tasks in the same scheduling
-   *  domain
-   *  @{
-   * \param[out] countp number of tasks will be returned
+   * \page  pip_get_task_pipid  pip_get_task_pipid
    *
-   * \return This function returns no error
-   */
-
-  /**
-   * \brief Return the number of runnable tasks in the current
-   * scheduling domain
-   *  @{
-   *
-   * \param[out] countp pointer to the counter value returning
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c countp is \c NULL
-   */
-  int pip_count_runnable_tasks( int *countp );
-  /** @}*/
-
-  /**
    * \brief Return PIPID of a PiP task
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_get_task_pipid( pip_task_t *task, int *pipidp );
    *
    * \param[in] task a PiP task
-   * \param[out] pipidp  pointer to the PIPID value returning
+   * \param[out] pipidp PiP ID of the specified task
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c task is \c NULL
@@ -815,26 +1045,35 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * finalized
    */
   int pip_get_task_pipid( pip_task_t *task, int *pipidp );
-  /** @}*/
 
   /**
+   * \page pip_get_task_by_pipid pip_get_task_by_pipid
+   *
    * \brief get PiP task from PiP ID
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_get_task_by_pipid( int pipid, pip_task_t **taskp );
+   *
    * \param[in] pipid PiP ID
-   * \param[out] taskp PiP task of the specified PiP ID
+   * \param[out] taskp returning PiP task of the specified PiP ID
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINVAL \c pipidp is \c NULL
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    * \retval ENOENT No such PiP task
+   * \retval ERANGE The specified \c pipid is out of ramge
    */
-  int pip_get_task_from_pipid( int pipid, pip_task_t **taskp );
-  /** @}*/
+  int pip_get_task_by_pipid( int pipid, pip_task_t **taskp );
 
   /**
+   * \page pip_set_aux pip_set_aux
+   *
    * \brief Associate user data with a PiP task
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_set_aux( pip_task_t *task, void *aux );
    *
    * \param[in] task PiP task. If \c NULL, then the data is associated
    * with the current PiP task
@@ -843,60 +1082,85 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
+   *
+   * \sa pip_get_aux(3)
    */
   int pip_set_aux( pip_task_t *task, void *aux );
-  /** @}*/
 
   /**
+   * \page pip_get_aux pip_get_aux
+   *
    * \brief Retrive the user data associated with a PiP task
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_get_aux( pip_task_t *task, void **auxp );
    *
    * \param[in] task PiP task. If \c NULL, then the data is associated
    * with the current PiP task
-   * \param[out] auxp The pointer to the usder data will be stored
+   * \param[out] auxp Returned user data
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EINAVL \c domainp is \c NULL or \c auxp is \c NULL
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
+   *
+   * \sa pip_set_aux(3)
    */
   int pip_get_aux( pip_task_t *task, void **auxp );
-  /** @}*/
 
   /**
-   * \brief Return the task representing the scheduling domain
-   *  @{
+   * \page pip_get_sched_domain pip_get_sched_domain
    *
-   * \param[out] domainp pointer to the domain task  returning
+   * \brief Return the task representing the scheduling domain
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_get_sched_domain( pip_task_t **domainp );
+   *
+   * \param[out] domainp Returned scheduling domain of the current task
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c domainp is \c NULL
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    */
   int pip_get_sched_domain( pip_task_t **domainp );
-  /** @}*/
 
   /**
+   * @}
+   */
+
+  /**
+   * \defgroup ulp-4-barrier BLT/ULP Barrier Functions
+   * @{
+   * \page ulp-barrier BLT/ULP barrier synchronization functions
+   * \description BLT/ULP barrier synchronization functions
+   */
+
+  /**
+   * \page pip_barrier_init pip_barrier_init
+   *
    * \brief initialize barrier synchronization structure
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_barrier_init( pip_barrier_t *barrp, int n );
    *
    * \param[in] barrp pointer to a PiP barrier structure
    * \param[in] n number of participants of this barrier
    * synchronization
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    * \retval EINAVL \c n is invalid
    *
    * \note This barrier works on PiP tasks only.
    *
-   * \sa pip_barrier_wait(3),
-   * pip_barrier_init(3),
-   * pip_barrier_wait(3),
+   * \sa pip_barrier_init(3), pip_barrier_fin(3),
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_barrier_init( pip_barrier_t *barrp, int n );
-  /** @}*/
 #else
   int pip_barrier_init_( pip_barrier_t *barrp, int n );
 #define pip_barrier_init( B, N ) \
@@ -904,19 +1168,26 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_barrier_wait pip_barrier_wait
+   *
    * \brief wait on barrier synchronization in a busy-wait way
-   *  @{
+   * int pip_barrier_wait( pip_barrier_t *barrp );
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_barrier_wait( pip_barrier_t *barrp );
    *
    * \param[in] barrp pointer to a PiP barrier structure
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    *
-   * \sa pip_barrier_init(3), pip_barrier_init(3),
+   * \sa pip_barrier_init(3), pip_barrier_fin(3),
    *
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_barrier_wait( pip_barrier_t *barrp );
-  /** @}*/
 #else
   int pip_barrier_wait_( pip_barrier_t *barrp );
 #define pip_barrier_wait( B ) \
@@ -924,22 +1195,26 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_barrier_fin pip_barrier_fin
+   *
    * \brief finalize barrier synchronization structure
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_barrier_fin( pip_barrier_t *barrp );
    *
    * \param[in] barrp pointer to a PiP barrier structure
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    * \retval EBUSY there are some tasks wating for barrier
    * synchronization
    *
-   * \sa pip_barrier_wait(3),
-   * pip_barrier_init(3),
-   * pip_barrier_wait(3),
+   * \sa  pip_barrier_init(3), pip_barrier_wait(3),
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_barrier_fin( pip_barrier_t *barrp );
-  /** @}*/
 #else
   int pip_barrier_fin_( pip_barrier_t *queue );
 #define pip_barrier_fin( B ) \
@@ -947,18 +1222,35 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * @}
+   */
+
+  /**
+   * \defgroup ulp-5-mutex BLT/ULP Mutex Functions
+   * @{
+   * \page ulp-barrier BLT/ULP mutex functions
+   * \description BLT/ULP mutex  functions
+   */
+
+  /**
+   * \page pip_mutex_init pip_mutex_init
+   *
    * \brief Initialize PiP mutex
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_mutex_init( pip_mutex_t *mutex );
+   *
    * \param[in,out] mutex pointer to the PiP task mutex
    *
    * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c mutex is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    *
-   * \sa pip_mutex_lock(3), pip_mutex_unlock(3)
+   * \sa pip_mutex_lock(3), pip_mutex_unlock(3), pip_mutex_fin(3)
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_init( pip_mutex_t *mutex );
-  /** @}*/
 #else
   int pip_mutex_init_( pip_mutex_t *mutex );
 #define pip_mutex_init( M ) \
@@ -966,17 +1258,24 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_mutex_lock pip_mutex_lock
+   *
    * \brief Lock PiP mutex
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_mutex_lock( pip_mutex_t *mutex );
+   *
    * \param[in] mutex pointer to the PiP task mutex
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    *
-   * \sa pip_mutex_init(3), pip_mutex_unlock(3)
+   * \sa pip_mutex_init(3), pip_mutex_unlock(3), pip_mutex_fin(3)
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_lock( pip_mutex_t *mutex );
-  /** @}*/
 #else
   int pip_mutex_lock_( pip_mutex_t *mutex );
 #define pip_mutex_lock( M ) \
@@ -984,17 +1283,24 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_mutex_unlock pip_mutex_unlock
+   *
    * \brief Unlock PiP mutex
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_mutex_unlock( pip_mutex_t *mutex );
+   *
    * \param[in] mutex pointer to the PiP task mutex
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    *
-   * \sa pip_mutex_init(3), pip_mutex_lock(3)
+   * \sa pip_mutex_init(3), pip_mutex_lock(3), pip_mutex_fin(3)
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_unlock( pip_mutex_t *mutex );
-  /** @}*/
 #else
   int pip_mutex_unlock_( pip_mutex_t *mutex );
 #define pip_mutex_unlock( M ) \
@@ -1002,18 +1308,25 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * \page pip_mutex_fin pip_mutex_fin
+   *
    * \brief Finalize PiP mutex
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_mutex_fin( pip_mutex_t *mutex );
+   *
    * \param[in,out] mutex pointer to the PiP task mutex
    *
    * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    * \retval EBUSY There is one or more waiting PiP task
    *
    * \sa pip_mutex_lock(3), pip_mutex_unlock(3)
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_fin( pip_mutex_t *mutex );
-  /** @}*/
 #else
   int pip_mutex_fin_( pip_mutex_t *mutex );
 #define pip_mutex_fin( M ) \
@@ -1021,29 +1334,53 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
+   * @}
+   */
+
+  /**
+   * \defgroup ulp-6-coupling BLT/ULP Coupling/Decoupling Functions
+   * @{
+   * \page ulp-barrier BLT/ULP coupling/decoupling functions
+   * \description BLT/ULP coupling/decoupling functions
+   */
+
+  /**
+   * \page pip_couple pip_couple
+   *
    * \brief Couple the curren task with the original kernel thread
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_couple( void );
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized or already finalized
    * \retval EBUSY the curren task is already coupled with a kernel thread
    */
-  int pip_couple();
-  /** @}*/
+  int pip_couple( void );
 
   /**
    * \page pip_decouple pip_decouple
    *
    * \brief Decouple the curren task from the kernel thread
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_decouple( pip_task_t *sched )
+   *
    * \param[in] task specify the scheduling task to schedule the decoupled task
-   * (calling this function)
+   * (calling this function). If \c NULL, then the previously coupled
+   * pip_task takes place.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized or already finalized
    * \retval EBUSY the curren task is already decoupled from a kernel thread
    */
   int pip_decouple( pip_task_t *task );
+
+  /**
+   * @}
+   */
 
 #ifdef PIP_EXPERIMENTAL
   int pip_migrate( pip_task_t* );

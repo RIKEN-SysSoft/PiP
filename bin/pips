@@ -30,37 +30,25 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pips pips
+### \page pips pips
 ###
 ### \brief List or kill running PiP tasks
 ###
-### \section synopsis SYNOPSIS
+### \synopsis
+### pips [ OPTION ] [ PIP-PROG-NAME ...]
 ###
-###	\c \b pips [\b options] [\b pip-command ...]
+### \description
+### The following options are avilable.
 ###
-### \section options OPTIONS
+### \param "-s SIGNAL" Send the specified signal to the specified PiP tasks
+### \param -k Same as 'pips -s TERM'
+### \param -l  List (ps command) running PiP tasks specified. This is the default action.
+### \param "--list" Same as 'pips -l'
+### \param -t Show running PiP tasks specified by using the top command.
+### \param -v Verbose mode
+### \param "--top" Same sa 'pip -t'
 ###
-### The following options are avilable. If none of them specified, then
-### this sends TERM signal to all running PiP tasks including PiP root.
-###
-### \subsection signal -s \b SIGNAL
-### Send the specified signal to the specified PiP tasks
-###
-### \subsection kill -k
-### same as \b -s \b TERM
-###
-### \subsection list -l
-### List (ps command) running PiP tasks specified. This is the default action.
-###
-### \subsection list-long --list
-### same as \b -l
-###
-### \subsection top -t
-### Show running PiP tasks specified by using the top command.
-### Due to the top command limitation, only 20 PiP tasks will be shown.
-###
-### \subsection top-long --top
-### same as \b -t
+### \sa ps(1), top(1)
 ###
 
 isa_pip_program() {

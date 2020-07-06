@@ -79,7 +79,7 @@ int main( int argc, char **argv ) {
       pip_task_queue_t 	queue;
       int 	 	m = ntasks - 1, n, i;
 
-      CHECK( pip_get_task_from_pipid(PIP_PIPID_MYSELF,&task), RV,
+      CHECK( pip_get_task_by_pipid(PIP_PIPID_MYSELF,&task), RV,
 	     return(EXIT_FAIL) );
       pip_task_queue_init( &queue, NULL );
 

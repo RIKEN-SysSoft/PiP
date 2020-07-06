@@ -36,12 +36,6 @@
 #ifndef _pip_internal_h_
 #define _pip_internal_h_
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifdef DOXYGEN_INPROGRESS
 #ifndef INLINE
 #define INLINE
@@ -88,15 +82,15 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
-/** BLT supported version **/
+/** BLT supported version (RELEASED as PiP v3) **/
 #define PIP_BASE_VERSION	(0x4000U)
-/** ULP supported version
+/** ULP UNsupported version (RELEASED as PiP v2)
 #define PIP_BASE_VERSION	(0x3000U)
 **/
-/** ULP supported version
+/** ULP supported version -- abandoned to releas
 #define PIP_BASE_VERSION	(0x2000U)
 **/
-/** The very first stable release version
+/** The very first stable release version -- no this was no so much stable !!
 #define PIP_BASE_VERSION	(0x1000U)
 **/
 
@@ -526,6 +520,6 @@ INLINE void pip_system_yield( void ) {
 
 int pip_set_syncflag( uint32_t flags );
 
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#endif /* DOXYGEN */
 
 #endif /* _pip_internal_h_ */

@@ -36,12 +36,6 @@
 #ifndef _pip_machdep_x86_64_h
 #define _pip_machdep_x86_64_h
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifdef DOXYGEN_INPROGRESS
 #ifndef INLINE
 #define INLINE
@@ -99,6 +93,6 @@ INLINE int pip_load_tls( pip_tls_t tls ) {
 typedef volatile uint32_t	pip_spinlock_t;
 #define PIP_LOCK_TYPE
 
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#endif /* DOXYGEN */
 
 #endif

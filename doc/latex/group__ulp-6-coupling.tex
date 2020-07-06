@@ -1,0 +1,54 @@
+\hypertarget{group__ulp-6-coupling}{\section{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions}
+\label{group__ulp-6-coupling}\index{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions@{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}{int {\bfseries pip\-\_\-couple} (void)}\label{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}
+
+\item 
+\hypertarget{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}{int {\bfseries pip\-\_\-decouple} (pip\-\_\-task\-\_\-t $\ast$task)}\label{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip_couple}{}\subsubsection{pip\-\_\-couple}\label{pip_couple}
+Couple the curren task with the original kernel thread
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-couple( void );
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+{\em E\-B\-U\-S\-Y} & the curren task is already coupled with a kernel thread \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_decouple}{}\subsubsection{pip\-\_\-decouple}\label{pip_decouple}
+Decouple the curren task from the kernel thread
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-decouple( pip\-\_\-task\-\_\-t $\ast$sched )
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em task} & specify the scheduling task to schedule the decoupled task (calling this function). If {\ttfamily N\-U\-L\-L}, then the previously coupled pip\-\_\-task takes place.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+{\em E\-B\-U\-S\-Y} & the curren task is already decoupled from a kernel thread \\
+\hline
+\end{DoxyRetVals}

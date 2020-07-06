@@ -1,19 +1,19 @@
 #!/bin/sh
 
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
+# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 # $PIP_VERSION: Version 1.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-# 
+#
 # 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the 
+#    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -25,39 +25,31 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup piplnlibs piplnlibs
+### \page piplnlibs piplnlibs
 ###
-### \brief command to create symbolic links to the SOLIBs in the patched GLIBC.
+### \brief command to create symbolic links to the SOLIBs in the install directory
+### of the patched GLIBC.
 ###
-### \section synopsis SYNOPSIS
+### \synopsis
+### piplnlibs [ OPTIONS ]
 ###
-###	\c \b piplnlibs [<b>-rs</b>]
-###
-### \section description DESCRIPTION
+### \description
 ### This command creates a number of symbolic links to the SOLIBs which
 ### are not installed by the patched GLIBC installation.
 ###
-### \section options OPTIONS
-###
-### \subsection remove -r
-### Remove symbolic links to SOLIBs in @glibc_libdir@ before creating.
-###
-### \subsection silent -s
-### Silent mode.
-###
-### \section environment ENVIRONMENT
-###
-### \subsection PIP_LIBRARY_PATH PIP_LIBRARY_PATH
-### Symbolic links to SOLIBs in the directories specified by PIP_LIBRARY_PATH
+### \param -r Remove symbolic links to SOLIBs in @glibc_libdir@ before creating.
+### \param -s Silent mode.
+ ###
+### \environment
+### \arg \b PIP_LIBRARY_PATH Symbolic links to SOLIBs in the directories specified by PIP_LIBRARY_PATH
 ### will be also created.
+### \arg \b  LD_LIBRARY_PATH If PIP_LIBRARY_PATH is not set, LD_LIBRARY_PATH is used instead.
 ###
-### \subsection LD_LIBRARY_PATH LD_LIBRARY_PATH
-### If PIP_LIBRARY_PATH is not set, LD_LIBRARY_PATH is used instead.
 
 glibc_libdir=@glibc_libdir@
 glibc_default_libdir=/lib64

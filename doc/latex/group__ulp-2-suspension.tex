@@ -1,0 +1,231 @@
+\hypertarget{group__ulp-2-suspension}{\section{Suspending and Resuming B\-L\-T/\-U\-L\-P}
+\label{group__ulp-2-suspension}\index{Suspending and Resuming B\-L\-T/\-U\-L\-P@{Suspending and Resuming B\-L\-T/\-U\-L\-P}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__ulp-2-suspension_ga7dbf7e64e78cd00ef62c3bb04f289a68}{int {\bfseries pip\-\_\-suspend\-\_\-and\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg)}\label{group__ulp-2-suspension_ga7dbf7e64e78cd00ef62c3bb04f289a68}
+
+\item 
+\hypertarget{group__ulp-2-suspension_gab78d289ab89fa2981f2910849b1b2df7}{int {\bfseries pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg)}\label{group__ulp-2-suspension_gab78d289ab89fa2981f2910849b1b2df7}
+
+\item 
+\hypertarget{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched)}\label{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}
+
+\item 
+\hypertarget{group__ulp-2-suspension_gab3c26770ac6de70ad11239dc301bd403}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched)}\label{group__ulp-2-suspension_gab3c26770ac6de70ad11239dc301bd403}
+
+\item 
+\hypertarget{group__ulp-2-suspension_gac26e54557d8e89fcdcb52a9df6c65998}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np)}\label{group__ulp-2-suspension_gac26e54557d8e89fcdcb52a9df6c65998}
+
+\item 
+\hypertarget{group__ulp-2-suspension_ga939e70924803be491c2f6f10b364e803}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np)}\label{group__ulp-2-suspension_ga939e70924803be491c2f6f10b364e803}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{ulp-suspension}{}\subsubsection{Suspending and resuming B\-L\-T/\-U\-L\-P}\label{ulp-suspension}
+\begin{DoxyParagraph}{Description}
+Suspending and resuming B\-L\-T/\-U\-L\-P 
+\end{DoxyParagraph}
+\hypertarget{pip_suspend_and_enqueue}{}\subsubsection{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}\label{pip_suspend_and_enqueue}
+suspend the curren task and enqueue it with lock
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-suspend\-\_\-and\-\_\-enqueue( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+The {\bfseries queue} is locked just before the calling task is enqueued and unlocked after the calling task is enqueued. After then the {\bfseries callback} function is called. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{}
+As the result of this suspension, a context-\/switch takes place if there is at least one elgible-\/to-\/run task in the scheduling queue (this is hidden from users). If there is no other task to schedule then the kernel thread of the current task will be blocked.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em callback} & A callback function which is called immediately after the task is enqueued \\
+\hline
+\mbox{\tt in}  & {\em cbarg} & An argument given to the callback function\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-enqueu\-\_\-and\-\_\-suspend\-\_\-nolock(3), pip\-\_\-dequeue\-\_\-and\-\_\-resume(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_suspend_and_enqueue_nolock}{}\subsubsection{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock}\label{pip_suspend_and_enqueue_nolock}
+suspend the curren task and enqueue it without locking the queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Unlike {\ttfamily pip\-\_\-suspend\-\_\-and\-\_\-enqueue}, this function never locks the queue. It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function. The {\bfseries callback} function can be used for unlocking. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{}
+As the result of this suspension, a context-\/switch takes place if there is at least one elgible-\/to-\/run task in the scheduling queue (this is hidden from users). If there is no other task to schedule then the kernel thread of the current task will be blocked.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em callback} & A callback function which is called when enqueued \\
+\hline
+\mbox{\tt in}  & {\em cbarg} & An argument given to the callback function\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_dequeue_and_resume}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume}\label{pip_dequeue_and_resume}
+dequeue a task and make it runnable
+
+\begin{DoxyParagraph}{Description}
+The {\bfseries queue} is locked and then unlocked when to dequeued a task.
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-dequeue\-\_\-and\-\_\-resume( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em sched} & A task to specify a scheduling domain\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+If succeedss, 0 is returned. Otherwise an error code is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-N\-O\-E\-N\-T} & {\ttfamily queue} is empty. \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_dequeue_and_resume_nolock}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock}\label{pip_dequeue_and_resume_nolock}
+dequeue a task and make it runnable
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-dequeue\-\_\-and\-\_\-resume( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Task in the queue is dequeued and scheduled by the specified {\ttfamily sched}. If {\ttfamily sched} is N\-U\-L\-L, then the task is enqueued into the scheduling queue of calling task. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{}
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em sched} & A task to specify a scheduling domain\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+This function returns no error 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-N\-O\-E\-N\-T} & {\ttfamily queue} is empty. \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_dequeue_and_resume_N}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N}\label{pip_dequeue_and_resume_N}
+dequeue multiple tasks and resume the execution of them
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+The specified number of tasks are dequeued and scheduled by the specified {\ttfamily sched}. If {\ttfamily sched} is N\-U\-L\-L, then the task is enqueued into the scheduling queue of calling task. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{}
+The {\bfseries queue} is locked and unlocked when dequeued.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em sched} & A task to specify a scheduling domain \\
+\hline
+\mbox{\tt in,out}  & {\em np} & A pointer to an interger which spcifies the number of tasks dequeued and actual number of tasks dequeued is returned. When {\ttfamily P\-I\-P\-\_\-\-T\-A\-S\-K\-\_\-\-A\-L\-L} is specified, then all tasks in the queue will be resumed.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+This function returns no error 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & the specified number of tasks is invalid \\
+\hline
+{\em E\-N\-O\-E\-N\-T} & {\ttfamily queue} is empty.\\
+\hline
+\end{DoxyRetVals}
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function. \hypertarget{pip_dequeue_and_resume_N_nolock}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock}\label{pip_dequeue_and_resume_N_nolock}
+dequeue tasks and resume the execution of them
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+The specified number of tasks are dequeued and scheduled by the specified {\ttfamily sched}. If {\ttfamily sched} is N\-U\-L\-L, then the task is enqueued into the scheduling queue of calling task. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{}
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em sched} & A task to specify a scheduling domain \\
+\hline
+\mbox{\tt in,out}  & {\em np} & A pointer to an interger which spcifies the number of tasks dequeued and actual number of tasks dequeued is returned. When {\ttfamily P\-I\-P\-\_\-\-T\-A\-S\-K\-\_\-\-A\-L\-L} is specified, then all tasks in the queue will be resumed.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+This function returns no error 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & the specified number of tasks is invalid \\
+\hline
+{\em E\-N\-O\-E\-N\-T} & {\ttfamily queue} is empty. \\
+\hline
+\end{DoxyRetVals}

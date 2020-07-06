@@ -1,0 +1,202 @@
+\hypertarget{group__pip-4-export}{\section{Export/\-Import Functions}
+\label{group__pip-4-export}\index{Export/\-Import Functions@{Export/\-Import Functions}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__pip-4-export_ga3613eaa34ad5a4985007ff9177eb6542}{int {\bfseries pip\-\_\-named\-\_\-export} (void $\ast$exp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf}\label{group__pip-4-export_ga3613eaa34ad5a4985007ff9177eb6542}
+
+\item 
+\hypertarget{group__pip-4-export_ga16cbf39b7e29a7453ee836847e06aa16}{int {\bfseries pip\-\_\-named\-\_\-import} (int pipid, void $\ast$$\ast$expp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf}\label{group__pip-4-export_ga16cbf39b7e29a7453ee836847e06aa16}
+
+\item 
+\hypertarget{group__pip-4-export_ga3cf67ef6b8cb058400ee1ea91d4436bd}{int {\bfseries pip\-\_\-named\-\_\-tryimport} (int pipid, void $\ast$$\ast$expp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf}\label{group__pip-4-export_ga3cf67ef6b8cb058400ee1ea91d4436bd}
+
+\item 
+\hypertarget{group__pip-4-export_ga76ef9337bec7dd836168f22247d4c64c}{int {\bfseries pip\-\_\-export} (void $\ast$exp)}\label{group__pip-4-export_ga76ef9337bec7dd836168f22247d4c64c}
+
+\item 
+\hypertarget{group__pip-4-export_ga6d7ac596a9da824e40d7c06528f42e5f}{int {\bfseries pip\-\_\-import} (int pipid, void $\ast$$\ast$expp)}\label{group__pip-4-export_ga6d7ac596a9da824e40d7c06528f42e5f}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-export}{}\subsubsection{Pi\-P Export and Import}\label{pip-export}
+\begin{DoxyParagraph}{Description}
+Export and import functions to exchange addresses among tasks 
+\end{DoxyParagraph}
+\hypertarget{pip_named_export}{}\subsubsection{pip\-\_\-named\-\_\-export}\label{pip_named_export}
+export an address of the calling Pi\-P root or a Pi\-P task to the others.
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-named\-\_\-export( void $\ast$exp, const char $\ast$format, ... )
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Pass an address of a memory region to the other Pi\-P task. Unlike the simmple {\ttfamily pip\-\_\-export} and {\ttfamily pip\-\_\-import} functions which can only export one address per task, {\ttfamily pip\-\_\-named\-\_\-export} and {\ttfamily pip\-\_\-named\-\_\-import} can associate a name with an address so that Pi\-P root or Pi\-P task can exchange arbitrary number of addressess.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em exp} & an address to be passed to the other Pi\-P task \\
+\hline
+\mbox{\tt in}  & {\em format} & a {\ttfamily printf} format to give the exported address a name. If this is {\ttfamily N\-U\-L\-L}, then the name is assumed to be \char`\"{}\char`\"{}.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & {\ttfamily pip\-\_\-init} is not yet called. \\
+\hline
+{\em E\-B\-U\-S\-Y} & The name is already registered. \\
+\hline
+{\em E\-N\-O\-M\-E\-M} & Not enough memory\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyNote}{Note}
+The addresses exported by {\ttfamily pip\-\_\-named\-\_\-export} cannot be imported by calling {\ttfamily pip\-\_\-import}, and vice versa.
+\end{DoxyNote}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-named\-\_\-import(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_named_import}{}\subsubsection{pip\-\_\-named\-\_\-import}\label{pip_named_import}
+import the named exported address
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-named\-\_\-import( int pipid, void $\ast$$\ast$expp, const char $\ast$format, ... )
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Import an address exported by the specified Pi\-P task and having the specified name. If it is not exported yet, the calling task will be blocked. The
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & The Pi\-P I\-D to import the exposed address \\
+\hline
+\mbox{\tt out}  & {\em expp} & The starting address of the exposed region of the Pi\-P task specified by the {\itshape pipid}. \\
+\hline
+\mbox{\tt in}  & {\em format} & a {\ttfamily printf} format to give the exported address a name\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+There is possibility of deadlock when two or more tasks are mutually waiting for exported addresses. 
+\end{DoxyNote}
+\begin{DoxyParagraph}{}
+The addresses exported by {\ttfamily pip\-\_\-export} cannot be imported by calling {\ttfamily pip\-\_\-named\-\_\-import}, and vice versa.
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+zero is returned if this function succeeds. On error, an error number is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & {\ttfamily pip\-\_\-init} is not yet called. \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & The specified {\ttfamily pipid} is invalid \\
+\hline
+{\em E\-N\-O\-M\-E\-M} & Not enough memory \\
+\hline
+{\em E\-C\-A\-N\-C\-E\-L\-E\-D} & The target task is terminated \\
+\hline
+{\em E\-D\-E\-A\-D\-L\-K} & {\ttfamily pipid} is the calling task and tries to block itself\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-tryimport(3), pip\-\_\-export(3), pip\-\_\-import(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_named_tryimport}{}\subsubsection{pip\-\_\-named\-\_\-tryimport}\label{pip_named_tryimport}
+import the named exported address (non-\/blocking)
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-named\-\_\-tryimport( int pipid, void $\ast$$\ast$expp, const char $\ast$format, ... )
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Import an address exported by the specified Pi\-P task and having the specified name. If it is not exported yet, this returns {\ttfamily E\-A\-G\-A\-I\-N}.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & The Pi\-P I\-D to import the exposed address \\
+\hline
+\mbox{\tt out}  & {\em expp} & The starting address of the exposed region of the Pi\-P task specified by the {\itshape pipid}. \\
+\hline
+\mbox{\tt in}  & {\em format} & a {\ttfamily printf} format to give the exported address a name\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+The addresses exported by {\ttfamily pip\-\_\-export} cannot be imported by calling {\ttfamily pip\-\_\-named\-\_\-import}, and vice versa.
+\end{DoxyNote}
+\begin{DoxyReturn}{Returns}
+Zero is returned if this function succeeds. On error, an error number is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & {\ttfamily pip\-\_\-init} is not yet called. \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & The specified {\ttfamily pipid} is invalid \\
+\hline
+{\em E\-N\-O\-M\-E\-M} & Not enough memory \\
+\hline
+{\em E\-C\-A\-N\-C\-E\-L\-E\-D} & The target task is terminated \\
+\hline
+{\em E\-A\-G\-A\-I\-N} & Target is not exported yet\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-import(3), pip\-\_\-export(3), pip\-\_\-import(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_export}{}\subsubsection{pip\-\_\-export}\label{pip_export}
+export an address
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-export( void $\ast$exp );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Pass an address of a memory region to the other Pi\-P task. This is a very naive implementation in Pi\-P v1 and deprecated. Once a task export an address, there is no way to change the exported address or undo export.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em exp} & An addresss\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-import(3), pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-import(3), pip\-\_\-named\-\_\-tryimport(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_import}{}\subsubsection{pip\-\_\-import}\label{pip_import}
+import exported address of a Pi\-P task
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-export( void $\ast$$\ast$expp );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+Get an address exported by the specified Pi\-P task. This is a very naive implementation in Pi\-P v1 and deprecated. If the address is not yet exported at the time of calling this function, then {\ttfamily N\-U\-L\-L} is returned.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & The Pi\-P I\-D to import the exportedaddress \\
+\hline
+\mbox{\tt out}  & {\em expp} & The exported address\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-export(3), pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-import(3), pip\-\_\-named\-\_\-tryimport(3) 
+\end{DoxySeeAlso}

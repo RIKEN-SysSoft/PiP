@@ -1,0 +1,213 @@
+.TH "BLT/ULP Miscellaneous Function" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+BLT/ULP Miscellaneous Function \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "pip_task_t * \fBpip_task_self\fP (void)"
+.br
+.ti -1c
+.RI "int \fBpip_get_task_pipid\fP (pip_task_t *task, int *pipidp)"
+.br
+.ti -1c
+.RI "int \fBpip_get_task_by_pipid\fP (int pipid, pip_task_t **taskp)"
+.br
+.ti -1c
+.RI "int \fBpip_set_aux\fP (pip_task_t *task, void *aux)"
+.br
+.ti -1c
+.RI "int \fBpip_get_aux\fP (pip_task_t *task, void **auxp)"
+.br
+.ti -1c
+.RI "int \fBpip_get_sched_domain\fP (pip_task_t **domainp)"
+.br
+.in -1c
+.SH "Detailed Description"
+.PP 
+BLT/ULP miscellaneous function
+
+.PP
+\fBDescription\fP
+.RS 4
+BLT/ULP miscellaneous function 
+.RE
+.PP
+
+.SS "pip_task_self"
+Return the current task
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+pip_task_t *pip_task_self( void );
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return the current task\&. 
+.RE
+.PP
+
+.SS "pip_get_task_pipid"
+Return PIPID of a PiP task
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_get_task_pipid( pip_task_t *task, int *pipidp );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP a PiP task 
+.br
+\fIpipidp\fP PiP ID of the specified task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCtask\fP is \fCNULL\fP 
+.br
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.RE
+.PP
+
+.SS "pip_get_task_by_pipid"
+get PiP task from PiP ID
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_get_task_by_pipid( int pipid, pip_task_t **taskp );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID 
+.br
+\fItaskp\fP returning PiP task of the specified PiP ID
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.br
+\fIENOENT\fP No such PiP task 
+.br
+\fIERANGE\fP The specified \fCpipid\fP is out of ramge 
+.RE
+.PP
+
+.SS "pip_set_aux"
+Associate user data with a PiP task
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_set_aux( pip_task_t *task, void *aux );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP PiP task\&. If \fCNULL\fP, then the data is associated with the current PiP task 
+.br
+\fIaux\fP Pointer to the user dat to assocate with
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_get_aux(3) 
+.RE
+.PP
+
+.SS "pip_get_aux"
+Retrive the user data associated with a PiP task
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_get_aux( pip_task_t *task, void **auxp );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP PiP task\&. If \fCNULL\fP, then the data is associated with the current PiP task 
+.br
+\fIauxp\fP Returned user data
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINAVL\fP \fCdomainp\fP is \fCNULL\fP or \fCauxp\fP is \fCNULL\fP 
+.br
+\fIEPERM\fP PiP library is not yet initialized or already finalized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+pip_set_aux(3) 
+.RE
+.PP
+
+.SS "pip_get_sched_domain"
+Return the task representing the scheduling domain
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_get_sched_domain( pip_task_t **domainp );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIdomainp\fP Returned scheduling domain of the current task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

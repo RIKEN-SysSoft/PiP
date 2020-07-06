@@ -1,0 +1,208 @@
+\hypertarget{group__ulp-1-task-queue}{\section{Task Queue Operations}
+\label{group__ulp-1-task-queue}\index{Task Queue Operations@{Task Queue Operations}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__ulp-1-task-queue_ga9c50d9b2b810d97a75a5fe9c332902e0}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-init} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$methods)}\label{group__ulp-1-task-queue_ga9c50d9b2b810d97a75a5fe9c332902e0}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-trylock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-lock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-unlock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-isempty} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-count} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np)}\label{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_gae0f80336f51c43c3da988dd0467453cf}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$task)}\label{group__ulp-1-task-queue_gae0f80336f51c43c3da988dd0467453cf}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}{pip\-\_\-task\-\_\-t $\ast$ {\bfseries pip\-\_\-task\-\_\-queue\-\_\-dequeue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-describe} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, F\-I\-L\-E $\ast$fp)}\label{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}
+
+\item 
+\hypertarget{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-fin} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{ulp-task-queue}{}\subsubsection{Task queue operations}\label{ulp-task-queue}
+\begin{DoxyParagraph}{Description}
+Manipulating U\-L\-P/\-B\-L\-T task queue functions 
+\end{DoxyParagraph}
+\hypertarget{pip_task_queue_init}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-init}\label{pip_task_queue_init}
+Initialize task queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-task\-\_\-queue\-\_\-init( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$methods );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em methods} & Must be set to {\ttfamily N\-U\-L\-L}. Researved for future use.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Always return 0. 
+\end{DoxyReturn}
+\hypertarget{pip_task_queue_trylock}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-trylock}\label{pip_task_queue_trylock}
+Try locking task queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-task\-\_\-queue\-\_\-trylock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Returns a non-\/zero value if lock succeeds. 
+\end{DoxyReturn}
+\hypertarget{pip_task_queue_lock}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-lock}\label{pip_task_queue_lock}
+Lock task queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-task\-\_\-queue\-\_\-lock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+This function returns no error 
+\end{DoxyReturn}
+\hypertarget{pip_task_queue_unlock}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-unlock}\label{pip_task_queue_unlock}
+Unlock task queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-task\-\_\-queue\-\_\-unlock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+This function returns no error 
+\end{DoxyReturn}
+\hypertarget{pip_task_queue_isempty}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-isempty}\label{pip_task_queue_isempty}
+Query function if the current task has some tasks to be scheduled with.
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-task\-\_\-queue\-\_\-isempty( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Returns a non-\/zero value if the queue is empty 
+\end{DoxyReturn}
+\hypertarget{pip_task_queue_count}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-count}\label{pip_task_queue_count}
+Count the length of task queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-task\-\_\-queue\-\_\-count( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt out}  & {\em np} & the queue length returned\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-I\-N\-V\-A\-L} & {\ttfamily np} is {\ttfamily N\-U\-L\-L} \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_task_queue_enqueue}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-enqueue}\label{pip_task_queue_enqueue}
+Enqueue a B\-L\-T
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+void pip\-\_\-task\-\_\-queue\-\_\-enqueue( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$task );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em task} & A task to be enqueued\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+It is the user responsibility to lock (and unlock) the queue. 
+\end{DoxyNote}
+\hypertarget{pip_task_queue_dequeue}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-dequeue}\label{pip_task_queue_dequeue}
+Dequeue a task from a task queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+pip\-\_\-task\-\_\-t$\ast$ pip\-\_\-task\-\_\-queue\-\_\-dequeue( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Dequeued task iss returned. If the queue is empty then {\ttfamily N\-U\-L\-L} is returned.
+\end{DoxyReturn}
+\begin{DoxyNote}{Note}
+It is the user responsibility to lock (and unlock) the queue. 
+\end{DoxyNote}
+\hypertarget{pip_task_queue_describe}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-describe}\label{pip_task_queue_describe}
+Describe queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+void pip\-\_\-task\-\_\-queue\-\_\-describe( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, F\-I\-L\-E $\ast$fp );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue \\
+\hline
+\mbox{\tt in}  & {\em fp} & a File pointer \\
+\hline
+\end{DoxyParams}
+\hypertarget{pip_task_queue_fin}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-fin}\label{pip_task_queue_fin}
+Finalize a task queue
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-task\-\_\-queue\-\_\-fin( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em queue} & A task queue\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Zero is returned always 
+\end{DoxyReturn}

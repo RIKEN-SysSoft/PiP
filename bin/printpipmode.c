@@ -33,18 +33,14 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-/** \addtogroup printpipmode printpipmode
+/** \page printpipmode printpipmode
  *
- * \brief command to print current PiP mode
+ * \brief Print current PiP mode
  *
- * \section synopsis SYNOPSIS
+ * \synopsis
+ * printpipmode
  *
- *	\b printpipmode
- *
- * \section description DESCRIPTION
- *
- * \b This command prints the current PiP mode setting
- *
+ * \sa pip-mode(1)
  */
 
 #include <pip.h>

@@ -1,0 +1,211 @@
+\hypertarget{group__pip-5-misc}{\section{Pi\-P Miscellaneous Functions}
+\label{group__pip-5-misc}\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}{int {\bfseries pip\-\_\-get\-\_\-pipid} (int $\ast$pipidp)}\label{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}
+
+\item 
+\hypertarget{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}{int {\bfseries pip\-\_\-is\-\_\-initialized} (void)}\label{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}
+
+\item 
+\hypertarget{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}{int {\bfseries pip\-\_\-get\-\_\-ntasks} (int $\ast$ntasksp)}\label{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}
+
+\item 
+\hypertarget{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}{int {\bfseries pip\-\_\-get\-\_\-mode} (int $\ast$modep)}\label{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}
+
+\item 
+\hypertarget{group__pip-5-misc_ga0e12c95fe7abc5c356acfd45a89ad5d8}{const char $\ast$ {\bfseries pip\-\_\-get\-\_\-mode\-\_\-str} (void)}\label{group__pip-5-misc_ga0e12c95fe7abc5c356acfd45a89ad5d8}
+
+\item 
+\hypertarget{group__pip-5-misc_gadf3d9e96b46d7a58bf4ce6dda173091a}{int {\bfseries pip\-\_\-get\-\_\-system\-\_\-id} (int pipid, pip\-\_\-id\-\_\-t $\ast$idp)}\label{group__pip-5-misc_gadf3d9e96b46d7a58bf4ce6dda173091a}
+
+\item 
+\hypertarget{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}{int {\bfseries pip\-\_\-isa\-\_\-root} (void)}\label{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}
+
+\item 
+\hypertarget{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}{int {\bfseries pip\-\_\-isa\-\_\-task} (void)}\label{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}
+
+\item 
+\hypertarget{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}{int {\bfseries pip\-\_\-is\-\_\-threaded} (int $\ast$flagp)}\label{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}
+
+\item 
+\hypertarget{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}{int {\bfseries pip\-\_\-is\-\_\-shared\-\_\-fd} (int $\ast$flagp)}\label{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-misc}{}\subsubsection{Pi\-P miscellaneous functions}\label{pip-misc}
+\begin{DoxyParagraph}{Description}
+Miscellaneous functions for Pi\-P task (not B\-L\-T/\-U\-L\-P) 
+\end{DoxyParagraph}
+\hypertarget{pip_get_pipid}{}\subsubsection{pip\-\_\-get\-\_\-pipid}\label{pip_get_pipid}
+get Pi\-P I\-D of the calling task
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-get\-\_\-pipid( int $\ast$pipidp );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em pipidp} & This parameter points to the variable which will be set to the Pi\-P I\-D of the calling task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_is_initialized}{}\subsubsection{pip\-\_\-is\-\_\-initialized}\label{pip_is_initialized}
+Query is Pi\-P library is already initialized
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-is\-\_\-initialized( void );
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+Return a non-\/zero value if Pi\-P is already initialized. Otherwise this returns zero. 
+\end{DoxyReturn}
+\hypertarget{pip_get_ntasks}{}\subsubsection{pip\-\_\-get\-\_\-ntasks}\label{pip_get_ntasks}
+get the maximum number of the Pi\-P tasks
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-get\-\_\-ntasks( int $\ast$ntasksp );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em ntasksp} & Maximum number of Pi\-P tasks is returned\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_get_mode}{}\subsubsection{pip\-\_\-get\-\_\-mode}\label{pip_get_mode}
+get the Pi\-P execution mode
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ int pip\-\_\-get\-\_\-mode( int $\ast$modep );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em modep} & Returned Pi\-P execution mode\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-get\-\_\-mode\-\_\-str(3) 
+\end{DoxySeeAlso}
+\hypertarget{pip_get_mode_str}{}\subsubsection{pip\-\_\-get\-\_\-mode\-\_\-str}\label{pip_get_mode_str}
+get a character string of the current execution mode
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+ char $\ast$pip\-\_\-get\-\_\-mode\-\_\-str( void );
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+Return the name string of the current execution mode. If Pi\-P library is note initialized yet, then thiss return {\ttfamily N\-U\-L\-L}. 
+\end{DoxyReturn}
+\hypertarget{pip_get_system_id}{}\subsubsection{pip\-\_\-get\-\_\-system\-\_\-id}\label{pip_get_system_id}
+deliver a process or thread I\-D defined by the system
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-get\-\_\-system\-\_\-id( int $\ast$pipid, uintptr\-\_\-t $\ast$idp );
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+The returned object depends on the Pi\-P execution mode. In the process mode it returns T\-I\-D (Thread I\-D, not P\-I\-D) and in the thread mode it returns thread ({\ttfamily pthread\-\_\-t}) associated with the Pi\-P task This function can be used regardless to the Pi\-P execution mode.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em pipid} & Pi\-P I\-D of a target Pi\-P task \\
+\hline
+\mbox{\tt out}  & {\em idp} & a pointer to store the I\-D value\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_isa_root}{}\subsubsection{pip\-\_\-isa\-\_\-root}\label{pip_isa_root}
+check if calling Pi\-P task is a Pi\-P root or not
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-isa\-\_\-root( void );
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+Return a non-\/zero value if the caller is the Pi\-P root. Otherwise this returns zero. 
+\end{DoxyReturn}
+\hypertarget{pip_isa_task}{}\subsubsection{pip\-\_\-isa\-\_\-task}\label{pip_isa_task}
+check if calling Pi\-P task is a Pi\-P task or not
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-isa\-\_\-task( void );
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+Return a non-\/zero value if the caller is the Pi\-P task. Otherwise this returns zero. 
+\end{DoxyReturn}
+\hypertarget{pip_is_threaded}{}\subsubsection{pip\-\_\-is\-\_\-threaded}\label{pip_is_threaded}
+check if Pi\-P execution mode is pthread or not
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-is\-\_\-threaded( int $\ast$flagp );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em set} & to a non-\/zero value if Pi\-P execution mode is Pthread\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{pip_is_shared_fd}{}\subsubsection{pip\-\_\-is\-\_\-shared\-\_\-fd}\label{pip_is_shared_fd}
+check if file descriptors are shared or not. This is equivalent with the {\ttfamily pip\-\_\-is\-\_\-threaded} function.
+
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int pip\-\_\-is\-\_\-shared\-\_\-fd( int $\ast$flagp );
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em set} & to a non-\/zero value if F\-Ds are shared\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
+\hline
+\end{DoxyRetVals}

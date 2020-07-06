@@ -35,7 +35,9 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAMS_TO_INSTALL = piplnlibs
+
 MAN1_SRCS = piplnlibs
+
 DEPINC = \
 	   $(PIPINCDIR)/pip_gdbif.h		\
 	   $(PIPINCDIR)/pip_machdep.h	 	\

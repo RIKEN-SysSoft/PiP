@@ -1,9 +1,6 @@
-
-\page libpip (This is a Doxygen directive and just ignore)
+\page libpip libpip
 
 # Process-in-Process (PiP)
-
-# Description
 
 PiP is a user-level library to have the best of the both worlds
 of multi-process and multi-thread parallel execution models. PiP
@@ -197,15 +194,11 @@ Man pages will be installed at **PIP\_INSTALL\_DIR**/share/man.
 
     $ man -M PIP_INSTALL_DIR/share/man 7 libpip
 
-Or, use the pip-man command (fromm v2).
+Or, use the pip-man command (from v2).
 
     $ PIP_INSTALL_DIR/bin/pip-man 7 libpip
 
 The above two exammples will show you the same document you are reading.
-
-## HTML
-
-HTML documents will be installed at **PIP\_INSTALL\_DIR**/share/doc/pip/html.
 
 ## PDF
 
@@ -213,7 +206,7 @@ PDF documents will be installed at **PIP\_INSTALL\_DIR**/share/doc/pip/pdf.
 
 # Getting Started
 
-## To compile and link your PiP programs
+## Compile and link your PiP programs
 
 * pipcc(1) command (since v2)
 
@@ -222,7 +215,7 @@ You can use pipcc(1) command to compile and link your PiP programs.
     $ pipcc -Wall -O2 -g -c pip-prog.c
     $ pipcc -Wall -O2 -g -o pip-prog pip-prog.c
 
-## To run your PiP programs
+## Run your PiP programs
 
 * pip-exec(1) command (piprun(1) in PiP v1)
 
@@ -249,14 +242,14 @@ If you get the following message when you try to run your program;
 
 Then this means that the 'myprog' is not compiled by using the pipcc(1) command
 properly. You may check if your program(s) can run as a PiP root and/or PiP task
-by using the pip-check(1) command (fromm v2);
+by using the pip-check(1) command (from v2);
 
     $ pip-check a.out
     a.out : Root&Task
 
 Above example shows that the 'a.out' program can run as a PiP root and PiP tasks.
 
-* pips(1) command (fromm v2)
+* pips(1) command (from v2)
 
   You can check if your PiP program is running or not by using the pips(1)
   command.
@@ -371,12 +364,92 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 * [ROSS'18](presentation/Ross-2018-PiP.key.pdf)
 * [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf)
 
-# Query
+# Mailing List
 
-Send e-mails to pip@ml.riken.jp
+pip@ml.riken.jp
+
+# PiP Man Pages
+
+## Overview
+
+
+## Commands
+- pipcc
+- piplnlibs
+- pips
+- printpipmode
+
+
+## Functions
+- pip\_abort
+- pip\_barrier\_fin
+- pip\_barrier\_init
+- pip\_barrier\_wait
+- pip\_blt\_spawn
+- pip\_couple
+- pip\_decouple
+- pip\_dequeue\_and\_resume
+- pip\_dequeue\_and\_resume\_N
+- pip\_dequeue\_and\_resume\_N\_nolock
+- pip\_dequeue\_and\_resume\_nolock
+- pip\_exit
+- pip\_export
+- pip\_fin
+- pip\_get\_aux
+- pip\_get\_mode
+- pip\_get\_mode\_str
+- pip\_get\_ntasks
+- pip\_get\_pipid
+- pip\_get\_sched\_domain
+- pip\_get\_system\_id
+- pip\_get\_task\_by\_pipid
+- pip\_get\_task\_pipid
+- pip\_import
+- pip\_init
+- pip\_isa\_root
+- pip\_isa\_task
+- pip\_is\_initialized
+- pip\_is\_shared\_fd
+- pip\_is\_threaded
+- pip\_kill
+- pip\_kill\_all\_tasks
+- pip\_mutex\_fin
+- pip\_mutex\_init
+- pip\_mutex\_lock
+- pip\_mutex\_unlock
+- pip\_named\_export
+- pip\_named\_import
+- pip\_named\_tryimport
+- pip\_set\_aux
+- pip\_sigmask
+- pip\_signal\_wait
+- pip\_spawn
+- pip\_spawn\_from\_func
+- pip\_spawn\_from\_main
+- pip\_spawn\_hook
+- pip\_suspend\_and\_enqueue
+- pip\_suspend\_and\_enqueue\_nolock
+- pip\_task\_queue\_count
+- pip\_task\_queue\_dequeue
+- pip\_task\_queue\_describe
+- pip\_task\_queue\_enqueue
+- pip\_task\_queue\_fin
+- pip\_task\_queue\_init
+- pip\_task\_queue\_isempty
+- pip\_task\_queue\_lock
+- pip\_task\_queue\_trylock
+- pip\_task\_queue\_unlock
+- pip\_task\_self
+- pip\_task\_spawn
+- pip\_trywait
+- pip\_trywait\_any
+- pip\_wait
+- pip\_wait\_any
+- pip\_yield
+- pip\_yield\_to
 
 # Author
 
-Atsushi Hori
-Riken Center for Commputational Science (R-CCS)
-Japan
+Atsushi Hori \n
+Riken Center for Commputational Science (R-CCS) \n
+Japan \n

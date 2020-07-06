@@ -30,29 +30,25 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pipcc pipcc
+### \page pipcc pipcc
 ###
 ### \brief C compiler driver for PiP
 ###
-### \section synopsis SYNOPSIS
+### \synopsis
+### pipcc [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]
 ###
-###	\c \b pipcc [\b pip-options] [\b cc-command-options]
+### \param -piproot the compile (and link) as a PiP root
+### \param -piptask the compile (and link) as a PiP task
+### \param -nopip No PiP related settings will be applied
 ###
-### \section options OPTIONS
+### \note The \b -piproot and \b -piptask options can be specified at the same time. In this case,
+### the compiled object can be both of PiP root and PiP task. This is also the default behavior when
+### none of them is not specified.
 ###
-### The following options are avilable. If no of them specified, then
-### the compiled output file can be used as both PiP root and PiP task.
+### \environment
+### if \p CC environment  is set then \p \$(CC) will be used as a C compiler
 ###
-### \subsection root -piproot
-### If specified, the compile (and link) is done for PiP root.
-###
-### \subsection task -piptask
-### If specified, the compile (and link) is done for PiP task
-###
-### \section environment Environment
-### if \p CC is set then \p \$(CC) will be used as a C compiler
-###
-### \section seealso See Also
+### \sa
 ### pip-exec(1), pip-mode(1)
 ###
 

@@ -36,12 +36,6 @@
 #ifndef _pip_debug_h_
 #define _pip_debug_h_
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifndef DOXYGEN_INPROGRESS
 
 /**** debug macros ****/
@@ -197,5 +191,5 @@ extern int pip_debug_env( void );
 #define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
 #define ERRJ_CHK(FUNC)	{ if( (FUNC) ) { DBG; goto error; } }
 
-#endif
+#endif	/* DOXYGEN */
 #endif

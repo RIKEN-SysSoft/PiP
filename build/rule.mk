@@ -27,8 +27,8 @@ distclean: veryclean \
 	doxygen-distclean distclean-here post-distclean-hook
 .PHONY: distclean
 
-doxygen: subdir-doxygen doxygen-here
-.PHONY: doxygen
+doc: subdir-doc doc-here
+.PHONY: doc
 
 misc-clean:
 	@echo \
@@ -61,7 +61,7 @@ testclean-here:
 subdir-all subdir-install \
 subdir-clean subdir-veryclean subdir-distclean \
 subdir-testclean subdir-install-test \
-subdir-doxygen:
+subdir-doc:
 	@target=`expr $@ : 'subdir-\(.*\)'`; \
 	for dir in -- $(SUBDIRS); do \
 		case $${dir} in --) continue;; esac; \
@@ -215,30 +215,29 @@ prog-testclean:
 	$(RM) seek-file.text
 .PHONY: prog-testclean
 
-### doxygen rules
+### doc (doxygen) rules
 
-doxygen-here:
-	-@$(RM) .doxygen_html;
+doc-distclean:
+	-$(RM) .doxygen_latex .doxygen_man1 .doxygen_man3 .doxygen_man7
+.PHONY: doc-distclean
+
+doc-here: doc-distclean
 	-@case "$(MAN1_SRCS)" in \
 	'')	;; \
-	*)	for i in $(MAN1_SRCS); do echo $$i; done > .doxygen_man1; \
-		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_html;; \
+	*)	for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_man1; \
+		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
 	-@case "$(MAN3_SRCS)" in \
 	'')	;; \
-	*)	for i in $(MAN3_SRCS); do echo $$i; done > .doxygen_man3; \
-		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_html;; \
+	*)	for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_man3; \
+		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
 	-@case "$(MAN7_SRCS)" in \
 	'')	;; \
-	*)	for i in $(MAN7_SRCS); do echo $$i; done > .doxygen_man7; \
-		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_html;; \
+	*)	for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_man7; \
+		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
-.PHONY: doxygen-here
-
-doxygen-distclean:
-	-$(RM) .doxygen_html .doxygen_man1 .doxygen_man3 .doxygen_man7
-.PHONY: doxygen-distclean
+.PHONY: doc-here
 
 ### common rules
 

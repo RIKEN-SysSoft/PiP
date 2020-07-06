@@ -35,13 +35,6 @@
 
 #ifndef _pip_machdep_aarch64_h
 #define _pip_machdep_aarch64_h
-
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifdef DOXYGEN_INPROGRESS
 #ifndef INLINE
 #define INLINE
@@ -88,6 +81,6 @@ INLINE void pip_memory_barrier(void) {
 }
 #define PIP_MEMORY_BARRIER
 
-#endif /* DOXYGEN_SHOULD_SKIP_THIS */
+#endif /* DOXYGEN */
 
 #endif

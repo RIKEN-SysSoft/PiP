@@ -33,25 +33,28 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-/** \addtogroup pip-exec pip-exec
+/** \page pip-exec pip-exec
  *
  * \brief run program(s) as PiP tasks
  *
  * \synopsis
+ * pip-exec [OPTIONS] &lt;program&gt; ... [ : ... ]
  *
- *	\c \b pip-exec [OPTIONS] &lt;program&gt; ... [ : ... ]
- *
- * \section description DESCRIPTION
+ * \description
  * \b Run a program as PiP task(s).  Mutiple programs can be specified
- * by separating them with ':'.
+ * by separating them with ':' to share the same virtual address space with
+ * the \p pip-exec command.
  *
- * -n \b &lt;N&gt; number of tasks\n
- * -f \b &lt;FUNC&gt; function name to start\n
- * -c \b &lt;CORE&gt; specify the CPU core number to bind core(s)\n
- * -r core binding in the round-robin fashion\n
+ * \param "-n N" number of tasks
+ * \param "-f FUNC" function name to start
+ * \param "-c CORE" specify the CPU core number to bind core(s)
+ * \param -r core binding in the round-robin fashion
+ *
+ * \sa
+ * pipcc(1)
  */
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
 #ifndef DEBUG
 //#define DEBUG
@@ -448,4 +451,4 @@ int main( int argc, char **argv ) {
   return err;
 }
 
-#endif
+#endif	/* DOXYGEN */

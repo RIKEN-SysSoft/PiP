@@ -30,40 +30,26 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pip-mode pip-mode
+### \page pip-mode pip-mode
 ###
 ### \brief Set PiP execution mode
 ###
-### \section synopsis SYNOPSIS
+### \synopsis
+### pip-mode [OPTION] [PIP-COMMAND]
 ###
-###	\c \b pip-mode [\b OPTION] [\b COMMANDS ...]
-###
-### \section options OPTION
-###
+### \description
 ### The following options are avilable. If no of them specified, then
 ### the compiled output file can be used as both PiP root and PiP task.
 ###
-### \subsection process	-P
-### If specified, PiP will run with the 'process' mode
+### \param -P 'process' mode
+### \param -L 'process:preload' mode
+### \param -C 'process:clone' mode
+### \param -G 'process:got' mode
+### \param -T 'thread' mode
+### \param -u Show usage
 ###
-### \subsection preload	-L
-### If specified, PiP will run with the 'process' mode (preload)
-###
-### \subsection pipclone -C
-### If specified, PiP will run with the 'process' mode (pip_clone)
-###
-### \subsection pipclone -G
-### If specified, PiP will run with the 'process' mode (GOT)
-###
-### \subsection pthread	-T
-### If specified, PiP will run with the 'thread' mode
-###
-### \subsection pthread	-u
-### Show usage
-###
-### \section seealso See Also
+### \sa
 ### pip-exec(1)
-###
 ###
 
 INSTALLTOP=@prefix@

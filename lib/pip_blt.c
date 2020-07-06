@@ -522,7 +522,7 @@ int pip_get_task_pipid( pip_task_t *task, int *pipidp ) {
   RETURN( 0 );
 }
 
-int pip_get_task_from_pipid( int pipid, pip_task_t **taskp ) {
+int pip_get_task_by_pipid( int pipid, pip_task_t **taskp ) {
   int	err;
 
   IF_LIKELY( ( err = pip_check_pipid( &pipid ) ) == 0 ) {
@@ -540,8 +540,9 @@ int pip_get_task_from_pipid( int pipid, pip_task_t **taskp ) {
 int pip_get_sched_domain( pip_task_t **domainp ) {
   pip_task_internal_t	*taski = pip_task;
   IF_UNLIKELY( taski   == NULL ) RETURN( EPERM  );
-  IF_UNLIKELY( domainp == NULL ) RETURN( EINVAL );
-  *domainp = PIP_TASKQ( taski->task_sched );
+  IF_UNLIKELY( domainp != NULL ) {
+    *domainp = PIP_TASKQ( taski->task_sched );
+  }
   RETURN( 0 );
 }
 
