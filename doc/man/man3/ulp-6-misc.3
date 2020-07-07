@@ -1,4 +1,4 @@
-.TH "BLT/ULP Miscellaneous Function" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Miscellaneous Function" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,21 +9,27 @@ BLT/ULP Miscellaneous Function \-
 .ti -1c
 .RI "pip_task_t * \fBpip_task_self\fP (void)"
 .br
+.RI "\fIReturn the current task\&. \fP"
 .ti -1c
 .RI "int \fBpip_get_task_pipid\fP (pip_task_t *task, int *pipidp)"
 .br
+.RI "\fIReturn PIPID of a PiP task\&. \fP"
 .ti -1c
 .RI "int \fBpip_get_task_by_pipid\fP (int pipid, pip_task_t **taskp)"
 .br
+.RI "\fIget PiP task from PiP ID \fP"
 .ti -1c
 .RI "int \fBpip_set_aux\fP (pip_task_t *task, void *aux)"
 .br
+.RI "\fIAssociate user data with a PiP task\&. \fP"
 .ti -1c
 .RI "int \fBpip_get_aux\fP (pip_task_t *task, void **auxp)"
 .br
+.RI "\fIRetrive the user data associated with a PiP task\&. \fP"
 .ti -1c
 .RI "int \fBpip_get_sched_domain\fP (pip_task_t **domainp)"
 .br
+.RI "\fIReturn the task representing the scheduling domain\&. \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -36,8 +42,15 @@ BLT/ULP miscellaneous function
 .RE
 .PP
 
-.SS "pip_task_self"
-Return the current task
+.SH "Function Documentation"
+.PP 
+.SS "pip_task_t* pip_task_self (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_self
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -52,14 +65,19 @@ Return the current task\&.
 .RE
 .PP
 
-.SS "pip_get_task_pipid"
-Return PIPID of a PiP task
+.SS "int pip_get_task_pipid (pip_task_t *task, int *pipidp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_task_pipid
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_get_task_pipid( pip_task_t *task, int *pipidp );
+int \fBpip_get_task_pipid( pip_task_t *task, int *pipidp )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -82,14 +100,19 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_get_task_by_pipid"
-get PiP task from PiP ID
+.SS "int pip_get_task_by_pipid (intpipid, pip_task_t **taskp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_task_by_pipid
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_get_task_by_pipid( int pipid, pip_task_t **taskp );
+int \fBpip_get_task_by_pipid( int pipid, pip_task_t **taskp )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -114,14 +137,19 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_set_aux"
-Associate user data with a PiP task
+.SS "int pip_set_aux (pip_task_t *task, void *aux)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_set_aux
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_set_aux( pip_task_t *task, void *aux );
+int \fBpip_set_aux( pip_task_t *task, void *aux )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -147,14 +175,19 @@ pip_get_aux(3)
 .RE
 .PP
 
-.SS "pip_get_aux"
-Retrive the user data associated with a PiP task
+.SS "int pip_get_aux (pip_task_t *task, void **auxp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_aux
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_get_aux( pip_task_t *task, void **auxp );
+int \fBpip_get_aux( pip_task_t *task, void **auxp )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -182,14 +215,19 @@ pip_set_aux(3)
 .RE
 .PP
 
-.SS "pip_get_sched_domain"
-Return the task representing the scheduling domain
+.SS "int pip_get_sched_domain (pip_task_t **domainp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_sched_domain
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_get_sched_domain( pip_task_t **domainp );
+int \fBpip_get_sched_domain( pip_task_t **domainp )\fP;
 .RE
 .PP
 \fBParameters:\fP

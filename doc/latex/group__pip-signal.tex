@@ -4,15 +4,12 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__pip-signal_ga4a396f38920d94b71dcfd3c898fbb82b}{int {\bfseries pip\-\_\-kill} (int pipid, int signal)}\label{group__pip-signal_ga4a396f38920d94b71dcfd3c898fbb82b}
-
-\item 
-\hypertarget{group__pip-signal_gaf546ee24368b118e937aadd2dbea2217}{int {\bfseries pip\-\_\-sigmask} (int how, const sigset\-\_\-t $\ast$sigmask, sigset\-\_\-t $\ast$oldmask)}\label{group__pip-signal_gaf546ee24368b118e937aadd2dbea2217}
-
-\item 
-\hypertarget{group__pip-signal_ga2048e7685a030e61e8c529c474899feb}{int {\bfseries pip\-\_\-signal\-\_\-wait} (int signal)}\label{group__pip-signal_ga2048e7685a030e61e8c529c474899feb}
-
-\end{DoxyCompactItemize}
+int \hyperlink{group__pip-signal_ga4a396f38920d94b71dcfd3c898fbb82b}{pip\-\_\-kill} (int pipid, int signal)
+\begin{DoxyCompactList}\small\item\em deliver a signal to Pi\-P task \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-signal_gaf546ee24368b118e937aadd2dbea2217}{pip\-\_\-sigmask} (int how, const sigset\-\_\-t $\ast$sigmask, sigset\-\_\-t $\ast$oldmask)
+\begin{DoxyCompactList}\small\item\em set signal mask of the current Pi\-P task \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-signal_ga2048e7685a030e61e8c529c474899feb}{pip\-\_\-signal\-\_\-wait} (int signal)
+\begin{DoxyCompactList}\small\item\em wait for a signal \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -20,12 +17,23 @@
 \begin{DoxyParagraph}{Description}
 Signal manupilating functions. All functions listed here are agnostic to the Pi\-P execution mode. 
 \end{DoxyParagraph}
-\hypertarget{pip_kill}{}\subsubsection{pip\-\_\-kill}\label{pip_kill}
-deliver a signal to Pi\-P task
 
+
+\subsection{Function Documentation}
+\hypertarget{group__pip-signal_ga4a396f38920d94b71dcfd3c898fbb82b}{\index{Pi\-P Signaling Functions@{Pi\-P Signaling Functions}!pip\-\_\-kill@{pip\-\_\-kill}}
+\index{pip\-\_\-kill@{pip\-\_\-kill}!PiP Signaling Functions@{Pi\-P Signaling Functions}}
+\subsubsection[{pip\-\_\-kill}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-kill (
+\begin{DoxyParamCaption}
+\item[{int}]{pipid, }
+\item[{int}]{signal}
+\end{DoxyParamCaption}
+)}}\label{group__pip-signal_ga4a396f38920d94b71dcfd3c898fbb82b}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-kill\index{pip_kill@{pip\-\_\-kill}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-kill( int pipid, int signal );
+int \hyperlink{group__pip-signal_ga4a396f38920d94b71dcfd3c898fbb82b}{pip\-\_\-kill( int pipid, int signal )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -47,12 +55,21 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 tkill(2) 
 \end{DoxySeeAlso}
-\hypertarget{pip_sigmask}{}\subsubsection{pip\-\_\-sigmask}\label{pip_sigmask}
-set signal mask of the current Pi\-P task
-
+\hypertarget{group__pip-signal_gaf546ee24368b118e937aadd2dbea2217}{\index{Pi\-P Signaling Functions@{Pi\-P Signaling Functions}!pip\-\_\-sigmask@{pip\-\_\-sigmask}}
+\index{pip\-\_\-sigmask@{pip\-\_\-sigmask}!PiP Signaling Functions@{Pi\-P Signaling Functions}}
+\subsubsection[{pip\-\_\-sigmask}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-sigmask (
+\begin{DoxyParamCaption}
+\item[{int}]{how, }
+\item[{const sigset\-\_\-t $\ast$}]{sigmask, }
+\item[{sigset\-\_\-t $\ast$}]{oldmask}
+\end{DoxyParamCaption}
+)}}\label{group__pip-signal_gaf546ee24368b118e937aadd2dbea2217}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-sigmask\index{pip_sigmask@{pip\-\_\-sigmask}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-sigmask( int how, const sigset\-\_\-t $\ast$sigmask, sigset\-\_\-t $\ast$oldmask );
+int \hyperlink{group__pip-signal_gaf546ee24368b118e937aadd2dbea2217}{pip\-\_\-sigmask( int how, const sigset\-\_\-t $\ast$sigmask, sigset\-\_\-t $\ast$oldmask )};
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Description}
 This function is agnostic to the Pi\-P execution mode.
@@ -79,12 +96,19 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 sigprocmask, pthread\-\_\-sigmask 
 \end{DoxySeeAlso}
-\hypertarget{pip_signal_wait}{}\subsubsection{pip\-\_\-signal\-\_\-wait}\label{pip_signal_wait}
-wait for a signal
-
+\hypertarget{group__pip-signal_ga2048e7685a030e61e8c529c474899feb}{\index{Pi\-P Signaling Functions@{Pi\-P Signaling Functions}!pip\-\_\-signal\-\_\-wait@{pip\-\_\-signal\-\_\-wait}}
+\index{pip\-\_\-signal\-\_\-wait@{pip\-\_\-signal\-\_\-wait}!PiP Signaling Functions@{Pi\-P Signaling Functions}}
+\subsubsection[{pip\-\_\-signal\-\_\-wait}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-signal\-\_\-wait (
+\begin{DoxyParamCaption}
+\item[{int}]{signal}
+\end{DoxyParamCaption}
+)}}\label{group__pip-signal_ga2048e7685a030e61e8c529c474899feb}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-signal\-\_\-wait\index{pip_signal_wait@{pip\-\_\-signal\-\_\-wait}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-signal\-\_\-wait( int signal );
+int \hyperlink{group__pip-signal_ga2048e7685a030e61e8c529c474899feb}{pip\-\_\-signal\-\_\-wait( int signal )};
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Description}
 This function is agnostic to the Pi\-P execution mode.

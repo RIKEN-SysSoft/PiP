@@ -4,24 +4,18 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__ulp-2-suspension_ga7dbf7e64e78cd00ef62c3bb04f289a68}{int {\bfseries pip\-\_\-suspend\-\_\-and\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg)}\label{group__ulp-2-suspension_ga7dbf7e64e78cd00ef62c3bb04f289a68}
-
-\item 
-\hypertarget{group__ulp-2-suspension_gab78d289ab89fa2981f2910849b1b2df7}{int {\bfseries pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg)}\label{group__ulp-2-suspension_gab78d289ab89fa2981f2910849b1b2df7}
-
-\item 
-\hypertarget{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched)}\label{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}
-
-\item 
-\hypertarget{group__ulp-2-suspension_gab3c26770ac6de70ad11239dc301bd403}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched)}\label{group__ulp-2-suspension_gab3c26770ac6de70ad11239dc301bd403}
-
-\item 
-\hypertarget{group__ulp-2-suspension_gac26e54557d8e89fcdcb52a9df6c65998}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np)}\label{group__ulp-2-suspension_gac26e54557d8e89fcdcb52a9df6c65998}
-
-\item 
-\hypertarget{group__ulp-2-suspension_ga939e70924803be491c2f6f10b364e803}{int {\bfseries pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np)}\label{group__ulp-2-suspension_ga939e70924803be491c2f6f10b364e803}
-
-\end{DoxyCompactItemize}
+int \hyperlink{group__ulp-2-suspension_ga7dbf7e64e78cd00ef62c3bb04f289a68}{pip\-\_\-suspend\-\_\-and\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg)
+\begin{DoxyCompactList}\small\item\em suspend the curren task and enqueue it with lock \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-2-suspension_gab78d289ab89fa2981f2910849b1b2df7}{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg)
+\begin{DoxyCompactList}\small\item\em suspend the curren task and enqueue it without locking the queue \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}{pip\-\_\-dequeue\-\_\-and\-\_\-resume} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched)
+\begin{DoxyCompactList}\small\item\em dequeue a task and make it runnable \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-2-suspension_gab3c26770ac6de70ad11239dc301bd403}{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched)
+\begin{DoxyCompactList}\small\item\em dequeue a task and make it runnable \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-2-suspension_gac26e54557d8e89fcdcb52a9df6c65998}{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np)
+\begin{DoxyCompactList}\small\item\em dequeue multiple tasks and resume the execution of them \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-2-suspension_ga939e70924803be491c2f6f10b364e803}{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np)
+\begin{DoxyCompactList}\small\item\em dequeue tasks and resume the execution of them \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -29,9 +23,21 @@
 \begin{DoxyParagraph}{Description}
 Suspending and resuming B\-L\-T/\-U\-L\-P 
 \end{DoxyParagraph}
-\hypertarget{pip_suspend_and_enqueue}{}\subsubsection{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}\label{pip_suspend_and_enqueue}
-suspend the curren task and enqueue it with lock
 
+
+\subsection{Function Documentation}
+\hypertarget{group__ulp-2-suspension_ga7dbf7e64e78cd00ef62c3bb04f289a68}{\index{Suspending and Resuming B\-L\-T/\-U\-L\-P@{Suspending and Resuming B\-L\-T/\-U\-L\-P}!pip\-\_\-suspend\-\_\-and\-\_\-enqueue@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}}
+\index{pip\-\_\-suspend\-\_\-and\-\_\-enqueue@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}!Suspending and Resuming BLT/ULP@{Suspending and Resuming B\-L\-T/\-U\-L\-P}}
+\subsubsection[{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-suspend\-\_\-and\-\_\-enqueue (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-enqueue\-\_\-callback\-\_\-t}]{callback, }
+\item[{void $\ast$}]{cbarg}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-2-suspension_ga7dbf7e64e78cd00ef62c3bb04f289a68}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-suspend\-\_\-and\-\_\-enqueue\index{pip_suspend_and_enqueue@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-suspend\-\_\-and\-\_\-enqueue( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg );
@@ -64,9 +70,18 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-enqueu\-\_\-and\-\_\-suspend\-\_\-nolock(3), pip\-\_\-dequeue\-\_\-and\-\_\-resume(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_suspend_and_enqueue_nolock}{}\subsubsection{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock}\label{pip_suspend_and_enqueue_nolock}
-suspend the curren task and enqueue it without locking the queue
-
+\hypertarget{group__ulp-2-suspension_gab78d289ab89fa2981f2910849b1b2df7}{\index{Suspending and Resuming B\-L\-T/\-U\-L\-P@{Suspending and Resuming B\-L\-T/\-U\-L\-P}!pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock}}
+\index{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock}!Suspending and Resuming BLT/ULP@{Suspending and Resuming B\-L\-T/\-U\-L\-P}}
+\subsubsection[{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-enqueue\-\_\-callback\-\_\-t}]{callback, }
+\item[{void $\ast$}]{cbarg}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-2-suspension_gab78d289ab89fa2981f2910849b1b2df7}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock\index{pip_suspend_and_enqueue_nolock@{pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-suspend\-\_\-and\-\_\-enqueue\-\_\-nolock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-enqueue\-\_\-callback\-\_\-t callback, void $\ast$cbarg );
@@ -96,15 +111,23 @@ Return 0 on success. Return an error code on error.
 {\em E\-I\-N\-V\-A\-L} & {\ttfamily queue} is {\ttfamily N\-U\-L\-L} \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_dequeue_and_resume}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume}\label{pip_dequeue_and_resume}
-dequeue a task and make it runnable
-
+\hypertarget{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}{\index{Suspending and Resuming B\-L\-T/\-U\-L\-P@{Suspending and Resuming B\-L\-T/\-U\-L\-P}!pip\-\_\-dequeue\-\_\-and\-\_\-resume@{pip\-\_\-dequeue\-\_\-and\-\_\-resume}}
+\index{pip\-\_\-dequeue\-\_\-and\-\_\-resume@{pip\-\_\-dequeue\-\_\-and\-\_\-resume}!Suspending and Resuming BLT/ULP@{Suspending and Resuming B\-L\-T/\-U\-L\-P}}
+\subsubsection[{pip\-\_\-dequeue\-\_\-and\-\_\-resume}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-dequeue\-\_\-and\-\_\-resume (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{sched}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-dequeue\-\_\-and\-\_\-resume\index{pip_dequeue_and_resume@{pip\-\_\-dequeue\-\_\-and\-\_\-resume}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Description}
 The {\bfseries queue} is locked and then unlocked when to dequeued a task.
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-dequeue\-\_\-and\-\_\-resume( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched );
+int \hyperlink{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}{pip\-\_\-dequeue\-\_\-and\-\_\-resume( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -125,12 +148,20 @@ If succeedss, 0 is returned. Otherwise an error code is returned.
 {\em E\-N\-O\-E\-N\-T} & {\ttfamily queue} is empty. \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_dequeue_and_resume_nolock}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock}\label{pip_dequeue_and_resume_nolock}
-dequeue a task and make it runnable
-
+\hypertarget{group__ulp-2-suspension_gab3c26770ac6de70ad11239dc301bd403}{\index{Suspending and Resuming B\-L\-T/\-U\-L\-P@{Suspending and Resuming B\-L\-T/\-U\-L\-P}!pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock}}
+\index{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock}!Suspending and Resuming BLT/ULP@{Suspending and Resuming B\-L\-T/\-U\-L\-P}}
+\subsubsection[{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{sched}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-2-suspension_gab3c26770ac6de70ad11239dc301bd403}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock\index{pip_dequeue_and_resume_nolock@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-nolock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-dequeue\-\_\-and\-\_\-resume( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched );
+int \hyperlink{group__ulp-2-suspension_gaaff299f195e2397f17cf11016c8a394f}{pip\-\_\-dequeue\-\_\-and\-\_\-resume( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched )};
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Description}
 Task in the queue is dequeued and scheduled by the specified {\ttfamily sched}. If {\ttfamily sched} is N\-U\-L\-L, then the task is enqueued into the scheduling queue of calling task. 
@@ -157,9 +188,18 @@ This function returns no error
 {\em E\-N\-O\-E\-N\-T} & {\ttfamily queue} is empty. \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_dequeue_and_resume_N}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N}\label{pip_dequeue_and_resume_N}
-dequeue multiple tasks and resume the execution of them
-
+\hypertarget{group__ulp-2-suspension_gac26e54557d8e89fcdcb52a9df6c65998}{\index{Suspending and Resuming B\-L\-T/\-U\-L\-P@{Suspending and Resuming B\-L\-T/\-U\-L\-P}!pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N}}
+\index{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N}!Suspending and Resuming BLT/ULP@{Suspending and Resuming B\-L\-T/\-U\-L\-P}}
+\subsubsection[{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{sched, }
+\item[{int $\ast$}]{np}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-2-suspension_gac26e54557d8e89fcdcb52a9df6c65998}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\index{pip_dequeue_and_resume_N@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-N}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np );
@@ -193,9 +233,18 @@ This function returns no error
 {\em E\-N\-O\-E\-N\-T} & {\ttfamily queue} is empty.\\
 \hline
 \end{DoxyRetVals}
-It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function. \hypertarget{pip_dequeue_and_resume_N_nolock}{}\subsubsection{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock}\label{pip_dequeue_and_resume_N_nolock}
-dequeue tasks and resume the execution of them
-
+It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function. \hypertarget{group__ulp-2-suspension_ga939e70924803be491c2f6f10b364e803}{\index{Suspending and Resuming B\-L\-T/\-U\-L\-P@{Suspending and Resuming B\-L\-T/\-U\-L\-P}!pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock}}
+\index{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock}!Suspending and Resuming BLT/ULP@{Suspending and Resuming B\-L\-T/\-U\-L\-P}}
+\subsubsection[{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{sched, }
+\item[{int $\ast$}]{np}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-2-suspension_ga939e70924803be491c2f6f10b364e803}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock\index{pip_dequeue_and_resume_N_nolock@{pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-N\-\_\-nolock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-dequeue\-\_\-and\-\_\-resume\-\_\-\-N\-\_\-nolock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$sched, int $\ast$np );

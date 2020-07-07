@@ -1,4 +1,4 @@
-.TH "Waiting for PiP task termination" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Waiting for PiP task termination" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,15 +9,19 @@ Waiting for PiP task termination \-
 .ti -1c
 .RI "int \fBpip_wait\fP (int pipid, int *status)"
 .br
+.RI "\fIwait for the termination of a PiP task \fP"
 .ti -1c
 .RI "int \fBpip_trywait\fP (int pipid, int *status)"
 .br
+.RI "\fIwait for the termination of a PiP task in a non-blocking way \fP"
 .ti -1c
 .RI "int \fBpip_wait_any\fP (int *pipid, int *status)"
 .br
+.RI "\fIWait for the termination of any PiP task\&. \fP"
 .ti -1c
 .RI "int \fBpip_trywait_any\fP (int *pipid, int *retval)"
 .br
+.RI "\fInon-blocking version of \fCpip_wait_any\fP \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -30,14 +34,21 @@ Functions to wait for PiP task termination\&. All functions listed here must onl
 .RE
 .PP
 
-.SS "pip_wait"
-wait for the termination of a PiP task
+.SH "Function Documentation"
+.PP 
+.SS "int pip_wait (intpipid, int *status)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_wait
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_wait( int pipid, int *status );
+int \fBpip_wait( int pipid, int *status )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -74,14 +85,19 @@ pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
 .RE
 .PP
 
-.SS "pip_trywait"
-wait for the termination of a PiP task in a non-blocking way
+.SS "int pip_trywait (intpipid, int *status)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_trywait
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_trywait( int pipid, int *status );
+int \fBpip_trywait( int pipid, int *status )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -93,7 +109,7 @@ This function can be used regardless to the PiP execution mode\&. This function 
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_trywait( int pipid, int *status );
+int \fBpip_trywait( int pipid, int *status )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -130,14 +146,19 @@ pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3)
 .RE
 .PP
 
-.SS "pip_wait_any"
-Wait for the termination of any PiP task
+.SS "int pip_wait_any (int *pipid, int *status)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_wait_any
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_wait_any( int *pipid, int *status );
+int \fBpip_wait_any( int *pipid, int *status )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -172,14 +193,19 @@ pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3)
 .RE
 .PP
 
-.SS "pip_trywait_any"
-non-blocking version of \fCpip_wait_any\fP 
+.SS "int pip_trywait_any (int *pipid, int *retval)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_trywait_any
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_trywait_any( int *pipid, int *status );
+int \fBpip_trywait_any( int *pipid, int *status )\fP;
 .RE
 .PP
 \fBDescription\fP

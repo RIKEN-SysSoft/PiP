@@ -4,24 +4,18 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__pip-1-spawn_ga0b1e746befd27c418355d28a830b2db6}{void {\bfseries pip\-\_\-spawn\-\_\-from\-\_\-main} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, char $\ast$prog, char $\ast$$\ast$argv, char $\ast$$\ast$envv, void $\ast$exp)}\label{group__pip-1-spawn_ga0b1e746befd27c418355d28a830b2db6}
-
-\item 
-\hypertarget{group__pip-1-spawn_ga6ebadd5070ca345daf8d7465f4926fc0}{void {\bfseries pip\-\_\-spawn\-\_\-from\-\_\-func} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, char $\ast$prog, char $\ast$funcname, void $\ast$arg, char $\ast$$\ast$envv, void $\ast$exp)}\label{group__pip-1-spawn_ga6ebadd5070ca345daf8d7465f4926fc0}
-
-\item 
-\hypertarget{group__pip-1-spawn_ga1c3f1d9e029f68dbcfb7d78b7dfa1533}{void {\bfseries pip\-\_\-spawn\-\_\-hook} (pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hook, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg)}\label{group__pip-1-spawn_ga1c3f1d9e029f68dbcfb7d78b7dfa1533}
-
-\item 
-\hypertarget{group__pip-1-spawn_gaf1fcc4cb85ec3eda734afe2beb0c6a36}{int {\bfseries pip\-\_\-task\-\_\-spawn} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, uint32\-\_\-t coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp)}\label{group__pip-1-spawn_gaf1fcc4cb85ec3eda734afe2beb0c6a36}
-
-\item 
-\hypertarget{group__pip-1-spawn_ga4698d85283b03f0443fb0991e1119d35}{int {\bfseries pip\-\_\-spawn} (char $\ast$filename, char $\ast$$\ast$argv, char $\ast$$\ast$envv, uint32\-\_\-t coreno, int $\ast$pipidp, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg)}\label{group__pip-1-spawn_ga4698d85283b03f0443fb0991e1119d35}
-
-\item 
-\hypertarget{group__pip-1-spawn_ga8b31bc23b6e165ae50d3bdea655539c5}{int {\bfseries pip\-\_\-blt\-\_\-spawn} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, uint32\-\_\-t coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-task\-\_\-t $\ast$$\ast$bltp, pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp)}\label{group__pip-1-spawn_ga8b31bc23b6e165ae50d3bdea655539c5}
-
-\end{DoxyCompactItemize}
+void \hyperlink{group__pip-1-spawn_ga0b1e746befd27c418355d28a830b2db6}{pip\-\_\-spawn\-\_\-from\-\_\-main} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, char $\ast$prog, char $\ast$$\ast$argv, char $\ast$$\ast$envv, void $\ast$exp)
+\begin{DoxyCompactList}\small\item\em Setting information to invoke a Pi\-P task starting from the main function. \end{DoxyCompactList}\item 
+void \hyperlink{group__pip-1-spawn_ga6ebadd5070ca345daf8d7465f4926fc0}{pip\-\_\-spawn\-\_\-from\-\_\-func} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, char $\ast$prog, char $\ast$funcname, void $\ast$arg, char $\ast$$\ast$envv, void $\ast$exp)
+\begin{DoxyCompactList}\small\item\em Setting information to invoke a Pi\-P task starting from a function defined in a program. \end{DoxyCompactList}\item 
+void \hyperlink{group__pip-1-spawn_ga1c3f1d9e029f68dbcfb7d78b7dfa1533}{pip\-\_\-spawn\-\_\-hook} (pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hook, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg)
+\begin{DoxyCompactList}\small\item\em Setting invocation hook information. \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-1-spawn_gaf1fcc4cb85ec3eda734afe2beb0c6a36}{pip\-\_\-task\-\_\-spawn} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, uint32\-\_\-t coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp)
+\begin{DoxyCompactList}\small\item\em Spawning a Pi\-P task. \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-1-spawn_ga4698d85283b03f0443fb0991e1119d35}{pip\-\_\-spawn} (char $\ast$filename, char $\ast$$\ast$argv, char $\ast$$\ast$envv, uint32\-\_\-t coreno, int $\ast$pipidp, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg)
+\begin{DoxyCompactList}\small\item\em spawn a Pi\-P task (Pi\-P v1 A\-P\-I and deprecated) \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-1-spawn_ga8b31bc23b6e165ae50d3bdea655539c5}{pip\-\_\-blt\-\_\-spawn} (pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, uint32\-\_\-t coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-task\-\_\-t $\ast$$\ast$bltp, pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp)
+\begin{DoxyCompactList}\small\item\em spawn a Pi\-P B\-L\-T/\-U\-L\-P (Bi-\/\-Level Task / User-\/\-Level Process) \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -29,9 +23,23 @@
 \begin{DoxyParagraph}{Description}
 Spawning Pi\-P task or U\-L\-P/\-B\-L\-T task 
 \end{DoxyParagraph}
-\hypertarget{pip_spawn_from_main}{}\subsubsection{pip\-\_\-spawn\-\_\-from\-\_\-main}\label{pip_spawn_from_main}
-Setting information to invoke a Pi\-P task starting from the main function
 
+
+\subsection{Function Documentation}
+\hypertarget{group__pip-1-spawn_ga0b1e746befd27c418355d28a830b2db6}{\index{Spawning Pi\-P task@{Spawning Pi\-P task}!pip\-\_\-spawn\-\_\-from\-\_\-main@{pip\-\_\-spawn\-\_\-from\-\_\-main}}
+\index{pip\-\_\-spawn\-\_\-from\-\_\-main@{pip\-\_\-spawn\-\_\-from\-\_\-main}!Spawning PiP task@{Spawning Pi\-P task}}
+\subsubsection[{pip\-\_\-spawn\-\_\-from\-\_\-main}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-spawn\-\_\-from\-\_\-main (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$}]{progp, }
+\item[{char $\ast$}]{prog, }
+\item[{char $\ast$$\ast$}]{argv, }
+\item[{char $\ast$$\ast$}]{envv, }
+\item[{void $\ast$}]{exp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-1-spawn_ga0b1e746befd27c418355d28a830b2db6}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-spawn\-\_\-from\-\_\-main\index{pip_spawn_from_main@{pip\-\_\-spawn\-\_\-from\-\_\-main}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 void pip\-\_\-spawn\-\_\-from\-\_\-main( pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, char $\ast$prog, char $\ast$$\ast$argv, char $\ast$$\ast$envv, void $\ast$exp )
@@ -55,8 +63,19 @@ This function sets up the {\ttfamily pip\-\_\-spawn\-\_\-program\-\_\-t} structu
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-task\-\_\-spawn(3), pip\-\_\-spawn\-\_\-from\-\_\-func(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_spawn_from_func}{}\subsubsection{pip\-\_\-spawn\-\_\-from\-\_\-func}\label{pip_spawn_from_func}
-Setting information to invoke a Pi\-P task starting from a function defined in a program
+\hypertarget{group__pip-1-spawn_ga6ebadd5070ca345daf8d7465f4926fc0}{\index{Spawning Pi\-P task@{Spawning Pi\-P task}!pip\-\_\-spawn\-\_\-from\-\_\-func@{pip\-\_\-spawn\-\_\-from\-\_\-func}}
+\index{pip\-\_\-spawn\-\_\-from\-\_\-func@{pip\-\_\-spawn\-\_\-from\-\_\-func}!Spawning PiP task@{Spawning Pi\-P task}}
+\subsubsection[{pip\-\_\-spawn\-\_\-from\-\_\-func}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-spawn\-\_\-from\-\_\-func (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$}]{progp, }
+\item[{char $\ast$}]{prog, }
+\item[{char $\ast$}]{funcname, }
+\item[{void $\ast$}]{arg, }
+\item[{char $\ast$$\ast$}]{envv, }
+\item[{void $\ast$}]{exp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-1-spawn_ga6ebadd5070ca345daf8d7465f4926fc0}
+-\/entry pip\-\_\-spawn\-\_\-from\-\_\-func
 
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
@@ -87,9 +106,19 @@ This function sets the required information to invoke a program, starting from t
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-task\-\_\-spawn(3), pip\-\_\-spawn\-\_\-from\-\_\-main(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_spawn_hook}{}\subsubsection{pip\-\_\-spawn\-\_\-hook}\label{pip_spawn_hook}
-Setting invocation hook information
-
+\hypertarget{group__pip-1-spawn_ga1c3f1d9e029f68dbcfb7d78b7dfa1533}{\index{Spawning Pi\-P task@{Spawning Pi\-P task}!pip\-\_\-spawn\-\_\-hook@{pip\-\_\-spawn\-\_\-hook}}
+\index{pip\-\_\-spawn\-\_\-hook@{pip\-\_\-spawn\-\_\-hook}!Spawning PiP task@{Spawning Pi\-P task}}
+\subsubsection[{pip\-\_\-spawn\-\_\-hook}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-spawn\-\_\-hook (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$}]{hook, }
+\item[{pip\-\_\-spawnhook\-\_\-t}]{before, }
+\item[{pip\-\_\-spawnhook\-\_\-t}]{after, }
+\item[{void $\ast$}]{hookarg}
+\end{DoxyParamCaption}
+)}}\label{group__pip-1-spawn_ga1c3f1d9e029f68dbcfb7d78b7dfa1533}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-spawn\-\_\-hook\index{pip_spawn_hook@{pip\-\_\-spawn\-\_\-hook}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 void pip\-\_\-spawn\-\_\-hook( pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hook, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg );
@@ -123,9 +152,20 @@ Note that the file descriptors and signal handlers are shared between Pi\-P root
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-task\-\_\-spawn(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_task_spawn}{}\subsubsection{pip\-\_\-task\-\_\-spawn}\label{pip_task_spawn}
-Spawning a Pi\-P task
-
+\hypertarget{group__pip-1-spawn_gaf1fcc4cb85ec3eda734afe2beb0c6a36}{\index{Spawning Pi\-P task@{Spawning Pi\-P task}!pip\-\_\-task\-\_\-spawn@{pip\-\_\-task\-\_\-spawn}}
+\index{pip\-\_\-task\-\_\-spawn@{pip\-\_\-task\-\_\-spawn}!Spawning PiP task@{Spawning Pi\-P task}}
+\subsubsection[{pip\-\_\-task\-\_\-spawn}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-spawn (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$}]{progp, }
+\item[{uint32\-\_\-t}]{coreno, }
+\item[{uint32\-\_\-t}]{opts, }
+\item[{int $\ast$}]{pipidp, }
+\item[{pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$}]{hookp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-1-spawn_gaf1fcc4cb85ec3eda734afe2beb0c6a36}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-spawn\index{pip_task_spawn@{pip\-\_\-task\-\_\-spawn}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 int pip\-\_\-task\-\_\-spawn( pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, uint32\-\_\-t coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp );
@@ -190,9 +230,23 @@ If the root process is multithreaded, only the main thread can call this functio
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-task\-\_\-spawn(3), pip\-\_\-spawn\-\_\-from\-\_\-main(3), pip\-\_\-spawn\-\_\-from\-\_\-func(3), pip\-\_\-spawn\-\_\-hook(3), pip\-\_\-spawn(3), pip\-\_\-blt\-\_\-spawn(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_spawn}{}\subsubsection{pip\-\_\-spawn}\label{pip_spawn}
-spawn a Pi\-P task (Pi\-P v1 A\-P\-I and deprecated)
-
+\hypertarget{group__pip-1-spawn_ga4698d85283b03f0443fb0991e1119d35}{\index{Spawning Pi\-P task@{Spawning Pi\-P task}!pip\-\_\-spawn@{pip\-\_\-spawn}}
+\index{pip\-\_\-spawn@{pip\-\_\-spawn}!Spawning PiP task@{Spawning Pi\-P task}}
+\subsubsection[{pip\-\_\-spawn}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-spawn (
+\begin{DoxyParamCaption}
+\item[{char $\ast$}]{filename, }
+\item[{char $\ast$$\ast$}]{argv, }
+\item[{char $\ast$$\ast$}]{envv, }
+\item[{uint32\-\_\-t}]{coreno, }
+\item[{int $\ast$}]{pipidp, }
+\item[{pip\-\_\-spawnhook\-\_\-t}]{before, }
+\item[{pip\-\_\-spawnhook\-\_\-t}]{after, }
+\item[{void $\ast$}]{hookarg}
+\end{DoxyParamCaption}
+)}}\label{group__pip-1-spawn_ga4698d85283b03f0443fb0991e1119d35}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-spawn\index{pip_spawn@{pip\-\_\-spawn}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 int pip\-\_\-spawn( char $\ast$filename, char $\ast$$\ast$argv, char $\ast$$\ast$envv, uint32\-\_\-t coreno, int $\ast$pipidp, pip\-\_\-spawnhook\-\_\-t before, pip\-\_\-spawnhook\-\_\-t after, void $\ast$hookarg);
@@ -260,9 +314,22 @@ If the root process is multithreaded, only the main thread can call this functio
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-task\-\_\-spawn(3), pip\-\_\-spawn\-\_\-from\-\_\-main(3), pip\-\_\-spawn\-\_\-from\-\_\-func(3), pip\-\_\-spawn\-\_\-hook(3), pip\-\_\-task\-\_\-spawn(3), pip\-\_\-blt\-\_\-spawn(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_blt_spawn}{}\subsubsection{pip\-\_\-blt\-\_\-spawn}\label{pip_blt_spawn}
-spawn a Pi\-P B\-L\-T/\-U\-L\-P (Bi-\/\-Level Task / User-\/\-Level Process)
-
+\hypertarget{group__pip-1-spawn_ga8b31bc23b6e165ae50d3bdea655539c5}{\index{Spawning Pi\-P task@{Spawning Pi\-P task}!pip\-\_\-blt\-\_\-spawn@{pip\-\_\-blt\-\_\-spawn}}
+\index{pip\-\_\-blt\-\_\-spawn@{pip\-\_\-blt\-\_\-spawn}!Spawning PiP task@{Spawning Pi\-P task}}
+\subsubsection[{pip\-\_\-blt\-\_\-spawn}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-blt\-\_\-spawn (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$}]{progp, }
+\item[{uint32\-\_\-t}]{coreno, }
+\item[{uint32\-\_\-t}]{opts, }
+\item[{int $\ast$}]{pipidp, }
+\item[{pip\-\_\-task\-\_\-t $\ast$$\ast$}]{bltp, }
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$}]{hookp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-1-spawn_ga8b31bc23b6e165ae50d3bdea655539c5}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-blt\-\_\-spawn\index{pip_blt_spawn@{pip\-\_\-blt\-\_\-spawn}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 int pip\-\_\-blt\-\_\-spawn( pip\-\_\-spawn\-\_\-program\-\_\-t $\ast$progp, uint32\-\_\-t coreno, uint32\-\_\-t opts, int $\ast$pipidp, pip\-\_\-task\-\_\-t $\ast$$\ast$bltp, pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-spawn\-\_\-hook\-\_\-t $\ast$hookp );

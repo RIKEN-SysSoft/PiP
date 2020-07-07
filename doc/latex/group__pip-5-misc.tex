@@ -4,36 +4,26 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}{int {\bfseries pip\-\_\-get\-\_\-pipid} (int $\ast$pipidp)}\label{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}
-
-\item 
-\hypertarget{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}{int {\bfseries pip\-\_\-is\-\_\-initialized} (void)}\label{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}
-
-\item 
-\hypertarget{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}{int {\bfseries pip\-\_\-get\-\_\-ntasks} (int $\ast$ntasksp)}\label{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}
-
-\item 
-\hypertarget{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}{int {\bfseries pip\-\_\-get\-\_\-mode} (int $\ast$modep)}\label{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}
-
-\item 
-\hypertarget{group__pip-5-misc_ga0e12c95fe7abc5c356acfd45a89ad5d8}{const char $\ast$ {\bfseries pip\-\_\-get\-\_\-mode\-\_\-str} (void)}\label{group__pip-5-misc_ga0e12c95fe7abc5c356acfd45a89ad5d8}
-
-\item 
-\hypertarget{group__pip-5-misc_gadf3d9e96b46d7a58bf4ce6dda173091a}{int {\bfseries pip\-\_\-get\-\_\-system\-\_\-id} (int pipid, pip\-\_\-id\-\_\-t $\ast$idp)}\label{group__pip-5-misc_gadf3d9e96b46d7a58bf4ce6dda173091a}
-
-\item 
-\hypertarget{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}{int {\bfseries pip\-\_\-isa\-\_\-root} (void)}\label{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}
-
-\item 
-\hypertarget{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}{int {\bfseries pip\-\_\-isa\-\_\-task} (void)}\label{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}
-
-\item 
-\hypertarget{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}{int {\bfseries pip\-\_\-is\-\_\-threaded} (int $\ast$flagp)}\label{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}
-
-\item 
-\hypertarget{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}{int {\bfseries pip\-\_\-is\-\_\-shared\-\_\-fd} (int $\ast$flagp)}\label{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}
-
-\end{DoxyCompactItemize}
+int \hyperlink{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}{pip\-\_\-get\-\_\-pipid} (int $\ast$pipidp)
+\begin{DoxyCompactList}\small\item\em get Pi\-P I\-D of the calling task \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}{pip\-\_\-is\-\_\-initialized} (void)
+\begin{DoxyCompactList}\small\item\em Query is Pi\-P library is already initialized. \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}{pip\-\_\-get\-\_\-ntasks} (int $\ast$ntasksp)
+\begin{DoxyCompactList}\small\item\em get the maximum number of the Pi\-P tasks \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}{pip\-\_\-get\-\_\-mode} (int $\ast$modep)
+\begin{DoxyCompactList}\small\item\em get the Pi\-P execution mode \end{DoxyCompactList}\item 
+const char $\ast$ \hyperlink{group__pip-5-misc_ga0e12c95fe7abc5c356acfd45a89ad5d8}{pip\-\_\-get\-\_\-mode\-\_\-str} (void)
+\begin{DoxyCompactList}\small\item\em get a character string of the current execution mode \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_gadf3d9e96b46d7a58bf4ce6dda173091a}{pip\-\_\-get\-\_\-system\-\_\-id} (int pipid, pip\-\_\-id\-\_\-t $\ast$idp)
+\begin{DoxyCompactList}\small\item\em deliver a process or thread I\-D defined by the system \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}{pip\-\_\-isa\-\_\-root} (void)
+\begin{DoxyCompactList}\small\item\em check if calling Pi\-P task is a Pi\-P root or not \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}{pip\-\_\-isa\-\_\-task} (void)
+\begin{DoxyCompactList}\small\item\em check if calling Pi\-P task is a Pi\-P task or not \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}{pip\-\_\-is\-\_\-threaded} (int $\ast$flagp)
+\begin{DoxyCompactList}\small\item\em check if Pi\-P execution mode is pthread or not \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}{pip\-\_\-is\-\_\-shared\-\_\-fd} (int $\ast$flagp)
+\begin{DoxyCompactList}\small\item\em check if file descriptors are shared or not. This is equivalent with the {\ttfamily pip\-\_\-is\-\_\-threaded} function. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -41,12 +31,22 @@
 \begin{DoxyParagraph}{Description}
 Miscellaneous functions for Pi\-P task (not B\-L\-T/\-U\-L\-P) 
 \end{DoxyParagraph}
-\hypertarget{pip_get_pipid}{}\subsubsection{pip\-\_\-get\-\_\-pipid}\label{pip_get_pipid}
-get Pi\-P I\-D of the calling task
 
+
+\subsection{Function Documentation}
+\hypertarget{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-get\-\_\-pipid@{pip\-\_\-get\-\_\-pipid}}
+\index{pip\-\_\-get\-\_\-pipid@{pip\-\_\-get\-\_\-pipid}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-get\-\_\-pipid}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-pipid (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{pipidp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-pipid\index{pip_get_pipid@{pip\-\_\-get\-\_\-pipid}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
- int pip\-\_\-get\-\_\-pipid( int $\ast$pipidp );
+ int \hyperlink{group__pip-5-misc_ga4e715bb8c325e9acc81af0745908dc0e}{pip\-\_\-get\-\_\-pipid( int $\ast$pipidp )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -61,22 +61,36 @@ Return 0 on success. Return an error code on error.
 {\em E\-P\-E\-R\-M} & Pi\-P library is not initialized yet \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_is_initialized}{}\subsubsection{pip\-\_\-is\-\_\-initialized}\label{pip_is_initialized}
-Query is Pi\-P library is already initialized
-
+\hypertarget{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-is\-\_\-initialized@{pip\-\_\-is\-\_\-initialized}}
+\index{pip\-\_\-is\-\_\-initialized@{pip\-\_\-is\-\_\-initialized}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-is\-\_\-initialized}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-is\-\_\-initialized (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-is\-\_\-initialized\index{pip_is_initialized@{pip\-\_\-is\-\_\-initialized}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
- int pip\-\_\-is\-\_\-initialized( void );
+ int \hyperlink{group__pip-5-misc_gabbec4ae2f820b13400f63cba55a53399}{pip\-\_\-is\-\_\-initialized( void )};
 \end{DoxyParagraph}
 \begin{DoxyReturn}{Returns}
 Return a non-\/zero value if Pi\-P is already initialized. Otherwise this returns zero. 
 \end{DoxyReturn}
-\hypertarget{pip_get_ntasks}{}\subsubsection{pip\-\_\-get\-\_\-ntasks}\label{pip_get_ntasks}
-get the maximum number of the Pi\-P tasks
-
+\hypertarget{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-get\-\_\-ntasks@{pip\-\_\-get\-\_\-ntasks}}
+\index{pip\-\_\-get\-\_\-ntasks@{pip\-\_\-get\-\_\-ntasks}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-get\-\_\-ntasks}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-ntasks (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{ntasksp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-ntasks\index{pip_get_ntasks@{pip\-\_\-get\-\_\-ntasks}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
- int pip\-\_\-get\-\_\-ntasks( int $\ast$ntasksp );
+ int \hyperlink{group__pip-5-misc_ga9786d5aafa2a3882714c35ecc9f39a5a}{pip\-\_\-get\-\_\-ntasks( int $\ast$ntasksp )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -91,12 +105,19 @@ Return 0 on success. Return an error code on error.
 {\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_get_mode}{}\subsubsection{pip\-\_\-get\-\_\-mode}\label{pip_get_mode}
-get the Pi\-P execution mode
-
+\hypertarget{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-get\-\_\-mode@{pip\-\_\-get\-\_\-mode}}
+\index{pip\-\_\-get\-\_\-mode@{pip\-\_\-get\-\_\-mode}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-get\-\_\-mode}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-mode (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{modep}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-mode\index{pip_get_mode@{pip\-\_\-get\-\_\-mode}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
- int pip\-\_\-get\-\_\-mode( int $\ast$modep );
+ int \hyperlink{group__pip-5-misc_gab603f68c1ce972a5f3bfb8c95fcfb555}{pip\-\_\-get\-\_\-mode( int $\ast$modep )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -114,9 +135,16 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-get\-\_\-mode\-\_\-str(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_get_mode_str}{}\subsubsection{pip\-\_\-get\-\_\-mode\-\_\-str}\label{pip_get_mode_str}
-get a character string of the current execution mode
-
+\hypertarget{group__pip-5-misc_ga0e12c95fe7abc5c356acfd45a89ad5d8}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-get\-\_\-mode\-\_\-str@{pip\-\_\-get\-\_\-mode\-\_\-str}}
+\index{pip\-\_\-get\-\_\-mode\-\_\-str@{pip\-\_\-get\-\_\-mode\-\_\-str}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-get\-\_\-mode\-\_\-str}]{\setlength{\rightskip}{0pt plus 5cm}const char$\ast$ pip\-\_\-get\-\_\-mode\-\_\-str (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_ga0e12c95fe7abc5c356acfd45a89ad5d8}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-mode\-\_\-str\index{pip_get_mode_str@{pip\-\_\-get\-\_\-mode\-\_\-str}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  char $\ast$pip\-\_\-get\-\_\-mode\-\_\-str( void );
@@ -124,9 +152,17 @@ get a character string of the current execution mode
 \begin{DoxyReturn}{Returns}
 Return the name string of the current execution mode. If Pi\-P library is note initialized yet, then thiss return {\ttfamily N\-U\-L\-L}. 
 \end{DoxyReturn}
-\hypertarget{pip_get_system_id}{}\subsubsection{pip\-\_\-get\-\_\-system\-\_\-id}\label{pip_get_system_id}
-deliver a process or thread I\-D defined by the system
-
+\hypertarget{group__pip-5-misc_gadf3d9e96b46d7a58bf4ce6dda173091a}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-get\-\_\-system\-\_\-id@{pip\-\_\-get\-\_\-system\-\_\-id}}
+\index{pip\-\_\-get\-\_\-system\-\_\-id@{pip\-\_\-get\-\_\-system\-\_\-id}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-get\-\_\-system\-\_\-id}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-system\-\_\-id (
+\begin{DoxyParamCaption}
+\item[{int}]{pipid, }
+\item[{pip\-\_\-id\-\_\-t $\ast$}]{idp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_gadf3d9e96b46d7a58bf4ce6dda173091a}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-system\-\_\-id\index{pip_get_system_id@{pip\-\_\-get\-\_\-system\-\_\-id}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 int pip\-\_\-get\-\_\-system\-\_\-id( int $\ast$pipid, uintptr\-\_\-t $\ast$idp );
@@ -149,32 +185,53 @@ Return 0 on success. Return an error code on error.
 {\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_isa_root}{}\subsubsection{pip\-\_\-isa\-\_\-root}\label{pip_isa_root}
-check if calling Pi\-P task is a Pi\-P root or not
-
+\hypertarget{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-isa\-\_\-root@{pip\-\_\-isa\-\_\-root}}
+\index{pip\-\_\-isa\-\_\-root@{pip\-\_\-isa\-\_\-root}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-isa\-\_\-root}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-isa\-\_\-root (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-isa\-\_\-root\index{pip_isa_root@{pip\-\_\-isa\-\_\-root}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-isa\-\_\-root( void );
+int \hyperlink{group__pip-5-misc_ga6f1045bdbf682cb2ac504f09b57b73e9}{pip\-\_\-isa\-\_\-root( void )};
 \end{DoxyParagraph}
 \begin{DoxyReturn}{Returns}
 Return a non-\/zero value if the caller is the Pi\-P root. Otherwise this returns zero. 
 \end{DoxyReturn}
-\hypertarget{pip_isa_task}{}\subsubsection{pip\-\_\-isa\-\_\-task}\label{pip_isa_task}
-check if calling Pi\-P task is a Pi\-P task or not
-
+\hypertarget{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-isa\-\_\-task@{pip\-\_\-isa\-\_\-task}}
+\index{pip\-\_\-isa\-\_\-task@{pip\-\_\-isa\-\_\-task}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-isa\-\_\-task}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-isa\-\_\-task (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-isa\-\_\-task\index{pip_isa_task@{pip\-\_\-isa\-\_\-task}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-isa\-\_\-task( void );
+int \hyperlink{group__pip-5-misc_gaf0283e47ad2d415206d6a3fa61e8a0a9}{pip\-\_\-isa\-\_\-task( void )};
 \end{DoxyParagraph}
 \begin{DoxyReturn}{Returns}
 Return a non-\/zero value if the caller is the Pi\-P task. Otherwise this returns zero. 
 \end{DoxyReturn}
-\hypertarget{pip_is_threaded}{}\subsubsection{pip\-\_\-is\-\_\-threaded}\label{pip_is_threaded}
-check if Pi\-P execution mode is pthread or not
-
+\hypertarget{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-is\-\_\-threaded@{pip\-\_\-is\-\_\-threaded}}
+\index{pip\-\_\-is\-\_\-threaded@{pip\-\_\-is\-\_\-threaded}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-is\-\_\-threaded}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-is\-\_\-threaded (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{flagp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-is\-\_\-threaded\index{pip_is_threaded@{pip\-\_\-is\-\_\-threaded}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-is\-\_\-threaded( int $\ast$flagp );
+int \hyperlink{group__pip-5-misc_ga0455093d5040ae45585cc88a5f3f002b}{pip\-\_\-is\-\_\-threaded( int $\ast$flagp )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -189,12 +246,19 @@ Return 0 on success. Return an error code on error.
 {\em E\-P\-E\-R\-M} & The Pi\-P library is not initialized yet \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_is_shared_fd}{}\subsubsection{pip\-\_\-is\-\_\-shared\-\_\-fd}\label{pip_is_shared_fd}
-check if file descriptors are shared or not. This is equivalent with the {\ttfamily pip\-\_\-is\-\_\-threaded} function.
-
+\hypertarget{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}{\index{Pi\-P Miscellaneous Functions@{Pi\-P Miscellaneous Functions}!pip\-\_\-is\-\_\-shared\-\_\-fd@{pip\-\_\-is\-\_\-shared\-\_\-fd}}
+\index{pip\-\_\-is\-\_\-shared\-\_\-fd@{pip\-\_\-is\-\_\-shared\-\_\-fd}!PiP Miscellaneous Functions@{Pi\-P Miscellaneous Functions}}
+\subsubsection[{pip\-\_\-is\-\_\-shared\-\_\-fd}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-is\-\_\-shared\-\_\-fd (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{flagp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-is\-\_\-shared\-\_\-fd\index{pip_is_shared_fd@{pip\-\_\-is\-\_\-shared\-\_\-fd}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-is\-\_\-shared\-\_\-fd( int $\ast$flagp );
+int \hyperlink{group__pip-5-misc_ga180ece8f3f537d84db8e70921f3ae099}{pip\-\_\-is\-\_\-shared\-\_\-fd( int $\ast$flagp )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}

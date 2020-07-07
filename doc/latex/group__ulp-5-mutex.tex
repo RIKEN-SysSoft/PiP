@@ -4,27 +4,33 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__ulp-5-mutex_gaff168395426838d385ad6720c9fb4184}{int {\bfseries pip\-\_\-mutex\-\_\-init} (pip\-\_\-mutex\-\_\-t $\ast$mutex)}\label{group__ulp-5-mutex_gaff168395426838d385ad6720c9fb4184}
-
-\item 
-\hypertarget{group__ulp-5-mutex_ga14f77d2413590f58d7a45a3b56960c90}{int {\bfseries pip\-\_\-mutex\-\_\-lock} (pip\-\_\-mutex\-\_\-t $\ast$mutex)}\label{group__ulp-5-mutex_ga14f77d2413590f58d7a45a3b56960c90}
-
-\item 
-\hypertarget{group__ulp-5-mutex_ga370bb79d84360fdb96169fc5cea789ee}{int {\bfseries pip\-\_\-mutex\-\_\-unlock} (pip\-\_\-mutex\-\_\-t $\ast$mutex)}\label{group__ulp-5-mutex_ga370bb79d84360fdb96169fc5cea789ee}
-
-\item 
-\hypertarget{group__ulp-5-mutex_ga884fae0413bd07dbdb5f3940129b7b20}{int {\bfseries pip\-\_\-mutex\-\_\-fin} (pip\-\_\-mutex\-\_\-t $\ast$mutex)}\label{group__ulp-5-mutex_ga884fae0413bd07dbdb5f3940129b7b20}
-
-\end{DoxyCompactItemize}
+int \hyperlink{group__ulp-5-mutex_gaff168395426838d385ad6720c9fb4184}{pip\-\_\-mutex\-\_\-init} (pip\-\_\-mutex\-\_\-t $\ast$mutex)
+\begin{DoxyCompactList}\small\item\em Initialize Pi\-P mutex. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-5-mutex_ga14f77d2413590f58d7a45a3b56960c90}{pip\-\_\-mutex\-\_\-lock} (pip\-\_\-mutex\-\_\-t $\ast$mutex)
+\begin{DoxyCompactList}\small\item\em Lock Pi\-P mutex. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-5-mutex_ga370bb79d84360fdb96169fc5cea789ee}{pip\-\_\-mutex\-\_\-unlock} (pip\-\_\-mutex\-\_\-t $\ast$mutex)
+\begin{DoxyCompactList}\small\item\em Unlock Pi\-P mutex. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-5-mutex_ga884fae0413bd07dbdb5f3940129b7b20}{pip\-\_\-mutex\-\_\-fin} (pip\-\_\-mutex\-\_\-t $\ast$mutex)
+\begin{DoxyCompactList}\small\item\em Finalize Pi\-P mutex. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
-\hypertarget{pip_mutex_init}{}\subsubsection{pip\-\_\-mutex\-\_\-init}\label{pip_mutex_init}
-Initialize Pi\-P mutex
 
+
+\subsection{Function Documentation}
+\hypertarget{group__ulp-5-mutex_gaff168395426838d385ad6720c9fb4184}{\index{B\-L\-T/\-U\-L\-P Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}!pip\-\_\-mutex\-\_\-init@{pip\-\_\-mutex\-\_\-init}}
+\index{pip\-\_\-mutex\-\_\-init@{pip\-\_\-mutex\-\_\-init}!BLT/ULP Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}}
+\subsubsection[{pip\-\_\-mutex\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-mutex\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-mutex\-\_\-t $\ast$}]{mutex}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-5-mutex_gaff168395426838d385ad6720c9fb4184}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-mutex\-\_\-init\index{pip_mutex_init@{pip\-\_\-mutex\-\_\-init}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-mutex\-\_\-init( pip\-\_\-mutex\-\_\-t $\ast$mutex );
+int \hyperlink{group__ulp-5-mutex_gaff168395426838d385ad6720c9fb4184}{pip\-\_\-mutex\-\_\-init( pip\-\_\-mutex\-\_\-t $\ast$mutex )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -42,12 +48,19 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-mutex\-\_\-lock(3), pip\-\_\-mutex\-\_\-unlock(3), pip\-\_\-mutex\-\_\-fin(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_mutex_lock}{}\subsubsection{pip\-\_\-mutex\-\_\-lock}\label{pip_mutex_lock}
-Lock Pi\-P mutex
-
+\hypertarget{group__ulp-5-mutex_ga14f77d2413590f58d7a45a3b56960c90}{\index{B\-L\-T/\-U\-L\-P Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}!pip\-\_\-mutex\-\_\-lock@{pip\-\_\-mutex\-\_\-lock}}
+\index{pip\-\_\-mutex\-\_\-lock@{pip\-\_\-mutex\-\_\-lock}!BLT/ULP Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}}
+\subsubsection[{pip\-\_\-mutex\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-mutex\-\_\-lock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-mutex\-\_\-t $\ast$}]{mutex}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-5-mutex_ga14f77d2413590f58d7a45a3b56960c90}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-mutex\-\_\-lock\index{pip_mutex_lock@{pip\-\_\-mutex\-\_\-lock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-mutex\-\_\-lock( pip\-\_\-mutex\-\_\-t $\ast$mutex );
+int \hyperlink{group__ulp-5-mutex_ga14f77d2413590f58d7a45a3b56960c90}{pip\-\_\-mutex\-\_\-lock( pip\-\_\-mutex\-\_\-t $\ast$mutex )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -65,12 +78,19 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-mutex\-\_\-init(3), pip\-\_\-mutex\-\_\-unlock(3), pip\-\_\-mutex\-\_\-fin(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_mutex_unlock}{}\subsubsection{pip\-\_\-mutex\-\_\-unlock}\label{pip_mutex_unlock}
-Unlock Pi\-P mutex
-
+\hypertarget{group__ulp-5-mutex_ga370bb79d84360fdb96169fc5cea789ee}{\index{B\-L\-T/\-U\-L\-P Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}!pip\-\_\-mutex\-\_\-unlock@{pip\-\_\-mutex\-\_\-unlock}}
+\index{pip\-\_\-mutex\-\_\-unlock@{pip\-\_\-mutex\-\_\-unlock}!BLT/ULP Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}}
+\subsubsection[{pip\-\_\-mutex\-\_\-unlock}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-mutex\-\_\-unlock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-mutex\-\_\-t $\ast$}]{mutex}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-5-mutex_ga370bb79d84360fdb96169fc5cea789ee}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-mutex\-\_\-unlock\index{pip_mutex_unlock@{pip\-\_\-mutex\-\_\-unlock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-mutex\-\_\-unlock( pip\-\_\-mutex\-\_\-t $\ast$mutex );
+int \hyperlink{group__ulp-5-mutex_ga370bb79d84360fdb96169fc5cea789ee}{pip\-\_\-mutex\-\_\-unlock( pip\-\_\-mutex\-\_\-t $\ast$mutex )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -88,12 +108,19 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-mutex\-\_\-init(3), pip\-\_\-mutex\-\_\-lock(3), pip\-\_\-mutex\-\_\-fin(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_mutex_fin}{}\subsubsection{pip\-\_\-mutex\-\_\-fin}\label{pip_mutex_fin}
-Finalize Pi\-P mutex
-
+\hypertarget{group__ulp-5-mutex_ga884fae0413bd07dbdb5f3940129b7b20}{\index{B\-L\-T/\-U\-L\-P Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}!pip\-\_\-mutex\-\_\-fin@{pip\-\_\-mutex\-\_\-fin}}
+\index{pip\-\_\-mutex\-\_\-fin@{pip\-\_\-mutex\-\_\-fin}!BLT/ULP Mutex Functions@{B\-L\-T/\-U\-L\-P Mutex Functions}}
+\subsubsection[{pip\-\_\-mutex\-\_\-fin}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-mutex\-\_\-fin (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-mutex\-\_\-t $\ast$}]{mutex}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-5-mutex_ga884fae0413bd07dbdb5f3940129b7b20}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-mutex\-\_\-fin\index{pip_mutex_fin@{pip\-\_\-mutex\-\_\-fin}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-mutex\-\_\-fin( pip\-\_\-mutex\-\_\-t $\ast$mutex );
+int \hyperlink{group__ulp-5-mutex_ga884fae0413bd07dbdb5f3940129b7b20}{pip\-\_\-mutex\-\_\-fin( pip\-\_\-mutex\-\_\-t $\ast$mutex )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}

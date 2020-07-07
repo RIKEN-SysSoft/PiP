@@ -4,36 +4,26 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__ulp-1-task-queue_ga9c50d9b2b810d97a75a5fe9c332902e0}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-init} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$methods)}\label{group__ulp-1-task-queue_ga9c50d9b2b810d97a75a5fe9c332902e0}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-trylock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-lock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-unlock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-isempty} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-count} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np)}\label{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_gae0f80336f51c43c3da988dd0467453cf}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$task)}\label{group__ulp-1-task-queue_gae0f80336f51c43c3da988dd0467453cf}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}{pip\-\_\-task\-\_\-t $\ast$ {\bfseries pip\-\_\-task\-\_\-queue\-\_\-dequeue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}{void {\bfseries pip\-\_\-task\-\_\-queue\-\_\-describe} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, F\-I\-L\-E $\ast$fp)}\label{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}
-
-\item 
-\hypertarget{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}{int {\bfseries pip\-\_\-task\-\_\-queue\-\_\-fin} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)}\label{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}
-
-\end{DoxyCompactItemize}
+int \hyperlink{group__ulp-1-task-queue_ga9c50d9b2b810d97a75a5fe9c332902e0}{pip\-\_\-task\-\_\-queue\-\_\-init} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$methods)
+\begin{DoxyCompactList}\small\item\em Initialize task queue. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}{pip\-\_\-task\-\_\-queue\-\_\-trylock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Try locking task queue. \end{DoxyCompactList}\item 
+void \hyperlink{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}{pip\-\_\-task\-\_\-queue\-\_\-lock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Lock task queue. \end{DoxyCompactList}\item 
+void \hyperlink{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}{pip\-\_\-task\-\_\-queue\-\_\-unlock} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Unlock task queue. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}{pip\-\_\-task\-\_\-queue\-\_\-isempty} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Query function if the current task has some tasks to be scheduled with. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}{pip\-\_\-task\-\_\-queue\-\_\-count} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np)
+\begin{DoxyCompactList}\small\item\em Count the length of task queue. \end{DoxyCompactList}\item 
+void \hyperlink{group__ulp-1-task-queue_gae0f80336f51c43c3da988dd0467453cf}{pip\-\_\-task\-\_\-queue\-\_\-enqueue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$task)
+\begin{DoxyCompactList}\small\item\em Enqueue a B\-L\-T. \end{DoxyCompactList}\item 
+pip\-\_\-task\-\_\-t $\ast$ \hyperlink{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}{pip\-\_\-task\-\_\-queue\-\_\-dequeue} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Dequeue a task from a task queue. \end{DoxyCompactList}\item 
+void \hyperlink{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}{pip\-\_\-task\-\_\-queue\-\_\-describe} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, F\-I\-L\-E $\ast$fp)
+\begin{DoxyCompactList}\small\item\em Describe queue. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}{pip\-\_\-task\-\_\-queue\-\_\-fin} (pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue)
+\begin{DoxyCompactList}\small\item\em Finalize a task queue. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -41,9 +31,20 @@
 \begin{DoxyParagraph}{Description}
 Manipulating U\-L\-P/\-B\-L\-T task queue functions 
 \end{DoxyParagraph}
-\hypertarget{pip_task_queue_init}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-init}\label{pip_task_queue_init}
-Initialize task queue
 
+
+\subsection{Function Documentation}
+\hypertarget{group__ulp-1-task-queue_ga9c50d9b2b810d97a75a5fe9c332902e0}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-init@{pip\-\_\-task\-\_\-queue\-\_\-init}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-init@{pip\-\_\-task\-\_\-queue\-\_\-init}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$}]{methods}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_ga9c50d9b2b810d97a75a5fe9c332902e0}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-init\index{pip_task_queue_init@{pip\-\_\-task\-\_\-queue\-\_\-init}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-task\-\_\-queue\-\_\-init( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-queue\-\_\-methods\-\_\-t $\ast$methods );
@@ -58,12 +59,19 @@ Initialize task queue
 \begin{DoxyReturn}{Returns}
 Always return 0. 
 \end{DoxyReturn}
-\hypertarget{pip_task_queue_trylock}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-trylock}\label{pip_task_queue_trylock}
-Try locking task queue
-
+\hypertarget{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-trylock@{pip\-\_\-task\-\_\-queue\-\_\-trylock}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-trylock@{pip\-\_\-task\-\_\-queue\-\_\-trylock}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-trylock}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-trylock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-trylock\index{pip_task_queue_trylock@{pip\-\_\-task\-\_\-queue\-\_\-trylock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-task\-\_\-queue\-\_\-trylock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+int \hyperlink{group__ulp-1-task-queue_ga20d50746c585f1ede68f2c9aefc39a5c}{pip\-\_\-task\-\_\-queue\-\_\-trylock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -73,12 +81,19 @@ int pip\-\_\-task\-\_\-queue\-\_\-trylock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast
 \begin{DoxyReturn}{Returns}
 Returns a non-\/zero value if lock succeeds. 
 \end{DoxyReturn}
-\hypertarget{pip_task_queue_lock}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-lock}\label{pip_task_queue_lock}
-Lock task queue
-
+\hypertarget{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-lock@{pip\-\_\-task\-\_\-queue\-\_\-lock}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-lock@{pip\-\_\-task\-\_\-queue\-\_\-lock}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-lock}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-task\-\_\-queue\-\_\-lock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-lock\index{pip_task_queue_lock@{pip\-\_\-task\-\_\-queue\-\_\-lock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-task\-\_\-queue\-\_\-lock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+int \hyperlink{group__ulp-1-task-queue_gaf7f6e26e29752a148704108bdcc7756f}{pip\-\_\-task\-\_\-queue\-\_\-lock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -88,12 +103,19 @@ int pip\-\_\-task\-\_\-queue\-\_\-lock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$qu
 \begin{DoxyReturn}{Returns}
 This function returns no error 
 \end{DoxyReturn}
-\hypertarget{pip_task_queue_unlock}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-unlock}\label{pip_task_queue_unlock}
-Unlock task queue
-
+\hypertarget{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-unlock@{pip\-\_\-task\-\_\-queue\-\_\-unlock}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-unlock@{pip\-\_\-task\-\_\-queue\-\_\-unlock}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-unlock}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-task\-\_\-queue\-\_\-unlock (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-unlock\index{pip_task_queue_unlock@{pip\-\_\-task\-\_\-queue\-\_\-unlock}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-task\-\_\-queue\-\_\-unlock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+int \hyperlink{group__ulp-1-task-queue_gaf4cfe9905f1862718f65ba2fda961b84}{pip\-\_\-task\-\_\-queue\-\_\-unlock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -103,12 +125,19 @@ int pip\-\_\-task\-\_\-queue\-\_\-unlock( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$
 \begin{DoxyReturn}{Returns}
 This function returns no error 
 \end{DoxyReturn}
-\hypertarget{pip_task_queue_isempty}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-isempty}\label{pip_task_queue_isempty}
-Query function if the current task has some tasks to be scheduled with.
-
+\hypertarget{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-isempty@{pip\-\_\-task\-\_\-queue\-\_\-isempty}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-isempty@{pip\-\_\-task\-\_\-queue\-\_\-isempty}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-isempty}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-isempty (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-isempty\index{pip_task_queue_isempty@{pip\-\_\-task\-\_\-queue\-\_\-isempty}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-task\-\_\-queue\-\_\-isempty( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+int \hyperlink{group__ulp-1-task-queue_gabf772cd5ea121458291801a26dea5c9d}{pip\-\_\-task\-\_\-queue\-\_\-isempty( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -118,12 +147,20 @@ int pip\-\_\-task\-\_\-queue\-\_\-isempty( pip\-\_\-task\-\_\-queue\-\_\-t $\ast
 \begin{DoxyReturn}{Returns}
 Returns a non-\/zero value if the queue is empty 
 \end{DoxyReturn}
-\hypertarget{pip_task_queue_count}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-count}\label{pip_task_queue_count}
-Count the length of task queue
-
+\hypertarget{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-count@{pip\-\_\-task\-\_\-queue\-\_\-count}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-count@{pip\-\_\-task\-\_\-queue\-\_\-count}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-count}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-count (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{int $\ast$}]{np}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-count\index{pip_task_queue_count@{pip\-\_\-task\-\_\-queue\-\_\-count}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-task\-\_\-queue\-\_\-count( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np );
+int \hyperlink{group__ulp-1-task-queue_ga5a043af776eb89933bfc0a057790cc82}{pip\-\_\-task\-\_\-queue\-\_\-count( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, int $\ast$np )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -142,9 +179,17 @@ Return 0 on success. Return an error code on error.
 {\em E\-I\-N\-V\-A\-L} & {\ttfamily np} is {\ttfamily N\-U\-L\-L} \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_task_queue_enqueue}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-enqueue}\label{pip_task_queue_enqueue}
-Enqueue a B\-L\-T
-
+\hypertarget{group__ulp-1-task-queue_gae0f80336f51c43c3da988dd0467453cf}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-enqueue@{pip\-\_\-task\-\_\-queue\-\_\-enqueue}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-enqueue@{pip\-\_\-task\-\_\-queue\-\_\-enqueue}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-enqueue}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-task\-\_\-queue\-\_\-enqueue (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{task}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_gae0f80336f51c43c3da988dd0467453cf}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-enqueue\index{pip_task_queue_enqueue@{pip\-\_\-task\-\_\-queue\-\_\-enqueue}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 void pip\-\_\-task\-\_\-queue\-\_\-enqueue( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, pip\-\_\-task\-\_\-t $\ast$task );
@@ -159,12 +204,18 @@ void pip\-\_\-task\-\_\-queue\-\_\-enqueue( pip\-\_\-task\-\_\-queue\-\_\-t $\as
 \begin{DoxyNote}{Note}
 It is the user responsibility to lock (and unlock) the queue. 
 \end{DoxyNote}
-\hypertarget{pip_task_queue_dequeue}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-dequeue}\label{pip_task_queue_dequeue}
-Dequeue a task from a task queue
+\hypertarget{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-dequeue@{pip\-\_\-task\-\_\-queue\-\_\-dequeue}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-dequeue@{pip\-\_\-task\-\_\-queue\-\_\-dequeue}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-dequeue}]{\setlength{\rightskip}{0pt plus 5cm}pip\-\_\-task\-\_\-t$\ast$ pip\-\_\-task\-\_\-queue\-\_\-dequeue (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}
+-\/man-\/enrty pip\-\_\-task\-\_\-queue\-\_\-dequeue
 
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-pip\-\_\-task\-\_\-t$\ast$ pip\-\_\-task\-\_\-queue\-\_\-dequeue( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+pip\-\_\-task\-\_\-t$\ast$ \hyperlink{group__ulp-1-task-queue_ga943bace202c72533951df9fc43f62277}{pip\-\_\-task\-\_\-queue\-\_\-dequeue( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -177,12 +228,20 @@ Dequeued task iss returned. If the queue is empty then {\ttfamily N\-U\-L\-L} is
 \begin{DoxyNote}{Note}
 It is the user responsibility to lock (and unlock) the queue. 
 \end{DoxyNote}
-\hypertarget{pip_task_queue_describe}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-describe}\label{pip_task_queue_describe}
-Describe queue
-
+\hypertarget{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-describe@{pip\-\_\-task\-\_\-queue\-\_\-describe}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-describe@{pip\-\_\-task\-\_\-queue\-\_\-describe}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-describe}]{\setlength{\rightskip}{0pt plus 5cm}void pip\-\_\-task\-\_\-queue\-\_\-describe (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue, }
+\item[{F\-I\-L\-E $\ast$}]{fp}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-describe\index{pip_task_queue_describe@{pip\-\_\-task\-\_\-queue\-\_\-describe}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-void pip\-\_\-task\-\_\-queue\-\_\-describe( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, F\-I\-L\-E $\ast$fp );
+void \hyperlink{group__ulp-1-task-queue_ga7fdea4628abd0c38779276b6cd8ebd3f}{pip\-\_\-task\-\_\-queue\-\_\-describe( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue, F\-I\-L\-E $\ast$fp )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}
@@ -191,12 +250,19 @@ void pip\-\_\-task\-\_\-queue\-\_\-describe( pip\-\_\-task\-\_\-queue\-\_\-t $\a
 \mbox{\tt in}  & {\em fp} & a File pointer \\
 \hline
 \end{DoxyParams}
-\hypertarget{pip_task_queue_fin}{}\subsubsection{pip\-\_\-task\-\_\-queue\-\_\-fin}\label{pip_task_queue_fin}
-Finalize a task queue
-
+\hypertarget{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}{\index{Task Queue Operations@{Task Queue Operations}!pip\-\_\-task\-\_\-queue\-\_\-fin@{pip\-\_\-task\-\_\-queue\-\_\-fin}}
+\index{pip\-\_\-task\-\_\-queue\-\_\-fin@{pip\-\_\-task\-\_\-queue\-\_\-fin}!Task Queue Operations@{Task Queue Operations}}
+\subsubsection[{pip\-\_\-task\-\_\-queue\-\_\-fin}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-task\-\_\-queue\-\_\-fin (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-queue\-\_\-t $\ast$}]{queue}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-queue\-\_\-fin\index{pip_task_queue_fin@{pip\-\_\-task\-\_\-queue\-\_\-fin}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
- int pip\-\_\-task\-\_\-queue\-\_\-fin( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue );
+ int \hyperlink{group__ulp-1-task-queue_ga45d0eaa7122e459ea19187c148b9da10}{pip\-\_\-task\-\_\-queue\-\_\-fin( pip\-\_\-task\-\_\-queue\-\_\-t $\ast$queue )};
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}

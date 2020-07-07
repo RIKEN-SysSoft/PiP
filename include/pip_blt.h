@@ -245,7 +245,7 @@ extern "C" {
    */
 
   /**
-   * \page pip_blt_spawn pip_blt_spawn
+   * \PiPManEntry{pip_blt_spawn}
    *
    * \brief spawn a PiP BLT/ULP (Bi-Level Task / User-Level Process)
    *
@@ -359,7 +359,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_yield pip_yield
+   * \PiPManEntry{pip_yield}
    *
    * \brief Yield
    *
@@ -386,7 +386,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_yield( int flag );
 
   /**
-   * \page pip_yield_to pip_yield_to
+   * \PiPManEntry{pip_yield_to}
    *
    * \brief Yield to the specified PiP task
    *
@@ -423,7 +423,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_task_queue_init pip_task_queue_init
+   * \PiPManEntry{pip_task_queue_init}
    *
    * \brief Initialize task queue
    *
@@ -461,7 +461,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_trylock pip_task_queue_trylock
+   * \PiPManEntry{pip_task_queue_trylock}
    *
    * \brief Try locking task queue
    *
@@ -489,7 +489,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_lock pip_task_queue_lock
+   * \PiPManEntry{pip_task_queue_lock}
    *
    * \brief Lock task queue
    *
@@ -519,7 +519,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_unlock pip_task_queue_unlock
+   * \PiPManEntry{pip_task_queue_unlock}
    *
    * \brief Unlock task queue
    *
@@ -547,7 +547,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_isempty pip_task_queue_isempty
+   * \PiPManEntry{pip_task_queue_isempty}
    *
    * \brief Query function if the current task has some tasks to be
    *  scheduled with.
@@ -575,7 +575,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_count pip_task_queue_count
+   * \PiPManEntry{pip_task_queue_count}
    *
    * \brief Count the length of task queue
    *
@@ -610,7 +610,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_enqueue pip_task_queue_enqueue
+   * \PiPManEntry{pip_task_queue_enqueue}
    *
    * \brief Enqueue a BLT
    *
@@ -643,7 +643,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_dequeue pip_task_queue_dequeue
+   * \pip-man-enrty pip_task_queue_dequeue
    *
    * \brief Dequeue a task from a task queue
    *
@@ -681,7 +681,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_describe pip_task_queue_describe
+   * \PiPManEntry{pip_task_queue_describe}
    *
    * \brief Describe queue
    *
@@ -720,7 +720,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_task_queue_fin pip_task_queue_fin
+   * \PiPManEntry{pip_task_queue_fin}
    *
    * \brief Finalize a task queue
    *
@@ -760,7 +760,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_suspend_and_enqueue pip_suspend_and_enqueue
+   * \PiPManEntry{pip_suspend_and_enqueue}
    *
    * \brief suspend the curren task and enqueue it with lock
    *
@@ -804,7 +804,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page  pip_suspend_and_enqueue_nolock pip_suspend_and_enqueue_nolock
+   * \PiPManEntry{pip_suspend_and_enqueue_nolock}
    *
    * \brief suspend the curren task and enqueue it without locking the queue
    *
@@ -846,7 +846,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_dequeue_and_resume pip_dequeue_and_resume
+   * \PiPManEntry{pip_dequeue_and_resume}
    *
    * \brief dequeue a task and make it runnable
    *
@@ -875,7 +875,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_dequeue_and_resume_nolock pip_dequeue_and_resume_nolock
+   * \PiPManEntry{pip_dequeue_and_resume_nolock}
    *
    * \brief dequeue a task and make it runnable
    *
@@ -912,7 +912,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_dequeue_and_resume_N pip_dequeue_and_resume_N
+   * \PiPManEntry{pip_dequeue_and_resume_N}
    *
    * \brief dequeue multiple tasks and resume the execution of them
    *
@@ -960,7 +960,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_dequeue_and_resume_N_nolock pip_dequeue_and_resume_N_nolock
+   * \PiPManEntry{pip_dequeue_and_resume_N_nolock}
    *
    * \brief dequeue tasks and resume the execution of them
    *
@@ -1014,7 +1014,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_task_self pip_task_self
+   * \PiPManEntry{pip_task_self}
    *
    * \brief Return the current task
    *
@@ -1028,7 +1028,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   pip_task_t *pip_task_self( void );
 
   /**
-   * \page  pip_get_task_pipid  pip_get_task_pipid
+   * \PiPManEntry{pip_get_task_pipid}
    *
    * \brief Return PIPID of a PiP task
    *
@@ -1047,7 +1047,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_get_task_pipid( pip_task_t *task, int *pipidp );
 
   /**
-   * \page pip_get_task_by_pipid pip_get_task_by_pipid
+   * \PiPManEntry{pip_get_task_by_pipid}
    *
    * \brief get PiP task from PiP ID
    *
@@ -1067,7 +1067,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_get_task_by_pipid( int pipid, pip_task_t **taskp );
 
   /**
-   * \page pip_set_aux pip_set_aux
+   * \PiPManEntry{pip_set_aux}
    *
    * \brief Associate user data with a PiP task
    *
@@ -1088,7 +1088,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_set_aux( pip_task_t *task, void *aux );
 
   /**
-   * \page pip_get_aux pip_get_aux
+   * \PiPManEntry{pip_get_aux}
    *
    * \brief Retrive the user data associated with a PiP task
    *
@@ -1110,7 +1110,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_get_aux( pip_task_t *task, void **auxp );
 
   /**
-   * \page pip_get_sched_domain pip_get_sched_domain
+   * \PiPManEntry{pip_get_sched_domain}
    *
    * \brief Return the task representing the scheduling domain
    *
@@ -1138,7 +1138,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_barrier_init pip_barrier_init
+   * \PiPManEntry{pip_barrier_init}
    *
    * \brief initialize barrier synchronization structure
    *
@@ -1168,7 +1168,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_barrier_wait pip_barrier_wait
+   * \PiPManEntry{pip_barrier_wait}
    *
    * \brief wait on barrier synchronization in a busy-wait way
    * int pip_barrier_wait( pip_barrier_t *barrp );
@@ -1195,7 +1195,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_barrier_fin pip_barrier_fin
+   * \PiPManEntry{pip_barrier_fin}
    *
    * \brief finalize barrier synchronization structure
    *
@@ -1233,7 +1233,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_mutex_init pip_mutex_init
+   * \PiPManEntry{pip_mutex_init}
    *
    * \brief Initialize PiP mutex
    *
@@ -1258,7 +1258,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_mutex_lock pip_mutex_lock
+   * \PiPManEntry{pip_mutex_lock}
    *
    * \brief Lock PiP mutex
    *
@@ -1283,7 +1283,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_mutex_unlock pip_mutex_unlock
+   * \PiPManEntry{pip_mutex_unlock}
    *
    * \brief Unlock PiP mutex
    *
@@ -1308,7 +1308,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \page pip_mutex_fin pip_mutex_fin
+   * \PiPManEntry{pip_mutex_fin}
    *
    * \brief Finalize PiP mutex
    *
@@ -1340,12 +1340,12 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /**
    * \defgroup ulp-6-coupling BLT/ULP Coupling/Decoupling Functions
    * @{
-   * \page ulp-barrier BLT/ULP coupling/decoupling functions
+   * \page ulp-coupling BLT/ULP coupling/decoupling functions
    * \description BLT/ULP coupling/decoupling functions
    */
 
   /**
-   * \page pip_couple pip_couple
+   * \PiPManEntry{pip_couple}
    *
    * \brief Couple the curren task with the original kernel thread
    *
@@ -1360,7 +1360,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_couple( void );
 
   /**
-   * \page pip_decouple pip_decouple
+   * \PiPManEntry{pip_decouple}
    *
    * \brief Decouple the curren task from the kernel thread
    *

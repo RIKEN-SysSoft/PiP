@@ -4,21 +4,33 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}{int {\bfseries pip\-\_\-couple} (void)}\label{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}
-
-\item 
-\hypertarget{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}{int {\bfseries pip\-\_\-decouple} (pip\-\_\-task\-\_\-t $\ast$task)}\label{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}
-
-\end{DoxyCompactItemize}
+int \hyperlink{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}{pip\-\_\-couple} (void)
+\begin{DoxyCompactList}\small\item\em Couple the curren task with the original kernel thread. \end{DoxyCompactList}\item 
+int \hyperlink{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}{pip\-\_\-decouple} (pip\-\_\-task\-\_\-t $\ast$task)
+\begin{DoxyCompactList}\small\item\em Decouple the curren task from the kernel thread. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
-\hypertarget{pip_couple}{}\subsubsection{pip\-\_\-couple}\label{pip_couple}
-Couple the curren task with the original kernel thread
+\hypertarget{ulp-coupling}{}\subsubsection{B\-L\-T/\-U\-L\-P coupling/decoupling functions}\label{ulp-coupling}
+\begin{DoxyParagraph}{Description}
+B\-L\-T/\-U\-L\-P coupling/decoupling functions 
+\end{DoxyParagraph}
 
+
+\subsection{Function Documentation}
+\hypertarget{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}{\index{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions@{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions}!pip\-\_\-couple@{pip\-\_\-couple}}
+\index{pip\-\_\-couple@{pip\-\_\-couple}!BLT/ULP Coupling/Decoupling Functions@{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions}}
+\subsubsection[{pip\-\_\-couple}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-couple (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-couple\index{pip_couple@{pip\-\_\-couple}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-couple( void );
+int \hyperlink{group__ulp-6-coupling_ga62b74934c0295bbe1aeab544365eb20f}{pip\-\_\-couple( void )};
 \end{DoxyParagraph}
 \begin{DoxyReturn}{Returns}
 Return 0 on success. Return an error code on error. 
@@ -30,12 +42,19 @@ Return 0 on success. Return an error code on error.
 {\em E\-B\-U\-S\-Y} & the curren task is already coupled with a kernel thread \\
 \hline
 \end{DoxyRetVals}
-\hypertarget{pip_decouple}{}\subsubsection{pip\-\_\-decouple}\label{pip_decouple}
-Decouple the curren task from the kernel thread
-
+\hypertarget{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}{\index{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions@{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions}!pip\-\_\-decouple@{pip\-\_\-decouple}}
+\index{pip\-\_\-decouple@{pip\-\_\-decouple}!BLT/ULP Coupling/Decoupling Functions@{B\-L\-T/\-U\-L\-P Coupling/\-Decoupling Functions}}
+\subsubsection[{pip\-\_\-decouple}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-decouple (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{task}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-decouple\index{pip_decouple@{pip\-\_\-decouple}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-decouple( pip\-\_\-task\-\_\-t $\ast$sched )
+int \hyperlink{group__ulp-6-coupling_ga1c77a30388d68e5f12667007ae430c1b}{pip\-\_\-decouple( pip\-\_\-task\-\_\-t $\ast$sched )}
 \end{DoxyParagraph}
 
 \begin{DoxyParams}[1]{Parameters}

@@ -4,11 +4,9 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__pip-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{int {\bfseries pip\-\_\-init} (int $\ast$pipidp, int $\ast$ntasks, void $\ast$$\ast$root\-\_\-expp, uint32\-\_\-t opts)}\label{group__pip-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}
-
+int \hyperlink{group__pip-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{pip\-\_\-init} (int $\ast$pipidp, int $\ast$ntasks, void $\ast$$\ast$root\-\_\-expp, uint32\-\_\-t opts)
 \item 
-\hypertarget{group__pip-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{int {\bfseries pip\-\_\-fin} (void)}\label{group__pip-0-init-fin_gac4654282785abb9434ce81573fdf16ed}
-
+int \hyperlink{group__pip-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin} (void)
 \end{DoxyCompactItemize}
 
 
@@ -17,13 +15,28 @@
 \begin{DoxyParagraph}{Description}
 Pi\-P initialization/finalization functions 
 \end{DoxyParagraph}
-\hypertarget{pip_init}{}\subsubsection{pip\-\_\-init}\label{pip_init}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__pip-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{\index{Pi\-P Initialization/\-Finalization@{Pi\-P Initialization/\-Finalization}!pip\-\_\-init@{pip\-\_\-init}}
+\index{pip\-\_\-init@{pip\-\_\-init}!PiP Initialization/Finalization@{Pi\-P Initialization/\-Finalization}}
+\subsubsection[{pip\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{pipidp, }
+\item[{int $\ast$}]{ntasks, }
+\item[{void $\ast$$\ast$}]{root\-\_\-expp, }
+\item[{uint32\-\_\-t}]{opts}
+\end{DoxyParamCaption}
+)}}\label{group__pip-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-init\index{pip_init@{pip\-\_\-init}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Name}
 Initialize the Pi\-P library
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-init( int $\ast$pipidp, int $\ast$ntasks, void $\ast$$\ast$root\-\_\-expp, uint32\-\_\-t opts );
+int \hyperlink{group__pip-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{pip\-\_\-init( int $\ast$pipidp, int $\ast$ntasks, void $\ast$$\ast$root\-\_\-expp, uint32\-\_\-t opts )};
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Description}
 This function initializes the Pi\-P library. The Pi\-P root process must call this. A Pi\-P task is not required to call this function unless the Pi\-P task calls any Pi\-P functions. 
@@ -79,13 +92,22 @@ pip\-\_\-named\-\_\-export(3), pip\-\_\-export(3), pip\-\_\-fin(3), pip-\/mode(1
 \par
 
 \end{DoxySeeAlso}
-\hypertarget{pip_fin}{}\subsubsection{pip\-\_\-fin}\label{pip_fin}
+\hypertarget{group__pip-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{\index{Pi\-P Initialization/\-Finalization@{Pi\-P Initialization/\-Finalization}!pip\-\_\-fin@{pip\-\_\-fin}}
+\index{pip\-\_\-fin@{pip\-\_\-fin}!PiP Initialization/Finalization@{Pi\-P Initialization/\-Finalization}}
+\subsubsection[{pip\-\_\-fin}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-fin (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__pip-0-init-fin_gac4654282785abb9434ce81573fdf16ed}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-fin\index{pip_fin@{pip\-\_\-fin}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Name}
 Finalize the Pi\-P library
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
-int pip\-\_\-fin( void );
+int \hyperlink{group__pip-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin( void )};
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Description}
 This function finalizes the Pi\-P library. After calling this, most of the Pi\-P functions will return the error code {\ttfamily E\-P\-E\-R\-M}.

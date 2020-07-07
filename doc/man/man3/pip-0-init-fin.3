@@ -1,4 +1,4 @@
-.TH "PiP Initialization/Finalization" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Initialization/Finalization" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -24,8 +24,15 @@ PiP initialization/finalization functions
 .RE
 .PP
 
-.SS "pip_init"
+.SH "Function Documentation"
+.PP 
+.SS "int pip_init (int *pipidp, int *ntasks, void **root_expp, uint32_topts)"
 
+.PP
+\fBName\fP
+.RS 4
+pip_init
+.RE
 .PP
 \fBName\fP
 .RS 4
@@ -36,7 +43,7 @@ Initialize the PiP library
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
+int \fBpip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -127,8 +134,13 @@ pip_named_export(3), pip_export(3), pip_fin(3), pip-mode(1), pips(1)
 .RE
 .PP
 
-.SS "pip_fin"
+.SS "int pip_fin (void)"
 
+.PP
+\fBName\fP
+.RS 4
+pip_fin
+.RE
 .PP
 \fBName\fP
 .RS 4
@@ -139,7 +151,7 @@ Finalize the PiP library
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_fin( void );
+int \fBpip_fin( void )\fP;
 .RE
 .PP
 \fBDescription\fP

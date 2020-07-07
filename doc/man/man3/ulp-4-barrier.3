@@ -1,4 +1,4 @@
-.TH "BLT/ULP Barrier Functions" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Barrier Functions" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,12 +9,15 @@ BLT/ULP Barrier Functions \-
 .ti -1c
 .RI "int \fBpip_barrier_init\fP (pip_barrier_t *barrp, int n)"
 .br
+.RI "\fIinitialize barrier synchronization structure \fP"
 .ti -1c
 .RI "int \fBpip_barrier_wait\fP (pip_barrier_t *barrp)"
 .br
+.RI "\fIwait on barrier synchronization in a busy-wait way int \fBpip_barrier_wait( pip_barrier_t *barrp )\fP; \fP"
 .ti -1c
 .RI "int \fBpip_barrier_fin\fP (pip_barrier_t *barrp)"
 .br
+.RI "\fIfinalize barrier synchronization structure \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -28,23 +31,25 @@ BLT/ULP barrier synchronization functions
 .PP
 \fBDescription\fP
 .RS 4
-BLT/ULP mutex functions
-.RE
-.PP
-\fBDescription\fP
-.RS 4
-BLT/ULP coupling/decoupling functions 
+BLT/ULP mutex functions 
 .RE
 .PP
 
-.SS "pip_barrier_init"
-initialize barrier synchronization structure
+.SH "Function Documentation"
+.PP 
+.SS "int pip_barrier_init (pip_barrier_t *barrp, intn)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_barrier_init
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_barrier_init( pip_barrier_t *barrp, int n );
+int \fBpip_barrier_init( pip_barrier_t *barrp, int n )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -77,14 +82,19 @@ pip_barrier_init(3), pip_barrier_fin(3),
 .RE
 .PP
 
-.SS "pip_barrier_wait"
-wait on barrier synchronization in a busy-wait way int pip_barrier_wait( pip_barrier_t *barrp );
+.SS "int pip_barrier_wait (pip_barrier_t *barrp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_barrier_wait
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_barrier_wait( pip_barrier_t *barrp );
+int \fBpip_barrier_wait( pip_barrier_t *barrp )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -108,14 +118,19 @@ pip_barrier_init(3), pip_barrier_fin(3),
 .RE
 .PP
 
-.SS "pip_barrier_fin"
-finalize barrier synchronization structure
+.SS "int pip_barrier_fin (pip_barrier_t *barrp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_barrier_fin
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_barrier_fin( pip_barrier_t *barrp );
+int \fBpip_barrier_fin( pip_barrier_t *barrp )\fP;
 .RE
 .PP
 \fBParameters:\fP

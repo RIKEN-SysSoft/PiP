@@ -1,4 +1,4 @@
-.TH "Export/Import Functions" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Export/Import Functions" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,18 +9,23 @@ Export/Import Functions \-
 .ti -1c
 .RI "int \fBpip_named_export\fP (void *exp, const char *format,\&.\&.\&.) __attribute__((format(printf"
 .br
+.RI "\fIexport an address of the calling PiP root or a PiP task to the others\&. \fP"
 .ti -1c
-.RI "int \fBpip_named_import\fP (int pipid, void **expp, const char *format,\&.\&.\&.) __attribute__((format(printf"
+.RI "int int \fBpip_named_import\fP (int pipid, void **expp, const char *format,\&.\&.\&.) __attribute__((format(printf"
 .br
+.RI "\fIimport the named exported address \fP"
 .ti -1c
-.RI "int \fBpip_named_tryimport\fP (int pipid, void **expp, const char *format,\&.\&.\&.) __attribute__((format(printf"
+.RI "int int int \fBpip_named_tryimport\fP (int pipid, void **expp, const char *format,\&.\&.\&.) __attribute__((format(printf"
 .br
+.RI "\fIimport the named exported address (non-blocking) \fP"
 .ti -1c
-.RI "int \fBpip_export\fP (void *exp)"
+.RI "int int int int \fBpip_export\fP (void *exp)"
 .br
+.RI "\fIexport an address \fP"
 .ti -1c
 .RI "int \fBpip_import\fP (int pipid, void **expp)"
 .br
+.RI "\fIimport exported address of a PiP task \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -33,8 +38,15 @@ Export and import functions to exchange addresses among tasks
 .RE
 .PP
 
-.SS "pip_named_export"
-export an address of the calling PiP root or a PiP task to the others\&.
+.SH "Function Documentation"
+.PP 
+.SS "int pip_named_export (void *exp, const char *format, \&.\&.\&.)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_named_export
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -80,8 +92,13 @@ pip_named_import(3)
 .RE
 .PP
 
-.SS "pip_named_import"
-import the named exported address
+.SS "int int pip_named_import (intpipid, void **expp, const char *format, \&.\&.\&.)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_named_import
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -138,8 +155,13 @@ pip_named_export(3), pip_named_tryimport(3), pip_export(3), pip_import(3)
 .RE
 .PP
 
-.SS "pip_named_tryimport"
-import the named exported address (non-blocking)
+.SS "int int int pip_named_tryimport (intpipid, void **expp, const char *format, \&.\&.\&.)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_named_tryimport
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -191,14 +213,19 @@ pip_named_export(3), pip_named_import(3), pip_export(3), pip_import(3)
 .RE
 .PP
 
-.SS "pip_export"
-export an address
+.SS "int int int int pip_export (void *exp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_export
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
- int pip_export( void *exp );
+ int \fBpip_export( void *exp )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -227,8 +254,13 @@ pip_import(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3)
 .RE
 .PP
 
-.SS "pip_import"
-import exported address of a PiP task
+.SS "int pip_import (intpipid, void **expp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_import
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4

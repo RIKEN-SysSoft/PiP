@@ -1,4 +1,4 @@
-.TH "Suspending and Resuming BLT/ULP" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Suspending and Resuming BLT/ULP" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,21 +9,27 @@ Suspending and Resuming BLT/ULP \-
 .ti -1c
 .RI "int \fBpip_suspend_and_enqueue\fP (pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg)"
 .br
+.RI "\fIsuspend the curren task and enqueue it with lock \fP"
 .ti -1c
 .RI "int \fBpip_suspend_and_enqueue_nolock\fP (pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg)"
 .br
+.RI "\fIsuspend the curren task and enqueue it without locking the queue \fP"
 .ti -1c
 .RI "int \fBpip_dequeue_and_resume\fP (pip_task_queue_t *queue, pip_task_t *sched)"
 .br
+.RI "\fIdequeue a task and make it runnable \fP"
 .ti -1c
 .RI "int \fBpip_dequeue_and_resume_nolock\fP (pip_task_queue_t *queue, pip_task_t *sched)"
 .br
+.RI "\fIdequeue a task and make it runnable \fP"
 .ti -1c
 .RI "int \fBpip_dequeue_and_resume_N\fP (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
 .br
+.RI "\fIdequeue multiple tasks and resume the execution of them \fP"
 .ti -1c
 .RI "int \fBpip_dequeue_and_resume_N_nolock\fP (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
 .br
+.RI "\fIdequeue tasks and resume the execution of them \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -36,8 +42,15 @@ Suspending and resuming BLT/ULP
 .RE
 .PP
 
-.SS "pip_suspend_and_enqueue"
-suspend the curren task and enqueue it with lock
+.SH "Function Documentation"
+.PP 
+.SS "int pip_suspend_and_enqueue (pip_task_queue_t *queue, pip_enqueue_callback_tcallback, void *cbarg)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_suspend_and_enqueue
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -83,8 +96,13 @@ pip_enqueu_and_suspend_nolock(3), pip_dequeue_and_resume(3)
 .RE
 .PP
 
-.SS "pip_suspend_and_enqueue_nolock"
-suspend the curren task and enqueue it without locking the queue
+.SS "int pip_suspend_and_enqueue_nolock (pip_task_queue_t *queue, pip_enqueue_callback_tcallback, void *cbarg)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_suspend_and_enqueue_nolock
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -125,8 +143,13 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_dequeue_and_resume"
-dequeue a task and make it runnable
+.SS "int pip_dequeue_and_resume (pip_task_queue_t *queue, pip_task_t *sched)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_dequeue_and_resume
+.RE
 .PP
 \fBDescription\fP
 .RS 4
@@ -137,7 +160,7 @@ The \fBqueue\fP is locked and then unlocked when to dequeued a task\&.
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched );
+int \fBpip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -162,14 +185,19 @@ If succeedss, 0 is returned\&. Otherwise an error code is returned\&.
 .RE
 .PP
 
-.SS "pip_dequeue_and_resume_nolock"
-dequeue a task and make it runnable
+.SS "int pip_dequeue_and_resume_nolock (pip_task_queue_t *queue, pip_task_t *sched)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_dequeue_and_resume_nolock
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched );
+int \fBpip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -204,8 +232,13 @@ This function returns no error
 .RE
 .PP
 
-.SS "pip_dequeue_and_resume_N"
-dequeue multiple tasks and resume the execution of them
+.SS "int pip_dequeue_and_resume_N (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_dequeue_and_resume_N
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -250,8 +283,13 @@ This function returns no error
 .RE
 .PP
 It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function\&. 
-.SS "pip_dequeue_and_resume_N_nolock"
-dequeue tasks and resume the execution of them
+.SS "int pip_dequeue_and_resume_N_nolock (pip_task_queue_t *queue, pip_task_t *sched, int *np)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_dequeue_and_resume_N_nolock
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4

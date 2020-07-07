@@ -1,4 +1,4 @@
-.TH "Terminating PiP Task" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Terminating PiP Task" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,12 +9,15 @@ Terminating PiP Task \-
 .ti -1c
 .RI "void \fBpip_exit\fP (int status)"
 .br
+.RI "\fIterminate the calling PiP task \fP"
 .ti -1c
 .RI "int \fBpip_kill_all_tasks\fP (void)"
 .br
+.RI "\fIkill all PiP tasks \fP"
 .ti -1c
 .RI "void \fBpip_abort\fP (void)"
 .br
+.RI "\fIKill all PiP tasks and then kill PiP root\&. \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -27,14 +30,21 @@ Function to ternminate PiP task normally or abnormally (abort)\&.
 .RE
 .PP
 
-.SS "pip_exit"
-terminate the calling PiP task
+.SH "Function Documentation"
+.PP 
+.SS "void pip_exit (intstatus)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_exit
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
- void pip_exit( int status );
+ void \fBpip_exit( int status )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -58,14 +68,19 @@ pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
 .RE
 .PP
 
-.SS "pip_kill_all_tasks"
-kill all PiP tasks
+.SS "int pip_kill_all_tasks (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_kill_all_tasks
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_kill_all_tasks( void );
+int \fBpip_kill_all_tasks( void )\fP;
 .RE
 .PP
 \fBNote:\fP
@@ -86,14 +101,19 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_abort"
-Kill all PiP tasks and then kill PiP root
+.SS "void pip_abort (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_abort 
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-void pip_abort( void ); 
+void \fBpip_abort( void )\fP; 
 .RE
 .PP
 

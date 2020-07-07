@@ -1,4 +1,4 @@
-.TH "Yielding Functionns" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Yielding Functionns" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,9 +9,11 @@ Yielding Functionns \-
 .ti -1c
 .RI "int \fBpip_yield\fP (int flag)"
 .br
+.RI "\fIYield\&. \fP"
 .ti -1c
 .RI "int \fBpip_yield_to\fP (pip_task_t *task)"
 .br
+.RI "\fIYield to the specified PiP task\&. \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -24,14 +26,21 @@ Yielding execution of the calling BLT/ULP
 .RE
 .PP
 
-.SS "pip_yield"
-Yield
+.SH "Function Documentation"
+.PP 
+.SS "int pip_yield (intflag)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_yield
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_yield( int flag );
+int \fBpip_yield( int flag )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -64,8 +73,13 @@ pip_yield_to(3)
 .RE
 .PP
 
-.SS "pip_yield_to"
-Yield to the specified PiP task
+.SS "int pip_yield_to (pip_task_t *task)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_yield_to
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4

@@ -4,21 +4,16 @@
 \subsection*{Functions}
 \begin{DoxyCompactItemize}
 \item 
-\hypertarget{group__pip-4-export_ga3613eaa34ad5a4985007ff9177eb6542}{int {\bfseries pip\-\_\-named\-\_\-export} (void $\ast$exp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf}\label{group__pip-4-export_ga3613eaa34ad5a4985007ff9177eb6542}
-
-\item 
-\hypertarget{group__pip-4-export_ga16cbf39b7e29a7453ee836847e06aa16}{int {\bfseries pip\-\_\-named\-\_\-import} (int pipid, void $\ast$$\ast$expp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf}\label{group__pip-4-export_ga16cbf39b7e29a7453ee836847e06aa16}
-
-\item 
-\hypertarget{group__pip-4-export_ga3cf67ef6b8cb058400ee1ea91d4436bd}{int {\bfseries pip\-\_\-named\-\_\-tryimport} (int pipid, void $\ast$$\ast$expp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf}\label{group__pip-4-export_ga3cf67ef6b8cb058400ee1ea91d4436bd}
-
-\item 
-\hypertarget{group__pip-4-export_ga76ef9337bec7dd836168f22247d4c64c}{int {\bfseries pip\-\_\-export} (void $\ast$exp)}\label{group__pip-4-export_ga76ef9337bec7dd836168f22247d4c64c}
-
-\item 
-\hypertarget{group__pip-4-export_ga6d7ac596a9da824e40d7c06528f42e5f}{int {\bfseries pip\-\_\-import} (int pipid, void $\ast$$\ast$expp)}\label{group__pip-4-export_ga6d7ac596a9da824e40d7c06528f42e5f}
-
-\end{DoxyCompactItemize}
+int \hyperlink{group__pip-4-export_ga3613eaa34ad5a4985007ff9177eb6542}{pip\-\_\-named\-\_\-export} (void $\ast$exp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf
+\begin{DoxyCompactList}\small\item\em export an address of the calling Pi\-P root or a Pi\-P task to the others. \end{DoxyCompactList}\item 
+int int \hyperlink{group__pip-4-export_ga68bcfa436ddc6acaf25f67fc30430fc1}{pip\-\_\-named\-\_\-import} (int pipid, void $\ast$$\ast$expp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf
+\begin{DoxyCompactList}\small\item\em import the named exported address \end{DoxyCompactList}\item 
+int int int \hyperlink{group__pip-4-export_ga205d73fdb294d3cbfe095c14d5e63637}{pip\-\_\-named\-\_\-tryimport} (int pipid, void $\ast$$\ast$expp, const char $\ast$format,...) \-\_\-\-\_\-attribute\-\_\-\-\_\-((format(printf
+\begin{DoxyCompactList}\small\item\em import the named exported address (non-\/blocking) \end{DoxyCompactList}\item 
+int int int int \hyperlink{group__pip-4-export_ga92d98dc8bafe8c73d4332d40d77be6cb}{pip\-\_\-export} (void $\ast$exp)
+\begin{DoxyCompactList}\small\item\em export an address \end{DoxyCompactList}\item 
+int \hyperlink{group__pip-4-export_ga6d7ac596a9da824e40d7c06528f42e5f}{pip\-\_\-import} (int pipid, void $\ast$$\ast$expp)
+\begin{DoxyCompactList}\small\item\em import exported address of a Pi\-P task \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -26,9 +21,21 @@
 \begin{DoxyParagraph}{Description}
 Export and import functions to exchange addresses among tasks 
 \end{DoxyParagraph}
-\hypertarget{pip_named_export}{}\subsubsection{pip\-\_\-named\-\_\-export}\label{pip_named_export}
-export an address of the calling Pi\-P root or a Pi\-P task to the others.
 
+
+\subsection{Function Documentation}
+\hypertarget{group__pip-4-export_ga3613eaa34ad5a4985007ff9177eb6542}{\index{Export/\-Import Functions@{Export/\-Import Functions}!pip\-\_\-named\-\_\-export@{pip\-\_\-named\-\_\-export}}
+\index{pip\-\_\-named\-\_\-export@{pip\-\_\-named\-\_\-export}!Export/Import Functions@{Export/\-Import Functions}}
+\subsubsection[{pip\-\_\-named\-\_\-export}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-named\-\_\-export (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{exp, }
+\item[{const char $\ast$}]{format, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{group__pip-4-export_ga3613eaa34ad5a4985007ff9177eb6542}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-named\-\_\-export\index{pip_named_export@{pip\-\_\-named\-\_\-export}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
 int pip\-\_\-named\-\_\-export( void $\ast$exp, const char $\ast$format, ... )
@@ -61,9 +68,19 @@ The addresses exported by {\ttfamily pip\-\_\-named\-\_\-export} cannot be impor
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-named\-\_\-import(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_named_import}{}\subsubsection{pip\-\_\-named\-\_\-import}\label{pip_named_import}
-import the named exported address
-
+\hypertarget{group__pip-4-export_ga68bcfa436ddc6acaf25f67fc30430fc1}{\index{Export/\-Import Functions@{Export/\-Import Functions}!pip\-\_\-named\-\_\-import@{pip\-\_\-named\-\_\-import}}
+\index{pip\-\_\-named\-\_\-import@{pip\-\_\-named\-\_\-import}!Export/Import Functions@{Export/\-Import Functions}}
+\subsubsection[{pip\-\_\-named\-\_\-import}]{\setlength{\rightskip}{0pt plus 5cm}int int pip\-\_\-named\-\_\-import (
+\begin{DoxyParamCaption}
+\item[{int}]{pipid, }
+\item[{void $\ast$$\ast$}]{expp, }
+\item[{const char $\ast$}]{format, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{group__pip-4-export_ga68bcfa436ddc6acaf25f67fc30430fc1}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-named\-\_\-import\index{pip_named_import@{pip\-\_\-named\-\_\-import}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-named\-\_\-import( int pipid, void $\ast$$\ast$expp, const char $\ast$format, ... )
@@ -105,9 +122,19 @@ zero is returned if this function succeeds. On error, an error number is returne
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-tryimport(3), pip\-\_\-export(3), pip\-\_\-import(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_named_tryimport}{}\subsubsection{pip\-\_\-named\-\_\-tryimport}\label{pip_named_tryimport}
-import the named exported address (non-\/blocking)
-
+\hypertarget{group__pip-4-export_ga205d73fdb294d3cbfe095c14d5e63637}{\index{Export/\-Import Functions@{Export/\-Import Functions}!pip\-\_\-named\-\_\-tryimport@{pip\-\_\-named\-\_\-tryimport}}
+\index{pip\-\_\-named\-\_\-tryimport@{pip\-\_\-named\-\_\-tryimport}!Export/Import Functions@{Export/\-Import Functions}}
+\subsubsection[{pip\-\_\-named\-\_\-tryimport}]{\setlength{\rightskip}{0pt plus 5cm}int int int pip\-\_\-named\-\_\-tryimport (
+\begin{DoxyParamCaption}
+\item[{int}]{pipid, }
+\item[{void $\ast$$\ast$}]{expp, }
+\item[{const char $\ast$}]{format, }
+\item[{}]{...}
+\end{DoxyParamCaption}
+)}}\label{group__pip-4-export_ga205d73fdb294d3cbfe095c14d5e63637}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-named\-\_\-tryimport\index{pip_named_tryimport@{pip\-\_\-named\-\_\-tryimport}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-named\-\_\-tryimport( int pipid, void $\ast$$\ast$expp, const char $\ast$format, ... )
@@ -146,12 +173,19 @@ Zero is returned if this function succeeds. On error, an error number is returne
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-import(3), pip\-\_\-export(3), pip\-\_\-import(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_export}{}\subsubsection{pip\-\_\-export}\label{pip_export}
-export an address
-
+\hypertarget{group__pip-4-export_ga92d98dc8bafe8c73d4332d40d77be6cb}{\index{Export/\-Import Functions@{Export/\-Import Functions}!pip\-\_\-export@{pip\-\_\-export}}
+\index{pip\-\_\-export@{pip\-\_\-export}!Export/Import Functions@{Export/\-Import Functions}}
+\subsubsection[{pip\-\_\-export}]{\setlength{\rightskip}{0pt plus 5cm}int int int int pip\-\_\-export (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{exp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-4-export_ga92d98dc8bafe8c73d4332d40d77be6cb}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-export\index{pip_export@{pip\-\_\-export}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
- int pip\-\_\-export( void $\ast$exp );
+ int \hyperlink{group__pip-4-export_ga92d98dc8bafe8c73d4332d40d77be6cb}{pip\-\_\-export( void $\ast$exp )};
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Description}
 Pass an address of a memory region to the other Pi\-P task. This is a very naive implementation in Pi\-P v1 and deprecated. Once a task export an address, there is no way to change the exported address or undo export.
@@ -172,9 +206,17 @@ Return 0 on success. Return an error code on error.
 \begin{DoxySeeAlso}{See Also}
 pip\-\_\-import(3), pip\-\_\-named\-\_\-export(3), pip\-\_\-named\-\_\-import(3), pip\-\_\-named\-\_\-tryimport(3) 
 \end{DoxySeeAlso}
-\hypertarget{pip_import}{}\subsubsection{pip\-\_\-import}\label{pip_import}
-import exported address of a Pi\-P task
-
+\hypertarget{group__pip-4-export_ga6d7ac596a9da824e40d7c06528f42e5f}{\index{Export/\-Import Functions@{Export/\-Import Functions}!pip\-\_\-import@{pip\-\_\-import}}
+\index{pip\-\_\-import@{pip\-\_\-import}!Export/Import Functions@{Export/\-Import Functions}}
+\subsubsection[{pip\-\_\-import}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-import (
+\begin{DoxyParamCaption}
+\item[{int}]{pipid, }
+\item[{void $\ast$$\ast$}]{expp}
+\end{DoxyParamCaption}
+)}}\label{group__pip-4-export_ga6d7ac596a9da824e40d7c06528f42e5f}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-import\index{pip_import@{pip\-\_\-import}}
+\end{DoxyParagraph}
 \begin{DoxyParagraph}{Synopsis}
 \#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
  int pip\-\_\-export( void $\ast$$\ast$expp );

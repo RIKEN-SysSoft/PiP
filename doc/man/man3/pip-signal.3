@@ -1,4 +1,4 @@
-.TH "PiP Signaling Functions" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Signaling Functions" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,12 +9,15 @@ PiP Signaling Functions \-
 .ti -1c
 .RI "int \fBpip_kill\fP (int pipid, int signal)"
 .br
+.RI "\fIdeliver a signal to PiP task \fP"
 .ti -1c
 .RI "int \fBpip_sigmask\fP (int how, const sigset_t *sigmask, sigset_t *oldmask)"
 .br
+.RI "\fIset signal mask of the current PiP task \fP"
 .ti -1c
 .RI "int \fBpip_signal_wait\fP (int signal)"
 .br
+.RI "\fIwait for a signal \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -27,14 +30,21 @@ Signal manupilating functions\&. All functions listed here are agnostic to the P
 .RE
 .PP
 
-.SS "pip_kill"
-deliver a signal to PiP task
+.SH "Function Documentation"
+.PP 
+.SS "int pip_kill (intpipid, intsignal)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_kill
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_kill( int pipid, int signal );
+int \fBpip_kill( int pipid, int signal )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -62,14 +72,19 @@ tkill(2)
 .RE
 .PP
 
-.SS "pip_sigmask"
-set signal mask of the current PiP task
+.SS "int pip_sigmask (inthow, const sigset_t *sigmask, sigset_t *oldmask)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_sigmask
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
+int \fBpip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask )\fP;
 .RE
 .PP
 \fBDescription\fP
@@ -104,14 +119,19 @@ sigprocmask, pthread_sigmask
 .RE
 .PP
 
-.SS "pip_signal_wait"
-wait for a signal
+.SS "int pip_signal_wait (intsignal)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_signal_wait
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_signal_wait( int signal );
+int \fBpip_signal_wait( int signal )\fP;
 .RE
 .PP
 \fBDescription\fP

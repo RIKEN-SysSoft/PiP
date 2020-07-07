@@ -132,7 +132,7 @@ extern "C" {
    * \description PiP initialization/finalization functions
    */
   /**
-   * \page pip_init pip_init
+   * \PiPManEntry{pip_init}
    *
    * \name
    * Initialize the PiP library
@@ -226,7 +226,7 @@ extern "C" {
   int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
 
   /**
-   * \page pip_fin pip_fin
+   * \PiPManEntry{pip_fin}
    *
    * \name
    * Finalize the PiP library
@@ -264,7 +264,7 @@ extern "C" {
    */
 
   /**
-   * \page pip_spawn_from_main pip_spawn_from_main
+   * \PiPManEntry{pip_spawn_from_main}
    *
    * \brief Setting information to invoke a PiP task starting from the
    *  main function
@@ -313,7 +313,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
 }
 
   /**
-   * \page pip_spawn_from_func pip_spawn_from_func
+   * \man-entry pip_spawn_from_func
    *
    * \brief Setting information to invoke a PiP task starting from a
    * function defined in a program
@@ -369,7 +369,7 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
 }
 
   /**
-   * \page pip_spawn_hook pip_spawn_hook
+   * \PiPManEntry{pip_spawn_hook}
    *
    * \brief Setting invocation hook information
    *
@@ -435,7 +435,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
 }
 
   /**
-   * \page pip_task_spawn pip_task_spawn
+   * \PiPManEntry{pip_task_spawn}
    *
    * \brief Spawning a PiP task
    *
@@ -517,7 +517,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
 		    pip_spawn_hook_t *hookp );
 
   /**
-   * \page pip_spawn pip_spawn
+   * \PiPManEntry{pip_spawn}
    *
    * \brief spawn a PiP task (PiP v1 API and deprecated)
    *
@@ -606,7 +606,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_named_export pip_named_export
+   * \PiPManEntry{pip_named_export}
    *
    * \brief export an address of the calling PiP root or a PiP task to
    * the others.
@@ -642,7 +642,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     __attribute__ ((format (printf, 2, 3)));
 
   /**
-   * \page pip_named_import pip_named_import
+   * \PiPManEntry{pip_named_import}
    *
    * \brief import the named exported address
    *
@@ -683,7 +683,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     __attribute__ ((format (printf, 3, 4)));
 
   /**
-   * \page pip_named_tryimport pip_named_tryimport
+   * \PiPManEntry{pip_named_tryimport}
    *
    * \brief import the named exported address (non-blocking)
    *
@@ -719,7 +719,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
     __attribute__ ((format (printf, 3, 4)));
 
   /**
-   * \page pip_export pip_export
+   * \PiPManEntry{pip_export}
    *
    * \brief export an address
    *
@@ -743,7 +743,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_export( void *exp );
 
   /**
-   * \page pip_import pip_import
+   * \PiPManEntry{pip_import}
    *
    * \brief import exported address of a PiP task
    *
@@ -780,7 +780,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_wait pip_wait
+   * \PiPManEntry{pip_wait}
    *
    * \brief wait for the termination of a PiP task
    *
@@ -810,7 +810,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_wait( int pipid, int *status );
 
   /**
-   * \page pip_trywait pip_trywait
+   * \PiPManEntry{pip_trywait}
    *
    * \brief wait for the termination of a PiP task in a non-blocking way
    *
@@ -846,7 +846,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_trywait( int pipid, int *status );
 
   /**
-   * \page pip_wait_any pip_wait_any
+   * \PiPManEntry{pip_wait_any}
    *
    * \brief Wait for the termination of any PiP task
    *
@@ -875,7 +875,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_wait_any( int *pipid, int *status );
 
   /**
-   * \page pip_trywait_any pip_trywait_any
+   * \PiPManEntry{pip_trywait_any}
    *
    * \brief non-blocking version of \p pip_wait_any
    *
@@ -913,7 +913,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_get_pipid pip_get_pipid
+   * \PiPManEntry{pip_get_pipid}
    *
    * \brief get PiP ID of the calling task
    *
@@ -930,7 +930,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_get_pipid( int *pipidp );
 
   /**
-   * \page pip_is_initialized pip_is_initialized
+   * \PiPManEntry{pip_is_initialized}
    *
    * \brief Query is PiP library is already initialized
    *
@@ -944,7 +944,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_is_initialized( void );
 
   /**
-   * \page pip_get_ntasks pip_get_ntasks
+   * \PiPManEntry{pip_get_ntasks}
    *
    * \brief get the maximum number of the PiP tasks
    *
@@ -961,7 +961,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_get_ntasks( int *ntasksp );
 
   /**
-   * \page pip_get_mode pip_get_mode
+   * \PiPManEntry{pip_get_mode}
    *
    * \brief get the PiP execution mode
    *
@@ -979,7 +979,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_get_mode( int *modep );
 
   /**
-   * \page pip_get_mode_str pip_get_mode_str
+   * \PiPManEntry{pip_get_mode_str}
    *
    * \brief get a character string of the current execution mode
    *
@@ -994,7 +994,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   const char *pip_get_mode_str( void );
 
   /**
-   * \page pip_get_system_id pip_get_system_id
+   * \PiPManEntry{pip_get_system_id}
    *
    * \brief deliver a process or thread ID defined by the system
    *
@@ -1018,7 +1018,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_get_system_id( int pipid, pip_id_t *idp );
 
   /**
-   * \page pip_isa_root pip_isa_root
+   * \PiPManEntry{pip_isa_root}
    *
    * \brief check if calling PiP task is a PiP root or not
    *
@@ -1032,7 +1032,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int  pip_isa_root( void );
 
   /**
-   * \page pip_isa_task pip_isa_task
+   * \PiPManEntry{pip_isa_task}
    *
    * \brief check if calling PiP task is a PiP task or not
    *
@@ -1046,7 +1046,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int  pip_isa_task( void );
 
   /**
-   * \page pip_is_threaded pip_is_threaded
+   * \PiPManEntry{pip_is_threaded}
    *
    * \brief check if PiP execution mode is pthread or not
    *
@@ -1063,7 +1063,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_is_threaded( int *flagp );
 
   /**
-   * \page pip_is_shared_fd pip_is_shared_fd
+   * \PiPManEntry{pip_is_shared_fd}
    *
    * \brief check if file descriptors are shared or not.
    * This is equivalent with the \p pip_is_threaded function.
@@ -1092,7 +1092,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \page pip_exit pip_exit
+   * \PiPManEntry{pip_exit}
    *
    * \brief terminate the calling PiP task
    *
@@ -1118,7 +1118,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   void pip_exit( int status );
 
   /**
-   * \page pip_kill_all_tasks pip_kill_all_tasks
+   * \PiPManEntry{pip_kill_all_tasks}
    *
    * \brief kill all PiP tasks
    *
@@ -1136,7 +1136,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   int pip_kill_all_tasks( void );
 
   /**
-   * \page pip_abort pip_abort
+   * \PiPManEntry{pip_abort}
    * \brief Kill all PiP tasks and then kill PiP root
    *
    * \synopsis

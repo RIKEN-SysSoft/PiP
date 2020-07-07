@@ -42,14 +42,15 @@ extern "C" {
 #endif
 #endif
 
-  /** \defgroup pip-signal PiP Signaling Functions
+  /**
+   * \defgroup pip-signal PiP Signaling Functions
    * @{
    * \page pip-signal PiP signaling functions
    * \description Signal manupilating functions. All functions listed
    * here are agnostic to the PiP execution mode.
    */
   /**
-   * \page pip_kill pip_kill
+   * \PiPManEntry{pip_kill}
    *
    * \brief deliver a signal to PiP task
    *
@@ -70,7 +71,7 @@ extern "C" {
   int pip_kill( int pipid, int signal );
 
   /**
-   * \page pip_sigmask pip_sigmask
+   * \PiPManEntry{pip_sigmask}
    *
    * \brief set signal mask of the current PiP task
    *
@@ -95,7 +96,7 @@ extern "C" {
   int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
 
   /**
-   * \page pip_signal_wait pip_signal_wait
+   * \PiPManEntry{pip_signal_wait}
    *
    * \brief wait for a signal
    *

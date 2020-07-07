@@ -1,4 +1,4 @@
-.TH "PiP Miscellaneous Functions" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Miscellaneous Functions" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,33 +9,43 @@ PiP Miscellaneous Functions \-
 .ti -1c
 .RI "int \fBpip_get_pipid\fP (int *pipidp)"
 .br
+.RI "\fIget PiP ID of the calling task \fP"
 .ti -1c
 .RI "int \fBpip_is_initialized\fP (void)"
 .br
+.RI "\fIQuery is PiP library is already initialized\&. \fP"
 .ti -1c
 .RI "int \fBpip_get_ntasks\fP (int *ntasksp)"
 .br
+.RI "\fIget the maximum number of the PiP tasks \fP"
 .ti -1c
 .RI "int \fBpip_get_mode\fP (int *modep)"
 .br
+.RI "\fIget the PiP execution mode \fP"
 .ti -1c
 .RI "const char * \fBpip_get_mode_str\fP (void)"
 .br
+.RI "\fIget a character string of the current execution mode \fP"
 .ti -1c
 .RI "int \fBpip_get_system_id\fP (int pipid, pip_id_t *idp)"
 .br
+.RI "\fIdeliver a process or thread ID defined by the system \fP"
 .ti -1c
 .RI "int \fBpip_isa_root\fP (void)"
 .br
+.RI "\fIcheck if calling PiP task is a PiP root or not \fP"
 .ti -1c
 .RI "int \fBpip_isa_task\fP (void)"
 .br
+.RI "\fIcheck if calling PiP task is a PiP task or not \fP"
 .ti -1c
 .RI "int \fBpip_is_threaded\fP (int *flagp)"
 .br
+.RI "\fIcheck if PiP execution mode is pthread or not \fP"
 .ti -1c
 .RI "int \fBpip_is_shared_fd\fP (int *flagp)"
 .br
+.RI "\fIcheck if file descriptors are shared or not\&. This is equivalent with the \fCpip_is_threaded\fP function\&. \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -48,14 +58,21 @@ Miscellaneous functions for PiP task (not BLT/ULP)
 .RE
 .PP
 
-.SS "pip_get_pipid"
-get PiP ID of the calling task
+.SH "Function Documentation"
+.PP 
+.SS "int pip_get_pipid (int *pipidp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_pipid
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
- int pip_get_pipid( int *pipidp );
+ int \fBpip_get_pipid( int *pipidp )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -74,14 +91,19 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_is_initialized"
-Query is PiP library is already initialized
+.SS "int pip_is_initialized (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_is_initialized
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
- int pip_is_initialized( void );
+ int \fBpip_is_initialized( void )\fP;
 .RE
 .PP
 \fBReturns:\fP
@@ -90,14 +112,19 @@ Return a non-zero value if PiP is already initialized\&. Otherwise this returns 
 .RE
 .PP
 
-.SS "pip_get_ntasks"
-get the maximum number of the PiP tasks
+.SS "int pip_get_ntasks (int *ntasksp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_ntasks
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
- int pip_get_ntasks( int *ntasksp );
+ int \fBpip_get_ntasks( int *ntasksp )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -116,14 +143,19 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_get_mode"
-get the PiP execution mode
+.SS "int pip_get_mode (int *modep)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_mode
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
- int pip_get_mode( int *modep );
+ int \fBpip_get_mode( int *modep )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -147,8 +179,13 @@ pip_get_mode_str(3)
 .RE
 .PP
 
-.SS "pip_get_mode_str"
-get a character string of the current execution mode
+.SS "const char* pip_get_mode_str (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_mode_str
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -163,8 +200,13 @@ Return the name string of the current execution mode\&. If PiP library is note i
 .RE
 .PP
 
-.SS "pip_get_system_id"
-deliver a process or thread ID defined by the system
+.SS "int pip_get_system_id (intpipid, pip_id_t *idp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_system_id
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -196,14 +238,19 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_isa_root"
-check if calling PiP task is a PiP root or not
+.SS "int pip_isa_root (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_isa_root
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_isa_root( void );
+int \fBpip_isa_root( void )\fP;
 .RE
 .PP
 \fBReturns:\fP
@@ -212,14 +259,19 @@ Return a non-zero value if the caller is the PiP root\&. Otherwise this returns 
 .RE
 .PP
 
-.SS "pip_isa_task"
-check if calling PiP task is a PiP task or not
+.SS "int pip_isa_task (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_isa_task
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_isa_task( void );
+int \fBpip_isa_task( void )\fP;
 .RE
 .PP
 \fBReturns:\fP
@@ -228,14 +280,19 @@ Return a non-zero value if the caller is the PiP task\&. Otherwise this returns 
 .RE
 .PP
 
-.SS "pip_is_threaded"
-check if PiP execution mode is pthread or not
+.SS "int pip_is_threaded (int *flagp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_is_threaded
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_is_threaded( int *flagp );
+int \fBpip_is_threaded( int *flagp )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -254,14 +311,19 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "pip_is_shared_fd"
-check if file descriptors are shared or not\&. This is equivalent with the \fCpip_is_threaded\fP function\&.
+.SS "int pip_is_shared_fd (int *flagp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_is_shared_fd
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_is_shared_fd( int *flagp );
+int \fBpip_is_shared_fd( int *flagp )\fP;
 .RE
 .PP
 \fBParameters:\fP

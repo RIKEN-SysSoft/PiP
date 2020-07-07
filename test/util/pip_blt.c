@@ -9,6 +9,15 @@
 
 #define DO_COREBIND
 
+#ifdef DO_COREBIND
+static int get_ncpus( void ) {
+  cpu_set_t cpuset;
+  CHECK( sched_getaffinity( 0, sizeof(cpuset), &cpuset ),
+	 RV, exit(EXIT_UNTESTED) );
+  return CPU_COUNT( &cpuset );
+}
+#endif
+
 static pip_task_queue_t	queues[NTASKS+1];
 
 static int is_taskq_empty( pip_task_queue_t *queue ) {
@@ -50,6 +59,10 @@ int main( int argc, char **argv ) {
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );
   pip_spawn_from_main( &prog, argv[3], &argv[3], NULL, NULL );
+
+#ifdef DO_COREBIND
+  nc = get_ncpus() - 1;
+#endif
 
   for( i=0,j=0; i<npass; i++,j++ ) {
     pipid = i;

@@ -1,4 +1,4 @@
-.TH "BLT/ULP Mutex Functions" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Mutex Functions" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,26 +9,38 @@ BLT/ULP Mutex Functions \-
 .ti -1c
 .RI "int \fBpip_mutex_init\fP (pip_mutex_t *mutex)"
 .br
+.RI "\fIInitialize PiP mutex\&. \fP"
 .ti -1c
 .RI "int \fBpip_mutex_lock\fP (pip_mutex_t *mutex)"
 .br
+.RI "\fILock PiP mutex\&. \fP"
 .ti -1c
 .RI "int \fBpip_mutex_unlock\fP (pip_mutex_t *mutex)"
 .br
+.RI "\fIUnlock PiP mutex\&. \fP"
 .ti -1c
 .RI "int \fBpip_mutex_fin\fP (pip_mutex_t *mutex)"
 .br
+.RI "\fIFinalize PiP mutex\&. \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_mutex_init (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
 pip_mutex_init
-Initialize PiP mutex
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_mutex_init( pip_mutex_t *mutex );
+int \fBpip_mutex_init( pip_mutex_t *mutex )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -52,14 +64,19 @@ pip_mutex_lock(3), pip_mutex_unlock(3), pip_mutex_fin(3)
 .RE
 .PP
 
-.SS "pip_mutex_lock"
-Lock PiP mutex
+.SS "int pip_mutex_lock (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_mutex_lock
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_mutex_lock( pip_mutex_t *mutex );
+int \fBpip_mutex_lock( pip_mutex_t *mutex )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -83,14 +100,19 @@ pip_mutex_init(3), pip_mutex_unlock(3), pip_mutex_fin(3)
 .RE
 .PP
 
-.SS "pip_mutex_unlock"
-Unlock PiP mutex
+.SS "int pip_mutex_unlock (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_mutex_unlock
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_mutex_unlock( pip_mutex_t *mutex );
+int \fBpip_mutex_unlock( pip_mutex_t *mutex )\fP;
 .RE
 .PP
 \fBParameters:\fP
@@ -114,14 +136,19 @@ pip_mutex_init(3), pip_mutex_lock(3), pip_mutex_fin(3)
 .RE
 .PP
 
-.SS "pip_mutex_fin"
-Finalize PiP mutex
+.SS "int pip_mutex_fin (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_mutex_fin
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int pip_mutex_fin( pip_mutex_t *mutex );
+int \fBpip_mutex_fin( pip_mutex_t *mutex )\fP;
 .RE
 .PP
 \fBParameters:\fP

@@ -1,4 +1,4 @@
-.TH "Spawning PiP task" 3 "Mon Jul 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Spawning PiP task" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -9,21 +9,27 @@ Spawning PiP task \-
 .ti -1c
 .RI "void \fBpip_spawn_from_main\fP (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp)"
 .br
+.RI "\fISetting information to invoke a PiP task starting from the main function\&. \fP"
 .ti -1c
 .RI "void \fBpip_spawn_from_func\fP (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp)"
 .br
+.RI "\fISetting information to invoke a PiP task starting from a function defined in a program\&. \fP"
 .ti -1c
 .RI "void \fBpip_spawn_hook\fP (pip_spawn_hook_t *hook, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)"
 .br
+.RI "\fISetting invocation hook information\&. \fP"
 .ti -1c
 .RI "int \fBpip_task_spawn\fP (pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp)"
 .br
+.RI "\fISpawning a PiP task\&. \fP"
 .ti -1c
 .RI "int \fBpip_spawn\fP (char *filename, char **argv, char **envv, uint32_t coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)"
 .br
+.RI "\fIspawn a PiP task (PiP v1 API and deprecated) \fP"
 .ti -1c
 .RI "int \fBpip_blt_spawn\fP (pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp)"
 .br
+.RI "\fIspawn a PiP BLT/ULP (Bi-Level Task / User-Level Process) \fP"
 .in -1c
 .SH "Detailed Description"
 .PP 
@@ -36,8 +42,15 @@ Spawning PiP task or ULP/BLT task
 .RE
 .PP
 
-.SS "pip_spawn_from_main"
-Setting information to invoke a PiP task starting from the main function
+.SH "Function Documentation"
+.PP 
+.SS "void pip_spawn_from_main (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_spawn_from_main
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -70,8 +83,8 @@ pip_task_spawn(3), pip_spawn_from_func(3)
 .RE
 .PP
 
-.SS "pip_spawn_from_func"
-Setting information to invoke a PiP task starting from a function defined in a program
+.SS "void pip_spawn_from_func (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp)"
+-entry pip_spawn_from_func
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -113,8 +126,13 @@ pip_task_spawn(3), pip_spawn_from_main(3)
 .RE
 .PP
 
-.SS "pip_spawn_hook"
-Setting invocation hook information
+.SS "void pip_spawn_hook (pip_spawn_hook_t *hook, pip_spawnhook_tbefore, pip_spawnhook_tafter, void *hookarg)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_spawn_hook
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -165,8 +183,13 @@ pip_task_spawn(3)
 .RE
 .PP
 
-.SS "pip_task_spawn"
-Spawning a PiP task
+.SS "int pip_task_spawn (pip_spawn_program_t *progp, uint32_tcoreno, uint32_topts, int *pipidp, pip_spawn_hook_t *hookp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_spawn
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -255,8 +278,13 @@ pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3), pip_spawn_hoo
 .RE
 .PP
 
-.SS "pip_spawn"
-spawn a PiP task (PiP v1 API and deprecated)
+.SS "int pip_spawn (char *filename, char **argv, char **envv, uint32_tcoreno, int *pipidp, pip_spawnhook_tbefore, pip_spawnhook_tafter, void *hookarg)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_spawn
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
@@ -346,8 +374,13 @@ pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3), pip_spawn_hoo
 .RE
 .PP
 
-.SS "pip_blt_spawn"
-spawn a PiP BLT/ULP (Bi-Level Task / User-Level Process)
+.SS "int pip_blt_spawn (pip_spawn_program_t *progp, uint32_tcoreno, uint32_topts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_blt_spawn
+.RE
 .PP
 \fBSynopsis\fP
 .RS 4
