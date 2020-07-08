@@ -155,7 +155,7 @@ done
 
 pipcmds=$@
 if [ "x$pipcmds" == x ]; then
-    echo "ps H $NOHEADER_OPT -u $user --format '%c %p'"
+    ##echo "ps H $NOHEADER_OPT -u $user --format '%c %p'"
     ps=`ps H $NOHEADER_OPT -u $user --format '%c %p'`
     decompose_psout $ps;
 else
@@ -200,7 +200,7 @@ else
 	fi
     elif $flag_top; then
 	tpids=`top_pids $pids`;
-	echo top H -p$tpids;
+	##echo top H -p$tpids;
 	top H -p$tpids;
 	extval=$?;
     else

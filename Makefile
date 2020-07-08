@@ -65,8 +65,8 @@ install_test_dirtop = $(prefix)/pip-test
 install_test_dir = $(prefix)/pip-test/test
 test_build_dir = $(install_test_dirtop)/build
 
-.PHONY: install-test-prepare
-install-test-prepare: install
+.PHONY: check-installed-prepare
+check-installed-prepare: install
 	-$(RM) -r $(install_test_dirtop)
 	$(MKDIR_P) $(install_test_dirtop)
 	ln -f -s $(prefix)/bin $(install_test_dirtop)
@@ -74,16 +74,16 @@ install-test-prepare: install
 	cat $(CONFIG_MKS) > $(test_build_dir)/var.mk
 	$(INSTALL) -C -m 644 $(RULES_MKS) $(test_build_dir)
 
-.PHONY: install-test-programs
-install-test-programs: install-test-prepare
+.PHONY: check-installed-programs
+check-installed-programs: check-installed-prepare
 	install_test_dir=$(install_test_dir) $(MAKE) -C test do-install-test
 
-.PHONY: do-install-test
-do-install-test: install-test-programs
+.PHONY: do-check-installed
+do-check-installed: check-installed-programs
 	install_test_dir=$(install_test_dir) $(MAKE) -C $(install_test_dir) test
 
-.PHONY: install-test
-install-test: do-install-test
+.PHONY: check-installed
+check-installed: do-check-installed
 
 ### doc
 
