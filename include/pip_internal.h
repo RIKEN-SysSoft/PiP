@@ -366,7 +366,6 @@ extern void pip_swap_context( pip_task_internal_t *taski,
 			      pip_task_internal_t *nexti ) PIP_PRIVATE;
 extern void pip_stack_protect( pip_task_internal_t *taski,
 			       pip_task_internal_t *nexti ) PIP_PRIVATE;
-extern void pip_stack_unprotect( pip_task_internal_t *taski ) PIP_PRIVATE;
 extern void pip_stack_wait( pip_task_internal_t *taski ) PIP_PRIVATE;
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
@@ -410,6 +409,7 @@ extern int  pip_isa_coefd( int ) PIP_PRIVATE;
 extern void pip_set_name( pip_task_internal_t* ) PIP_PRIVATE;
 
 extern int  pip_taski_str( char*, size_t, pip_task_internal_t* ) PIP_PRIVATE;
+extern int pip_task_str( char *p, size_t sz, pip_task_t *task );
 extern size_t pip_idstr( char*, size_t ) PIP_PRIVATE;
 
 extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;

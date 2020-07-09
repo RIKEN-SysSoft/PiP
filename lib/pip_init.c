@@ -240,7 +240,8 @@ pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
   } else if( taski->type == PIP_TYPE_NONE ) {
     n = snprintf( p, sz, "*" );
   } else if( PIP_ISA_TASK( taski ) ) {
-    n = pip_pipid_str( p, sz, taski->pipid, PIP_IS_RUNNING(taski) );
+    //    n = pip_pipid_str( p, sz, taski->pipid, PIP_IS_RUNNING(taski) );
+    n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
   } else {
     n = snprintf( p, sz, "!" );
   }

@@ -147,6 +147,10 @@ TMP=.$FILE;
 i=0;
 start=`date +%s`;
 
+if [ $display -eq 0 ]; then
+    set -o pipefail;
+fi
+
 while true; do
     if [ $nomode -eq 0 ]; then
 	for mode in $mlist; do

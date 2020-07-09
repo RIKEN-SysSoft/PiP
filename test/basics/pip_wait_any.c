@@ -33,8 +33,10 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-//#define DEBUG
+#define DEBUG
 #include <test.h>
+
+#define IMPOSSIBLE_PIPID	(-123)
 
 int main( int argc, char **argv ) {
   char	*env;
@@ -73,7 +75,9 @@ int main( int argc, char **argv ) {
     }
     for( i=0; i<ntasks; i++ ) {
       status = 0;
+      pipid = IMPOSSIBLE_PIPID;
       CHECK( pip_wait_any(&pipid,&status), RV, return(EXIT_FAIL) );
+      CHECK( pipid==IMPOSSIBLE_PIPID,      RV, return(EXIT_FAIL) );
       if( sig == 0 ) {
 	CHECK( WIFSIGNALED(status),     RV, return(EXIT_FAIL) );
 	CHECK( WIFEXITED(status),      !RV, return(EXIT_FAIL) );

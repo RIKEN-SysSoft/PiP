@@ -54,7 +54,7 @@ void pip_stack_protect( pip_task_internal_t *taski,
   nexti->flag_stackpp = &taski->flag_stackp;
 }
 
-void pip_stack_unprotect( pip_task_internal_t *taski ) {
+static void pip_stack_unprotect( pip_task_internal_t *taski ) {
   /* this function must be called everytime a context is switched */
   pip_memory_barrier();
   IF_UNLIKELY( taski->flag_stackpp == NULL ) {
@@ -176,6 +176,7 @@ void pip_swap_context( pip_task_internal_t *taski,
   pip_stack_unprotect( taski );
 
 #endif
+  SET_CURR_TASK( taski->task_sched, taski );
 }
 
 #ifdef PIP_USE_FCONTEXT
@@ -205,7 +206,7 @@ static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
 
 void pip_decouple_context( pip_task_internal_t *taski,
 			   pip_task_internal_t *schedi ) {
-  DBGF( "task PIPID:%d   sched PIPID:%d", taski->pipid, schedi->pipid );
+  ENTERF( "task PIPID:%d   sched PIPID:%d", taski->pipid, schedi->pipid );
 
 #ifdef PIP_USE_FCONTEXT
   pip_ctx_data_t	data;
@@ -259,7 +260,7 @@ void pip_decouple_context( pip_task_internal_t *taski,
   pip_swap_ctx( taski->ctx_suspend, schedi->annex->ctx_sleep );
   pip_stack_unprotect( taski );
 #endif
-  /* resumed */
+  SET_CURR_TASK( taski->task_sched, taski );
 }
 
 void pip_couple_context( pip_task_internal_t *schedi,
@@ -299,5 +300,5 @@ void pip_couple_context( pip_task_internal_t *schedi,
   pip_swap_ctx( &lvars.ctx, taski->ctx_suspend );
   pip_stack_unprotect( schedi );
 #endif
-  /* resumed */
+  NEVER_REACH_HERE;
 }

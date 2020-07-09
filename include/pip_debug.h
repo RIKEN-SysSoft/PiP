@@ -157,7 +157,7 @@ extern int pip_debug_env( void );
   if(DBGSW) { if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);	\
       pip_debug_info(); pip_abort(); } } while(0)
 
-#define SET_CURR_TASK(sched,task)	(sched)->annex->task_curr = task
+#define SET_CURR_TASK(sched,task)	(sched)->annex->task_curr=(task)
 
 #define DPAUSE	\
   do { struct timespec __ts; __ts.tv_sec=0; __ts.tv_nsec=1*1000*1000;	\

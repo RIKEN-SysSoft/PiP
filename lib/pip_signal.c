@@ -85,13 +85,17 @@ int pip_signal_wait( int signal ) {
   int 		sig, err = 0;
 
   ASSERT( sigemptyset( &sigset ) );
+  ASSERT( sigaddset( &sigset, signal ) );
+  err = sigwait( &sigset, &sig );
+#ifdef AHAH
   if( pip_is_threaded_() ) {
     ASSERT( sigaddset( &sigset, signal ) );
-    errno = 0;
-    sigwait( &sigset, &sig );
-    err = errno;
+    err = sigwait( &sigset, &sig );
   } else {
+    DBG;
     (void) sigsuspend( &sigset ); /* always returns EINTR */
+    DBG;
   }
+#endif
   return( err );
 }
