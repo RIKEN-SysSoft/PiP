@@ -50,32 +50,43 @@ AC_SUBST(glibc_lib)
 AC_SUBST(dynamic_linker)
 
 AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--enable-fcontext],
-  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])])
-
-AS_IF([test "x$enable_fcontext" != "xno"], [
-  AC_CHECK_PROG([AS], [as], [yes])
-  AS_IF([test x"$AS" != x"yes"], [AC_MSG_ERROR([Can't find assmbler (as)])])
-  AC_DEFINE(enable_fcontext)
-])
-
-if test "x$enable_fcontext" != "xno"; then
+  ["yes": use fcontext, "fp(reg(s))": fcontext with FP regs, "no": use (slow) ucontext])],
+[
+case "$enable_fcontext" in
+  no)
+     boost_fctx_objs="";
+     boost_fctx_arch="";
+     boost_fctx_cppflags="";;
+  ""|yes|fp|fpreg|fpregs)
+    AC_CHECK_PROG([AS], [as], [yes])
+    AS_IF([test x"$AS" != x"yes"], [AC_MSG_ERROR([Can't find assmbler (as)])])
+    boost_fctx_objs="fctx_jump.o fctx_make.o";
+    case $host in
+      x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
+      aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
+      *) AC_MSG_ERROR([Unsupported host cpu]);;
+    esac;
+    case "$enable_fcontext" in
+      yes) boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
+      fp|fpreg|fpregs)
+           boost_fctx_cppflags="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX";;
+    esac
+    ;;
+esac
+],
+[
   boost_fctx_objs="fctx_jump.o fctx_make.o"
   case $host in
-	x86_64-*-*-*)
-		boost_fctx_arch="x86_64_sysv";;
-	aarch64-*-*-*)
-		boost_fctx_arch="arm64_aapcs";;
+  	x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
+	aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
+	*) AC_MSG_ERROR([Unsupported host]);;
   esac
-  if test "x$enable_fcontext" == "xfpreg"; then
-     enable_fcontext=yes
-     boost_fctx_cppflag="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX"
-  else
-     boost_fctx_cppflag="-DPIP_USE_FCONTEXT"
-  fi
-fi
+  boost_fctx_flag="-DPIP_USE_FCONTEXT"
+])
+
 AC_SUBST(boost_fctx_objs)
 AC_SUBST(boost_fctx_arch)
-AC_SUBST(boost_fctx_cppflag)
+AC_SUBST(boost_fctx_cppflags)
 
 # Checks for programs.
 AC_PROG_CC

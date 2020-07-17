@@ -600,7 +600,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
-boost_fctx_fpreg_flag
+boost_fctx_cppflags
 boost_fctx_arch
 boost_fctx_objs
 AS
@@ -1285,8 +1285,8 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-fcontext       Switch if using GLIBC's ucontext of Boost's fcontext
-                          (fpreg)
+  --enable-fcontext       "yes": use fcontext, "fp(reg(s))": fcontext with FP
+                          regs, "no": use (slow) ucontext
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1966,12 +1966,13 @@ $as_echo "${glibc_incdir}" >&6; }
 # Check whether --enable-fcontext was given.
 if test "${enable_fcontext+set}" = set; then :
   enableval=$enable_fcontext;
-fi
-
-
-if test "x$enable_fcontext" != "xno"; then :
-
-  # Extract the first word of "as", so it can be a program name with args.
+case "$enable_fcontext" in
+  no)
+     boost_fctx_objs="";
+     boost_fctx_arch="";
+     boost_fctx_cppflags="";;
+  ""|yes|fp|fpreg|fpregs)
+    # Extract the first word of "as", so it can be a program name with args.
 set dummy as; ac_word=$2
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 $as_echo_n "checking for $ac_word... " >&6; }
@@ -2008,33 +2009,36 @@ $as_echo "no" >&6; }
 fi
 
 
-  if test x"$AS" != x"yes"; then :
+    if test x"$AS" != x"yes"; then :
   as_fn_error $? "Can't find assmbler (as)" "$LINENO" 5
 fi
-  $as_echo "#define enable_fcontext 1" >>confdefs.h
+    boost_fctx_objs="fctx_jump.o fctx_make.o";
+    case $host in
+      x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
+      aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
+      *) as_fn_error $? "Unsupported host cpu" "$LINENO" 5;;
+    esac;
+    case "$enable_fcontext" in
+      yes) boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
+      fp|fpreg|fpregs)
+           boost_fctx_cppflags="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX";;
+    esac
+    ;;
+esac
 
+else
 
-fi
-
-boost_fctx_objs=""
-boost_fctx_arch=""
-boost_fctx_fpreg_flag=""
-
-if test "x$enable_fcontext" != "xno"; then
   boost_fctx_objs="fctx_jump.o fctx_make.o"
   case $host in
-	x86_64-*-*-*)
-		boost_fctx_arch="x86_64_sysv";;
-	aarch64-*-*-*)
-		boost_fctx_arch="arm64_aapcs";;
+  	x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
+	aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
+	*) as_fn_error $? "Unsupported host" "$LINENO" 5;;
   esac
-  if test "x$enable_fcontext" == "xfpreg"; then
-     enable_fcontext=yes
-     boost_fctx_fpreg_flag="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX"
-  else
-     boost_fctx_fpreg_flag="-DPIP_USE_FCONTEXT"
-  fi
+  boost_fctx_flag="-DPIP_USE_FCONTEXT"
+
 fi
+
+
 
 
 
