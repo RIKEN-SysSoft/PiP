@@ -58,10 +58,6 @@ AS_IF([test "x$enable_fcontext" != "xno"], [
   AC_DEFINE(enable_fcontext)
 ])
 
-boost_fctx_objs=""
-boost_fctx_arch=""
-boost_fctx_fpreg_flag=""
-
 if test "x$enable_fcontext" != "xno"; then
   boost_fctx_objs="fctx_jump.o fctx_make.o"
   case $host in
@@ -72,14 +68,14 @@ if test "x$enable_fcontext" != "xno"; then
   esac
   if test "x$enable_fcontext" == "xfpreg"; then
      enable_fcontext=yes
-     boost_fctx_fpreg_flag="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX"
+     boost_fctx_cppflag="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX"
   else
-     boost_fctx_fpreg_flag="-DPIP_USE_FCONTEXT"
+     boost_fctx_cppflag="-DPIP_USE_FCONTEXT"
   fi
 fi
 AC_SUBST(boost_fctx_objs)
 AC_SUBST(boost_fctx_arch)
-AC_SUBST(boost_fctx_fpreg_flag)
+AC_SUBST(boost_fctx_cppflag)
 
 # Checks for programs.
 AC_PROG_CC

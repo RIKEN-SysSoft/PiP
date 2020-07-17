@@ -37,7 +37,7 @@ FCTXDIR = ../import/fcontext/boost/fcontext
 
 FCTXOBJS = @boost_fctx_objs@
 
-FCTXCPPFLAG = @boost_fctx_fpreg_flag@
+FCTXCPPFLAG = @boost_fctx_cppflag@
 
 fctx_jump.o : $(FCTXDIR)/jump_@boost_fctx_arch@_elf_gas.S
 	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \
