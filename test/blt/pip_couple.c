@@ -77,11 +77,12 @@ int main( int argc, char **argv ) {
     } else {
       pip_task_t 	*task, *t;
       pip_task_queue_t 	queue;
-      int 	 	m = ntasks - 1, n, i;
+      int 	 	m = ntasks - 1, n, i, err;
 
+      pip_task_queue_init( &queue, NULL );
       CHECK( pip_get_task_by_pipid(PIP_PIPID_MYSELF,&task), RV,
 	     return(EXIT_FAIL) );
-      pip_task_queue_init( &queue, NULL );
+      CHECK( pip_task_self()!=task, RV, return(EXIT_FAIL) );
 
       for( i=0; i<m; i++ ) {
 	while( 1 ) {
@@ -95,7 +96,8 @@ int main( int argc, char **argv ) {
       n = PIP_TASK_ALL;
       CHECK( pip_dequeue_and_resume_N(&queue,task,&n), RV, return(EXIT_FAIL) );
       for( i=0; i<niters; i++ ) {
-	CHECK( pip_yield(PIP_YIELD_USER), (RV&&RV!=EINTR), return(EXIT_FAIL) );
+	while( ( err = pip_yield(PIP_YIELD_DEFAULT) ) == 0 );
+	CHECK( err != EINTR, RV, return(EXIT_FAIL) );
       }
     }
     CHECK( pip_barrier_wait(&expp->barrier), RV, return(EXIT_FAIL) );

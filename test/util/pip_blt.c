@@ -60,6 +60,7 @@ int main( int argc, char **argv ) {
   putenv( env_ntasks );
   pip_spawn_from_main( &prog, argv[3], &argv[3], NULL, NULL );
 
+  nc = 0;
 #ifdef DO_COREBIND
   nc = get_ncpus() - 1;
 #endif
@@ -72,7 +73,7 @@ int main( int argc, char **argv ) {
     if( nc == 0 ) {
       c = PIP_CPUCORE_ASIS;
     } else {
-      c = ( i % nc ) + 1;
+      c = i % nc;
     }
 #endif
     sprintf( env_pipid, "%s=%d", PIP_TEST_PIPID_ENV, pipid );

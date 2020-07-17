@@ -8,9 +8,8 @@ timer 1 ./pip_init ntask_too_big
 timer 1 ./pip_init invalid_opts
 timer 1 ./pip_init both_pthread_process
 timer 1 ./pip_init both_preload_clone
-%include wait.list
 timer 1 ./pip_init pip_task_unset
-timer 2 ./pip_fin
+timer 1 ./pip_fin
 timer 1 pip_task 1 ./pip_init pip_child_task
 timer 1 pip_task 8 ./pip_init pip_child_task
 timer 1 ./pip_exit
@@ -34,13 +33,15 @@ skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 1
 skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 8
 timer 1 ./pip_kill 1
 timer 1 ./pip_kill 8
-timer 5 ./seek-file.sh  1
-timer 5 ./seek-pipe.sh  1
-timer 5 ./seek-outin.sh 1
-timer 10 ./seek-file.sh  4
-timer 10 ./seek-pipe.sh  4
-timer 10 ./seek-outin.sh 4
-timer 5 ./pip_barrier  1  10
-timer 10 ./pip_barrier 8  10
-timer 5 ./pip_barrier2 1  10
-timer 10 ./pip_barrier2 8 10
+timer 1 ./seek-file.sh  1
+timer 1 ./seek-pipe.sh  1
+timer 1 ./seek-outin.sh 1
+timer 1 ./seek-file.sh  4
+timer 1 ./seek-pipe.sh  4
+timer 1 ./seek-outin.sh 4
+timer 1 ./pip_barrier  1  10
+timer 1 ./pip_barrier 8  10
+timer 2 ./pip_barrier2 1  10
+timer 2 ./pip_barrier2 8 10
+timer 1  pip_task 2    ./pip_namexp
+timer 1  pip_task 8    ./pip_namexp

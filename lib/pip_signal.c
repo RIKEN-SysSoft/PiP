@@ -35,24 +35,35 @@
 
 #include <pip_internal.h>
 
+int pip_tgkill( int tgid, int tid, int signal ) {
+  return (int) syscall( (long int) SYS_tgkill, tgid, tid, signal );
+}
+
+int pip_tkill( int tid, int signal ) {
+  return (int) syscall( (long int) SYS_tkill, tid, signal );
+}
+
 /* for internal use */
 int pip_raise_signal( pip_task_internal_t *taski, int sig ) {
   int err = ESRCH;
 
-  DBGF( "raise signal (%s) to PIPID:%d PID:%d TID:%d",
-	strsignal(sig),
-	taski->pipid,
-	getpid(),
-	taski->annex->tid );
+  DBGF( "raise signal (%s) to PIPID:%d", strsignal(sig), taski->pipid )
   if( taski->flag_exit == 0 ) {
     if( taski->task_sched != taski &&
 	taski->schedq_len > 0 ) {
       /* Not allowed to a signal to an inactive task */
-      err = EPERM;
+      RETURN( EPERM );
     } else if( taski->annex->tid > 0 ) {
-      errno = 0;
-      (void) pip_tkill( taski->annex->tid, sig );
-      err = errno;
+      DBGF( "taski->annex->tid: %d", taski->annex->tid );
+      if( pip_is_threaded_() ) {
+	err = pthread_kill( taski->annex->thread, sig );
+      } else {
+	errno = 0;
+	if( pip_tkill( taski->annex->tid, sig ) ) {
+	  RETURN( errno );
+	}
+	err = 0;
+      }
     }
   }
   RETURN( err );
@@ -82,20 +93,8 @@ int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask ) {
 
 int pip_signal_wait( int signal ) {
   sigset_t 	sigset;
-  int 		sig, err = 0;
-
+  int 		sig;
   ASSERT( sigemptyset( &sigset ) );
   ASSERT( sigaddset( &sigset, signal ) );
-  err = sigwait( &sigset, &sig );
-#ifdef AHAH
-  if( pip_is_threaded_() ) {
-    ASSERT( sigaddset( &sigset, signal ) );
-    err = sigwait( &sigset, &sig );
-  } else {
-    DBG;
-    (void) sigsuspend( &sigset ); /* always returns EINTR */
-    DBG;
-  }
-#endif
-  return( err );
+  return sigwait( &sigset, &sig );
 }

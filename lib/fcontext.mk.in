@@ -35,6 +35,8 @@
 
 FCTXDIR = ../import/fcontext/boost/fcontext
 
+FCTXOBJS = @boost_fctx_objs@
+
 FCTXCPPFLAG = @boost_fctx_fpreg_flag@
 
 fctx_jump.o : $(FCTXDIR)/jump_@boost_fctx_arch@_elf_gas.S

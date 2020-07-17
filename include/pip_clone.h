@@ -95,12 +95,26 @@ INLINE void pip_clone_unlock( pip_spinlock_t *lockp ) {
 INLINE int pip_clone_flags( int flags ) {
   flags &= ~(CLONE_FS);		/* 0x00200 */
   flags &= ~(CLONE_FILES);	/* 0x00400 */
-  flags &= ~(CLONE_SIGHAND);	/* 0x00800 */
+  flags &= ~(CLONE_SIGHAND);	/* 0x08000 */
+  flags &= ~(CLONE_PARENT);	/* 0x10000 */
   flags &= ~(CLONE_THREAD);	/* 0x10000 */
+#ifdef CLONE_NEWNET
+  flags &= ~(CLONE_NEWNET);	/* 0x10000 */
+#endif
+#ifdef CLONE_NEWNS
+  flags &= ~(CLONE_NEWNS);	/* 0x10000 */
+#endif
+#ifdef CLONE_NEWPID
+  flags &= ~(CLONE_NEWPID);	/* 0x10000 */
+#endif
+#ifdef CLONE_NEWUTS
+  flags &= ~(CLONE_NEWUTS);	/* 0x10000 */
+#endif
+  flags |= CLONE_VM;		/* 0x00100 */
+  flags |= CLONE_PTRACE;        /* 0x02000 */
+  /* do not reset the CLONE_SETTLS flag */
+  flags |= CLONE_SETTLS; 	/* 0x80000 */
   flags &= ~0xff;
-  flags |= CLONE_VM;
-  flags |= CLONE_SETTLS;  /* do not reset the CLONE_SETTLS flag */
-  flags |= CLONE_PTRACE;
   flags |= SIGCHLD;
   return flags;
 }

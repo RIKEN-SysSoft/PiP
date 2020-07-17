@@ -36,8 +36,6 @@
 #include <pip_internal.h>
 #include <pip_dlfcn.h>
 
-typedef int(*pip_clone_syscall_t)(int(*)(void*), void*, int, void*, ...);
-
 pip_clone_syscall_t	pip_clone_orig;
 pip_spinlock_t 		pip_lock_got_clone PIP_PRIVATE;
 

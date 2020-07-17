@@ -52,7 +52,8 @@ SRCS  = pip_init.c \
 	pip_barrier.c \
 	pip_barrier2.c \
 	seek.c \
-	pip_kill.c
+	pip_kill.c \
+	pip_namexp.c
 
 PROGRAMS = \
 	pip_init \
@@ -77,7 +78,8 @@ PROGRAMS = \
 	pip_barrier \
 	pip_barrier2 \
 	seek \
-	pip_kill
+	pip_kill \
+	pip_namexp
 
 PROGRAMS_TO_INSTALL = # nothing
 

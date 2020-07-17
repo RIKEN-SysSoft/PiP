@@ -76,7 +76,7 @@ check-installed-prepare: install
 
 .PHONY: check-installed-programs
 check-installed-programs: check-installed-prepare
-	install_test_dir=$(install_test_dir) $(MAKE) -C test do-install-test
+	install_test_dir=$(install_test_dir) $(MAKE) -C test do-check-installed
 
 .PHONY: do-check-installed
 do-check-installed: check-installed-programs
@@ -117,10 +117,6 @@ prog-distclean:
 	$(RM) config.log config.status include/config.h build/config.mk
 .PHONY: prog-distclean
 
-.PHONY: TAGS
-TAGS:
-	ctags -Re
-
 post-install-hook:
 	$(MAKE) -C sample
 
@@ -132,3 +128,7 @@ post-veryclean-hook:
 	$(RM) config.sh lib/fcontext.mk
 	$(MAKE) -C sample veryclean
 	$(MAKE) -C test veryclean
+
+.PHONY: TAGS
+TAGS:
+	ctags -Re

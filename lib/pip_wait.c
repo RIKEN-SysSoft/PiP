@@ -49,7 +49,7 @@ void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
     st = 'S';
   }
   fprintf( fp,
-	   "%d[%d] %c  SchedQL:%d  OODQ:%d  NTC:%d  StkP:%d[%d]  WU:%d  SM:%d\n",
+	   "%d[%d] %c  SchedQL:%d  OODQ:%d  RFC:%d  StkP:%d[%d]  WU:%d  SM:%d\n",
 	   taski->pipid,
 	   (taski->task_sched!=NULL)?taski->task_sched->pipid:-1,
 	   st,
@@ -287,7 +287,7 @@ static int pip_wait_task_nb( pip_task_internal_t *taski ) {
   int retval = DONE;
 
   ENTERF( "PIPID:%d", taski->pipid );
-  if( taski->pipid < 0 || PIP_TYPE_NONE ) {
+  if( taski->pipid < 0 || taski->type == PIP_TYPE_NONE ) {
     retval = NOT_ATASK;
   } else if( taski->flag_exit == PIP_EXIT_WAITED ) {
     retval = DONE;

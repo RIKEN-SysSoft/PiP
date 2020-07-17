@@ -1,6 +1,7 @@
 SHELL = @SHELL@
 prefix = @prefix@
 exec_prefix = @exec_prefix@
+PACKAGE_VERSION = @PACKAGE_VERSION@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 
 host = @host@

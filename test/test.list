@@ -1,12 +1,14 @@
 %include util/test.list
 %include scripts/test.list
 %include basics/task.list
+%include basics/wait.list
 %include compat/test.list
 %include pthread/test.list
 %include openmp/test.list
 %include cxx/test.list
-%include fortran/test.list
+%include fortran/task.list
 %include issues/test.list
 %include prog/test.list
 %include basics/blt.list
+%include fortran/blt.list
 %include blt/test.list

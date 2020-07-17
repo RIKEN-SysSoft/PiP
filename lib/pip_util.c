@@ -161,14 +161,6 @@ int pip_check_pie( const char *path, int flag_verbose ) {
   return err;
 }
 
-int pip_tgkill( int tgid, int tid, int signal ) {
-  return (int) syscall( (long int) SYS_tgkill, tgid, tid, signal );
-}
-
-int pip_tkill( int tid, int signal ) {
-  return (int) syscall( (long int) SYS_tkill, tid, signal );
-}
-
 /* the following function(s) are for debugging */
 
 int pip_debug_env( void ) {

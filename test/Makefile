@@ -54,16 +54,14 @@ veryclean:
 test: all
 	./test.sh -A test.list
 
-## install-test
-
 TESTLISTS = bin.list sample.list test.list
 HEADERS   = test.h
 SCRIPTS   = test.sh loop.sh NG.sh OK.sh skip.sh exit_code.sh.inc
 
-do-install-test:
+do-check-installed:
 	$(MKDIR_P) $(install_test_dir)
 	$(INSTALL) -d -m 755 $(install_test_dir)
 	$(INSTALL) -C -m 644 Makefile Test.common $(TESTLISTS) $(HEADERS) \
 		$(install_test_dir)
 	$(INSTALL) -C -m 755 $(SCRIPTS) $(install_test_dir)
-	$(MAKE) subdir-install-test
+	$(MAKE) subdir-check-installed

@@ -53,7 +53,7 @@ libnull.so: libnull.c Makefile
 	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so
 
 test:
-	../test.sh compat/test.list
+	../test.sh compat/task.list
 
 install_test_compat = $(install_test_dir)/compat
 

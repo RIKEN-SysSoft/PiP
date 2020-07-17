@@ -45,8 +45,9 @@ int main( int argc, char **argv ) {
     countp = NULL;
     CHECK( pip_named_import( target, (void**) &countp, "COUNT:%d", target ),
 	   RV, return(EXIT_FAIL) );
-    CHECK( countp==NULL,          RV, return(EXIT_FAIL) );
-    CHECK( *countp!=conv(target), RV, return(EXIT_FAIL) );
+    CHECK( countp==NULL,                 RV,               return(EXIT_FAIL) );
+    CHECK( *countp!=conv(target),        RV,               return(EXIT_FAIL) );
+    CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
   }
 
   if( pipid == 0 ) {

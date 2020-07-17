@@ -180,7 +180,7 @@ In the process execution mode, the file descriptors having the {\ttfamily F\-D\-
 \begin{DoxyParams}[1]{Parameters}
 \mbox{\tt out}  & {\em hook} & Pointer to the {\ttfamily pip\-\_\-spawn\-\_\-hook\-\_\-t} structure in which the invocation hook information is set \\
 \hline
-\mbox{\tt in}  & {\em coreno} & C\-P\-U core number for the Pi\-P task to be bound to. By default, {\ttfamily coreno} is set to zero, for example, then the calling task will be bound to the first core available. This is in mind that the available core numbers are not contiguous. To specify an absolute core number, {\ttfamily coreno} must be bitwise-\/\-O\-Red with {\ttfamily P\-I\-P\-\_\-\-C\-P\-U\-C\-O\-R\-E\-\_\-\-A\-B\-S}. If {\ttfamily P\-I\-P\-\_\-\-C\-P\-U\-C\-O\-R\-E\-\_\-\-A\-S\-I\-S} is specified, then the core binding will not take place. \\
+\mbox{\tt in}  & {\em coreno} & C\-P\-U core number for the Pi\-P task to be bound to. By default, {\ttfamily coreno} is set to zero, for example, then the calling task will be bound to the 'first' core available. This is in mind that the available core numbers are not contiguous. To specify an absolute core number, {\ttfamily coreno} must be bitwise-\/\-O\-Red with {\ttfamily P\-I\-P\-\_\-\-C\-P\-U\-C\-O\-R\-E\-\_\-\-A\-B\-S}. If {\ttfamily P\-I\-P\-\_\-\-C\-P\-U\-C\-O\-R\-E\-\_\-\-A\-S\-I\-S} is specified, then the core binding will not take place. \\
 \hline
 \mbox{\tt in}  & {\em opts} & option flags \\
 \hline
@@ -213,14 +213,6 @@ Zero is returned if this function succeeds. On error, an error number is returne
 {\em E\-N\-X\-I\-O} & {\ttfamily dlmopen} failss\\
 \hline
 \end{DoxyRetVals}
-\begin{DoxyNote}{Note}
-In the process execution mode, each Pi\-P task may have its own file descriptors, signal handlers, and so on, just like a process. Contrastingly, in the pthread executionn mode, file descriptors and signal handlers are shared among Pi\-P root and Pi\-P tasks while maintaining the privatized variables.
-\end{DoxyNote}
-\begin{DoxyParagraph}{Environment}
-\begin{DoxyItemize}
-\item {\bfseries P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T} Specifying the P\-I\-P I\-D to stop on start to debug the specified Pi\-P task from the beginning. If the before hook is specified, then the Pi\-P task will be stopped just before calling the before hook.\end{DoxyItemize}
-
-\end{DoxyParagraph}
 \begin{DoxyParagraph}{Bugs}
 In theory, there is no reason to restrict for a Pi\-P task to spawn another Pi\-P task. However, the current glibc implementation does not allow to do so. 
 \end{DoxyParagraph}
@@ -300,11 +292,6 @@ Return 0 on success. Return an error code on error.
 {\em E\-N\-X\-I\-O} & {\ttfamily dlmopen} failss\\
 \hline
 \end{DoxyRetVals}
-\begin{DoxyParagraph}{Environment}
-\begin{DoxyItemize}
-\item {\bfseries P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T} Specifying the P\-I\-P I\-D to stop on start Pi\-P task program to debug from the beginning. If the before hook is specified, then the Pi\-P task will be stopped just before calling the before hook.\end{DoxyItemize}
-
-\end{DoxyParagraph}
 \begin{DoxyParagraph}{Bugs}
 In theory, there is no reason to restrict for a Pi\-P task to spawn another Pi\-P task. However, the current glibc implementation does not allow to do so. 
 \end{DoxyParagraph}
@@ -348,7 +335,7 @@ In the process execution mode, the file descriptors having the {\ttfamily F\-D\-
 \hline
 \mbox{\tt in}  & {\em opts} & option flags. If {\ttfamily P\-I\-P\-\_\-\-T\-A\-S\-K\-\_\-\-I\-N\-A\-C\-T\-I\-V\-E} is set, the created B\-L\-T is suspended and enqueued to the specified {\ttfamily queue}. Otherwise the B\-L\-T will schedules the B\-L\-Ts in {\ttfamily queue}. \\
 \hline
-\mbox{\tt in,out}  & {\em pipidp} & Specify Pi\-P I\-D of the spawned Pi\-P task. If {\ttfamily P\-I\-P\-\_\-\-P\-I\-P\-I\-D\-\_\-\-A\-N\-Y} is specified, then the Pi\-P I\-D of the spawned Pi\-P task is up to the Pi\-P library and the assigned Pi\-P I\-D will be returned. \\
+\mbox{\tt in,out}  & {\em pipidp} & Specify Pi\-P I\-D of the spawned Pi\-P task. If {\ttfamily P\-I\-P\-\_\-\-P\-I\-P\-I\-D\-\_\-\-A\-N\-Y} is specified, then the Pi\-P I\-D of the spawned Pi\-P task is up to the Pi\-P library and the assigned Pi\-P I\-D will be returned. The Pi\-P execution mode can also be specified (see below). \\
 \hline
 \mbox{\tt in,out}  & {\em bltp} & returns created B\-L\-T \\
 \hline
@@ -357,11 +344,6 @@ In the process execution mode, the file descriptors having the {\ttfamily F\-D\-
 \mbox{\tt in}  & {\em hookp} & Hook information to be invoked before and after the program invokation.\\
 \hline
 \end{DoxyParams}
-\begin{DoxyNote}{Note}
-In theory, there is no reason to restrict for a Pi\-P task to spawn another Pi\-P task. However, the current implementation fails to do so. If the root process is multithreaded, only the main thread can call this function. 
-
-In the process mode, the file descriptors set the close-\/on-\/exec flag will be closed on the created child task.
-\end{DoxyNote}
 \begin{DoxyReturn}{Returns}
 Return 0 on success. Return an error code on error. 
 \end{DoxyReturn}
@@ -384,9 +366,18 @@ Return 0 on success. Return an error code on error.
 {\em E\-N\-X\-I\-O} & {\ttfamily dlmopen} failss\\
 \hline
 \end{DoxyRetVals}
+\begin{DoxyParagraph}{Execution mode option}
+Users may explicitly specify the Pi\-P execution mode. This execution mode can be categorized in two; process mode and thread mode. In the process execution mode, each Pi\-P task may have its own file descriptors, signal handlers, and so on, just like a process. Contrastingly, in the pthread executionn mode, file descriptors and signal handlers are shared among Pi\-P root and Pi\-P tasks while maintaining the privatized variables. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{}
+To spawn a Pi\-P task in the process mode, the Pi\-P library modifies the {\bfseries clone()} flag so that the created Pi\-P task can exhibit the alomost same way with that of normal Linux process. There are three ways implmented; using L\-D\-\_\-\-P\-R\-E\-L\-O\-A\-D, modifying G\-L\-I\-B\-C, and modifying G\-I\-O\-T entry of the {\bfseries clone()} systemcall. One of the option flag values; {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-T\-H\-R\-E\-A\-D}, {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S}, {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S\-\_\-\-P\-R\-E\-L\-O\-A\-D}, {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S\-\_\-\-P\-I\-P\-C\-L\-O\-N\-E}, or b P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S\-\_\-\-G\-O\-T can be specified as the option flag. Or, users may specify the execution mode by the P\-I\-P\-\_\-\-M\-O\-D\-E environment described below.
+\end{DoxyParagraph}
+\begin{DoxyNote}{Note}
+In theory, there is no reason to restrict for a Pi\-P task to spawn another Pi\-P task. However, the current implementation fails to do so. If the root process is multithreaded, only the main thread can call this function.
+\end{DoxyNote}
 \begin{DoxyParagraph}{Environment}
 \begin{DoxyItemize}
-\item {\bfseries P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T} Specifying the P\-I\-P I\-D to stop on start Pi\-P task program to debug from the beginning. If the before hook is specified, then the Pi\-P task will be stopped just before calling the before hook.\end{DoxyItemize}
+\item {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E} Specifying the Pi\-P execution mode. The value can be one of; 'process', 'process\-:preload', 'process\-:got' and 'thread' (or 'pthread'). \item {\bfseries P\-I\-P\-\_\-\-S\-T\-A\-C\-K\-S\-Z} Sepcifying the stack size (in bytes). The {\bfseries K\-M\-P\-\_\-\-S\-T\-A\-C\-K\-S\-I\-Z\-E} and {\bfseries O\-M\-P\-\_\-\-S\-T\-A\-C\-K\-S\-I\-Z\-E} can also be specified. The 't', 'g', 'm', 'k' and 'b' posfix character can be used. \item {\bfseries P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T} Specifying the P\-I\-P I\-D to stop on start Pi\-P task program to debug from the beginning. If the before hook is specified, then the Pi\-P task will be stopped just before calling the before hook. \item {\bfseries P\-I\-P\-\_\-\-S\-T\-A\-C\-K\-S\-Z} Sepcifying the stack size (in bytes). The {\bfseries K\-M\-P\-\_\-\-S\-T\-A\-C\-K\-S\-I\-Z\-E} and {\bfseries O\-M\-P\-\_\-\-S\-T\-A\-C\-K\-S\-I\-Z\-E} can also be specified. The 't', 'g', 'm', 'k' and 'b' posfix character can be used.\end{DoxyItemize}
 
 \end{DoxyParagraph}
 \begin{DoxyParagraph}{Bugs}

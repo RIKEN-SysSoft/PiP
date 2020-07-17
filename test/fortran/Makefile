@@ -46,7 +46,7 @@ include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 test :
-	../test.sh test.list
+	../test.sh task.list
 
 install_test_fortran = $(install_test_dir)/fortran
 

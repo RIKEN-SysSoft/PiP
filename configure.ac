@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([pip], [2.0.0], [pip@ml.riken.jp], [], [https://github.com/RIKEN-SysSoft/PiP])
+AC_INIT([pip], [3.0.0], [pip@ml.riken.jp], [], [https://github.com/RIKEN-SysSoft/PiP])
 AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
 AC_CONFIG_MACRO_DIR([build/m4])
@@ -49,8 +49,9 @@ AC_SUBST(glibc_libdir)
 AC_SUBST(glibc_lib)
 AC_SUBST(dynamic_linker)
 
-AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--disable-fcontext],
-  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])],[yes])
+AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--enable-fcontext],
+  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])],,[yes])
+
 AS_IF([test "x$enable_fcontext" != "xno"], [
   AC_CHECK_PROG([AS], [as], [yes])
   AS_IF([test x"$AS" != x"yes"], [AC_MSG_ERROR([Can't find assmbler (as)])])
@@ -67,7 +68,10 @@ if test "x$enable_fcontext" != "xno"; then
 		boost_fctx_arch="arm64_aapcs";;
   esac
   if test "x$enable_fcontext" == "xfpreg"; then
-     boost_fctx_fpreg_flag="-DBOOST_USE_TSX"
+     enable_fcontext=yes
+     boost_fctx_fpreg_flag="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX"
+  else
+     boost_fctx_fpreg_flag="-DPIP_USE_FCONTEXT"
   fi
 fi
 AC_SUBST(boost_fctx_objs)
@@ -101,5 +105,6 @@ AC_CONFIG_FILES([
 	bin/pip-check
 	bin/pip-man
 	util/piplnlibs
+	doc/latex-inuse/libpip-manpages.tex
 ])
 AC_OUTPUT

@@ -47,13 +47,13 @@
 
 #define PIP_OPTS_NONE			(0x0)
 
-#define PIP_MODE_PTHREAD		(0x1000)
-#define PIP_MODE_PROCESS		(0x2000)
+#define PIP_MODE_PTHREAD		(0x1000U)
+#define PIP_MODE_PROCESS		(0x2000U)
 /* the following two modes are a submode of PIP_MODE_PROCESS */
-#define PIP_MODE_PROCESS_PRELOAD	(0x2100)
-#define PIP_MODE_PROCESS_PIPCLONE	(0x2200)
-#define PIP_MODE_PROCESS_GOT		(0x2400)
-#define PIP_MODE_MASK			(0xFF00)
+#define PIP_MODE_PROCESS_PRELOAD	(0x2100U)
+#define PIP_MODE_PROCESS_PIPCLONE	(0x2200U)
+#define PIP_MODE_PROCESS_GOT		(0x2400U)
+#define PIP_MODE_MASK			(0xFF00U)
 
 #define PIP_ENV_MODE			"PIP_MODE"
 #define PIP_ENV_MODE_THREAD		"thread"
@@ -88,11 +88,11 @@
 #define PIP_NTASKS_MAX			(300)
 
 #define PIP_CPUCORE_FLAG_SHIFT		(24)
-#define PIP_CPUCORE_CORENO_MASK		((1<<PIP_CPUCORE_FLAG_SHIFT)-1)
-#define PIP_CPUCORE_CORENO_MAX		PIP_CPUCORE_CORENO_MASK
-#define PIP_CPUCORE_ASIS 		(0x10)
-#define PIP_CPUCORE_ABS 		(0x20)
-#define PIP_CPUCORE_CORENO_MASK		((1<<PIP_CPUCORE_FLAG_SHIFT)-1)
+#define PIP_CPUCORE_FLAG_MASK		(0xFFU<<PIP_CPUCORE_FLAG_SHIFT)
+#define PIP_CPUCORE_CORENO_MAX		((1U<<20)-1)
+#define PIP_CPUCORE_ASIS 		(0x1U<<PIP_CPUCORE_FLAG_SHIFT)
+#define PIP_CPUCORE_ABS 		(0x2U<<PIP_CPUCORE_FLAG_SHIFT)
+#define PIP_CPUCORE_CORENO_MASK		((0x1U<<PIP_CPUCORE_FLAG_SHIFT)-1)
 
 typedef struct {
   char		*prog;
@@ -119,11 +119,11 @@ typedef uintptr_t	pip_id_t;
 extern "C" {
 #endif
 
-#endif /* DOXYGEN */
-
 #ifndef INLINE
 #define INLINE			inline static
 #endif
+
+#endif /* DOXYGEN */
 
   /**
    * \defgroup pip-0-init-fin PiP Initialization/Finalization
@@ -168,14 +168,25 @@ extern "C" {
    *  returns the exported address by the PiP root, if any.
    * \param[in] opts Specifying the PiP execution mode and See below.
    *
-   * \notes
-   * The \c opts may have one of the defined values \c PIP_MODE_PTHREAD,
-   * \c PIP_MODE_PROCESS, \c PIP_MODE_PROCESS_PRELOAD,
-   * \c PIP_MODE_PROCESS_PIPCLONE and \c PIP_MODE_PROCESS_GOT, or
-   * any combination (bit-wise or) of them. If combined or \c opts is zero,
-   * then an
-   * appropriate one is chosen by the library. This PiP execution mode
-   * can be specified by an environment variable described below.
+   * @par Execution mode option
+   * Users may explicitly specify the PiP execution mode.
+   * This execution mode can be categorized in two; process mode and
+   * thread mode. In the process execution mode, each PiP task may
+   * have its own file descriptors, signal handlers, and so on, just
+   * like a process. Contrastingly, in the pthread executionn mode, file
+   * descriptors and signal handlers are shared among PiP root and PiP
+   * tasks while maintaining the privatized variables.
+   * \par
+   * To spawn a PiP task in the process mode, the PiP library modifies
+   * the \b clone() flag so that the created PiP task can exhibit the
+   * alomost same way with that of normal Linux process. There are
+   * three ways implmented; using LD_PRELOAD, modifying GLIBC, and
+   * modifying GIOT entry of the \b clone() systemcall. One of the
+   * option flag values; \b PIP_MODE_PTHREAD, \b PIP_MODE_PROCESS,
+   * \b PIP_MODE_PROCESS_PRELOAD, \b PIP_MODE_PROCESS_PIPCLONE, or
+   * \b PIP_MODE_PROCESS_GOT can be specified as the option flag. Or,
+   * users may specify the execution mode by the \b PIP_MODE environment
+   * described below.
    *
    * \return Zero is returned if this function succeeds. Otherwise an
    * error number is returned.
@@ -192,11 +203,18 @@ extern "C" {
    * either \c thread, \c pthread, \c process, \c process:preload,
    * \c process:pipclone, or \c process:got.
    * \arg \b LD_PRELOAD This is required to set appropriately to hold the path
-   * to \c pip_preload.so file, if the PiP execution mode is
+   * to the \c pip_preload.so file, if the PiP execution mode is
    * \c PIP_MODE_PROCESS_PRELOAD (the \c opts in \c pip_init) and/or
    * the PIP_MODE ennvironment is set to \c process:preload. See also
    * the pip_mode(1) command to set the environment variable appropriately and
    * easily.
+   * \arg \b PIP_STACKSZ Sepcifying the stack size (in bytes). The
+   * \b KMP_STACKSIZE and \b OMP_STACKSIZE are also effective. The 't',
+   * 'g', 'm', 'k' and 'b' posfix character can be used.
+   * \arg \b PIP_STOP_ON_START Specifying the PIP ID to stop on start
+   * to debug the specified PiP task from the beginning. If the
+   * before hook is specified, then the PiP task will be stopped just
+   * before calling the before hook.
    * \arg \b PIP_GDB_PATH If thisenvironment is set to the path pointing to the PiP-gdb
    * executable file, then PiP-gdb is automatically attached when an
    * excetion signal (SIGSEGV and SIGHUP by default) is delivered. The signals which
@@ -459,7 +477,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    *  structure in which the invocation hook information is set
    * \param[in] coreno CPU core number for the PiP task to be bound to. By
    *  default, \p coreno is set to zero, for example, then the calling
-   *  task will be bound to the first core available. This is in mind
+   *  task will be bound to the 'first' core available. This is in mind
    *  that the available core numbers are not contiguous. To specify
    *  an absolute core number, \p coreno must be bitwise-ORed with
    *  \p PIP_CPUCORE_ABS. If
@@ -485,19 +503,6 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \retval EBUSY specified PiP ID is alredy occupied
    * \retval ENOMEM not enough memory
    * \retval ENXIO \c dlmopen failss
-   *
-   * \note
-   * In the process execution mode, each PiP task may have its own
-   * file descriptors, signal handlers, and so on, just like a
-   * process. Contrastingly, in the pthread executionn mode, file
-   * descriptors and signal handlers are shared among PiP root and PiP
-   * tasks while maintaining the privatized variables.
-   *
-   * \environment
-   * \arg \b PIP_STOP_ON_START Specifying the PIP ID to stop on start
-   * to debug the specified PiP task from the beginning. If the
-   * before hook is specified, then the PiP task will be stopped just
-   * before calling the before hook.
    *
    * \bugs
    * In theory, there is no reason to restrict for a PiP task to
@@ -572,12 +577,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EBUSY specified PiP ID is alredy occupied
    * \retval ENOMEM not enough memory
    * \retval ENXIO \c dlmopen failss
-   *
-   * \environment
-   * \arg \b PIP_STOP_ON_START Specifying the PIP ID to stop on start
-   * PiP task program to debug from the beginning. If the
-   * before hook is specified, then the PiP task will be stopped just
-   * before calling the before hook.
    *
    * \bugs
    * In theory, there is no reason to restrict for a PiP task to

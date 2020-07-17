@@ -42,27 +42,27 @@
 #include <pip_machdep.h>
 #include <string.h>
 
-#define PIP_SYNC_AUTO			(0x0001)
-#define PIP_SYNC_BUSYWAIT		(0x0002)
-#define PIP_SYNC_YIELD			(0x0004)
-#define PIP_SYNC_BLOCKING		(0x0008)
+#define PIP_SYNC_AUTO			(0x0001U)
+#define PIP_SYNC_BUSYWAIT		(0x0002U)
+#define PIP_SYNC_YIELD			(0x0004U)
+#define PIP_SYNC_BLOCKING		(0x0008U)
 
 #define PIP_SYNC_MASK			(PIP_SYNC_AUTO     |	\
 					 PIP_SYNC_BUSYWAIT |	\
 					 PIP_SYNC_YIELD    |	\
 					 PIP_SYNC_BLOCKING)
 
-#define PIP_TASK_INACTIVE		(0x01000)
-#define PIP_TASK_ACTIVE			(0x02000)
+#define PIP_TASK_INACTIVE		(0x01000U)
+#define PIP_TASK_ACTIVE			(0x02000U)
 
 #define PIP_TASK_MASK				\
   (PIP_TASK_INACTIVE|PIP_TASK_ACTIVE)
 
 #define PIP_TASK_ALL			(-1)
 
-#define PIP_YIELD_DEFAULT		(0x0)
-#define PIP_YIELD_USER			(0x1)
-#define PIP_YIELD_SYSTEM		(0x2)
+#define PIP_YIELD_DEFAULT		(0x0U)
+#define PIP_YIELD_USER			(0x1U)
+#define PIP_YIELD_SYSTEM		(0x2U)
 
 #define PIP_ENV_SYNC			"PIP_SYNC"
 #define PIP_ENV_SYNC_AUTO		"auto"
@@ -72,7 +72,7 @@
 #define PIP_ENV_SYNC_BLOCK		"block"
 #define PIP_ENV_SYNC_BLOCKING		"blocking"
 
-#define PIP_TOPT_BUSYWAIT		(0x01)
+#define PIP_TOPT_BUSYWAIT		(0x01U)
 
 typedef struct pip_task {
   struct pip_task	*next;
@@ -286,18 +286,11 @@ extern "C" {
    * \param[in,out] pipidp Specify PiP ID of the spawned PiP task. If
    *  \c PIP_PIPID_ANY is specified, then the PiP ID of the spawned PiP
    *  task is up to the PiP library and the assigned PiP ID will be
-   *  returned.
+   *  returned. The PiP execution mode can also be specified (see below).
    * \param[in,out] bltp returns created BLT
    * \param[in] queue PiP task queue. See the above \p opts description.
    * \param[in] hookp Hook information to be invoked before and after
    *  the program invokation.
-   *
-   * \note In theory, there is no reason to restrict for a PiP task to
-   * spawn another PiP task. However, the current implementation fails
-   * to do so. If the root process is multithreaded, only the main
-   * thread can call this function.
-   * \note In the process mode, the file descriptors set the
-   * close-on-exec flag will be closed on the created child task.
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
@@ -309,11 +302,44 @@ extern "C" {
    * \retval ENOMEM not enough memory
    * \retval ENXIO \c dlmopen failss
    *
+   * @par Execution mode option
+   * Users may explicitly specify the PiP execution mode.
+   * This execution mode can be categorized in two; process mode and
+   * thread mode. In the process execution mode, each PiP task may
+   * have its own file descriptors, signal handlers, and so on, just
+   * like a process. Contrastingly, in the pthread executionn mode, file
+   * descriptors and signal handlers are shared among PiP root and PiP
+   * tasks while maintaining the privatized variables.
+   * \par
+   * To spawn a PiP task in the process mode, the PiP library modifies
+   * the \b clone() flag so that the created PiP task can exhibit the
+   * alomost same way with that of normal Linux process. There are
+   * three ways implmented; using LD_PRELOAD, modifying GLIBC, and
+   * modifying GIOT entry of the \b clone() systemcall. One of the
+   * option flag values; \b PIP_MODE_PTHREAD, \b PIP_MODE_PROCESS,
+   * \b PIP_MODE_PROCESS_PRELOAD, \b PIP_MODE_PROCESS_PIPCLONE, or
+   * b PIP_MODE_PROCESS_GOT can be specified as the option flag. Or,
+   * users may specify the execution mode by the PIP_MODE environment
+   * described below.
+   *
+   * \note In theory, there is no reason to restrict for a PiP task to
+   * spawn another PiP task. However, the current implementation fails
+   * to do so. If the root process is multithreaded, only the main
+   * thread can call this function.
+   *
    * \environment
+   * \arg \b PIP_MODE Specifying the PiP execution mode. The value can be one of;
+   * 'process', 'process:preload', 'process:got' and 'thread' (or 'pthread').
+   * \arg \b PIP_STACKSZ Sepcifying the stack size (in bytes). The
+   * \b KMP_STACKSIZE and \b OMP_STACKSIZE can also be specified. The 't',
+   * 'g', 'm', 'k' and 'b' posfix character can be used.
    * \arg \b PIP_STOP_ON_START Specifying the PIP ID to stop on start
    * PiP task program to debug from the beginning. If the
    * before hook is specified, then the PiP task will be stopped just
    * before calling the before hook.
+   * \arg \b PIP_STACKSZ Sepcifying the stack size (in bytes). The
+   * \b KMP_STACKSIZE and \b OMP_STACKSIZE can also be specified. The 't',
+   * 'g', 'm', 'k' and 'b' posfix character can be used.
    *
    * \bugs
    * In theory, there is no reason to restrict for a PiP task to
@@ -1381,10 +1407,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /**
    * @}
    */
-
-#ifdef PIP_EXPERIMENTAL
-  int pip_migrate( pip_task_t* );
-#endif
 
 #ifndef DOXYGEN_INPROGRESS
 #ifdef __cplusplus

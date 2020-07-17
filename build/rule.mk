@@ -35,7 +35,7 @@ misc-clean:
 	$(RM) *.E *.S
 	$(RM) \#*\# .\#* *~
 	$(RM) core.*
-	$(RM) .nfs*
+	-$(RM) .nfs*
 .PHONY: misc-clean
 
 distclean-here:
@@ -54,13 +54,13 @@ testclean-here:
 	$(RM) seek-file.text
 .PHONY: testclean-here
 
-.PHONY: install-test
+.PHONY: check-installed
 
 ### subdir rules
 
 subdir-all subdir-install \
 subdir-clean subdir-veryclean subdir-distclean \
-subdir-testclean subdir-install-test \
+subdir-testclean subdir-check-installed \
 subdir-doc:
 	@target=`expr $@ : 'subdir-\(.*\)'`; \
 	for dir in -- $(SUBDIRS); do \

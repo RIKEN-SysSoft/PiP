@@ -43,7 +43,7 @@
 //#define EVAL
 
 #include <limits.h>		/* for PTHREAD_STACK_MIN */
-#define PIP_SLEEP_STACKSZ	PTHREAD_STACK_MIN
+#define PIP_TRAMPOLINE_STACKSZ	(PTHREAD_STACK_MIN)
 
 #include <pip_internal.h>
 #include <pip_dlfcn.h>
@@ -281,7 +281,7 @@ static pip_task_internal_t *pip_get_myself( void ) {
 
 void pip_reset_task_struct( pip_task_internal_t *taski ) {
   pip_task_annex_t 	*annex = taski->annex;
-  void			*stack_sleep = annex->stack_sleep;
+  void			*stack_trampoline = annex->stack_trampoline;
   void			*namexp = annex->named_exptab;
 
   memset( (void*) taski, 0, sizeof( pip_task_internal_t ) );
@@ -292,7 +292,7 @@ void pip_reset_task_struct( pip_task_internal_t *taski ) {
   taski->annex = annex;
 
   memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
-  annex->stack_sleep  = stack_sleep;
+  annex->stack_trampoline  = stack_trampoline;
   annex->named_exptab = namexp;
   annex->tid          = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_TASKQ_INIT( &annex->oodq      );
@@ -306,10 +306,10 @@ int pip_check_sync_flag( uint32_t *optsp ) {
 
   DBGF( "flags:0x%x", f );
   if( f ) {
-    if( pip_is_flag_excl( f, PIP_SYNC_AUTO     ) ) goto OK;
-    if( pip_is_flag_excl( f, PIP_SYNC_BUSYWAIT ) ) goto OK;
-    if( pip_is_flag_excl( f, PIP_SYNC_YIELD    ) ) goto OK;
-    if( pip_is_flag_excl( f, PIP_SYNC_BLOCKING ) ) goto OK;
+    if( pip_are_flags_exclusive( f, PIP_SYNC_AUTO     ) ) goto OK;
+    if( pip_are_flags_exclusive( f, PIP_SYNC_BUSYWAIT ) ) goto OK;
+    if( pip_are_flags_exclusive( f, PIP_SYNC_YIELD    ) ) goto OK;
+    if( pip_are_flags_exclusive( f, PIP_SYNC_BLOCKING ) ) goto OK;
     return -1;
   } else {
     char *env = getenv( PIP_ENV_SYNC );
@@ -453,16 +453,16 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
 
     pipid = PIP_PIPID_ROOT;
     pip_set_magic( root );
-    root->version          = PIP_API_VERSION;
-    root->ntasks           = ntasks;
-    root->ntasks_count     = 1; /* root is also a PiP task */
-    root->cloneinfo        = pip_cloneinfo;
-    root->opts             = opts;
-    root->yield_iters      = pip_measure_yieldtime();
-    root->stack_size_sleep = PIP_SLEEP_STACKSZ;
-    root->task_root        = &root->tasks[ntasks];
+    root->version               = PIP_API_VERSION;
+    root->ntasks                = ntasks;
+    root->ntasks_count          = 1; /* root is also a PiP task */
+    root->cloneinfo             = pip_cloneinfo;
+    root->opts                  = opts;
+    root->yield_iters           = pip_measure_yieldtime();
+    root->stack_size_trampoline = PIP_TRAMPOLINE_STACKSZ;
+    root->task_root             = &root->tasks[ntasks];
     if( rt_expp != NULL ) {
-      root->export_root    = *rt_expp;
+      root->export_root = *rt_expp;
     }
     for( i=0; i<ntasks+1; i++ ) {
       root->tasks[i].annex = &root->annex[i];
@@ -474,19 +474,20 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
     taski->pipid      = pipid;
     taski->type       = PIP_TYPE_ROOT;
     taski->task_sched = taski;
+    SETCURR( taski, taski );
     PIP_RUN( taski );
-    SET_CURR_TASK( taski, taski );
 
-    taski->annex->task_root = root;
     taski->annex->loaded    = dlopen( NULL, 0 );
+    taski->annex->task_root = root;
     taski->annex->tid       = pip_gettid();
     taski->annex->thread    = pthread_self();
+
 #ifdef PIP_SAVE_TLS
     pip_save_tls( &taski->tls );
 #endif
-    pip_page_alloc( root->stack_size_sleep,
-		     &taski->annex->stack_sleep );
-    if( taski->annex->stack_sleep == NULL ) {
+    pip_page_alloc( root->stack_size_trampoline,
+		    &taski->annex->stack_trampoline );
+    if( taski->annex->stack_trampoline == NULL ) {
       free( root );
       RETURN( err );
     }

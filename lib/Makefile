@@ -51,7 +51,6 @@ CPPFLAGS += $(PIP_CPPFLAGS) \
 	-DPIP_BUILD_BIN_PIPS=\"../bin/pips\" \
 	$(CPPFLAGS_DEBUG)
 CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
-FCTXOBJS  = fctx_jump.o fctx_make.o
 LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
 
 SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \

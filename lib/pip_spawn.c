@@ -258,13 +258,26 @@ static int pip_find_user_symbols( pip_spawn_program_t *progp,
   RETURN( err );
 }
 
-static int
-pip_find_glibc_symbols( void *handle, pip_task_internal_t *taski ) {
+
+#ifdef RTLD_DEEPBIND
+#define DLMOPEN_FLAGS	  (RTLD_NOW | RTLD_DEEPBIND)
+#else
+#define DLMOPEN_FLAGS	  (RTLD_NOW)
+#endif
+
+static int pip_load_glibc( pip_task_internal_t *taski, Lmid_t lmid ) {
   pip_symbols_t *symp = &taski->annex->symbols;
-  int err = 0;
+  void	*handle;
+  int 	err = 0;
 
   pip_glibc_lock();		/* to protect dlsym */
   {
+    if( ( handle = dlmopen( lmid, PIP_INSTALL_GLIBC, DLMOPEN_FLAGS ) ) == NULL ) {
+      pip_glibc_unlock();
+      DBGF( "dlmopen: %s", dlerror() );
+      err = ENXIO;
+      RETURN( err );
+    }
     /* the GLIBC _init() seems not callable. It seems that */
     /* dlmopen()ed name space does not setup VDSO properly */
     //symp->libc_init        = dlsym( handle, "_init"                 );
@@ -289,6 +302,7 @@ pip_find_glibc_symbols( void *handle, pip_task_internal_t *taski ) {
   if( symp->libc_init == NULL && symp->environ == NULL ) {
     err = ENOEXEC;
   }
+  if( err ) pip_dlclose( handle );
   RETURN( err );
 }
 
@@ -321,52 +335,12 @@ static char *pip_find_newer_libpipinit( void ) {
   return newer;
 }
 
-static int
-pip_load_dsos( pip_spawn_program_t *progp, pip_task_internal_t *taski ) {
-  const char 	*path = progp->prog;
-  Lmid_t	lmid;
+void pip_load_libpip( pip_task_internal_t *taski, Lmid_t lmid ) {
+  void		*loaded = taski->annex->loaded;
+  void		*ld_pipinit = NULL;
   char		*libpipinit = NULL;
   pip_init_t	impinit     = NULL;
-  void 		*loaded     = NULL;
-  void		*ld_glibc   = NULL;
-  void 		*ld_pipinit = NULL;
-  int 		flags = RTLD_NOW;
-  /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
-  int		err = 0;
 
-#ifdef RTLD_DEEPBIND
-  flags |= RTLD_DEEPBIND;
-#endif
-
-  ENTERF( "path:%s", path );
-  lmid = LM_ID_NEWLM;
-  if( ( loaded = pip_dlmopen( lmid, path, flags ) ) == NULL ) {
-    char *dle = pip_dlerror();
-    if( ( err = pip_check_pie( path, 1 ) ) != 0 ) goto error;
-    pip_err_mesg( "dlmopen(%s): %s", path, dle );
-    err = ENOEXEC;
-    goto error;
-  }
-  if( ( err = pip_find_user_symbols( progp, loaded, taski ) ) ) {
-    goto error;
-  }
-  if( pip_dlinfo( loaded, RTLD_DI_LMID, &lmid ) != 0 ) {
-    pip_err_mesg( "Unable to obtain Lmid (%s): %s",
-		  libpipinit, pip_dlerror() );
-    err = ENXIO;
-    goto error;
-  }
-  DBGF( "lmid:%d", (int) lmid );
-  /* load libc explicitly */
-  if( ( ld_glibc = pip_dlmopen( lmid, PIP_INSTALL_GLIBC, flags ) ) == NULL ) {
-    DBGF( "dlmopen: %s", pip_dlerror() );
-    err = ENXIO;
-    DBGF( PIP_INSTALL_GLIBC );;
-    goto error;
-  }
-  if( ( err = pip_find_glibc_symbols( ld_glibc, taski ) ) ) {
-    goto error;
-  }
   /* call pip_init_task_implicitly */
   /*** we cannot call pip_ini_task_implicitly() directly here  ***/
   /*** the name space contexts of here and there are different ***/
@@ -375,7 +349,7 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_internal_t *taski ) {
     DBGF( "dlsym: %s", pip_dlerror() );
     if( ( libpipinit = pip_find_newer_libpipinit() ) != NULL ) {
       DBGF( "libpipinit: %s", libpipinit );
-      if( ( ld_pipinit = pip_dlmopen( lmid, libpipinit, flags ) ) == NULL ) {
+      if( ( ld_pipinit = pip_dlmopen( lmid, libpipinit, DLMOPEN_FLAGS ) ) == NULL ) {
 	pip_warn_mesg( "Unable to load %s: %s", libpipinit, pip_dlerror() );
       } else {
 	impinit = (pip_init_t) pip_dlsym( ld_pipinit, "pip_init_task_implicitly" );
@@ -386,13 +360,45 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_internal_t *taski ) {
   taski->annex->symbols.pip_init = impinit;
   taski->annex->symbols.named_export_fin =
     pip_dlsym( loaded, "pip_named_export_fin" );
+}
+
+static int
+pip_load_dsos( pip_spawn_program_t *progp, pip_task_internal_t *taski ) {
+  const char 	*prog = progp->prog;
+  Lmid_t	lmid = LM_ID_NEWLM;
+  void 		*loaded = NULL;
+  int		err = 0;
+
+  ENTERF( "prog: %s", prog );
+  if( ( loaded = pip_dlmopen( lmid, prog, DLMOPEN_FLAGS ) ) == NULL ) {
+    char *dle = pip_dlerror();
+    if( ( err = pip_check_pie( prog, 1 ) ) != 0 ) goto error;
+    pip_err_mesg( "dlmopen(%s): %s", prog, dle );
+    err = ENOEXEC;
+    goto error;
+  }
+  DBG;
+  if( ( err = pip_find_user_symbols( progp, loaded, taski ) ) ) {
+    goto error;
+  }
+  DBG;
+  if( pip_dlinfo( loaded, RTLD_DI_LMID, &lmid ) != 0 ) {
+    pip_err_mesg( "Unable to obtain Lmid - %s", pip_dlerror() );
+    err = ENXIO;
+    goto error;
+  }
   taski->annex->loaded = loaded;
+
+  DBGF( "lmid: %d", (int) lmid );
+  /* load libc explicitly */
+  if( ( err = pip_load_glibc( taski, lmid ) ) ) {
+    goto error;
+  }
+  pip_load_libpip( taski, lmid );
   RETURN( 0 );
 
  error:
-  if( loaded     != NULL ) pip_dlclose( loaded    );
-  if( ld_glibc   != NULL ) pip_dlclose( ld_glibc  );
-  if( ld_pipinit != NULL ) pip_dlclose( ld_pipinit);
+  if( loaded != NULL ) pip_dlclose( loaded );
   RETURN( err );
 }
 
@@ -401,7 +407,7 @@ static int pip_load_prog( pip_spawn_program_t *progp,
 			  pip_task_internal_t *taski ) {
   int 	err;
 
-  ENTERF( "prog=%s", progp->prog );
+  ENTERF( "prog: %s", progp->prog );
 
   PIP_ACCUM( time_load_dso,
 	     ( err = pip_load_dsos( progp, taski ) ) == 0 );
@@ -411,12 +417,13 @@ static int pip_load_prog( pip_spawn_program_t *progp,
 
 int pip_do_corebind( pid_t tid, uint32_t coreno, cpu_set_t *oldsetp ) {
   cpu_set_t cpuset;
-  int flags  = coreno >> PIP_CPUCORE_FLAG_SHIFT;
+  int flags  = coreno & PIP_CPUCORE_FLAG_MASK;
   int i, err = 0;
 
   ENTER;
-  /* PIP_CPUCORE_ASIS flag is exclusive */
-  if( ( flags & PIP_CPUCORE_ASIS ) != flags ) RETURN( EINVAL );
+  /* PIP_CPUCORE_* flags are exclusive */
+  if( ( flags & PIP_CPUCORE_ASIS ) != flags &&
+      ( flags & PIP_CPUCORE_ABS  ) != flags ) RETURN( EINVAL );
   if( flags & PIP_CPUCORE_ASIS ) RETURN( 0 );
   coreno &= PIP_CPUCORE_CORENO_MASK;
   if( coreno >= PIP_CPUCORE_CORENO_MAX ) RETURN ( EINVAL );
@@ -599,11 +606,8 @@ static void pip_reset_signal_handler( int sig ) {
 }
 
 static void pip_start_cb( void *tsk ) {
-   pip_task_internal_t *taski = (pip_task_internal_t*) tsk;
+  pip_task_internal_t *taski = (pip_task_internal_t*) tsk;
   /* let root proc know the task is running (or enqueued) */
-  taski->annex->tid    = pip_gettid();
-  DBGF( "TID:%d", taski->annex->tid );
-  taski->annex->thread = pthread_self();
   pip_glibc_unlock();
   /* let pip-gdb know */
   pip_gdbif_task_commit( taski );
@@ -741,6 +745,8 @@ static void* pip_spawn_top( void *thargs )  {
   pip_task_internal_t 	*self  = &pip_root->tasks[pipid];
   int			err    = 0;
 
+  self->annex->tid    = pip_gettid();
+  self->annex->thread = pthread_self();
   ENTER;
   pip_set_name( self );
   pip_save_tls( &self->tls );
@@ -821,8 +827,8 @@ static int pip_check_active_flag( uint32_t flags ) {
 
   DBGF( "flags:0x%x", flags );
   if( f ) {
-    if( pip_is_flag_excl( f, PIP_TASK_ACTIVE   ) ) goto OK;
-    if( pip_is_flag_excl( f, PIP_TASK_INACTIVE ) ) goto OK;
+    if( pip_are_flags_exclusive( f, PIP_TASK_ACTIVE   ) ) goto OK;
+    if( pip_are_flags_exclusive( f, PIP_TASK_INACTIVE ) ) goto OK;
     return 1;
   }
  OK:
@@ -872,7 +878,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   task->pipid      = pipid;	/* mark it as occupied */
   task->type       = PIP_TYPE_TASK;
   task->task_sched = task;
-  task->refcount   = 1;
+  SETCURR( task, task );
 
   task->annex->opts          = opts;
   task->annex->task_root     = pip_root;
@@ -886,9 +892,9 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     task->annex->hook_after  = hookp->after;
     task->annex->hook_arg    = hookp->hookarg;
   }
-  SET_CURR_TASK( task, task );
   /* allocate stack for sleeping */
-  pip_page_alloc( pip_root->stack_size_sleep, &task->annex->stack_sleep );
+  pip_page_alloc( pip_root->stack_size_trampoline,
+		  &task->annex->stack_trampoline );
 
   args = &task->annex->args;
   args->pipid     = pipid;
@@ -935,8 +941,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
       PIP_MODE_PROCESS_PIPCLONE ) {
     int flags = pip_clone_flags( CLONE_PARENT_SETTID |
 				 CLONE_CHILD_CLEARTID |
-				 CLONE_SYSVSEM |
-				 CLONE_PTRACE );
+				 CLONE_SYSVSEM );
     pid_t pid;
 
     /* we need lock on ldlinux. supposedly glibc does someting */

@@ -8,7 +8,7 @@
 #define PACKAGE_NAME "pip"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "pip 2.0.0"
+#define PACKAGE_STRING "pip 3.0.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "pip"
@@ -17,7 +17,7 @@
 #define PACKAGE_URL "https://github.com/RIKEN-SysSoft/PiP"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.0.0"
+#define PACKAGE_VERSION "3.0.0"
 
 /* using fcontext w/ or w/o FPREG */
 #define enable_fcontext 1

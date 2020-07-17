@@ -87,10 +87,10 @@
 /** ULP UNsupported version (RELEASED as PiP v2)
 #define PIP_BASE_VERSION	(0x3000U)
 **/
-/** ULP supported version -- abandoned to releas
+/** ULP supported version -- abandoned to release
 #define PIP_BASE_VERSION	(0x2000U)
 **/
-/** The very first stable release version -- no this was no so much stable !!
+/** The very first stable release version -- No, this was not stable !!
 #define PIP_BASE_VERSION	(0x1000U)
 **/
 
@@ -102,15 +102,12 @@
 #define PIP_MAGIC_WORD		"PrcInPrc"
 #define PIP_MAGIC_WLEN		(8)
 
-#define PIP_LD_SOLIBS		{ NULL }
-
 #define PIP_STACK_SIZE		(8*1024*1024) /* 8 MiB */
 #define PIP_STACK_SIZE_MIN	(1*1024*1024) /* 1 MiB */
 #define PIP_STACK_ALIGN		(256)
 
 #define PIP_EXITED		(1)
 #define PIP_EXIT_WAITED		(2)
-#define PIP_ABORT		(9)
 
 struct pip_root;
 struct pip_task_internal;
@@ -168,8 +165,8 @@ typedef int  (*named_export_fin_t)(struct pip_task_internal*);
 typedef int  (*pip_clone_mostly_pthread_t)
 ( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
 typedef int  (*pip_init_t)(struct pip_root*,pip_task_internal_t*);
-typedef
-int(*clone_syscall_t)(int(*)(void*), void*, int, void*, pid_t*, void*, pid_t*);
+typedef int  (*pip_clone_syscall_t)(int(*)(void*),void*,int,void*,pid_t*,void*,pid_t*);
+typedef pip_task_internal_t* (*pip_current_utask_t)( void );
 
 typedef struct pip_symbol {
   main_func_t		main;	      /* main function address */
@@ -178,20 +175,23 @@ typedef struct pip_symbol {
   pip_init_t		pip_init;     /* implicit initialization */
   named_export_fin_t	named_export_fin; /* for free()ing hash entries */
   /* glibc variables */
-  char			***libc_argvp; /* to set __libc_argv */
-  int			*libc_argcp;   /* to set __libc_argc */
-  char			**prog;
-  char			**prog_full;
+  char			***libc_argvp; /* to set __libc_argv     */
+  int			*libc_argcp;   /* to set __libc_argc     */
+  char			**prog;	       /* to set __progname      */
+  char			**prog_full;   /* to set __progname_full */
   char			***environ;    /* pointer to the environ variable */
   /* GLIBC init funcs */
   libc_init_first_t	libc_init;    /* initialize GLIBC */
-  res_init_t		res_init;     /* to call GLIBC res_init() */
+  res_init_t		res_init;     /* (unused) GLIBC res_init() */
   ctype_init_t		ctype_init;   /* to call GLIBC __ctype_init() */
-  long long		*malloc_hook;
   /* GLIBC functions */
-  mallopt_t		mallopt;      /* to call GLIBC mallopt() */
-  fflush_t		libc_fflush;  /* to call GLIBC fflush() at the end */
-  void			*__reserved__[3]; /* reserved for future use */
+  mallopt_t		mallopt;	/* to call GLIBC mallopt() */
+  long long		*malloc_hook;	/* Kaiming patch */
+  long long		*realloc_hook;	/* (unused) */
+  long long 		*memalign_hook;	/* (unused) */
+  long long		*free_hook;	/* (unused) */
+  fflush_t		libc_fflush; /* to call GLIBC fflush() at the end */
+  void			*__reserved__[17]; /* reserved for future use */
 } pip_symbols_t;
 
 typedef struct pip_char_vec {
@@ -217,10 +217,10 @@ typedef sem_t			pip_sem_t;
 
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
-  pip_task_internal_t		*task_curr;
-  pip_ctx_p			ctx_sleep; /* context to resume */
+  pip_task_internal_t		*task_wakeup;
+  pip_ctx_p			ctx_trampoline; /* trampoline context */
   pip_sem_t			sleep;
-  void				*stack_sleep;
+  void				*stack_trampoline;
 
   pip_task_t			oodq;	   /* out-of-damain queue */
   pip_spinlock_t		lock_oodq; /* lock for OOD queue */
@@ -244,10 +244,13 @@ typedef struct pip_task_annex {
   pip_spawnhook_t		hook_before; /* before spawning hook */
   pip_spawnhook_t		hook_after;  /* after spawning hook */
   void				*hook_arg;   /* hook arg */
+  /* for debug */
+  pip_task_internal_t		*task_current;
   /* GDB interface */
   void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
   void				*sigalt_stack;
+  void				*__reserved__[10]; /* reserved for future use */
 } pip_task_annex_t;
 
 #define PIP_TASKI(TASK)		((pip_task_internal_t*)(TASK))
@@ -290,50 +293,47 @@ typedef struct pip_env {
 
 typedef struct pip_root {
   /* sanity check info */
-  char			magic[PIP_MAGIC_WLEN];
-  unsigned int		version;
-  size_t		size_whole;
-  size_t		size_root;
-  size_t		size_task;
-  size_t		size_annex;
+  char				magic[PIP_MAGIC_WLEN];
+  unsigned int			version;
+  size_t			size_whole;
+  size_t			size_root;
+  size_t			size_task;
+  size_t			size_annex;
   /* actual root info */
-  void *volatile	export_root;
-  pip_atomic_t		ntasks_blocking;
-  pip_atomic_t		ntasks_count;
-  int			ntasks_accum; /* not used */
-  int			ntasks;
-  int			pipid_curr;
-  uint32_t		opts;
-  int			yield_iters;
-  size_t		page_size;
-  pip_clone_t		*cloneinfo; /* only valid with process:preload */
-  pip_task_internal_t	*task_root; /* points to tasks[ntasks] */
-  pip_spinlock_t	lock_tasks; /* lock for finding a new task id */
-  pip_sem_t		lock_glibc; /* lock for GLIBC functions */
-  pip_sem_t		sync_spawn; /* Spawn synch */
+  void *volatile		export_root;
+  pip_atomic_t			ntasks_blocking;
+  pip_atomic_t			ntasks_count;
+  int				ntasks_accum; /* not used */
+  int				ntasks;
+  int				pipid_curr;
+  uint32_t			opts;
+  int				yield_iters;
+  size_t			page_size;
+  pip_clone_t			*cloneinfo; /* only valid with process:preload */
+  pip_task_internal_t		*task_root; /* points to tasks[ntasks] */
+  pip_spinlock_t		lock_tasks; /* lock for finding a new task id */
+  pip_sem_t			lock_glibc; /* lock for GLIBC functions */
+  pip_sem_t			sync_spawn; /* Spawn synch */
   /* BLT related info */
-  size_t		stack_size_blt; /* stack size for BLTs */
-  size_t		stack_size_sleep; /* stack size for sleeping */
+  size_t			stack_size_blt; /* stack size for BLTs */
+  size_t			stack_size_trampoline; /* stack size for trampoline */
   /* signal related members */
-  sigset_t		old_sigmask;
+  sigset_t			old_sigmask;
   /* for chaining signal handlers */
-  struct sigaction	old_sigterm;
-  struct sigaction	old_sigchld;
+  struct sigaction		old_sigterm;
+  struct sigaction		old_sigchld;
   /* environments */
-  pip_env_t		envs;
+  pip_env_t			envs;
   /* GDB Interface */
-  struct pip_gdbif_root	*gdbif_root;
+  struct pip_gdbif_root		*gdbif_root;
   /* for backtrace */
-  pip_spinlock_t	lock_bt; /* lock for backtrace */
+  pip_spinlock_t		lock_bt; /* lock for backtrace */
+  void				*__reserved__[32]; /* reserved for future use */
   /* PiP tasks array */
-  pip_task_annex_t	*annex;
-  pip_task_internal_t	tasks[];
+  pip_task_annex_t		*annex;
+  pip_task_internal_t		tasks[];
 
 } pip_root_t;
-
-extern pip_clone_mostly_pthread_t 	pip_clone_mostly_pthread_ptr;
-extern int  pip_get_thread_id( pthread_t th );
-extern void pip_set_thread_id( pthread_t th, int );
 
 #define PIP_MIDLEN		(64)
 
@@ -353,9 +353,13 @@ extern void pip_set_thread_id( pthread_t th, int );
 extern pip_root_t		*pip_root;
 extern pip_task_internal_t	*pip_task;
 
+extern pip_clone_mostly_pthread_t 	pip_clone_mostly_pthread_ptr;
+
 extern int __attribute__ ((visibility ("default")))
 pip_init_task_implicitly( pip_root_t *root,
 			  pip_task_internal_t *task );
+
+extern void pip_wakeup( pip_task_internal_t *taski ) PIP_PRIVATE;
 
 extern  void pip_terminate_task( pip_task_internal_t *self ) PIP_PRIVATE;
 extern void pip_decouple_context( pip_task_internal_t *taski,
@@ -366,6 +370,7 @@ extern void pip_swap_context( pip_task_internal_t *taski,
 			      pip_task_internal_t *nexti ) PIP_PRIVATE;
 extern void pip_stack_protect( pip_task_internal_t *taski,
 			       pip_task_internal_t *nexti ) PIP_PRIVATE;
+extern void pip_stack_unprotect( pip_task_internal_t *taski ) PIP_PRIVATE;
 extern void pip_stack_wait( pip_task_internal_t *taski ) PIP_PRIVATE;
 
 extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
@@ -431,10 +436,10 @@ extern int  pip_are_sizes_ok( pip_root_t* ) PIP_PRIVATE;
 
 extern void pip_debug_on_exceptions( pip_task_internal_t* ) PIP_PRIVATE;
 
-extern pip_task_internal_t *pip_current_task( int ) PIP_PRIVATE;
+extern pip_task_internal_t *pip_current_ktask( int ) PIP_PRIVATE;
 
 
-INLINE int pip_is_flag_excl( uint32_t flags, uint32_t val ) {
+INLINE int pip_are_flags_exclusive( uint32_t flags, uint32_t val ) {
   return ( flags & val ) == ( flags | val );
 }
 
@@ -445,15 +450,14 @@ INLINE void pip_sem_init( pip_sem_t *sem ) {
 }
 
 INLINE void pip_sem_post( pip_sem_t *sem ) {
-  errno = 0;
-  (void) sem_post( sem );
-  ASSERT( errno );
+  ASSERT( sem_post( sem ) );
 }
 
 INLINE void pip_sem_wait( pip_sem_t *sem ) {
-  errno = 0;
-  (void) sem_wait( sem );
-  ASSERT( errno !=0 && errno != EINTR );
+  while( 1 ) {
+    if( sem_wait( sem ) == 0 ) break;
+    ASSERT( errno != EINTR );
+  }
 }
 
 INLINE void pip_sem_fin( pip_sem_t *sem ) {
@@ -511,7 +515,6 @@ INLINE pip_task_internal_t *pip_get_task( int pipid ) {
 
 INLINE void pip_system_yield( void ) {
   if( pip_root != NULL && pip_is_threaded_() ) {
-    int pthread_yield( void );
     (void) pthread_yield();
   } else {
     sched_yield();

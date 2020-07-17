@@ -44,6 +44,7 @@ print_usage() {
     echo >&2 "    -s: show stdout/stderr";
     echo >&2 "    -k: clean loop-*.log files before running test proram";
     echo >&2 "    -d: Supress debug output (may affects timing)";
+    echo >&2 "    -i: ignore error";
     echo >&2 "    -S: Silent mode";
     exit 2;
 }
@@ -83,6 +84,7 @@ klean=0;
 nodebug=0;
 mode_list='';
 nomode=0;
+ignore_err=0;
 
 case $# in
     0)	print_usage;;
@@ -104,6 +106,7 @@ case $# in
 	    case $1 in *k)        klean=1;;      esac
 	    case $1 in *d)        nodebug=1;;    esac
 	    case $1 in *S)        quiet=1;;      esac
+	    case $1 in *i)        ignore_err=1;; esac
 	    case $1 in *h | *u)   print_usage;;  esac
 	    shift;
         done
@@ -135,7 +138,7 @@ if [ $nomode -eq 0 ]; then
     for mode in $mode_list
     do
 	if $dir/scripts/pip-mode $mode $dir/util/pip_mode_check > /dev/null 2>&1; then
-	    mlist="$mode $mlist";
+	    mlist="$mlist $mode";
 	fi
     done
 fi
@@ -147,9 +150,11 @@ TMP=.$FILE;
 i=0;
 start=`date +%s`;
 
-if [ $display -eq 0 ]; then
+if [ $display -ne 0 ]; then
     set -o pipefail;
 fi
+
+err_count=0
 
 while true; do
     if [ $nomode -eq 0 ]; then
@@ -166,14 +171,16 @@ while true; do
 		$dir_script/pip-mode $mode $@ 2>&1 | tee -a $TMP;
 	    fi
 	    ext=$?;
-	    if [ $ext != 0 ]; then
-		prt_ext $ext;
-		finalize;
-		exit $ext;
-	    else
-		rm -f $TMP
-		touch $TMP
+	    if [ $ext != 0 ] ; then
+		err_count=$((err_count+1));
+		if [ $ignore_err -eq 0 ] ; then
+		    prt_ext $ext;
+		    finalize;
+		    exit $ext;
+		fi
 	    fi
+	    rm -f $TMP;
+	    touch $TMP;
 	done
     else			# nomode
 	echo "" > $TMP;
@@ -191,16 +198,24 @@ while true; do
 	fi
 	ext=$?;
 	if [ $ext != 0 ]; then
-	    prt_ext $ext;
-	    finalize;
-	    exit $ext;
-	else
-	    rm -f $TMP
-	    touch $TMP
+	    err_count=$((err_count+1));
+	    if [ $ignore_err -eq 0 ] ; then
+	        prt_ext $ext;
+	        finalize;
+	        exit $ext;
+	    fi
 	fi
+	rm -f $TMP;
+	touch $TMP;
     fi
 
     i=$((i+1));
+
+    if [ $err_count -gt 0 ] ; then
+	echo;
+	echo "*** Error run: $err_count / $i";
+    fi
+
     if [ $iteration -gt 0 -a $i -ge $iteration ]; then
 	if [ $quiet -eq 0 ]; then
 	    echo;

@@ -154,14 +154,15 @@ extern int pip_debug_env( void );
     return; } while(0)
 
 #define ASSERTD(X)							\
-  if(DBGSW) { if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);	\
-      pip_debug_info(); pip_abort(); } } while(0)
-
-#define SET_CURR_TASK(sched,task)	(sched)->annex->task_curr=(task)
+  if(X){NL_EMSG("{%s} Assertion FAILED (DEBUG) !!!!!!\n",#X);		\
+    pip_debug_info(); pip_abort(); }
 
 #define DPAUSE	\
   do { struct timespec __ts; __ts.tv_sec=0; __ts.tv_nsec=1*1000*1000;	\
     nanosleep( &__ts, NULL ); } while(0)
+
+#define SETCURR(S,T)	(S)->annex->task_current = (T)
+#define UNSETCURR(S)	(S)->annex->task_current = NULL
 
 #else  /* DEBUG */
 
@@ -175,7 +176,8 @@ extern int pip_debug_env( void );
 #define ASSERTD(X)
 #define DPAUSE
 
-#define SET_CURR_TASK(sched,task)
+#define SETCURR(S,T)
+#define UNSETCURR(S)
 
 #endif	/* !DEBUG */
 

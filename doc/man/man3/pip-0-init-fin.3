@@ -1,4 +1,4 @@
-.TH "PiP Initialization/Finalization" 3 "Tue Jul 7 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Initialization/Finalization" 3 "Fri Jul 17 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -72,9 +72,14 @@ A PiP task may or may not call this function\&. If \fCpip_init\fP is not called 
 \fIopts\fP Specifying the PiP execution mode and See below\&.
 .RE
 .PP
-\fBNotes\fP
+\fBExecution mode option\fP
 .RS 4
-The \fCopts\fP may have one of the defined values \fCPIP_MODE_PTHREAD\fP, \fCPIP_MODE_PROCESS\fP, \fCPIP_MODE_PROCESS_PRELOAD\fP, \fCPIP_MODE_PROCESS_PIPCLONE\fP and \fCPIP_MODE_PROCESS_GOT\fP, or any combination (bit-wise or) of them\&. If combined or \fCopts\fP is zero, then an appropriate one is chosen by the library\&. This PiP execution mode can be specified by an environment variable described below\&.
+Users may explicitly specify the PiP execution mode\&. This execution mode can be categorized in two; process mode and thread mode\&. In the process execution mode, each PiP task may have its own file descriptors, signal handlers, and so on, just like a process\&. Contrastingly, in the pthread executionn mode, file descriptors and signal handlers are shared among PiP root and PiP tasks while maintaining the privatized variables\&. 
+.RE
+.PP
+\fB\fP
+.RS 4
+To spawn a PiP task in the process mode, the PiP library modifies the \fBclone()\fP flag so that the created PiP task can exhibit the alomost same way with that of normal Linux process\&. There are three ways implmented; using LD_PRELOAD, modifying GLIBC, and modifying GIOT entry of the \fBclone()\fP systemcall\&. One of the option flag values; \fBPIP_MODE_PTHREAD\fP, \fBPIP_MODE_PROCESS\fP, \fBPIP_MODE_PROCESS_PRELOAD\fP, \fBPIP_MODE_PROCESS_PIPCLONE\fP, or \fBPIP_MODE_PROCESS_GOT\fP can be specified as the option flag\&. Or, users may specify the execution mode by the \fBPIP_MODE\fP environment described below\&.
 .RE
 .PP
 \fBReturns:\fP
@@ -103,7 +108,11 @@ Zero is returned if this function succeeds\&. Otherwise an error number is retur
 .IP "\(bu" 2
 \fBPIP_MODE\fP Specifying the PiP execution mmode\&. Its value can be either \fCthread\fP, \fCpthread\fP, \fCprocess\fP, \fCprocess:preload\fP, \fCprocess:pipclone\fP, or \fCprocess:got\fP\&. 
 .IP "\(bu" 2
-\fBLD_PRELOAD\fP This is required to set appropriately to hold the path to \fCpip_preload\&.so\fP file, if the PiP execution mode is \fCPIP_MODE_PROCESS_PRELOAD\fP (the \fCopts\fP in \fCpip_init\fP) and/or the PIP_MODE ennvironment is set to \fCprocess:preload\fP\&. See also the pip_mode(1) command to set the environment variable appropriately and easily\&. 
+\fBLD_PRELOAD\fP This is required to set appropriately to hold the path to the \fCpip_preload\&.so\fP file, if the PiP execution mode is \fCPIP_MODE_PROCESS_PRELOAD\fP (the \fCopts\fP in \fCpip_init\fP) and/or the PIP_MODE ennvironment is set to \fCprocess:preload\fP\&. See also the pip_mode(1) command to set the environment variable appropriately and easily\&. 
+.IP "\(bu" 2
+\fBPIP_STACKSZ\fP Sepcifying the stack size (in bytes)\&. The \fBKMP_STACKSIZE\fP and \fBOMP_STACKSIZE\fP are also effective\&. The 't', 'g', 'm', 'k' and 'b' posfix character can be used\&. 
+.IP "\(bu" 2
+\fBPIP_STOP_ON_START\fP Specifying the PIP ID to stop on start to debug the specified PiP task from the beginning\&. If the before hook is specified, then the PiP task will be stopped just before calling the before hook\&. 
 .IP "\(bu" 2
 \fBPIP_GDB_PATH\fP If thisenvironment is set to the path pointing to the PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered\&. The signals which triggers the PiP-gdb invokation can be specified the \fCPIP_GDB_SIGNALS\fP environment described below\&. 
 .IP "\(bu" 2

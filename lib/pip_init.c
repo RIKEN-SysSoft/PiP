@@ -39,7 +39,11 @@
 
 pip_root_t		*pip_root PIP_PRIVATE;
 pip_task_internal_t	*pip_task PIP_PRIVATE;
+
 struct pip_gdbif_root	*pip_gdbif_root PIP_PRIVATE;
+
+static char *pip_path_gdb;
+static char *pip_command_gdb;
 
 pid_t pip_gettid( void ) {
   return (pid_t) syscall( (long int) SYS_gettid );
@@ -84,9 +88,10 @@ int pip_is_threaded_( void ) {
 
 #define PIP_MESGLEN		(512)
 static void
-pip_message( FILE *fp, char *tag, char *nl, const char *format, va_list ap ) {
+pip_message( FILE *fp, char *tag, int fnl, const char *format, va_list ap ) {
   char mesg[PIP_MESGLEN];
   char idstr[PIP_MIDLEN];
+  char *nl = ( fnl )? "\n" : "";
   int len, l;
 
   len = snprintf( &mesg[0], PIP_MESGLEN, "%s", tag );
@@ -102,62 +107,57 @@ void pip_info_fmesg( FILE *fp, const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
   if( fp == NULL ) fp = stderr;
-  pip_message( fp, "PiP-INFO", "", format, ap );
+  pip_message( fp, "PiP-INFO", 0, format, ap );
   va_end( ap );
 }
 
 void pip_info_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( stderr, "PiP-INFO", "", format, ap );
+  pip_message( stderr, "PiP-INFO", 0, format, ap );
   va_end( ap );
 }
 
 void pip_warn_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( stderr, "PiP-WRN", "", format, ap );
+  pip_message( stderr, "PiP-WARN", 0, format, ap );
   va_end( ap );
 }
 
 void pip_err_mesg( const char *format, ... ) {
   va_list ap;
   va_start( ap, format );
-  pip_message( stderr, "\nPiP-ERR", "\n", format, ap );
+  pip_message( stderr,
+#ifdef DEBUG
+	       "\nPiP-ERR", 1,
+#else
+	       "PiP-ERR", 0,
+#endif
+	       format, ap );
   va_end( ap );
 }
 
-static char *pip_path_gdb;
-static char *pip_command_gdb;
-
-pip_task_internal_t *pip_current_task( int tid ) {
+pip_task_internal_t *pip_current_ktask( int tid ) {
   /* do not put any DBG macors in this function */
   pip_root_t		*root = pip_root;
   pip_task_internal_t 	*taski;
   static int		curr = 0;
+  int 			i;
 
   if( root != NULL ) {
-    if( root->task_root != NULL &&
-	tid == root->task_root->annex->tid ) {
-      return root->task_root;
-    } else {
-      int i;
-      for( i=curr; i<root->ntasks; i++ ) {
-	taski = &root->tasks[i];
-	if( taski->pipid == PIP_PIPID_ROOT ||
-	    ( taski->pipid >= 0 && taski->pipid < root->ntasks ) ) {
-	  if( tid == taski->annex->tid ) {
-	    curr = i;
-	    return taski;
-	  }
-	}
+    for( i=curr; i<root->ntasks+1; i++ ) {
+      taski = &root->tasks[i];
+      if( tid == taski->annex->tid ) {
+	curr = i;
+	return taski;
       }
-      for( i=0; i<curr; i++ ) {
-	taski = &root->tasks[i];
-	if( tid == taski->annex->tid ) {
-	  curr = i;
-	  return taski;
-	}
+    }
+    for( i=0; i<curr; i++ ) {
+      taski = &root->tasks[i];
+      if( tid == taski->annex->tid ) {
+	curr = i;
+	return taski;
       }
     }
   }
@@ -166,81 +166,47 @@ pip_task_internal_t *pip_current_task( int tid ) {
 
 static int
 pip_pipid_str( char *p, size_t sz, int pipid, int upper ) {
-  int	n = 0;
+  char	c;
 
-  /* do not call ctype function here !! */
-  if( upper ) {
-    switch( pipid ) {
-    case PIP_PIPID_ROOT:
-      n = snprintf( p, sz, "R" );
-      break;
-    case PIP_PIPID_MYSELF:
-      n = snprintf( p, sz, "S" );
-      break;
-    case PIP_PIPID_ANY:
-      n = snprintf( p, sz, "A" );
-      break;
-    case PIP_PIPID_NULL:
-      n = snprintf( p, sz, "N" );
-      break;
-    default:
-      if( pip_root != NULL && pip_root->ntasks > 0 ) {
-	if( 0 <= pipid && pipid < pip_root->ntasks ) {
-	  n = snprintf( p, sz, "T%d", pipid );
-	} else {
-	  n = snprintf( p, sz, "?" );
-	}
+  /* !! NEVER CALL CTYPE FUNCTION HERE !! */
+  /* it may NOT be initialized and cause SIGSEGV */
+  switch( pipid ) {
+  case PIP_PIPID_ROOT:
+    c = (upper)? 'R' : 'r'; goto one_char;
+    break;
+  case PIP_PIPID_MYSELF:
+    c = (upper)? 'S' : 's'; goto one_char;
+    break;
+  case PIP_PIPID_ANY:
+    c = (upper)? 'A' : 'a'; goto one_char;
+    break;
+  case PIP_PIPID_NULL:
+    c = (upper)? 'U' : 'u'; goto one_char;
+    break;
+  default:
+    c = (upper)? 'T' : 't';
+    if( pip_root != NULL && pip_root->ntasks > 0 ) {
+      if( 0 <= pipid && pipid < pip_root->ntasks ) {
+	return snprintf( p, sz, "%c%d", c, pipid );
       } else {
-	if( 0 <= pipid ) {
-	  n = snprintf( p, sz, "T%d", pipid );
-	} else {
-	  n = snprintf( p, sz, "?" );
-	}
-      }
-    }
-  } else {
-    switch( pipid ) {
-    case PIP_PIPID_ROOT:
-      n = snprintf( p, sz, "r" );
-      break;
-    case PIP_PIPID_MYSELF:
-      n = snprintf( p, sz, "s" );
-      break;
-    case PIP_PIPID_ANY:
-      n = snprintf( p, sz, "a" );
-      break;
-    case PIP_PIPID_NULL:
-      n = snprintf( p, sz, "n" );
-      break;
-    default:
-      if( pip_root != NULL && pip_root->ntasks > 0 ) {
-	if( 0 <= pipid && pipid < pip_root->ntasks ) {
-	  n = snprintf( p, sz, "t%d", pipid );
-	} else {
-	  n = snprintf( p, sz, "?" );
-	}
-      } else {
-	if( 0 <= pipid ) {
-	  n = snprintf( p, sz, "t%d", pipid );
-	} else {
-	  n = snprintf( p, sz, "?" );
-	}
+	return snprintf( p, sz, "%c##", c );
       }
     }
   }
-  return n;
+  c = '?';
+
+ one_char:
+  return snprintf( p, sz, "%c", c );
 }
 
-int
-pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
+int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
   int 	n = 0;
 
   if( taski == NULL ) {
-    n = snprintf( p, sz, "_" );
+    n = snprintf( p, sz, "~" );
   } else if( taski->type == PIP_TYPE_NONE ) {
-    n = snprintf( p, sz, "*" );
+    n = snprintf( p, sz, "_" );
   } else if( PIP_ISA_TASK( taski ) ) {
-    //    n = pip_pipid_str( p, sz, taski->pipid, PIP_IS_RUNNING(taski) );
     n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
   } else {
     n = snprintf( p, sz, "!" );
@@ -252,19 +218,50 @@ int pip_task_str( char *p, size_t sz, pip_task_t *task ) {
   return pip_taski_str( p, sz, PIP_TASKI(task) );
 }
 
+#ifdef DEBUG
+static int
+pip_on_trampoline( pip_task_internal_t *taski, void *stack_varp ) {
+  if( taski != NULL && taski->annex  != NULL &&
+      taski->annex->stack_trampoline != NULL &&
+      taski->annex->task_root        != NULL ) {
+    void  *stack_start;
+    size_t stack_size;
+
+    stack_start = taski->annex->stack_trampoline;
+    stack_size  = taski->annex->task_root->stack_size_trampoline;
+    return( stack_start <= stack_varp &&
+	    stack_varp  <  stack_start + stack_size );
+  } else {
+    return 0;
+  }
+}
+#endif
+
 size_t pip_idstr( char *p, size_t s ) {
   pid_t			tid  = pip_gettid();
+  pip_task_internal_t	*kc  = pip_current_ktask( tid );
   pip_task_internal_t	*ctx = pip_task;
-  pip_task_internal_t	*kc  = pip_current_task( tid );
-  char 			*opn = "[", *cls = "]", *delim = ":";
+  char 			*opn, *cls;
+  char 			*opnN = "[", *clsN = "]";
+  char			*delim = ":";
   int			n;
 
 #ifdef DEBUG
-  pip_task_internal_t	*uc  =
-    ( kc == NULL ) ? NULL : kc->annex->task_curr;
+  int ontc = pip_on_trampoline( kc, (void*) &n );
+
+  pip_task_internal_t	*uc =
+    ( ontc || kc == NULL ) ? NULL : kc->annex->task_current;
   pip_task_internal_t	*schd =
     ( uc == NULL ) ? NULL : uc->task_sched;
   char 			*sched = "/";
+  char 			*opnT = " <", *clsT = ">";
+  if( kc != NULL && ontc ) {
+    opn = opnT; cls = clsT;
+  } else {
+    opn = opnN; cls = clsN;
+  }
+#else
+  opn = opnN; cls = clsN;
 #endif
 
   n = snprintf( p, s, "%s", opn ); 	s -= n; p += n;
@@ -281,13 +278,12 @@ size_t pip_idstr( char *p, size_t s ) {
     n = pip_taski_str( p, s, ctx );	s -= n; p += n;
   }
   n = snprintf( p, s, "%s", cls ); 	s -= n; p += n;
-
   return s;
 }
 
 void pip_describe( pid_t tid ) __attribute__ ((unused));
 void pip_describe( pid_t tid ) {
-  pip_task_internal_t *taski = pip_current_task( tid );
+  pip_task_internal_t *taski = pip_current_ktask( tid );
   char  *backtrace = "back-traced";
   char  *debugged  = "debugged";
   char	*trailer;
@@ -358,19 +354,12 @@ static void pip_attach_gdb( void ) {
       /*  8 */ argv[argc++] = NULL;
     }
     (void) close( 0 );		/* close STDIN */
-#ifdef AH
-    {
-      int i;
-      for( i=0; i<argc; i++ ) {
-	DBGF( "[%d] %s", i, argv[i] );
-      }
-    }
-#endif
+    dup2( 2, 1 );
     execve( pip_path_gdb, argv, environ );
-    pip_err_mesg( "Failed to execute PiP-gdb (%s)\n", pip_path_gdb );
+    pip_err_mesg( "Failed to execute PiP-gdb (%s)", pip_path_gdb );
 
   } else if( pid < 0 ) {
-    pip_err_mesg( "Failed to fork PiP-gdb (%s)\n", pip_path_gdb );
+    pip_err_mesg( "Failed to fork PiP-gdb (%s)", pip_path_gdb );
   } else {
     waitpid( pid, NULL, 0 );
   }
@@ -431,7 +420,7 @@ void pip_debug_info( void ) {
     pip_attach_gdb();
   } else {
     pip_err_mesg( "\tto attach pip-gdb automatically, "
-		  "set %s env. to the pip-gdb path\n",
+		  "set %s env. to pip-gdb path",
 		  PIP_ENV_GDB_PATH );
   }
 }
@@ -439,11 +428,11 @@ void pip_debug_info( void ) {
 static void pip_exception_handler( int sig, siginfo_t *info, void *extra ) {
   if( pip_root != NULL ) pip_spin_lock( &pip_root->lock_bt );
   {
-    pip_err_mesg( "*** Exception signal: %s (%d) !!\n", strsignal(sig), sig );
+    pip_err_mesg( "*** Exception signal: %s (%d) !!", strsignal(sig), sig );
     pip_debug_info();
   }
   if( pip_root != NULL ) pip_spin_unlock( &pip_root->lock_bt );
-  (void) kill( pip_gettid(), sig );
+  (void) pip_tkill( pip_gettid(), sig );
 }
 
 static int
@@ -477,8 +466,6 @@ static void pip_set_gdb_signal( sigset_t *sigs,
 	{ NULL, 0 } };
   int i;
 
-  DBGF( "token:%.*s (%d)", len, token, len );
-
   if( pip_strncasecmp( "ALL", token, len ) == 0 ) {
     for( i=0; sigtab[i].name!=NULL; i++ ) {
       ASSERT( sigman( sigs, sigtab[i].signum ) );
@@ -507,7 +494,6 @@ static int pip_next_token( char *str, int p ) {
 static void pip_set_gdb_sigset( char *env, sigset_t *sigs ) {
   int i, j;
 
-  DBGF( "signals: %s", env );
   i = pip_next_token( env, 0 );
   if( i > 0 ) {
     pip_set_gdb_signal( sigs, env, i, sigaddset );
@@ -571,7 +557,7 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 
     if( !pip_is_threaded_() || pip_isa_root() ) {
       if( access( path, X_OK ) != 0 ) {
-	  pip_err_mesg( "PiP-gdb unable to execute (%s)\n", path );
+	  pip_err_mesg( "PiP-gdb unable to execute (%s)", path );
       } else {
 	pip_path_gdb = path;
 	if( ( command = pip_root->envs.gdb_command ) != NULL &&
