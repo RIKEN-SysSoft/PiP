@@ -50,7 +50,7 @@ AC_SUBST(glibc_lib)
 AC_SUBST(dynamic_linker)
 
 AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--enable-fcontext],
-  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])],,[yes])
+  [Switch if using GLIBC's ucontext of Boost's fcontext (fpreg)])])
 
 AS_IF([test "x$enable_fcontext" != "xno"], [
   AC_CHECK_PROG([AS], [as], [yes])
@@ -59,6 +59,9 @@ AS_IF([test "x$enable_fcontext" != "xno"], [
 ])
 
 boost_fctx_objs=""
+boost_fctx_arch=""
+boost_fctx_fpreg_flag=""
+
 if test "x$enable_fcontext" != "xno"; then
   boost_fctx_objs="fctx_jump.o fctx_make.o"
   case $host in

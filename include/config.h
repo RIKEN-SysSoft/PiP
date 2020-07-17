@@ -20,4 +20,4 @@
 #define PACKAGE_VERSION "3.0.0"
 
 /* using fcontext w/ or w/o FPREG */
-#define enable_fcontext 1
+/* #undef enable_fcontext */

@@ -1966,8 +1966,6 @@ $as_echo "${glibc_incdir}" >&6; }
 # Check whether --enable-fcontext was given.
 if test "${enable_fcontext+set}" = set; then :
   enableval=$enable_fcontext;
-else
-  yes
 fi
 
 
@@ -2019,6 +2017,9 @@ fi
 fi
 
 boost_fctx_objs=""
+boost_fctx_arch=""
+boost_fctx_fpreg_flag=""
+
 if test "x$enable_fcontext" != "xno"; then
   boost_fctx_objs="fctx_jump.o fctx_make.o"
   case $host in
