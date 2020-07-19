@@ -9,7 +9,20 @@ AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_HEADERS([include/config.h])
 
 # Specialized system macros
+AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+case "$target_os" in
+     linux*) true;;
+     *) AC_MSG_ERROR([Unsupported OS])
+esac
+
+case "$target" in
+      x86_64-*-*-*)  true;;
+      aarch64-*-*-*) true;;
+      *) AC_MSG_ERROR([Unsupported target CPU architecture]);;
+esac;
 
 # srcdir_top
 
@@ -50,7 +63,7 @@ AC_SUBST(glibc_lib)
 AC_SUBST(dynamic_linker)
 
 AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--enable-fcontext],
-  ["yes": use fcontext, "fp(reg(s))": fcontext with FP regs, "no": use (slow) ucontext])],
+  ["yes": use fcontext (default), "fp(reg(s))": fcontext with FP regs, "no": use (slow) ucontext])],
 [
 case "$enable_fcontext" in
   no)
@@ -58,16 +71,13 @@ case "$enable_fcontext" in
      boost_fctx_arch="";
      boost_fctx_cppflags="";;
   ""|yes|fp|fpreg|fpregs)
-    AC_CHECK_PROG([AS], [as], [yes])
-    AS_IF([test x"$AS" != x"yes"], [AC_MSG_ERROR([Can't find assmbler (as)])])
     boost_fctx_objs="fctx_jump.o fctx_make.o";
-    case $host in
+    case "$target" in
       x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
       aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
-      *) AC_MSG_ERROR([Unsupported host cpu]);;
     esac;
     case "$enable_fcontext" in
-      yes) boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
+      ""|yes) boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
       fp|fpreg|fpregs)
            boost_fctx_cppflags="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX";;
     esac
@@ -76,10 +86,10 @@ esac
 ],
 [
   boost_fctx_objs="fctx_jump.o fctx_make.o"
-  case $host in
+  case "$target" in
   	x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
 	aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
-	*) AC_MSG_ERROR([Unsupported host]);;
+	*) AC_MSG_ERROR([Unsupported CPU architecture]);;
   esac
   boost_fctx_flag="-DPIP_USE_FCONTEXT"
 ])

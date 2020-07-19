@@ -603,12 +603,15 @@ CC
 boost_fctx_cppflags
 boost_fctx_arch
 boost_fctx_objs
-AS
 dynamic_linker
 glibc_lib
 glibc_libdir
 glibc_incdir
 srcdir_top
+target_os
+target_vendor
+target_cpu
+target
 host_os
 host_vendor
 host_cpu
@@ -1272,6 +1275,7 @@ _ACEOF
 System types:
   --build=BUILD     configure for building on BUILD [guessed]
   --host=HOST       cross-compile to build programs to run on HOST [BUILD]
+  --target=TARGET   configure for building compilers for TARGET [HOST]
 _ACEOF
 fi
 
@@ -1285,8 +1289,8 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --enable-fcontext       "yes": use fcontext, "fp(reg(s))": fcontext with FP
-                          regs, "no": use (slow) ucontext
+  --enable-fcontext       "yes": use fcontext (default), "fp(reg(s))":
+                          fcontext with FP regs, "no": use (slow) ucontext
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1918,6 +1922,55 @@ IFS=$ac_save_IFS
 case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking target system type" >&5
+$as_echo_n "checking target system type... " >&6; }
+if ${ac_cv_target+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test "x$target_alias" = x; then
+  ac_cv_target=$ac_cv_host
+else
+  ac_cv_target=`$SHELL "$ac_aux_dir/config.sub" $target_alias` ||
+    as_fn_error $? "$SHELL $ac_aux_dir/config.sub $target_alias failed" "$LINENO" 5
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_target" >&5
+$as_echo "$ac_cv_target" >&6; }
+case $ac_cv_target in
+*-*-*) ;;
+*) as_fn_error $? "invalid value of canonical target" "$LINENO" 5;;
+esac
+target=$ac_cv_target
+ac_save_IFS=$IFS; IFS='-'
+set x $ac_cv_target
+shift
+target_cpu=$1
+target_vendor=$2
+shift; shift
+# Remember, the first character of IFS is used to create $*,
+# except with old shells:
+target_os=$*
+IFS=$ac_save_IFS
+case $target_os in *\ *) target_os=`echo "$target_os" | sed 's/ /-/g'`;; esac
+
+
+# The aliases save the names the user supplied, while $host etc.
+# will get canonicalized.
+test -n "$target_alias" &&
+  test "$program_prefix$program_suffix$program_transform_name" = \
+    NONENONEs,x,x, &&
+  program_prefix=${target_alias}-
+
+case "$target_os" in
+     linux*) true;;
+     *) as_fn_error $? "Unsupported OS" "$LINENO" 5
+esac
+
+case "$target" in
+      aarch64-*-*-*) true;;
+      *) as_fn_error $? "Unsupported target CPU architecture" "$LINENO" 5;;
+esac;
 
 # srcdir_top
 
@@ -1972,54 +2025,13 @@ case "$enable_fcontext" in
      boost_fctx_arch="";
      boost_fctx_cppflags="";;
   ""|yes|fp|fpreg|fpregs)
-    # Extract the first word of "as", so it can be a program name with args.
-set dummy as; ac_word=$2
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
-$as_echo_n "checking for $ac_word... " >&6; }
-if ${ac_cv_prog_AS+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-  if test -n "$AS"; then
-  ac_cv_prog_AS="$AS" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-    for ac_exec_ext in '' $ac_executable_extensions; do
-  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_AS="yes"
-    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-  done
-IFS=$as_save_IFS
-
-fi
-fi
-AS=$ac_cv_prog_AS
-if test -n "$AS"; then
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $AS" >&5
-$as_echo "$AS" >&6; }
-else
-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
-fi
-
-
-    if test x"$AS" != x"yes"; then :
-  as_fn_error $? "Can't find assmbler (as)" "$LINENO" 5
-fi
     boost_fctx_objs="fctx_jump.o fctx_make.o";
-    case $host in
+    case "$target" in
       x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
       aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
-      *) as_fn_error $? "Unsupported host cpu" "$LINENO" 5;;
     esac;
     case "$enable_fcontext" in
-      yes) boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
+      ""|yes) boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
       fp|fpreg|fpregs)
            boost_fctx_cppflags="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX";;
     esac
@@ -2029,10 +2041,10 @@ esac
 else
 
   boost_fctx_objs="fctx_jump.o fctx_make.o"
-  case $host in
+  case "$target" in
   	x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
 	aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
-	*) as_fn_error $? "Unsupported host" "$LINENO" 5;;
+	*) as_fn_error $? "Unsupported CPU architecture" "$LINENO" 5;;
   esac
   boost_fctx_flag="-DPIP_USE_FCONTEXT"
 
