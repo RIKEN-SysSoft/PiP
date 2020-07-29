@@ -48,6 +48,7 @@ doxygen:
 	  echo "man1"; \
 	  echo "man3"; \
 	  echo "latex"; \
+	  echo "docbook"; \
 	) | while read type; do \
 		echo ==== $$type =====; \
 		( \

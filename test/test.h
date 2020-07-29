@@ -49,6 +49,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <link.h>
