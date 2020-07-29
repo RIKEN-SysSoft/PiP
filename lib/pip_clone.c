@@ -78,13 +78,12 @@ pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
     va_end( ap );
   } while( 0 );
   pip_spin_unlock( &pip_lock_got_clone );
-  DBGF( "<< retval:%d", retval );
-  return retval;
+  RETURN( retval );
 }
 
 int pip_wrap_clone( void ) {
   ENTER;
   pip_clone_orig = pip_dlsym( RTLD_DEFAULT, "__clone" );
   if( pip_clone_orig == NULL ) RETURN( ENOSYS );
-  RETURN( pip_patch_GOT( "libpthread.so", "__clone", pip_clone ) );
+  RETURN( !pip_patch_GOT( "libpthread.so", "__clone", pip_clone ) );
 }

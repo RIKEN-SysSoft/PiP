@@ -36,28 +36,29 @@
 #define DEBUG
 #include <test.h>
 
+int task_main( void *arg ) {
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+  return 0;
+}
+
 int main( int argc, char **argv ) {
+  pip_spawn_program_t prog;
   int pipid, ntasks;
 
   CHECK( pip_fin(), RV!=EPERM, return(EXIT_FAIL) );
   ntasks = 1;
   CHECK( pip_init( &pipid, &ntasks, NULL, 0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
+    pip_spawn_from_func( &prog, argv[0], "task_main",
+			 NULL, NULL, NULL );
     pipid = 0;
-    CHECK( pip_spawn( argv[0], argv, NULL, PIP_CPUCORE_ASIS, &pipid,
-			NULL, NULL, NULL ),
-	     RV,
-	     return(EXIT_FAIL) );
+    CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
+	   RV,
+	   return(EXIT_FAIL) );
     CHECK( pip_fin(), 		RV!=EBUSY, return(EXIT_FAIL) );
     CHECK( pip_wait( 0, NULL ), RV,	   return(EXIT_FAIL) );
     CHECK( pip_fin(), 		RV, 	   return(EXIT_FAIL) );
     CHECK( pip_fin(),           RV!=EPERM, return(EXIT_FAIL) );
-
-    CHECK( pip_init( &pipid, &ntasks, NULL, 0), RV, return(EXIT_FAIL) );
-    CHECK( pip_fin(),           RV       , return(EXIT_FAIL) );
-
-  } else {
-    CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   }
   return EXIT_PASS;
 }

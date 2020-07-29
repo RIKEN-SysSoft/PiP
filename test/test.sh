@@ -8,6 +8,12 @@ TEST_TRAP_SIGS='1 2 14 15';
 longestmsg=" T -- UNRESOLVED :-O";
 width=60;
 
+print_usage()
+{
+    echo >&2 "Usage: `basename $cmd` [-APLGCT] [-thread] [-process[:preload|:got|:pipclone]] [<test_list_file>]";
+    exit 2;
+}
+
 set_term_width() {
     if which resize > /dev/null 2>&1; then
 	RESIZE=`resize | grep COLUMNS | grep -v export | sed -e "s/;//" 2> /dev/null`;
@@ -209,12 +215,6 @@ print_mode_list()
     exit 1;
 }
 
-print_usage()
-{
-    echo >&2 "Usage: `basename $cmd` [-APLGCT] [-thread] [-process[:preload|:got|:pipclone]] [<test_list_file>]";
-    exit 2;
-}
-
 # parse command line option
 cmd=$0
 case $# in
@@ -257,6 +257,10 @@ case $# in
 	print_usage
 	exit 2;;
 esac
+
+if [ -z "$TEST_LIST" ]; then
+    print_usage;
+fi
 
 if [ -z "$pip_mode_list" ]; then
     print_usage;
