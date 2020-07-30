@@ -901,7 +901,8 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   args->coreno    = coreno;
   args->queue     = queue;
   args->prog      = strdup( progp->prog );
-  args->prog_full = realpath( basename( progp->prog ), NULL );
+  args->prog_full = realpath( progp->prog, NULL );
+  DBGF( "prog:%s full:%s", args->prog, args->prog_full );
   if( args->prog      == NULL ) ERRJ_ERR( ENOMEM );
   if( args->prog_full == NULL ) ERRJ_ERR( ENOMEM );
   err = pip_copy_env( progp->envv, pipid, &args->envvec );
