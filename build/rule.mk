@@ -225,17 +225,20 @@ doc-here: doc-distclean
 	-@case "$(MAN1_SRCS)" in \
 	'')	;; \
 	*)	for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_man1; \
-		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_latex;; \
+		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_latex; \
+		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_docbook;; \
 	esac
 	-@case "$(MAN3_SRCS)" in \
 	'')	;; \
 	*)	for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_man3; \
-		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_latex;; \
+		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_latex; \
+		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_docbook;; \
 	esac
 	-@case "$(MAN7_SRCS)" in \
 	'')	;; \
 	*)	for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_man7; \
-		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_latex;; \
+		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_latex; \
+		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_docbook;; \
 	esac
 .PHONY: doc-here
 

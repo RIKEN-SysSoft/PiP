@@ -39,7 +39,6 @@
 
 pip_root_t		*pip_root PIP_PRIVATE;
 pip_task_internal_t	*pip_task PIP_PRIVATE;
-
 struct pip_gdbif_root	*pip_gdbif_root PIP_PRIVATE;
 
 static char *pip_path_gdb;
@@ -205,7 +204,7 @@ int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
   if( taski == NULL ) {
     n = snprintf( p, sz, "~" );
   } else if( taski->type == PIP_TYPE_NONE ) {
-    n = snprintf( p, sz, "_" );
+    n = snprintf( p, sz, "*" );
   } else if( PIP_ISA_TASK( taski ) ) {
     n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
   } else {
