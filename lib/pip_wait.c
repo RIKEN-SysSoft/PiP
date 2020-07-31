@@ -132,17 +132,11 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
     //pip_dlclose( taski->annex->loaded );
     //taski->annex->loaded = NULL;
   }
-#ifdef AH
-  PIP_FREE( taski->annex->args.prog );
-  taski->annex->args.prog = NULL;
-  PIP_FREE( taski->annex->args.prog_full );
-  taski->annex->args.prog_full = NULL;
+#ifdef DONOT_FREE_THEM
   PIP_FREE( taski->annex->args.funcname );
   taski->annex->args.funcname = NULL;
   PIP_FREE( taski->annex->args.start_arg );
   taski->annex->args.start_arg = NULL;
-#endif
-#ifdef AH
   PIP_FREE( taski->annex->args.argvec.vec );
   taski->annex->args.argvec.vec  = NULL;
   PIP_FREE( taski->annex->args.argvec.strs );

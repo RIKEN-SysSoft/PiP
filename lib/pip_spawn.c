@@ -897,17 +897,16 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   args->coreno    = coreno;
   args->queue     = queue;
   { 				/* GLIBC/misc/init-misc.c */
-    char *p = strrchr (argv[0], '/');
+    char *argv0 = progp->argv[0];
+    char *p = strrchr( argv0, '/' );
     if( p == NULL ) {
-      args->prog      = argv[0];
+      args->prog      = argv0;
     } else {
       args->prog      = p + 1;
-      args->prog_full = argv[0];
+      args->prog_full = argv0;
     }
     DBGF( "prog:%s full:%s", args->prog, args->prog_full );
   }
-  if( args->prog      == NULL ) ERRJ_ERR( ENOMEM );
-  if( args->prog_full == NULL ) ERRJ_ERR( ENOMEM );
   err = pip_copy_env( progp->envv, pipid, &args->envvec );
   if( err ) ERRJ_ERR( err );
 
@@ -1007,8 +1006,6 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   } else {
   error:			/* undo */
     if( args != NULL ) {
-      PIP_FREE( args->prog        );
-      PIP_FREE( args->prog_full   );
       PIP_FREE( args->funcname    );
       PIP_FREE( args->argvec.vec  );
       PIP_FREE( args->argvec.strs );
