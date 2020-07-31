@@ -897,7 +897,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   args->coreno    = coreno;
   args->queue     = queue;
   { 				/* GLIBC/misc/init-misc.c */
-    char *argv0 = progp->argv[0];
+    char *argv0 = progp->prog;
     char *p = strrchr( argv0, '/' );
     if( p == NULL ) {
       args->prog      = argv0;
