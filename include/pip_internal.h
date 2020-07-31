@@ -82,9 +82,9 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
-/** BLT supported version (RELEASED as PiP v3) **/
+/** BLT/ULP supported version (RELEASED as PiP v3) **/
 #define PIP_BASE_VERSION	(0x4000U)
-/** ULP UNsupported version (RELEASED as PiP v2)
+/** BLT/ULP UNsupported version (RELEASED as PiP v2)
 #define PIP_BASE_VERSION	(0x3000U)
 **/
 /** ULP supported version -- abandoned to release
@@ -435,9 +435,6 @@ extern int  pip_is_version_ok( pip_root_t* ) PIP_PRIVATE;
 extern int  pip_are_sizes_ok( pip_root_t* ) PIP_PRIVATE;
 
 extern void pip_debug_on_exceptions( pip_task_internal_t* ) PIP_PRIVATE;
-
-extern pip_task_internal_t *pip_current_ktask( int ) PIP_PRIVATE;
-
 
 INLINE int pip_are_flags_exclusive( uint32_t flags, uint32_t val ) {
   return ( flags & val ) == ( flags | val );

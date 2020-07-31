@@ -68,12 +68,14 @@
 #endif	/* DEBUG */
 
 static int
-pip_isable_to_terminate_now( pip_task_internal_t *taski ) {
+pip_able_to_terminate_now( pip_task_internal_t *taski ) {
   DBGF( "[PIPID:%d] flag_exit:%d  refcount:%d",
 	taski->pipid, taski->flag_exit, (int) taski->refcount );
   return taski->flag_exit && taski->refcount == 0;
 }
 
+void pip_terminate_task( pip_task_internal_t* )
+ __attribute__((noreturn));
 void pip_terminate_task( pip_task_internal_t *self ) {
   DBGF( "PIPID:%d  tid:%d", self->pipid, self->annex->tid );
   ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
@@ -220,6 +222,8 @@ static void pip_do_sleep( pip_task_internal_t *taski ) {
   RETURNV;
 }
 
+void pip_sleep( pip_task_internal_t* )
+ __attribute__((noreturn));
 void pip_sleep( pip_task_internal_t *schedi ) {
   pip_task_internal_t 	*nexti;
   pip_task_t 		*next;
@@ -234,7 +238,7 @@ void pip_sleep( pip_task_internal_t *schedi ) {
     }
     while( 1 ) {
       if( pip_takein_ood_task( schedi ) ) break;
-      if( pip_isable_to_terminate_now( schedi ) ) {
+      if( pip_able_to_terminate_now( schedi ) ) {
 	DBGF( "PIPID:%d -- WOKEUP to EXIT", schedi->pipid );
 	pip_stack_wait( schedi );
 	pip_terminate_task( schedi );
@@ -396,9 +400,8 @@ void pip_do_exit( pip_task_internal_t *taski, int extval ) {
       pip_decouple_context( taski, schedi );
       DBGF( "TRY-AGAIN (2)" );
       goto try_again;
-    } else if( pip_isable_to_terminate_now( taski ) ) {
+    } else if( pip_able_to_terminate_now( taski ) ) {
       pip_terminate_task( taski );
-      NEVER_REACH_HERE;
     }
   }
   NEVER_REACH_HERE;

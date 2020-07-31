@@ -48,16 +48,16 @@ pip-exec : ../../bin/pip-exec
 	ln -s ../../bin/pip-exec
 
 abc: abc.c $(DEPINCS) Makefile
-	$(PIPCC) -DMSG=\"abc\" $< -o $@
+	$(PIPCC) $< -o $@
 
 def: abc.c $(DEPINCS) Makefile
-	$(PIPCC) -DMSG=\"def\" $< -o $@
+	$(PIPCC) $< -o $@
 
 ghi: abc.c $(DEPINCS) Makefile
-	$(PIPCC) -DMSG=\"ghi\" $< -o $@
+	$(PIPCC) $< -o $@
 
 xyz: abc.c $(DEPINCS) Makefile
-	$(PIPCC) -DMSG=\"xyz\" $< -o $@
+	$(PIPCC) $< -o $@
 
 hello.c: ../scripts/hello.c
 	cp -f ../scripts/hello.c .

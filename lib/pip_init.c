@@ -137,25 +137,16 @@ void pip_err_mesg( const char *format, ... ) {
   va_end( ap );
 }
 
-pip_task_internal_t *pip_current_ktask( int tid ) {
+static pip_task_internal_t *pip_current_ktask( int tid ) {
   /* do not put any DBG macors in this function */
   pip_root_t		*root = pip_root;
   pip_task_internal_t 	*taski;
-  static int		curr = 0;
-  int 			i;
 
   if( root != NULL ) {
-    for( i=curr; i<root->ntasks+1; i++ ) {
+    int i;
+    for( i=0; i<root->ntasks+1; i++ ) {
       taski = &root->tasks[i];
       if( tid == taski->annex->tid ) {
-	curr = i;
-	return taski;
-      }
-    }
-    for( i=0; i<curr; i++ ) {
-      taski = &root->tasks[i];
-      if( tid == taski->annex->tid ) {
-	curr = i;
 	return taski;
       }
     }
@@ -166,8 +157,7 @@ pip_task_internal_t *pip_current_ktask( int tid ) {
 static int
 pip_pipid_str( char *p, size_t sz, int pipid, int upper ) {
   char	c;
-
-  /* !! NEVER CALL CTYPE FUNCTION HERE !! */
+  /* !! NEVER CALL ANY CTYPE FUNCTION HERE !!    */
   /* it may NOT be initialized and cause SIGSEGV */
   switch( pipid ) {
   case PIP_PIPID_ROOT:
@@ -199,16 +189,18 @@ pip_pipid_str( char *p, size_t sz, int pipid, int upper ) {
 }
 
 int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
-  int 	n = 0;
+  int 	n;
 
   if( taski == NULL ) {
     n = snprintf( p, sz, "~" );
-  } else if( taski->type == PIP_TYPE_NONE ) {
-    n = snprintf( p, sz, "*" );
-  } else if( PIP_ISA_TASK( taski ) ) {
-    n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
   } else {
-    n = snprintf( p, sz, "!" );
+    if( taski->type == PIP_TYPE_NONE ) {
+      n = snprintf( p, sz, "*" );
+    } else if( PIP_ISA_TASK( taski ) ) {
+      n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
+    } else {
+      n = snprintf( p, sz, "!" );
+    }
   }
   return n;
 }
@@ -220,19 +212,23 @@ int pip_task_str( char *p, size_t sz, pip_task_t *task ) {
 #ifdef DEBUG
 static int
 pip_on_trampoline( pip_task_internal_t *taski, void *stack_varp ) {
-  if( taski != NULL && taski->annex  != NULL &&
-      taski->annex->stack_trampoline != NULL &&
-      taski->annex->task_root        != NULL ) {
-    void  *stack_start;
-    size_t stack_size;
-
-    stack_start = taski->annex->stack_trampoline;
-    stack_size  = taski->annex->task_root->stack_size_trampoline;
-    return( stack_start <= stack_varp &&
-	    stack_varp  <  stack_start + stack_size );
-  } else {
-    return 0;
+  /* there can be race condition here    */
+  /* checkings must be done step by step */
+  if( taski != NULL ) {
+    pip_task_annex_t *annex = taski->annex;
+    if( annex != NULL ) {
+      void *stack_start = annex->stack_trampoline;
+      if( stack_start != NULL ) {
+	pip_root_t *root = annex->task_root;
+	if( root != NULL ) {
+	  size_t stack_size = root->stack_size_trampoline;
+	  return( stack_start <= stack_varp &&
+		  stack_varp  <  stack_start + stack_size );
+	}
+      }
+    }
   }
+  return 0;
 }
 #endif
 
@@ -246,14 +242,14 @@ size_t pip_idstr( char *p, size_t s ) {
   int			n;
 
 #ifdef DEBUG
+  char 			*sched = "/";
+  char 			*opnT = " <", *clsT = ">";
   int ontc = pip_on_trampoline( kc, (void*) &n );
 
   pip_task_internal_t	*uc =
     ( ontc || kc == NULL ) ? NULL : kc->annex->task_current;
   pip_task_internal_t	*schd =
     ( uc == NULL ) ? NULL : uc->task_sched;
-  char 			*sched = "/";
-  char 			*opnT = " <", *clsT = ">";
   if( kc != NULL && ontc ) {
     opn = opnT; cls = clsT;
   } else {

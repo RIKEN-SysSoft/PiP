@@ -106,7 +106,7 @@ void pip_set_name( pip_task_internal_t *task ) {
   } else {
     (void) pthread_setname_np( pthread_self(), name );
   }
-  DBGF( "CommanndName:'%s'", name );
+  DBGF( "CommandName:'%s'", name );
 #endif
 }
 

@@ -607,11 +607,10 @@ static void pip_reset_signal_handler( int sig ) {
 
 static void pip_start_cb( void *tsk ) {
   pip_task_internal_t *taski = (pip_task_internal_t*) tsk;
-  /* let root proc know the task is running (or enqueued) */
   pip_glibc_unlock();
   /* let pip-gdb know */
   pip_gdbif_task_commit( taski );
-  /* sync with root */
+  /* let root proc know the task is running (or enqueued) */
   pip_sem_post( &taski->annex->task_root->sync_spawn );
 }
 
@@ -622,111 +621,108 @@ static void pip_start_user_func( pip_spawn_args_t *args,
   char **envv     = args->envvec.vec;
   void *start_arg = args->start_arg;
   char *env_stop;
-  volatile int	flag = 0;
   int	extval, i, err = 0;
 
   ENTER;
-
-  if( !flag ) {
-    flag = 1;
-    DBGF( "fd_list:%p", args->fd_list );
-    if( args->fd_list != NULL ) {
-      for( i=0; args->fd_list[i]>=0; i++ ) { /* Close-on-exec FDs */
-	DBGF( "COE: %d", args->fd_list[i] );
-	(void) close( args->fd_list[i] );
-      }
-    }
-    pip_glibc_init( &self->annex->symbols, args );
-    pip_gdbif_hook_before( self );
-
-    DBGF( "pip_impinit:%p", self->annex->symbols.pip_init );
-    if( self->annex->symbols.pip_init != NULL ) {
-      int rv = self->annex->symbols.pip_init( self->annex->task_root,
-					      self );
-      if( rv ) {
-	err = EPERM;
-	switch( rv ) {
-	case 1:
-	  pip_err_mesg( "Invalid PiP root" );
-	  break;
-	case 2:
-	  pip_err_mesg( "Magic number error" );
-	  break;
-	case 3:
-	  pip_err_mesg( "Version miss-match between PiP root and task" );
-	  break;
-	case 4:
-	  pip_err_mesg( "Size miss-match between PiP root and task" );
-	  break;
-	default:
-	  pip_err_mesg( "Something wrong with PiP root and task" );
-	  break;
-	}
-      }
-    }
-    if( !err ) {
-      err = pip_call_before_hook( self );
-      if( !err ) {
-	if( self->annex->opts & PIP_TASK_INACTIVE ) {
-	  DBGF( "INACTIVE" );
-	  pip_suspend_and_enqueue_generic( self,
-					   queue,
-					   1, /* lock flag */
-					   pip_start_cb,
-					   self );
-	  /* resumed */
-	} else {
-	  DBGF( "ACTIVE" );
-	  if( queue != NULL ) {
-	    int n = PIP_TASK_ALL;
-	    err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
-	  }
-	  /* since there is no callback, the cb func is called explicitly */
-	  pip_start_cb( (void*) self );
-	}
-      }
-      if( !err ) {
-	if( ( env_stop = pip_root->envs.stop_on_start ) != NULL ) {
-	  int pipid_stop = strtol( env_stop, NULL, 10 );
-	  if( pipid_stop < 0 || pipid_stop == self->pipid ) {
-	    pip_info_mesg( "PiP task[%d] is SIGSTOPed (%s=%s)",
-			   self->pipid, PIP_ENV_STOP_ON_START, env_stop );
-	    pip_kill( self->pipid, SIGSTOP );
-	  }
-	}
-      }
-      if( !err ) {
-	if( self->annex->symbols.start == NULL ) {
-	  /* calling hook function, if any */
-	  DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
-		args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1] );
-	  extval = self->annex->symbols.main( args->argc, argv, envv );
-	  DBGF( "[%d] << main@%p(%d,%s,%s,...) = %d",
-		args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1],
-		extval );
-	} else {
-	  DBGF( "[%d] >> %s:%p(%p)",
-		args->pipid, args->funcname,
-		self->annex->symbols.start, start_arg );
-	  extval = self->annex->symbols.start( start_arg );
-	  DBGF( "[%d] << %s:%p(%p) = %d",
-		args->pipid, args->funcname,
-		self->annex->symbols.start, start_arg, extval );
-	}
-      } else {
-	extval = err;
-      }
-      pip_return_from_start_func( self, extval );
-    } else {
-      /* only with the thread mode */
-      ASSERT( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
-      pthread_exit( NULL );
+  DBGF( "fd_list:%p", args->fd_list );
+  if( args->fd_list != NULL ) {
+    for( i=0; args->fd_list[i]>=0; i++ ) { /* Close-on-exec FDs */
+      DBGF( "COE: %d", args->fd_list[i] );
+      (void) close( args->fd_list[i] );
     }
   }
-  pip_return_from_start_func( self, err );
+  pip_glibc_init( &self->annex->symbols, args );
+  pip_gdbif_hook_before( self );
+
+  DBGF( "pip_impinit:%p", self->annex->symbols.pip_init );
+  if( self->annex->symbols.pip_init != NULL ) {
+    int rv = self->annex->symbols.pip_init( self->annex->task_root,
+					    self );
+    if( rv ) {
+      err = EPERM;
+      switch( rv ) {
+      case 1:
+	pip_err_mesg( "Invalid PiP root" );
+	break;
+      case 2:
+	pip_err_mesg( "Magic number error" );
+	break;
+      case 3:
+	pip_err_mesg( "Version miss-match between PiP root and task" );
+	break;
+      case 4:
+	pip_err_mesg( "Size miss-match between PiP root and task" );
+	break;
+      default:
+	pip_err_mesg( "Something wrong with PiP root and task" );
+	break;
+      }
+    }
+  }
+  if( err ) {
+    extval = err;
+  } else {
+    err = pip_call_before_hook( self );
+    if( !err ) {
+      if( self->annex->opts & PIP_TASK_INACTIVE ) {
+	DBGF( "INACTIVE" );
+	pip_suspend_and_enqueue_generic( self,
+					 queue,
+					 1, /* lock flag */
+					 pip_start_cb,
+					 self );
+	/* resumed */
+      } else {
+	DBGF( "ACTIVE" );
+	if( queue != NULL ) {
+	  int n = PIP_TASK_ALL;
+	  err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
+	}
+	/* since there is no callback, the cb func is called explicitly */
+	pip_start_cb( (void*) self );
+      }
+    }
+    if( err ) {
+      extval = err;
+    } else {
+      if( ( env_stop = pip_root->envs.stop_on_start ) != NULL &&
+	  env_stop[0] != '\0' ) {
+	int pipid_stop = strtol( env_stop, NULL, 10 );
+	if( pipid_stop < 0 || pipid_stop == self->pipid ) {
+	  pip_info_mesg( "PiP task[%d] is SIGSTOPed (%s=%s)",
+			 self->pipid, PIP_ENV_STOP_ON_START, env_stop );
+	  pip_kill( self->pipid, SIGSTOP );
+	} else {
+	  pip_warn_mesg( "PiP task[%d] %s=%s: out of range",
+			 self->pipid, PIP_ENV_STOP_ON_START, env_stop );
+	}
+      }
+      if( self->annex->symbols.start == NULL ) {
+	/* calling hook function, if any */
+	DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
+	      args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1] );
+	extval = self->annex->symbols.main( args->argc, argv, envv );
+	DBGF( "[%d] << main@%p(%d,%s,%s,...) = %d",
+	      args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1],
+	      extval );
+      } else {
+	DBGF( "[%d] >> %s:%p(%p)",
+	      args->pipid, args->funcname,
+	      self->annex->symbols.start, start_arg );
+	extval = self->annex->symbols.start( start_arg );
+	DBGF( "[%d] << %s:%p(%p) = %d",
+	      args->pipid, args->funcname,
+	      self->annex->symbols.start, start_arg, extval );
+      }
+    }
+  }
+  pip_return_from_start_func( self, extval );
   NEVER_REACH_HERE;
 }
 
+static void pip_sigquit_handler( int, void(*)(),
+				 struct sigaction* )
+ __attribute__((noreturn));
 static void pip_sigquit_handler( int sig,
 				 void(*handler)(),
 				 struct sigaction *oldp ) {
@@ -735,7 +731,7 @@ static void pip_sigquit_handler( int sig,
   NEVER_REACH_HERE;
 }
 
-static void* pip_spawn_top( void *thargs )  {
+static void *pip_spawn_top( void *thargs )  {
   /* The context of this function is of the root task                */
   /* so the global var; pip_task (and pip_root) are of the root task */
   /* and do not call malloc() and free() in this contxt !!!!         */
@@ -770,7 +766,7 @@ static void* pip_spawn_top( void *thargs )  {
     pip_do_exit( self, err );
   }
   NEVER_REACH_HERE;
-  return NULL;			/* dummy */
+  return( NULL );		/* dummy */
 }
 
 static int pip_find_a_free_task( int *pipidp ) {
@@ -900,9 +896,16 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   args->pipid     = pipid;
   args->coreno    = coreno;
   args->queue     = queue;
-  args->prog      = strdup( progp->prog );
-  args->prog_full = realpath( progp->prog, NULL );
-  DBGF( "prog:%s full:%s", args->prog, args->prog_full );
+  { 				/* GLIBC/misc/init-misc.c */
+    char *p = strrchr (argv[0], '/');
+    if( p == NULL ) {
+      args->prog      = argv[0];
+    } else {
+      args->prog      = p + 1;
+      args->prog_full = argv[0];
+    }
+    DBGF( "prog:%s full:%s", args->prog, args->prog_full );
+  }
   if( args->prog      == NULL ) ERRJ_ERR( ENOMEM );
   if( args->prog_full == NULL ) ERRJ_ERR( ENOMEM );
   err = pip_copy_env( progp->envv, pipid, &args->envvec );

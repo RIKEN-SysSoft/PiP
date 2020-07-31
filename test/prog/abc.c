@@ -33,17 +33,13 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#ifndef MSG
-#error "MSG must be defined as a compile option"
-#endif
-
 #ifdef PIP
 #include <pip.h>
 #else
 #include <stdio.h>
 #endif
 
-static char *msg = MSG;
+static char *msg;
 
 int func( void ) {
   printf( "[func] %s\n", msg );
@@ -51,6 +47,7 @@ int func( void ) {
 }
 
 int main( int argc, char **argv ) {
+  msg = argv[0];
 #ifndef PIP
   printf( "[main] %s\n", msg );
 #else

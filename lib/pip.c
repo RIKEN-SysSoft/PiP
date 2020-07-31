@@ -739,6 +739,7 @@ int pip_kill_all_tasks( void ) {
   return err;
 }
 
+void pip_abort( void ) __attribute__((noreturn));
 void pip_abort( void ) {
   /* thin function may be called either root or tasks */
   /* SIGTERM is delivered to root so that PiP tasks   */
@@ -746,10 +747,10 @@ void pip_abort( void ) {
   ENTER;
   if( pip_root != NULL ) {
     (void) pip_raise_signal( pip_root->task_root, SIGTERM );
-    while( 1 ) sleep( 1 );
   } else {
     kill( getpid(), SIGTERM );
   }
+  while( 1 ) sleep( 1 );	/* wait for being killed */
   NEVER_REACH_HERE;
 }
 
