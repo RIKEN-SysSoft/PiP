@@ -211,7 +211,7 @@ int pip_patch_GOT( char *dsoname, char *symname, void *new_addr ) {
   itr_args.symname  = symname;
   itr_args.new_addr = new_addr;
   (void) dl_iterate_phdr( pip_replace_clone_itr, (void*) &itr_args );
-  RETURN( pip_got_patch_ok );
+  RETURN_NE( pip_got_patch_ok );
 }
 
 void pip_undo_patch_GOT( void ) {

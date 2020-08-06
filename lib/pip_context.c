@@ -71,7 +71,10 @@ void pip_stack_wait( pip_task_internal_t *taski ) {
 #else
   int i = 0, j;
 
-  if( !taski->flag_stackp ) goto done;
+  if( !taski->flag_stackp ) {
+    i = 9999;
+    goto done;
+  }
   DBGF( "PIPID:%d waits for unprotect", taski->pipid );
   for( i=0; i<pip_root->yield_iters; i++ ) {
     pip_pause();
@@ -115,7 +118,7 @@ INLINE void pip_preproc_fctxsw( pip_ctx_data_t *dp,
   if( new != old ) {
     /* GCC: warning: suggest explicit braces
        to avoid ambiguous ‘else’ [-Wparentheses] */
-    ASSERT( pip_load_tls( new->tls ) );
+    ASSERTS( pip_load_tls( new->tls ) );
   }
 }
 
@@ -131,11 +134,10 @@ INLINE void pip_postproc_fctxsw( pip_transfer_t tr ) {
 #endif	/* PIP_USE_FCONTEXT */
 
 INLINE void pip_post_ctxsw( pip_task_internal_t *taski ) {
+  pip_task_internal_t *wakeup = taski->annex->wakeup_deffered;
+  taski->annex->wakeup_deffered = NULL;
   pip_stack_unprotect( taski );
-  if( taski->annex->task_wakeup ) {
-    pip_wakeup( taski->annex->task_wakeup );
-    taski->annex->task_wakeup = NULL;
-  }
+  if( wakeup != NULL ) pip_wakeup( wakeup );
 }
 
 void pip_swap_context( pip_task_internal_t *taski,
@@ -170,10 +172,10 @@ void pip_swap_context( pip_task_internal_t *taski,
   nexti->ctx_suspend = NULL;
   pip_stack_wait( nexti );
   if( taski != nexti ) {
-    ASSERT( pip_load_tls( nexti->tls ) );
+    ASSERTS( pip_load_tls( nexti->tls ) );
   }
   taski->ctx_suspend = &lvars.ctx_old;
-  ASSERT( pip_swap_ctx( &lvars.ctx_old, lvars.ctxp_new ) );
+  ASSERTS( pip_swap_ctx( &lvars.ctx_old, lvars.ctxp_new ) );
   SETCURR( taski->task_sched, taski );
 
 #endif
@@ -200,6 +202,8 @@ static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
 void pip_decouple_context( pip_task_internal_t *taski,
 			   pip_task_internal_t *schedi ) {
   ENTERF( "task PIPID:%d  sched PIPID:%d", taski->pipid, schedi->pipid );
+  taski->flag_wakeup = 0;
+  pip_memory_barrier();
 
 #ifdef PIP_USE_FCONTEXT
   pip_ctx_data_t	data;
@@ -238,7 +242,7 @@ void pip_decouple_context( pip_task_internal_t *taski,
     lvars.args_H = ( ((intptr_t) schedi) >> 32 ) & PIP_MASK32;
     lvars.args_L = (  (intptr_t) schedi)         & PIP_MASK32;
 
-    ASSERT( pip_save_ctx( &lvars.ctx_new ) );
+    ASSERTS( pip_save_ctx( &lvars.ctx_new ) );
     pip_make_uctx( &lvars.ctx_new,
 		   pip_call_sleep,
 		   2,
@@ -248,7 +252,7 @@ void pip_decouple_context( pip_task_internal_t *taski,
   }
   taski->ctx_suspend = &lvars.ctx_old;
   if( taski != schedi ) {
-    ASSERT( pip_load_tls( schedi->tls ) );
+    ASSERTS( pip_load_tls( schedi->tls ) );
   }
   pip_swap_ctx( taski->ctx_suspend, schedi->annex->ctx_trampoline );
 #endif
@@ -285,7 +289,7 @@ void pip_couple_context( pip_task_internal_t *schedi,
   schedi->annex->ctx_trampoline = &lvars.ctx;
   pip_stack_wait( taski );
   if( taski != schedi ) {
-    ASSERT( pip_load_tls( taski->tls ) );
+    ASSERTS( pip_load_tls( taski->tls ) );
   }
   pip_swap_ctx( &lvars.ctx, taski->ctx_suspend );
 #endif

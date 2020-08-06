@@ -117,8 +117,9 @@ if [ $# -lt 1 ]; then
     print_usage;
 fi
 
-if [ ! -x $1 ]; then
-    echo "$1 is not executable";
+/bin/which $1 > /dev/null 2>&1
+if [ $? != 0 ]; then
+    echo "$1: Command not found";
     exit 5;
 fi
 
@@ -159,7 +160,7 @@ err_count=0
 while true; do
     if [ $nomode -eq 0 ]; then
 	for mode in $mlist; do
-	    echo "" > $TMP #rewind
+	    echo -n "" > $TMP #rewind
 	    if [ $display -eq 0 ]; then
 		echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;
 		if [ $quiet -eq 0 ]; then

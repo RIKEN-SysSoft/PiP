@@ -148,7 +148,7 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   taski->annex->args.fd_list = NULL;
   pip_sem_fin( &taski->annex->sleep );
 
-  pip_reset_task_struct( taski );
+  //pip_reset_task_struct( taski );
 }
 
 static int
@@ -201,8 +201,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   int err = 0;
 
   ENTERF( "PIPID:%d", taski->pipid );
-  if( taski->flag_exit  == PIP_EXIT_WAITED ||
-      taski->annex->tid <= 0 ) {
+  if( taski->type == PIP_TYPE_NULL ) {
     /* already waited */
     RETURN( ECHILD );
   }
@@ -265,7 +264,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   }
   if( !err ) {
     DBGF( "PIPID:%d terminated", taski->pipid );
-    taski->flag_exit     = PIP_EXIT_WAITED;
+    taski->type          = PIP_TYPE_NULL;
     taski->annex->thread = 0;
     taski->annex->tid    = 0;
   }
@@ -281,16 +280,14 @@ static int pip_wait_task_nb( pip_task_internal_t *taski ) {
   int retval = DONE;
 
   ENTERF( "PIPID:%d", taski->pipid );
-  if( taski->pipid < 0 || taski->type == PIP_TYPE_NONE ) {
+  if( taski->pipid < 0 || taski->type == PIP_TYPE_NULL ) {
     retval = NOT_ATASK;
-  } else if( taski->flag_exit == PIP_EXIT_WAITED ) {
-    retval = DONE;
   } else if( pip_wait_syscall( taski, 0 ) == 0 ) {
     retval = DONE;
   } else {
     retval = NOT_YET;
   }
-  RETURN( retval );
+  RETURN_NE( retval );
 }
 
 static int pip_nonblocking_waitany( int *pipidp ) {
@@ -333,15 +330,13 @@ int pip_wait( int pipid, int *statusp ) {
   pip_task_internal_t	*taski;
   int 			err = 0;
 
-  ENTER;
+  ENTERF( "PIPID:%d", pipid );;
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
   if( !pip_isa_root() )                          RETURN( EPERM   );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
-  DBGF( "PIPID:%d", pipid );
 
   taski = pip_get_task( pipid );
-  if( taski->type == PIP_TYPE_NONE ) {
-    /* already waited */
+  if( taski->type == PIP_TYPE_NULL ) {
     err = ECHILD;
   } else {
     while( 1 ) {
@@ -352,7 +347,7 @@ int pip_wait( int pipid, int *statusp ) {
 	pip_finalize_task_RC( taski );
 	break;
       }
-      ASSERT( pip_signal_wait( SIGCHLD ) );
+      ASSERTS( pip_signal_wait( SIGCHLD ) );
     }
   }
   RETURN( err );
@@ -362,11 +357,10 @@ int pip_trywait( int pipid, int *statusp ) {
   pip_task_internal_t 	*taski;
   int err;
 
-  ENTER;
+  ENTERF( "PIPID:%d", pipid );;
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err     );
   if( !pip_isa_root() )                          RETURN( EPERM   );
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
-  DBGF( "PIPID:%d", pipid );
 
   taski = pip_get_task( pipid );
   if( ( err = pip_wait_syscall( taski, 0 ) ) == 0 ) {

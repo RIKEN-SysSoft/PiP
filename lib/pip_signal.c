@@ -94,7 +94,7 @@ int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask ) {
 int pip_signal_wait( int signal ) {
   sigset_t 	sigset;
   int 		sig;
-  ASSERT( sigemptyset( &sigset ) );
-  ASSERT( sigaddset( &sigset, signal ) );
+  ASSERTS( sigemptyset( &sigset ) );
+  ASSERTS( sigaddset( &sigset, signal ) );
   return sigwait( &sigset, &sig );
 }

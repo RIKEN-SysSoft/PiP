@@ -4,8 +4,8 @@ timer 1 pip_task 1 ./environ
 timer 1 pip_task 8 ./environ
 timer 1 ./pagefault 1
 timer 1 ./pagefault 8
-timer 10 pip_task 1 ./malloc
-timer 30 pip_task 8 ./malloc
+timer 2 pip_task 1 ./malloc
+timer 3 pip_task 8 ./malloc
 timer 1 pip_task 1 ./fork
 timer 1 pip_task 8 ./fork
 timer 1 pip_task 1 ./system

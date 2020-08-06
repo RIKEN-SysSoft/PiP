@@ -117,8 +117,8 @@ static int pip_copy_env( char **envsrc, int pipid,
   char *preload_env = getenv( "LD_PRELOAD" );
   char *addenv[4] = { rootenv, taskenv, preload_env, NULL };
 
-  ASSERT( snprintf( rootenv, ENVLEN, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
-  ASSERT( snprintf( taskenv, ENVLEN, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
+  ASSERTS( snprintf( rootenv, ENVLEN, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
+  ASSERTS( snprintf( taskenv, ENVLEN, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
   return pip_copy_vec( addenv, envsrc, vecp );
 }
 
@@ -377,11 +377,9 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_internal_t *taski ) {
     err = ENOEXEC;
     goto error;
   }
-  DBG;
   if( ( err = pip_find_user_symbols( progp, loaded, taski ) ) ) {
     goto error;
   }
-  DBG;
   if( pip_dlinfo( loaded, RTLD_DI_LMID, &lmid ) != 0 ) {
     pip_err_mesg( "Unable to obtain Lmid - %s", pip_dlerror() );
     err = ENXIO;
@@ -596,12 +594,12 @@ static void pip_reset_signal_handler( int sig ) {
     struct sigaction	sigact;
     memset( &sigact, 0, sizeof( sigact ) );
     sigact.sa_sigaction = (void(*)(int,siginfo_t*,void*)) SIG_DFL;
-    ASSERT( sigaction( sig, &sigact, NULL ) != 0 );
+    ASSERTS( sigaction( sig, &sigact, NULL ) != 0 );
   } else {
     sigset_t sigmask;
     (void) sigemptyset( &sigmask );
     (void) sigaddset( &sigmask, sig );
-    ASSERT( pthread_sigmask( SIG_BLOCK, &sigmask, NULL ) != 0 );
+    ASSERTS( pthread_sigmask( SIG_BLOCK, &sigmask, NULL ) != 0 );
   }
 }
 
@@ -676,7 +674,7 @@ static void pip_start_user_func( pip_spawn_args_t *args,
 	DBGF( "ACTIVE" );
 	if( queue != NULL ) {
 	  int n = PIP_TASK_ALL;
-	  err = pip_dequeue_and_resume_multiple( self, queue, self, &n );
+	  err = pip_dequeue_and_resume_multiple( queue, self, &n );
 	}
 	/* since there is no callback, the cb func is called explicitly */
 	pip_start_cb( (void*) self );
@@ -720,9 +718,8 @@ static void pip_start_user_func( pip_spawn_args_t *args,
   NEVER_REACH_HERE;
 }
 
-static void pip_sigquit_handler( int, void(*)(),
-				 struct sigaction* )
- __attribute__((noreturn));
+static void pip_sigquit_handler( int, void(*)(), struct sigaction* )
+  NORETURN;
 static void pip_sigquit_handler( int sig,
 				 void(*handler)(),
 				 struct sigaction *oldp ) {
@@ -868,7 +865,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( pipid != PIP_PIPID_ANY ) {
     if( pipid < 0 || pipid > pip_root->ntasks ) RETURN( EINVAL );
   }
-  if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) ERRJ;
+  if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) GOTO_ERROR;
   task = &pip_root->tasks[pipid];
   pip_reset_task_struct( task );
   task->pipid      = pipid;	/* mark it as occupied */
@@ -908,22 +905,22 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     DBGF( "prog:%s full:%s", args->prog, args->prog_full );
   }
   err = pip_copy_env( progp->envv, pipid, &args->envvec );
-  if( err ) ERRJ_ERR( err );
+  if( err ) GOTO_ERR( err );
 
   if( progp->funcname == NULL ) {
     err = pip_copy_vec( NULL, progp->argv, &args->argvec );
-    if( err ) ERRJ_ERR( err );
+    if( err ) GOTO_ERR( err );
     args->argc = pip_count_vec( args->argvec.vec );
   } else {
     if( ( args->funcname = strdup( progp->funcname ) ) == NULL ) {
-      ERRJ_ERR( ENOMEM );
+      GOTO_ERR( ENOMEM );
     }
     args->start_arg = progp->arg;
   }
   if( pip_is_shared_fd_() ) {
     args->fd_list = NULL;
   } else if( ( err = pip_list_coe_fds( &args->fd_list ) ) != 0 ) {
-    ERRJ_ERR( err );
+    GOTO_ERR( err );
   }
   /* must be called before calling dlmopen() */
   pip_gdbif_task_new( task );
@@ -936,7 +933,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     /* and of course, the corebinding must be undone */
     (void) pip_undo_corebind( 0, coreno, &cpuset );
   }
-  ERRJ_CHK( err );
+  if( err ) GOTO_ERROR;
 
   stack_size = pip_stack_size();
 

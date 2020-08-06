@@ -87,10 +87,9 @@ void pip_named_export_init( pip_task_internal_t *taski ) {
   pip_namexp_list_t	*hashtab;
   int			i, sz = PIP_HASHTAB_SZ;
 
-  DBGF( "PIPID:%d", taski->pipid );
   hashtab = (pip_namexp_list_t*)
     PIP_MALLOC( sizeof( pip_namexp_list_t ) * sz );
-  ASSERT( hashtab == NULL );
+  ASSERTS( hashtab == NULL );
   memset( hashtab, 0, sizeof( pip_namexp_list_t ) * sz );
   for( i=0; i<sz; i++ ) {
     PIP_LIST_INIT( &(hashtab[i].list) );
@@ -98,7 +97,7 @@ void pip_named_export_init( pip_task_internal_t *taski ) {
     //DBGF( "htab[%d]:%p", i, &(hashtab[i]) );
   }
   namexp = (pip_named_exptab_t*) PIP_MALLOC( sizeof( pip_named_exptab_t ) );
-  ASSERT( namexp == NULL );
+  ASSERTS( namexp == NULL );
   memset( namexp, 0, sizeof( pip_named_exptab_t ) );
   namexp->sz         = sz;
   namexp->hash_table = hashtab;
@@ -187,13 +186,15 @@ int pip_named_export( void *exp, const char *format, ... ) {
   int 		err = 0;
 
   ENTER;
+  if( !pip_is_initialized() ) RETURN( EPERM );
+
   va_start( ap, format );
   hash = pip_name_hash( &name, format, ap );
-  ASSERT( name == NULL );
+  ASSERTS( name == NULL );
   DBGF( "pipid:%d  name:%s  exp:%p", pip_task->pipid, name, exp );
 
   namexp = (pip_named_exptab_t*) pip_task->annex->named_exptab;
-  ASSERTD( namexp == NULL );
+  ASSERTS( namexp == NULL );
 
   if( namexp->flag_closed ) RETURN( ECANCELED );
 
@@ -376,8 +377,7 @@ void pip_named_export_fin( pip_task_internal_t *taski ) {
   pip_list_t		*list, *next;
   int 			i, err;
 
-  ENTER;
-  DBGF( "PIPID:%d", taski->pipid );
+  ENTERF("PIPID:%d", taski->pipid );
   namexp = (pip_named_exptab_t*) taski->annex->named_exptab;
   if( namexp != NULL ) {
     namexp->flag_closed = 1;
@@ -395,7 +395,7 @@ void pip_named_export_fin( pip_task_internal_t *taski ) {
 	  /* this is a query entry, it must be free()ed by the query task */
 	  entry->flag_canceled = 1;
 	  err = pip_dequeue_and_resume_nolock( &entry->queue_owner, NULL );
-	  ASSERT( err );
+	  ASSERTS( err );
 	}
       }
       pip_spin_unlock( &head->lock );
@@ -409,8 +409,8 @@ void pip_named_export_fin_all( void ) {
   pip_named_exptab_t  *namexp;
   int i;
 
+  ENTERF( "pip_root->ntasks:%d", pip_root->ntasks );
   ASSERTD( pip_task != pip_root->task_root );
-  DBGF( "pip_root->ntasks:%d", pip_root->ntasks );
   for( i=0; i<pip_root->ntasks; i++ ) {
     DBGF( "PiP task: %d", i );
     taski  = &pip_root->tasks[i];

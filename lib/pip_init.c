@@ -141,12 +141,21 @@ static pip_task_internal_t *pip_current_ktask( int tid ) {
   /* do not put any DBG macors in this function */
   pip_root_t		*root = pip_root;
   pip_task_internal_t 	*taski;
+  static int		curr = 0;
 
   if( root != NULL ) {
     int i;
-    for( i=0; i<root->ntasks+1; i++ ) {
+    for( i=curr; i<root->ntasks+1; i++ ) {
       taski = &root->tasks[i];
       if( tid == taski->annex->tid ) {
+	curr = i;
+	return taski;
+      }
+    }
+    for( i=0; i<curr; i++ ) {
+      taski = &root->tasks[i];
+      if( tid == taski->annex->tid ) {
+	curr = i;
 	return taski;
       }
     }
@@ -194,10 +203,15 @@ int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
   if( taski == NULL ) {
     n = snprintf( p, sz, "~" );
   } else {
-    if( taski->type == PIP_TYPE_NONE ) {
+    if( taski->type == PIP_TYPE_NULL ) {
       n = snprintf( p, sz, "*" );
     } else if( PIP_ISA_TASK( taski ) ) {
       n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
+      sz -= n; p += n;
+#define WITH_RFC
+#ifdef WITH_RFC
+      n += snprintf( p, sz, ".%d", (int) taski->refcount );
+#endif
     } else {
       n = snprintf( p, sz, "!" );
     }
@@ -241,16 +255,21 @@ size_t pip_idstr( char *p, size_t s ) {
   char			*delim = ":";
   int			n;
 
+  if( pip_root == NULL ) {
+    n = snprintf( p, s, "[%d]", tid ); 	s -= n; p += n;
+    return s;
+  }
+
 #ifdef DEBUG
   char 			*sched = "/";
-  char 			*opnT = " <", *clsT = ">";
-  int ontc = pip_on_trampoline( kc, (void*) &n );
+  char 			*opnT = "<<", *clsT = ">>";
+  int intc = pip_on_trampoline( kc, (void*) &n );
 
   pip_task_internal_t	*uc =
-    ( ontc || kc == NULL ) ? NULL : kc->annex->task_current;
+    ( kc == NULL ) ? NULL : kc->annex->task_current;
   pip_task_internal_t	*schd =
     ( uc == NULL ) ? NULL : uc->task_sched;
-  if( kc != NULL && ontc ) {
+  if( intc ) {
     opn = opnT; cls = clsT;
   } else {
     opn = opnN; cls = clsN;
@@ -265,11 +284,13 @@ size_t pip_idstr( char *p, size_t s ) {
     n = pip_taski_str( p, s, kc ); 	s -= n; p += n;
     n = snprintf( p, s, ")%s", delim );	s -= n; p += n;
 #ifdef DEBUG
-    n = pip_taski_str( p, s, uc );	s -= n; p += n;
-    n = snprintf( p, s, sched ); 	s -= n; p += n;
-    n = pip_taski_str( p, s, schd );	s -= n; p += n;
+    if( !intc ) {
+      n = pip_taski_str( p, s, uc );	s -= n; p += n;
+      n = snprintf( p, s, sched ); 	s -= n; p += n;
+      n = pip_taski_str( p, s, schd );	s -= n; p += n;
+      n = snprintf( p, s, delim ); 	s -= n; p += n;
+    }
 #endif
-    n = snprintf( p, s, delim ); 	s -= n; p += n;
     n = pip_taski_str( p, s, ctx );	s -= n; p += n;
   }
   n = snprintf( p, s, "%s", cls ); 	s -= n; p += n;
@@ -463,12 +484,12 @@ static void pip_set_gdb_signal( sigset_t *sigs,
 
   if( pip_strncasecmp( "ALL", token, len ) == 0 ) {
     for( i=0; sigtab[i].name!=NULL; i++ ) {
-      ASSERT( sigman( sigs, sigtab[i].signum ) );
+      ASSERTS( sigman( sigs, sigtab[i].signum ) );
     }
   } else {
     for( i=0; sigtab[i].name!=NULL; i++ ) {
       if( pip_strncasecmp( sigtab[i].name, token, len ) == 0 ) {
-	ASSERT( sigman( sigs, sigtab[i].signum ) );
+	ASSERTS( sigman( sigs, sigtab[i].signum ) );
 	goto done;
       }
     }
@@ -493,8 +514,8 @@ static void pip_set_gdb_sigset( char *env, sigset_t *sigs ) {
   if( i > 0 ) {
     pip_set_gdb_signal( sigs, env, i, sigaddset );
   } else {
-    ASSERT( sigaddset( sigs, SIGHUP  ) );
-    ASSERT( sigaddset( sigs, SIGSEGV ) );
+    ASSERTS( sigaddset( sigs, SIGHUP  ) );
+    ASSERTS( sigaddset( sigs, SIGSEGV ) );
   }
   while( 1 ) {
     int  sign, len;
@@ -529,7 +550,7 @@ void pip_page_alloc( size_t sz, void **allocp ) {
     pgsz = pip_root->page_size;
   }
   sz = ROUNDUP( sz, pgsz );
-  ASSERT( posix_memalign( allocp, pgsz, sz ) != 0 &&
+  ASSERTS( posix_memalign( allocp, pgsz, sz ) != 0 &&
 	  *allocp == NULL );
 }
 
@@ -547,8 +568,8 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 
   if( ( path = pip_root->envs.gdb_path ) != NULL &&
       *path != '\0' ) {
-    ASSERT( sigemptyset( &sigs     ) );
-    ASSERT( sigemptyset( &sigempty ) );
+    ASSERTS( sigemptyset( &sigs     ) );
+    ASSERTS( sigemptyset( &sigempty ) );
 
     if( !pip_is_threaded_() || pip_isa_root() ) {
       if( access( path, X_OK ) != 0 ) {
@@ -562,8 +583,8 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 	if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	  pip_set_gdb_sigset( signals, &sigs );
 	} else {		/* default signals */
-	  ASSERT( sigaddset( &sigs, SIGHUP  ) );
-	  ASSERT( sigaddset( &sigs, SIGSEGV ) );
+	  ASSERTS( sigaddset( &sigs, SIGHUP  ) );
+	  ASSERTS( sigaddset( &sigs, SIGSEGV ) );
 	}
 	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) != 0 ) {
 	  /* FIXME: since the sigaltstack is allocated  */
@@ -576,7 +597,7 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 	  memset( &sigstack, 0, sizeof( sigstack ) );
 	  sigstack.ss_sp   = altstack;
 	  sigstack.ss_size = PIP_MINSIGSTKSZ;
-	  ASSERT( sigaltstack( &sigstack, NULL ) );
+	  ASSERTS( sigaltstack( &sigstack, NULL ) );
 
 	  memset( &sigact, 0, sizeof( sigact ) );
 	  sigact.sa_sigaction = pip_exception_handler;
@@ -597,12 +618,12 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
       if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	pip_set_gdb_sigset( signals, &sigs );
 	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) ) {
-	  ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
+	  ASSERTS( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
 	}
       } else {			/* default signals */
-	ASSERT( sigaddset( &sigs, SIGHUP  ) );
-	ASSERT( sigaddset( &sigs, SIGSEGV ) );
-	ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
+	ASSERTS( sigaddset( &sigs, SIGHUP  ) );
+	ASSERTS( sigaddset( &sigs, SIGSEGV ) );
+	ASSERTS( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
       }
     }
   }
@@ -630,17 +651,4 @@ int pip_init_task_implicitly( pip_root_t *root,
     pip_debug_on_exceptions( task );
   }
   return err;
-}
-
-/* energy-saving spin-lock */
-void pip_glibc_lock( void ) __attribute__ ((unused));
-/* actually this is being used */
-void pip_glibc_lock( void ) {
-  if( pip_root != NULL ) pip_sem_wait( &pip_root->lock_glibc );
-}
-
-void pip_glibc_unlock( void ) __attribute__ ((unused));
-/* actually this is being used */
-void pip_glibc_unlock( void ) {
-  if( pip_root != NULL ) pip_sem_post( &pip_root->lock_glibc );
 }

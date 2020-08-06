@@ -284,17 +284,17 @@ void pip_reset_task_struct( pip_task_internal_t *taski ) {
   void			*stack_trampoline = annex->stack_trampoline;
   void			*namexp = annex->named_exptab;
 
-  memset( (void*) taski, 0, sizeof( pip_task_internal_t ) );
+  //memset( (void*) taski, 0, offsetof( pip_task_internal_t, annex ) );
   PIP_TASKQ_INIT( &taski->queue  );
   PIP_TASKQ_INIT( &taski->schedq );
-  taski->type  = PIP_TYPE_NONE;
+  taski->type  = PIP_TYPE_NULL;
   taski->pipid = PIP_PIPID_NULL;
-  taski->annex = annex;
+  taski->flag_exit = 0;
 
-  memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
-  annex->stack_trampoline  = stack_trampoline;
-  annex->named_exptab = namexp;
-  annex->tid          = -1; /* pip_gdbif_init_task_struct() refers this */
+  //memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
+  annex->stack_trampoline = stack_trampoline;
+  annex->named_exptab     = namexp;
+  annex->tid              = -1; /* pip_gdbif_init_task_struct() refers this */
   PIP_TASKQ_INIT( &annex->oodq      );
   pip_spin_init(  &annex->lock_oodq );
   pip_sem_init(   &annex->sleep     );
@@ -340,13 +340,13 @@ void pip_set_signal_handler( int sig,
 
   memset( &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = handler;
-  ASSERT( sigemptyset( &sigact.sa_mask )    != 0 );
-  ASSERT( sigaddset( &sigact.sa_mask, sig ) != 0 );
-  ASSERT( sigaction( sig, &sigact, oldp )   != 0 );
+  ASSERTS( sigemptyset( &sigact.sa_mask )    != 0 );
+  ASSERTS( sigaddset( &sigact.sa_mask, sig ) != 0 );
+  ASSERTS( sigaction( sig, &sigact, oldp )   != 0 );
 }
 
 void pip_unset_signal_handler( int sig, struct sigaction *oldp ) {
-  ASSERT( sigaction( sig, oldp, NULL ) != 0 );
+  ASSERTS( sigaction( sig, oldp, NULL ) != 0 );
 }
 
 /* save PiP environments */
@@ -382,13 +382,13 @@ static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
 void pip_set_sigmask( int sig ) {
   sigset_t sigmask;
 
-  ASSERT( sigemptyset( &sigmask ) );
-  ASSERT( sigaddset(   &sigmask, sig ) );
-  ASSERT( sigprocmask( SIG_BLOCK, &sigmask, &pip_root->old_sigmask ) );
+  ASSERTS( sigemptyset( &sigmask ) );
+  ASSERTS( sigaddset(   &sigmask, sig ) );
+  ASSERTS( sigprocmask( SIG_BLOCK, &sigmask, &pip_root->old_sigmask ) );
 }
 
 void pip_unset_sigmask( void ) {
-  ASSERT( sigprocmask( SIG_SETMASK, &pip_root->old_sigmask, NULL ) );
+  ASSERTS( sigprocmask( SIG_SETMASK, &pip_root->old_sigmask, NULL ) );
 }
 
 /* API */
@@ -518,7 +518,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
 
     root  = (pip_root_t*) strtoll( envroot, NULL, 16 );
     pipid = (int) strtol( envtask, NULL, 10 );
-    ASSERT( pipid < 0 || pipid > root->ntasks );
+    ASSERTS( pipid < 0 || pipid > root->ntasks );
     taski = &pip_root->tasks[pipid];
     if( ( rv = pip_init_task_implicitly( root, taski ) ) == 0 ) {
       ntasks = root->ntasks;
@@ -567,12 +567,10 @@ int pip_fin( void ) {
     ntasks = pip_root->ntasks;
     for( i=0; i<ntasks; i++ ) {
       pip_task_internal_t *taski = &pip_root->tasks[i];
-      if( taski->pipid != PIP_PIPID_NULL ) {
-	if( taski->flag_exit != PIP_EXIT_WAITED) {
-	  DBGF( "%d/%d [pipid=%d (type=0x%x)] -- BUSY",
-		i, ntasks, taski->pipid, taski->type );
-	  RETURN( EBUSY );
-	}
+      if( taski->type != PIP_TYPE_NULL ) {
+	DBGF( "%d/%d [pipid=%d (type=0x%x)] -- BUSY",
+	      i, ntasks, taski->pipid, taski->type );
+	RETURN( EBUSY );
       }
     }
     pip_named_export_fin_all();
@@ -739,7 +737,7 @@ int pip_kill_all_tasks( void ) {
   return err;
 }
 
-void pip_abort( void ) __attribute__((noreturn));
+void pip_abort( void ) NORETURN;
 void pip_abort( void ) {
   /* thin function may be called either root or tasks */
   /* SIGTERM is delivered to root so that PiP tasks   */
@@ -770,4 +768,17 @@ int pip_get_system_id( int pipid, pip_id_t *idp ) {
     }
   }
   RETURN( 0 );
+}
+
+/* energy-saving spin-lock */
+void pip_glibc_lock( void ) __attribute__ ((unused));
+/* actually this is being used */
+void pip_glibc_lock( void ) {
+  if( pip_root != NULL ) pip_sem_wait( &pip_root->lock_glibc );
+}
+
+void pip_glibc_unlock( void ) __attribute__ ((unused));
+/* actually this is being used */
+void pip_glibc_unlock( void ) {
+  if( pip_root != NULL ) pip_sem_post( &pip_root->lock_glibc );
 }

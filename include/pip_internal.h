@@ -40,9 +40,15 @@
 #ifndef INLINE
 #define INLINE
 #endif
+#ifndef NORETURN
+#define NORETURN
+#endif
 #else
 #ifndef INLINE
 #define INLINE			inline static
+#endif
+#ifndef NORETURN
+#define NORETURN		__attribute__((noreturn))
 #endif
 #endif
 
@@ -146,9 +152,9 @@ typedef struct pip_task_internal {
 	volatile uint8_t	flag_wakeup; /* flag to wakeup */
       };
       struct pip_task_internal	*coupled_sched; /* decoupled sched */
-      struct pip_task_annex	*annex;
       pip_ctx_p			*ctx_savep; /* only for fcontext */
       void			*aux; /* pointer to user data (if provided) */
+      struct pip_task_annex	*annex; /* must be the last member */
     };
     pip_cacheblk_t		__align__[2];
   };
@@ -217,7 +223,7 @@ typedef sem_t			pip_sem_t;
 
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
-  pip_task_internal_t		*task_wakeup;
+  pip_task_internal_t		*wakeup_deffered;
   pip_ctx_p			ctx_trampoline; /* trampoline context */
   pip_sem_t			sleep;
   void				*stack_trampoline;
@@ -256,7 +262,7 @@ typedef struct pip_task_annex {
 #define PIP_TASKI(TASK)		((pip_task_internal_t*)(TASK))
 #define PIP_TASKQ(TASK)		((pip_task_t*)(TASK))
 
-#define PIP_TYPE_NONE		(0x00)
+#define PIP_TYPE_NULL		(0x00)
 #define PIP_TYPE_ROOT		(0x01)
 #define PIP_TYPE_TASK		(0x02)
 
@@ -360,6 +366,7 @@ pip_init_task_implicitly( pip_root_t *root,
 			  pip_task_internal_t *task );
 
 extern void pip_wakeup( pip_task_internal_t *taski ) PIP_PRIVATE;
+extern void pip_wakeup_to_die( pip_task_internal_t *taski ) PIP_PRIVATE;
 
 extern  void pip_terminate_task( pip_task_internal_t *self ) PIP_PRIVATE;
 extern void pip_decouple_context( pip_task_internal_t *taski,
@@ -396,12 +403,6 @@ extern int  pip_check_sync_flag( uint32_t* ) PIP_PRIVATE;
 
 extern int  pip_dlclose( void* );
 
-extern void pip_suspend_and_enqueue_generic( pip_task_internal_t*,
-					     pip_task_queue_t*,
-					     int,
-					     pip_enqueue_callback_t,
-					     void* ) PIP_PRIVATE;
-
 extern void pip_named_export_init( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_named_export_fin_all( void ) PIP_PRIVATE;
 
@@ -421,8 +422,7 @@ extern void pip_page_alloc( size_t, void** ) PIP_PRIVATE;
 extern int  pip_count_vec( char** ) PIP_PRIVATE;
 extern int  pip_get_dso( int pipid, void **loaded ) PIP_PRIVATE;
 
-extern int  pip_dequeue_and_resume_multiple( pip_task_internal_t*,
-					     pip_task_queue_t*,
+extern int  pip_dequeue_and_resume_multiple( pip_task_queue_t*,
 					     pip_task_internal_t*,
 					     int* ) PIP_PRIVATE;
 extern void pip_suspend_and_enqueue_generic( pip_task_internal_t*,
@@ -430,6 +430,7 @@ extern void pip_suspend_and_enqueue_generic( pip_task_internal_t*,
 					     int,
 					     pip_enqueue_callback_t,
 					     void* ) PIP_PRIVATE;
+
 extern int  pip_is_magic_ok( pip_root_t* ) PIP_PRIVATE;
 extern int  pip_is_version_ok( pip_root_t* ) PIP_PRIVATE;
 extern int  pip_are_sizes_ok( pip_root_t* ) PIP_PRIVATE;
@@ -447,13 +448,13 @@ INLINE void pip_sem_init( pip_sem_t *sem ) {
 }
 
 INLINE void pip_sem_post( pip_sem_t *sem ) {
-  ASSERT( sem_post( sem ) );
+  ASSERTS( sem_post( sem ) );
 }
 
 INLINE void pip_sem_wait( pip_sem_t *sem ) {
   while( 1 ) {
     if( sem_wait( sem ) == 0 ) break;
-    ASSERT( errno != EINTR );
+    ASSERTS( errno != EINTR );
   }
 }
 

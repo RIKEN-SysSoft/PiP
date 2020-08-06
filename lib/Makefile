@@ -115,4 +115,4 @@ TAGS:
 	ctags -Re
 
 post-clean-hook:
-	$(RM) $(LIBNAME) $(LIBNAME_PIPINIT)
+	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)

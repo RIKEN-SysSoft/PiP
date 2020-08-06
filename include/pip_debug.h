@@ -149,6 +149,12 @@ extern int pip_debug_env( void );
       } else { DBG_PRNT(": returns %d",__xxx); }			\
       DBG_OUTPUT; } return (__xxx); } while(0)
 
+#define RETURN_NE(X)							\
+  do { int __xxx=(X);							\
+    if(DBGSW) { DBG_PRTBUF; DBG_TAG_LEAVE;				\
+      DBG_PRNT(": returns %d",__xxx);					\
+      DBG_OUTPUT; } return (__xxx); } while(0)
+
 #define RETURNV								\
   do { if(DBGSW) { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; }		\
     return; } while(0)
@@ -172,6 +178,7 @@ extern int pip_debug_env( void );
 #define ENTER
 #define ENTERF(...)
 #define RETURN(X)		return(X)
+#define RETURN_NE(X)		return(X)
 #define RETURNV			return
 #define ASSERTD(X)
 #define DPAUSE
@@ -182,16 +189,20 @@ extern int pip_debug_env( void );
 #endif	/* !DEBUG */
 
 #define ASSERT(X)							\
-  if(X){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
-    pip_debug_info(); pip_abort(); } else { DBGF( "{%s} -- Assertion OK", #X ); }
+  if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
+    pip_debug_info(); pip_abort(); }					\
+  else { DBGF( "{%s} -- Assertion OK", #X ); }
+
+#define ASSERTS(X)							\
+  if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
+	  pip_debug_info(); pip_abort(); }
 
 #define NEVER_REACH_HERE						\
   do { NL_EMSG( "Should never reach here !!!!!!\n" ); } while(0)
 
-#define ERRJ		{ DBG;                goto error; }
-#define ERRJ_ERRNO	{ DBG; err=errno;     goto error; }
-#define ERRJ_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
-#define ERRJ_CHK(FUNC)	{ if( (FUNC) ) { DBG; goto error; } }
+#define GOTO_ERROR	{ DBG;                goto error; }
+#define GOTO_ERRNO	{ DBG; err=errno;     goto error; }
+#define GOTO_ERR(ENO)	{ DBG; err=(ENO);     goto error; }
 
 #endif	/* DOXYGEN */
 #endif

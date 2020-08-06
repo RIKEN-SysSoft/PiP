@@ -67,12 +67,13 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
 
   } else {
     pip_task_queue_t 	queue;
-    pip_task_t		*t;
     int 		i;
     /* the last task. we must wait until all tasks are enqueued */
     pip_task_queue_init( &queue, NULL );
     c = init - 1;  /* the last one (myself) is not in the queue */
     for( i=0; i<c; i++ ) {
+      pip_task_t	*t;
+
       while( 1 ) {
 	pip_task_queue_lock( qp );
 	t = pip_task_queue_dequeue( qp );
@@ -83,6 +84,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
       }
       pip_task_queue_enqueue( &queue, t );
     }
+    pip_task_queue_describe( &queue, "BARRIER-DONE", stderr );
     /* really done. dequeue all tasks in the queue and resume them */
     barrp->count = init;
     pip_memory_barrier();

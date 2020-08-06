@@ -258,7 +258,10 @@ case $# in
 	exit 2;;
 esac
 
-if [ -z "$TEST_LIST" ]; then
+if [ x"$TEST_LIST" == x ]; then
+    print_usage;
+fi
+if [ ! -e "$TEST_LIST" ]; then
     print_usage;
 fi
 
