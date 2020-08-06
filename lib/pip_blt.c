@@ -232,11 +232,6 @@ void pip_sleep( pip_task_internal_t *schedi ) {
   ENTERF( "PIPID:%d", schedi->pipid );
   while( 1 ) {
     pip_stack_unprotect( schedi );
-    if( schedi->annex->wakeup_deffered ) {
-      DBGF( "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" );
-      pip_wakeup( schedi->annex->wakeup_deffered );
-      schedi->annex->wakeup_deffered = NULL;
-    }
     while( 1 ) {
       if( pip_takein_ood_task( schedi ) ) break;
       if( schedi->flag_exit &&

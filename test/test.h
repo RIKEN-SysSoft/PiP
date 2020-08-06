@@ -72,6 +72,10 @@
 #define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
 #define EXIT_KILLED	7  /* killed by Control-C or something               */
 
+#ifndef INLINE
+#define INLINE	static inline
+#endif
+
 extern int pip_id;
 
 typedef struct test_args {
@@ -84,7 +88,7 @@ typedef struct test_args {
   volatile int	niters;
 } test_args_t;
 
-inline static pid_t my_gettid( void ) {
+INLINE pid_t my_gettid( void ) {
   return (pid_t) syscall( (long int) SYS_gettid );
 }
 
@@ -98,21 +102,21 @@ extern char *__progname;
 
 #define PRINT_FLE(FSTR,ERR)			\
   if(!errno) {								\
-    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s'\n\n",			\
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s'\n\n",		\
 	    __progname,my_gettid(),__FILE__,__LINE__,FSTR,		\
 	    ERR,strerror(ERR));						\
   } else {								\
-    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s' (errno: %d:'%s')\n\n",	\
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s' (errno: %d:'%s')\n\n", \
 	    __progname, my_gettid(), __FILE__,__LINE__,FSTR,		\
 	    (ERR), strerror(ERR), errno,  strerror(errno) ); }
 
 #ifndef DEBUG
 #define CHECK(F,C,A) \
-  do{ errno=0; long int RV=(intptr_t)(F);	\
+  do { errno=0; long int RV=(intptr_t)(F);	\
     if(C) { PRINT_FLE(#F,RV); A; } } while(0)
 #else
 #define CHECK(F,C,A)							\
-  do{									\
+  do {									\
     fprintf(stderr,"[%s(%d)] %s:%d %s: >> %s\n",__progname,my_gettid(),	\
 	    __FILE__,__LINE__,__func__,#F );				\
     errno=0; long int RV=(intptr_t)(F);					\
@@ -122,12 +126,12 @@ extern char *__progname;
   } while(0)
 #endif
 
-inline static void abend( int extval ) {
+INLINE void abend( int extval ) {
   (void) pip_kill_all_tasks();
   exit( extval );
 }
 
-inline static void print_maps( void ) {
+INLINE void print_maps( void ) {
   int fd = open( "/proc/self/maps", O_RDONLY );
   while( 1 ) {
     char buf[1024];
@@ -138,7 +142,7 @@ inline static void print_maps( void ) {
   close( fd );
 }
 
-inline static void print_numa( void ) {
+INLINE void print_numa( void ) {
   int fd = open( "/proc/self/numa_maps", O_RDONLY );
   while( 1 ) {
     char buf[1024];
@@ -150,7 +154,7 @@ inline static void print_numa( void ) {
 }
 
 #define DUMP_ENV(X,Y)	dump_env( #X, X, Y );
-inline static void dump_env( char *tag, char **envv, int nomore ) {
+INLINE void dump_env( char *tag, char **envv, int nomore ) {
   int i;
   for( i=0; envv[i]!=NULL; i++ ) {
     if( i >= nomore ) {
@@ -163,7 +167,7 @@ inline static void dump_env( char *tag, char **envv, int nomore ) {
 
 #ifndef __cplusplus
 
-inline static char *signal_name( int sig ) {
+INLINE char *signal_name( int sig ) {
   char *signam_tab[] = {
     "(signal0)",		/* 0 */
     "SIGHUP",			/* 1 */
@@ -212,7 +216,7 @@ static void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
 	   my_gettid() );
 }
 
-inline static void set_signal_watcher( int signal ) {
+INLINE void set_signal_watcher( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_watcher;
@@ -220,18 +224,18 @@ inline static void set_signal_watcher( int signal ) {
   CHECK( sigaction( signal, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
-inline static void ignore_signal( int signal ) {
+INLINE void ignore_signal( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_handler = SIG_IGN;
   CHECK( sigaction( signal, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
-inline static void watch_sigchld( void ) {
+INLINE void watch_sigchld( void ) {
   set_signal_watcher( SIGCHLD );
 }
 
-inline static void watch_anysignal( void ) {
+INLINE void watch_anysignal( void ) {
   set_signal_watcher( SIGHUP  );
   set_signal_watcher( SIGINT  );
   set_signal_watcher( SIGQUIT );
@@ -253,7 +257,7 @@ inline static void watch_anysignal( void ) {
   set_signal_watcher( SIGTTOU );
 }
 
-inline static int set_signal_handler( int signal, void(*handler)() ) {
+INLINE int set_signal_handler( int signal, void(*handler)() ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = handler;
@@ -263,7 +267,7 @@ inline static int set_signal_handler( int signal, void(*handler)() ) {
   return errno;
 }
 
-inline static void ignore_anysignal( void ) {
+INLINE void ignore_anysignal( void ) {
   ignore_signal( SIGHUP  );
   ignore_signal( SIGINT  );
   ignore_signal( SIGQUIT );
@@ -285,13 +289,13 @@ inline static void ignore_anysignal( void ) {
   ignore_signal( SIGTTOU );
 }
 
-inline static void set_sigint_watcher( void ) {
-  void sigint_watcher( int sig, siginfo_t *info, void* extra ) {
-    fprintf( stderr, "\n(^C?) interrupted by user !!!!!!\n" );
-    fflush( NULL );
-    exit( EXIT_UNRESOLVED );
-  }
+static void sigint_watcher( int sig, siginfo_t *info, void* extra ) {
+  fprintf( stderr, "\n(^C?) interrupted by user !!!!!!\n" );
+  fflush( NULL );
+  exit( EXIT_UNRESOLVED );
+}
 
+INLINE void set_sigint_watcher( void ) {
   struct sigaction sigact;
 
   memset( (void*) &sigact, 0, sizeof( sigact ) );
@@ -301,7 +305,7 @@ inline static void set_sigint_watcher( void ) {
 }
 
 #define PROCFD		"/proc/self/fd"
-inline static int print_fds( FILE *file ) {
+INLINE int print_fds( FILE *file ) {
   struct dirent **entry_list;
   int count;
   int err = 0;
@@ -344,7 +348,7 @@ inline static int print_fds( FILE *file ) {
 }
 #endif
 
-inline static unsigned long get_total_memory( void ) {
+INLINE unsigned long get_total_memory( void ) {
   FILE *fp;
   int ns = 0;
   unsigned long memtotal = 0;

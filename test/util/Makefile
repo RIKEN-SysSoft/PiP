@@ -48,32 +48,32 @@ PROGRAMS_TO_INSTALL = # nothing
 
 all: $(PROGRAMS)
 
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
+
 dlmopen_count: dlmopen_count.c Makefile
-	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
+	$(CC) -g -O2 $(CPPFLAGS) $(DBGFLAG) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
 ompnumthread: ompnumthread.c Makefile
 	$(CC) -fopenmp -openmp $< -o $@
 
 timer: timer.c Makefile
-	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
+	$(CC) -g -O2 $(CPPFLAGS) $(DBGFLAG) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 pip_is_debug_build : pip_is_debug_build.c Makefile
-	../scripts/pipcc -g -O2 $< -o $@
+	../scripts/pipcc -g -O2 $(DBGFLAG) $< -o $@
 
 pip_mode_check : pip_mode_check.c Makefile
-	../scripts/pipcc -g -O2 -I.. $< --piptask -o $@
+	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 pip_task : pip_task.c Makefile
-	../scripts/pipcc -g -O2 -I.. $< --piptask -o $@
+	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 pip_blt : pip_blt.c Makefile
-	../scripts/pipcc -g -O2 -I.. $< --piptask -o $@
+	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 inf : inf.c Makefile
-	../scripts/pipcc -g -O2 -I.. $< --piptask -o $@
-
-debug:
-	CPPFLAGS+="-DDEBUG" $(MAKE) all
+	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 test :
 	../test.sh test.list

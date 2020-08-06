@@ -45,6 +45,11 @@ PROGRAMS  = openmp
 
 PROGRAMS_TO_INSTALL = # nothing
 
+CPPFLAGS += $(DBGFLAG)
+
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 

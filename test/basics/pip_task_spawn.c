@@ -30,7 +30,6 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 
-#define DEBUG
 #include <test.h>
 
 static int static_user_func( void *args ) __attribute__ ((unused));

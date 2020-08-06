@@ -170,8 +170,11 @@ fi
 
 PTHREAD_FLAG="-pthread"
 
+PIPCC_DEF="-DPIPCC"
+
 if ${is_linking}; then
-    do_exec ${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} ${PTHREAD_FLAG} ${opts}
+    do_exec ${CC} ${PIPCC_DEF} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	${PTHREAD_FLAG} ${opts}
 else
-    do_exec ${CC} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
+    do_exec ${CC} ${PIPCC_DEF} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
 fi

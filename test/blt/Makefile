@@ -39,6 +39,11 @@ PROGRAMS = pip_yield   pip_namexp   pip_barrier   pip_mutex   pip_couple
 
 PROGRAMS_TO_INSTALL = # nothing
 
+PIP_CPPFLAGS += $(DBGFLAG)
+
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 

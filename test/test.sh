@@ -15,20 +15,12 @@ print_usage()
 }
 
 set_term_width() {
-    if which resize > /dev/null 2>&1; then
-	RESIZE=`resize | grep COLUMNS | grep -v export | sed -e "s/;//" 2> /dev/null`;
-	case $RESIZE in
-	    COLUMNS*) export $RESIZE;
-	esac
-	if [ "x$COLUMNS" != "x" ]; then
-	    termwidth=$COLUMNS;
-	fi
+    if [ "x$COLUMNS" != "x" ]; then
+	termwidth=${COLUMNS};
+    elif [ "x$TERM" != "xdumb" ]; then
+	termwidth=`tput cols`;
     else
-	if [ "x$TERM" != "xdumb" ]; then
-	    termwidth=`tput cols`;
-	else
-	    termwidth=80;
-	fi
+	termwidth=80;
     fi
     lmsglen=${#longestmsg};
     width=$((termwidth-lmsglen));

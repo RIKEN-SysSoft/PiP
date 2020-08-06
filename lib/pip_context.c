@@ -182,20 +182,27 @@ void pip_swap_context( pip_task_internal_t *taski,
   pip_post_ctxsw( taski );
 }
 
+void pip_call_sleep2( pip_task_internal_t *schedi ) {
+  if( schedi->annex->wakeup_deffered ) {
+    DBGF( "deffered PIPID:%d", schedi->annex->wakeup_deffered->pipid );
+    pip_wakeup( schedi->annex->wakeup_deffered );
+    schedi->annex->wakeup_deffered = NULL;
+  }
+  pip_sleep( schedi );
+}
+
 #ifdef PIP_USE_FCONTEXT
 static void pip_call_sleep( pip_transfer_t tr ) {
-  pip_ctx_data_t *dp;
-
-  dp = (pip_ctx_data_t*) tr.data;
+  pip_ctx_data_t *dp = (pip_ctx_data_t*) tr.data;
   ASSERTD( dp->old->ctx_savep == NULL );
   *dp->old->ctx_savep = tr.ctx;
-  pip_sleep( dp->new );
+  pip_call_sleep2( dp->new );
 }
 #else  /* ucontext */
 static void pip_call_sleep( intptr_t task_H, intptr_t task_L ) {
   pip_task_internal_t	*schedi = (pip_task_internal_t*)
     ( ( ((intptr_t) task_H) << 32 ) | ( ((intptr_t) task_L) & PIP_MASK32 ) );
-  pip_sleep( schedi );
+  pip_call_sleep2( schedi );
 }
 #endif
 

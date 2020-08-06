@@ -83,13 +83,13 @@ PROGRAMS = \
 
 PROGRAMS_TO_INSTALL = # nothing
 
-PIP_CPPFLAGS += $(CPPFLAGS_DEBUG)
+PIP_CPPFLAGS += $(DBGFLAG)
 
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
 debug:
-	CPPFLAGS_DEBUG="-DDEBUG" $(MAKE) all;
+	DBGFLAG=-DDEBUG $(MAKE) all
 
 cdebug:
 	$(MAKE) veryclean debug;

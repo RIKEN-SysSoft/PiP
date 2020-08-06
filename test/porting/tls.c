@@ -33,8 +33,8 @@
   * Written by Atsushi HORI <ahori@riken.jp>
 */
 
-//#define DEBUG
 #include <test.h>
+#include <sys/time.h>
 
 #define NTHREADS	(100)
 
@@ -46,6 +46,12 @@ static int			ids[NTHREADS];
 static pthread_barrier_t	barr;
 static int 			nthreads;
 static __thread int		tlsvar;
+
+static double tls_gettime( void ) {
+  struct timeval tv;
+  gettimeofday( &tv, NULL );
+  return ((double)tv.tv_sec + (((double)tv.tv_usec) * 1.0e-6));
+}
 
 static void *thread_main( void *argp ) {
   pthread_t thr;
@@ -61,21 +67,21 @@ static void *thread_main( void *argp ) {
   for( i=0; i<WARMUP; i++ ) {
     CHECK( pip_save_tls( &tls ), RV, exit(EXIT_FAIL) );
   }
-  t0 = -pip_gettime();
+  t0 = - tls_gettime();
   for( i=0; i<NITERS; i++ ) {
     CHECK( pip_save_tls( &tls ), RV, exit(EXIT_FAIL) );
   }
-  t0 += pip_gettime();
+  t0 += tls_gettime();
   t0 /= (double)NITERS;
 
   for( i=0; i<WARMUP; i++ ) {
     CHECK( pip_load_tls( tls ), RV, exit(EXIT_FAIL) );
   }
-  t1 = -pip_gettime();
+  t1 = - tls_gettime();
   for( i=0; i<NITERS; i++ ) {
     CHECK( pip_load_tls( tls ), RV, exit(EXIT_FAIL) );
   }
-  t1 += pip_gettime();
+  t1 += tls_gettime();
   t1 /= (double)NITERS;
 
   CHECK( (tlsvar!=id), RV, exit(EXIT_FAIL) );

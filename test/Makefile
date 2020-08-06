@@ -38,6 +38,9 @@ SUBDIRS = scripts prog util basics compat pthread openmp cxx fortran issues blt
 
 PROGRAMS_TO_INSTALL = # nothing
 
+debug:
+	CPPFLAGS+="-DDEBUG" $(MAKE) clean all;
+
 include $(top_srcdir)/build/rule.mk
 include ./Test.common
 

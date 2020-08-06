@@ -32,7 +32,6 @@
 
 #include <string.h>
 
-//#define DEBUG
 #include <test.h>
 
 static int test_pip_init( char **argv ) {

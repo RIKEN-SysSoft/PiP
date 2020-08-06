@@ -33,8 +33,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define DEBUG
-
 #include <netdb.h>
 #include <test.h>
 

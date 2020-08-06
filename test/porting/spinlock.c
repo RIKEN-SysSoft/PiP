@@ -33,7 +33,6 @@
   * Written by Atsushi HORI <ahori@riken.jp>
 */
 
-//#define DEBUG
 #include <test.h>
 
 #define NTHREADS	(100)

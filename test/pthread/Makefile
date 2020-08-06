@@ -42,6 +42,11 @@ PROGRAM = pthread pthread_exit pthread_barrier pthread_mutex
 
 PROGRAMS_TO_INSTALL = # nothing
 
+PIP_CPPFLAGS += $(DBGFLAG)
+
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
+
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 

@@ -5,8 +5,6 @@
  * $PIP_license$
  */
 
-//#define DEBUG
-
 #define PIP_EXPERIMENTAL
 #include <test.h>
 
