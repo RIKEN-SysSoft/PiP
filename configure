@@ -1968,7 +1968,8 @@ case "$target_os" in
 esac
 
 case "$target" in
-      aarch64-*-*-*) true;;
+      x86_64-*)  true;;
+      aarch64-*) true;;
       *) as_fn_error $? "Unsupported target CPU architecture" "$LINENO" 5;;
 esac;
 

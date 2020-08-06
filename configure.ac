@@ -19,8 +19,8 @@ case "$target_os" in
 esac
 
 case "$target" in
-      x86_64-*-*-*)  true;;
-      aarch64-*-*-*) true;;
+      x86_64-*)  true;;
+      aarch64-*) true;;
       *) AC_MSG_ERROR([Unsupported target CPU architecture]);;
 esac;
 
