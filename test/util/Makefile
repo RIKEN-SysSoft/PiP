@@ -81,9 +81,9 @@ test :
 
 install_test_util = $(install_test_dir)/util
 
-install-test:
+check-installed:
 	$(MKDIR_P) $(install_test_util)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_util)
-	$(INSTALL) -C -m 744 test-timer.sh $(install_test_util)
+	$(INSTALL) -C -m 744 test-timer.sh path-test.sh $(install_test_util)
 
 include $(top_srcdir)/build/rule.mk

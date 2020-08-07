@@ -791,7 +791,7 @@ int pip_couple( void ) {
   taski->coupled_sched = schedi;
   nexti = pip_schedq_next( schedi );
   /* here, abobe pip_schedq_next() must be followed by pip_sched_ood_task() */
-  /* otherwise, nexti would be myself !! */
+  /* otherwise, nexti might be myself !! */
   (void) pip_sched_ood_task( taski, taski );
   if( nexti != NULL ) {
     nexti->annex->wakeup_deffered = taski;
@@ -811,11 +811,12 @@ int pip_decouple( pip_task_t *sched ) {
   int			err = 0;
 
   ENTER;
-  IF_UNLIKELY( taski                     == NULL  ) RETURN( EPERM );
-  IF_UNLIKELY( taski->task_sched         != taski ) RETURN( EPERM );
-  IF_UNLIKELY( schedi == NULL && coupled == NULL  ) RETURN( EPERM );
+  IF_UNLIKELY( taski             == NULL  ) RETURN( EPERM );
+  IF_UNLIKELY( taski->task_sched != taski ) RETURN( EPERM );
   if( schedi == NULL ) schedi = coupled;
-  IF_UNLIKELY( schedi->flag_exit                  ) RETURN( EBUSY );
+  IF_UNLIKELY( schedi            == NULL  ) RETURN( EPERM );
+  IF_UNLIKELY( schedi            == taski ) RETURN( EPERM );
+  IF_UNLIKELY( schedi->flag_exit          ) RETURN( EBUSY );
 
   taski->coupled_sched = NULL;
   if( pip_sched_ood_task( schedi, taski ) ) {

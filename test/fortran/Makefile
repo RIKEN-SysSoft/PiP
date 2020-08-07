@@ -50,6 +50,6 @@ test :
 
 install_test_fortran = $(install_test_dir)/fortran
 
-install-test :
+check-installed :
 	$(MKDIR_P) $(install_test_fortran)
-	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_fortran)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) task.list blt.list $(install_test_fortran)

@@ -54,6 +54,6 @@ test :
 
 install_test_cxx = $(install_test_dir)/cxx
 
-install-test :
+check-installed :
 	$(MKDIR_P) $(install_test_cxx)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_cxx)

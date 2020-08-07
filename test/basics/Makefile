@@ -116,7 +116,7 @@ TESTS   = task.list wait.list blt.list
 SCRIPTS = seek-file.sh seek-outin.sh seek-pipe.sh
 DATFILE = GreatExpectations-Chap1.txt
 
-install-test :
+check-installed :
 	$(MKDIR_P) $(install_test_basics)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) prog.c $(TESTS) $(DATFILE) $(install_test_basics)
 	$(INSTALL) -C -m 744 $(SCRIPTS) $(install_test_basics)

@@ -52,6 +52,6 @@ test :
 
 install_test_blt = $(install_test_dir)/blt
 
-install-test :
+check-installed :
 	$(MKDIR_P) $(install_test_blt)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_blt)

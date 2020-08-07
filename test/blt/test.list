@@ -13,6 +13,6 @@ timer 1 pip_task 24   ./pip_mutex 100
 timer 1 pip_blt  1 1  ./pip_mutex 100
 timer 1 pip_blt  4 4  ./pip_mutex 100
 timer 1 pip_blt  8 24 ./pip_mutex 100
-timer 1 ./pip_couple 2
-timer 1 ./pip_couple 4
-timer 1 ./pip_couple 8
+skip.sh T UNSUPPORTED timer 1 ./pip_couple 2
+skip.sh T UNSUPPORTED timer 1 ./pip_couple 4
+skip.sh T UNSUPPORTED timer 1 ./pip_couple 8

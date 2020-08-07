@@ -71,16 +71,15 @@ case "$enable_fcontext" in
      boost_fctx_objs="";
      boost_fctx_arch="";
      boost_fctx_cppflags="";;
-  ""|yes|fp|fpreg|fpregs)
+  *)
     boost_fctx_objs="fctx_jump.o fctx_make.o";
     case "$target" in
-      x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
-      aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
+      x86_64-*)  boost_fctx_arch="x86_64_sysv";;
+      aarch64-*) boost_fctx_arch="arm64_aapcs";;
     esac;
     case "$enable_fcontext" in
-      ""|yes) boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
-      fp|fpreg|fpregs)
-           boost_fctx_cppflags="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX";;
+      fp|fpreg|fpregs) boost_fctx_cppflags="-DPIP_USE_FCONTEXT -DBOOST_USE_TSX";;
+      *)               boost_fctx_cppflags="-DPIP_USE_FCONTEXT";;
     esac
     ;;
 esac
@@ -88,11 +87,10 @@ esac
 [
   boost_fctx_objs="fctx_jump.o fctx_make.o"
   case "$target" in
-  	x86_64-*-*-*)  boost_fctx_arch="x86_64_sysv";;
-	aarch64-*-*-*) boost_fctx_arch="arm64_aapcs";;
-	*) AC_MSG_ERROR([Unsupported CPU architecture]);;
+  	x86_64-*)  boost_fctx_arch="x86_64_sysv";;
+	aarch64-*) boost_fctx_arch="arm64_aapcs";;
   esac
-  boost_fctx_flag="-DPIP_USE_FCONTEXT"
+  boost_fctx_cppflag="-DPIP_USE_FCONTEXT"
 ])
 
 AC_SUBST(boost_fctx_objs)

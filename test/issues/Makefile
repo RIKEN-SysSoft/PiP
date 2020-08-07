@@ -53,6 +53,6 @@ test :
 
 install_test_issues = $(install_test_dir)/issues
 
-install-test :
+check-installed :
 	$(MKDIR_P) $(install_test_issues)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_issues)

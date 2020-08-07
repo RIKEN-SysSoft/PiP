@@ -61,7 +61,7 @@ test :
 
 install_test_openmp = $(install_test_dir)/openmp
 
-install-test :
+check-installed :
 	$(MKDIR_P) $(install_test_openmp)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_openmp)
 	$(INSTALL) -C -m 744 ompenv.sh $(install_test_openmp)
