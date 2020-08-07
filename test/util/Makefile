@@ -76,6 +76,7 @@ inf : inf.c Makefile
 	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 test :
+	$(MAKE) -C ../prog
 	../test.sh test.list
 
 install_test_util = $(install_test_dir)/util

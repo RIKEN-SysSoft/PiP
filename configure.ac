@@ -16,7 +16,7 @@ AC_CANONICAL_TARGET
 
 case "$target_os" in
      linux*) true;;
-     *) AC_MSG_ERROR([Unsupported OS])
+     *) AC_MSG_ERROR([Unsupported OS]);;
 esac
 
 case "$target" in

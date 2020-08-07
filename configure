@@ -1964,7 +1964,7 @@ test -n "$target_alias" &&
 
 case "$target_os" in
      linux*) true;;
-     *) as_fn_error $? "Unsupported OS" "$LINENO" 5
+     *) as_fn_error $? "Unsupported OS" "$LINENO" 5;;
 esac
 
 case "$target" in

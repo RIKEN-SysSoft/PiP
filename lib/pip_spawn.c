@@ -846,15 +846,16 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( !pip_isa_root()         ) RETURN( EPERM  );
   if( progp           == NULL ) RETURN( EINVAL );
   if( progp->prog     == NULL ) RETURN( EINVAL );
+
+  if( pip_check_sync_flag(  &opts ) ) RETURN( EINVAL );
+  if( pip_check_active_flag( opts ) ) RETURN( EINVAL );
+
   /* starting from main */
   if( progp->funcname == NULL &&
       ( progp->argv == NULL || progp->argv[0] == NULL ) ) {
     RETURN( EINVAL );
   }
   /* starting from an arbitrary func */
-  if( pip_check_sync_flag(   &opts ) ) RETURN( EINVAL );
-  if( pip_check_active_flag(  opts ) ) RETURN( EINVAL );
-
   if( progp->funcname == NULL && progp->prog == NULL ) {
     progp->prog = progp->argv[0];
   }
@@ -894,13 +895,13 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   args->coreno    = coreno;
   args->queue     = queue;
   { 				/* GLIBC/misc/init-misc.c */
-    char *argv0 = progp->prog;
-    char *p = strrchr( argv0, '/' );
+    char *prog = progp->prog;
+    char *p = strrchr( prog, '/' );
     if( p == NULL ) {
-      args->prog      = argv0;
+      args->prog      = prog;
     } else {
       args->prog      = p + 1;
-      args->prog_full = argv0;
+      args->prog_full = prog;
     }
     DBGF( "prog:%s full:%s", args->prog, args->prog_full );
   }
