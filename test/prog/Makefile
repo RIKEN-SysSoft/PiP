@@ -43,6 +43,8 @@ PIPCC = ../scripts/pipcc
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
+debug: all
+
 pip-exec : ../../bin/pip-exec
 	$(RM) pip-exec
 	ln -s ../../bin/pip-exec

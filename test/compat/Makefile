@@ -37,28 +37,28 @@ include $(top_srcdir)/build/var.mk
 SRCS  = libnull.c fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
 	gethostname.c gethostbyname.c getaddrinfo.c \
 	const_destruct.c system.c sigchld.c pagefault.c \
-	get_nprocs.c environ.c
+	get_nprocs.c environ.c atexit.c on_exit..c
 
 PROGRAMS  = libnull.so fork malloc ctype pip_dlopen gettimeofday \
 	gethostname gethostbyname getaddrinfo \
 	const_destruct system sigchld pagefault \
-	get_nprocs environ
+	get_nprocs environ atexit on_exit
 
 PROGRAMS_TO_INSTALL = # nothing
 
 PIP_CPPFLAGS += $(DBGFLAG)
 
-debug:
-	DBGFLAG=-DDEBUG $(MAKE) all
-
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
+
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
 
 libnull.so: libnull.c Makefile
 	$(CC) -g -O3 -fPIC -shared libnull.c -o libnull.so
 
 test:
-	../test.sh compat/task.list
+	../test.sh test.list
 
 install_test_compat = $(install_test_dir)/compat
 

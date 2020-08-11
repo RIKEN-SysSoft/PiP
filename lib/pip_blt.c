@@ -100,23 +100,12 @@ INLINE int pip_takein_ood_task( pip_task_internal_t *schedi ) {
   RETURN_NE( !PIP_TASKQ_ISEMPTY( &schedi->schedq ) );
 }
 
-INLINE int
-pip_able_to_terminate_now( pip_task_internal_t *taski ) {
-  DBGF( "[PIPID:%d] flag_exit:%d  RFC:%d",
-	taski->pipid, taski->flag_exit, (int) taski->refcount );
-  return
-    taski->flag_exit       &&
-    taski->refcount   == 0 &&
-    taski->schedq_len == 0 &&
-    taski->oodq_len   == 0;
-}
-
 void pip_terminate_task( pip_task_internal_t *self ) NORETURN;
 void pip_terminate_task( pip_task_internal_t *self ) {
   ENTERF( "PIPID:%d  tid:%d", self->pipid, self->annex->tid );
 
-  ASSERTD( self->schedq_len != 0 );
   ASSERTD( (pid_t) self->annex->tid != pip_gettid() );
+  ASSERTD( self->schedq_len != 0 );
 
   /* call fflush() in the target context to flush out std* messages */
   if( self->annex->symbols.libc_fflush != NULL ) {
@@ -134,9 +123,17 @@ void pip_terminate_task( pip_task_internal_t *self ) {
     /* simulate process behavior */
     ASSERT( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
     DBGF( "calling pthread_exit()" );
-    pthread_exit( NULL );
+    if( self->annex->symbols.pthread_exit != NULL ) {
+      self->annex->symbols.pthread_exit( NULL );
+    } else {
+      pthread_exit( NULL );
+    }
   } else {			/* process mode */
-    exit( WEXITSTATUS(self->annex->status) );
+    if( self->annex->symbols.exit != NULL ) {
+      self->annex->symbols.exit( WEXITSTATUS(self->annex->status) );
+    } else {
+      exit( WEXITSTATUS(self->annex->status) );
+    }
   }
   NEVER_REACH_HERE;
 }
@@ -330,30 +327,12 @@ void pip_suspend_and_enqueue_generic( pip_task_internal_t *taski,
   RETURNV;
 }
 
-static void pip_set_extval( pip_task_internal_t *taski, int extval ) {
-  ENTER;
-  if( !taski->flag_exit ) {
-    taski->flag_exit = PIP_EXITED;
-    DBGF( "PIPID:%d/%d extval:%d",
-	  taski->pipid, taski->task_sched->pipid, extval );
-    if( taski->annex->status == 0 ) {
-      taski->annex->status = PIP_W_EXITCODE( extval, 0 );
-    }
-    pip_gdbif_exit( taski, extval );
-    pip_memory_barrier();
-    pip_gdbif_hook_after( taski );
-  }
-  DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->status );
-  RETURNV;
-}
-
-void pip_do_exit( pip_task_internal_t *taski, int extval ) {
+void pip_do_exit( pip_task_internal_t *taski ) {
   pip_task_internal_t	*schedi, *nexti;
   pip_task_t		*queue, *next;
   /* this is called when 1) return from main (or func) function */
   /*                     2) pip_exit() is explicitly called     */
   ENTERF( "PIPID:%d", taski->pipid );
-  pip_set_extval( taski, extval );
 
  try_again:
   ASSERTS( ( schedi = taski->task_sched ) == NULL );

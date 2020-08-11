@@ -6,12 +6,16 @@ timer 1 ./pagefault 1
 timer 1 ./pagefault 8
 timer 2 pip_task 1 ./malloc
 timer 3 pip_task 8 ./malloc
+timer 1 pip_task 1 ./atexit
+timer 1 pip_task 8 ./atexit
+timer 1 pip_task 1 ./on_exit
+timer 1 pip_task 8 ./on_exit
 timer 1 pip_task 1 ./fork
 timer 1 pip_task 8 ./fork
 timer 1 pip_task 1 ./system
 timer 1 pip_task 8 ./system
-timer 4 pip_task 1 ./gettimeofday
-timer 4 pip_task 8 ./gettimeofday
+timer 1 pip_task 1 ./gettimeofday
+timer 1 pip_task 8 ./gettimeofday
 timer 1 pip_task 1 ./gethostname
 timer 1 pip_task 8 ./gethostname
 timer 1 pip_task 1 ./getaddrinfo

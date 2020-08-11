@@ -44,11 +44,11 @@ PROGRAMS_TO_INSTALL = # nothing
 
 PIP_CPPFLAGS += $(DBGFLAG)
 
-debug:
-	DBGFLAG=-DDEBUG $(MAKE) all
-
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
+
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
 
 test :
 	../test.sh test.list

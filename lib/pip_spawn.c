@@ -280,20 +280,22 @@ static int pip_load_glibc( pip_task_internal_t *taski, Lmid_t lmid ) {
     }
     /* the GLIBC _init() seems not callable. It seems that */
     /* dlmopen()ed name space does not setup VDSO properly */
-    //symp->libc_init        = dlsym( handle, "_init"                 );
-    //symp->res_init         = dlsym( handle, "__res_init"            );
-    symp->ctype_init       = dlsym( handle, "__ctype_init"          );
-    symp->mallopt          = dlsym( handle, "mallopt"               );
-    symp->libc_fflush      = dlsym( handle, "fflush"                );
-    symp->malloc_hook      = dlsym( handle, "__malloc_hook"         );
+    //symp->libc_init        = dlsym( handle, "_init"           );
+    //symp->res_init         = dlsym( handle, "__res_init"      );
+    symp->ctype_init       = dlsym( handle, "__ctype_init"    );
+    symp->mallopt          = dlsym( handle, "mallopt"         );
+    symp->libc_fflush      = dlsym( handle, "fflush"          );
+    symp->malloc_hook      = dlsym( handle, "__malloc_hook"   );
+    symp->exit	           = dlsym( handle, "exit"            );
+    symp->pthread_exit     = dlsym( handle, "pthread_exit"    );
     if( symp->libc_init == NULL ) {
       /* GLIBC variables */
-      symp->libc_argcp     = dlsym( handle, "__libc_argc"           );
-      symp->libc_argvp     = dlsym( handle, "__libc_argv"           );
-      symp->environ        = dlsym( handle, "environ"               );
+      symp->libc_argcp     = dlsym( handle, "__libc_argc"     );
+      symp->libc_argvp     = dlsym( handle, "__libc_argv"     );
+      symp->environ        = dlsym( handle, "environ"         );
       /* GLIBC misc. variables */
-      symp->prog           = dlsym( handle, "__progname"            );
-      symp->prog_full      = dlsym( handle, "__progname_full"       );
+      symp->prog           = dlsym( handle, "__progname"      );
+      symp->prog_full      = dlsym( handle, "__progname_full" );
     }
   }
   pip_glibc_unlock();
@@ -570,10 +572,49 @@ int pip_call_after_hook( pip_task_internal_t *taski, int extval ) {
   return extval;
 }
 
+static void pip_set_extval( pip_task_internal_t *taski, int extval ) {
+  ENTER;
+  if( !taski->flag_exit ) {
+    taski->flag_exit = PIP_EXITED;
+    DBGF( "PIPID:%d/%d extval:%d",
+	  taski->pipid, taski->task_sched->pipid, extval );
+    if( taski->annex->status == 0 ) {
+      taski->annex->status = PIP_W_EXITCODE( extval, 0 );
+    }
+    pip_gdbif_exit( taski, extval );
+    pip_memory_barrier();
+    pip_gdbif_hook_after( taski );
+  }
+  DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->status );
+  RETURNV;
+}
+
+static int pip_unknown_tid( void ) {
+  pip_task_internal_t *taski;
+  pid_t tid = pip_gettid();
+  int   id;
+  
+  for( id=0; id<pip_root->ntasks; id++ ) {
+    taski = &pip_root->tasks[id];
+    if( tid == taski->annex->tid ) return 0;
+  }
+  return 1;
+}
+
 static void pip_return_from_start_func( pip_task_internal_t *taski,
 					int extval ) {
-  int err = pip_call_after_hook( taski, extval );
-  pip_do_exit( taski, err );
+  if( pip_unknown_tid() ) {
+    /* when a PiP task fork()s and returns */
+    /* from main this case happens         */
+    DBGF( "return from a fork()ed process?" );
+    /* here we have to call the exit() in the same context */
+    taski->annex->symbols.exit( extval );
+    
+  } else {
+    extval = pip_call_after_hook( taski, extval );
+    pip_set_extval( taski, extval );
+    pip_do_exit( taski );
+  }
   NEVER_REACH_HERE;
 }
 
@@ -760,7 +801,8 @@ static void *pip_spawn_top( void *thargs )  {
     PIP_RUN( self );
     pip_start_user_func( args, self );
   } else {
-    pip_do_exit( self, err );
+    pip_set_extval( self, err );
+    pip_do_exit( self );
   }
   NEVER_REACH_HERE;
   return( NULL );		/* dummy */

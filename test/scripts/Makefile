@@ -41,6 +41,10 @@ PROGRAMS_TO_INSTALL = # nothing
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 
+all: $(PROGRAMS) hello.c
+
+debug: all
+
 pipcc: ../../bin/pipcc Makefile
 	$(INSTALL_PROGRAM) ../../bin/pipcc .
 
@@ -52,8 +56,6 @@ pip-mode: ../../bin/pip-mode Makefile
 
 test: Makefile
 	../test.sh test.list
-
-all: $(PROGRAMS) hello.c
 
 post-clean-hook:
 	$(RM) $(PROGRAMS) a.out hello hello.o root task

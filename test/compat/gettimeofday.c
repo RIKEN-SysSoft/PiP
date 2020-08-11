@@ -41,7 +41,7 @@
 #include <sys/time.h>
 #include <test.h>
 
-#define NITERS		(1000*1000)
+#define NITERS		(1000)
 
 double gettime( void ) {
   struct timeval  tv;

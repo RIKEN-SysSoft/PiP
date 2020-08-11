@@ -58,7 +58,7 @@ testclean-here:
 
 ### subdir rules
 
-subdir-all subdir-install \
+subdir-all subdir-debug subdir-install \
 subdir-clean subdir-veryclean subdir-distclean \
 subdir-testclean subdir-check-installed \
 subdir-doc:
@@ -95,7 +95,7 @@ subdir-doc:
 			) || exit 1; \
 		fi; \
 	done
-.PHONY: subdir-all subdir-install \
+.PHONY: subdir-all subdir-debug subdir-install \
 	subdir-clean subdir-veryclean subdir-distclean subdir-testclean
 
 ### header rules

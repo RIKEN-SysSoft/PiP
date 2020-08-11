@@ -167,6 +167,8 @@ typedef int  (*res_init_t)(void);
 typedef	void (*ctype_init_t)(void);
 typedef int  (*mallopt_t)(int,int);
 typedef	void (*fflush_t)(FILE*);
+typedef void (*exit_t)(int);
+typedef void (*pthread_exit_t)(void*);
 typedef int  (*named_export_fin_t)(struct pip_task_internal*);
 typedef int  (*pip_clone_mostly_pthread_t)
 ( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
@@ -197,7 +199,9 @@ typedef struct pip_symbol {
   long long 		*memalign_hook;	/* (unused) */
   long long		*free_hook;	/* (unused) */
   fflush_t		libc_fflush; /* to call GLIBC fflush() at the end */
-  void			*__reserved__[17]; /* reserved for future use */
+  exit_t		exit;	     /* call exit() from fork()ed process */
+  pthread_exit_t	pthread_exit;	   /* (see above exit) */
+  void			*__reserved__[15]; /* reserved for future use */
 } pip_symbols_t;
 
 typedef struct pip_char_vec {
@@ -356,6 +360,17 @@ typedef struct pip_root {
 #endif
 #define PIP_W_EXITCODE(X,S)	__W_EXITCODE(X,S)
 
+INLINE int
+pip_able_to_terminate_now( pip_task_internal_t *taski ) {
+  DBGF( "[PIPID:%d] flag_exit:%d  RFC:%d",
+	taski->pipid, taski->flag_exit, (int) taski->refcount );
+  return
+    taski->flag_exit       &&
+    taski->refcount   == 0 &&
+    taski->schedq_len == 0 &&
+    taski->oodq_len   == 0;
+}
+
 extern pip_root_t		*pip_root;
 extern pip_task_internal_t	*pip_task;
 
@@ -380,7 +395,7 @@ extern void pip_stack_protect( pip_task_internal_t *taski,
 extern void pip_stack_unprotect( pip_task_internal_t *taski ) PIP_PRIVATE;
 extern void pip_stack_wait( pip_task_internal_t *taski ) PIP_PRIVATE;
 
-extern void pip_do_exit( pip_task_internal_t*, int ) PIP_PRIVATE;
+extern void pip_do_exit( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_reset_task_struct( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task( pip_task_internal_t* ) PIP_PRIVATE;
 extern void pip_finalize_task_RC( pip_task_internal_t* ) PIP_PRIVATE;
