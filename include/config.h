@@ -18,6 +18,3 @@
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "3.0.0"
-
-/* using fcontext w/ or w/o FPREG */
-/* #undef enable_fcontext */

@@ -33,6 +33,7 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
+include fctx_defs.mk
 
 LIBNAME  = libpip.so
 SO_MAJOR = 0
@@ -42,29 +43,36 @@ LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
-CPPFLAGS += $(PIP_CPPFLAGS) \
+INTERP = $(dynamic_linker)
+
+CPPFLAGS += -I. $(PIP_CPPFLAGS)  $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
 	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
 	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
 	-DPIP_BUILD_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\" \
 	-DPIP_INSTALL_BIN_PIPS=\"$(default_bindir)/pips\" \
 	-DPIP_BUILD_BIN_PIPS=\"../bin/pips\" \
+	-DPREFIX=\"$(prefix)\" \
+	-DLDLINUX=\"$(dynamic_linker)\" \
 	$(CPPFLAGS_DEBUG)
 CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
 LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
 
-SRCS     = pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
+LIBMAIN = -Wl,-e,pip_main
+
+SRCS     = pip_main.c pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
 	pip_dlfcn.c pip_signal.c pip_init.c pip_context.c
 
 OBJS_PIPINIT = pip_init.o
 
-OBJS	 = pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
+OBJS	 = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
 	pip_context.o
 
-DEPINCS  = $(PIP_INCDIR)/config.h		\
+DEPINCS  = ./build.h                            \
+	   $(PIP_INCDIR)/config.h		\
 	   $(PIP_INCDIR)/pip.h			\
 	   $(PIP_INCDIR)/pip_context.h		\
 	   $(PIP_INCDIR)/pip_blt.h		\
@@ -81,13 +89,15 @@ DEPINCS  = $(PIP_INCDIR)/config.h		\
 	   $(PIP_INCDIR)/pip_gdbif_queue.h
 
 include $(top_srcdir)/build/rule.mk
-
 include fcontext.mk
+
+build.h: build-header.sh
+	./build-header.sh $(CC)
 
 $(OBJS): $(DEPINCS) Makefile ../build/config.mk
 
 $(LIBRARY): $(OBJS) Makefile
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
 	rm -f $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 

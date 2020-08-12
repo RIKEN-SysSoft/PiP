@@ -90,7 +90,7 @@ esac
   	x86_64-*)  boost_fctx_arch="x86_64_sysv";;
 	aarch64-*) boost_fctx_arch="arm64_aapcs";;
   esac
-  boost_fctx_cppflag="-DPIP_USE_FCONTEXT"
+  boost_fctx_cppflags="-DPIP_USE_FCONTEXT"
 ])
 
 AC_SUBST(boost_fctx_objs)
@@ -118,6 +118,7 @@ fi
 AC_CONFIG_FILES([
 	build/config.mk
 	release/version.conf
+	lib/fctx_defs.mk
 	lib/fcontext.mk
 	bin/pipcc
 	bin/pip-mode

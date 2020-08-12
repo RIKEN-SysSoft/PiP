@@ -32,10 +32,8 @@
 # $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-fctx_jump.o : $(FCTXDIR)/jump_@boost_fctx_arch@_elf_gas.S
-	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \
-	$(AS) $$tmp -o $@; $(RM) $$tmp
+FCTXDIR = ../import/fcontext/boost/fcontext
 
-fctx_make.o : $(FCTXDIR)/make_@boost_fctx_arch@_elf_gas.S
-	tmp=`mktemp`; $(CPP) -nostdinc $(FCTXCPPFLAG) $< -o $$tmp; \
-	$(AS) $$tmp -o $@; $(RM) $$tmp
+FCTXOBJS = @boost_fctx_objs@
+
+FCTXCPPFLAG = @boost_fctx_cppflags@

@@ -100,7 +100,6 @@ INLINE int pip_takein_ood_task( pip_task_internal_t *schedi ) {
   RETURN_NE( !PIP_TASKQ_ISEMPTY( &schedi->schedq ) );
 }
 
-void pip_terminate_task( pip_task_internal_t *self ) NORETURN;
 void pip_terminate_task( pip_task_internal_t *self ) {
   ENTERF( "PIPID:%d  tid:%d", self->pipid, self->annex->tid );
 

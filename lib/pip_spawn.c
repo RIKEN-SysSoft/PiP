@@ -593,7 +593,7 @@ static int pip_unknown_tid( void ) {
   pip_task_internal_t *taski;
   pid_t tid = pip_gettid();
   int   id;
-  
+
   for( id=0; id<pip_root->ntasks; id++ ) {
     taski = &pip_root->tasks[id];
     if( tid == taski->annex->tid ) return 0;
@@ -608,8 +608,11 @@ static void pip_return_from_start_func( pip_task_internal_t *taski,
     /* from main this case happens         */
     DBGF( "return from a fork()ed process?" );
     /* here we have to call the exit() in the same context */
-    taski->annex->symbols.exit( extval );
-    
+    if( taski->annex->symbols.exit != NULL ) {
+      taski->annex->symbols.exit( WEXITSTATUS(taski->annex->status) );
+    } else {
+      exit( WEXITSTATUS(taski->annex->status) );
+    }
   } else {
     extval = pip_call_after_hook( taski, extval );
     pip_set_extval( taski, extval );

@@ -208,7 +208,7 @@ int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
     } else if( PIP_ISA_TASK( taski ) ) {
       n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
       sz -= n; p += n;
-#define WITH_RFC
+//#define WITH_RFC
 #ifdef WITH_RFC
       n += snprintf( p, sz, ".%d", (int) taski->refcount );
 #endif

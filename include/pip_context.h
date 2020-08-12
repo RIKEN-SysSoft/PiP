@@ -41,8 +41,7 @@
 #include <config.h>
 #include <pip_machdep.h>
 
-#ifdef enable_fcontext
-#define PIP_USE_FCONTEXT
+#ifdef PIP_USE_FCONTEXT
 
 typedef void *volatile	pip_ctx_p;
 typedef struct pip_transfer {
@@ -56,7 +55,7 @@ pip_ctx_p      make_fcontext( void*, size_t, void (*)(pip_transfer_t) );
 #define pip_jump_fctx(CTX,DATA)		jump_fcontext((CTX),(DATA))
 #define pip_make_fctx(SP,SZ,FUNC)	make_fcontext((SP),(SZ),(FUNC))
 
-#else  /* !enable_fcontext */
+#else  /* PIP_USE_FCONTEXT */
 
 #include <ucontext.h>
 typedef struct {
@@ -86,7 +85,7 @@ inline static int pip_swap_ctx( pip_ctx_t *oldctx, pip_ctx_t *newctx ) {
   }
 }
 
-#endif	/* enable_fcontext */
+#endif	/*  PIP_USE_FCONTEXT */
 
 #endif	/* DOXYGEN_SHOULD_SKIP_THIS */
 
