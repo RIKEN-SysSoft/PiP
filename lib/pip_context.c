@@ -39,6 +39,7 @@
 
 void pip_stack_protect( pip_task_internal_t *taski,
 			pip_task_internal_t *nexti ) {
+#ifdef AH
   /* so that new task can reset the flag */
   DBGF( "protect PIPID:%d released by PIPID:%d",
 	taski->pipid, nexti->pipid );
@@ -46,9 +47,11 @@ void pip_stack_protect( pip_task_internal_t *taski,
   taski->flag_stackp = 1;
   pip_memory_barrier();
   nexti->flag_stackpp = &taski->flag_stackp;
+#endif
 }
 
 void pip_stack_unprotect( pip_task_internal_t *taski ) {
+#ifdef AH
   /* this function must be called everytime a context is switched */
   pip_memory_barrier();
   IF_UNLIKELY( taski->flag_stackpp == NULL ) {
@@ -63,9 +66,11 @@ void pip_stack_unprotect( pip_task_internal_t *taski ) {
     *taski->flag_stackpp = 0;
     taski->flag_stackpp  = NULL;
   }
+#endif
 }
 
 void pip_stack_wait( pip_task_internal_t *taski ) {
+#ifdef AH
 #ifndef DEBUG
   while( taski->flag_stackp ) pip_pause();
 #else
@@ -96,6 +101,7 @@ void pip_stack_wait( pip_task_internal_t *taski ) {
  done:
   DBGF( "PIPID:%d WAIT-DONE (count=%d*%d)",
 	taski->pipid, i, pip_root->yield_iters );
+#endif
 #endif
 }
 
@@ -133,11 +139,20 @@ INLINE void pip_postproc_fctxsw( pip_transfer_t tr ) {
 
 #endif	/* PIP_USE_FCONTEXT */
 
+INLINE void pip_deffered_proc( pip_task_internal_t *taski ) {
+  pip_task_annex_t 	*annex = taski->annex;
+  pip_deffered_proc_t	def_proc = annex->deffered_proc;
+  void			*def_arg = annex->deffered_arg;
+
+  annex->deffered_proc = NULL;
+  annex->deffered_arg  = NULL;
+  if( def_proc != NULL ) def_proc( def_arg );
+  RETURNV;
+}
+
 INLINE void pip_post_ctxsw( pip_task_internal_t *taski ) {
-  pip_task_internal_t *wakeup = taski->annex->wakeup_deffered;
-  taski->annex->wakeup_deffered = NULL;
+  pip_deffered_proc( taski );
   pip_stack_unprotect( taski );
-  if( wakeup != NULL ) pip_wakeup( wakeup );
 }
 
 void pip_swap_context( pip_task_internal_t *taski,
@@ -152,13 +167,12 @@ void pip_swap_context( pip_task_internal_t *taski,
   pip_stack_wait( nexti );
   /* wait for stack and ctx ready */
   ctx = nexti->ctx_suspend;
-#ifdef DEBUG
   ASSERTD( ctx == NULL );
   nexti->ctx_suspend = NULL;
-#endif
   pip_preproc_fctxsw( &data, taski, nexti, &taski->ctx_suspend );
   tr = pip_jump_fctx( ctx, (void*) &data );
   pip_postproc_fctxsw( tr );
+
 #else  /* ucontext */
   struct {
     pip_ctx_p ctxp_new;
@@ -183,11 +197,7 @@ void pip_swap_context( pip_task_internal_t *taski,
 }
 
 void pip_call_sleep2( pip_task_internal_t *schedi ) {
-  if( schedi->annex->wakeup_deffered ) {
-    DBGF( "deffered PIPID:%d", schedi->annex->wakeup_deffered->pipid );
-    pip_wakeup( schedi->annex->wakeup_deffered );
-    schedi->annex->wakeup_deffered = NULL;
-  }
+  pip_deffered_proc( schedi );
   pip_sleep( schedi );
 }
 
@@ -280,13 +290,12 @@ void pip_couple_context( pip_task_internal_t *schedi,
   pip_stack_wait( taski );
 
   ctx = taski->ctx_suspend;
-#ifdef DEBUG
   ASSERTD( ctx == NULL );
   taski->ctx_suspend = NULL;
-#endif
   pip_preproc_fctxsw( &data, schedi, taski, &schedi->annex->ctx_trampoline );
   tr = pip_jump_fctx( ctx, (void*) &data );
   pip_postproc_fctxsw( tr );
+
 #else  /* ucontext */
   struct {
     pip_ctx_t	ctx; /* must be the last member */

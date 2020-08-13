@@ -295,9 +295,9 @@ void pip_reset_task_struct( pip_task_internal_t *taski ) {
   annex->stack_trampoline = stack_trampoline;
   annex->named_exptab     = namexp;
   annex->tid              = -1; /* pip_gdbif_init_task_struct() refers this */
-  PIP_TASKQ_INIT( &annex->oodq      );
-  pip_spin_init(  &annex->lock_oodq );
-  pip_sem_init(   &annex->sleep     );
+  PIP_TASKQ_INIT( &annex->oodq          );
+  pip_spin_init(  &annex->lock_oodq     );
+  pip_sem_init(   &annex->sleep         );
 }
 
 int pip_check_sync_flag( uint32_t *optsp ) {

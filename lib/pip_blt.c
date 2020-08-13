@@ -67,21 +67,22 @@
 #define QUEUE_DUMP( taski, queue )
 #endif	/* DEBUG */
 
-INLINE int pip_sched_ood_task( pip_task_internal_t *schedi,
-			       pip_task_internal_t *taski ) {
+void pip_sched_ood_task( pip_task_internal_t *schedi,
+			 pip_task_internal_t *taski,
+			 pip_task_internal_t *wakeup ) {
   pip_task_annex_t	*annex = schedi->annex;
   int			flag;
 
   ENTERF( "taski:PIPID:%d  sched:PIPID:%d", taski->pipid, schedi->pipid );
 
-  taski->task_sched= schedi;
+  taski->task_sched = schedi;
   pip_spin_lock( &annex->lock_oodq );
   flag = ( schedi->oodq_len == 0 );
   schedi->oodq_len ++;
   PIP_TASKQ_ENQ_LAST( &annex->oodq, PIP_TASKQ(taski) );
+  /* wakeup() must be called inside this lock region */
+  if( flag && wakeup != NULL ) pip_wakeup( wakeup );
   pip_spin_unlock( &annex->lock_oodq );
-
-  return flag;
 }
 
 INLINE int pip_takein_ood_task( pip_task_internal_t *schedi ) {
@@ -140,11 +141,13 @@ void pip_terminate_task( pip_task_internal_t *self ) {
 void pip_wakeup( pip_task_internal_t *taski ) {
   uint32_t 	opts = taski->annex->opts_sync;
 
+#ifdef AH
   if( taski->flag_wakeup ) {
     ENTERF( "-- WAKEUP PIPID:%d (PID:%d) -- already wokeup",
 	    taski->pipid, taski->annex->tid );
     RETURNV;
   }
+#endif
   ENTERF( "-- WAKEUP PIPID:%d (PID:%d) vvvvvvvvvv",
 	  taski->pipid, taski->annex->tid );
   DBGF( "schedq_len:%d  oodq_len:%d  RFC:%d  flag_exit:%d",
@@ -227,13 +230,13 @@ void pip_sleep( pip_task_internal_t *schedi ) {
 
   ENTERF( "PIPID:%d", schedi->pipid );
   while( 1 ) {
-    pip_stack_unprotect( schedi );
+    //AH//pip_stack_unprotect( schedi );
     while( 1 ) {
       if( pip_takein_ood_task( schedi ) ) break;
       if( schedi->flag_exit &&
 	  schedi->refcount == 0 ) {
 	DBGF( "PIPID:%d -- WOKEUP to EXIT", schedi->pipid );
-	pip_stack_wait( schedi );
+	//AH//pip_stack_wait( schedi );
 	pip_terminate_task( schedi );
 	NEVER_REACH_HERE;
       }
@@ -294,6 +297,24 @@ static void pip_enqueue_task( pip_task_internal_t *taski,
   }
 }
 
+struct deffered_enqueue {
+  pip_task_internal_t	*taski;
+  pip_task_queue_t 	*queue;
+  int 			flag_lock;
+  pip_enqueue_callback_t callback;
+  void 			*cbarg;
+};
+
+static void pip_deffered_enqueue( void *def_arg ) {
+  struct deffered_enqueue *def_enq =
+    (struct deffered_enqueue*) def_arg;
+  pip_enqueue_task( def_enq->taski,
+		    def_enq->queue,
+		    def_enq->flag_lock,
+		    def_enq->callback,
+		    def_enq->cbarg );
+}
+
 void pip_suspend_and_enqueue_generic( pip_task_internal_t *taski,
 				      pip_task_queue_t *queue,
 				      int flag_lock,
@@ -301,29 +322,46 @@ void pip_suspend_and_enqueue_generic( pip_task_internal_t *taski,
 				      void *cbarg ) {
   pip_task_internal_t	*schedi = taski->task_sched;
   pip_task_internal_t	*nexti  = pip_schedq_next( schedi );
+  struct deffered_enqueue def_enqueue;
 
   ASSERTD( schedi == NULL );
   PIP_SUSPEND( taski );
   pip_atomic_fetch_and_add( &schedi->refcount, 1 );
   DBGF( "Sched %d  RFC:%d", schedi->pipid, (int)schedi->refcount );
+  def_enqueue.taski     = taski;
+  def_enqueue.queue     = queue;
+  def_enqueue.flag_lock = flag_lock;
+  def_enqueue.callback  = callback;
+  def_enqueue.cbarg     = cbarg;
   if( nexti != NULL ) {
     /* context-switch to the next task */
-    pip_stack_protect( taski, nexti );
+    //AH//pip_stack_protect( taski, nexti );
     /* before enqueue, the stack must be protected */
-    pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
+    //AH//pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
+    nexti->annex->deffered_proc = pip_deffered_enqueue;
+    nexti->annex->deffered_arg  = &def_enqueue;
     DBGF( "PIPID:%d -->> PIPID:%d", taski->pipid, nexti->pipid );
     SETCURR( schedi, nexti );
     pip_swap_context( taski, nexti );
 
   } else {
     /* if there is no task to schedule next, block scheduling task */
-    pip_stack_protect( taski, schedi );
+    //AH//pip_stack_protect( taski, schedi );
     /* before enqueue, the stack must be protected */
-    pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
+    //AH//pip_enqueue_task( taski, queue, flag_lock, callback, cbarg );
+    schedi->annex->deffered_proc = pip_deffered_enqueue;
+    schedi->annex->deffered_arg  = &def_enqueue;
     pip_decouple_context( taski, schedi );
   }
   /* taski is resumed eventually */
   RETURNV;
+}
+
+static void pip_deffered_wakeup( void *def_arg ) {
+  pip_task_internal_t	*taski =
+    (pip_task_internal_t*) def_arg;
+  DBGF( "deffered-wakeup PIPID:%d", taski->pipid );
+  pip_wakeup( taski );
 }
 
 void pip_do_exit( pip_task_internal_t *taski ) {
@@ -348,7 +386,9 @@ void pip_do_exit( pip_task_internal_t *taski ) {
       /* if taski is NOT a scheduling task,  */
       /* then wakeup taski to terminate and  */
       ASSERTS( --schedi->schedq_len < 0 );
-      nexti->annex->wakeup_deffered = taski;
+      nexti->annex->deffered_proc = pip_deffered_wakeup;
+      nexti->annex->deffered_arg  = (void*) taski;
+      //AH//nexti->annex->deffered_wakeup = taski;
     } else {
       /* if this is a scheduling task, then */
       /* repeat this until the queue becomes emoty */
@@ -359,7 +399,6 @@ void pip_do_exit( pip_task_internal_t *taski ) {
     SETCURR( schedi, nexti );
     pip_swap_context( taski, nexti );
     DBGF( "TRY-AGAIN (1)" );
-    goto try_again;
 
   } else {			/* queue is empty */
     DBGF( "task PIPID:%d   sched PIPID:%d", taski->pipid, schedi->pipid );
@@ -368,17 +407,16 @@ void pip_do_exit( pip_task_internal_t *taski ) {
 	pip_terminate_task( taski );
 	NEVER_REACH_HERE;
       }
-      pip_decouple_context( taski, schedi );
       DBGF( "TRY-AGAIN (2)" );
-      goto try_again;
     } else {
       /* wakeup taski to terminate */
-      schedi->annex->wakeup_deffered = taski;
-      pip_decouple_context( taski, schedi );
+      schedi->annex->deffered_proc = pip_deffered_wakeup;
+      schedi->annex->deffered_arg  = (void*) taski;
       DBGF( "TRY-AGAIN (3)" );
-      goto try_again;
     }
+    pip_decouple_context( taski, schedi );
   }
+  goto try_again;
   NEVER_REACH_HERE;
 }
 
@@ -415,9 +453,10 @@ static int pip_do_resume( pip_task_internal_t *resume,
   } else {
     /* schedule the task as an OOD (Out Of (scheduling) Domain) task */
     DBGF( "RUN(OOD): %d/%d", resume->pipid, sched_new->pipid );
-    if( pip_sched_ood_task( sched_new, resume ) ) {
-      /* wakeup sched_new if it is sleeping */
-      if( sched_new != taski ) pip_wakeup( sched_new );
+    if( sched_new != taski ) {
+      pip_sched_ood_task( sched_new, resume, sched_new );
+    } else {
+      pip_sched_ood_task( sched_new, resume, NULL );
     }
   }
 
@@ -755,7 +794,36 @@ int pip_get_aux( pip_task_t *task, void **auxp ) {
   RETURN( 0 );
 }
 
+struct deffered_ood_and_wakeup {
+  pip_task_internal_t 	*ood_schedi;
+  pip_task_internal_t 	*ood_taski;
+  pip_task_internal_t 	*ood_wakeup;
+  pip_task_internal_t 	*wakeup;
+};
+
+static void pip_deffered_ood_and_wakeup( void *def_arg ) {
+  struct deffered_ood_and_wakeup *def_ood =
+    (struct deffered_ood_and_wakeup*) def_arg;
+  pip_task_internal_t	*ood_schedi = def_ood->ood_schedi;
+  pip_task_internal_t	*ood_taski  = def_ood->ood_taski;
+  pip_task_internal_t	*ood_wakeup = def_ood->ood_wakeup;
+  pip_task_internal_t	*wakeup     = def_ood->wakeup;
+
+  ENTER;
+  if( ood_schedi != NULL ) {
+    ASSERTD( ood_taski == NULL );
+    DBGF( "deffered-OOD PIPID:%d/%d",
+	  ood_taski->pipid, ood_schedi->pipid );
+    pip_sched_ood_task( ood_schedi, ood_taski, ood_wakeup );
+  }
+  if( wakeup ) {
+    DBGF( "deffered-wakeup PIPID:%d", wakeup->pipid );
+    pip_wakeup( wakeup );
+  }
+}
+
 int pip_couple( void ) {
+  struct deffered_ood_and_wakeup def_ood;
   pip_task_internal_t 	*taski = pip_task;
   pip_task_internal_t 	*schedi = taski->task_sched;
   pip_task_internal_t 	*nexti;
@@ -767,22 +835,26 @@ int pip_couple( void ) {
   IF_UNLIKELY( taski->coupled_sched != NULL  ) RETURN( EBUSY );
 
   taski->coupled_sched = schedi;
-  nexti = pip_schedq_next( schedi );
-  /* here, abobe pip_schedq_next() must be followed by pip_sched_ood_task() */
-  /* otherwise, nexti might be myself !! */
-  (void) pip_sched_ood_task( taski, taski );
-  if( nexti != NULL ) {
-    nexti->annex->wakeup_deffered = taski;
+  def_ood.ood_schedi = taski;
+  def_ood.ood_taski  = taski;
+  def_ood.ood_wakeup = NULL;
+  def_ood.wakeup     = taski;
+
+  if( ( nexti = pip_schedq_next( schedi ) ) != NULL ) {
     SETCURR( schedi, nexti );
+    nexti->annex->deffered_proc = pip_deffered_ood_and_wakeup;
+    nexti->annex->deffered_arg  = &def_ood;
     pip_swap_context( taski, nexti );
   } else {
-    schedi->annex->wakeup_deffered = taski;
+    schedi->annex->deffered_proc = pip_deffered_ood_and_wakeup;
+    schedi->annex->deffered_arg  = &def_ood;
     pip_decouple_context( taski, schedi );
   }
   RETURN( err );
 }
 
 int pip_decouple( pip_task_t *sched ) {
+  struct deffered_ood_and_wakeup def_ood;
   pip_task_internal_t 	*taski   = pip_task;
   pip_task_internal_t  	*schedi  = PIP_TASKI( sched );
   pip_task_internal_t  	*coupled = taski->coupled_sched;
@@ -797,9 +869,13 @@ int pip_decouple( pip_task_t *sched ) {
   IF_UNLIKELY( schedi->flag_exit          ) RETURN( EBUSY );
 
   taski->coupled_sched = NULL;
-  if( pip_sched_ood_task( schedi, taski ) ) {
-    taski->annex->wakeup_deffered = schedi;
-  }
+  def_ood.ood_schedi = schedi;
+  def_ood.ood_taski  = taski;
+  def_ood.ood_wakeup = schedi;
+  def_ood.wakeup     = NULL;
+  taski->annex->deffered_proc = pip_deffered_ood_and_wakeup;
+  taski->annex->deffered_arg  = &def_ood;
+
   pip_decouple_context( taski, taski );
   RETURN( err );
 }

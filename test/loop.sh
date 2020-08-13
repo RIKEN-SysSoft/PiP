@@ -162,7 +162,7 @@ while true; do
 	for mode in $mlist; do
 	    echo -n "" > $TMP #rewind
 	    if [ $display -eq 0 ]; then
-		echo "[[" "$i$mode" "]]" "$cmdline" `date` >> $TMP;
+		echo "[[" "$i$mode" "]]" "$cmdline" ":" `date` >> $TMP;
 		if [ $quiet -eq 0 ]; then
 		    echo -n $i$mode "";
 		fi

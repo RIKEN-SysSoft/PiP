@@ -225,9 +225,12 @@ typedef struct pip_spawn_args {
 
 typedef sem_t			pip_sem_t;
 
+typedef void(*pip_deffered_proc_t)(void*);
+
 typedef struct pip_task_annex {
   /* less and less frequently accessed part follows */
-  pip_task_internal_t		*wakeup_deffered;
+  pip_deffered_proc_t		deffered_proc;
+  void				*deffered_arg;
   pip_ctx_p			ctx_trampoline; /* trampoline context */
   pip_sem_t			sleep;
   void				*stack_trampoline;
@@ -382,6 +385,9 @@ pip_init_task_implicitly( pip_root_t *root,
 
 extern void pip_wakeup( pip_task_internal_t *taski ) PIP_PRIVATE;
 extern void pip_wakeup_to_die( pip_task_internal_t *taski ) PIP_PRIVATE;
+extern void pip_sched_ood_task( pip_task_internal_t *schedi,
+				pip_task_internal_t *taski,
+				pip_task_internal_t *wakeup ) PIP_PRIVATE;
 
 extern  void pip_terminate_task( pip_task_internal_t *self ) PIP_PRIVATE;
 extern void pip_decouple_context( pip_task_internal_t *taski,

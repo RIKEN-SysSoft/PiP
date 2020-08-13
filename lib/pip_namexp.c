@@ -264,7 +264,7 @@ static int pip_do_named_import( int pipid,
   int 			n, err = 0;
 
   ENTER;
-  if( !pip_is_initialized() ) RETURN( EPERM );
+  if( !pip_is_initialized() ) RETURN( EPERM  );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   taski = pip_get_task( pipid );
   namexp = (pip_named_exptab_t*) taski->annex->named_exptab;
@@ -349,7 +349,7 @@ static int pip_do_named_import( int pipid,
   PIP_FREE( name );
   if( !err ) {
     DBGF( "exp:%p", address );
-    *expp = address;
+    if( expp != NULL ) *expp = address;
   }
   RETURN( err );
 }

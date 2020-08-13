@@ -7,20 +7,14 @@
 
 #include <test.h>
 
-#define NITERS		(1000)
+#define NITERS		(100)
 
-static int count;
-static pip_atomic_t done;
-
-static int conv( int x ) {
-  return( x * 100 );
-}
+#define MAGIC		(12345)
 
 int main( int argc, char **argv ) {
-  int 	ntasks, pipid;
+  int 	pipid, ntasks, prev, next;
   int 	niters = 0, i;
-  int 	*countp;
-  pip_atomic_t	*donep;
+  int 	count, *counts, *countp;
 
   if( argc > 1 ) {
     niters = strtol( argv[1], NULL, 10 );
@@ -31,49 +25,48 @@ int main( int argc, char **argv ) {
   CHECK( pipid==PIP_PIPID_ROOT,                RV, return(EXIT_UNTESTED) );
   CHECK( ntasks<2,                             RV, return(EXIT_UNTESTED) );
 
-  srand( ( pipid + 1 ) * ( pipid + 1 ) );
-  count = conv( pipid );
-  CHECK( pip_named_export( (void*) &count, "COUNT:%d", pipid ),
+  prev = pipid - 1;
+  prev = ( prev < 0 ) ? ntasks - 1 : prev;
+  next = pipid + 1;
+  next = ( next == ntasks ) ? 0 : next;
+
+  CHECK( pip_named_import( pipid, (void**) &countp, "must not be found" ),
+	 RV!=EDEADLK, return(EXIT_FAIL) );
+  count = MAGIC;
+  CHECK( pip_named_export( (void*) &count, "must be found" ),
 	 RV, return(EXIT_FAIL) );
+  CHECK( pip_named_import( pipid, (void**) &countp, "must be found" ),
+	 RV, return(EXIT_FAIL) );
+  CHECK( *countp!=MAGIC, RV, return(EXIT_FAIL) );
 
+  CHECK( counts=(int*)malloc(sizeof(int)*niters), RV==0, return(EXIT_UNTESTED) );
   for( i=0; i<niters; i++ ) {
-    int target;
-    do {
-      target = rand() % ntasks;
-    } while( target == pipid );
-    countp = NULL;
-    CHECK( pip_named_import( target, (void**) &countp, "COUNT:%d", target ),
-	   RV, return(EXIT_FAIL) );
-    CHECK( countp==NULL,                 RV,               return(EXIT_FAIL) );
-    CHECK( *countp!=conv(target),        RV,               return(EXIT_FAIL) );
-    CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
+    counts[i] = i + MAGIC;
   }
-
-  if( pipid == 0 ) {
-    for( i=1; i<ntasks; i++ ) {
-      donep = NULL;
-      CHECK( pip_named_import( i, (void**) &donep, "DONE" ),
+  for( i=0; i<niters; i++ ) {
+    if( pipid == 0 ) {
+      CHECK( pip_named_export( (void*) &counts[i], "forward:%d", i ),
 	     RV, return(EXIT_FAIL) );
-      CHECK( donep==NULL, RV, return(EXIT_FAIL) );
-      CHECK( *donep!=i,   RV, return(EXIT_FAIL) );
-      *donep = -1;
+      CHECK( pip_named_export( (void*) &counts[i], "backward:%d", i ),
+	     RV, return(EXIT_FAIL) );
+      CHECK( pip_named_import( next, (void**) &countp, "forward:%d", i ),
+	     RV, return(EXIT_FAIL) );
+      CHECK( *countp!=i+MAGIC, RV, return(EXIT_FAIL) );
+      CHECK( pip_named_import( prev, (void**) &countp, "backward:%d", i ),
+	     RV, return(EXIT_FAIL) );
+      CHECK( *countp!=i+MAGIC, RV, return(EXIT_FAIL) );
+    } else {
+      CHECK( pip_named_import( prev, (void**) &countp, "forward:%d", i ),
+	     RV, return(EXIT_FAIL) );
+      CHECK( *countp!=i+MAGIC, RV, return(EXIT_FAIL) );
+      CHECK( pip_named_export( (void*) &counts[i], "forward:%d", i ),
+	     RV, return(EXIT_FAIL) );
+      CHECK( pip_named_export( (void*) &counts[i], "backward:%d", i ),
+	     RV, return(EXIT_FAIL) );
+      CHECK( pip_named_import( next, (void**) &countp, "backward:%d", i ),
+	     RV, return(EXIT_FAIL) );
+      CHECK( *countp!=i+MAGIC, RV, return(EXIT_FAIL) );
     }
-    done = 1;
-    CHECK( pip_named_export( (void*) &done, "DONE" ), RV,    return(EXIT_FAIL) );
-    while( done < ntasks ) {
-      CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
-    }
-  } else {
-    done = pipid;
-    CHECK( pip_named_export( (void*) &done, "DONE" ), RV,    return(EXIT_FAIL) );
-    while( done > 0 ) {
-      CHECK( pip_yield(PIP_YIELD_DEFAULT), RV!=0&&RV!=EINTR, return(EXIT_FAIL) );
-    }
-    donep = NULL;
-    CHECK( pip_named_import( 0, (void**) &donep, "DONE" ),
-	   RV, return(EXIT_FAIL) );
-    CHECK( donep==NULL, RV, return(EXIT_FAIL) );
-    (void) pip_atomic_fetch_and_add( donep, 1 );
   }
   CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
