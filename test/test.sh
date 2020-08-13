@@ -98,6 +98,15 @@ if [ $OMP_NUM_THREADS -lt 4 ]; then
     exit 1;
 fi
 
+if test -f "$dir_real/../lib/libpip.so"; then
+    debug=`$dir_real/../lib/libpip.so --debug`
+elif test -f "$dir_real/../../lib/libpip.so"; then
+    debug=`$dir_real/../../lib/libpip.so --debug`
+else
+    echo "Unable to find libpip.so";
+    exit 2;
+fi
+
 if test -f "$dir_real/../preload/pip_preload.so"; then
     export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
 elif test -f "$dir_real/../../lib/pip_preload.so"; then
@@ -279,6 +288,7 @@ else
 fi
 
 if [ x"$SUMMARY_FILE" = x ]; then
+    echo "libpip.so -- DEBUG:" $debug
     echo LD_PRELOAD=$LD_PRELOAD
     echo 'NTASKS:  ' ${NTASKS}
     echo 'NTHERADS:' ${OMP_NUM_THREADS}

@@ -233,8 +233,7 @@ void pip_sleep( pip_task_internal_t *schedi ) {
     //AH//pip_stack_unprotect( schedi );
     while( 1 ) {
       if( pip_takein_ood_task( schedi ) ) break;
-      if( schedi->flag_exit &&
-	  schedi->refcount == 0 ) {
+      if( pip_able_to_terminate_now( schedi ) ) {
 	DBGF( "PIPID:%d -- WOKEUP to EXIT", schedi->pipid );
 	//AH//pip_stack_wait( schedi );
 	pip_terminate_task( schedi );

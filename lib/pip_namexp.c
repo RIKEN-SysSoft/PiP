@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2018
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #include <pip_internal.h>
@@ -196,8 +196,6 @@ int pip_named_export( void *exp, const char *format, ... ) {
   namexp = (pip_named_exptab_t*) pip_task->annex->named_exptab;
   ASSERTS( namexp == NULL );
 
-  if( namexp->flag_closed ) RETURN( ECANCELED );
-
   head = pip_lock_hashtab_head( namexp, hash );
   {
     if( ( entry = pip_find_namexp( head, hash, name ) ) == NULL ) {
@@ -264,13 +262,10 @@ static int pip_do_named_import( int pipid,
   int 			n, err = 0;
 
   ENTER;
-  if( !pip_is_initialized() ) RETURN( EPERM  );
+  if( !pip_is_initialized() ) RETURN( EPERM );
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   taski = pip_get_task( pipid );
   namexp = (pip_named_exptab_t*) taski->annex->named_exptab;
-
-  if( namexp == NULL      ) RETURN( ECANCELED );
-  if( namexp->flag_closed ) RETURN( ECANCELED );
 
   hash = pip_name_hash( &name, format, ap );
   if( name == NULL ) RETURN( ENOMEM );
@@ -282,7 +277,9 @@ static int pip_do_named_import( int pipid,
       if( entry->flag_exported ) { /* exported already */
 	address = entry->address;
       } else {		   /* already queried, but not yet exported */
-	if( flag_nblk ) {
+	if( namexp->flag_closed ) {
+	  err = ECANCELED;
+	} else if( flag_nblk ) {
 	  err = EAGAIN;
 	} else {
 	  pip_namexp_wait_t	wait;
@@ -302,7 +299,9 @@ static int pip_do_named_import( int pipid,
 	}
       }
     } else {			/* not found */
-      if( pipid == pip_task->pipid ) {
+      if( namexp->flag_closed ) {
+	err = ECANCELED;
+      } else if( pipid == pip_task->pipid ) {
 	err = EDEADLK;
       } else if( flag_nblk ) {	/* no entry yet */
 	err = EAGAIN;
@@ -387,12 +386,7 @@ void pip_named_export_fin( pip_task_internal_t *taski ) {
       pip_spin_lock( &head->lock );
       PIP_LIST_FOREACH_SAFE( (pip_list_t*) &head->list, list, next ) {
 	pip_namexp_entry_t *entry = (pip_namexp_entry_t*) list;
-	pip_del_namexp_entry( entry );
-	if( entry->flag_exported ) {
-	  PIP_FREE( entry->name );
-	  PIP_FREE( entry );
-	} else {
-	  /* this is a query entry, it must be free()ed by the query task */
+	if( !entry->flag_exported ) {
 	  entry->flag_canceled = 1;
 	  err = pip_dequeue_and_resume_nolock( &entry->queue_owner, NULL );
 	  ASSERTS( err );

@@ -39,6 +39,7 @@ void exit_hook( int st, void* arg ) {
   int pid = *(int*) arg;
   printf( "[%d/%d] exit_hook is called (%d)\n", getpid(), pid, st );
   CHECK( pid!=getpid(), RV, _exit(EXIT_FAIL) );
+  _exit( 0 );
 }
 
 int arg;
@@ -47,5 +48,5 @@ int main() {
   arg = getpid();
   printf( "[%d] main\n", arg );
   CHECK( on_exit( exit_hook, (void*) &arg ), RV, return(EXIT_FAIL) );
-  exit( 0 );
+  exit( EXIT_FAIL );
 }

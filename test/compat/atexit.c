@@ -33,17 +33,15 @@
   * Written by Atsushi HORI <ahori@riken.jp>
 */
 
-#include <sys/types.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <test.h>
 
 void exit_hook( void ) {
   printf( "[%d] exit_hook is called\n", getpid() );
+  _exit( 0 );
 }
 
 int main() {
   printf( "[%d] main\n", getpid() );
   atexit( exit_hook );
-  exit( 0 );
+  exit( EXIT_FAIL );
 }
