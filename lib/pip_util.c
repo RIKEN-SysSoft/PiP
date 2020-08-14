@@ -43,10 +43,10 @@ void pip_set_name( pip_task_internal_t *task ) {
   /* this function is to set the right    */
   /* name shown by the ps and top command */
 #ifdef PR_SET_NAME
-  pip_root_t 	*root     = task->annex->task_root;
-  int		pipid     = task->pipid;
-  char		*progname = task->annex->args.prog;
-  char 		*funcname = task->annex->args.funcname;
+  pip_root_t 	*root     = AA(task)->task_root;
+  int		pipid     = TA(task)->pipid;
+  char		*progname = MA(task)->args.prog;
+  char 		*funcname = MA(task)->args.funcname;
   char 		symbol[3], name[16], prg[16];
 
   symbol[2] = '\0';

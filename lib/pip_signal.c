@@ -47,19 +47,19 @@ int pip_tkill( int tid, int signal ) {
 int pip_raise_signal( pip_task_internal_t *taski, int sig ) {
   int err = ESRCH;
 
-  DBGF( "raise signal (%s) to PIPID:%d", strsignal(sig), taski->pipid )
-  if( taski->flag_exit == 0 ) {
-    if( taski->task_sched != taski &&
-	taski->schedq_len > 0 ) {
+  DBGF( "raise signal (%s) to PIPID:%d", strsignal(sig), TA(taski)->pipid );
+  if( AA(taski)->flag_exit == 0 ) {
+    if( TA(taski)->task_sched != taski &&
+	TA(taski)->schedq_len > 0 ) {
       /* Not allowed to a signal to an inactive task */
       RETURN( EPERM );
-    } else if( taski->annex->tid > 0 ) {
-      DBGF( "taski->annex->tid: %d", taski->annex->tid );
+    } else if( AA(taski)->tid > 0 ) {
+      DBGF( "taski->annex->tid: %d", AA(taski)->tid );
       if( pip_is_threaded_() ) {
-	err = pthread_kill( taski->annex->thread, sig );
+	err = pthread_kill( MA(taski)->thread, sig );
       } else {
 	errno = 0;
-	if( pip_tkill( taski->annex->tid, sig ) ) {
+	if( pip_tkill( AA(taski)->tid, sig ) ) {
 	  RETURN( errno );
 	}
 	err = 0;

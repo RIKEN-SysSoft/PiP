@@ -41,7 +41,7 @@
 #ifdef PIP_DUMP_TASKS
 void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
   char st;
-  if( taski->flag_exit ) {
+  if( AA(taski)->flag_exit ) {
     st = 'E';
   } else if( PIP_IS_RUNNING( taski ) ) {
     st = 'R';
@@ -49,20 +49,15 @@ void pip_dump_task( FILE *fp, pip_task_internal_t *taski ) {
     st = 'S';
   }
   fprintf( fp,
-	   "%d[%d] %c  SchedQL:%d  OODQ:%d  RFC:%d  StkP:%d[%d]  WU:%d  SM:%d\n",
-	   taski->pipid,
-	   (taski->task_sched!=NULL)?taski->task_sched->pipid:-1,
+	   "%d[%d] %c  SchedQL:%d  OODQ:%d  RFC:%d  WU:%d  SM:%d\n",
+	   TA(taski)->pipid,
+	   (TA(taski)->task_sched!=NULL)?TA(TA(taski)->task_sched)->pipid:-1,
 	   st,
-	   (int) taski->schedq_len,
-	   (int) taski->oodq_len,
-	   (int) taski->refcount,
-	   (int) taski->flag_stackp,
-	   ( taski->flag_stackpp != NULL ) ?
-	   ( (pip_task_internal_t*)
-	     ( taski->flag_stackpp -
-	       offsetof(pip_task_internal_t,flag_stackpp) ) )->pipid : -1,
-	   (int) taski->flag_wakeup,
-	   (int) taski->flag_semwait );
+	   (int) TA(taski)->schedq_len,
+	   (int) TA(taski)->oodq_len,
+	   (int) TA(taski)->refcount,
+	   (int) TA(taski)->flag_wakeup,
+	   (int) TA(taski)->flag_semwait );
 }
 
 static void pip_dump_all_tasks( FILE *fp ) {
@@ -107,46 +102,46 @@ void pip_deadlock_dec( void ) {
 static void
 pip_set_exit_status( pip_task_internal_t *taski, int status ) {
   ENTER;
-  if( !taski->flag_exit ) {
-    taski->flag_exit = PIP_EXITED;
+  if( !AA(taski)->flag_exit ) {
+    AA(taski)->flag_exit = PIP_EXITED;
     /* mark myself as exited */
     DBGF( "PIPID:%d[%d] status:0x%x",
-	  taski->pipid, taski->task_sched->pipid, status );
-    if( taski->annex->status == 0 ) {
-      taski->annex->status = status;
+	  TA(taski)->pipid, TA(TA(taski)->task_sched)->pipid, status );
+    if( AA(taski)->status == 0 ) {
+      AA(taski)->status = status;
     }
   }
-  DBGF( "status: 0x%x(0x%x)", status, taski->annex->status );
+  DBGF( "status: 0x%x(0x%x)", status, AA(taski)->status );
   RETURNV;
 }
 
 void pip_finalize_task_RC( pip_task_internal_t *taski ) {
-  ENTERF( "pipid=%d  status=0x%x", taski->pipid, taski->annex->status );
+  ENTERF( "pipid=%d  status=0x%x", TA(taski)->pipid, AA(taski)->status );
 
   pip_gdbif_finalize_task( taski );
 
   /* dlclose() and free() must be called only from the root process since */
   /* corresponding dlmopen() and malloc() is called by the root process   */
-  if( taski->annex->loaded != NULL ) {
+  if( MA(taski)->loaded != NULL ) {
     /***** do not call dlclose() *****/
-    //pip_dlclose( taski->annex->loaded );
-    //taski->annex->loaded = NULL;
+    //pip_dlclose( AA(taski)->loaded );
+    //AA(taski)->loaded = NULL;
   }
 #ifdef DONOT_FREE_THEM
-  PIP_FREE( taski->annex->args.funcname );
-  taski->annex->args.funcname = NULL;
-  PIP_FREE( taski->annex->args.start_arg );
-  taski->annex->args.start_arg = NULL;
-  PIP_FREE( taski->annex->args.argvec.vec );
-  taski->annex->args.argvec.vec  = NULL;
-  PIP_FREE( taski->annex->args.argvec.strs );
-  taski->annex->args.argvec.strs = NULL;
+  PIP_FREE( MA(taski)->args.funcname );
+  MA(taski)->args.funcname = NULL;
+  PIP_FREE( MA(taski)->args.start_arg );
+  MA(taski)->args.start_arg = NULL;
+  PIP_FREE( MA(taski)->args.argvec.vec );
+  MA(taski)->args.argvec.vec  = NULL;
+  PIP_FREE( MA(taski)->args.argvec.strs );
+  MA(taski)->args.argvec.strs = NULL;
 #endif
   /* since envvec might be free()ed by calling realloc() */
   /* in glibc and envvec cannot be free()ed here         */
-  PIP_FREE( taski->annex->args.fd_list );
-  taski->annex->args.fd_list = NULL;
-  pip_sem_fin( &taski->annex->sleep );
+  PIP_FREE( MA(taski)->args.fd_list );
+  MA(taski)->args.fd_list = NULL;
+  pip_sem_fin( &AA(taski)->sleep );
 
   //pip_reset_task_struct( taski );
 }
@@ -155,29 +150,29 @@ static int
 pip_wait_thread( pip_task_internal_t *taski, int flag_blk ) {
   int err = 0;
 
-  ENTERF( "PIPID:%d", taski->pipid );
-  if( !taski->annex->thread ) {
+  ENTERF( "PIPID:%d", TA(taski)->pipid );
+  if( !MA(taski)->thread ) {
     err = ECHILD;
   } else {
     if( flag_blk ) {
-      err = pthread_join( taski->annex->thread, NULL );
+      err = pthread_join( MA(taski)->thread, NULL );
       if( err ) {
 	DBGF( "pthread_timedjoin_np(): %s", strerror(err) );
       }
     } else {
-      err = pthread_tryjoin_np( taski->annex->thread, NULL );
+      err = pthread_tryjoin_np( MA(taski)->thread, NULL );
       DBGF( "pthread_tryjoin_np(): %s", strerror(err) );
     }
     if( err ) err = ECHILD;
   }
   /* workaround (make sure) */
-  if( err && taski->annex->flag_sigchld ) {
+  if( err && AA(taski)->flag_sigchld ) {
     struct timespec ts;
     char path[128];
     struct stat stbuf;
 
     snprintf( path, 128, "/proc/%d/task/%d",
-	      getpid(), taski->annex->tid );
+	      getpid(), AA(taski)->tid );
     while( 1 ) {
       errno = 0;
       (void) stat( path, &stbuf );
@@ -200,15 +195,15 @@ static int
 pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
   int err = 0;
 
-  ENTERF( "PIPID:%d", taski->pipid );
-  if( taski->type == PIP_TYPE_NULL ) {
+  ENTERF( "PIPID:%d", TA(taski)->pipid );
+  if( TA(taski)->type == PIP_TYPE_NULL ) {
     /* already waited */
     RETURN( ECHILD );
   }
   if( pip_is_threaded_() ) {	/* thread mode */
-    if( taski->annex->flag_sigchld ) {
+    if( AA(taski)->flag_sigchld ) {
       /* if sigchld is really raised, then blocking wait */
-      taski->annex->flag_sigchld = 0;
+      AA(taski)->flag_sigchld = 0;
       err = pip_wait_thread( taski, 1 );
     } else {
       err = pip_wait_thread( taski, flag_blk );
@@ -231,10 +226,10 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
     if( !flag_blk ) options |= WNOHANG;
 
     DBGF( "calling waitpid()  task:%p  tid:%d  pipid:%d",
-	  taski, taski->annex->tid, taski->pipid );
+	  taski, AA(taski)->tid, TA(taski)->pipid );
     while( 1 ) {
       errno = 0;
-      tid = waitpid( taski->annex->tid, &status, options );
+      tid = waitpid( AA(taski)->tid, &status, options );
       err = errno;
       if( err == EINTR ) continue;
       if( err == ESRCH ) {
@@ -242,7 +237,7 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 	break;
       }
       if( err ) break;
-      if( tid != taski->annex->tid ) {
+      if( tid != AA(taski)->tid ) {
 	err = ECHILD;
       } else if( tid > 0 ) {
 	if( WIFSTOPPED( status ) || WIFCONTINUED( status ) ) {
@@ -253,20 +248,20 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
       break;
     }
     DBGF( "waitpid(tid=%d,status=0x%x)=%d (err=%d)",
-	  taski->annex->tid, status, tid, err );
+	  AA(taski)->tid, status, tid, err );
 
     if( !err && WIFSIGNALED( status ) ) {
       int sig = WTERMSIG( status );
       pip_warn_mesg( "PiP Task [%d] terminated by '%s' (%d) signal",
-		     taski->pipid, strsignal(sig), sig );
+		     TA(taski)->pipid, strsignal(sig), sig );
 	pip_set_exit_status( taski, status );
     }
   }
   if( !err ) {
-    DBGF( "PIPID:%d terminated", taski->pipid );
-    taski->type          = PIP_TYPE_NULL;
-    taski->annex->thread = 0;
-    taski->annex->tid    = 0;
+    DBGF( "PIPID:%d terminated", TA(taski)->pipid );
+    TA(taski)->type   = PIP_TYPE_NULL;
+    AA(taski)->tid    = 0;
+    MA(taski)->thread = 0;
   }
   RETURN( err );
 }
@@ -279,8 +274,8 @@ pip_wait_syscall( pip_task_internal_t *taski, int flag_blk ) {
 static int pip_wait_task_nb( pip_task_internal_t *taski ) {
   int retval = DONE;
 
-  ENTERF( "PIPID:%d", taski->pipid );
-  if( taski->pipid < 0 || taski->type == PIP_TYPE_NULL ) {
+  ENTERF( "PIPID:%d", TA(taski)->pipid );
+  if( TA(taski)->pipid < 0 || TA(taski)->type == PIP_TYPE_NULL ) {
     retval = NOT_ATASK;
   } else if( pip_wait_syscall( taski, 0 ) == 0 ) {
     retval = DONE;
@@ -336,13 +331,13 @@ int pip_wait( int pipid, int *statusp ) {
   if( pipid == PIP_PIPID_ROOT )                  RETURN( EDEADLK );
 
   taski = pip_get_task( pipid );
-  if( taski->type == PIP_TYPE_NULL ) {
+  if( TA(taski)->type == PIP_TYPE_NULL ) {
     err = ECHILD;
   } else {
     while( 1 ) {
       if( pip_wait_task_nb( taski ) == 0 ) {
 	if( statusp != NULL ) {
-	  *statusp = taski->annex->status;
+	  *statusp = AA(taski)->status;
 	}
 	pip_finalize_task_RC( taski );
 	break;
@@ -365,7 +360,7 @@ int pip_trywait( int pipid, int *statusp ) {
   taski = pip_get_task( pipid );
   if( ( err = pip_wait_syscall( taski, 0 ) ) == 0 ) {
     if( statusp != NULL ) {
-      *statusp = taski->annex->status;
+      *statusp = AA(taski)->status;
     }
     pip_finalize_task_RC( taski );
   }
@@ -395,7 +390,7 @@ pip_do_waitany( int *pipidp, int *statusp, int flag_blk ) {
       *pipidp = pipid;
     }
     if( statusp != NULL ) {
-      *statusp = taski->annex->status;
+      *statusp = AA(taski)->status;
     }
     pip_finalize_task_RC( taski );
   }

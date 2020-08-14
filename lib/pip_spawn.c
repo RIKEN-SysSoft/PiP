@@ -228,7 +228,7 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
 static int pip_find_user_symbols( pip_spawn_program_t *progp,
 				  void *handle,
 				  pip_task_internal_t *taski ) {
-  pip_symbols_t *symp = &taski->annex->symbols;
+  pip_symbols_t *symp = &MA(taski)->symbols;
   int err = 0;
 
   pip_glibc_lock();		/* to protect dlsym */
@@ -266,7 +266,7 @@ static int pip_find_user_symbols( pip_spawn_program_t *progp,
 #endif
 
 static int pip_load_glibc( pip_task_internal_t *taski, Lmid_t lmid ) {
-  pip_symbols_t *symp = &taski->annex->symbols;
+  pip_symbols_t *symp = &MA(taski)->symbols;
   void	*handle;
   int 	err = 0;
 
@@ -338,7 +338,7 @@ static char *pip_find_newer_libpipinit( void ) {
 }
 
 void pip_load_libpip( pip_task_internal_t *taski, Lmid_t lmid ) {
-  void		*loaded = taski->annex->loaded;
+  void		*loaded = MA(taski)->loaded;
   void		*ld_pipinit = NULL;
   char		*libpipinit = NULL;
   pip_init_t	impinit     = NULL;
@@ -359,8 +359,8 @@ void pip_load_libpip( pip_task_internal_t *taski, Lmid_t lmid ) {
       }
     }
   }
-  taski->annex->symbols.pip_init = impinit;
-  taski->annex->symbols.named_export_fin =
+  MA(taski)->symbols.pip_init = impinit;
+  MA(taski)->symbols.named_export_fin =
     pip_dlsym( loaded, "pip_named_export_fin" );
 }
 
@@ -387,7 +387,7 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_internal_t *taski ) {
     err = ENXIO;
     goto error;
   }
-  taski->annex->loaded = loaded;
+  MA(taski)->loaded = loaded;
 
   DBGF( "lmid: %d", (int) lmid );
   /* load libc explicitly */
@@ -489,7 +489,7 @@ int pip_get_dso( int pipid, void **loaded ) {
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   task = pip_get_task( pipid );
-  if( loaded != NULL ) *loaded = task->annex->loaded;
+  if( loaded != NULL ) *loaded = MA(task)->loaded;
   RETURN( 0 );
 }
 
@@ -527,15 +527,6 @@ static void pip_glibc_init( pip_symbols_t *symbols,
     }
   }
 
-#ifdef AH
-  /* calling GLIBC initialization functions */
-  if( symbols->res_init != NULL ) {
-    DBGF( ">> res_init@%p", symbols->res_init );
-    (void) symbols->res_init();
-    DBGF( "<< res_init@%p", symbols->res_init );
-  }
-#endif
-
 #ifndef PIP_NO_MALLOPT
   /* heap (using brk or sbrk) is not safe in PiP */
   if( symbols->mallopt != NULL ) {
@@ -555,37 +546,38 @@ static void pip_glibc_init( pip_symbols_t *symbols,
 
 static int pip_call_before_hook( pip_task_internal_t *taski ) {
   int err = 0;
-  if( taski->annex->hook_before != NULL &&
-      ( err = taski->annex->hook_before( taski->annex->hook_arg ) ) != 0 ) {
-    pip_err_mesg( "PIPID:%d before-hook returns %d", taski->pipid, err );
+  if( MA(taski)->hook_before != NULL &&
+      ( err = MA(taski)->hook_before( MA(taski)->hook_arg ) ) != 0 ) {
+    pip_err_mesg( "PIPID:%d before-hook returns %d", TA(taski)->pipid, err );
   }
   return err;
 }
 
 int pip_call_after_hook( pip_task_internal_t *taski, int extval ) {
   int err = 0;
-  if( taski->annex->hook_after != NULL &&
-      ( err = taski->annex->hook_after( taski->annex->hook_arg ) ) != 0 ) {
-    pip_err_mesg( "PIPID:%d after-hook returns %d", taski->pipid, err );
+  if( MA(taski)->hook_after != NULL &&
+      ( err = MA(taski)->hook_after( MA(taski)->hook_arg ) ) != 0 ) {
+    pip_err_mesg( "PIPID:%d after-hook returns %d", TA(taski)->pipid, err );
     if( extval == 0 ) extval = err;
   }
   return extval;
 }
 
 static void pip_set_extval( pip_task_internal_t *taski, int extval ) {
+  pip_task_annex_t	*annex = AA(taski);
   ENTER;
-  if( !taski->flag_exit ) {
-    taski->flag_exit = PIP_EXITED;
+  if( !annex->flag_exit ) {
+    annex->flag_exit = PIP_EXITED;
     DBGF( "PIPID:%d/%d extval:%d",
-	  taski->pipid, taski->task_sched->pipid, extval );
-    if( taski->annex->status == 0 ) {
-      taski->annex->status = PIP_W_EXITCODE( extval, 0 );
+	  TA(taski)->pipid, TA(TA(taski)->task_sched)->pipid, extval );
+    if( annex->status == 0 ) {
+      annex->status = PIP_W_EXITCODE( extval, 0 );
     }
     pip_gdbif_exit( taski, extval );
     pip_memory_barrier();
     pip_gdbif_hook_after( taski );
   }
-  DBGF( "extval: 0x%x(0x%x)", extval, taski->annex->status );
+  DBGF( "extval: 0x%x(0x%x)", extval, annex->status );
   RETURNV;
 }
 
@@ -596,7 +588,7 @@ static int pip_unknown_tid( void ) {
 
   for( id=0; id<pip_root->ntasks; id++ ) {
     taski = &pip_root->tasks[id];
-    if( tid == taski->annex->tid ) return 0;
+    if( tid == AA(taski)->tid ) return 0;
   }
   return 1;
 }
@@ -608,10 +600,10 @@ static void pip_return_from_start_func( pip_task_internal_t *taski,
     /* from main this case happens         */
     DBGF( "return from a fork()ed process?" );
     /* here we have to call the exit() in the same context */
-    if( taski->annex->symbols.exit != NULL ) {
-      taski->annex->symbols.exit( WEXITSTATUS(taski->annex->status) );
+    if( MA(taski)->symbols.exit != NULL ) {
+      MA(taski)->symbols.exit( WEXITSTATUS(AA(taski)->status) );
     } else {
-      exit( WEXITSTATUS(taski->annex->status) );
+      exit( WEXITSTATUS(AA(taski)->status) );
     }
   } else {
     extval = pip_call_after_hook( taski, extval );
@@ -653,7 +645,7 @@ static void pip_start_cb( void *tsk ) {
   /* let pip-gdb know */
   pip_gdbif_task_commit( taski );
   /* let root proc know the task is running (or enqueued) */
-  pip_sem_post( &taski->annex->task_root->sync_spawn );
+  pip_sem_post( &AA(taski)->task_root->sync_spawn );
 }
 
 static void pip_start_user_func( pip_spawn_args_t *args,
@@ -673,13 +665,12 @@ static void pip_start_user_func( pip_spawn_args_t *args,
       (void) close( args->fd_list[i] );
     }
   }
-  pip_glibc_init( &self->annex->symbols, args );
+  pip_glibc_init( &MA(self)->symbols, args );
   pip_gdbif_hook_before( self );
 
-  DBGF( "pip_impinit:%p", self->annex->symbols.pip_init );
-  if( self->annex->symbols.pip_init != NULL ) {
-    int rv = self->annex->symbols.pip_init( self->annex->task_root,
-					    self );
+  DBGF( "pip_impinit:%p", MA(self)->symbols.pip_init );
+  if( MA(self)->symbols.pip_init != NULL ) {
+    int rv = MA(self)->symbols.pip_init( AA(self)->task_root, self );
     if( rv ) {
       err = EPERM;
       switch( rv ) {
@@ -706,7 +697,7 @@ static void pip_start_user_func( pip_spawn_args_t *args,
   } else {
     err = pip_call_before_hook( self );
     if( !err ) {
-      if( self->annex->opts & PIP_TASK_INACTIVE ) {
+      if( AA(self)->opts & PIP_TASK_INACTIVE ) {
 	DBGF( "INACTIVE" );
 	pip_suspend_and_enqueue_generic( self,
 					 queue,
@@ -730,31 +721,31 @@ static void pip_start_user_func( pip_spawn_args_t *args,
       if( ( env_stop = pip_root->envs.stop_on_start ) != NULL &&
 	  env_stop[0] != '\0' ) {
 	int pipid_stop = strtol( env_stop, NULL, 10 );
-	if( pipid_stop < 0 || pipid_stop == self->pipid ) {
+	if( pipid_stop < 0 || pipid_stop == TA(self)->pipid ) {
 	  pip_info_mesg( "PiP task[%d] is SIGSTOPed (%s=%s)",
-			 self->pipid, PIP_ENV_STOP_ON_START, env_stop );
-	  pip_kill( self->pipid, SIGSTOP );
+			 TA(self)->pipid, PIP_ENV_STOP_ON_START, env_stop );
+	  pip_kill( TA(self)->pipid, SIGSTOP );
 	} else {
 	  pip_warn_mesg( "PiP task[%d] %s=%s: out of range",
-			 self->pipid, PIP_ENV_STOP_ON_START, env_stop );
+			 TA(self)->pipid, PIP_ENV_STOP_ON_START, env_stop );
 	}
       }
-      if( self->annex->symbols.start == NULL ) {
+      if( MA(self)->symbols.start == NULL ) {
 	/* calling hook function, if any */
 	DBGF( "[%d] >> main@%p(%d,%s,%s,...)",
-	      args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1] );
-	extval = self->annex->symbols.main( args->argc, argv, envv );
+	      TA(self)->pipid, MA(self)->symbols.main, args->argc, argv[0], argv[1] );
+	extval = MA(self)->symbols.main( args->argc, argv, envv );
 	DBGF( "[%d] << main@%p(%d,%s,%s,...) = %d",
-	      args->pipid, self->annex->symbols.main, args->argc, argv[0], argv[1],
+	      TA(self)->pipid, MA(self)->symbols.main, args->argc, argv[0], argv[1],
 	      extval );
       } else {
 	DBGF( "[%d] >> %s:%p(%p)",
-	      args->pipid, args->funcname,
-	      self->annex->symbols.start, start_arg );
-	extval = self->annex->symbols.start( start_arg );
+	      TA(self)->pipid, args->funcname,
+	      MA(self)->symbols.start, start_arg );
+	extval = MA(self)->symbols.start( start_arg );
 	DBGF( "[%d] << %s:%p(%p) = %d",
 	      args->pipid, args->funcname,
-	      self->annex->symbols.start, start_arg, extval );
+	      MA(self)->symbols.start, start_arg, extval );
       }
     }
   }
@@ -782,17 +773,17 @@ static void *pip_spawn_top( void *thargs )  {
   pip_task_internal_t 	*self  = &pip_root->tasks[pipid];
   int			err    = 0;
 
-  self->annex->tid    = pip_gettid();
-  self->annex->thread = pthread_self();
+  AA(self)->tid    = pip_gettid();
+  MA(self)->thread = pthread_self();
   ENTER;
   pip_set_name( self );
-  pip_save_tls( &self->tls );
+  pip_save_tls( &TA(self)->tls );
   pip_memory_barrier();
 
   if( !pip_is_threaded_() ) {
     pip_reset_signal_handler( SIGCHLD );
     pip_reset_signal_handler( SIGTERM );
-    (void) setpgid( 0, (pid_t) pip_root->task_root->annex->tid );
+    (void) setpgid( 0, (pid_t) AA(pip_root->task_root)->tid );
   } else {
     pip_set_signal_handler( SIGQUIT, pip_sigquit_handler, NULL );
   }
@@ -827,19 +818,19 @@ static int pip_find_a_free_task( int *pipidp ) {
     DBGF( "pipid:%d  ntasks:%d  pipid_curr:%d",
 	  pipid, pip_root->ntasks, pip_root->pipid_curr );
     if( pipid != PIP_PIPID_ANY ) {
-      if( pip_root->tasks[pipid].pipid != PIP_PIPID_NULL ) {
+      if( TA(&pip_root->tasks[pipid])->pipid != PIP_PIPID_NULL ) {
 	err = EAGAIN;
 	goto unlock;
       }
     } else {
       for( i=pip_root->pipid_curr; i<pip_root->ntasks; i++ ) {
-	if( pip_root->tasks[i].pipid == PIP_PIPID_NULL ) {
+	if( TA(&pip_root->tasks[i])->pipid == PIP_PIPID_NULL ) {
 	  pipid = i;
 	  goto found;
 	}
       }
       for( i=0; i<=pip_root->pipid_curr; i++ ) {
-	if( pip_root->tasks[i].pipid == PIP_PIPID_NULL ) {
+	if( TA(&pip_root->tasks[i])->pipid == PIP_PIPID_NULL ) {
 	  pipid = i;
 	  goto found;
 	}
@@ -848,7 +839,7 @@ static int pip_find_a_free_task( int *pipidp ) {
       goto unlock;
     }
   found:
-    pip_root->tasks[pipid].pipid = pipid;	/* mark it as occupied */
+    TA(&pip_root->tasks[pipid])->pipid = pipid;	/* mark it as occupied */
     pip_root->pipid_curr = pipid + 1;
     *pipidp = pipid;
 
@@ -914,28 +905,28 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   if( ( err = pip_find_a_free_task( &pipid ) ) != 0 ) GOTO_ERROR;
   task = &pip_root->tasks[pipid];
   pip_reset_task_struct( task );
-  task->pipid      = pipid;	/* mark it as occupied */
-  task->type       = PIP_TYPE_TASK;
-  task->task_sched = task;
+  TA(task)->pipid      = pipid;	/* mark it as occupied */
+  TA(task)->type       = PIP_TYPE_TASK;
+  TA(task)->task_sched = task;
   SETCURR( task, task );
 
-  task->annex->opts          = opts;
-  task->annex->task_root     = pip_root;
+  AA(task)->opts          = opts;
+  AA(task)->task_root     = pip_root;
   if( progp->exp != NULL ) {
-    task->annex->import_root = progp->exp;
+    AA(task)->import_root = progp->exp;
   } else {
-    task->annex->import_root = pip_root->export_root;
+    AA(task)->import_root = pip_root->export_root;
   }
   if( hookp != NULL ) {
-    task->annex->hook_before = hookp->before;
-    task->annex->hook_after  = hookp->after;
-    task->annex->hook_arg    = hookp->hookarg;
+    MA(task)->hook_before = hookp->before;
+    MA(task)->hook_after  = hookp->after;
+    MA(task)->hook_arg    = hookp->hookarg;
   }
   /* allocate stack for sleeping */
   pip_page_alloc( pip_root->stack_size_trampoline,
-		  &task->annex->stack_trampoline );
+		  &AA(task)->stack_trampoline );
 
-  args = &task->annex->args;
+  args = &MA(task)->args;
   args->pipid     = pipid;
   args->coreno    = coreno;
   args->queue     = queue;
@@ -993,7 +984,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     /* we need lock on ldlinux. supposedly glibc does someting */
     /* before calling main function */
     pip_glibc_lock();
-    err = pip_clone_mostly_pthread_ptr( (pthread_t*) &task->annex->thread,
+    err = pip_clone_mostly_pthread_ptr( (pthread_t*) &MA(task)->thread,
 					flags,
 					coreno == PIP_CPUCORE_ASIS ? - 1 :
 					coreno,
@@ -1044,7 +1035,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     if( bltp != NULL ) *bltp = (pip_task_t*) task;
 
     DBGF( "task (PIPID:%d,TID:%d) is created and running",
-	  task->pipid, task->annex->tid );
+	  TA(task)->pipid, AA(task)->tid );
 
   } else {
   error:			/* undo */
@@ -1057,7 +1048,9 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
       PIP_FREE( args->fd_list     );
     }
     if( task != NULL ) {
-      if( task->annex->loaded != NULL ) pip_dlclose( task->annex->loaded );
+      if( MA(task)->loaded != NULL ) {
+	pip_dlclose( MA(task)->loaded );
+      }
       pip_reset_task_struct( task );
     }
   }
@@ -1086,7 +1079,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   }
   err = pip_do_task_spawn( progp, pipid, coreno, opts, &task, NULL, hookp );
   if( !err ) {
-    if( pipidp != NULL ) *pipidp = PIP_TASKI(task)->pipid;
+    if( pipidp != NULL ) *pipidp = TA(PIP_TASKI(task))->pipid;
   }
   RETURN( err );
 }
@@ -1109,7 +1102,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   }
   err = pip_do_task_spawn( progp, pipid, coreno, opts, &blt, queue, hookp );
   if( !err ) {
-    if( pipidp != NULL ) *pipidp = PIP_TASKI(blt)->pipid;
+    if( pipidp != NULL ) *pipidp = TA(PIP_TASKI(blt))->pipid;
     if( bltp   != NULL ) *bltp   = blt;
   }
   RETURN( err );

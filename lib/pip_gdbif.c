@@ -64,39 +64,39 @@ static int pipid_to_gdbif( int pipid ) {
  */
 
 void pip_gdbif_load( pip_task_internal_t *task ) {
-  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = MA(task)->gdbif_task;
   Dl_info dli;
 
   ENTER;
   if( gdbif_task != NULL ) {
     void *faddr = NULL;
 
-    gdbif_task->handle = task->annex->loaded;
+    gdbif_task->handle = MA(task)->loaded;
 
-    if( task->annex->symbols.main != NULL ) {
-      faddr = task->annex->symbols.main;
-    } else if( task->annex->symbols.start != NULL ) {
-      faddr = task->annex->symbols.start;
+    if( MA(task)->symbols.main != NULL ) {
+      faddr = MA(task)->symbols.main;
+    } else if( MA(task)->symbols.start != NULL ) {
+      faddr = MA(task)->symbols.start;
     }
     gdbif_task->load_address = NULL;
     if( faddr != NULL ) {
       if( !pip_dladdr( faddr, &dli ) ) {
 	pip_warn_mesg( "dladdr(%s) failure"
 		       " - PiP-gdb won't work with this PiP task %d",
-		       task->annex->args.prog, task->pipid );
+		       MA(task)->args.prog, TA(task)->pipid );
       } else {
 	gdbif_task->load_address = dli.dli_fbase;
       }
     }
     /* dli.dli_fname is same with task->args.prog and may be a relative path */
-    DBGF( "[%d] task:%p gdbif_task:%p", task->pipid, task, gdbif_task );
-    gdbif_task->realpathname = task->annex->args.prog_full;
+    DBGF( "[%d] task:%p gdbif_task:%p", TA(task)->pipid, task, gdbif_task );
+    gdbif_task->realpathname = MA(task)->args.prog_full;
   }
   RETURNV;
 }
 
 void pip_gdbif_exit( pip_task_internal_t *task, int extval ) {
-  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = MA(task)->gdbif_task;
 
   if( gdbif_task != NULL ) {
     gdbif_task->pid       = -1;
@@ -107,9 +107,9 @@ void pip_gdbif_exit( pip_task_internal_t *task, int extval ) {
 }
 
 void pip_gdbif_task_commit( pip_task_internal_t *task ) {
-  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = MA(task)->gdbif_task;
 
-  gdbif_task->pid = task->annex->tid;
+  gdbif_task->pid = AA(task)->tid;
   pip_memory_barrier();
   gdbif_task->status = PIP_GDBIF_STATUS_CREATED;
 }
@@ -122,16 +122,16 @@ static void pip_gdbif_init_task_struct( struct pip_gdbif_task *gdbif_task,
 					pip_task_internal_t *task ) {
   ENTER;
   /* members from task->args are unavailable if PIP_GDBIF_STATUS_TERMINATED */
-  task->annex->gdbif_task = gdbif_task;
-  gdbif_task->pathname     = task->annex->args.prog;
+  MA(task)->gdbif_task = gdbif_task;
+  gdbif_task->pathname     = MA(task)->args.prog;
   gdbif_task->realpathname = NULL; /* filled by pip_gdbif_load() later */
-  gdbif_task->argc         = task->annex->args.argc;
-  gdbif_task->argv         = task->annex->args.argvec.vec;
-  gdbif_task->envv         = task->annex->args.envvec.vec;
+  gdbif_task->argc         = MA(task)->args.argc;
+  gdbif_task->argv         = MA(task)->args.argvec.vec;
+  gdbif_task->envv         = MA(task)->args.envvec.vec;
   gdbif_task->handle       = NULL; /* filled by pip_gdbif_load() later*/
   gdbif_task->load_address = NULL; /* filled by pip_gdbif_load() later */
   gdbif_task->exit_code    = -1;
-  gdbif_task->pipid        = pipid_to_gdbif( task->pipid );
+  gdbif_task->pipid        = pipid_to_gdbif( TA(task)->pipid );
   gdbif_task->exec_mode =
     (pip_root->opts & PIP_MODE_PROCESS) ? PIP_GDBIF_EXMODE_PROCESS :
     (pip_root->opts & PIP_MODE_PTHREAD) ? PIP_GDBIF_EXMODE_THREAD :
@@ -151,10 +151,10 @@ static void pip_gdbif_link_task_struct( struct pip_gdbif_task *gdbif_task ) {
 
 void pip_gdbif_task_new( pip_task_internal_t *task ) {
   struct pip_gdbif_root *gdbif_root = pip_root->gdbif_root;
-  struct pip_gdbif_task *gdbif_task = &gdbif_root->tasks[task->pipid];
+  struct pip_gdbif_task *gdbif_task = &gdbif_root->tasks[TA(task)->pipid];
   pip_gdbif_init_task_struct( gdbif_task, task );
   pip_gdbif_link_task_struct( gdbif_task );
-  task->annex->gdbif_task = gdbif_task;
+  MA(task)->gdbif_task = gdbif_task;
 }
 
 static void pip_gdb_hook_before( struct pip_gdbif_task *gdbif_task ) {
@@ -218,7 +218,7 @@ static void pip_gdbif_finalize_tasks( void ) {
 
 void pip_gdbif_finalize_task( pip_task_internal_t *task ) {
   struct pip_gdbif_root *gdbif_root = pip_root->gdbif_root;
-  struct pip_gdbif_task *gdbif_task = task->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = MA(task)->gdbif_task;
 
   ENTER;
   if( gdbif_task != NULL ) {
@@ -242,7 +242,7 @@ void pip_gdbif_finalize_task( pip_task_internal_t *task ) {
 
 void pip_gdbif_hook_before( pip_task_internal_t *taski ) {
   struct pip_gdbif_root *gdbif_root = pip_root->gdbif_root;
-  struct pip_gdbif_task *gdbif_task = taski->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = MA(taski)->gdbif_task;
 
   if( gdbif_root->hook_before_main != NULL ) {
     gdbif_root->hook_before_main( gdbif_task );
@@ -251,7 +251,7 @@ void pip_gdbif_hook_before( pip_task_internal_t *taski ) {
 
 void pip_gdbif_hook_after( pip_task_internal_t *taski ) {
   struct pip_gdbif_root *gdbif_root = pip_root->gdbif_root;
-  struct pip_gdbif_task *gdbif_task = taski->annex->gdbif_task;
+  struct pip_gdbif_task *gdbif_task = MA(taski)->gdbif_task;
 
   if( gdbif_root->hook_after_main != NULL ) {
     gdbif_root->hook_after_main( gdbif_task );

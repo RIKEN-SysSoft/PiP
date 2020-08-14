@@ -33,8 +33,6 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define _GNU_SOURCE
-
 //#define DEBUG
 //#define PRINT_MAPS
 //#define PRINT_FDS
@@ -42,12 +40,12 @@
 /* the EVAL define symbol is to measure the time for calling dlmopen() */
 //#define EVAL
 
-#include <limits.h>		/* for PTHREAD_STACK_MIN */
-#define PIP_TRAMPOLINE_STACKSZ	(PTHREAD_STACK_MIN)
-
 #include <pip_internal.h>
 #include <pip_dlfcn.h>
 #include <pip_gdbif_func.h>
+
+#include <limits.h>		/* for PTHREAD_STACK_MIN */
+#define PIP_TRAMPOLINE_STACKSZ	(PTHREAD_STACK_MIN)
 
 extern char 		**environ;
 extern pip_spinlock_t 	*pip_lock_clone;
@@ -280,24 +278,26 @@ static pip_task_internal_t *pip_get_myself( void ) {
 /* internal funcs */
 
 void pip_reset_task_struct( pip_task_internal_t *taski ) {
-  pip_task_annex_t 	*annex = taski->annex;
+  pip_task_annex_t 	*annex = AA(taski);
+  pip_task_misc_t 	*misc = annex->misc;
   void			*stack_trampoline = annex->stack_trampoline;
   void			*namexp = annex->named_exptab;
 
   //memset( (void*) taski, 0, offsetof( pip_task_internal_t, annex ) );
-  PIP_TASKQ_INIT( &taski->queue  );
-  PIP_TASKQ_INIT( &taski->schedq );
-  taski->type  = PIP_TYPE_NULL;
-  taski->pipid = PIP_PIPID_NULL;
-  taski->flag_exit = 0;
+  PIP_TASKQ_INIT( &TA(taski)->queue  );
+  PIP_TASKQ_INIT( &TA(taski)->schedq );
+  PIP_TASKQ_INIT( &TA(taski)->oodq   );
+  TA(taski)->type  = PIP_TYPE_NULL;
+  TA(taski)->pipid = PIP_PIPID_NULL;
+  pip_spin_init( &TA(taski)->lock_oodq );
 
   //memset( (void*) annex, 0, sizeof( pip_task_annex_t ) );
+  annex->flag_exit        = 0;
   annex->stack_trampoline = stack_trampoline;
   annex->named_exptab     = namexp;
   annex->tid              = -1; /* pip_gdbif_init_task_struct() refers this */
-  PIP_TASKQ_INIT( &annex->oodq          );
-  pip_spin_init(  &annex->lock_oodq     );
-  pip_sem_init(   &annex->sleep         );
+  annex->misc             = misc;
+  pip_sem_init( &annex->sleep );
 }
 
 int pip_check_sync_flag( uint32_t *optsp ) {
@@ -374,7 +374,7 @@ static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {}
 
 static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
   ENTER;
-  ASSERTD( pip_task->pipid != PIP_PIPID_ROOT );
+  ASSERTD( TA(pip_task)->pipid != PIP_PIPID_ROOT );
   (void) pip_kill_all_tasks();
   (void) kill( getpid(), SIGKILL );
 }
@@ -393,16 +393,15 @@ void pip_unset_sigmask( void ) {
 
 /* API */
 
-#define PIP_CACHE_ALIGN(X)					\
-  ( ( (X) + PIP_CACHEBLK_SZ - 1 ) & ~( PIP_CACHEBLK_SZ -1 ) )
-
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
   pip_root_t		*root;
   pip_task_internal_t	*taski;
+  pip_task_annex_t	*annex;
+  pip_task_misc_t	*misc;
   size_t		sz;
+  char			*envroot, *envtask;
   int			ntasks, pipid;
   int			i, err = 0;
-  char			*envroot, *envtask;
 
 #ifdef DO_MCHECK
   mcheck( NULL );
@@ -422,25 +421,48 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
     if( pip_check_opt_and_env( &opts ) != 0 ) RETURN( EINVAL );
     if( pip_check_sync_flag(   &opts )  < 0 ) RETURN( EINVAL );
 
-    sz = PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
-      PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) +
-      PIP_CACHE_ALIGN( sizeof( pip_task_annex_t    ) * ( ntasks + 1 ) );
+#ifndef PIP_CONCAT_STRUCT
+    sz = PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
+      PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) +
+      PIP_CACHE_ALIGN( sizeof(pip_task_annex_t   ) * ( ntasks + 1 ) ) +
+      PIP_CACHE_ALIGN( sizeof(pip_task_misc_t    ) * ( ntasks + 1 ) );
+    pip_page_alloc( sz, (void**) &root );
+    (void) memset( root, 0, sz );
+    annex = (pip_task_annex_t*)
+      ( ((intptr_t)root) +
+	PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
+	PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) );
+    misc = (pip_task_misc_t*)
+      ( ((intptr_t)root) +
+	PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
+	PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) +
+	PIP_CACHE_ALIGN( sizeof(pip_task_annex_t)    * ( ntasks + 1 ) ) );
+    for( i=0; i<ntasks+1; i++ ) {
+      root->tasks[i].annex       = &annex[i];
+      root->tasks[i].annex->misc = &misc[i];
+    }
+#else
+    pip_task_internal_t	*tasks;
+
+    sz = PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
+      PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) +
+      PIP_CACHE_ALIGN( sizeof(pip_task_misc_t) * ( ntasks + 1 ) );
     pip_page_alloc( sz, (void**) &root );
     (void) memset( root, 0, sz );
 
+    tasks = (pip_task_internal_t*) ((intptr_t)root) +
+      PIP_CACHE_ALIGN( sizeof(pip_root_t) );
+    misc = (pip_task_misc_t*) ( ((intptr_t)tasks) +
+      PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) );
+    for( i=0; i<ntasks+1; i++ ) {
+    root->tasks[i].annex.misc = &misc[i];
+  }
+#endif
     root->size_whole = sz;
     root->size_root  = sizeof( pip_root_t );
     root->size_task  = sizeof( pip_task_internal_t );
     root->size_annex = sizeof( pip_task_annex_t );
-
-    DBGF( "sizeof(root):%d  sizoef(task):%d  sizeof(annex):%d",
-	  (int) root->size_root, (int) root->size_task,
-	  (int) root->size_annex );
-
-    root->annex = (pip_task_annex_t*)
-      ( ((intptr_t)root) +
-	PIP_CACHE_ALIGN( sizeof( pip_root_t ) ) +
-	PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) );
+    root->size_misc  = sizeof( pip_task_misc_t );
 
     DBGF( "ROOTROOT (%p)", root );
 
@@ -465,29 +487,28 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
       root->export_root = *rt_expp;
     }
     for( i=0; i<ntasks+1; i++ ) {
-      root->tasks[i].annex = &root->annex[i];
       pip_named_export_init( &root->tasks[i] );
       pip_reset_task_struct( &root->tasks[i] );
     }
 
     taski = root->task_root;
-    taski->pipid      = pipid;
-    taski->type       = PIP_TYPE_ROOT;
-    taski->task_sched = taski;
+    TA(taski)->type       = PIP_TYPE_ROOT;
+    TA(taski)->pipid      = pipid;
+    TA(taski)->task_sched = taski;
     SETCURR( taski, taski );
     PIP_RUN( taski );
 
-    taski->annex->loaded    = dlopen( NULL, 0 );
-    taski->annex->task_root = root;
-    taski->annex->tid       = pip_gettid();
-    taski->annex->thread    = pthread_self();
+    AA(taski)->task_root = root;
+    AA(taski)->tid       = pip_gettid();
+    MA(taski)->loaded = dlopen( NULL, 0 );
+    MA(taski)->thread = pthread_self();
 
 #ifdef PIP_SAVE_TLS
-    pip_save_tls( &taski->tls );
+    pip_save_tls( &TA(taski)->tls );
 #endif
     pip_page_alloc( root->stack_size_trampoline,
-		    &taski->annex->stack_trampoline );
-    if( taski->annex->stack_trampoline == NULL ) {
+		    &AA(taski)->stack_trampoline );
+    if( AA(taski)->stack_trampoline == NULL ) {
       free( root );
       RETURN( err );
     }
@@ -525,7 +546,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
       /* succeeded */
       if( ntasksp != NULL ) *ntasksp = ntasks;
       if( rt_expp != NULL ) {
-	*rt_expp = taski->annex->import_root;
+	*rt_expp = AA(taski)->import_root;
       }
       unsetenv( PIP_ROOT_ENV );
       unsetenv( PIP_TASK_ENV );
@@ -567,9 +588,9 @@ int pip_fin( void ) {
     ntasks = pip_root->ntasks;
     for( i=0; i<ntasks; i++ ) {
       pip_task_internal_t *taski = &pip_root->tasks[i];
-      if( taski->type != PIP_TYPE_NULL ) {
+      if( TA(taski)->type != PIP_TYPE_NULL ) {
 	DBGF( "%d/%d [pipid=%d (type=0x%x)] -- BUSY",
-	      i, ntasks, taski->pipid, taski->type );
+	      i, ntasks, TA(taski)->pipid, TA(taski)->type );
 	RETURN( EBUSY );
       }
     }
@@ -615,7 +636,7 @@ int pip_fin( void ) {
 
 int pip_export( void *exp ) {
   if( !pip_is_initialized() ) RETURN( EPERM );
-  pip_get_myself()->annex->exp = exp;
+  AA(pip_get_myself())->exp = exp;
   RETURN( 0 );
 }
 
@@ -625,7 +646,7 @@ int pip_import( int pipid, void **expp  ) {
 
   if( ( err = pip_check_pipid( &pipid ) ) != 0 ) RETURN( err );
   taski = pip_get_task( pipid );
-  if( expp != NULL ) *expp = (void*) taski->annex->exp;
+  if( expp != NULL ) *expp = (void*) AA(taski)->exp;
   RETURN( 0 );
 }
 
@@ -726,7 +747,7 @@ int pip_kill_all_tasks( void ) {
       if( pip_check_pipid( &pipid ) == 0 ) {
 	if( pip_is_threaded_() ) {
 	  pip_task_internal_t *taski = &pip_root->tasks[pipid];
-	  taski->annex->status = PIP_W_EXITCODE( 0, SIGTERM );
+	  AA(taski)->status = PIP_W_EXITCODE( 0, SIGTERM );
 	    (void) pip_kill( pipid, SIGQUIT );
 	} else {
 	  (void) pip_kill( pipid, SIGKILL );
@@ -762,9 +783,9 @@ int pip_get_system_id( int pipid, pip_id_t *idp ) {
     /* Do not call gettid() nor pthread_self() for tbis                */
     /* if a task is a BLT then gettid() returns the scheduling task ID */
     if( pip_is_threaded_() ) {
-      *idp = (intptr_t) taski->task_sched->annex->thread;
+      *idp = (intptr_t) AA(TA(taski)->task_sched)->misc->thread;
     } else {
-      *idp = (intptr_t) taski->annex->tid;
+      *idp = (intptr_t) AA(taski)->tid;
     }
   }
   RETURN( 0 );

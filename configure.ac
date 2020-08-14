@@ -63,6 +63,12 @@ AC_SUBST(glibc_libdir)
 AC_SUBST(glibc_lib)
 AC_SUBST(dynamic_linker)
 
+getconf=`/bin/which getconf`
+if test -x $getconf; then
+   cache_line_size=`$getconf LEVEL1_DCACHE_LINESIZE`
+   AC_DEFINE_UNQUOTED([CACHE_LINE_SIZE], [${cache_line_size}], ["Cache Line Size"])
+fi
+
 AC_ARG_ENABLE([fcontext], [AC_HELP_STRING([--enable-fcontext],
   ["yes": use fcontext (default), "fp(reg(s))": fcontext with FP regs, "no": use (slow) ucontext])],
 [
@@ -105,7 +111,6 @@ AC_PROG_INSTALL
 if test "$GCC" = yes; then
   CFLAGS="$CFLAGS -Wall"
 fi
-
 
 # Checks for libraries.
 

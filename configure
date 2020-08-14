@@ -2017,6 +2017,16 @@ $as_echo "${glibc_incdir}" >&6; }
 
 
 
+getconf=`/bin/which getconf`
+if test -x $getconf; then
+   cache_line_size=`$getconf LEVEL1_DCACHE_LINESIZE`
+
+cat >>confdefs.h <<_ACEOF
+#define CACHE_LINE_SIZE ${cache_line_size}
+_ACEOF
+
+fi
+
 # Check whether --enable-fcontext was given.
 if test "${enable_fcontext+set}" = set; then :
   enableval=$enable_fcontext;
@@ -3198,7 +3208,6 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 if test "$GCC" = yes; then
   CFLAGS="$CFLAGS -Wall"
 fi
-
 
 # Checks for libraries.
 

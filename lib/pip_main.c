@@ -33,9 +33,8 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#include <config.h>
-#include <build.h>
 #include <pip_internal.h>
+#include <build.h>
 #include <getopt.h>
 
 const char interp[] __attribute__((section(".interp"))) = INTERP;
@@ -57,6 +56,8 @@ struct option opttab[] =
     OPTION( hash,      9 ),
     OPTION( context,  10 ),
     OPTION( debug,    11 ),
+    OPTION( sizes,    12 ),
+    OPTION( cache,    13 ),
     OPTION( usage, USAGE ),
     OPTION( help,  USAGE ),
     { NULL, 0, NULL, 0 } };
@@ -90,13 +91,43 @@ struct value_table valtab[] =
     },
       { "Debug build",
 #ifdef DEBUG
-    "yes"
+      "yes"
 #else
-    "no"
+      "no"
 #endif
       },
+    { "Struct Sizes", NULL },
+    { "CacheLineSize", NULL },
     { NULL, NULL },
   };
+
+static void make_struct_size_str( void ) {
+  char *str;
+#ifdef PIP_CONCAT_STRUCT
+  asprintf( &str,
+	    "( pip_task_internal_body_t:%lu +"
+	    "pip_task_annex_t:%lu )  "
+	    "pip_task_misc_t:%lu",
+	    sizeof(pip_task_internal_body_t),
+	    sizeof(pip_task_annex_t),
+	    sizeof(pip_task_misc_t) );
+#else
+  asprintf( &str,
+	    "pip_task_internal_t:%lu  "
+	    "pip_task_annex_t:%lu  "
+	    "pip_task_misc_t:%lu",
+	    sizeof(pip_task_internal_t),
+	    sizeof(pip_task_annex_t),
+	    sizeof(pip_task_misc_t) );
+#endif
+  valtab[12].value = str;
+}
+
+static void make_cacheline_size_str( void ) {
+  char *str;
+  asprintf( &str, "%d", CACHE_LINE_SIZE );
+  valtab[13].value = str;
+}
 
 static void print_item( int item ) {
   if( item == -1 ) {
@@ -160,6 +191,8 @@ int pip_main( void ) {
   char *argv0;
   int argc;
 
+  make_struct_size_str();
+  make_cacheline_size_str();
   if( ( argc = parse_cmdline( &argv ) ) > 0 ) {
     argv[0] = argv0 = basename( argv[0] );
   }

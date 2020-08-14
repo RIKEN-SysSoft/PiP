@@ -17,3 +17,6 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* cache line size */
+#undef CACHE_LINE_SIZE

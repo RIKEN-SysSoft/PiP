@@ -53,7 +53,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
   int init = barrp->count_init;
   int n, c, err = 0;
 
-  ENTERF( "PIPID:%d", pip_task->pipid );
+  ENTERF( "PIPID:%d", TA(pip_task)->pipid );
   IF_UNLIKELY( !pip_is_initialized() ) RETURN( EPERM );
   IF_UNLIKELY( init == 1 ) RETURN( 0 );
 
@@ -97,7 +97,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
 }
 
 int pip_barrier_fin_( pip_barrier_t *barrp ) {
-  ENTERF( "PIPID:%d", pip_task->pipid );
+  ENTERF( "PIPID:%d", TA(pip_task)->pipid );
   if( !pip_is_initialized() ) RETURN( EPERM );
   if( !PIP_TASKQ_ISEMPTY( (pip_task_t*) &barrp->queue ) ) {
     RETURN( EBUSY );
@@ -108,7 +108,7 @@ int pip_barrier_fin_( pip_barrier_t *barrp ) {
 /* MUTEX */
 
 int pip_mutex_init_( pip_mutex_t *mutex ) {
-  ENTERF( "PIPID:%d", pip_task->pipid );
+  ENTERF( "PIPID:%d", TA(pip_task)->pipid );
   if( !pip_is_initialized() ) RETURN( EPERM );
   memset( (void*) mutex, 0, sizeof(pip_mutex_t) );
   RETURN( pip_task_queue_init( &mutex->queue, NULL ) );
@@ -117,7 +117,7 @@ int pip_mutex_init_( pip_mutex_t *mutex ) {
 int pip_mutex_lock_( pip_mutex_t *mutex ) {
   int c, err = 0;
 
-  ENTERF( "PIPID:%d", pip_task->pipid );
+  ENTERF( "PIPID:%d", TA(pip_task)->pipid );
   if( !pip_is_initialized() ) RETURN( EPERM );
   c = pip_atomic_fetch_and_add( &mutex->count, 1 );
   IF_LIKELY( c > 0 ) {
@@ -130,7 +130,7 @@ int pip_mutex_lock_( pip_mutex_t *mutex ) {
 int pip_mutex_unlock_( pip_mutex_t *mutex ) {
   int c,  err = 0;
 
-  ENTERF( "PIPID:%d", pip_task->pipid );
+  ENTERF( "PIPID:%d", TA(pip_task)->pipid );
   if( !pip_is_initialized() ) RETURN( EPERM );
   IF_UNLIKELY( mutex->count == 0 ) RETURN( EPERM );
   c = pip_atomic_sub_and_fetch( &mutex->count, 1 );
@@ -147,7 +147,7 @@ int pip_mutex_unlock_( pip_mutex_t *mutex ) {
 }
 
 int pip_mutex_fin_( pip_mutex_t *mutex ) {
-  ENTERF( "PIPID:%d", pip_task->pipid );
+  ENTERF( "PIPID:%d", TA(pip_task)->pipid );
   if( !pip_is_initialized() ) RETURN( EPERM );
   if( !pip_task_queue_isempty( (pip_task_t*) &mutex->queue ) ) {
     RETURN( EBUSY );

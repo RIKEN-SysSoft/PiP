@@ -66,13 +66,13 @@ SRCS     = pip_main.c pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 
 OBJS_PIPINIT = pip_init.o
 
-OBJS	 = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
+OBJS  = build.h \
+	pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
 	pip_context.o
 
-DEPINCS  = ./build.h                            \
-	   $(PIP_INCDIR)/config.h		\
+DEPINCS_ACT = $(PIP_INCDIR)/config.h		\
 	   $(PIP_INCDIR)/pip.h			\
 	   $(PIP_INCDIR)/pip_context.h		\
 	   $(PIP_INCDIR)/pip_blt.h		\
@@ -88,13 +88,17 @@ DEPINCS  = ./build.h                            \
 	   $(PIP_INCDIR)/pip_gdbif_func.h	\
 	   $(PIP_INCDIR)/pip_gdbif_queue.h
 
+DEPINCS = $(DEPINCS_ACT) build.h concat.h
+
 include $(top_srcdir)/build/rule.mk
 include fcontext.mk
 
-build.h: build-header.sh
-	./build-header.sh $(CC)
+build.h: $(SRCS) $(DEPINCS_ACT) build-header.sh
+	./build-header.sh $(CC) > build.h
 
-$(OBJS): $(DEPINCS) Makefile ../build/config.mk
+concat.h: concat.c $(DEPINC_ACT)
+	$(CC) -I$(PIP_INCDIR) concat.c -o concat
+	./concat > concat.h
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
@@ -125,4 +129,7 @@ TAGS:
 	ctags -Re
 
 post-clean-hook:
-	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)
+	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT) build.h
+
+post-veryclean-hook:
+	$(RM) build.h concat.h concat

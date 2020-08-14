@@ -77,6 +77,12 @@
 #include <dlfcn.h>
 #include <ucontext.h>
 
+#include <config.h>
+
+#ifndef CACHE_LINE_SIZE
+#define CACHE_LINE_SIZE		(64)
+#endif
+
 #include <pip_blt.h>
 #include <pip_clone.h>
 #include <pip_context.h>
@@ -115,50 +121,12 @@
 #define PIP_EXITED		(1)
 #define PIP_EXIT_WAITED		(2)
 
+#define PIP_CACHE_ALIGN(X)					\
+  ( ( (X) + CACHE_LINE_SIZE - 1 ) & ~( CACHE_LINE_SIZE -1 ) )
+
 struct pip_root;
 struct pip_task_internal;
-struct pip_task_annex;
 struct pip_gdbif_task;
-struct pip_gdbif_root;
-
-typedef struct pip_cacheblk {
-  char		cacheblk[PIP_CACHEBLK_SZ];
-} pip_cacheblk_t;
-
-typedef volatile uint8_t	pip_stack_protect_t;
-typedef pip_stack_protect_t	*pip_stack_protect_p;
-
-typedef struct pip_task_internal {
-  union {
-    struct {
-      /* Most frequently accessed (time critial) part */
-      pip_task_t		queue; /* !!! DO NOT MOVE THIS AROUND !!! */
-      pip_task_t		schedq;	/* scheduling queue */
-      struct pip_task_internal	*task_sched; /* scheduling task */
-      pip_tls_t			tls;	     /* Thread Local Stiorage */
-      pip_ctx_p			ctx_suspend; /* context to resume */
-      pip_stack_protect_p	flag_stackpp; /* pointer to unprotect stack */
-      /* end of one cache block (64 bytes) */
-      /* less frequently accessed part follows */
-      pip_atomic_t		refcount; /* reference count */
-      struct {
-	pip_stack_protect_t	flag_stackp; /* stack protection flag */
-	int16_t			pipid;	    /* PiP ID */
-	uint16_t		schedq_len; /* length of schedq */
-	volatile uint16_t	oodq_len; /* indictaes ood task is added */
-	volatile uint8_t	type; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
-	volatile char		state; /* BLT state */
-	volatile uint8_t	flag_exit; /* if this task is terminated */
-	volatile uint8_t	flag_wakeup; /* flag to wakeup */
-      };
-      struct pip_task_internal	*coupled_sched; /* decoupled sched */
-      pip_ctx_p			*ctx_savep; /* only for fcontext */
-      void			*aux; /* pointer to user data (if provided) */
-      struct pip_task_annex	*annex; /* must be the last member */
-    };
-    pip_cacheblk_t		__align__[2];
-  };
-} pip_task_internal_t;
 
 typedef	int  (*main_func_t)(int,char**,char**);
 typedef	int  (*start_func_t)(void*);
@@ -172,11 +140,12 @@ typedef void (*pthread_exit_t)(void*);
 typedef int  (*named_export_fin_t)(struct pip_task_internal*);
 typedef int  (*pip_clone_mostly_pthread_t)
 ( pthread_t *newthread, int, int, size_t, void *(*)(void *), void*, pid_t* );
-typedef int  (*pip_init_t)(struct pip_root*,pip_task_internal_t*);
+typedef int  (*pip_init_t)(struct pip_root*,struct pip_task_internal*);
 typedef int  (*pip_clone_syscall_t)(int(*)(void*),void*,int,void*,pid_t*,void*,pid_t*);
-typedef pip_task_internal_t* (*pip_current_utask_t)( void );
+typedef struct pip_task_internal* (*pip_current_utask_t)( void );
+struct pip_gdbif_root;
 
-typedef struct pip_symbol {
+typedef struct pip_symbols {
   main_func_t		main;	      /* main function address */
   start_func_t		start;	      /* strat function instead of main */
   /* PiP init functions */
@@ -225,46 +194,94 @@ typedef struct pip_spawn_args {
 
 typedef sem_t			pip_sem_t;
 
-typedef void(*pip_deffered_proc_t)(void*);
-
-typedef struct pip_task_annex {
-  /* less and less frequently accessed part follows */
-  pip_deffered_proc_t		deffered_proc;
-  void				*deffered_arg;
-  pip_ctx_p			ctx_trampoline; /* trampoline context */
-  pip_sem_t			sleep;
-  void				*stack_trampoline;
-
-  pip_task_t			oodq;	   /* out-of-damain queue */
-  pip_spinlock_t		lock_oodq; /* lock for OOD queue */
-
-  void				*import_root;
-  void *volatile		exp;
-  void				*named_exptab;
-
-  uint32_t			opts;
-  uint32_t			opts_sync;
-  volatile int32_t		status;	   /* exit value */
-  volatile int			flag_sigchld; /* termination in thread mode */
-
-  volatile pid_t		tid; /* TID in process mode at beginning */
+typedef struct pip_task_misc {
   volatile pthread_t		thread;	/* thread */
   void				*loaded; /* loaded DSO handle */
-  struct pip_root		*task_root;
+  /* for debug */
+  struct pip_task_internal	*task_current;
   /* spawn info */
   pip_spawn_args_t		args;	 /* arguments for a PiP task */
   pip_symbols_t			symbols; /* symbols */
   pip_spawnhook_t		hook_before; /* before spawning hook */
   pip_spawnhook_t		hook_after;  /* after spawning hook */
   void				*hook_arg;   /* hook arg */
-  /* for debug */
-  pip_task_internal_t		*task_current;
   /* GDB interface */
-  void				*load_address;
+  //AH//void				*load_address;
   struct pip_gdbif_task		*gdbif_task; /* GDB if */
+  /* stack for pip-gdb automatic attach */
   void				*sigalt_stack;
-  void				*__reserved__[10]; /* reserved for future use */
+} pip_task_misc_t;
+
+typedef struct pip_task_annex {
+  /* less frequently accessed part follows */
+  pip_sem_t			sleep;
+  pip_ctx_p			ctx_trampoline; /* trampoline context */
+  void				*stack_trampoline;
+
+  volatile int32_t		status;	   /* exit value */
+  uint32_t			opts;
+  uint32_t			opts_sync;
+  volatile int8_t		flag_sigchld; /* termination in thread mode */
+  uint8_t			flag_exit; /* if this task is terminated */
+  uint8_t			flag_wakeup; /* flag to wakeup */
+
+  struct pip_task_internal	*coupled_sched; /* decoupled sched */
+
+  void				*aux; /* pointer to user data (if provided) */
+  void				*import_root;
+  void *volatile		exp;
+  void				*named_exptab;
+
+  volatile pid_t		tid; /* TID in process mode at beginning */
+  struct pip_root		*task_root;
+
+  pip_task_misc_t		*misc;
+  /* 16 words */
 } pip_task_annex_t;
+
+typedef void(*pip_deffered_proc_t)(void*);
+
+typedef struct pip_task_internal_body {
+  /* Most frequently accessed (time critial) part */
+  pip_task_t			queue; /* !!! DO NOT MOVE THIS AROUND !!! */
+  pip_task_t			schedq;	/* scheduling queue head */
+  struct pip_task_internal	*task_sched; /* scheduling task */
+  pip_tls_t			tls;	     /* Thread Local Storage */
+  pip_ctx_p			ctx_suspend; /* context to resume */
+  pip_ctx_p			*ctx_savep; /* for fcontext */
+  /* 8 words */
+  pip_deffered_proc_t		deffered_proc;
+  void				*deffered_arg;
+  pip_atomic_t			refcount; /* reference count */
+  pip_task_t			oodq;	   /* out-of-damain queue */
+  pip_spinlock_t		lock_oodq; /* lock for OOD queue */
+  struct {
+    int16_t			pipid;	  /* PiP ID */
+    int16_t			schedq_len; /* length of schedq */
+    volatile int16_t		oodq_len; /* indictaes ood task is added */
+    uint8_t			type; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
+    char			state; /* PIP_TYPE_ROOT, PIP_TYPE_TASK, ... */
+  };
+  /* 15 words */
+} pip_task_internal_body_t;
+
+#ifdef PIP_CONCAT_STRUCT
+typedef struct pip_task_internal {
+  pip_task_internal_body_t	body;
+  pip_task_annex_t		annex;
+} pip_task_internal_t;
+#define TA(T)		(&((T)->body))
+#define AA(T)		(&((T)->body.annex))
+#define MA(T)		((T)->body.annex.misc)
+#else
+typedef struct pip_task_internal {
+  pip_task_internal_body_t	body;
+  pip_task_annex_t		*annex;
+} pip_task_internal_t;
+#define TA(T)		(&((T)->body))
+#define AA(T)		((T)->annex)
+#define MA(T)		((T)->annex->misc)
+#endif
 
 #define PIP_TASKI(TASK)		((pip_task_internal_t*)(TASK))
 #define PIP_TASKQ(TASK)		((pip_task_t*)(TASK))
@@ -278,15 +295,15 @@ typedef struct pip_task_annex {
 #define PIP_TASK_RUNNING_NOSCHED	('r')
 #define PIP_TASK_SUSPENDED_NOSCHED	('s')
 
-#define PIP_RUN(T)		( PIP_TASKI(T)->state = PIP_TASK_RUNNING   )
-#define PIP_SUSPEND(T)		( PIP_TASKI(T)->state = PIP_TASK_SUSPENDED )
+#define PIP_RUN(T)		( TA(PIP_TASKI(T))->state = PIP_TASK_RUNNING   )
+#define PIP_SUSPEND(T)		( TA(PIP_TASKI(T))->state = PIP_TASK_SUSPENDED )
 
-#define PIP_IS_RUNNING(T)	( PIP_TASKI(T)->state == PIP_TASK_RUNNING   )
-#define PIP_IS_SUSPENDED(T)	( PIP_TASKI(T)->state == PIP_TASK_SUSPENDED )
+#define PIP_IS_RUNNING(T)	( TA( PIP_TASKI(T))->state == PIP_TASK_RUNNING   )
+#define PIP_IS_SUSPENDED(T)	( TA(PIP_TASKI(T))->state == PIP_TASK_SUSPENDED )
 
-#define PIP_ISA_ROOT(T)		( PIP_TASKI(T)->type & PIP_TYPE_ROOT )
+#define PIP_ISA_ROOT(T)		( TA(PIP_TASKI(T))->type & PIP_TYPE_ROOT )
 #define PIP_ISA_TASK(T)		\
-  ( PIP_TASKI(T)->type & ( PIP_TYPE_ROOT | PIP_TYPE_TASK ) )
+  ( TA(PIP_TASKI(T))->type & ( PIP_TYPE_ROOT | PIP_TYPE_TASK ) )
 
 #define PIP_BUSYWAIT_COUNT	(1000)
 
@@ -312,6 +329,7 @@ typedef struct pip_root {
   size_t			size_root;
   size_t			size_task;
   size_t			size_annex;
+  size_t			size_misc;
   /* actual root info */
   void *volatile		export_root;
   pip_atomic_t			ntasks_blocking;
@@ -343,13 +361,11 @@ typedef struct pip_root {
   pip_spinlock_t		lock_bt; /* lock for backtrace */
   void				*__reserved__[32]; /* reserved for future use */
   /* PiP tasks array */
-  pip_task_annex_t		*annex;
   pip_task_internal_t		tasks[];
 
 } pip_root_t;
 
 #define PIP_MIDLEN		(64)
-
 
 #define PIP_PRIVATE		__attribute__((visibility ("hidden")))
 
@@ -366,12 +382,14 @@ typedef struct pip_root {
 INLINE int
 pip_able_to_terminate_now( pip_task_internal_t *taski ) {
   DBGF( "[PIPID:%d] flag_exit:%d  RFC:%d",
-	taski->pipid, taski->flag_exit, (int) taski->refcount );
+	TA(taski)->pipid,
+	AA(taski)->flag_exit,
+	(int) TA(taski)->refcount );
   return
-    taski->flag_exit       &&
-    taski->refcount   == 0 &&
-    taski->schedq_len == 0 &&
-    taski->oodq_len   == 0;
+    TA(taski)->refcount    == 0 &&
+    TA(taski)->schedq_len  == 0 &&
+    TA(taski)->oodq_len    == 0 &&
+    AA(taski)->flag_exit;
 }
 
 extern pip_root_t		*pip_root;
@@ -485,7 +503,7 @@ INLINE void pip_sem_fin( pip_sem_t *sem ) {
 
 INLINE int pip_get_pipid_( void ) {
   if( !pip_is_initialized() ) return PIP_PIPID_NULL;
-  return pip_task->pipid;
+  return TA(pip_task)->pipid;
 }
 
 INLINE int pip_check_pipid( int *pipidp ) {
@@ -506,7 +524,7 @@ INLINE int pip_check_pipid( int *pipidp ) {
     if( pip_isa_root() ) {
       *pipidp = PIP_PIPID_ROOT;
     } else if( pip_isa_task() ) {
-      *pipidp = pip_task->pipid;
+      *pipidp = TA(pip_task)->pipid;
     } else {
       RETURN( ENXIO );		/* ???? */
     }

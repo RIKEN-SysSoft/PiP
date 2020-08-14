@@ -167,8 +167,8 @@ extern int pip_debug_env( void );
   do { struct timespec __ts; __ts.tv_sec=0; __ts.tv_nsec=1*1000*1000;	\
     nanosleep( &__ts, NULL ); } while(0)
 
-#define SETCURR(S,T)	(S)->annex->task_current = (T)
-#define UNSETCURR(S)	(S)->annex->task_current = NULL
+#define SETCURR(S,T)	MA(S)->task_current = (T)
+#define UNSETCURR(S)	MA(S)->task_current = NULL
 
 #else  /* DEBUG */
 

@@ -59,9 +59,10 @@ int pip_is_version_ok( pip_root_t *root ) {
 }
 
 int pip_are_sizes_ok( pip_root_t *root ) {
-  return( root->size_root  == sizeof( pip_root_t )          &&
+  return( root->size_root  == sizeof( pip_root_t          ) &&
 	  root->size_task  == sizeof( pip_task_internal_t ) &&
-	  root->size_annex == sizeof( pip_task_annex_t ) );
+	  root->size_annex == sizeof( pip_task_annex_t    ) &&
+	  root->size_misc  == sizeof( pip_task_misc_t     ) );
 }
 
 static int pip_check_root( pip_root_t *root ) {
@@ -147,14 +148,14 @@ static pip_task_internal_t *pip_current_ktask( int tid ) {
     int i;
     for( i=curr; i<root->ntasks+1; i++ ) {
       taski = &root->tasks[i];
-      if( tid == taski->annex->tid ) {
+      if( tid == AA(taski)->tid ) {
 	curr = i;
 	return taski;
       }
     }
     for( i=0; i<curr; i++ ) {
       taski = &root->tasks[i];
-      if( tid == taski->annex->tid ) {
+      if( tid == AA(taski)->tid ) {
 	curr = i;
 	return taski;
       }
@@ -203,10 +204,10 @@ int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
   if( taski == NULL ) {
     n = snprintf( p, sz, "~" );
   } else {
-    if( taski->type == PIP_TYPE_NULL ) {
+    if( TA(taski)->type == PIP_TYPE_NULL ) {
       n = snprintf( p, sz, "*" );
     } else if( PIP_ISA_TASK( taski ) ) {
-      n = pip_pipid_str( p, sz, taski->pipid, taski==taski->task_sched );
+      n = pip_pipid_str( p, sz, TA(taski)->pipid, taski==TA(taski)->task_sched );
       sz -= n; p += n;
 //#define WITH_RFC
 #ifdef WITH_RFC
@@ -229,7 +230,7 @@ pip_on_trampoline( pip_task_internal_t *taski, void *stack_varp ) {
   /* there can be race condition here    */
   /* checkings must be done step by step */
   if( taski != NULL ) {
-    pip_task_annex_t *annex = taski->annex;
+    pip_task_annex_t *annex = AA(taski);
     if( annex != NULL ) {
       void *stack_start = annex->stack_trampoline;
       if( stack_start != NULL ) {
@@ -266,9 +267,9 @@ size_t pip_idstr( char *p, size_t s ) {
   int intc = pip_on_trampoline( kc, (void*) &n );
 
   pip_task_internal_t	*uc =
-    ( kc == NULL ) ? NULL : kc->annex->task_current;
+    ( kc == NULL ) ? NULL : MA(kc)->task_current;
   pip_task_internal_t	*schd =
-    ( uc == NULL ) ? NULL : uc->task_sched;
+    ( uc == NULL ) ? NULL : TA(uc)->task_sched;
   if( intc ) {
     opn = opnT; cls = clsT;
   } else {
@@ -310,7 +311,7 @@ void pip_describe( pid_t tid ) {
     trailer = debugged;
   }
   if( taski != NULL ) {
-    int pipid = taski->pipid;
+    int pipid = TA(taski)->pipid;
     if( pipid == PIP_PIPID_ROOT ) {
       printf( "\nPiP-ROOT(TID:%d) is %s\n\n", tid, trailer );
     } else if( pipid >= 0 ) {
@@ -593,7 +594,7 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 	  stack_t	sigstack;
 
 	  pip_page_alloc( PIP_MINSIGSTKSZ, &altstack );
-	  taski->annex->sigalt_stack = altstack;
+	  MA(taski)->sigalt_stack = altstack;
 	  memset( &sigstack, 0, sizeof( sigstack ) );
 	  sigstack.ss_sp   = altstack;
 	  sigstack.ss_size = PIP_MINSIGSTKSZ;

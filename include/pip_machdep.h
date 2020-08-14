@@ -60,10 +60,6 @@
 #error "Not supported CPU architecture"
 #endif
 
-#ifndef PIP_CACHEBLK_SZ
-#define PIP_CACHEBLK_SZ		(64)
-#endif
-
 #ifndef PIP_LOCK_TYPE
 typedef volatile uint32_t	pip_spinlock_t;
 #endif
