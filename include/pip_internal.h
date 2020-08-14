@@ -83,6 +83,8 @@
 #define CACHE_LINE_SIZE		(64)
 #endif
 
+#include <concat.h>
+
 #include <pip_blt.h>
 #include <pip_clone.h>
 #include <pip_context.h>

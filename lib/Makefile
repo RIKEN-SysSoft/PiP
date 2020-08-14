@@ -66,7 +66,7 @@ SRCS     = pip_main.c pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 
 OBJS_PIPINIT = pip_init.o
 
-OBJS  = build.h \
+OBJS  = build.h concat.h \
 	pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
