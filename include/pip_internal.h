@@ -83,7 +83,9 @@
 #define CACHE_LINE_SIZE		(64)
 #endif
 
+#ifndef CONCAT
 #include <concat.h>
+#endif
 
 #include <pip_blt.h>
 #include <pip_clone.h>
@@ -122,9 +124,6 @@
 
 #define PIP_EXITED		(1)
 #define PIP_EXIT_WAITED		(2)
-
-#define PIP_CACHE_ALIGN(X)					\
-  ( ( (X) + CACHE_LINE_SIZE - 1 ) & ~( CACHE_LINE_SIZE -1 ) )
 
 struct pip_root;
 struct pip_task_internal;
@@ -271,10 +270,11 @@ typedef struct pip_task_internal_body {
 typedef struct pip_task_internal {
   pip_task_internal_body_t	body;
   pip_task_annex_t		annex;
+  void				*__filler__;
 } pip_task_internal_t;
 #define TA(T)		(&((T)->body))
-#define AA(T)		(&((T)->body.annex))
-#define MA(T)		((T)->body.annex.misc)
+#define AA(T)		(&((T)->annex))
+#define MA(T)		((T)->annex.misc)
 #else
 typedef struct pip_task_internal {
   pip_task_internal_body_t	body;

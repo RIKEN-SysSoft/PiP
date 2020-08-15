@@ -47,17 +47,16 @@ struct option opttab[] =
   { OPTION( name,      0 ),
     OPTION( version,   1 ),
     OPTION( license,   2 ),
-    OPTION( date,      3 ),
-    OPTION( os,        4 ),
-    OPTION( cc,        5 ),
-    OPTION( prefix,    6 ),
-    OPTION( glibc,     7 ),
-    OPTION( ldlinux,   8 ),
-    OPTION( hash,      9 ),
-    OPTION( context,  10 ),
-    OPTION( debug,    11 ),
-    OPTION( sizes,    12 ),
-    OPTION( cache,    13 ),
+    OPTION( os,        3 ),
+    OPTION( cc,        4 ),
+    OPTION( prefix,    5 ),
+    OPTION( glibc,     6 ),
+    OPTION( ldlinux,   7 ),
+    OPTION( hash,      8 ),
+    OPTION( context,   9 ),
+    OPTION( debug,    10 ),
+    OPTION( sizes,    11 ),
+    OPTION( cache,    12 ),
     OPTION( usage, USAGE ),
     OPTION( help,  USAGE ),
     { NULL, 0, NULL, 0 } };
@@ -71,7 +70,6 @@ struct value_table valtab[] =
   { { "Package", PACKAGE_NAME },
     { "Version", PACKAGE_VERSION },
     { "License", "the 2-clause simplified BSD License" },
-    { "Build Date", BUILD_DATE },
     { "Build OS", BUILD_OS },
     { "Build CC", BUILD_CC },
     { "Install Prefix", PREFIX },
@@ -105,7 +103,7 @@ static void make_struct_size_str( void ) {
   char *str;
 #ifdef PIP_CONCAT_STRUCT
   asprintf( &str,
-	    "( pip_task_internal_body_t:%lu +"
+	    "( pip_task_internal_body_t:%lu + "
 	    "pip_task_annex_t:%lu )  "
 	    "pip_task_misc_t:%lu",
 	    sizeof(pip_task_internal_body_t),
@@ -120,13 +118,13 @@ static void make_struct_size_str( void ) {
 	    sizeof(pip_task_annex_t),
 	    sizeof(pip_task_misc_t) );
 #endif
-  valtab[12].value = str;
+  valtab[11].value = str;
 }
 
 static void make_cacheline_size_str( void ) {
   char *str;
   asprintf( &str, "%d", CACHE_LINE_SIZE );
-  valtab[13].value = str;
+  valtab[12].value = str;
 }
 
 static void print_item( int item ) {

@@ -638,18 +638,18 @@ int pip_init_task_implicitly( pip_root_t *root,
 int pip_init_task_implicitly( pip_root_t *root,
 			      pip_task_internal_t *task ) {
   int err = pip_check_root( root );
-  if( err ) {
-    err = ELIBSCN;
-  } else if( ( pip_root != NULL && pip_root != root ) ||
-	     ( pip_task != NULL && pip_task != task ) ||
-	     ( pip_gdbif_root != NULL &&
-	       pip_gdbif_root != root->gdbif_root ) ) {
-    err = ELIBSCN;
-  } else {
-    pip_root = root;
-    pip_task = task;
-    pip_gdbif_root = root->gdbif_root;
-    pip_debug_on_exceptions( task );
+  if( !err ) {
+    if( ( pip_root != NULL && pip_root != root ) ||
+	( pip_task != NULL && pip_task != task ) ||
+	( pip_gdbif_root != NULL &&
+	  pip_gdbif_root != root->gdbif_root ) ) {
+      err = 5;
+    } else {
+      pip_root = root;
+      pip_task = task;
+      pip_gdbif_root = root->gdbif_root;
+      pip_debug_on_exceptions( task );
+    }
   }
   return err;
 }

@@ -41,11 +41,12 @@ LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 
 LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
+
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
 INTERP = $(dynamic_linker)
 
-CPPFLAGS += -I. $(PIP_CPPFLAGS)  $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
+CPPFLAGS += $(PIP_CPPFLAGS)  $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
 	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
 	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
@@ -60,26 +61,15 @@ LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
 
 LIBMAIN = -Wl,-e,pip_main
 
-SRCS     = pip_main.c pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
-	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
-	pip_dlfcn.c pip_signal.c pip_init.c pip_context.c
-
-OBJS_PIPINIT = pip_init.o
-
-OBJS  = build.h concat.h \
-	pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
-	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
-	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
-	pip_context.o
-
-DEPINCS_ACT = $(PIP_INCDIR)/config.h		\
+DEPINCS =  $(PIP_INCDIR)/config.h		\
 	   $(PIP_INCDIR)/pip.h			\
-	   $(PIP_INCDIR)/pip_context.h		\
 	   $(PIP_INCDIR)/pip_blt.h		\
-	   $(PIP_INCDIR)/pip_clone.h		\
 	   $(PIP_INCDIR)/pip_internal.h		\
+	   $(PIP_INCDIR)/pip_context.h		\
+	   $(PIP_INCDIR)/pip_clone.h		\
 	   $(PIP_INCDIR)/pip_util.h		\
 	   $(PIP_INCDIR)/pip_dlfcn.h		\
+	   $(PIP_INCDIR)/pip_signal.h		\
 	   $(PIP_INCDIR)/pip_machdep.h 		\
 	   $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
 	   $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
@@ -88,17 +78,31 @@ DEPINCS_ACT = $(PIP_INCDIR)/config.h		\
 	   $(PIP_INCDIR)/pip_gdbif_func.h	\
 	   $(PIP_INCDIR)/pip_gdbif_queue.h
 
-DEPINCS = $(DEPINCS_ACT) build.h concat.h
+SRCS  = pip_main.c pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
+	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
+	pip_dlfcn.c pip_signal.c pip_init.c pip_context.c
+
+OBJS_PIPINIT = pip_init.o
+
+OBJS  = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
+	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
+	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
+	pip_context.o
+
+all: build.h concat.h $(LIBRARIES)
 
 include $(top_srcdir)/build/rule.mk
 include fcontext.mk
 
-build.h: $(SRCS) $(DEPINCS_ACT) build-header.sh
-	./build-header.sh $(CC) > build.h
+build.h: FORCE
+	./build-header.sh $(CC) > $(PIP_INCDIR)/build.h
+.PHONY: FORCE
 
-concat.h: concat.c $(DEPINC_ACT)
-	$(CC) -I$(PIP_INCDIR) concat.c -o concat
-	./concat > concat.h
+concat: concat.c $(DEPINCS)
+	$(CC) -I$(PIP_INCDIR) -O concat.c -o concat
+
+concat.h: concat 
+	./concat > $(PIP_INCDIR)/concat.h
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
@@ -129,7 +133,7 @@ TAGS:
 	ctags -Re
 
 post-clean-hook:
-	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT) build.h
+	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT) build.h concat.h
 
 post-veryclean-hook:
 	$(RM) build.h concat.h concat

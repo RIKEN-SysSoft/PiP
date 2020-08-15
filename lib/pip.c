@@ -396,7 +396,6 @@ void pip_unset_sigmask( void ) {
 int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
   pip_root_t		*root;
   pip_task_internal_t	*taski;
-  pip_task_annex_t	*annex;
   pip_task_misc_t	*misc;
   size_t		sz;
   char			*envroot, *envtask;
@@ -415,6 +414,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
     } else {
       ntasks = *ntasksp;
     }
+
     if( ntasks <= 0             ) RETURN( EINVAL );
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
@@ -422,21 +422,21 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
     if( pip_check_sync_flag(   &opts )  < 0 ) RETURN( EINVAL );
 
 #ifndef PIP_CONCAT_STRUCT
-    sz = PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
-      PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) +
-      PIP_CACHE_ALIGN( sizeof(pip_task_annex_t   ) * ( ntasks + 1 ) ) +
-      PIP_CACHE_ALIGN( sizeof(pip_task_misc_t    ) * ( ntasks + 1 ) );
+    sz = sizeof(pip_root_t) +
+      sizeof(pip_task_internal_t) * ( ntasks + 1 ) +
+      sizeof(pip_task_annex_t   ) * ( ntasks + 1 ) +
+      sizeof(pip_task_misc_t    ) * ( ntasks + 1 );
     pip_page_alloc( sz, (void**) &root );
     (void) memset( root, 0, sz );
     annex = (pip_task_annex_t*)
       ( ((intptr_t)root) +
-	PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
-	PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) );
+	sizeof(pip_root_t) +
+	sizeof(pip_task_internal_t) * ( ntasks + 1 ) );
     misc = (pip_task_misc_t*)
       ( ((intptr_t)root) +
-	PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
-	PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) +
-	PIP_CACHE_ALIGN( sizeof(pip_task_annex_t)    * ( ntasks + 1 ) ) );
+	sizeof(pip_root_t) +
+	sizeof(pip_task_internal_t) * ( ntasks + 1 ) +
+	sizeof(pip_task_annex_t)    * ( ntasks + 1 ) );
     for( i=0; i<ntasks+1; i++ ) {
       root->tasks[i].annex       = &annex[i];
       root->tasks[i].annex->misc = &misc[i];
@@ -444,19 +444,18 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
 #else
     pip_task_internal_t	*tasks;
 
-    sz = PIP_CACHE_ALIGN( sizeof(pip_root_t) ) +
-      PIP_CACHE_ALIGN( sizeof(pip_task_internal_t) * ( ntasks + 1 ) ) +
-      PIP_CACHE_ALIGN( sizeof(pip_task_misc_t) * ( ntasks + 1 ) );
+    sz = sizeof(pip_root_t) +
+      sizeof(pip_task_internal_t) * ( ntasks + 1 ) +
+      sizeof(pip_task_misc_t)     * ( ntasks + 1 );
     pip_page_alloc( sz, (void**) &root );
     (void) memset( root, 0, sz );
 
-    tasks = (pip_task_internal_t*) ((intptr_t)root) +
-      PIP_CACHE_ALIGN( sizeof(pip_root_t) );
-    misc = (pip_task_misc_t*) ( ((intptr_t)tasks) +
-      PIP_CACHE_ALIGN( sizeof( pip_task_internal_t ) * ( ntasks + 1 ) ) );
+    tasks = (pip_task_internal_t*) ( ((intptr_t)root) + sizeof(pip_root_t) );
+    misc = (pip_task_misc_t*)
+      ( ((intptr_t)tasks) + sizeof(pip_task_internal_t) * ( ntasks + 1 ) );
     for( i=0; i<ntasks+1; i++ ) {
-    root->tasks[i].annex.misc = &misc[i];
-  }
+      root->tasks[i].annex.misc = &misc[i];
+    }
 #endif
     root->size_whole = sz;
     root->size_root  = sizeof( pip_root_t );
@@ -500,7 +499,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
 
     AA(taski)->task_root = root;
     AA(taski)->tid       = pip_gettid();
-    MA(taski)->loaded = dlopen( NULL, 0 );
+    MA(taski)->loaded = dlopen( NULL, RTLD_NOW );
     MA(taski)->thread = pthread_self();
 
 #ifdef PIP_SAVE_TLS

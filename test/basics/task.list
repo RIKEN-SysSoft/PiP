@@ -36,9 +36,9 @@ timer 1 ./pip_kill 8
 timer 1 ./seek-file.sh  1
 timer 1 ./seek-pipe.sh  1
 timer 1 ./seek-outin.sh 1
-timer 1 ./seek-file.sh  4
-timer 1 ./seek-pipe.sh  4
-timer 1 ./seek-outin.sh 4
+timer 2 ./seek-file.sh  4
+timer 2 ./seek-pipe.sh  4
+timer 2 ./seek-outin.sh 4
 timer 1 ./pip_barrier  1  10
 timer 1 ./pip_barrier 8  10
 timer 2 ./pip_barrier2 1  10

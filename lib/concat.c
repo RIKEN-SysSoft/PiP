@@ -33,12 +33,15 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
+#define CONCAT
 #include <pip_internal.h>
 
 int main() {
-  if( sizeof(pip_task_internal_t) + sizeof(pip_task_annex_t) >
+  if( sizeof(pip_task_internal_body_t) + sizeof(pip_task_annex_t) <=
       CACHE_LINE_SIZE ) {
     printf( "#define PIP_CONCAT_STRUCT\n" );
+  } else {
+    printf( "/* #define PIP_CONCAT_STRUCT */\n" );
   }
   return 0;
 }
