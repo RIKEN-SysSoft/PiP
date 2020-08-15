@@ -20,4 +20,4 @@
 #define PACKAGE_VERSION "3.0.0"
 
 /* cache line size */
-#define CACHE_LINE_SIZE 256
+#define CACHE_LINE_SIZE 64

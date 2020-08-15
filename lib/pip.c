@@ -428,7 +428,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
       sizeof(pip_task_misc_t    ) * ( ntasks + 1 );
     pip_page_alloc( sz, (void**) &root );
     (void) memset( root, 0, sz );
-    annex = (pip_task_annex_t*)
+    pip_task_annex_t *annex = (pip_task_annex_t*)
       ( ((intptr_t)root) +
 	sizeof(pip_root_t) +
 	sizeof(pip_task_internal_t) * ( ntasks + 1 ) );
@@ -442,15 +442,13 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
       root->tasks[i].annex->misc = &misc[i];
     }
 #else
-    pip_task_internal_t	*tasks;
-
     sz = sizeof(pip_root_t) +
       sizeof(pip_task_internal_t) * ( ntasks + 1 ) +
       sizeof(pip_task_misc_t)     * ( ntasks + 1 );
     pip_page_alloc( sz, (void**) &root );
     (void) memset( root, 0, sz );
-
-    tasks = (pip_task_internal_t*) ( ((intptr_t)root) + sizeof(pip_root_t) );
+    pip_task_internal_t	*tasks = (pip_task_internal_t*)
+      ( ((intptr_t)root) + sizeof(pip_root_t) );
     misc = (pip_task_misc_t*)
       ( ((intptr_t)tasks) + sizeof(pip_task_internal_t) * ( ntasks + 1 ) );
     for( i=0; i<ntasks+1; i++ ) {
