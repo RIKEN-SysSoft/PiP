@@ -1,4 +1,4 @@
-%%\batchmode
+\batchmode
 \documentclass[twoside]{book}
 
 % Packages required by doxygen
@@ -101,8 +101,6 @@
   unicode%
 }
 
-\usepackage[tc]{titlepic}
-
 % Custom commands
 \newcommand{\clearemptydoublepage}{%
   \newpage{\pagestyle{empty}\cleardoublepage}%
@@ -118,11 +116,12 @@
 \hypersetup{pageanchor=false}
 \pagenumbering{roman}
 \begin{titlepage}
-\vspace*{7cm}
+\vspace*{4cm}
 \begin{center}%
-\includegraphics{../logo/PiP.pdf}\\
+\includegraphics[width=4cm]{../logo/PiP.pdf}\\
+\vspace*{2cm}
 {\Large Processs-in-Process (PiP)\\
-\vspace*{0.5cm}
+\vspace*{2cm}
 @PACKAGE_VERSION@\\
 \vspace*{0.5cm}
 Refernce Manual}\\

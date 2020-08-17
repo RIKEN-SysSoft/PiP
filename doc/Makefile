@@ -87,7 +87,7 @@ doxygen:
 		echo "STRIP_FROM_PATH = $(top_srcdir)"; \
 		printf "INPUT = README-man.md"; \
 		echo ""; \
-	) | doxygen - >> dxygen-redme.log 2>&1;
+	) | doxygen - >> doxygen-readme.log 2>&1;
 	grep -e "warning" -e "error" doxygen-readme.log | cat
 	$(MAKE) -C latex-inuse
 	$(CP) README.md $(top_srcdir)
@@ -107,7 +107,7 @@ doxygen:
 			echo $$top_srcdir/$$dir/$$src; \
 		done <$$file; \
 	done | tr '\012' ' '; \
-	) | doxygen - >> dxygen-html.log 2>&1;
+	) | doxygen - >> doxygen-html.log 2>&1;
 	grep -e "warning" -e "error" doxygen-html.log | cat
 	echo ==== mandb =====; \
 	if which mandb; then mandb ./man -c -u; fi
@@ -135,7 +135,7 @@ doc-reset:
 
 clean:
 	$(RM) commannds.in functions.in
-	$(RM) doxygen-*.log
+	$(RM) doxygen*.log
 	$(RM) *~ \#*\#
 	$(MAKE) -C latex-inuse clean
 

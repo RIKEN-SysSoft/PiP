@@ -277,9 +277,7 @@ static int pip_do_named_import( int pipid,
       if( entry->flag_exported ) { /* exported already */
 	address = entry->address;
       } else {		   /* already queried, but not yet exported */
-	if( namexp->flag_closed ) {
-	  err = ECANCELED;
-	} else if( flag_nblk ) {
+	if( flag_nblk ) {
 	  err = EAGAIN;
 	} else {
 	  pip_namexp_wait_t	wait;
