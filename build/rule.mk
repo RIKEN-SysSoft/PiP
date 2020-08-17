@@ -218,27 +218,24 @@ prog-testclean:
 ### doc (doxygen) rules
 
 doc-distclean:
-	-$(RM) .doxygen_latex .doxygen_man1 .doxygen_man3 .doxygen_man7
+	-$(RM) .doxygen_*
 .PHONY: doc-distclean
 
 doc-here: doc-distclean
 	-@case "$(MAN1_SRCS)" in \
 	'')	;; \
 	*)	for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_man1; \
-		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_latex; \
-		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_docbook;; \
+		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
 	-@case "$(MAN3_SRCS)" in \
 	'')	;; \
 	*)	for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_man3; \
-		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_latex; \
-		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_docbook;; \
+		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
 	-@case "$(MAN7_SRCS)" in \
 	'')	;; \
 	*)	for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_man7; \
-		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_latex; \
-		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_docbook;; \
+		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
 .PHONY: doc-here
 

@@ -72,8 +72,6 @@
 #define PIP_ENV_SYNC_BLOCK		"block"
 #define PIP_ENV_SYNC_BLOCKING		"blocking"
 
-#define PIP_TOPT_BUSYWAIT		(0x01U)
-
 typedef struct pip_task {
   struct pip_task	*next;
   struct pip_task	*prev;
@@ -240,7 +238,7 @@ extern "C" {
 #endif
 
   /**
-   * \addtogroup pip-1-spawn
+   * \addtogroup pip1-spawn
    * @{
    */
 
@@ -270,8 +268,7 @@ extern "C" {
    * PiP task. This simulated close-on-exec will not take place in the
    * pthread execution mode.
    *
-   * \param[out] hook Pointer to the \c pip_spawn_hook_t
-   *  structure in which the invocation hook information is set
+   * \param[out] progp \b pip_spawn_program_t
    * \param[in] coreno CPU core number for the PiP task to be bound to. By
    *  default, \p coreno is set to zero, for example, then the calling
    *  task will be bound to the first core available. This is in mind
@@ -378,7 +375,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp-0-yield Yielding Functionns
+   * \defgroup ulp0-yield Yielding Functionns
    * @{
    * \page pip-yield Yielding functions
    * \description Yielding execution of the calling BLT/ULP
@@ -399,13 +396,12 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * returns zero. If the context-switch to the other BLT happens,
    * then this returns \p EINTR.
    *
-   * @par Fag
-   * \param PIP_YIELD_USER If the calling task is scheduling PiP
+   * \param flag If \b PIP_YIELD_USER, the calling task is scheduling PiP
    * task(s) then the calling task switch to the next eligible-to-run
-   * BLT.
-   * \param PIP_YIELD_SYSTEM Regardless if the calling task is active
+   * BLT. If \b PIP_YIELD_SYSTEM, regardless if the calling task is active
    * or inactive, it calls \p sched_yield.
-   * \param PIP_YIELD_DEFAULT
+   * If \b PIP_YIELD_DEFAULT or zero, then both \b PIP_YIELD_USER and
+   * \b PIP_YIELD_SYSTEM will be effective.
    *
    * \sa pip_yield_to(3)
    */
@@ -442,7 +438,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp-1-task-queue Task Queue Operations
+   * \defgroup ulp1-task-queue Task Queue Operations
    * @{
    * \page ulp-task-queue Task queue operations
    * \description Manipulating ULP/BLT task queue functions
@@ -669,7 +665,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
 #endif
 
   /**
-   * \pip-man-enrty pip_task_queue_dequeue
+   * \PiPManEntry{pip_task_queue_dequeue}
    *
    * \brief Dequeue a task from a task queue
    *
@@ -779,7 +775,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp-2-suspension Suspending and Resuming BLT/ULP
+   * \defgroup ulp2-suspension Suspending and Resuming BLT/ULP
    * @{
    * \page ulp-suspension Suspending and resuming BLT/ULP
    * \description Suspending and resuming BLT/ULP
@@ -1033,7 +1029,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp-6-misc BLT/ULP Miscellaneous Function
+   * \defgroup ulp--misc BLT/ULP Miscellaneous Function
    * @{
    * \page ulp-misc BLT/ULP miscellaneous function
    * \description BLT/ULP miscellaneous function
@@ -1116,7 +1112,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   /**
    * \PiPManEntry{pip_get_aux}
    *
-   * \brief Retrive the user data associated with a PiP task
+   * \brief Retrieve the user data associated with a PiP task
    *
    * \synopsis
    * \#include <pip.h> \n
@@ -1157,7 +1153,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp-4-barrier BLT/ULP Barrier Functions
+   * \defgroup ulp3-barrier BLT/ULP Barrier Functions
    * @{
    * \page ulp-barrier BLT/ULP barrier synchronization functions
    * \description BLT/ULP barrier synchronization functions
@@ -1252,7 +1248,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp-5-mutex BLT/ULP Mutex Functions
+   * \defgroup ulp4-mutex BLT/ULP Mutex Functions
    * @{
    * \page ulp-barrier BLT/ULP mutex functions
    * \description BLT/ULP mutex  functions
@@ -1364,7 +1360,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp-6-coupling BLT/ULP Coupling/Decoupling Functions
+   * \defgroup ulp5-coupling BLT/ULP Coupling/Decoupling Functions
    * @{
    * \page ulp-coupling BLT/ULP coupling/decoupling functions
    * \description BLT/ULP coupling/decoupling functions

@@ -12,8 +12,9 @@ datadir = $(default_datadir)
 datarootdir = $(default_datarootdir)
 mandir = $(default_mandir)
 docdir = $(default_docdir)
-htmldir = $(default_htmldir)/html
-pdfdir = $(default_pdfdir)/pdf
+htmldir = ${datarootdir}/html
+pdfdir = $(datarootdir)/pdf
+slidedir = $(datarootdir)/slides
 sysconfdir = $(default_sysconfdir)
 localedir = $(default_localedir)
 

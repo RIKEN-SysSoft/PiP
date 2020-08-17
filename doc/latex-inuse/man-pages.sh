@@ -36,7 +36,5 @@ for man3 in $man3_tex; do
 	    ulp*) echo "\input{../latex/group__$bn}" >> $man3_ulp_input;;
 	    *)    echo "\input{../latex/group__$bn}" >> $man3_input;;
 	esac
-    else
-	echo "$prog: $bn not found"
     fi
 done

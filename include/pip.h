@@ -275,7 +275,7 @@ extern "C" {
    */
 
   /**
-   * \defgroup pip-1-spawn Spawning PiP task
+   * \defgroup pip1-spawn Spawning PiP task
    * @{
    * \page pip-spawn PiP Spawnig PiP (ULP/BLT) task
    * \description Spawning PiP task or ULP/BLT task
@@ -331,7 +331,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
 }
 
   /**
-   * \man-entry pip_spawn_from_func
+   * \PiPManEntry{pip_spawn_from_func}
    *
    * \brief Setting information to invoke a PiP task starting from a
    * function defined in a program
@@ -473,8 +473,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * PiP task. This simulated close-on-exec will not take place in the
    * pthread execution mode.
    *
-   * \param[out] hook Pointer to the \p pip_spawn_hook_t
-   *  structure in which the invocation hook information is set
+   * \param[out] progp \b pip_spawn_program_t
    * \param[in] coreno CPU core number for the PiP task to be bound to. By
    *  default, \p coreno is set to zero, for example, then the calling
    *  task will be bound to the 'first' core available. This is in mind
@@ -771,7 +770,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip-3-wait Waiting for PiP task termination
+   * \defgroup pip3-wait Waiting for PiP task termination
    * @{
    * \page pip-wait Waiting for PiP task termination
    * \description Functions to wait for PiP task termination.
@@ -898,7 +897,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3)
    */
-  int pip_trywait_any( int *pipid, int *retval );
+  int pip_trywait_any( int *pipid, int *status );
 
   /**
    * @}
@@ -1053,7 +1052,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \#include <pip.h> \n
    * int pip_is_threaded( int *flagp );
    *
-   * \param[out] set to a non-zero value if PiP execution mode is
+   * \param[out] flagp set to a non-zero value if PiP execution mode is
    * Pthread
    *
    * \return Return 0 on success. Return an error code on error.
@@ -1071,7 +1070,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \#include <pip.h> \n
    * int pip_is_shared_fd( int *flagp );
    *
-   * \param[out] set to a non-zero value if FDs are shared
+   * \param[out] flagp set to a non-zero value if FDs are shared
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The PiP library is not initialized yet
@@ -1083,7 +1082,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip-2-exit Terminating PiP Task
+   * \defgroup pip2-exit Terminating PiP Task
    * @{
    * \page pip-exit Terminating PiP task
    * \description Function to ternminate PiP task normally or

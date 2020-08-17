@@ -1,4 +1,4 @@
-.TH "PiP Miscellaneous Functions" 3 "Sun Jul 19 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Miscellaneous Functions" 3 "Mon Aug 17 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -297,7 +297,7 @@ int \fBpip_is_threaded( int *flagp )\fP;
 .PP
 \fBParameters:\fP
 .RS 4
-\fIset\fP to a non-zero value if PiP execution mode is Pthread
+\fIflagp\fP set to a non-zero value if PiP execution mode is Pthread
 .RE
 .PP
 \fBReturns:\fP
@@ -328,7 +328,7 @@ int \fBpip_is_shared_fd( int *flagp )\fP;
 .PP
 \fBParameters:\fP
 .RS 4
-\fIset\fP to a non-zero value if FDs are shared
+\fIflagp\fP set to a non-zero value if FDs are shared
 .RE
 .PP
 \fBReturns:\fP

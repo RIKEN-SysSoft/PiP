@@ -1,0 +1,340 @@
+.TH "Task Queue Operations" 3 "Mon Aug 17 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Task Queue Operations \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_task_queue_init\fP (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
+.br
+.RI "\fIInitialize task queue\&. \fP"
+.ti -1c
+.RI "int \fBpip_task_queue_trylock\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fITry locking task queue\&. \fP"
+.ti -1c
+.RI "void \fBpip_task_queue_lock\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fILock task queue\&. \fP"
+.ti -1c
+.RI "void \fBpip_task_queue_unlock\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIUnlock task queue\&. \fP"
+.ti -1c
+.RI "int \fBpip_task_queue_isempty\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIQuery function if the current task has some tasks to be scheduled with\&. \fP"
+.ti -1c
+.RI "int \fBpip_task_queue_count\fP (pip_task_queue_t *queue, int *np)"
+.br
+.RI "\fICount the length of task queue\&. \fP"
+.ti -1c
+.RI "void \fBpip_task_queue_enqueue\fP (pip_task_queue_t *queue, pip_task_t *task)"
+.br
+.RI "\fIEnqueue a BLT\&. \fP"
+.ti -1c
+.RI "pip_task_t * \fBpip_task_queue_dequeue\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIDequeue a task from a task queue\&. \fP"
+.ti -1c
+.RI "void \fBpip_task_queue_describe\fP (pip_task_queue_t *queue, FILE *fp)"
+.br
+.RI "\fIDescribe queue\&. \fP"
+.ti -1c
+.RI "int \fBpip_task_queue_fin\fP (pip_task_queue_t *queue)"
+.br
+.RI "\fIFinalize a task queue\&. \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+Task queue operations
+
+.PP
+\fBDescription\fP
+.RS 4
+Manipulating ULP/BLT task queue functions 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_task_queue_init (pip_task_queue_t *queue, pip_task_queue_methods_t *methods)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_init
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int pip_task_queue_init( pip_task_queue_t *queue, pip_task_queue_methods_t *methods );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fImethods\fP Must be set to \fCNULL\fP\&. Researved for future use\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Always return 0\&. 
+.RE
+.PP
+
+.SS "int pip_task_queue_trylock (pip_task_queue_t *queue)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_trylock
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_task_queue_trylock( pip_task_queue_t *queue )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Returns a non-zero value if lock succeeds\&. 
+.RE
+.PP
+
+.SS "void pip_task_queue_lock (pip_task_queue_t *queue)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_lock
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_task_queue_lock( pip_task_queue_t *queue )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+
+.SS "void pip_task_queue_unlock (pip_task_queue_t *queue)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_unlock
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_task_queue_unlock( pip_task_queue_t *queue )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+This function returns no error 
+.RE
+.PP
+
+.SS "int pip_task_queue_isempty (pip_task_queue_t *queue)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_isempty
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_task_queue_isempty( pip_task_queue_t *queue )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Returns a non-zero value if the queue is empty 
+.RE
+.PP
+
+.SS "int pip_task_queue_count (pip_task_queue_t *queue, int *np)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_count
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_task_queue_count( pip_task_queue_t *queue, int *np )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fInp\fP the queue length returned
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEINVAL\fP \fCqueue\fP is \fCNULL\fP 
+.br
+\fIEINVAL\fP \fCnp\fP is \fCNULL\fP 
+.RE
+.PP
+
+.SS "void pip_task_queue_enqueue (pip_task_queue_t *queue, pip_task_t *task)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_enqueue
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+void pip_task_queue_enqueue( pip_task_queue_t *queue, pip_task_t *task );
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fItask\fP A task to be enqueued
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+It is the user responsibility to lock (and unlock) the queue\&. 
+.RE
+.PP
+
+.SS "pip_task_t* pip_task_queue_dequeue (pip_task_queue_t *queue)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_dequeue
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+pip_task_t* \fBpip_task_queue_dequeue( pip_task_queue_t *queue )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Dequeued task iss returned\&. If the queue is empty then \fCNULL\fP is returned\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+It is the user responsibility to lock (and unlock) the queue\&. 
+.RE
+.PP
+
+.SS "void pip_task_queue_describe (pip_task_queue_t *queue, FILE *fp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_describe
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+void \fBpip_task_queue_describe( pip_task_queue_t *queue, FILE *fp )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue 
+.br
+\fIfp\fP a File pointer 
+.RE
+.PP
+
+.SS "int pip_task_queue_fin (pip_task_queue_t *queue)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_task_queue_fin
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int \fBpip_task_queue_fin( pip_task_queue_t *queue )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIqueue\fP A task queue
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Zero is returned always 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

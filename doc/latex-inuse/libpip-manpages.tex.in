@@ -101,6 +101,8 @@
   unicode%
 }
 
+\usepackage[tc]{titlepic}
+
 % Custom commands
 \newcommand{\clearemptydoublepage}{%
   \newpage{\pagestyle{empty}\cleardoublepage}%
@@ -118,6 +120,7 @@
 \begin{titlepage}
 \vspace*{7cm}
 \begin{center}%
+\includegraphics{../logo/PiP.pdf}\\
 {\Large Processs-in-Process (PiP)\\
 \vspace*{0.5cm}
 @PACKAGE_VERSION@\\

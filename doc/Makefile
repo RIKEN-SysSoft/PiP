@@ -32,12 +32,16 @@ top_builddir = ..
 top_srcdir = $(top_builddir)
 srcdir = .
 
+MAN7_SRCS = README-html.md
+
 include $(top_srcdir)/build/var.mk
+include $(top_srcdir)/build/rule.mk
 
 ### doxygen
 
 doxygen:
-	-@$(RM) -r man latex
+	-@$(RM) -r man latex html
+	echo -n "" > doxygen-man713.log
 	@doxy_dirs=$$(find .. -name .doxygen_latex -print | while read file; do \
 		dir=$$(dirname $$file); \
 		while read src; do \
@@ -48,7 +52,6 @@ doxygen:
 	  echo "man1"; \
 	  echo "man3"; \
 	  echo "latex"; \
-	  echo "docbook"; \
 	) | while read type; do \
 		echo ==== $$type =====; \
 		( \
@@ -66,44 +69,75 @@ doxygen:
 			done <$$file; \
 		done | tr '\012' ' '; \
 		echo ""; \
-		) | doxygen -; \
+		) | doxygen - >> doxygen-man713.log 2>&1; \
 	done
-	./markdown.sh "## Overview" 7 "-" > overview.in
-	./markdown.sh "## Commands" 1 "-" > commands.in
-	./markdown.sh "## Functions" 3 "-" > functions.in
-	cat README.md.in overview.in commands.in functions.in Author.md.in > $(top_srcdir)/README.md
-	echo ==== README.md =====; \
+	grep -e "warning" -e "error" doxygen-man713.log | cat
+	./markdown.sh "# Commands"  1 "-" > commands.in
+	./markdown.sh "# Functions" 3 "-" > functions.in
+	cat README.md.in commands.in functions.in Slides-md.md Author.md.in > README.md
+	cat README-man.doxy  README.md.in commands.in functions.in Author.md.in > README-man.md
+	cat README-html.doxy README.md.in Slides-html.md Author.md.in > README-html.md
+	echo ==== README.md =====;
+	echo -n "" > doxygen-readme.log
 	( \
 		cat "config-common.doxy"; \
 		echo ""; \
 		cat "config-man7.doxy"; \
 		echo ""; \
 		echo "STRIP_FROM_PATH = $(top_srcdir)"; \
-		printf "INPUT = $(top_srcdir)/README.md"; \
+		printf "INPUT = README-man.md"; \
 		echo ""; \
-	) | doxygen -; \
-	if which mandb; then mandb ./man -c -u; fi
+	) | doxygen - >> dxygen-redme.log 2>&1;
+	grep -e "warning" -e "error" doxygen-readme.log | cat
 	$(MAKE) -C latex-inuse
+	$(CP) README.md $(top_srcdir)
+	echo ==== html =====;
+	echo -n "" > doxygen-html.log
+	( \
+	cat "config-common.doxy"; \
+	echo ""; \
+	cat "config-html.doxy"; \
+	echo ""; \
+	echo "STRIP_FROM_PATH = $$doxy_dirs"; \
+	printf "INPUT = "; \
+	find .. -name .doxygen_latex -print | while read file; do \
+		dir=$$(dirname $$file); \
+		while read src; do \
+			[ -f $$dir/$$src ] && echo $$dir/$$src || \
+			echo $$top_srcdir/$$dir/$$src; \
+		done <$$file; \
+	done | tr '\012' ' '; \
+	) | doxygen - >> dxygen-html.log 2>&1;
+	grep -e "warning" -e "error" doxygen-html.log | cat
+	echo ==== mandb =====; \
+	if which mandb; then mandb ./man -c -u; fi
 
 doc: doxygen
 
 all: doc
 
 install:
+	echo "Installing .. " $(mandir)
 	$(MKDIR_P) $(mandir);
-	(cd ./man  && tar cf - . ) | (cd $(mandir)  && $(RM) -r * && tar xf -)
+	(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
+	echo "Installing .. " $(pdfdir)
 	$(MKDIR_P) $(pdfdir);
-	cp ./latex-inuse/libpip-manpages.pdf $(pdfdir)/
+	$(CP) ./latex-inuse/libpip-manpages.pdf $(pdfdir)
+	$(MKDIR_P) $(slidedir);
+	$(CP) ./slides/* $(slidedir)
+	echo "Installing .. " $(htmldir)
+	$(MKDIR_P) $(htmldir);
+	(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
 
 doc-reset:
 	git checkout man latex latex-inuse
 .PHONE: doc-reset
 
 clean:
-	$(RM) overview.in commannds.in functions.in
+	$(RM) commannds.in functions.in
+	$(RM) doxygen-*.log
 	$(RM) *~ \#*\#
 	$(MAKE) -C latex-inuse clean
 
 veryclean: clean
-	$(RM) overview.in commannds.in functions.in
-	$(RM) -r man latex
+	$(RM) -r man latex html

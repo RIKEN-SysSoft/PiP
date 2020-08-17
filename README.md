@@ -1,5 +1,3 @@
-\page libpip libpip
-
 # Process-in-Process (PiP)
 
 PiP is a user-level library to have the best of the both worlds
@@ -345,12 +343,9 @@ of backtrace, in batch mode. If the PIP\_STOP\_ON\_START environment is
 set (to any value), then the PiP library delivers SIGSTOP to a spawned
 PiP task which is about to start user program.
 
-# FAQ
+# Mailing List
 
-* Does MPI with PiP exist?
-    Currently, we are working with ANL to develop MPICH using PiP.
-    This repository, located at ANL, is not yet open to public
-    at the time of this writing.
+pip@ml.riken.jp
 
 # Publications
 
@@ -358,29 +353,17 @@ PiP task which is about to start user program.
 
 A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Process-in-process: techniques for practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: https://doi.org/10.1145/3208040.3208045
 
-## Presentation Slides
-
-* [HPDC'18](presentation/HPDC18-PiP.key.pdf)
-* [ROSS'18](presentation/Ross-2018-PiP.key.pdf)
-* [IPDPS/RADR'20](presentation/IPDPS20-RADRws.key.pdf)
-
-# Mailing List
-
-pip@ml.riken.jp
-
-# PiP Man Pages
-
-## Overview
-
-
-## Commands
+# Commands
 - pipcc
 - piplnlibs
 - pips
 - printpipmode
 
 
-## Functions
+# Functions
+- pip1-spawn
+- pip2-exit
+- pip3-wait
 - pip\_abort
 - pip\_barrier\_fin
 - pip\_barrier\_init
@@ -447,6 +430,19 @@ pip@ml.riken.jp
 - pip\_wait\_any
 - pip\_yield
 - pip\_yield\_to
+- ulp0-yield
+- ulp1-task-queue
+- ulp2-suspension
+- ulp3-barrier
+- ulp4-mutex
+- ulp5-coupling
+
+
+## Presentation Slides
+
+* [HPDC'18](presentation/HPDC18.pdf)
+* [ROSS'18](presentation/HPDC18-ROSSpdf)
+* [IPDPS/RADR'20](presentation/IPDPS-RSADR-2020.pdf)
 
 # Author
 

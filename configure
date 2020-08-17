@@ -600,6 +600,7 @@ CPPFLAGS
 LDFLAGS
 CFLAGS
 CC
+prefix_slides
 boost_fctx_cppflags
 boost_fctx_arch
 boost_fctx_objs
@@ -2064,6 +2065,10 @@ fi
 
 
 
+prefix_slides=${prefix}/share/slides
+
+
+
 # Checks for programs.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3217,7 +3222,7 @@ fi
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files build/config.mk release/version.conf lib/fctx_defs.mk lib/fcontext.mk bin/pipcc bin/pip-mode bin/pip-check bin/pip-man util/piplnlibs doc/latex-inuse/libpip-manpages.tex"
+ac_config_files="$ac_config_files build/config.mk release/version.conf lib/fctx_defs.mk lib/fcontext.mk bin/pipcc bin/pip-mode bin/pip-check bin/pip-man util/piplnlibs doc/latex-inuse/libpip-manpages.tex doc/Slides-html.md"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3921,6 +3926,7 @@ do
     "bin/pip-man") CONFIG_FILES="$CONFIG_FILES bin/pip-man" ;;
     "util/piplnlibs") CONFIG_FILES="$CONFIG_FILES util/piplnlibs" ;;
     "doc/latex-inuse/libpip-manpages.tex") CONFIG_FILES="$CONFIG_FILES doc/latex-inuse/libpip-manpages.tex" ;;
+    "doc/Slides-html.md") CONFIG_FILES="$CONFIG_FILES doc/Slides-html.md" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

@@ -273,12 +273,9 @@ You can attach all relevant Pi\-P tasks by\-: \begin{DoxyVerb}$ pip-gdb -p PID-o
 
 If the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H environment is set to the path pointing to Pi\-P-\/gdb executable file, then Pi\-P-\/gdb is automatically attached when an excetion signal (S\-I\-G\-S\-E\-G\-V and S\-I\-G\-H\-U\-P by default) is delivered. The exception signals can also be defined by setting the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-S\-I\-G\-N\-A\-L\-S environment. Signal names (case insensitive) can be concatenated by the '+' or '-\/' symbol. 'all' is reserved to specify most of the signals. For example, 'A\-L\-L-\/\-T\-E\-R\-M' means all signals excepting S\-I\-G\-T\-E\-R\-M, another example, 'P\-I\-P\-E+\-I\-N\-T' means S\-I\-G\-P\-I\-P\-E and S\-I\-G\-I\-N\-T. If one of the defined or default signals is delivered, then Pi\-P-\/gdb will be attached. The Pi\-P-\/gdb will show backtrace by default. If users specify P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-C\-O\-M\-M\-A\-N\-D that a filename containing some G\-D\-B commands, then those G\-D\-B commands will be executed by the G\-D\-B, instead of backtrace, in batch mode. If the P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T environment is set (to any value), then the Pi\-P library delivers S\-I\-G\-S\-T\-O\-P to a spawned Pi\-P task which is about to start user program.
 
-\section*{F\-A\-Q}
+\section*{Mailing List}
 
-
-\begin{DoxyItemize}
-\item Does M\-P\-I with Pi\-P exist? Currently, we are working with A\-N\-L to develop M\-P\-I\-C\-H using Pi\-P. This repository, located at A\-N\-L, is not yet open to public at the time of this writing.
-\end{DoxyItemize}
+\href{mailto:pip@ml.riken.jp}{\tt pip@ml.\-riken.\-jp}
 
 \section*{Publications}
 
@@ -286,24 +283,7 @@ If the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H environment is set to the path p
 
 A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. \char`\"{}\-Process-\/in-\/process\-: techniques for practical address-\/space sharing,\char`\"{} In Proceedings of the 27th International Symposium on High-\/\-Performance Parallel and Distributed Computing (H\-P\-D\-C '18). A\-C\-M, New York, N\-Y, U\-S\-A, 131-\/143. D\-O\-I\-: \href{https://doi.org/10.1145/3208040.3208045}{\tt https\-://doi.\-org/10.\-1145/3208040.\-3208045}
 
-\subsection*{Presentation Slides}
-
-
-\begin{DoxyItemize}
-\item \href{presentation/HPDC18-PiP.key.pdf}{\tt H\-P\-D\-C'18}
-\item \href{presentation/Ross-2018-PiP.key.pdf}{\tt R\-O\-S\-S'18}
-\item \href{presentation/IPDPS20-RADRws.key.pdf}{\tt I\-P\-D\-P\-S/\-R\-A\-D\-R'20}
-\end{DoxyItemize}
-
-\section*{Mailing List}
-
-\href{mailto:pip@ml.riken.jp}{\tt pip@ml.\-riken.\-jp}
-
-\section*{Pi\-P Man Pages}
-
-\subsection*{Overview}
-
-\subsection*{Commands}
+\section*{Commands}
 
 
 \begin{DoxyItemize}
@@ -313,10 +293,13 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. \cha
 \item printpipmode
 \end{DoxyItemize}
 
-\subsection*{Functions}
+\section*{Functions}
 
 
 \begin{DoxyItemize}
+\item pip1-\/spawn
+\item pip2-\/exit
+\item pip3-\/wait
 \item pip\-\_\-abort
 \item pip\-\_\-barrier\-\_\-fin
 \item pip\-\_\-barrier\-\_\-init
@@ -383,6 +366,12 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. \cha
 \item pip\-\_\-wait\-\_\-any
 \item pip\-\_\-yield
 \item pip\-\_\-yield\-\_\-to
+\item ulp0-\/yield
+\item ulp1-\/task-\/queue
+\item ulp2-\/suspension
+\item ulp3-\/barrier
+\item ulp4-\/mutex
+\item ulp5-\/coupling
 \end{DoxyItemize}
 
 \section*{Author}
