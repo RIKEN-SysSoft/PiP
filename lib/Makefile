@@ -89,22 +89,24 @@ OBJS  = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
 	pip_context.o
 
-all: build.h concat.h $(LIBRARIES)
+all: $(LIBRARIES)
 
 include $(top_srcdir)/build/rule.mk
 include fcontext.mk
 
-build.h: FORCE
+$(PIP_INCDIR)/build.h: FORCE
 	./build-header.sh $(CC) > $(PIP_INCDIR)/build.h
 .PHONY: FORCE
 
-concat: concat.c $(DEPINCS)
+concat: concat.c $(PIP_INCDIR)/pip_internal.h
 	$(CC) -I$(PIP_INCDIR) -O concat.c -o concat
 
-concat.h: concat 
+$(PIP_INCDIR)/concat.h: concat
 	./concat > $(PIP_INCDIR)/concat.h
 
-$(LIBRARY): $(OBJS) Makefile
+$(OBJS): $(DEPINCS) $(PIP_INCDIR)/concat.h $(PIP_INCDIR)/build.h Makefile
+
+$(LIBRARY): $(OBJS)
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
 	rm -f $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
@@ -133,7 +135,7 @@ TAGS:
 	ctags -Re
 
 post-clean-hook:
-	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT) build.h concat.h
+	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)
 
 post-veryclean-hook:
 	$(RM) build.h concat.h concat
