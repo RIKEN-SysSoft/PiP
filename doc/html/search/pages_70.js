@@ -10,7 +10,6 @@ var searchData=
   ['pip_20signaling_20functions',['PiP signaling functions',['../group__pip-signal.html',1,'']]],
   ['pip_20spawnig_20pip_20_28ulp_2fblt_29_20task',['PiP Spawnig PiP (ULP/BLT) task',['../group__pip1-spawn.html',1,'']]],
   ['pipcc',['pipcc',['../pipcc.html',1,'']]],
-  ['piplnlibs',['piplnlibs',['../piplnlibs.html',1,'']]],
   ['pips',['pips',['../pips.html',1,'']]],
   ['printpipmode',['printpipmode',['../printpipmode.html',1,'']]]
 ];

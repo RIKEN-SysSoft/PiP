@@ -355,7 +355,6 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 
 # Commands
 - pipcc
-- piplnlibs
 - pips
 - printpipmode
 
