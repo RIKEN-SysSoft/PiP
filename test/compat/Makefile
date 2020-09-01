@@ -37,7 +37,7 @@ include $(top_srcdir)/build/var.mk
 SRCS  = libnull.c fork.c malloc.c ctype.c pip_dlopen.c gettimeofday.c \
 	gethostname.c gethostbyname.c getaddrinfo.c \
 	const_destruct.c system.c sigchld.c pagefault.c \
-	get_nprocs.c environ.c atexit.c on_exit..c
+	get_nprocs.c environ.c atexit.c on_exit.c
 
 PROGRAMS  = libnull.so fork malloc ctype pip_dlopen gettimeofday \
 	gethostname gethostbyname getaddrinfo \
