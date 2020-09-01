@@ -62,6 +62,8 @@ test:
 
 install_test_compat = $(install_test_dir)/compat
 
+TESTS = test.list task.list blt.list
+
 check-installed :
 	$(MKDIR_P) $(install_test_compat)
-	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_compat)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) $(TESTS) $(install_test_compat)

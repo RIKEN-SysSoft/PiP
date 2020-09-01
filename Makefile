@@ -65,9 +65,12 @@ install_test_dirtop = $(prefix)/pip-test
 install_test_dir = $(prefix)/pip-test/test
 test_build_dir = $(install_test_dirtop)/build
 
-.PHONY: check-installed-prepare
-check-installed-prepare: install
+.PHONY: clean-check-installed
+clean-check-installed:
 	-$(RM) -r $(install_test_dirtop)
+
+.PHONY: check-installed-prepare
+check-installed-prepare: clean-check-installed install
 	$(MKDIR_P) $(install_test_dirtop)
 	ln -f -s $(prefix)/bin $(install_test_dirtop)
 	$(MKDIR_P) $(test_build_dir)
@@ -84,6 +87,7 @@ do-check-installed: check-installed-programs
 
 .PHONY: check-installed
 check-installed: do-check-installed
+	$(MAKE) clean-check-installed
 
 ### doc
 
