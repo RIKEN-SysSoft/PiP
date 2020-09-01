@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([Process-in-Processs], [2.0.0], [pip@ml.riken.jp], [proc-in-proc],
+AC_INIT([Process-in-Processs], [3.0.0], [pip@ml.riken.jp], [proc-in-proc],
 			       [https://github.com/RIKEN-SysSoft/PiP])
 AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
