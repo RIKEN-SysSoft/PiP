@@ -8,7 +8,7 @@
 #define PACKAGE_NAME "Process-in-Processs"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Process-in-Processs 3.0.0"
+#define PACKAGE_STRING "Process-in-Processs 2.0.0"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "proc-in-proc"
@@ -17,7 +17,7 @@
 #define PACKAGE_URL "https://github.com/RIKEN-SysSoft/PiP"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "3.0.0"
+#define PACKAGE_VERSION "2.0.0"
 
 /* cache line size */
 #define CACHE_LINE_SIZE 64

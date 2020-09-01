@@ -132,7 +132,6 @@ AC_CONFIG_FILES([
 	bin/pip-mode
 	bin/pip-check
 	bin/pip-man
-	util/piplnlibs
 	doc/latex-inuse/libpip-manpages.tex
 	doc/Slides-html.md
 ])

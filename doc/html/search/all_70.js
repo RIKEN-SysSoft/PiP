@@ -78,7 +78,6 @@ var searchData=
   ['pip_5fyield',['pip_yield',['../group__ulp0-yield.html#ga50469f21446ce86ea18ddd282cf15894',1,'pip_blt.h']]],
   ['pip_5fyield_5fto',['pip_yield_to',['../group__ulp0-yield.html#gac30cf124b28a8d80dac34c5e1bdb66ba',1,'pip_blt.h']]],
   ['pipcc',['pipcc',['../pipcc.html',1,'']]],
-  ['piplnlibs',['piplnlibs',['../piplnlibs.html',1,'']]],
   ['pips',['pips',['../pips.html',1,'']]],
   ['printpipmode',['printpipmode',['../printpipmode.html',1,'']]]
 ];
