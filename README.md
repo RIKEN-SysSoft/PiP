@@ -398,8 +398,8 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 ## Presentation Slides
 
 * [HPDC'18](doc/slides/HPDC18.pdf)
-* [ROSS'18](doc/slides/HPDC18-ROSSpdf)
-* [IPDPS/RADR'20](doc/slides/IPDPS-RSADR-2020.pdf)
+* [ROSS'18](doc/slides/HPDC18-ROSS.pdf)
+* [IPDPS/RADR'20](doc/slides/IPDPS-RADR-2020.pdf)
 # Author
 
 Atsushi Hori \n
