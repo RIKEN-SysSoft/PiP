@@ -1,0 +1,23 @@
+timer 1 NG.sh ../bin/piprun
+timer 1 NG.sh ../bin/piprun -n 10
+timer 1 NG.sh ../bin/piprun -n 100000 prog/abc
+timer 1 NG.sh ../bin/piprun -n 100 prog/abc :: -n 10000 prog/def
+timer 1 OK.sh ../bin/piprun -n 1 prog/abc
+timer 1 OK.sh ../bin/piprun -n 8 prog/abc
+timer 1 OK.sh ../bin/piprun -n 1 prog/abc :: -n 1 prog/def
+timer 1 OK.sh ../bin/piprun -n 4 prog/abc :: -n 4 prog/def
+timer 1 OK.sh ../bin/piprun -n 1 prog/abc :: -n 1 prog/def :: -n 1 prog/ghi
+timer 1 OK.sh ../bin/piprun -n 3 prog/abc :: -n 2 prog/def :: -n 3 prog/ghi
+timer 1 OK.sh ../bin/piprun -n 1 -f func prog/abc
+timer 1 OK.sh ../bin/piprun -n 8 -f func prog/abc
+timer 1 OK.sh ../bin/piprun -n 1 -f func prog/abc :: -n 1 -f func prog/def
+timer 1 OK.sh ../bin/piprun -n 4 -f func prog/abc :: -n 4 -f func prog/def
+timer 1 OK.sh ../bin/piprun -n 1 -f func prog/abc :: -n 1 -f func prog/def :: -n 1 -f func prog/ghi
+timer 1 OK.sh ../bin/piprun -n 3 -f func prog/abc :: -n 2 -f func prog/def :: -n 3 -f func prog/ghi
+timer 1 OK.sh ../bin/piprun -n 1 prog/abc :: -n 1 -f func prog/def :: -n 1 -f func prog/ghi
+timer 1 OK.sh ../bin/piprun -n 3 -f func prog/abc :: -n 2 -f func prog/def :: -n 3 prog/ghi
+timer 1 OK.sh ../bin/piprun -n 2  prog/abc :: -n 2 -f func prog/def :: -n 2 -f func prog/ghi
+timer 1 OK.sh ../bin/piprun -n 3 prog/xyz 0 0 1 2
+timer 1 OK.sh ../bin/piprun -n 2 prog/xyz 0 0 1 :: -n 3 prog/abc
+timer 1 OK.sh ../bin/piprun -n 4 prog/abc :: -n 3 prog/xyz 4 4 5 6
+timer 1 OK.sh ../bin/piprun -n 4 prog/xyz 0 0 1 2 3 :: -n 3 prog/xyz 4 4 5 6

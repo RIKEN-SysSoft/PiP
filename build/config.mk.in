@@ -9,6 +9,8 @@ host_cpu = @host_cpu@
 host_os = @host_os@
 host_vendor = @host_vendor@
 
+srcdir_top = @srcdir_top@
+
 default_sbindir = @sbindir@
 default_bindir = @bindir@
 default_libdir = @libdir@
@@ -20,10 +22,13 @@ default_datarootdir = @datarootdir@
 default_mandir = @mandir@
 default_docdir = @docdir@
 default_htmldir = @htmldir@
+default_pdfdir = @pdfdir@
 default_sysconfdir= @sysconfdir@
 default_localedir = @localedir@
 
+glibc_incdir = @glibc_incdir@
 glibc_libdir = @glibc_libdir@
+glibc_lib = @glibc_lib@
 dynamic_linker = @dynamic_linker@
 
 DEFAULT_CC = @CC@

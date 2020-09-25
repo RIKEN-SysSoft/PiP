@@ -1,0 +1,28 @@
+timer 1 NG.sh ./pip-exec
+timer 1 NG.sh ./pip-exec -n 8
+timer 1 NG.sh ./pip-exec -n 100000 ./abc
+timer 1 NG.sh ./pip-exec -n 100 ./abc : -n 10000 ./def
+timer 1 NG.sh ./pip-exec -n 200 ./abc : -n 200 ./def
+timer 1 NG.sh ./pip-exec -n 8 nosuchfile
+timer 1 OK.sh ./pip-exec -n 1 ./abc
+timer 1 OK.sh ./pip-exec -n 1 ./abc :
+timer 1 NG.sh ./pip-exec -n 1 ./abc : :
+timer 1 OK.sh ./pip-exec -n 8 ./hello
+timer 1 OK.sh ./pip-exec -n 8 ./abc
+timer 1 OK.sh ./pip-exec -n 1 ./abc : -n 1 ./def
+timer 1 OK.sh ./pip-exec -n 4 ./abc : -n 4 ./def
+timer 1 OK.sh ./pip-exec -n 1 ./abc : -n 1 ./def : -n 1 ./ghi
+timer 1 OK.sh ./pip-exec -n 3 ./abc : -n 2 ./def : -n 3 ./ghi
+timer 1 OK.sh ./pip-exec -n 1 -f func ./abc
+timer 1 OK.sh ./pip-exec -n 8 -f func ./abc
+timer 1 OK.sh ./pip-exec -n 1 -f func ./abc : -n 1 -f func ./def
+timer 1 OK.sh ./pip-exec -n 4 -f func ./abc : -n 4 -f func ./def
+timer 1 OK.sh ./pip-exec -n 1 -f func ./abc : -n 1 -f func ./def : -n 1 -f func ./ghi
+timer 1 OK.sh ./pip-exec -n 3 -f func ./abc : -n 2 -f func ./def : -n 3 -f func ./ghi
+timer 1 OK.sh ./pip-exec -n 1 ./abc : -n 1 -f func ./def : -n 1 -f func ./ghi
+timer 1 OK.sh ./pip-exec -n 3 -f func ./abc : -n 2 -f func ./def : -n 3 ./ghi
+timer 1 OK.sh ./pip-exec -n 2  ./abc : -n 2 -f func ./def : -n 2 -f func ./ghi
+timer 1 OK.sh ./pip-exec -n 3 ./xyz 0 0 1 2
+timer 1 OK.sh ./pip-exec -n 2 ./xyz 0 0 1 : -n 3 ./abc
+timer 1 OK.sh ./pip-exec -n 4 ./abc : -n 3 ./xyz 4 4 5 6
+timer 1 OK.sh ./pip-exec -n 4 ./xyz 0 0 1 2 3 : -n 3 ./xyz 4 4 5 6

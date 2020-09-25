@@ -1,15 +1,15 @@
-# $PIP_VERSION: Version 1.0.0$
+# $PIP_VERSION: Version 1.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-# 
+#
 # 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the 
+#    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -21,51 +21,104 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019$
+# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+# 	  System Software Devlopment Team. All rights researved$
 
 top_builddir = ../..
 top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
 
-SRCS  = initfin.c \
-	stack.c \
-	export.c \
-	environ.c \
-	malloc.c \
-	malloc2.c \
-	file.c \
-	wait.c \
-	signal.c \
+SRCS  = pip_init.c \
+	pip_wait.c \
+	pip_wait_any.c \
+	pip_trywait.c \
+	pip_trywait_any.c \
+	pip_fin.c \
+	pip_exit.c \
 	exit.c \
-	mutex.c \
-	barrier.c \
-	core.c \
-	numa.c \
-	hook.c \
-	spawn.c \
-	null.c \
-	recursive.c \
-	varvars.c \
-	getaddr.c
+	return.c \
+	pip_spawn.c \
+	pip_task_spawn.c \
+	pip_misc.c \
+	corebind.c \
+	spawn_pie.c \
+	hook_and_coe.c \
+	pip_barrier.c \
+	pip_barrier2.c \
+	seek.c \
+	pip_kill.c \
+	pip_yield.c \
+	pip_namexp.c
 
-PROGRAMS  = initfin stack export environ malloc malloc2 file \
-            wait signal exit mutex barrier core numa hook spawn \
-	    null recursive varvars getaddr
+PROGRAMS = \
+	pip_init \
+	pip_wait \
+	pip_wait_any \
+	pip_trywait \
+	pip_trywait_any \
+	pip_fin \
+	pip_exit \
+	exit \
+	return \
+	pip_spawn \
+	pip_task_spawn \
+	pip_misc \
+	corebind \
+	spawn_pie \
+	prog-noexec \
+	prog-nopie \
+	prog-pie \
+	prog-nordynamic \
+	hook_and_coe \
+	pip_barrier \
+	pip_barrier2 \
+	seek \
+	pip_kill \
+	pip_yield \
+	pip_namexp
 
 PROGRAMS_TO_INSTALL = # nothing
 
+PIP_CPPFLAGS += $(DBGFLAG)
+
 include $(top_srcdir)/build/rule.mk
+include $(srcdir)/../Test.common
 
-test-file:
-	( export LD_PRELOAD=$(PIPDIR)/preload/pip_preload.so; ./file )
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
 
-post-clean-hook:
-	$(RM) *.E *.log
+cdebug:
+	$(MAKE) veryclean debug;
+
+test :
+	../test.sh test.list
+
+prog-noexec : prog.c Makefile
+	$(CC) -g -O2 prog.c -o prog-noexec
+	chmod -x prog-noexec
+
+prog-nopie : prog.c Makefile
+	$(CC) -g -O2 prog.c -o prog-nopie
+
+prog-pie : prog.c Makefile
+	$(CC) -g -O2 -fpie -pie -rdynamic prog.c -o prog-pie
+
+prog-nordynamic : prog.c Makefile
+	$(CC) -g -O2 -fpie -pie prog.c -o prog-nordynamic
+
+install_test_basics_dir = $(install_test_dir)/basics
+
+TESTS   = task.list wait.list
+SCRIPTS = seek-file.sh seek-outin.sh seek-pipe.sh
+DATFILE = GreatExpectations-Chap1.txt
+
+install-test :
+	$(MKDIR_P) $(install_test_basics_dir)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) prog.c $(TESTS) $(DATFILE) $(install_test_basics_dir)
+	$(INSTALL) -C -m 744 $(SCRIPTS) $(install_test_basics_dir)

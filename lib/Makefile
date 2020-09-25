@@ -35,55 +35,82 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 LIBNAME  = libpip.so
-LIBRARY_PIPGDB = libpip_gdb.so
-
-CPPFLAGS += -I$(PIPINCDIR) -I. \
-	-DPIP_INSTALL_LIBPIPGDB=\"$(default_libdir)/$(LIBRARY_PIPGDB)\" \
-	-DPIP_MAKE_LIBPIPGDB=\"`pwd`/$(LIBRARY_PIPGDB)\"
-CFLAGS += $(PICFLAG)
-LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY) -L$(glibc_libdir) -ldl
-
 SO_MAJOR = 0
 LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 
-LIBRARIES = $(LIBRARY) $(LIBRARY_PIPGDB)
+LIBNAME_PIPINIT = libpip_init.so
+LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
+LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
-SRCS     = pip.c pip_util.c pip_gdb.c
-OBJS	 = pip.o pip_util.o
-OBJS_PIPGDB = pip_gdb.o
+INTERP = $(dynamic_linker)
 
-DEPINCS  = $(PIPINCDIR)/pip.h			\
-	   $(PIPINCDIR)/pip_clone.h		\
-	   $(PIPINCDIR)/pip_debug.h		\
-	   $(PIPINCDIR)/pip_gdbif.h		\
-	   $(PIPINCDIR)/pip_internal.h 		\
-	   $(PIPINCDIR)/pip_machdep.h 		\
-	   $(PIPINCDIR)/pip_machdep_aarch64.h 	\
-	   $(PIPINCDIR)/pip_machdep_x86_64.h 	\
-	   $(PIPINCDIR)/pip_queue.h 		\
-	   $(PIPINCDIR)/pip_ulp.h 		\
-	   $(PIPINCDIR)/pip_util.h
+CPPFLAGS += -I. $(PIP_CPPFLAGS) -DINTERP=\"$(INTERP)\" \
+	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
+	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
+	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
+	-DPIP_BUILD_LIBPIPINIT=\"`pwd`/$(LIBRARY_PIPINIT)\" \
+	-DPIP_INSTALL_BIN_PIPS=\"$(default_bindir)/pips\" \
+	-DPIP_BUILD_BIN_PIPS=\"../bin/pips\" \
+	-DPREFIX=\"$(prefix)\" \
+	-DLDLINUX=\"$(dynamic_linker)\" \
+	$(CPPFLAGS_DEBUG)
+CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
+LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
+
+LIBMAIN = -Wl,-e,pip_main
+
+SRCS     = pip_main.c pip.c pip_init.c pip_util.c pip_gdb.c pip_2_backport.c pip_signal.c \
+	pip_wait.c pip_dlfcn.c pip_gdbif.c pip_got.c pip_clone.c pip_namexp.c
+
+OBJS_PIPINIT = pip_init.o
+
+OBJS	 = pip_main.o pip.o pip_util.o pip_2_backport.o pip_signal.o pip_wait.o \
+	pip_dlfcn.o pip_gdbif.o pip_got.o pip_clone.o pip_namexp.o $(OBJS_PIPINIT)
+
+DEPINCS  = ./build.h                            \
+	   $(PIP_INCDIR)/config.h		\
+	   $(PIP_INCDIR)/pip.h			\
+	   $(PIP_INCDIR)/pip_clone.h		\
+	   $(PIP_INCDIR)/pip_dlfcn.h		\
+	   $(PIP_INCDIR)/pip_debug.h		\
+	   $(PIP_INCDIR)/pip_gdbif.h		\
+	   $(PIP_INCDIR)/pip_internal.h 	\
+	   $(PIP_INCDIR)/pip_machdep.h 		\
+	   $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
+	   $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
+	   $(PIP_INCDIR)/pip_queue.h 		\
+	   $(PIP_INCDIR)/pip_util.h
 
 include $(top_srcdir)/build/rule.mk
+
+build.h: build-header.sh
+	./build-header.sh $(CC)
 
 $(OBJS): $(DEPINCS) Makefile
 
 $(LIBRARY): $(OBJS) Makefile
-	$(CC) $(LDFLAGS) $(OBJS) -o $@
+	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
 	rm -f $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
-$(LIBRARY_PIPGDB): $(OBJS_PIPGDB) Makefile
-	$(CC) $(LDFLAGS) $(OBJS_PIPGDB) -o $@
+$(LIBRARY_PIPINIT): $(OBJS_PIPINIT) Makefile
+	$(CC) $(LDFLAGS) $(OBJS_PIPINIT) -o $@
+	rm -f $(LIBNAME_PIPINIT)
+	ln -s $(LIBRARY_PIPINIT) $(LIBNAME_PIPINIT)
 
 # chmod is to make rpmbuild happy
 install:
-	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY)
-	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
-	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
-
-very-clean:
-	rm -f $(LIBNAME)
+	chmod 0755 $(libdir)/$(LIBRARY)
+	$(RM) $(libdir)/$(LIBNAME)
+	$(RM) $(libdir)/$(LIBNAME_PIPINIT)
+	ln -s $(LIBRARY) $(libdir)/$(LIBNAME)
+	ln -s $(LIBRARY_PIPINIT) $(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
-	CPPFLAGS="-DDEBUG" make all;
+	CPPFLAGS="-DDEBUG" $(MAKE) all;
+
+cdebug: clean
+	CPPFLAGS="-DDEBUG" $(MAKE) all;
+
+post-clean-hook:
+	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)

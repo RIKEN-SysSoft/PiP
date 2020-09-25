@@ -1,18 +1,18 @@
 /*
- * $RIKEN_copyright: Riken Center for Computational Sceience,
- * System Software Development Team, 2016, 2017, 2018, 2019$
- * $PIP_VERSION: Version 1.0.0$
+ * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+ * 	  System Software Devlopment Team. All rights researved$
+ * $PIP_VERSION: Version 1.0$
  * $PIP_license: <Simplified BSD License>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the 
+ *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,85 +24,51 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * The views and conclusions contained in the software and documentation
  * are those of the authors and should not be interpreted as representing
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#define NTHREADS	(100)
-
-//#define DEBUG
-
-#define PIP_INTERNAL_FUNCS
 #include <test.h>
 
-void *thread( void *argp ) {
-  // TESTINT( pthread_setcancelstate( PTHREAD_CANCEL_DISABLE, NULL ) );
-  // the PTHREAD_CANCEL_DISABLE helps nothing
-  // pthread_exit( NULL );  /* pthread_exit() does SOMETHING WRONG !!!! */
+#define NTHREADS 10
+#define NITERS 10
+
+void *thread_main( void *argp ) {
+  //pthread_exit(NULL);
   return NULL;
 }
 
 int main( int argc, char **argv ) {
-  int pipid    = 999;
-  int ntasks   = NTASKS;
-  int nthreads = NTHREADS;
-  int i;
-  int err;
+  pthread_t threads[NTHREADS];
+  int nthreads, niters;
+  int i, j;
 
-  DBG;
-  if( !pip_isa_piptask() ) {
-    if( argc     >  1 ) ntasks = atoi( argv[1] );
-    if( ntasks   <= 0 ||
-	ntasks   >  NTASKS ) ntasks = NTASKS;
-  } else {
-    if( argc      > 2 ) nthreads = atoi( argv[2] );
-    if( nthreads <= 0 ||
-	nthreads >  NTHREADS ) nthreads = NTHREADS;
+  nthreads = 0;
+  if( argc > 1 ) {
+    nthreads = strtol( argv[1], NULL, 10 );
   }
+  nthreads = ( nthreads <= 0       ) ? NTHREADS : nthreads;
+  nthreads = ( nthreads > NTHREADS ) ? NTHREADS : nthreads;
 
-  TESTINT( pip_init( &pipid, &ntasks, NULL, 0 ) );
-  if( pipid == PIP_PIPID_ROOT ) {
-    for( i=0; i<ntasks; i++ ) {
-      pipid = i;
-      err = pip_spawn( argv[0], argv, NULL, i % cpu_num_limit(),
-		       &pipid, NULL, NULL, NULL );
-      if( err != 0 ) {
-	fprintf( stderr, "pip_spawn(%d/%d): %s\n",
-		 i, ntasks, strerror( err ) );
-	break;
-      }
-      if( i != pipid ) {
-	fprintf( stderr, "pip_spawn(%d!=%d) !!!!!!\n", i, pipid );
-      }
-//#define SERIAL
-#ifndef SERIAL
-    }
-    ntasks = i;
-    for( i=0; i<ntasks; i++ ) {
-#endif
-      TESTINT( pip_wait( i, NULL ) );
-    }
+  niters = 0;
+  if( argc > 2 ) {
+    niters = strtol( argv[2], NULL, 10 );
+  }
+  niters = ( niters <= 0 ) ? NITERS : niters;
 
-  } else {
-    pthread_t threads[NTHREADS];
-    for( i=0; i<nthreads; i++ ) {
-      TESTINT( pthread_create( &threads[i],NULL, thread, NULL ) );
-#ifndef SERIAL
+  for( i=0; i<niters; i++ ) {
+    for( j=0; j<nthreads; j++ ) {
+      CHECK( pthread_create( &threads[j], NULL, thread_main, NULL ),
+	     RV, return(EXIT_FAIL) );
     }
-    DBG;
-    for( i=0; i<nthreads; i++ ) {
-#endif
-      //while( pthread_tryjoin_np( threads[i], NULL ) != 0 );
-      TESTINT( pthread_join( threads[i], NULL ) );
-      printf( "SUCCESS\n" );
+    for( j=0; j<nthreads; j++ ) {
+      CHECK( pthread_join( threads[j], NULL ), RV, return(EXIT_FAIL) );
     }
   }
-  TESTINT( pip_fin() );
-  DBG;
   return 0;
 }

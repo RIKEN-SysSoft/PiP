@@ -1,4 +1,4 @@
-# $PIP_VERSION: Version 1.0.0$
+# $PIP_VERSION: Version 1.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,27 +25,62 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019$
+# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+# 	  System Software Devlopment Team. All rights researved$
 
 top_builddir = ../..
 top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
-include $(srcdir)/../Test.common
+include ../Test.common
 
-PROGRAMS = dlmopen_count ompnumthread pip_mode
+CWD = $(shell pwd)
+CPPFLAGS += -I.. -I../../include  -DCWD=\"$(CWD)\" -DPIPS=\"$(CWD)/../../bin/pips\"
+
+SRCS	= dlmopen_count.c ompnumthread.c timer.c inf.c \
+	pip_mode_check.c pip_is_debug_build.c pip_task.c
+
+PROGRAMS = dlmopen_count ompnumthread timer inf \
+	pip_mode_check pip_is_debug_build pip_task
+
 PROGRAMS_TO_INSTALL = # nothing
-SRCS	= dlmopen_count.c ompnumthread.c pip_mode.c
 
 all: $(PROGRAMS)
 
-pip_mode: pip_mode.c Makefile
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
 
 dlmopen_count: dlmopen_count.c Makefile
+	$(CC) -g -O2 $(CPPFLAGS) $(DBGFLAG) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
 ompnumthread: ompnumthread.c Makefile
-	$(CC) -fopenmp -openmp -O2 -ldl $< -o$@
+	$(CC) -fopenmp -openmp $< -o $@
+
+timer: timer.c Makefile
+	$(CC) -g -O2 $(CPPFLAGS) $(DBGFLAG) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
+
+pip_is_debug_build : pip_is_debug_build.c Makefile
+	../scripts/pipcc -g -O2 $< -o $@
+
+pip_mode_check : pip_mode_check.c Makefile
+	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
+
+pip_task : pip_task.c Makefile
+	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
+
+inf : inf.c Makefile
+	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
+
+test :
+	$(MAKE) -C ../prog
+	../test.sh test.list
+
+install_test_util_dir = $(install_test_dir)/util
+
+install-test:
+	$(MKDIR_P) $(install_test_util_dir)
+	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_util_dir)
+	$(INSTALL) -C -m 744 test-timer.sh path-test.sh $(install_test_util_dir)
 
 include $(top_srcdir)/build/rule.mk

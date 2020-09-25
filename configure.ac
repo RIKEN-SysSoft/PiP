@@ -2,33 +2,69 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([pip], [1.1.0])
+AC_INIT([Process-in-Processs], [2.0.0], [pip@ml.riken.jp], [proc-in-proc],
+                               [https://github.com/RIKEN-SysSoft/PiP])
 AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
+AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_HEADERS([include/config.h])
 
 # Specialized system macros
+AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+case "$target_os" in
+     linux*) true;;
+     *) AC_MSG_ERROR([Unsupported OS]);;
+esac
+
+case "$target" in
+      x86_64-*)  true;;
+      aarch64-*) true;;
+      *) AC_MSG_ERROR([Unsupported target CPU architecture]);;
+esac;
+
+# srcdir_top
+
+cwd=`dirname $0`;
+srcdir_top=`realpath $cwd`;
+AC_SUBST(srcdir_top)
 
 # Checks for command line options
 
 AC_MSG_CHECKING([for glibc libdir])
 AC_ARG_WITH([glibc-libdir],
   [AS_HELP_STRING([--with-glibc-libdir=DIR],
-                  [glibc lib directory @<:@default=/lib64@:>@])])
+                  [glibc lib directory @<:@default=/usr/lib64@:>@])])
 case "$with_glibc_libdir" in
-""|yes|no) with_glibc_libdir=/lib64;;
+""|yes|no) with_glibc_libdir="/usr/lib64";;
 esac
 dynamic_linker=`ls -d "${with_glibc_libdir}"/ld-@<:@0-9@:>@*.so | sed -n '$p'`
-if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}"; then
+glibc_lib=`ls -d "${with_glibc_libdir}"/libc-@<:@0-9@:>@*.so | sed -n '$p'`
+if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}" -a -f "${glibc_lib}"; then
   AC_MSG_RESULT([${with_glibc_libdir}])
-  glibc_libdir=${with_glibc_libdir}
+  glibc_libdir="${with_glibc_libdir}"
+  glibc_incdir="`realpath ${with_glibc_libdir}/../include`"
 else
   AC_MSG_ERROR([can't find ld.so.])
 fi
+if ! test -d "${glibc_incdir}" ; then
+  glibc_incdir="/usr/include"
+fi
+AC_MSG_RESULT([${glibc_incdir}])
+
+AC_SUBST(prefix)
+AC_SUBST(exec_prefix)
+AC_SUBST(includedir)
+AC_SUBST(libdir)
+AC_SUBST(glibc_incdir)
 AC_SUBST(glibc_libdir)
+AC_SUBST(glibc_lib)
 AC_SUBST(dynamic_linker)
 
+prefix_slides=${prefix}/share/slides
+AC_SUBST(prefix_slides)
 
 # Checks for programs.
 AC_PROG_CC
@@ -48,9 +84,13 @@ fi
 # Checks for library functions.
 
 AC_CONFIG_FILES([
-	bin/pipcc
 	build/config.mk
 	release/version.conf
-	util/piplnlibs
+	bin/pipcc
+	bin/pip-mode
+	bin/pip-check
+	bin/pip-man
+	doc/latex-inuse/libpip-manpages.tex
+        doc/Slides-html.md
 ])
 AC_OUTPUT

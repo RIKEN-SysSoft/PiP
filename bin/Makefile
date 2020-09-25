@@ -1,4 +1,4 @@
-# $PIP_VERSION: Version 1.0.0$
+# $PIP_VERSION: Version 1.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,8 +25,8 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019$
+# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+# 	  System Software Devlopment Team. All rights researved$
 
 top_builddir = ..
 top_srcdir = $(top_builddir)
@@ -34,30 +34,36 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) pipmap pipcc pips
-PROGRAMS = $(PROGRAMS_TO_INSTALL) hello
-MAN1_SRCS = piprun.c pipmap.c pipcc.in hello.c pips
+PROGRAM = pip-exec
+PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
+	pips printpipmode
 
-CFLAGS += -pthread
-CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
-LDLIBS += $(PIPLDLIB) -ldl
+#PROGRAMS  = # do not compile at build, compile at install
+PROGRAMS  = pip-exec printpipmode
 
-DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
+MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
+	pips printpipmode.c
+
+CPPFLAGS += $(PIP_CPPFLAGS) $(DBGFLAG)
+
+DEPINCS = $(top_srcdir)/include
+
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
 
 include $(top_srcdir)/build/rule.mk
 
-piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
-	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@ $(LDLIBS)
+pre-install-hook: pip-exec printpipmode
 
-pipmap: pipmap.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
+pip-exec: pip-exec.c $(DEPINCS) $(PIP_LIBS) Makefile
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
-hello: hello.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
+printpipmode: printpipmode.c $(DEPINCS) $(PIP_LIBS) Makefile
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
+
+post-veryclean-hook: post-clean-hook
+	$(RM) pip-exec pipcc pip-mode pip-check pip-man printpipmode
+	$(RM) .doxygen_*

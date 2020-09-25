@@ -1,0 +1,50 @@
+timer 1 ./pip_init
+timer 1 ./pip_init null
+timer 1 ./pip_init preload
+timer 1 ./pip_init got
+timer 1 ./pip_init twice
+timer 1 ./pip_init ntask_is_zero
+timer 1 ./pip_init ntask_too_big
+timer 1 ./pip_init invalid_opts
+timer 1 ./pip_init both_pthread_process
+timer 1 ./pip_init both_preload_clone
+%include wait.list
+timer 1 ./pip_init pip_task_unset
+timer 1 ./pip_fin
+timer 1 pip_task 1 ./pip_init pip_child_task
+timer 1 pip_task 8 ./pip_init pip_child_task
+timer 1 ./pip_exit
+timer 1 pip_task 1 ./pip_exit
+timer 1 pip_task 8 ./pip_exit
+timer 1 pip_task 1 ./return
+timer 1 pip_task 8 ./return
+skip.sh T UNSUPPORTED timer 1 pip_task 1 ./exit
+skip.sh T UNSUPPORTED timer 1 pip_task 8 ./exit
+timer 1 ./pip_spawn
+timer 1 ./pip_task_spawn
+timer 1 ./spawn_pie
+timer 1 pip_task 1 ./pip_spawn
+timer 1 pip_task 8 ./pip_spawn
+#timer 1 ./pip_misc
+timer 1 pip_task 1 ./pip_misc
+timer 1 pip_task 8 ./pip_misc
+timer 1 ./corebind 1
+timer 1 ./corebind 8
+skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 1
+skip.sh T UNSUPPORTED timer 1 ./hook_and_coe 8
+timer 1 ./pip_kill 1
+timer 1 ./pip_kill 8
+timer 1 ./seek-file.sh  1
+timer 1 ./seek-pipe.sh  1
+timer 1 ./seek-outin.sh 1
+timer 4 ./seek-file.sh  4
+timer 4 ./seek-pipe.sh  4
+timer 4 ./seek-outin.sh 4
+timer 1  pip_task 1    ./pip_yield
+timer 1  pip_task 8    ./pip_yield
+timer 1 ./pip_barrier  1 10
+timer 1 ./pip_barrier  8 10
+timer 2 ./pip_barrier2 1 10
+timer 2 ./pip_barrier2 8 10
+timer 1  pip_task 2    ./pip_namexp
+timer 1  pip_task 8    ./pip_namexp

@@ -6,13 +6,13 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
  * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the 
+ *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,7 +24,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * 
+ *
  * The views and conclusions contained in the software and documentation
  * are those of the authors and should not be interpreted as representing
  * official policies, either expressed or implied, of the PiP project.$
@@ -33,14 +33,12 @@
  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
  */
 
-#define _GNU_SOURCE
+#include <pip_internal.h>
+#include <pip.h>
+#include <pip_util.h>
 
 #include <dlfcn.h>
 #include <elf.h>
-
-#include <pip.h>
-#include <pip_internal.h>
-#include <pip_util.h>
 
 extern int pip_is_coefd( int );
 extern int pip_get_dso( int pipid, void **loaded );
@@ -73,15 +71,19 @@ void pip_print_maps( void ) {
   close( fd );
 }
 
+#define FDPATH_LEN	(512)
+#define RDLINK_BUF	(256)
+#define RDLINK_BUF_SP	(RDLINK_BUF+8)
+
 void pip_print_fd( int fd ) {
   char idstr[64];
-  char fdpath[512];
-  char fdname[256];
+  char fdpath[FDPATH_LEN];
+  char fdname[RDLINK_BUF_SP];
   ssize_t sz;
 
   pip_idstr( idstr, 64 );
   sprintf( fdpath, "/proc/self/fd/%d", fd );
-  if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+  if( ( sz = readlink( fdpath, fdname, RDLINK_BUF ) ) > 0 ) {
     fdname[sz] = '\0';
     fprintf( stderr, "%s %d -> %s", idstr, fd, fdname );
   }
@@ -91,8 +93,8 @@ void pip_print_fds( void ) {
   DIR *dir = opendir( "/proc/self/fd" );
   struct dirent *de;
   char idstr[64];
-  char fdpath[512];
-  char fdname[256];
+  char fdpath[FDPATH_LEN];
+  char fdname[RDLINK_BUF_SP];
   char coe = ' ';
   ssize_t sz;
 
@@ -103,7 +105,7 @@ void pip_print_fds( void ) {
 
     while( ( de = readdir( dir ) ) != NULL ) {
       sprintf( fdpath, "/proc/self/fd/%s", de->d_name );
-      if( ( sz = readlink( fdpath, fdname, 256 ) ) > 0 ) {
+      if( ( sz = readlink( fdpath, fdname, RDLINK_BUF ) ) > 0 ) {
 	fdname[sz] = '\0';
 	if( ( fd = atoi( de->d_name ) ) != fd_dir ) {
 	  if( pip_is_coefd ( fd ) ) coe = '*';
@@ -183,21 +185,4 @@ void pip_print_loaded_solibs( FILE *file ) {
     }
   }
   if( pip_root_p_() && handle != NULL ) dlclose( handle );
-}
-
-static int
-pip_print_dsos_cb_( struct dl_phdr_info *info, size_t size, void *data ) {
-  int i;
-
-  printf( "name=%s (%d segments)\n", info->dlpi_name, info->dlpi_phnum);
-
-  for ( i=0; i<info->dlpi_phnum; i++ ) {
-    printf( "\t\t header %2d: address=%10p\n", i,
-	    (void *) (info->dlpi_addr + info->dlpi_phdr[i].p_vaddr ) );
-  }
-  return 0;
-}
-
-void pip_print_dsos( void ) {
-  dl_iterate_phdr( pip_print_dsos_cb_, NULL );
 }

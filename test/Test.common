@@ -25,22 +25,24 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+# $RIKEN_copyright: 2018-2020 Riken Center for Computational Sceience,
 # 	  System Software Devlopment Team. All rights researved$
 
-CPPFLAGS = -I$(srcdir)/.. -I$(PIPINCDIR)
-CFLAGS += $(PIEFLAG) -pthread
-LDLIBS += $(PIPLDLIB) -ldl
+CFLAGS += -I$(srcdir_top)/test $(PIP_CFLAGS_BOTH)
 
-DEPINCS = ../test.h $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h \
-	$(PIPINCDIR)/pip_ulp.h $(PIPINCDIR)/pip_internal.h \
-	$(PIPINCDIR)/pip_machdep.h $(PIPINCDIR)/pip_debug.h
+LDFLAGS += $(PIP_LDFLAGS_BOTH)
+
+DEPINCS = ../test.h $(PIP_INCDIR)/pip.h $(PIP_INCDIR)/pip_internal.h
+
+PROGRAMS_TO_INSTALL = # nothing
 
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) $< -o $@ $(LDLIBS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-%: %.cxx $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CXX) $(CPPFLAGS) $(CFLAGS) $(PIPLDFLAGS) -pie $< -o $@ $(LDLIBS)
+%: %.cc $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
+	$(CXX) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 %: %.f $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(FC) $(CPPFLAGS) $(FFLAGS) $(PIPLDFLAGS) -fPIE $< -o $@ $(LDLIBS)
+	$(FC) $(FFLAGS) $(LDFLAGS) $< -o $@
+
+all : $(PROGRAMS)

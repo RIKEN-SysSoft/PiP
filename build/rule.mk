@@ -5,15 +5,19 @@ all: subdir-all header-all lib-all prog-all post-all-hook
 
 install: all \
 	pre-install-hook \
-	subdir-install header-install lib-install prog-install examples-install \
+	subdir-install header-install lib-install prog-install \
 	post-install-hook
 .PHONY: install
 
 clean: subdir-clean header-clean lib-clean prog-clean \
 	misc-clean post-clean-hook
-.PHONY: install
+.PHONY: clean
 
-veryclean: clean \
+testclean: \
+	subdir-testclean testclean-here post-testclean-hook
+.PHONY: testclean
+
+veryclean: clean testclean \
 	subdir-veryclean header-veryclean lib-veryclean prog-veryclean \
 	post-veryclean-hook
 .PHONY: veryclean
@@ -23,27 +27,41 @@ distclean: veryclean \
 	doxygen-distclean distclean-here post-distclean-hook
 .PHONY: distclean
 
-doxygen: subdir-doxygen doxygen-here
-.PHONY: doxygen
+doc: subdir-doc doc-here
+.PHONY: doc
 
 misc-clean:
 	@echo \
-	$(RM) *~ .nfs*; \
-	$(RM) *~ .nfs*
+	$(RM) *.E *.S
+	$(RM) \#*\# .\#* *~
+	$(RM) core.*
+	-$(RM) .nfs*
 .PHONY: misc-clean
 
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
 		echo \
-		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3; \
-		$(RM) Makefile .doxygen_html .doxygen_man1 .doxygen_man3; \
+		$(RM) Makefile .doxygen_html .doxygen_latex \
+		$(RM) Makefile .doxygen_man1 .doxygen_man3 .doxygen_man7; \
 	fi
 .PHONY: distclean-here
 
+testclean-here:
+	$(RM) *.log.xml
+	$(RM) test.log test.log.* test.out.* .test-sum-*.sh
+	$(RM) loop-*.log loop-*.log~ .loop-*.log \#loop-*.log\# .\#loop-*.log
+	$(RM) core.*
+	$(RM) seek-file.text
+.PHONY: testclean-here
+
+.PHONY: check-installed
+
 ### subdir rules
 
-subdir-all subdir-install subdir-clean subdir-veryclean subdir-distclean \
-subdir-doxygen:
+subdir-all subdir-debug subdir-install \
+subdir-clean subdir-veryclean subdir-distclean \
+subdir-testclean subdir-check-installed \
+subdir-doc:
 	@target=`expr $@ : 'subdir-\(.*\)'`; \
 	for dir in -- $(SUBDIRS); do \
 		case $${dir} in --) continue;; esac; \
@@ -77,8 +95,8 @@ subdir-doxygen:
 			) || exit 1; \
 		fi; \
 	done
-.PHONY: subdir-all subdir-install \
-	subdir-clean subdir-veryclean subdir-distclean
+.PHONY: subdir-all subdir-debug subdir-install \
+	subdir-clean subdir-veryclean subdir-distclean subdir-testclean
 
 ### header rules
 
@@ -88,17 +106,17 @@ header-all: $(HEADERS)
 header-install:
 	@for i in -- $(HEADERS); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(includedir); \
+		$(MKDIR_P) $(includedir); \
 		echo \
-		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(includedir)/$$i; \
-		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(includedir)/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/$$i; \
 	done
 	@for i in -- $(EXEC_HEADERS); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(exec_includedir); \
+		$(MKDIR_P) $(exec_includedir); \
 		echo \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(includedir)/$$i; \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(includedir)/$$i; \
+		$(INSTALL_DATA) $$i $(includedir)/$$i; \
+		$(INSTALL_DATA) $$i $(includedir)/$$i; \
 	done
 .PHONY: header-install
 
@@ -117,6 +135,10 @@ header-distclean:
 	esac
 .PHONY: header-distclean
 
+header-testclean:
+
+.PHONY: header-testclean
+
 ### lib rules
 
 lib-all: $(LIBRARIES)
@@ -125,10 +147,10 @@ lib-all: $(LIBRARIES)
 lib-install:
 	@for i in -- $(LIBRARIES); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(libdir); \
+		$(MKDIR_P) $(libdir); \
 		echo \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(libdir)/$$i; \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(libdir)/$$i; \
+		$(INSTALL_DATA) $$i $(libdir)/$$i; \
+		$(INSTALL_DATA) $$i $(libdir)/$$i; \
 	done
 .PHONY: lib-install
 
@@ -147,6 +169,14 @@ lib-veryclean:
 lib-distclean:
 .PHONY: lib-distclean
 
+lib-testclean:
+	$(RM) *.log *.log.xml
+	$(RM) test.log test.log.* test.out.*
+	$(RM) .test-sum-*.sh
+	$(RM) loop-*.log .loop-*.log
+	$(RM) seek-file.text
+.PHONY: lib-testclean
+
 ### prog rules
 
 prog-all: $(PROGRAMS)
@@ -155,10 +185,10 @@ prog-all: $(PROGRAMS)
 prog-install:
 	@for i in -- $(PROGRAMS_TO_INSTALL); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(bindir); \
+		$(MKDIR_P) $(bindir); \
 		echo \
-		$(INSTALL_PROGRAM) $$i $(DESTDIR)$(bindir)/$$i; \
-		$(INSTALL_PROGRAM) $$i $(DESTDIR)$(bindir)/$$i; \
+		$(INSTALL_PROGRAM) $$i $(bindir)/$$i; \
+		$(INSTALL_PROGRAM) $$i $(bindir)/$$i; \
 	done
 .PHONY: prog-install
 
@@ -177,37 +207,37 @@ prog-veryclean:
 prog-distclean:
 .PHONY: prog-distclean
 
-### doxygen rules
+prog-testclean:
+	$(RM) *.log *.log.xml
+	$(RM) test.log test.log.* test.out.*
+	$(RM) .test-sum-*.sh
+	$(RM) loop-*.log .loop-*.log
+	$(RM) seek-file.text
+.PHONY: prog-testclean
 
-doxygen-here:
-	-@$(RM) .doxygen_html;
+### doc (doxygen) rules
+
+doc-distclean:
+	-$(RM) .doxygen_*
+.PHONY: doc-distclean
+
+doc-here: doc-distclean
 	-@case "$(MAN1_SRCS)" in \
 	'')	;; \
-	*)	for i in $(MAN1_SRCS); do echo $$i; done > .doxygen_man1; \
-		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_html;; \
+	*)	for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_man1; \
+		for i in $(MAN1_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
 	-@case "$(MAN3_SRCS)" in \
 	'')	;; \
-	*)	for i in $(MAN3_SRCS); do echo $$i; done > .doxygen_man3; \
-		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_html;; \
+	*)	for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_man3; \
+		for i in $(MAN3_SRCS); do echo $$i; done >>.doxygen_latex;; \
 	esac
-.PHONY: doxygen-all
-
-doxygen-distclean:
-	-$(RM) .doxygen_html .doxygen_man1 .doxygen_man3
-.PHONY: doxygen-distclean
-
-### examples rules
-
-examples-install:
-	@for i in -- $(EXAMPLES); do \
-		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(DESTDIR)$(examplesdir); \
-		echo \
-		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(examplesdir)/$$i; \
-		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(examplesdir)/$$i; \
-	done
-.PHONY: examples-install
+	-@case "$(MAN7_SRCS)" in \
+	'')	;; \
+	*)	for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_man7; \
+		for i in $(MAN7_SRCS); do echo $$i; done >>.doxygen_latex;; \
+	esac
+.PHONY: doc-here
 
 ### common rules
 
@@ -229,5 +259,8 @@ post-install-hook:
 post-clean-hook:
 post-veryclean-hook:
 post-distclean-hook:
+post-testclean-hook:
 .PHONY: post-all-hook pre-install-hook post-install-hook
 .PHONY: post-clean-hook post-veryclean-hook post-distclean-hook
+.PHONY: post-testclean-hook
+.PHONY: debug cdebug

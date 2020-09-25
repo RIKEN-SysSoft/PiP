@@ -1,18 +1,18 @@
 /*
-  * $RIKEN_copyright: Riken Center for Computational Sceience,
-  * System Software Development Team, 2016, 2017, 2018, 2019$
-  * $PIP_VERSION: Version 1.0.0$
+  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+  * 	  System Software Devlopment Team. All rights researved$
+  * $PIP_VERSION: Version 1.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
   * met:
-  * 
+  *
   * 1. Redistributions of source code must retain the above copyright
   *    notice, this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright
-  *    notice, this list of conditions and the following disclaimer in the 
+  *    notice, this list of conditions and the following disclaimer in the
   *    documentation and/or other materials provided with the distribution.
-  * 
+  *
   * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
   * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
   * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -24,39 +24,44 @@
   * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
   * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
   * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  * 
+  *
   * The views and conclusions contained in the software and documentation
   * are those of the authors and should not be interpreted as representing
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
+
+#ifndef __test_h__
+#define __test_h__
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <ucontext.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <signal.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <string.h>
-#include <errno.h>
-
 #include <pip.h>
-#include <pip_util.h>
-#include <pip_machdep.h>
 
-#define NTASKS		PIP_NTASKS_MAX
+#include <sys/syscall.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sched.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <link.h>
+#include <dlfcn.h>
+#include <elf.h>
+#include <time.h>
+#include <pthread.h>
+
+#define NTASKS			PIP_NTASKS_MAX
+
+#define PIP_TEST_NTASKS_ENV 	"PIP_TEST_NTASKS"
+#define PIP_TEST_PIPID_ENV 	"PIP_TEST_PIPID"
 
 #define EXIT_PASS	0
 #define EXIT_FAIL	1
@@ -67,104 +72,89 @@
 #define EXIT_UNSUPPORTED 6 /* not tested, this environment can't test this   */
 #define EXIT_KILLED	7  /* killed by Control-C or something               */
 
-#ifndef DEBUG
-//#define DEBUG
+#ifndef INLINE
+#define INLINE	static inline
 #endif
 
-#include <pip_debug.h>
+extern int pip_id;
 
-#define PRINT_FL(FSTR,V)	\
-  fprintf(stderr,"%s:%d %s=%d\n",__FILE__,__LINE__,FSTR,V)
+typedef struct test_args {
+  int 		argc;
+  char 		**argv;
+  int		ntasks;
+  int		nact;
+  int		npass;
+  int		timer;
+  volatile int	niters;
+} test_args_t;
+
+INLINE pid_t my_gettid( void ) {
+  return (pid_t) syscall( (long int) SYS_gettid );
+}
+
+#define TRUE		(1)
+#define FALSE		(0)
+
+extern char *__progname;
+
+#define PRINT_FL(FSTR,VAL)	\
+  fprintf(stderr,"%s:%d (%s)=%d\n",__FILE__,__LINE__,FSTR,VAL)
+
+#define PRINT_FLE(FSTR,ERR)			\
+  if(!errno) {								\
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s'\n\n",		\
+	    __progname,my_gettid(),__FILE__,__LINE__,FSTR,		\
+	    ERR,strerror(ERR));						\
+  } else {								\
+    fprintf(stderr,"\n[%s(%d)] %s:%d (%s): %ld:'%s' (errno: %d:'%s')\n\n", \
+	    __progname, my_gettid(), __FILE__,__LINE__,FSTR,		\
+	    (ERR), strerror(ERR), errno,  strerror(errno) ); }
 
 #ifndef DEBUG
-
-#define TESTINT(F)		\
-  do{int __xyz=(F); if(__xyz){PRINT_FL(#F,__xyz);exit(9);}} while(0)
-#define TESTSYSERR(F)		\
-  do{int __xyz=(F); if(__xyz == -1){PRINT_FL(#F,__xyz);exit(9);}} while(0)
-#define TEST_EXPECT(F, X)	\
-  do{int __xyz=(F); if(__xyz != X){PRINT_FL(#F,__xyz);exit(9);}} while(0)
-
+#define CHECK(F,C,A) \
+  do { errno=0; long int RV=(intptr_t)(F);	\
+    if(C) { PRINT_FLE(#F,RV); A; } } while(0)
 #else
-
-#define TPRT(...)		\
-  do { char __msgbuf[256]; int n, m = pip_idstr( __msgbuf, 256 );	\
-  n = sprintf( &__msgbuf[m], " %s:%d: ", __FILE__, __LINE__ );		\
-  sprintf( &__msgbuf[n+m], __VA_ARGS__ );				\
-  fprintf( stderr, "%s\n", __msgbuf ); } while(0)
-#define TESTINT(F)		\
-  do{ 							\
-    TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz != 0 ) exit( 9 );				\
-  } while(0)
-#define TESTSYSERR(F)		\
-  do{ 							\
-    TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz == -1 ) exit( 9 );			\
-  } while(0)
-#define TEST_EXPECT(F, X)				\
-  do{ 							\
-    TPRT( ">> %s", #F );				\
-    int __xyz = (F);					\
-    TPRT( "<< %s=%d", #F, __xyz );			\
-    if( __xyz != X ) exit( 9 );				\
+#define CHECK(F,C,A)							\
+  do {									\
+    fprintf(stderr,"[%s(%d)] %s:%d %s: >> %s\n",__progname,my_gettid(),	\
+	    __FILE__,__LINE__,__func__,#F );				\
+    errno=0; long int RV=(intptr_t)(F);					\
+    fprintf(stderr,"[%s(%d)] %s:%d %s: << %s\n",__progname,my_gettid(),	\
+	    __FILE__,__LINE__,__func__,#F );				\
+    if(C) { PRINT_FLE(#F,RV); A; }					\
   } while(0)
 #endif
 
-inline static int cpu_num_limit( void ) {
-  static bool initialized = false;
-  static long ncpu;
-
-  if( initialized ) {
-    return ncpu;
-  }
-
-  ncpu = sysconf( _SC_NPROCESSORS_ONLN );
-  if( ncpu == -1 ) {
-    fprintf( stderr, "sysconf( _SC_NPROCESSORS_ONLN ): %s\n",
-	     strerror(errno) );
-    exit( EXIT_FAILURE );
-  }
-  if( ncpu > 16 )
-    ncpu = 16;
-  initialized = true;
-  return ncpu;
+INLINE void abend( int extval ) {
+  (void) pip_kill_all_tasks();
+  exit( extval );
 }
 
-inline static void pause_and_yield( int usec ) {
-  if( usec > 0 ) usleep( usec );
-  pip_pause();
-  sched_yield();
-}
-
-inline static void print_maps( void ) {
+INLINE void print_maps( void ) {
   int fd = open( "/proc/self/maps", O_RDONLY );
   while( 1 ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    TEST_EXPECT( write( 1, buf, sz ), sz );
+    CHECK( write( 1, buf, sz ), RV<0, abend(EXIT_UNTESTED) );
   }
   close( fd );
 }
 
-inline static void print_numa( void ) {
+INLINE void print_numa( void ) {
   int fd = open( "/proc/self/numa_maps", O_RDONLY );
   while( 1 ) {
     char buf[1024];
     int sz;
     if( ( sz = read( fd, buf, 1024 ) ) <= 0 ) break;
-    TEST_EXPECT( write( 1, buf, sz ), sz );
+    CHECK( write( 1, buf, sz ), RV<0, abend(EXIT_UNTESTED) );
   }
   close( fd );
 }
 
 #define DUMP_ENV(X,Y)	dump_env( #X, X, Y );
-inline static void dump_env( char *tag, char **envv, int nomore ) {
+INLINE void dump_env( char *tag, char **envv, int nomore ) {
   int i;
   for( i=0; envv[i]!=NULL; i++ ) {
     if( i >= nomore ) {
@@ -177,7 +167,7 @@ inline static void dump_env( char *tag, char **envv, int nomore ) {
 
 #ifndef __cplusplus
 
-inline static char *signal_name( int sig ) {
+INLINE char *signal_name( int sig ) {
   char *signam_tab[] = {
     "(signal0)",		/* 0 */
     "SIGHUP",			/* 1 */
@@ -217,32 +207,35 @@ inline static char *signal_name( int sig ) {
   return signam_tab[sig];
 }
 
-inline static void set_signal_watcher( int signal ) {
-  void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
-    fprintf( stderr, "!!!!!! SIGNAL: %s(%d) (pid=%d) !!!!!!\n",
-	     signal_name( siginfo->si_signo ),
-	     siginfo->si_signo,
-	     siginfo->si_pid  );
-  }
+static void signal_watcher( int sig, siginfo_t *siginfo, void *dummy ) {
+  fprintf( stderr,
+	   "SIGNAL: %s(%d) addr:%p pid=%d !!!!!!\n",
+	   signal_name( siginfo->si_signo ),
+	   siginfo->si_signo,
+	   siginfo->si_addr,
+	   my_gettid() );
+}
+
+INLINE void set_signal_watcher( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = signal_watcher;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( signal, &sigact, NULL ) );
+  CHECK( sigaction( signal, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
-inline static void ignore_signal( int signal ) {
+INLINE void ignore_signal( int signal ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
   sigact.sa_handler = SIG_IGN;
-  TESTINT( sigaction( signal, &sigact, NULL ) );
+  CHECK( sigaction( signal, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
-inline static void watch_sigchld( void ) {
+INLINE void watch_sigchld( void ) {
   set_signal_watcher( SIGCHLD );
 }
 
-inline static void watch_anysignal( void ) {
+INLINE void watch_anysignal( void ) {
   set_signal_watcher( SIGHUP  );
   set_signal_watcher( SIGINT  );
   set_signal_watcher( SIGQUIT );
@@ -264,44 +257,17 @@ inline static void watch_anysignal( void ) {
   set_signal_watcher( SIGTTOU );
 }
 
-inline static void set_signal_echo( int signal ) {
-  void signal_echo( int sig, siginfo_t *siginfo, void *dummy ) {
-    fprintf( stderr, "!!!!!! ECHO SIGNAL: %s(%d) (pid=%d) !!!!!!\n",
-	     signal_name( siginfo->si_signo ),
-	     siginfo->si_signo,
-	     siginfo->si_pid  );
-    TESTINT( pip_kill( PIP_PIPID_ROOT, siginfo->si_signo ) );
-  }
+INLINE int set_signal_handler( int signal, void(*handler)() ) {
   struct sigaction sigact;
   memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = signal_echo;
+  sigact.sa_sigaction = handler;
   sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( signal, &sigact, NULL ) );
+  errno = 0;
+  (void) sigaction( signal, &sigact, NULL );
+  return errno;
 }
 
-inline static void echo_anysignal( void ) {
-  set_signal_echo( SIGHUP  );
-  set_signal_echo( SIGINT  );
-  set_signal_echo( SIGQUIT );
-  set_signal_echo( SIGILL  );
-  set_signal_echo( SIGABRT );
-  set_signal_echo( SIGFPE  );
-  //set_signal_echo( SIGKILL );
-  set_signal_echo( SIGSEGV );
-  set_signal_echo( SIGPIPE );
-  set_signal_echo( SIGALRM );
-  set_signal_echo( SIGTERM );
-  set_signal_echo( SIGUSR1 );
-  set_signal_echo( SIGUSR2 );
-  set_signal_echo( SIGCHLD );
-  set_signal_echo( SIGCONT );
-  //set_signal_echo( SIGSTOP );
-  set_signal_echo( SIGTSTP );
-  set_signal_echo( SIGTTIN );
-  set_signal_echo( SIGTTOU );
-}
-
-inline static void ignore_anysignal( void ) {
+INLINE void ignore_anysignal( void ) {
   ignore_signal( SIGHUP  );
   ignore_signal( SIGINT  );
   ignore_signal( SIGQUIT );
@@ -323,41 +289,23 @@ inline static void ignore_anysignal( void ) {
   ignore_signal( SIGTTOU );
 }
 
-inline static void set_sigsegv_watcher( void ) {
-  void sigsegv_watcher( int sig, siginfo_t *siginfo, void *context ) {
-#ifdef REG_RIP
-    ucontext_t *ctx = (ucontext_t*) context;
-    intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
-#else
-    intptr_t pc = 0;
-#endif
-    char *sigcode;
-    if( siginfo->si_code == SEGV_MAPERR ) {
-      sigcode = "SEGV_MAPERR";
-    } else if( siginfo->si_code == SEGV_ACCERR ) {
-      sigcode = "SEGV_ACCERR";
-    } else {
-      sigcode = "(unknown)";
-    }
-    fprintf( stderr,
-	     "!!!!!! SIGSEGV@%p  pid=%d  segvaddr=%p  %s !!!!!!\n",
-	     (void*) pc,
-	     siginfo->si_pid,
-	     siginfo->si_addr,
-	     sigcode );
-    print_maps();
-  }
+static void sigint_watcher( int sig, siginfo_t *info, void* extra ) {
+  fprintf( stderr, "\n(^C?) interrupted by user !!!!!!\n" );
+  fflush( NULL );
+  exit( EXIT_UNRESOLVED );
+}
 
+INLINE void set_sigint_watcher( void ) {
   struct sigaction sigact;
 
   memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = sigsegv_watcher;
-  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( SIGSEGV, &sigact, NULL ) );
+  sigact.sa_sigaction = sigint_watcher;
+  sigact.sa_flags     = SA_RESETHAND;
+  CHECK( sigaction( SIGINT, &sigact, NULL ), RV, abend(EXIT_UNTESTED) );
 }
 
 #define PROCFD		"/proc/self/fd"
-inline static int print_fds( FILE *file ) {
+INLINE int print_fds( FILE *file ) {
   struct dirent **entry_list;
   int count;
   int err = 0;
@@ -398,30 +346,19 @@ inline static int print_fds( FILE *file ) {
   }
   return err;
 }
-
-inline static void set_sigint_watcher( void ) {
-  void sigint_watcher( int sig, siginfo_t *siginfo, void *context ) {
-#ifdef REG_RIP
-    ucontext_t *ctx = (ucontext_t*) context;
-    intptr_t pc = (intptr_t) ctx->uc_mcontext.gregs[REG_RIP];
-#else
-    intptr_t pc = 0;
 #endif
-    fprintf( stderr,
-	     "\n...... SIGINT@%p  pid=%d  segvaddr=%p !!!!!!\n",
-	     (void*) pc,
-	     siginfo->si_pid,
-	     siginfo->si_addr );
-    print_maps();
-    while( 1 );
+
+INLINE unsigned long get_total_memory( void ) {
+  FILE *fp;
+  int ns = 0;
+  unsigned long memtotal = 0;
+
+  if( ( fp = fopen( "/proc/meminfo", "r" ) ) != NULL ) {
+    ns = fscanf( fp, "MemTotal: %lu", &memtotal );
+    fclose( fp );
   }
-
-  struct sigaction sigact;
-
-  memset( (void*) &sigact, 0, sizeof( sigact ) );
-  sigact.sa_sigaction = sigint_watcher;
-  sigact.sa_flags     = SA_RESETHAND | SA_SIGINFO;
-  TESTINT( sigaction( SIGINT, &sigact, NULL ) );
+  if ( ns > 0 ) return memtotal;
+  return 0;
 }
 
-#endif
+#endif /* __test_h__ */

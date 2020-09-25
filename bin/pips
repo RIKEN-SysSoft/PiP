@@ -34,48 +34,43 @@
 ###
 ### \brief List or kill running PiP tasks
 ###
-### \section synopsis SYNOPSIS
+### \synopsis
+### pips [OPTIONS] [PIP-COMMAND ...]
 ###
-###	\c \b pips [\b options] [\b pip-command ...]
-###
-### \section options OPTIONS
-###
-### The following options are avilable. If none of them specified, then
-### this sends TERM signal to all running PiP tasks including PiP root.
-###
-### \subsection signal -s \b SIGNAL
-### Send the specified signal to the specified PiP tasks
-###
-### \subsection kill -k
-### same as \b -s \b TERM
-###
-### \subsection list -l
-### List (ps command) running PiP tasks specified. This is the default action.
-###
-### \subsection list-long --list
-### same as \b -l
-###
-### \subsection top -t
-### Show running PiP tasks specified by using the top command.
+### \param -s Send the specified signal (followed by the "-b" option)
+### to the specified PiP tasks
+### \param -k same as \b -s
+### \param -l List (using the Linux ps command) running PiP tasks specified.
+### This is the default action.
+### \param --list same as \b -l
+### \param -t Show running PiP tasks specified by using the top command.
 ### Due to the top command limitation, only 20 PiP tasks will be shown.
+### \param --top same as \b -t
 ###
-### \subsection top-long --top
-### same as \b -t
+### \sa
+### pip-exec(1)
 ###
 
 isa_pip_program() {
-    prefixes="R- R: R; R. R| 0: 1: 2: 3: 4: 5: 6: 7: 8: 9:";
+    prefixes0="R "`seq -s ' ' 0 9`;
+    prefixes1=": ; . | ?";
     if [ $# == 3 ]; then
-	for prefix in $prefixes; do
-	    if [ "$prefix$1" == "$2" ]; then
-		return 0;
-	    fi
+	for prefix0 in $prefixes0; do
+	    for prefix1 in $prefixes1; do
+		prefix="$prefix0$prefix1"
+		if [ "$prefix$1" == "$2" ]; then
+		    return 0;
+		fi
+	    done
 	done
     else
-	for prefix in $prefixes; do
-	    case $1 in
-		$prefix*) return 0;;
-	    esac
+	for prefix0 in $prefixes0; do
+	    for prefix1 in $prefixes1; do
+		prefix="$prefix0$prefix1"
+		case $1 in
+		    $prefix*) return 0;;
+		esac
+	    done
 	done
     fi
     return 1;
@@ -120,7 +115,7 @@ print_usage() {
     echo >&2 "    -k|--kill    : same as '-s TERM'"
     echo >&2 "    -l|--list    : list PiP tasks (default action)"
     echo >&2 "    -t|--top     : top command on PiP tasks"
-    echo >&2 "    -u|--help    : display usage"
+    echo >&2 "    -u|--help    : display this"
     echo >&2 "    -v|--verbose : show target PiP tasks"
     exit 0;
 }
@@ -132,6 +127,12 @@ user=`whoami`;
 flag_list=false;
 flag_top=false;
 flag_verbose=false;
+
+if ps --no-headers > /dev/null 2>&1; then
+    NOHEADER_OPT="--no-headers";
+else
+    NOHEADER_OPT="--no-headings";
+fi
 
 # parse command line option
 while
@@ -154,11 +155,13 @@ done
 
 pipcmds=$@
 if [ "x$pipcmds" == x ]; then
-    ps=`ps H -no-headers -u $user --format '%c %p'`
+    ##echo "ps H -no-headers -u $user --format '%c %p'"
+    ps=`ps H $NOHEADER_OPT -u $user --format '%c %p'`
     decompose_psout $ps;
 else
     for pipcmd in $pipcmds; do
-	ps=`ps H -no-headers -u $user --format '%c %p' | grep $pipcmd | grep -v grep`
+	##echo "ps H -no-headers -u $user --format '%c %p' | grep $pipcmd | grep -v grep"
+	ps=`ps H $NOHEADER_OPT -u $user --format '%c %p' | grep $pipcmd | grep -v grep`
 	decompose_psout $ps;
     done
 fi
@@ -197,7 +200,7 @@ else
 	fi
     elif $flag_top; then
 	tpids=`top_pids $pids`;
-	echo $tpids
+	echo top H -p$tpids;
 	top H -p$tpids;
 	extval=$?;
     else

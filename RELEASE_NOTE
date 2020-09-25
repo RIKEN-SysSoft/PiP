@@ -1,6 +1,8 @@
 Github:
 	https://github.com/RIKEN-SysSoft/PiP
 
+Version 2.0 (25 Sep. 2020)
+	The first stable version
 Version 1.1.0 (24 Mar. 2020)
 	Fix PiP-gdb bug (unable to find inferiors when PiP root is not PIE)
 	Adding pips command to show or kill all PiP root and tasks

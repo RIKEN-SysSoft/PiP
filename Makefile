@@ -34,94 +34,100 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include gdbif bin preload util sample \
-	test/util \
-	test/basics \
-	test/spawn \
-	test/compat \
-	test/openmp \
-	test/pthread \
-	test/fortran \
-	test/errno
+SUBDIRS = lib include preload gdbif bin
 
 include $(top_srcdir)/build/rule.mk
 
-doc: doxygen
+debug:
+	CPPFLAGS+="-DDEBUG" $(MAKE) clean all;
+
+### build test programs and run
+.PHONY: test-progs
+test-progs:
+	$(MAKE) -C test test-progs
+
+.PHONY: test
+test: all
+	$(MAKE) test-progs
+	$(MAKE) -C test test
+
+.PHONY: testclean
+testclean:
+	$(MAKE) -C test testclean
+
+TEST_MKS = build/config.mk build/var.mk build/rule.mk
+
+### install test programs and run
+CONFIG_MKS = build/config.mk build/var-install.mk
+RULES_MKS  = build/rule.mk
+
+install_test_dirtop = $(prefix)/pip-test
+install_test_dir = $(prefix)/pip-test/test
+test_build_dir = $(install_test_dirtop)/build
+
+.PHONY: check-installed-prepare
+check-installed-prepare: install
+	-$(RM) -r $(install_test_dirtop)
+	$(MKDIR_P) $(install_test_dirtop)
+	ln -f -s $(prefix)/bin $(install_test_dirtop)
+	$(MKDIR_P) $(test_build_dir)
+	cat $(CONFIG_MKS) > $(test_build_dir)/var.mk
+	$(INSTALL) -C -m 644 $(RULES_MKS) $(test_build_dir)
+
+.PHONY: check-installed-programs
+check-installed-programs: check-installed-prepare
+	install_test_dir=$(install_test_dir) $(MAKE) -C test do-install-test
+
+.PHONY: do-check-installed
+do-check-installed: check-installed-programs
+	install_test_dir=$(install_test_dir) $(MAKE) -C $(install_test_dir) test
+
+.PHONY: check-installed
+check-installed: do-check-installed
+
+### doc
+
+doxygen : doc
+	$(MAKE) -C doc
 .PHONY: doc
 
-install: doxygen-install
-.PHONY: install
+doc-install :
+	$(MAKE) -C doc install
+.PHONY: doc-install
 
-debug:
-	CPPFLAGS="-DDEBUG" make all;
+doc-reset:
+	$(MAKE) -C doc doc-reset
+.PHONE: doc-reset
 
-### doxygen
-
-doxygen:
-	-@$(RM) -r man html latex
-	@doxy_dirs=$$(find . -name .doxygen_html | while read file; do \
-		dir=$$(dirname $$file); \
-		while read src; do \
-			[ -f $$dir/$$src ] && echo $$dir || \
-			echo $$srcdir/$$dir; \
-		done <$$file; done | sort -u | tr '\012' ' ' ); \
-	( \
-	echo "man1 NO  NO YES 1"; \
-	echo "man3 YES NO YES 3"; \
-	echo "html YES YES NO 3"; \
-	) | while read type repeat_brief html man man_ext; do \
-		echo ==== $$type =====; \
-		( \
-		cat $(top_srcdir)/build/common.doxy; \
-		echo "REPEAT_BRIEF = $$repeat_brief"; \
-		echo "STRIP_FROM_PATH = $$doxy_dirs"; \
-		echo "GENERATE_LATEX = $$html"; \
-		echo "GENERATE_HTML = $$html"; \
-		echo "GENERATE_MAN = $$man"; \
-		echo "MAN_EXTENSION = $$man_ext"; \
-		printf "INPUT = "; \
-		find . -name .doxygen_$$type -print | while read file; do \
-			dir=`dirname $$file`; \
-			while read src; do \
-				[ -f $$dir/$$src ] && echo $$dir/$$src || \
-				echo $$srcdir/$$dir/$$src; \
-			done <$$file; \
-		done | tr '\012' ' '; \
-		echo ""; \
-		) | doxygen -; \
-	done
-.PHONY: doxygen
-
-doxygen-install:
-	$(MKDIR_P) $(DESTDIR)/$(mandir);
-	(cd ./man  && tar cf - . ) | (cd $(DESTDIR)/$(mandir)  && tar xf -)
-	$(MKDIR_P) $(DESTDIR)/$(htmldir);
-	(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
-.PHONY: doxygen-install
-
-# clean generated documents before "git commit"
 docclean:
-	git checkout html latex man
+	$(MAKE) -C doc clean
+.PHONE: docclean
 
 post-distclean-hook:
-	$(RM) -r man html
+	$(MAKE) -C doc post-distclean-hook
 .PHONY: post-distclean-hook
 
 ###
 
 check:
-	( cd test && ./test.sh -A )
+	$(MAKE) test
 .PHONY: check
-
-eval:
-	( cd eval && make && ./eval.sh )
-.PHONY: eval
 
 prog-distclean:
 	$(RM) config.log config.status include/config.h build/config.mk
 .PHONY: prog-distclean
 
-.PHONY: TAGS
+post-install-hook:
+	$(MAKE) -C sample
 
+post-clean-hook:
+	$(RM) test.log.* test.out.*
+	$(MAKE) -C test clean
+
+post-veryclean-hook:
+	$(RM) config.log config.status include/config.h
+	$(MAKE) subdir-veryclean
+
+.PHONY: TAGS
 TAGS:
 	ctags -Re

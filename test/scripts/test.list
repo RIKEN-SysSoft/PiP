@@ -1,0 +1,4 @@
+./test-pip-check.sh
+./test-pip-mode.sh
+./test-pipcc-0.sh
+./test-pipcc-1.sh

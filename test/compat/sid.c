@@ -1,7 +1,7 @@
 /*
- * $RIKEN_copyright: Riken Center for Computational Sceience,
- * System Software Development Team, 2016, 2017, 2018, 2019$
- * $PIP_VERSION: Version 1.0.0$
+ * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
+ * 	  System Software Devlopment Team. All rights researved$
+ * $PIP_VERSION: Version 1.0$
  * $PIP_license: <Simplified BSD License>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,47 +30,72 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #include <sys/wait.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <errno.h>
+#include <test.h>
 
-#include <pip.h>
-
-#define NTASKS	(10)
-
-int main( int argc, char **argv ) {
-  pid_t sid_old, sid_new;
-  int  i, ntasks, pipid;
+static int check_sid( int argc, char **argv ) {
+  pid_t pid, sid_old, sid_new;
+  int  	i, ntasks, ntenv, pipid;
+  char	*env;
 
   ntasks = NTASKS;
+  if( argc > 1 ) {
+    ntasks = strtol( argv[1], NULL, 10 );
+  }
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
+  }
 
-  sid_old = getsid( getpid() );
-
-  pip_init( &pipid, &ntasks, NULL, PIP_MODE_PROCESS );
+  pid = getpid();
+  CHECK( ( sid_old = getsid(pid) ), RV<0, return(EXIT_FAIL) );
+  CHECK( pip_init(&pipid, &ntasks,NULL,PIP_MODE_PROCESS),
+	 RV,
+	 return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
-    if( ( sid_new = setsid() ) < 0 ) {
-      printf( "ROOT: setsid(): %d\n", errno );
-    }
-    printf( "ROOT[%d]: sid %d -> %d\n", getpid(), sid_old, sid_new );
+    CHECK( (sid_new=setsid()), RV<0, return(EXIT_FAIL) );
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
-      pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL );
+      CHECK( pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL ),
+	     RV,
+	     return(EXIT_FAIL) );
     }
-    for( i=0; i<ntasks; i++ ) wait( NULL );
-    sid_new = getsid( getpid() );
-    printf( "ROOT[%d]: sid %d\n", getpid(), sid_new );
-    printf( "all done\n" );
+    for( i=0; i<ntasks; i++ ) {
+      CHECK( pip_wait( i, NULL ), RV, return(EXIT_FAIL) );
+    }
+    CHECK( ( sid_new == getsid( pid) ), RV, return(EXIT_FAIL) );
 
   } else {	/* PIP child task */
-    if( ( sid_new = setsid() ) < 0 ) {
-      printf( "CHILD: setsid(): %d\n", errno );
-    }
-    printf( "CHILD[%d]: sid %d -> %d\n", getpid(), sid_old, sid_new );
+    CHECK( ( sid_new = setsid() ), RV<0, return(EXIT_FAIL) );
   }
-  pip_fin();
+  CHECK( pip_fin(),  RV, return(EXIT_FAIL) );
   return 0;
+}
+
+int main( int argc, char **argv ) {
+  pid_t pid, sid;
+  int rv, status;
+
+  pid = getpid();
+  CHECK( ( sid = getsid(pid) ), RV<0, return(EXIT_FAIL) );
+  if( sid != pid ) {
+    printf( "fork\n" );
+    rv = check_sid( argc, argv );
+  } else if( ( pid = fork() ) == 0 ) {
+    exit( check_sid( argc, argv ) );
+  } else {
+    wait( &status );
+    if( WIFEXITED( status ) ) {
+      rv = WEXITSTATUS( status );
+    } else {
+      CHECK( "test program signaled", 1, return(EXIT_UNRESOLVED) );
+    }
+  }
+  return rv;
 }
