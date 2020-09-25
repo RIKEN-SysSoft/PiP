@@ -1,0 +1,23 @@
+C compiler driver for Pi\-P
+
+\begin{DoxyParagraph}{Synopsis}
+pipcc \mbox{[}P\-I\-P-\/\-O\-P\-T\-I\-O\-N\-S\mbox{]} \mbox{[}C\-C-\/\-C\-O\-M\-M\-A\-N\-D-\/\-O\-P\-T\-I\-O\-N\-S\-\_\-\-A\-N\-D\-\_\-\-A\-R\-G\-S\mbox{]}
+\end{DoxyParagraph}
+
+\begin{DoxyParams}{Parameters}
+{\em -\/piproot} & the compile (and link) as a Pi\-P root \\
+\hline
+{\em -\/piptask} & the compile (and link) as a Pi\-P task \\
+\hline
+{\em -\/nopip} & No Pi\-P related settings will be applied\\
+\hline
+\end{DoxyParams}
+\begin{DoxyNote}{Note}
+The {\bfseries -\/piproot} and {\bfseries -\/piptask} options can be specified at the same time. In this case, the compiled object can be both of Pi\-P root and Pi\-P task. This is also the default behavior when none of them is not specified.
+\end{DoxyNote}
+\begin{DoxyParagraph}{Environment}
+if {\ttfamily C\-C} environment is set then {\ttfamily \$}(C\-C) will be used as a C compiler
+\end{DoxyParagraph}
+\begin{DoxySeeAlso}{See Also}
+pip-\/exec(1), pip-\/mode(1) 
+\end{DoxySeeAlso}

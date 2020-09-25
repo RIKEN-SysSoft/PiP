@@ -1,0 +1,48 @@
+\hypertarget{group__ulp-0-yield}{\section{Yielding Functionns}
+\label{group__ulp-0-yield}\index{Yielding Functionns@{Yielding Functionns}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{group__ulp-0-yield_ga50469f21446ce86ea18ddd282cf15894}{pip\-\_\-yield} (int flag)
+\begin{DoxyCompactList}\small\item\em Yield. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-yield}{}\subsubsection{Yielding functions}\label{pip-yield}
+\begin{DoxyParagraph}{Description}
+Yielding execution of the calling B\-L\-T/\-U\-L\-P 
+\end{DoxyParagraph}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__ulp-0-yield_ga50469f21446ce86ea18ddd282cf15894}{\index{Yielding Functionns@{Yielding Functionns}!pip\-\_\-yield@{pip\-\_\-yield}}
+\index{pip\-\_\-yield@{pip\-\_\-yield}!Yielding Functionns@{Yielding Functionns}}
+\subsubsection[{pip\-\_\-yield}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-yield (
+\begin{DoxyParamCaption}
+\item[{int}]{flag}
+\end{DoxyParamCaption}
+)}}\label{group__ulp-0-yield_ga50469f21446ce86ea18ddd282cf15894}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-yield\index{pip_yield@{pip\-\_\-yield}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__ulp-0-yield_ga50469f21446ce86ea18ddd282cf15894}{pip\-\_\-yield( int flag )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em flag} & to specify the behavior of yielding. See below.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+No context-\/switch takes place during the call, then this returns zero. If the context-\/switch to the other B\-L\-T happens, then this returns {\ttfamily E\-I\-N\-T\-R}.
+\end{DoxyReturn}
+
+\begin{DoxyParams}{Parameters}
+{\em flag} & If {\bfseries P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-U\-S\-E\-R}, the calling task is scheduling Pi\-P task(s) then the calling task switch to the next eligible-\/to-\/run B\-L\-T. If {\bfseries P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-S\-Y\-S\-T\-E\-M}, regardless if the calling task is active or inactive, it calls {\ttfamily sched\-\_\-yield}. If {\bfseries P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-D\-E\-F\-A\-U\-L\-T} or zero, then both {\bfseries P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-U\-S\-E\-R} and {\bfseries P\-I\-P\-\_\-\-Y\-I\-E\-L\-D\-\_\-\-S\-Y\-S\-T\-E\-M} will be effective.\\
+\hline
+\end{DoxyParams}
+\begin{DoxySeeAlso}{See Also}
+pip\-\_\-yield\-\_\-to(3) 
+\end{DoxySeeAlso}

@@ -1,0 +1,239 @@
+
+\chapter{OpenMP vs. MPI vs. PiP}
+
+\section{Hello Programs}
+
+\lstinputlisting[style=program,caption={Hello OMP},label=prg:hello-omp]{../prgs/hello-omp.c}
+\begin{lstlisting}[style=example,caption={``Hello OMP'' output},label=out:hello-omp]
+$ OMP_NUM_THREADS=5 ./hello-omp
+Hello from OMP thread 3
+Hello from OMP thread 4
+Hello from OMP thread 2
+Hello from OMP thread 0
+Hello from OMP thread 1
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Hello MPI},label=hello-mpi]{../prgs/hello-mpi.c}
+\begin{lstlisting}[style=example,caption={``Hello MPI'' output},label=out:hello-mpi]
+$ mpiexec -np 5 ./hello-mpi
+Hello from MPI process 2
+Hello from MPI process 3
+Hello from MPI process 4
+Hello from MPI process 1
+Hello from MPI process 0
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Hello PiP},label=prg:hello-pip]{../prgs/hello-pip.c}
+\begin{lstlisting}[style=example,caption={``Hello PiP'' output},label=out:hello-pip]
+$ piprun -n 5 ./hello-pip
+Hello from PiP task 0
+Hello from PiP task 1
+Hello from PiP task 2
+Hello from PiP task 3
+Hello from PiP task 4
+\end{lstlisting}
+
+\section{Variables}
+
+
+\lstinputlisting[style=program,caption={Vars0 OMP},label=prg:vars0-omp]{../prgs/vars0-omp.c}
+\begin{lstlisting}[style=example,caption={``Vars0 OMP'' output},label=out:vars0-omp]
+$ OMP_NUM_THREADS=5 ./vars0-omp
+<1> gvar:0x601050 lvar:0x7ffd47c2bacc
+<4> gvar:0x601050 lvar:0x7ffd47c2bacc
+<0> gvar:0x601050 lvar:0x7ffd47c2bacc
+<3> gvar:0x601050 lvar:0x7ffd47c2bacc
+<2> gvar:0x601050 lvar:0x7ffd47c2bacc
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars0 MPI},label=vars0-mpi]{../prgs/vars0-mpi.c}
+\begin{lstlisting}[style=example,caption={``Vars0 MPI'' output},label=out:vars0-mpi]
+<1> gvar:0x601050 lvar:0x7ffdeec8d088
+<2> gvar:0x601050 lvar:0x7ffd2e275998
+<3> gvar:0x601050 lvar:0x7ffc163f6c58
+<4> gvar:0x601050 lvar:0x7ffef9d2db88
+<0> gvar:0x601050 lvar:0x7ffe438034d8
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars0 PiP},label=prg:vars0-pip]{../prgs/vars0-pip.c}
+\begin{lstlisting}[style=example,caption={``Vars0 PiP'' output},label=out:vars0-pip]
+$ piprun -n 5 ./vars0-pip
+<0> gvar:0x7f6a22849050 lvar:0x7f6a21c6e4f8
+<1> gvar:0x7f6a21477050 lvar:0x7f6a2089c4f8
+<2> gvar:0x7f6a1bfff050 lvar:0x7f6a1b4244f8
+<3> gvar:0x7f6a1ac2d050 lvar:0x7f6a1a0524f8
+<4> gvar:0x7f6a1985b050 lvar:0x7f6a18c804f8
+\end{lstlisting}
+
+
+
+\lstinputlisting[style=program,caption={Vars1 OMP},label=prg:vars1-omp]{../prgs/vars1-omp.c}
+\begin{lstlisting}[style=example,caption={``Vars1 OMP'' output},label=out:vars1-omp]
+$ OMP_NUM_THREADS=5 ./vars1-omp
+<0> gvar=3
+<4> gvar=3
+<2> gvar=3
+<3> gvar=3
+<1> gvar=3
+$ OMP_NUM_THREADS=5 ./vars1-omp
+<1> gvar=4
+<2> gvar=4
+<0> gvar=4
+<3> gvar=4
+<4> gvar=4
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars1 MPI},label=vars1-mpi]{../prgs/vars1-mpi.c}
+\begin{lstlisting}[style=example,caption={``Vars1 MPI'' output},label=out:vars1-mpi]
+$ mpirun -np 5 ./vars1-mpi
+<0> gvar=0
+<1> gvar=1
+<2> gvar=2
+<3> gvar=3
+<4> gvar=4
+$ mpirun -np 5 ./vars1-mpi
+<0> gvar=0
+<1> gvar=1
+<2> gvar=2
+<3> gvar=3
+<4> gvar=4
+$ mpirun -np 5 ./vars1-mpi
+<0> gvar=0
+<1> gvar=1
+<2> gvar=2
+<3> gvar=3
+<4> gvar=4
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={Vars1 PiP},label=prg:vars1-pip]{../prgs/vars1-pip.c}
+\begin{lstlisting}[style=example,caption={``Vars1 PiP'' output},label=out:vars1-pip]
+$ piprun -n 5 ./vars1-pip
+<4> gvar=4
+<2> gvar=2
+<3> gvar=3
+<0> gvar=0
+<1> gvar=1
+$ piprun -n 5 ./vars1-pip
+<3> gvar=3
+<2> gvar=2
+<4> gvar=4
+<0> gvar=0
+<1> gvar=1
+$ piprun -n 5 ./vars1-pip
+<4> gvar=4
+<3> gvar=3
+<1> gvar=1
+<2> gvar=2
+<0> gvar=0
+\end{lstlisting}
+
+\lstinputlisting[style=program,caption={{\tt pmap.h}},label=prg:pmap]{../prgs/pmap.h}
+\lstinputlisting[style=program,caption={Vars2 PiP},label=prg:vars2-pip]{../prgs/vars2-pip.c}
+{\footnotesize
+\begin{lstlisting}[style=example,caption={``Vars2 PiP'' output},label=out:vars2-pip]
+$ piprun -n 3 ./vars2-pip
+<1> 1st: gvar=1 @0x7fd396e3b098
+<1> 2nd: gvar=1	 gvarp=0x7fd39820e098
+<2> 1st: gvar=2 @0x7fd395a68098
+<2> 2nd: gvar=2	 gvarp=0x7fd39820e098
+<0> 1st: gvar=0 @0x7fd39820e098
+<0> 2nd: gvar=1002  gvarp=0x7fd39820e098
+PID: 21569
+00400000-00402000 r-xp		/PIP/bin/piprun
+00601000-00602000 r--p		/PIP/bin/piprun
+00602000-00603000 rw-p		/PIP/bin/piprun
+0159e000-015bf000 rw-p		 [heap]
+7fd388000000-7fd388029000 rw-p
+7fd388029000-7fd38c000000 ---p
+7fd38c000000-7fd38c029000 rw-p
+7fd38c029000-7fd390000000 ---p
+7fd390000000-7fd390029000 rw-p
+7fd390029000-7fd394000000 ---p
+7fd394496000-7fd394696000 rw-p
+7fd394696000-7fd394697000 ---p
+7fd394697000-7fd394e97000 rw-p
+7fd394e97000-7fd394e99000 r-xp	/lib64/libdl-2.17.so
+7fd394e99000-7fd395098000 ---p	/lib64/libdl-2.17.so
+7fd395098000-7fd395099000 r--p	/lib64/libdl-2.17.so
+7fd395099000-7fd39509a000 rw-p	/lib64/libdl-2.17.so
+7fd39509a000-7fd395238000 r-xp	/lib64/libc-2.17.so
+7fd395238000-7fd395438000 ---p	/lib64/libc-2.17.so
+7fd395438000-7fd39543c000 r--p	/lib64/libc-2.17.so
+7fd39543c000-7fd39543e000 rw-p	/lib64/libc-2.17.so
+7fd39543e000-7fd395443000 rw-p
+7fd395443000-7fd395458000 r-xp	/lib64/libpthread-2.17.so
+7fd395458000-7fd395657000 ---p	/lib64/libpthread-2.17.so
+7fd395657000-7fd395658000 r--p	/lib64/libpthread-2.17.so
+7fd395658000-7fd395659000 rw-p	/lib64/libpthread-2.17.so
+7fd395659000-7fd39565d000 rw-p
+7fd39565d000-7fd395665000 r-xp	/piplib/libpip.so
+7fd395665000-7fd395864000 ---p	/piplib/libpip.so
+7fd395864000-7fd395865000 r--p	/piplib/libpip.so
+7fd395865000-7fd395866000 rw-p	/piplib/libpip.so
+7fd395866000-7fd395868000 r-xp	/home/ahori/vars2-pip
+7fd395868000-7fd395a67000 ---p	/home/ahori/vars2-pip
+7fd395a67000-7fd395a68000 r--p	/home/ahori/vars2-pip
+7fd395a68000-7fd395a69000 rw-p	/home/ahori/vars2-pip
+				#<2> gvar @0x7fd395a68098
+7fd395a69000-7fd395a6a000 ---p
+7fd395a6a000-7fd39626a000 rw-p
+7fd39626a000-7fd39626c000 r-xp	/lib64/libdl-2.17.so
+7fd39626c000-7fd39646b000 ---p	/lib64/libdl-2.17.so
+7fd39646b000-7fd39646c000 r--p	/lib64/libdl-2.17.so
+7fd39646c000-7fd39646d000 rw-p	/lib64/libdl-2.17.so
+7fd39646d000-7fd39660b000 r-xp	/lib64/libc-2.17.so
+7fd39660b000-7fd39680b000 ---p	/lib64/libc-2.17.so
+7fd39680b000-7fd39680f000 r--p	/lib64/libc-2.17.so
+7fd39680f000-7fd396811000 rw-p	/lib64/libc-2.17.so
+7fd396811000-7fd396a30000 rw-p
+7fd396a30000-7fd396a38000 r-xp	/piplib/libpip.so
+7fd396a38000-7fd396c37000 ---p	/piplib/libpip.so
+7fd396c37000-7fd396c38000 r--p	/piplib/libpip.so
+7fd396c38000-7fd396c39000 rw-p	/piplib/libpip.so
+7fd396c39000-7fd396c3b000 r-xp	/home/ahori/vars2-pip
+7fd396c3b000-7fd396e3a000 ---p	/home/ahori/vars2-pip
+7fd396e3a000-7fd396e3b000 r--p	/home/ahori/vars2-pip
+7fd396e3b000-7fd396e3c000 rw-p	/home/ahori/vars2-pip
+				#<1> gvar @0x7fd396e3b098
+7fd396e3c000-7fd396e3d000 ---p
+7fd396e3d000-7fd39763d000 rw-p	 [stack:21569]
+7fd39763d000-7fd39763f000 r-xp	/lib64/libdl-2.17.so
+7fd39763f000-7fd39783e000 ---p	/lib64/libdl-2.17.so
+7fd39783e000-7fd39783f000 r--p	/lib64/libdl-2.17.so
+7fd39783f000-7fd397840000 rw-p	/lib64/libdl-2.17.so
+7fd397840000-7fd3979de000 r-xp	/lib64/libc-2.17.so
+7fd3979de000-7fd397bde000 ---p	/lib64/libc-2.17.so
+7fd397bde000-7fd397be2000 r--p	/lib64/libc-2.17.so
+7fd397be2000-7fd397be4000 rw-p	/lib64/libc-2.17.so
+7fd397be4000-7fd397e03000 rw-p
+7fd397e03000-7fd397e0b000 r-xp	/piplib/libpip.so
+7fd397e0b000-7fd39800a000 ---p	/piplib/libpip.so
+7fd39800a000-7fd39800b000 r--p	/piplib/libpip.so
+7fd39800b000-7fd39800c000 rw-p	/piplib/libpip.so
+7fd39800c000-7fd39800e000 r-xp	/home/ahori/vars2-pip
+7fd39800e000-7fd39820d000 ---p	/home/ahori/vars2-pip
+7fd39820d000-7fd39820e000 r--p	/home/ahori/vars2-pip
+7fd39820e000-7fd39820f000 rw-p	/home/ahori/vars2-pip
+				#<0> gvar @0x7fd39820e098
+7fd39820f000-7fd3983ad000 r-xp	/lib64/libc-2.17.so
+7fd3983ad000-7fd3985ad000 ---p	/lib64/libc-2.17.so
+7fd3985ad000-7fd3985b1000 r--p	/lib64/libc-2.17.so
+7fd3985b1000-7fd3985b3000 rw-p	/lib64/libc-2.17.so
+7fd3985b3000-7fd3987d2000 rw-p
+7fd3987d2000-7fd3987d4000 r-xp	/lib64/libdl-2.17.so
+7fd3987d4000-7fd3989d3000 ---p	/lib64/libdl-2.17.so
+7fd3989d3000-7fd3989d4000 r--p	/lib64/libdl-2.17.so
+7fd3989d4000-7fd3989d5000 rw-p	/lib64/libdl-2.17.so
+7fd3989d5000-7fd3989dd000 r-xp	/piplib/libpip.so
+7fd3989dd000-7fd398bdc000 ---p	/piplib/libpip.so
+7fd398bdc000-7fd398bdd000 r--p	/piplib/libpip.so
+7fd398bdd000-7fd398bde000 rw-p	/piplib/libpip.so
+7fd398de0000-7fd398dff000 r-xp	/lib64/ld-2.17.so
+7fd398ec5000-7fd398fd4000 rw-p
+7fd398ff8000-7fd398ffe000 rw-p
+7fd398ffe000-7fd398fff000 r--p	/lib64/ld-2.17.so
+7fd398fff000-7fd399010000 rw-p	/lib64/ld-2.17.so
+7ffd5a080000-7ffd5a0a3000 rw-p
+7ffd5a0e4000-7ffd5a0e6000 r-xp	 [vdso]
+ffffffffff600000-ffffffffff601000 r-xp	 [vsyscall]
+\end{lstlisting}}
