@@ -111,12 +111,15 @@ doxygen:
 	grep -e "warning" -e "error" doxygen-html.log | cat
 	echo ==== mandb =====; \
 	if which mandb; then mandb ./man -c -u; fi
+.PHONY: doxygen
 
 doc: doxygen
+.PHONY: doc
 
 all: doc
+.PHONY: all
 
-install:
+doc-install:
 	echo "Installing .. " $(mandir)
 	$(MKDIR_P) $(mandir);
 	(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
@@ -124,13 +127,14 @@ install:
 	$(MKDIR_P) $(pdfdir);
 	$(CP) ./latex-inuse/libpip-manpages.pdf $(pdfdir)
 	$(MKDIR_P) $(slidedir);
-	$(CP) ./slides/* $(slidedir)
-	echo "Installing .. " $(htmldir)
 	$(MKDIR_P) $(htmldir);
 	(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
+	$(CP) ./slides/* $(slidedir)
+	echo "Installing .. " $(htmldir)
+.PHONY: doc-install
 
 doc-reset:
-	git checkout man latex latex-inuse
+	git checkout man latex latex-inuse html slides
 .PHONE: doc-reset
 
 clean:

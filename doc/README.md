@@ -354,45 +354,11 @@ pip@ml.riken.jp
 A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Process-in-process: techniques for practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: https://doi.org/10.1145/3208040.3208045
 
 # Commands
-- pipcc
-- pips
-- printpipmode
+- libpip
 
 
 # Functions
-- pip\_abort
-- pip\_exit
-- pip\_export
-- pip\_fin
-- pip\_get\_mode
-- pip\_get\_mode\_str
-- pip\_get\_ntasks
-- pip\_get\_pipid
-- pip\_get\_system\_id
-- pip\_import
-- pip\_init
-- pip\_isa\_root
-- pip\_isa\_task
-- pip\_is\_initialized
-- pip\_is\_shared\_fd
-- pip\_is\_threaded
-- pip\_kill
-- pip\_kill\_all\_tasks
-- pip\_named\_export
-- pip\_named\_import
-- pip\_named\_tryimport
-- pip\_sigmask
-- pip\_signal\_wait
-- pip\_spawn
-- pip\_spawn\_from\_func
-- pip\_spawn\_from\_main
-- pip\_spawn\_hook
-- pip\_task\_spawn
-- pip\_trywait
-- pip\_trywait\_any
-- pip\_wait
-- pip\_wait\_any
-- pip\_yield
+- libpip
 
 
 ## Presentation Slides
