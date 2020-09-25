@@ -113,4 +113,4 @@ cdebug: clean
 	CPPFLAGS="-DDEBUG" $(MAKE) all;
 
 post-clean-hook:
-	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)
+	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT) build.h
