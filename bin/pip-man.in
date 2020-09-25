@@ -44,7 +44,7 @@
 prefix=@prefix@;
 mandir=${prefix}/share/man
 
-if [ "x$@" == x ]; then
+if [[ "x$@" == x ]]; then
     exec man -M ${mandir} 3 libpip
 else
     exec man -M ${mandir} $@;

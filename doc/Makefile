@@ -144,4 +144,5 @@ clean:
 	$(MAKE) -C latex-inuse clean
 
 veryclean: clean
-	$(RM) -r man latex html
+	$(RM) Slides-html.md
+	$(MAKE) -C latex-inuse veryclean

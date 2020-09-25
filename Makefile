@@ -92,7 +92,7 @@ doxygen : doc
 .PHONY: doc
 
 doc-install :
-	$(MAKE) -C doc install
+	$(MAKE) -C doc doc-install
 .PHONY: doc-install
 
 doc-reset:
