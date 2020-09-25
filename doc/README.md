@@ -353,8 +353,6 @@ pip@ml.riken.jp
 
 A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Process-in-process: techniques for practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: https://doi.org/10.1145/3208040.3208045
 
-A. Hori, B. Gerofi and Y. Ishikawa, "An Implementation of User-Level Processes using Address Space Sharing," 2020 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW), New Orleans, LA, USA, 2020, pp. 976-984, DOI: https://doi.org/10.1109/IPDPSW50202.2020.00161.
-
 # Commands
 - pipcc
 - pips
@@ -400,8 +398,8 @@ A. Hori, B. Gerofi and Y. Ishikawa, "An Implementation of User-Level Processes u
 ## Presentation Slides
 
 * [HPDC'18](doc/slides/HPDC18.pdf)
-* [ROSS'18](doc/slides/HPDC18-ROSSpdf)
-* [IPDPS/RADR'20](presentation/IPDPS-RSADR-2020.pdf)
+* [ROSS'18](doc/slides/HPDC18-ROSS.pdf)
+* [IPDPS/RADR'20](doc/slides/IPDPS-RADR-2020.pdf)
 # Author
 
 Atsushi Hori \n

@@ -1,4 +1,4 @@
-# $PIP_VERSION: Version 1.0.0$
+# $PIP_VERSION: Version 2.0.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
