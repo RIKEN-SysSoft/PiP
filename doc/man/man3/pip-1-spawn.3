@@ -1,4 +1,4 @@
-.TH "Spawning PiP task" 3 "Fri Sep 25 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Spawning PiP task" 3 "Sat Sep 26 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -75,7 +75,9 @@ This function sets up the \fCpip_spawn_program_t\fP structure for spawning a PiP
 .PP
 \fBSee Also:\fP
 .RS 4
-pip_task_spawn(3), pip_spawn_from_func(3) 
+\fBpip_task_spawn\fP 
+.PP
+\fBpip_spawn_from_func\fP 
 .RE
 .PP
 
@@ -123,7 +125,9 @@ int start_func( void *arg )
 .PP
 \fBSee Also:\fP
 .RS 4
-pip_task_spawn(3), pip_spawn_from_main(3) 
+\fBpip_task_spawn\fP 
+.PP
+\fBpip_spawn_from_main\fP 
 .RE
 .PP
 
@@ -180,7 +184,7 @@ Note that the file descriptors and signal handlers are shared between PiP root a
 .PP
 \fBSee Also:\fP
 .RS 4
-pip_task_spawn(3) 
+\fBpip_task_spawn\fP 
 .RE
 .PP
 
@@ -275,7 +279,17 @@ If the root process is multithreaded, only the main thread can call this functio
 .PP
 \fBSee Also:\fP
 .RS 4
-pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3), pip_spawn_hook(3), pip_spawn(3), pip_blt_spawn(3) 
+\fBpip_task_spawn\fP 
+.PP
+\fBpip_spawn_from_main\fP 
+.PP
+\fBpip_spawn_from_func\fP 
+.PP
+\fBpip_spawn_hook\fP 
+.PP
+\fBpip_spawn\fP 
+.PP
+pip_blt_spawn 
 .RE
 .PP
 
@@ -361,7 +375,17 @@ If the root process is multithreaded, only the main thread can call this functio
 .PP
 \fBSee Also:\fP
 .RS 4
-pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3), pip_spawn_hook(3), pip_task_spawn(3), pip_blt_spawn(3) 
+\fBpip_task_spawn\fP 
+.PP
+\fBpip_spawn_from_main\fP 
+.PP
+\fBpip_spawn_from_func\fP 
+.PP
+\fBpip_spawn_hook\fP 
+.PP
+\fBpip_task_spawn\fP 
+.PP
+pip_blt_spawn 
 .RE
 .PP
 

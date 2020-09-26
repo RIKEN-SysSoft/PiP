@@ -159,7 +159,9 @@ void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, c
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_task_spawn(3), pip_spawn_from_func(3) </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__pip-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd></dl>
 
 </div>
 </div>
@@ -226,7 +228,9 @@ pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, voi
   </table>
   </dd>
 </dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_task_spawn(3), pip_spawn_from_main(3) </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__pip-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd></dl>
 
 </div>
 </div>
@@ -284,7 +288,7 @@ The before and after hook functions should have the function prototype as shown 
   </dd>
 </dl>
 <dl class="section note"><dt>Note</dt><dd>Note that the file descriptors and signal handlers are shared between PiP root and PiP tasks in the pthread execution mode.</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_task_spawn(3) </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__pip-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd></dl>
 
 </div>
 </div>
@@ -366,7 +370,17 @@ int pip_task_spawn( pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, 
 </dd></dl>
 <dl class="section user"><dt>Bugs</dt><dd>In theory, there is no reason to restrict for a PiP task to spawn another PiP task. However, the current glibc implementation does not allow to do so. </dd></dl>
 <dl class="section user"><dt></dt><dd>If the root process is multithreaded, only the main thread can call this function.</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3), pip_spawn_hook(3), pip_spawn(3), pip_blt_spawn(3) </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__pip-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533" title="Setting invocation hook information. ">pip_spawn_hook</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#gae9187ea22ecf0623fa3ecfba5337f52d" title="spawn a PiP task (PiP v1 API and deprecated) ">pip_spawn</a> </dd>
+<dd>
+pip_blt_spawn </dd></dl>
 
 </div>
 </div>
@@ -464,7 +478,17 @@ int pip_spawn( char *filename, char **argv, char **envv, uint32_t coreno, int *p
 </dl>
 <dl class="section user"><dt>Bugs</dt><dd>In theory, there is no reason to restrict for a PiP task to spawn another PiP task. However, the current glibc implementation does not allow to do so. </dd></dl>
 <dl class="section user"><dt></dt><dd>If the root process is multithreaded, only the main thread can call this function.</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_task_spawn(3), pip_spawn_from_main(3), pip_spawn_from_func(3), pip_spawn_hook(3), pip_task_spawn(3), pip_blt_spawn(3) </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__pip-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533" title="Setting invocation hook information. ">pip_spawn_hook</a> </dd>
+<dd>
+<a class="el" href="group__pip-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
+<dd>
+pip_blt_spawn </dd></dl>
 
 </div>
 </div>

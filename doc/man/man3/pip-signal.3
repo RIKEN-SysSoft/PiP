@@ -1,4 +1,4 @@
-.TH "PiP Signaling Functions" 3 "Fri Sep 25 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Signaling Functions" 3 "Sat Sep 26 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -68,7 +68,7 @@ Return 0 on success\&. Return an error code on error\&.
 .PP
 \fBSee Also:\fP
 .RS 4
-tkill(2) 
+tkill 
 .RE
 .PP
 
@@ -115,7 +115,9 @@ Return 0 on success\&. Return an error code on error\&.
 .PP
 \fBSee Also:\fP
 .RS 4
-sigprocmask, pthread_sigmask 
+sigprocmask 
+.PP
+pthread_sigmask 
 .RE
 .PP
 
@@ -156,7 +158,9 @@ This function does NOT return the \fCEINTR\fP error\&. This case is treated as n
 .PP
 \fBSee Also:\fP
 .RS 4
-sigwait, sigsuspend 
+sigwait 
+.PP
+sigsuspend 
 .RE
 .PP
 

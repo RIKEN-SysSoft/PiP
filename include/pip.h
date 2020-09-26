@@ -259,9 +259,12 @@ extern "C" {
    * Is is NOT guaranteed that users can spawn tasks up to the number
    * specified by the \a ntasks argument. There are some limitations
    * come from outside of the PiP library (from GLIBC).
-   * \n\n
-   * \sa pip_named_export(3), pip_export(3), pip_fin(3), pip-mode(1), pips(1)
-   * \n\n
+   *
+   * \sa pip_named_export
+   * \sa pip_export
+   * \sa pip_fin
+   * \sa pip-mode
+   * \sa pips
    */
   int pip_init( int *pipidp, int *ntasks, void **root_expp, int opts );
 
@@ -287,8 +290,7 @@ extern "C" {
    * The behavior of calling \c pip_init after calling this \c pip_fin
    * is note defined and recommended to do so.
    *
-   * \n\n
-   * \sa pip_init(3)
+   * \sa pip_init
    */
   int pip_fin( void );
 
@@ -328,7 +330,8 @@ extern "C" {
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_func(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_func
    *
    */
 #ifndef DOXYGEN_INPROGRESS
@@ -387,7 +390,8 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_main
    *
    */
 #ifndef DOXYGEN_INPROGRESS
@@ -460,7 +464,7 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
    * handlers are shared between PiP root and PiP tasks in the pthread
    * execution mode.
    *
-   * \sa pip_task_spawn(3)
+   * \sa pip_task_spawn
    *
    */
 #ifndef DOXYGEN_INPROGRESS
@@ -548,8 +552,11 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * If the root process is multithreaded, only the main
    * thread can call this function.
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3),
-   * pip_spawn_from_func(3), pip_spawn_hook(3), pip_spawn(3), pip_blt_spawn(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_main
+   * \sa pip_spawn_from_func
+   * \sa pip_spawn_hook
+   * \sa pip_spawn
    */
 int pip_task_spawn( pip_spawn_program_t *progp,
 		    uint32_t coreno,
@@ -622,8 +629,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * If the root process is multithreaded, only the main
    * thread can call this function.
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3),
-   * pip_spawn_from_func(3), pip_spawn_hook(3), pip_task_spawn(3), pip_blt_spawn(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_main
+   * \sa pip_spawn_from_func
+   * \sa pip_spawn_hook
+   * \sa pip_task_spawn
    */
   int pip_spawn( char *filename, char **argv, char **envv,
 		 int coreno, int *pipidp,
@@ -672,7 +682,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * The addresses exported by \p pip_named_export cannot be imported
    * by calling \p pip_import, and vice versa.
    *
-   * \sa pip_named_import(3)
+   * \sa pip_named_import
    */
   int pip_named_export( void *exp, const char *format, ... )
     __attribute__ ((format (printf, 2, 3)));
@@ -713,7 +723,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EDEADLK \p pipid is the calling task and tries to block
    * itself
    *
-   * \sa pip_named_export(3), pip_named_tryimport(3), pip_export(3), pip_import(3)
+   * \sa pip_named_export
+   * \sa pip_named_tryimport
+   * \sa pip_export
+   * \sa pip_import
    */
   int pip_named_import( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
@@ -749,7 +762,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECANCELED The target task is terminated
    * \retval EAGAIN Target is not exported yet
    *
-   * \sa pip_named_export(3), pip_named_import(3), pip_export(3), pip_import(3)
+   * \sa pip_named_export
+   * \sa pip_named_import
+   * \sa pip_export
+   * \sa pip_import
    */
   int pip_named_tryimport( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
@@ -774,7 +790,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not initialized yet
    *
-   * \sa pip_import(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3)
+   * \sa pip_import
+   * \sa pip_named_export
+   * \sa pip_named_import
+   * \sa pip_named_tryimport
    */
   int pip_export( void *exp );
 
@@ -799,7 +818,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not initialized yet
    *
-   * \sa pip_export(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3)
+   * \sa pip_export
+   * \sa pip_named_export
+   * \sa pip_named_import
+   * \sa pip_named_tryimport
    */
   int pip_import( int pipid, void **expp );
 
@@ -841,7 +863,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECHILD The target PiP task does not exist or it was already
    * terminated and waited for
    *
-   * \sa pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
+   * \sa pip_exit
+   * \sa pip_trywait
+   * \sa pip_wait_any
+   * \sa pip_trywait_any
    */
   int pip_wait( int pipid, int *status );
 
@@ -877,7 +902,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECHILD The target PiP task does not exist or it was already
    * terminated and waited for
    *
-   * \sa pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3)
+   * \sa pip_exit
+   * \sa pip_wait
+   * \sa pip_wait_any
+   * \sa pip_trywait_any
    */
   int pip_trywait( int pipid, int *status );
 
@@ -905,7 +933,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECHILD The target PiP task does not exist or it was already
    * terminated and waited for
    *
-   * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3)
+   * \sa pip_exit
+   * \sa pip_wait
+   * \sa pip_trywait
+   * \sa pip_trywait_any
    *
    */
   int pip_wait_any( int *pipid, int *status );
@@ -933,7 +964,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EPERM This function is called other than PiP root
    * \retval ECHILD There is no PiP task to wait for
    *
-   * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3)
+   * \sa pip_exit
+   * \sa pip_wait
+   * \sa pip_trywait
+   * \sa pip_wait_any
    */
   int pip_trywait_any( int *pipid, int *status );
 
@@ -1010,7 +1044,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
    *
-   * \sa pip_get_mode_str(3)
+   * \sa pip_get_mode_str
    */
   int pip_get_mode( int *modep );
 
@@ -1149,7 +1183,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \p exit(3) is called in the process mode and \p pthread_exit(3)
    * is called in the pthread mode.
    *
-   * \sa pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
+   * \sa pip_wait
+   * \sa pip_trywait
+   * \sa pip_wait_any
+   * \sa pip_trywait_any
    *
    */
   void pip_exit( int status );
@@ -1210,7 +1247,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
    *
-   * \sa tkill(2)
+   * \sa tkill
    */
   int pip_kill( int pipid, int signal );
 
@@ -1235,7 +1272,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
    *
-   * \sa sigprocmask, pthread_sigmask
+   * \sa sigprocmask
+   * \sa pthread_sigmask
    */
   int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
 
@@ -1258,7 +1296,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \note This function does NOT return the \p EINTR error. This case
    * is treated as normal return;
    *
-   * \sa sigwait, sigsuspend
+   * \sa sigwait
+   * \sa sigsuspend
    */
   int pip_signal_wait( int signal );
 
@@ -1295,7 +1334,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * If \b PIP_YIELD_DEFAULT or zero, then both \b PIP_YIELD_USER and
    * \b PIP_YIELD_SYSTEM will be effective.
    *
-   * \sa pip_yield_to(3)
+   * \sa pip_yield_to
    */
   int pip_yield( int flag );
 

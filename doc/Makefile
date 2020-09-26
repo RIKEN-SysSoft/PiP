@@ -37,9 +37,11 @@ MAN7_SRCS = README-html.md
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk
 
+all: doc-install
+
 ### doxygen
 
-doxygen:
+documents:
 	-@$(RM) -r man latex html
 	echo -n "" > doxygen-man713.log
 	@doxy_dirs=$$(find .. -name .doxygen_latex -print | while read file; do \
@@ -113,24 +115,18 @@ doxygen:
 	if which mandb; then mandb ./man -c -u; fi
 .PHONY: doxygen
 
-doc: doxygen
-.PHONY: doc
-
-all: doc
-.PHONY: all
-
 doc-install:
-	echo "Installing .. " $(mandir)
-	$(MKDIR_P) $(mandir);
-	(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
-	echo "Installing .. " $(pdfdir)
-	$(MKDIR_P) $(pdfdir);
-	$(CP) ./latex-inuse/libpip-manpages.pdf $(pdfdir)
-	$(MKDIR_P) $(slidedir);
-	$(MKDIR_P) $(htmldir);
-	(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
-	$(CP) ./slides/* $(slidedir)
-	echo "Installing .. " $(htmldir)
+	@echo "Installing man pages ->" $(mandir)
+	@$(MKDIR_P) $(mandir);
+	@(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
+	@echo "Installing pdf ->" $(pdfdir)
+	@$(MKDIR_P) $(pdfdir);
+	@$(CP) ./latex-inuse/libpip-manpages.pdf $(pdfdir)
+	@$(MKDIR_P) $(slidedir);
+	@echo "Installing html ->" $(htmldir)
+	@$(MKDIR_P) $(htmldir);
+	@(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
+	@$(CP) ./slides/* $(slidedir)
 .PHONY: doc-install
 
 doc-reset:

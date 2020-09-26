@@ -169,12 +169,16 @@ int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );</dd><
 <li><b>PIP_SHOW_PIPS</b> If the value is 'on' and one of the above exection signals is delivered, then the process status by using the <code>pips</code> command (see also pips(1)) will be shown.</li>
 </ul>
 </dd></dl>
-<dl class="section user"><dt>Bugs</dt><dd>Is is NOT guaranteed that users can spawn tasks up to the number specified by the <em>ntasks</em> argument. There are some limitations come from outside of the PiP library (from GLIBC). <br/>
-<br/>
-</dd></dl>
-<dl class="section see"><dt>See Also</dt><dd>pip_named_export(3), pip_export(3), pip_fin(3), pip-mode(1), <a class="el" href="group__pips.html" title="List or kill running PiP tasks. ">pips</a> <br/>
-<br/>
-</dd></dl>
+<dl class="section user"><dt>Bugs</dt><dd>Is is NOT guaranteed that users can spawn tasks up to the number specified by the <em>ntasks</em> argument. There are some limitations come from outside of the PiP library (from GLIBC).</dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__pip-4-export.html#ga3613eaa34ad5a4985007ff9177eb6542" title="export an address of the calling PiP root or a PiP task to the others. ">pip_named_export</a> </dd>
+<dd>
+<a class="el" href="group__pip-4-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb" title="export an address ">pip_export</a> </dd>
+<dd>
+<a class="el" href="group__pip-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a> </dd>
+<dd>
+pip-mode </dd>
+<dd>
+<a class="el" href="group__pips.html" title="List or kill running PiP tasks. ">pips</a> </dd></dl>
 
 </div>
 </div>
@@ -205,10 +209,7 @@ int <a class="el" href="group__pip-0-init-fin.html#gac4654282785abb9434ce81573fd
   </dd>
 </dl>
 <dl class="section user"><dt>Notes</dt><dd>The behavior of calling <code>pip_init</code> after calling this <code>pip_fin</code> is note defined and recommended to do so.</dd></dl>
-<p><br/>
-<br/>
-</p>
-<dl class="section see"><dt>See Also</dt><dd>pip_init(3) </dd></dl>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__pip-0-init-fin.html#gad4e0db6c69792b3fa014e3310892a0eb">pip_init</a> </dd></dl>
 
 </div>
 </div>

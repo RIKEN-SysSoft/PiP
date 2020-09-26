@@ -42,13 +42,10 @@
 ### \param -k same as \b -s
 ### \param -l List (using the Linux ps command) running PiP tasks specified.
 ### This is the default action.
-### \param --list same as \b -l
 ### \param -t Show running PiP tasks specified by using the top command.
 ### Due to the top command limitation, only 20 PiP tasks will be shown.
-### \param --top same as \b -t
 ###
-### \sa
-### pip-exec(1)
+### \sa pip-exec
 ###
 
 isa_pip_program() {

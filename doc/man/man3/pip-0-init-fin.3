@@ -1,4 +1,4 @@
-.TH "PiP Initialization/Finalization" 3 "Fri Sep 25 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Initialization/Finalization" 3 "Sat Sep 26 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -128,18 +128,20 @@ Zero is returned if this function succeeds\&. Otherwise an error number is retur
 .PP
 \fBBugs\fP
 .RS 4
-Is is NOT guaranteed that users can spawn tasks up to the number specified by the \fIntasks\fP argument\&. There are some limitations come from outside of the PiP library (from GLIBC)\&. 
-.br
-
-.br
+Is is NOT guaranteed that users can spawn tasks up to the number specified by the \fIntasks\fP argument\&. There are some limitations come from outside of the PiP library (from GLIBC)\&.
 .RE
 .PP
 \fBSee Also:\fP
 .RS 4
-pip_named_export(3), pip_export(3), pip_fin(3), pip-mode(1), pips(1) 
-.br
-
-.br
+\fBpip_named_export\fP 
+.PP
+\fBpip_export\fP 
+.PP
+\fBpip_fin\fP 
+.PP
+pip-mode 
+.PP
+pips 
 .RE
 .PP
 
@@ -185,13 +187,9 @@ zero is returned if this function succeeds\&. On error, error number is returned
 The behavior of calling \fCpip_init\fP after calling this \fCpip_fin\fP is note defined and recommended to do so\&.
 .RE
 .PP
-
-.br
-
-.br
 \fBSee Also:\fP
 .RS 4
-pip_init(3) 
+\fBpip_init\fP 
 .RE
 .PP
 

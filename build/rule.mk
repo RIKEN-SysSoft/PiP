@@ -27,8 +27,8 @@ distclean: veryclean \
 	doxygen-distclean distclean-here post-distclean-hook
 .PHONY: distclean
 
-doc: subdir-doc doc-here
-.PHONY: doc
+documents: subdir-documents doc-here post-documents-hook
+.PHONY: documents
 
 misc-clean:
 	@echo \
@@ -61,7 +61,7 @@ testclean-here:
 subdir-all subdir-debug subdir-install \
 subdir-clean subdir-veryclean subdir-distclean \
 subdir-testclean subdir-check-installed \
-subdir-doc:
+subdir-documents:
 	@target=`expr $@ : 'subdir-\(.*\)'`; \
 	for dir in -- $(SUBDIRS); do \
 		case $${dir} in --) continue;; esac; \
@@ -95,7 +95,7 @@ subdir-doc:
 			) || exit 1; \
 		fi; \
 	done
-.PHONY: subdir-all subdir-debug subdir-install \
+.PHONY: subdir-all subdir-debug subdir-install subdir-documents \
 	subdir-clean subdir-veryclean subdir-distclean subdir-testclean
 
 ### header rules
@@ -260,7 +260,9 @@ post-clean-hook:
 post-veryclean-hook:
 post-distclean-hook:
 post-testclean-hook:
+post-documents-hook:
 .PHONY: post-all-hook pre-install-hook post-install-hook
 .PHONY: post-clean-hook post-veryclean-hook post-distclean-hook
 .PHONY: post-testclean-hook
+.PHONY: post-documents-hook
 .PHONY: debug cdebug

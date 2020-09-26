@@ -87,25 +87,27 @@ check-installed: do-check-installed
 
 ### doc
 
-doxygen : doc
+doc-install:
 	$(MAKE) -C doc
-.PHONY: doc
-
-doc-install :
-	$(MAKE) -C doc doc-install
 .PHONY: doc-install
+
+doc: doc-install
+.PHONY: doc
 
 doc-reset:
 	$(MAKE) -C doc doc-reset
 .PHONE: doc-reset
 
-docclean:
+doc-clean:
 	$(MAKE) -C doc clean
 .PHONE: docclean
 
 post-distclean-hook:
 	$(MAKE) -C doc post-distclean-hook
 .PHONY: post-distclean-hook
+
+post-documents-hook:
+	$(MAKE) -C doc documents
 
 ###
 

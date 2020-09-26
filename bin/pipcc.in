@@ -48,8 +48,8 @@
 ### \environment
 ### if \p CC environment  is set then \p \$(CC) will be used as a C compiler
 ###
-### \sa
-### pip-exec(1), pip-mode(1)
+### \sa pip-exec
+### \sa pip-mode
 ###
 
 PREFIX=@prefix@

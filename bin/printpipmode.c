@@ -40,10 +40,10 @@
  * \synopsis
  * printpipmode
  *
+ * \description
  * This command prints the current PiP mode setting
  *
- * \sa
- * pip-mode(1)
+ * \sa pip-mode
  */
 
 #include <pip.h>
