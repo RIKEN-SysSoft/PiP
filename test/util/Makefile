@@ -78,7 +78,7 @@ test :
 
 install_test_util_dir = $(install_test_dir)/util
 
-install-test:
+check-installed:
 	$(MKDIR_P) $(install_test_util_dir)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_util_dir)
 	$(INSTALL) -C -m 744 test-timer.sh path-test.sh $(install_test_util_dir)

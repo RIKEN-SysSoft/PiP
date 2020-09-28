@@ -63,7 +63,7 @@ install_test_scripts = $(install_test_dir)/scripts
 TEST_SRCS = a.c root.c task.c hello.c
 TEST_SCRIPTS = test-pip-check.sh test-pip-mode.sh test-pipcc-0.sh test-pipcc-1.sh
 
-install-test:
+check-installed:
 	$(MKDIR_P) $(install_test_scripts)
 	$(INSTALL) -C -m 644 Makefile test.list $(TEST_SRCS) $(install_test_scripts)
 	$(INSTALL) -C -m 744 $(TEST_SCRIPTS) $(install_test_scripts)

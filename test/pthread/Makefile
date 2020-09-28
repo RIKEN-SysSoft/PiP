@@ -55,6 +55,6 @@ test :
 
 install_test_pthread_dir = $(install_test_dir)/pthread
 
-install-test :
+check-installed :
 	$(MKDIR_P) $(install_test_pthread_dir)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_pthread_dir)

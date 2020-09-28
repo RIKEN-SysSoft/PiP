@@ -56,12 +56,12 @@ include $(srcdir)/../Test.common
 %: %.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -fpie -pie $< -o $@
 
-test :
+test:
 	../test.sh test.list
 
 install_test_openmp = $(install_test_dir)/openmp
 
-install-test :
+check-installed:
 	$(MKDIR_P) $(install_test_openmp)
 	$(INSTALL) -C -m 644 Makefile $(SRCS) test.list $(install_test_openmp)
 	$(INSTALL) -C -m 744 ompenv.sh $(install_test_openmp)

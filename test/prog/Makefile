@@ -70,7 +70,7 @@ test:
 
 install_test_prog_dir = $(install_test_dir)/prog
 
-install-test:
+check-installed:
 	$(MKDIR_P) $(install_test_prog_dir)
 	$(INSTALL) -C -m 644 Makefile abc.c hello.c test.list $(install_test_prog_dir)
 	ln -f -s $(prefix)/bin/pip-exec $(install_test_prog_dir)
