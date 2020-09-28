@@ -34,10 +34,4 @@ man3_tex=`ls ../latex/group__PiP*.tex`
 for man3 in $man3_tex; do
     bn=`basename -s.tex $man3`;
     echo "\input{../latex/$bn}" >> $man3_input;
-#    bn=`basename -s.3 $man3`;
-#    if [ -f ../latex/$bn.tex ]; then
-#	tex=${bn//_/\\_};
-#	echo "\section{$tex}" >> $man3_input;
-#	echo "\input{../latex/$bn}" >> $man3_input;
-#    fi
 done
