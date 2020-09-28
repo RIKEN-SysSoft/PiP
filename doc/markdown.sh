@@ -10,8 +10,6 @@ for item in $items; do
     bn=`basename -s.$sec $item`
     case $bn in
 	md_*) true;;
-	pip-*) true;;
-	ulp-*) true;;
 	*) list="$list $bn";;
     esac
 done

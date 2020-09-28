@@ -147,10 +147,11 @@ extern "C" {
 #endif /* DOXYGEN */
 
   /**
-   * \defgroup pip-0-init-fin PiP Initialization/Finalization
+   * \defgroup PiP-0-init-fin PiP Initialization/Finalization
    * @{
    * \page pip-intialize-finalize PiP Initialization/Finalization
-   * \description PiP initialization/finalization functions
+   * \description
+   * PiP initialization/finalization functions
    */
 
   /**
@@ -294,16 +295,16 @@ extern "C" {
    */
   int pip_fin( void );
 
-
   /**
    * @}
    */
 
   /**
-   * \defgroup pip-1-spawn Spawning PiP task
+   * \defgroup PiP-1-spawn Spawning PiP task
    * @{
    * \page pip-spawn PiP Spawnig PiP (ULP/BLT) task
-   * \description Spawning PiP task or ULP/BLT task
+   * \description
+   *  Spawning PiP task or ULP/BLT task
    */
 
   /**
@@ -392,7 +393,6 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    *
    * \sa pip_task_spawn
    * \sa pip_spawn_from_main
-   *
    */
 #ifndef DOXYGEN_INPROGRESS
 INLINE
@@ -426,7 +426,6 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
    *			  void *hookarg );
    *
    * \description
-   *
    * The \a before and \a after functions are introduced to follow the
    * programming model of the \c fork and \c exec.
    * \a before function does the prologue found between the
@@ -465,7 +464,6 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
    * execution mode.
    *
    * \sa pip_task_spawn
-   *
    */
 #ifndef DOXYGEN_INPROGRESS
 INLINE
@@ -558,11 +556,11 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \sa pip_spawn_hook
    * \sa pip_spawn
    */
-int pip_task_spawn( pip_spawn_program_t *progp,
-		    uint32_t coreno,
-		    uint32_t opts,
-		    int *pipidp,
-		    pip_spawn_hook_t *hookp );
+  int pip_task_spawn( pip_spawn_program_t *progp,
+		      uint32_t coreno,
+		      uint32_t opts,
+		      int *pipidp,
+		      pip_spawn_hook_t *hookp );
 
   /**
    * \PiPManEntry{pip_spawn}
@@ -643,12 +641,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * @}
    */
 
-
   /**
-   * \defgroup pip-4-export Export/Import Functions
+   * \defgroup PiP-2-export Export/Import Functions
    * @{
    * \page pip-export PiP Export and Import
-   * \description Export and import functions to exchange addresses among tasks
+   * \description
+   * Export and import functions to exchange addresses among tasks
    */
 
   /**
@@ -683,6 +681,9 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * by calling \p pip_import, and vice versa.
    *
    * \sa pip_named_import
+   * \sa pip_named_tryimport
+   * \sa pip_export
+   * \sa pip_import
    */
   int pip_named_export( void *exp, const char *format, ... )
     __attribute__ ((format (printf, 2, 3)));
@@ -700,7 +701,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \description
    * Import an address exported by the specified PiP task and having
    * the specified name. If it is not exported yet, the calling task
-   * will be blocked. The
+   * will be blocked.
    *
    * \param[in] pipid The PiP ID to import the exposed address
    * \param[out] expp The starting address of the exposed region of
@@ -830,10 +831,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip-3-wait Waiting for PiP task termination
+   * \defgroup PiP-3-wait Waiting for PiP task termination
    * @{
    * \page pip-wait Waiting for PiP task termination
-   * \description Functions to wait for PiP task termination.
+   * \description
+   * Functions to wait for PiP task termination.
    * All functions listed here must only be called from PiP root.
    */
 
@@ -867,6 +869,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \sa pip_trywait
    * \sa pip_wait_any
    * \sa pip_trywait_any
+   * \sa wait(Linux 2)
    */
   int pip_wait( int pipid, int *status );
 
@@ -906,6 +909,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \sa pip_wait
    * \sa pip_wait_any
    * \sa pip_trywait_any
+   * \sa wait(Linux 2)
    */
   int pip_trywait( int pipid, int *status );
 
@@ -925,7 +929,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * applied to the returned \p status value.
    *
    * \param[out] pipid PiP ID of terminated PiP task.
-   * \param[out] status Exit value of the terminated PiP task
+   * \param[out] status Exit statusof the terminated PiP task
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The PiP library is not initialized yet
@@ -937,7 +941,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \sa pip_wait
    * \sa pip_trywait
    * \sa pip_trywait_any
-   *
+   * \sa wait(Linux 2)
    */
   int pip_wait_any( int *pipid, int *status );
 
@@ -957,7 +961,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * applied to the returned \p status value.
    *
    * \param[out] pipid PiP ID of terminated PiP task.
-   * \param[out] status Exit value of the terminated PiP task
+   * \param[out] status Exit status of the terminated PiP task
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The PiP library is not initialized yet
@@ -968,6 +972,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \sa pip_wait
    * \sa pip_trywait
    * \sa pip_wait_any
+   * \sa wait(Linux 2)
    */
   int pip_trywait_any( int *pipid, int *status );
 
@@ -976,10 +981,11 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip-5-misc PiP Miscellaneous Functions
+   * \defgroup PiP-4-query PiP Query Functions
    * @{
-   * \page pip-misc PiP miscellaneous functions
-   * \description Miscellaneous functions for PiP task (not BLT/ULP)
+   * \page pip-query PiP Query functions
+   * \description
+   * Query functions for PiP task
    */
 
   /**
@@ -996,6 +1002,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not initialized yet
+   *
+   * \sa pip_init
    */
   int pip_get_pipid( int *pipidp );
 
@@ -1010,6 +1018,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return a non-zero value if PiP is already
    * initialized. Otherwise this returns zero.
+   *
+   * \sa pip_init
    */
   int pip_is_initialized( void );
 
@@ -1027,6 +1037,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
    *
+   * \sa pip_init
    */
   int pip_get_ntasks( int *ntasksp );
 
@@ -1060,6 +1071,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return the name string of the current execution mode. If
    * PiP library is note initialized yet, then thiss return \p NULL.
    *
+   * \sa pip_get_mode
    */
   const char *pip_get_mode_str( void );
 
@@ -1084,6 +1096,9 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The PiP library is not initialized yet
+   *
+   * \sa getpid(Linux 2)
+   * \sa pthread_self(Linux 3)
    */
   int pip_get_system_id( int pipid, pip_id_t *idp );
 
@@ -1098,6 +1113,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return a non-zero value if the caller is the PiP
    * root. Otherwise this returns zero.
+   *
+   * \sa pip_init
    */
   int  pip_isa_root( void );
 
@@ -1112,6 +1129,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return a non-zero value if the caller is the PiP
    * task. Otherwise this returns zero.
+   *
+   * \sa pip_init
    */
   int  pip_isa_task( void );
 
@@ -1129,6 +1148,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The PiP library is not initialized yet
+   *
+   * \sa pip_init
    */
   int pip_is_threaded( int *flagp );
 
@@ -1146,6 +1167,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM The PiP library is not initialized yet
+   *
+   * \sa pip_init
    */
   int pip_is_shared_fd( int *flagp );
 
@@ -1153,13 +1176,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * @}
    */
 
-
   /**
-   * \defgroup pip-2-exit Terminating PiP Task
+   * \defgroup PiP-5-exit PiP task termination
    * @{
    * \page pip-exit Terminating PiP task
-   * \description Function to ternminate PiP task normally or
-   * abnormally (abort).
+   * \description
+   * Terminating PiP task(s)
    */
 
   /**
@@ -1187,7 +1209,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \sa pip_trywait
    * \sa pip_wait_any
    * \sa pip_trywait_any
-   *
+   * \sa exit(Linux 3)
+   * \sa pthread_exit(Linux 3)
    */
   void pip_exit( int status );
 
@@ -1220,17 +1243,6 @@ int pip_task_spawn( pip_spawn_program_t *progp,
   void pip_abort(void);
 
   /**
-   * @}
-   */
-
-  /**
-   * \defgroup pip-signal PiP Signaling Functions
-   * @{
-   * \page pip-signal PiP signaling functions
-   * \description Signal manupilating functions. All functions listed
-   * here are agnostic to the PiP execution mode.
-   */
-  /**
    * \PiPManEntry{pip_kill}
    *
    * \brief deliver a signal to PiP task
@@ -1247,9 +1259,21 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
    *
-   * \sa tkill
+   * \sa tkill(Luinux 2)
    */
   int pip_kill( int pipid, int signal );
+
+  /**
+   * @}
+   */
+
+  /**
+   * \defgroup PiP-6-signal PiP Siganling Functions
+   * @{
+   * \page pip-signal PiP signaling functions
+   * \description
+   * Signaling functions for PiP task
+   */
 
   /**
    * \PiPManEntry{pip_sigmask}
@@ -1272,8 +1296,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
    *
-   * \sa sigprocmask
-   * \sa pthread_sigmask
+   * \sa sigprocmask(Linux 2)
+   * \sa pthread_sigmask(Linux 3)
    */
   int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
 
@@ -1296,20 +1320,21 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \note This function does NOT return the \p EINTR error. This case
    * is treated as normal return;
    *
-   * \sa sigwait
-   * \sa sigsuspend
+   * \sa sigwait(Linux 3)
+   * \sa sigsuspend(Linux 2)
    */
   int pip_signal_wait( int signal );
 
   /**
-   *   @}
+   * @}
    */
 
   /**
-   * \defgroup ulp-0-yield Yielding Functionns
+   * \defgroup PiP-7-sync PiP Synchronization Functions
    * @{
-   * \page pip-yield Yielding functions
-   * \description Yielding execution of the calling BLT/ULP
+   * \page pip-sync PiP synchronization functions
+   * \description
+   * Synchronization functions for PiP tasks
    */
 
   /**
@@ -1321,51 +1346,85 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \#include <pip.h> \n
    * int pip_yield( int flag );
    *
-   * \param[in] flag to specify the behavior of yielding. See below.
+   * \param[in] flag to specify the behavior of yielding. Unused and
+   * reserved for BLT/ULP (in PiP-v3)
    *
-   * \return No context-switch takes place during the call, then this
-   * returns zero. If the context-switch to the other BLT happens,
-   * then this returns \p EINTR.
+   * \return Thuis function always succeeds and returns zero.
    *
-   * \param flag If \b PIP_YIELD_USER, the calling task is scheduling PiP
-   * task(s) then the calling task switch to the next eligible-to-run
-   * BLT. If \b PIP_YIELD_SYSTEM, regardless if the calling task is active
-   * or inactive, it calls \p sched_yield.
-   * If \b PIP_YIELD_DEFAULT or zero, then both \b PIP_YIELD_USER and
-   * \b PIP_YIELD_SYSTEM will be effective.
-   *
-   * \sa pip_yield_to
+   * \sa sched_yield(Linux 2)
+   * \sa pthread_yield(Linux 3)
    */
   int pip_yield( int flag );
 
   /**
-   * @}
-   */
-
-  /**
+   * \PiPManEntry{pip_barrier_init}
+   *
    * \brief initialize barrier synchronization structure
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_barrier_init( pip_barrier_t *barrp, int n );
    *
    * \param[in] barrp pointer to a PiP barrier structure
    * \param[in] n number of participants of this barrier synchronization
    *
    * \return Return 0 on success. Return an error code on error.
    *
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   * \retval EINAVL \c n is invalid
+   *
+   * \sa pip_barrier_wait
+   * \sa pip_barrier_fin
    */
   int pip_barrier_init( pip_barrier_t *barrp, int n );
 
   /**
+   * \PiPManEntry{pip_barrier_wait}
+   *
    * \brief wait on barrier synchronization in a busy-wait way
-   *  @{
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_barrier_wait( pip_barrier_t *barrp );
    *
    * \param[in] barrp pointer to a PiP barrier structure
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \note This barrier synchronization never blocks.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
    *
+   * \sa pip_barrier_init
+   * \sa pip_barrier_fin
    */
   int pip_barrier_wait( pip_barrier_t *barrp );
+
+  /**
+   * \PiPManEntry{pip_barrier_fin}
+   *
+   * \brief finalize barrier synchronization structure
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_barrier_fin( pip_barrier_t *barrp );
+   *
+   * \param[in] barrp pointer to a PiP barrier structure
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   * \retval EBUSY there are some tasks wating for barrier
+   * synchronization
+   *
+   * \sa pip_barrier_init
+   * \sa pip_barrier_wait
+   */
+  int pip_barrier_fin( pip_barrier_t *barrp );
+
+  /**
+   * @}
+   */
 
 #ifndef DOXYGEN_INPROGRESS
 

@@ -355,12 +355,27 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 
 # Commands
 - pipcc
+- pip-check
+- pip-exec
+- pip-man
+- pip-mode
 - pips
 - printpipmode
 
 
 # Functions
+- PiP-0-init-fin
+- PiP-1-spawn
+- PiP-2-export
+- PiP-3-wait
+- PiP-4-query
+- PiP-5-exit
+- PiP-6-signal
+- PiP-7-sync
 - pip\_abort
+- pip\_barrier\_fin
+- pip\_barrier\_init
+- pip\_barrier\_wait
 - pip\_exit
 - pip\_export
 - pip\_fin
@@ -401,7 +416,6 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Pro
 * [ROSS'18](doc/slides/HPDC18-ROSS.pdf)
 * [IPDPS/RADR'20](doc/slides/IPDPS-RADR-2020.pdf)
 # Author
-
-Atsushi Hori \n
-Riken Center for Commputational Science (R-CCS) \n
-Japan \n
+Atsushi Hori\n
+Riken Center for Commputational Science (R-CCS)\n
+Japan\n

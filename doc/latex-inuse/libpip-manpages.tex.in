@@ -146,9 +146,6 @@ Refernce Manual}\\
 
 \chapter{PiP Functions}
 \input{man3-pip-inputs}
-
-\chapter{BLT/ULP Functions}
-\input{man3-ulp-inputs}
 %--- End generated contents ---
 
 % Index

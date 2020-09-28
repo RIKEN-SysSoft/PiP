@@ -42,10 +42,10 @@
 ###
 
 prefix=@prefix@;
-mandir=${prefix}/share/man
+mandir=${prefix}/share/man:${MANPATH}
 
 if [[ "x$@" == x ]]; then
-    exec man -M ${mandir} 3 libpip
+    exec man -M ${mandir} 7 libpip
 else
     exec man -M ${mandir} $@;
 fi

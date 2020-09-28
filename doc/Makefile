@@ -73,12 +73,12 @@ documents:
 		echo ""; \
 		) | doxygen - >> doxygen-man713.log 2>&1; \
 	done
-	grep -e "warning" -e "error" doxygen-man713.log | cat
+	-@grep -e "warning" -e "error" doxygen-man713.log && ( echo "Doxygen failed"; exit 1; )
 	./markdown.sh "# Commands"  1 "-" > commands.in
 	./markdown.sh "# Functions" 3 "-" > functions.in
-	cat README.md.in commands.in functions.in Slides-md.md Author.md.in > README.md
-	cat README-man.doxy  README.md.in commands.in functions.in Author.md.in > README-man.md
-	cat README-html.doxy README.md.in Slides-html.md Author.md.in > README-html.md
+	cat README.md.in commands.in functions.in Slides-md.md Author-md.md > README.md
+	cat README-man.doxy  README.md.in commands.in functions.in Author-md.md > README-man.md
+	cat README-html.doxy README.md.in Slides-html.md Author-html.md > README-html.md
 	echo ==== README.md =====;
 	echo -n "" > doxygen-readme.log
 	( \
@@ -89,8 +89,8 @@ documents:
 		echo "STRIP_FROM_PATH = $(top_srcdir)"; \
 		printf "INPUT = README-man.md"; \
 		echo ""; \
-	) | doxygen - >> doxygen-readme.log 2>&1;
-	grep -e "warning" -e "error" doxygen-readme.log | cat
+	) | doxygen - >> doxygen-readme.log 2>&1
+	-@grep -e "warning" -e "error" doxygen-readme.log && ( echo "Doxygen failed"; exit 1; )
 	$(MAKE) -C latex-inuse
 	$(CP) README.md $(top_srcdir)
 	echo ==== html =====;
@@ -110,7 +110,7 @@ documents:
 		done <$$file; \
 	done | tr '\012' ' '; \
 	) | doxygen - >> doxygen-html.log 2>&1;
-	grep -e "warning" -e "error" doxygen-html.log | cat
+	-@grep -e "warning" -e "error" doxygen-html.log && ( echo "Doxygen failed"; exit 1; )
 	echo ==== mandb =====; \
 	if which mandb; then mandb ./man -c -u; fi
 .PHONY: doxygen

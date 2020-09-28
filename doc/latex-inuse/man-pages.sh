@@ -30,19 +30,14 @@ for man1 in $man1_tex; do
     fi
 done
 
-man3_tex=`ls ../man/man3/*.3`
+man3_tex=`ls ../latex/group__PiP*.tex`
 for man3 in $man3_tex; do
-    bn=`basename -s.3 $man3`;
-    if [ -f ../latex/$bn.tex ]; then
-	tex=${bn//_/\\_};
-	echo "\section{$tex}" >> $man3_input;
-	echo "\input{../latex/$bn}" >> $man3_input;
-    elif [ -f ../latex/group__$bn.tex ]; then
-	tex=${bn//_/\\_};
-	case $bn in
-	    pip*) echo "\input{../latex/group__$bn}" >> $man3_pip_input;;
-	    ulp*) echo "\input{../latex/group__$bn}" >> $man3_ulp_input;;
-	    *)    echo "\input{../latex/group__$bn}" >> $man3_input;;
-	esac
-    fi
+    bn=`basename -s.tex $man3`;
+    echo "\input{../latex/$bn}" >> $man3_input;
+#    bn=`basename -s.3 $man3`;
+#    if [ -f ../latex/$bn.tex ]; then
+#	tex=${bn//_/\\_};
+#	echo "\section{$tex}" >> $man3_input;
+#	echo "\input{../latex/$bn}" >> $man3_input;
+#    fi
 done

@@ -218,7 +218,7 @@ a.out : Root&amp;Task
 </pre><p>You can select and debug an inferior by the following GDB command: </p>
 <pre class="fragment">(gdb) inferior 2
 [Switching to inferior 2 [process 6451 (pip 0)] (/somewhere/pip-task-0)]
-</pre><p>When an already-attached program calls '<a class="el" href="group__pip-1-spawn.html#gae9187ea22ecf0623fa3ecfba5337f52d" title="spawn a PiP task (PiP v1 API and deprecated) ">pip_spawn()</a>' and becomes a PiP root task, the newly created PiP child tasks aren't attached automatically, but you can add empty inferiors and then attach the PiP child tasks to the inferiors. e.g. </p>
+</pre><p>When an already-attached program calls '<a class="el" href="group__PiP-1-spawn.html#gae9187ea22ecf0623fa3ecfba5337f52d" title="spawn a PiP task (PiP v1 API and deprecated) ">pip_spawn()</a>' and becomes a PiP root task, the newly created PiP child tasks aren't attached automatically, but you can add empty inferiors and then attach the PiP child tasks to the inferiors. e.g. </p>
 <pre class="fragment">.... type Control-Z to stop the root task.
 ^Z
 Program received signal SIGTSTP, Stopped (user).
@@ -255,15 +255,12 @@ Added inferior 4
 <p>A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Process-in-process: techniques for practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: <a href="https://doi.org/10.1145/3208040.3208045">https://doi.org/10.1145/3208040.3208045</a></p>
 <h2>Presentation Slides</h2>
 <ul>
-<li>[HPDC'18] <a href="file:/home/ahori/PiP/x86_64/pip-1-1/install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/x86_64/pip-1-1/install/share/slides/HPDC18.pdf</a></li>
-<li>[ROSS'18] <a href="file:/home/ahori/PiP/x86_64/pip-1-1/install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/x86_64/pip-1-1/install/share/slides/HPDC18-ROSS.pdf</a></li>
-<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/x86_64/pip-1-1/install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/x86_64/pip-1-1/install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
+<li>[HPDC'18] <a href="file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18.pdf</a></li>
+<li>[ROSS'18] <a href="file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18-ROSS.pdf</a></li>
+<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
 </li>
 </ul>
-<p>Atsushi Hori <br/>
-Riken Center for Commputational Science (R-CCS) <br/>
-Japan <br/>
-</p>
+<p>Atsushi Hori Riken Center for Commputational Science (R-CCS) Japan </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

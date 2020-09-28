@@ -30,21 +30,16 @@
 
 LIBPIP = libpip-manpages
 
-all: $(LIBPIP).pdf
+pdf: all
 
-pdf: $(LIBPIP).pdf
-
-libpip-manpages.tex:
-	echo "Rerun configure"
-	exit 1
-
-$(LIBPIP).pdf: libpip-manpages.tex
+all :
 	./man-pages.sh
 	pdflatex $(LIBPIP) > /dev/null 2>&1
 	makeindex $(LIBPIP).idx > /dev/null 2>&1
 	pdflatex $(LIBPIP) > /dev/null 2>&1
 	latex_count=5 ; \
-	while egrep -s 'Rerun (LaTeX|to get cross-references right)' $(LIBPIP).log && [ $$latex_count -gt 0 ] ;\
+	while egrep -s 'Rerun (LaTeX|to get cross-references right)' $(LIBPIP).log && \
+		[ $$latex_count -gt 0 ] ;\
 	    do \
 	      echo "Rerunning latex...." ;\
 	      pdflatex $(LIBPIP) > /dev/null 2>&1 ;\
@@ -52,7 +47,12 @@ $(LIBPIP).pdf: libpip-manpages.tex
 	    done
 	makeindex $(LIBPIP).idx > /dev/null 2>&1
 	pdflatex $(LIBPIP) > /dev/null 2>&1
-	grep -e "LaTeX\ Warning" -e "Package\ natbib\ Warning" -e "undefined" -e "multiply\ defined" $(LIBPIP).log | cat
+	-@grep  -e "LaTeX\ Warning" \
+		-e "Package\ natbib\ Warning" \
+		-e "undefined" \
+		-e "multiply\ defined" \
+		$(LIBPIP).log \
+	&& ( echo "Latex failed"; exit 1; )
 
 clean:
 	$(RM) -f *.ps *.dvi *.aux *.toc *.idx *.ind *.ilg *.log *.out *.brf *.blg *.bbl

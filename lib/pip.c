@@ -1715,9 +1715,11 @@ int pip_get_pid_( int pipid, pid_t *pidp ) {
 }
 
 int pip_barrier_init( pip_barrier_t *barrp, int n ) {
-  barrp->count       = n;
-  barrp->count_init  = n;
-  barrp->gsense      = 0;
+  if( !pip_is_initialized() ) return EPERM;
+  if( n < 0 ) return EINVAL;
+  barrp->count      = n;
+  barrp->count_init = n;
+  barrp->gsense     = 0;
   return 0;
 }
 
@@ -1732,6 +1734,12 @@ int pip_barrier_wait( pip_barrier_t *barrp ) {
       while( barrp->gsense != lsense ) pip_pause();
     }
   }
+  return 0;
+}
+
+int pip_barrier_fin( pip_barrier_t *barrp ) {
+  if( !pip_is_initialized() ) return EPERM;
+  if( barrp->count != 0     ) return EBUSY;
   return 0;
 }
 
