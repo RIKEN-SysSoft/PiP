@@ -88,9 +88,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">  *       System Software Devlopment Team. All rights researved$</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">  * $PIP_VERSION: Version 1.0$</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">  * $RIKEN_copyright: Riken Center for Computational Sceience,
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">  * System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">  * $PIP_VERSION: Version 3.0.0$</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">  * $PIP_license: &lt;Simplified BSD License&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">  * Redistribution and use in source and binary forms, with or without</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">  * modification, are permitted provided that the following conditions are</span></div>
@@ -214,169 +214,169 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN */</span><span class="preprocessor"></span></div>
 <div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-0-init-fin.html#ga20439326ff318c2dd0752bd544dca0e2">pip_init</a>( <span class="keywordtype">int</span> *pipidp, <span class="keywordtype">int</span> *ntasks, <span class="keywordtype">void</span> **root_expp, uint32_t opts );</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;<span class="preprocessor"></span>INLINE</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00314"></a><span class="lineno"><a class="line" href="group__pip1-spawn.html#ga0b1e746befd27c418355d28a830b2db6">  314</a></span>&#160;<span class="preprocessor"></span><span class="keywordtype">void</span> <a class="code" href="group__pip1-spawn.html#ga0b1e746befd27c418355d28a830b2db6">pip_spawn_from_main</a>( pip_spawn_program_t *progp,</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;              <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv,</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;              <span class="keywordtype">void</span> *exp ) {</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;  memset( progp, 0, <span class="keyword">sizeof</span>(pip_spawn_program_t) );</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  <span class="keywordflow">if</span>( prog != NULL ) {</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    progp-&gt;prog   = prog;</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    progp-&gt;prog   = argv[0];</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;  }</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;  progp-&gt;argv     = argv;</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;  <span class="keywordflow">if</span>( envv == NULL ) {</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="keyword">extern</span> <span class="keywordtype">char</span> **environ;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    progp-&gt;envv = environ;</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    progp-&gt;envv = envv;</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  }</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  progp-&gt;exp = exp;</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;}</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;<span class="preprocessor"></span>INLINE</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00373"></a><span class="lineno"><a class="line" href="group__pip1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0">  373</a></span>&#160;<span class="preprocessor"></span><span class="keywordtype">void</span> <a class="code" href="group__pip1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0">pip_spawn_from_func</a>( pip_spawn_program_t *progp,</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;              <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> *funcname, <span class="keywordtype">void</span> *arg, <span class="keywordtype">char</span> **envv,</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;              <span class="keywordtype">void</span> *exp ) {</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  memset( progp, 0, <span class="keyword">sizeof</span>(pip_spawn_program_t) );</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;  progp-&gt;prog     = prog;</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  progp-&gt;funcname = funcname;</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  progp-&gt;arg      = arg;</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  <span class="keywordflow">if</span>( envv == NULL ) {</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    <span class="keyword">extern</span> <span class="keywordtype">char</span> **environ;</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    progp-&gt;envv = environ;</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    progp-&gt;envv = envv;</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  }</div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  progp-&gt;exp = exp;</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;}</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;<span class="preprocessor"></span>INLINE</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00446"></a><span class="lineno"><a class="line" href="group__pip1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">  446</a></span>&#160;<span class="preprocessor"></span><span class="keywordtype">void</span> <a class="code" href="group__pip1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">pip_spawn_hook</a>( pip_spawn_hook_t *hook,</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;             pip_spawnhook_t before,</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;             pip_spawnhook_t after,</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;             <span class="keywordtype">void</span> *hookarg ) {</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  hook-&gt;before  = before;</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;  hook-&gt;after   = after;</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  hook-&gt;hookarg = hookarg;</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;}</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__pip1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36">pip_task_spawn</a>( pip_spawn_program_t *progp,</div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;            uint32_t coreno,</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;            uint32_t opts,</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;            <span class="keywordtype">int</span> *pipidp,</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;            pip_spawn_hook_t *hookp );</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;</div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip1-spawn.html#ga4698d85283b03f0443fb0991e1119d35">pip_spawn</a>( <span class="keywordtype">char</span> *filename, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv,</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;         uint32_t coreno, <span class="keywordtype">int</span> *pipidp,</div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;         pip_spawnhook_t before, pip_spawnhook_t after, <span class="keywordtype">void</span> *hookarg);</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-4-export.html#ga3613eaa34ad5a4985007ff9177eb6542">pip_named_export</a>( <span class="keywordtype">void</span> *exp, <span class="keyword">const</span> <span class="keywordtype">char</span> *format, ... )</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;    __attribute__ ((format (printf, 2, 3)));</div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-4-export.html#ga68bcfa436ddc6acaf25f67fc30430fc1">pip_named_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;</div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-4-export.html#ga205d73fdb294d3cbfe095c14d5e63637">pip_named_tryimport</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-4-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb">pip_export</a>( <span class="keywordtype">void</span> *exp );</div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;</div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-4-export.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp );</div>
-<div class="line"><a name="l00767"></a><span class="lineno">  767</span>&#160;</div>
-<div class="line"><a name="l00808"></a><span class="lineno">  808</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip3-wait.html#gae04520bc29d3ec85d7090f7e645de27d">pip_wait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *status );</div>
-<div class="line"><a name="l00809"></a><span class="lineno">  809</span>&#160;</div>
-<div class="line"><a name="l00844"></a><span class="lineno">  844</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip3-wait.html#ga9e786d15401af041842f3f503c962a4b">pip_trywait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *status );</div>
-<div class="line"><a name="l00845"></a><span class="lineno">  845</span>&#160;</div>
-<div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36">pip_wait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *status );</div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-0-init-fin.html#ga20439326ff318c2dd0752bd544dca0e2">pip_init</a>( <span class="keywordtype">int</span> *pipidp, <span class="keywordtype">int</span> *ntasks, <span class="keywordtype">void</span> **root_expp, uint32_t opts );</div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;<span class="preprocessor"></span>INLINE</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00316"></a><span class="lineno"><a class="line" href="group__PiP-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6">  316</a></span>&#160;<span class="preprocessor"></span><span class="keywordtype">void</span> <a class="code" href="group__PiP-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6">pip_spawn_from_main</a>( pip_spawn_program_t *progp,</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;              <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv,</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;              <span class="keywordtype">void</span> *exp ) {</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;  memset( progp, 0, <span class="keyword">sizeof</span>(pip_spawn_program_t) );</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;  <span class="keywordflow">if</span>( prog != NULL ) {</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;    progp-&gt;prog   = prog;</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    progp-&gt;prog   = argv[0];</div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;  }</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;  progp-&gt;argv     = argv;</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;  <span class="keywordflow">if</span>( envv == NULL ) {</div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;    <span class="keyword">extern</span> <span class="keywordtype">char</span> **environ;</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    progp-&gt;envv = environ;</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    progp-&gt;envv = envv;</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  }</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  progp-&gt;exp = exp;</div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;}</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;<span class="preprocessor"></span>INLINE</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00376"></a><span class="lineno"><a class="line" href="group__PiP-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0">  376</a></span>&#160;<span class="preprocessor"></span><span class="keywordtype">void</span> <a class="code" href="group__PiP-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0">pip_spawn_from_func</a>( pip_spawn_program_t *progp,</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;              <span class="keywordtype">char</span> *prog, <span class="keywordtype">char</span> *funcname, <span class="keywordtype">void</span> *arg, <span class="keywordtype">char</span> **envv,</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;              <span class="keywordtype">void</span> *exp ) {</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;  memset( progp, 0, <span class="keyword">sizeof</span>(pip_spawn_program_t) );</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;  progp-&gt;prog     = prog;</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;  progp-&gt;funcname = funcname;</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  progp-&gt;arg      = arg;</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="keywordflow">if</span>( envv == NULL ) {</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    <span class="keyword">extern</span> <span class="keywordtype">char</span> **environ;</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    progp-&gt;envv = environ;</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;    progp-&gt;envv = envv;</div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;  }</div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  progp-&gt;exp = exp;</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;}</div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;<span class="preprocessor"></span>INLINE</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00449"></a><span class="lineno"><a class="line" href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">  449</a></span>&#160;<span class="preprocessor"></span><span class="keywordtype">void</span> <a class="code" href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">pip_spawn_hook</a>( pip_spawn_hook_t *hook,</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;             pip_spawnhook_t before,</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;             pip_spawnhook_t after,</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;             <span class="keywordtype">void</span> *hookarg ) {</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;  hook-&gt;before  = before;</div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;  hook-&gt;after   = after;</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;  hook-&gt;hookarg = hookarg;</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;}</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;</div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;<span class="keywordtype">int</span> <a class="code" href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36">pip_task_spawn</a>( pip_spawn_program_t *progp,</div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;            uint32_t coreno,</div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;            uint32_t opts,</div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;            <span class="keywordtype">int</span> *pipidp,</div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;            pip_spawn_hook_t *hookp );</div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-1-spawn.html#ga4698d85283b03f0443fb0991e1119d35">pip_spawn</a>( <span class="keywordtype">char</span> *filename, <span class="keywordtype">char</span> **argv, <span class="keywordtype">char</span> **envv,</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;         uint32_t coreno, <span class="keywordtype">int</span> *pipidp,</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;         pip_spawnhook_t before, pip_spawnhook_t after, <span class="keywordtype">void</span> *hookarg);</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-2-export.html#ga3613eaa34ad5a4985007ff9177eb6542">pip_named_export</a>( <span class="keywordtype">void</span> *exp, <span class="keyword">const</span> <span class="keywordtype">char</span> *format, ... )</div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;    __attribute__ ((format (printf, 2, 3)));</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;</div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-2-export.html#ga68bcfa436ddc6acaf25f67fc30430fc1">pip_named_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-2-export.html#ga205d73fdb294d3cbfe095c14d5e63637">pip_named_tryimport</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp, const <span class="keywordtype">char</span> *format, ... )</div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;    __attribute__ ((format (printf, 3, 4)));</div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;</div>
+<div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-2-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb">pip_export</a>( <span class="keywordtype">void</span> *exp );</div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;</div>
+<div class="line"><a name="l00789"></a><span class="lineno">  789</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-2-export.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">void</span> **expp );</div>
+<div class="line"><a name="l00790"></a><span class="lineno">  790</span>&#160;</div>
+<div class="line"><a name="l00834"></a><span class="lineno">  834</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-3-wait.html#gae04520bc29d3ec85d7090f7e645de27d">pip_wait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *status );</div>
+<div class="line"><a name="l00835"></a><span class="lineno">  835</span>&#160;</div>
+<div class="line"><a name="l00873"></a><span class="lineno">  873</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-3-wait.html#ga9e786d15401af041842f3f503c962a4b">pip_trywait</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> *status );</div>
 <div class="line"><a name="l00874"></a><span class="lineno">  874</span>&#160;</div>
-<div class="line"><a name="l00900"></a><span class="lineno">  900</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip3-wait.html#ga697a16f7400d2a2ed2b8ffa230ca83d9">pip_trywait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *status );</div>
-<div class="line"><a name="l00901"></a><span class="lineno">  901</span>&#160;</div>
-<div class="line"><a name="l00928"></a><span class="lineno">  928</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-5-misc.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a>( <span class="keywordtype">int</span> *pipidp );</div>
-<div class="line"><a name="l00929"></a><span class="lineno">  929</span>&#160;</div>
-<div class="line"><a name="l00942"></a><span class="lineno">  942</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-5-misc.html#gabbec4ae2f820b13400f63cba55a53399">pip_is_initialized</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00943"></a><span class="lineno">  943</span>&#160;</div>
-<div class="line"><a name="l00959"></a><span class="lineno">  959</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-5-misc.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a>( <span class="keywordtype">int</span> *ntasksp );</div>
-<div class="line"><a name="l00960"></a><span class="lineno">  960</span>&#160;</div>
-<div class="line"><a name="l00977"></a><span class="lineno">  977</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-5-misc.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a>( <span class="keywordtype">int</span> *modep );</div>
+<div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36">pip_wait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *status );</div>
+<div class="line"><a name="l00906"></a><span class="lineno">  906</span>&#160;</div>
+<div class="line"><a name="l00935"></a><span class="lineno">  935</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-3-wait.html#ga697a16f7400d2a2ed2b8ffa230ca83d9">pip_trywait_any</a>( <span class="keywordtype">int</span> *pipid, <span class="keywordtype">int</span> *status );</div>
+<div class="line"><a name="l00936"></a><span class="lineno">  936</span>&#160;</div>
+<div class="line"><a name="l00963"></a><span class="lineno">  963</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-4-query.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a>( <span class="keywordtype">int</span> *pipidp );</div>
+<div class="line"><a name="l00964"></a><span class="lineno">  964</span>&#160;</div>
+<div class="line"><a name="l00977"></a><span class="lineno">  977</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-4-query.html#gabbec4ae2f820b13400f63cba55a53399">pip_is_initialized</a>( <span class="keywordtype">void</span> );</div>
 <div class="line"><a name="l00978"></a><span class="lineno">  978</span>&#160;</div>
-<div class="line"><a name="l00992"></a><span class="lineno">  992</span>&#160;  const <span class="keywordtype">char</span> *<a class="code" href="group__pip-5-misc.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l00993"></a><span class="lineno">  993</span>&#160;</div>
-<div class="line"><a name="l01016"></a><span class="lineno"> 1016</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-5-misc.html#gadf3d9e96b46d7a58bf4ce6dda173091a">pip_get_system_id</a>( <span class="keywordtype">int</span> pipid, pip_id_t *idp );</div>
-<div class="line"><a name="l01017"></a><span class="lineno"> 1017</span>&#160;</div>
-<div class="line"><a name="l01030"></a><span class="lineno"> 1030</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__pip-5-misc.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01031"></a><span class="lineno"> 1031</span>&#160;</div>
-<div class="line"><a name="l01044"></a><span class="lineno"> 1044</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__pip-5-misc.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01045"></a><span class="lineno"> 1045</span>&#160;</div>
-<div class="line"><a name="l01061"></a><span class="lineno"> 1061</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-5-misc.html#ga0455093d5040ae45585cc88a5f3f002b">pip_is_threaded</a>( <span class="keywordtype">int</span> *flagp );</div>
-<div class="line"><a name="l01062"></a><span class="lineno"> 1062</span>&#160;</div>
-<div class="line"><a name="l01078"></a><span class="lineno"> 1078</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-5-misc.html#ga180ece8f3f537d84db8e70921f3ae099">pip_is_shared_fd</a>( <span class="keywordtype">int</span> *flagp );</div>
-<div class="line"><a name="l01079"></a><span class="lineno"> 1079</span>&#160;</div>
-<div class="line"><a name="l01116"></a><span class="lineno"> 1116</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="group__pip2-exit.html#ga55171ea8db2c2693f005560e427485c2">pip_exit</a>( <span class="keywordtype">int</span> status );</div>
-<div class="line"><a name="l01117"></a><span class="lineno"> 1117</span>&#160;</div>
-<div class="line"><a name="l01134"></a><span class="lineno"> 1134</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip2-exit.html#gab7ba5cc62101240c68acf07905e36772">pip_kill_all_tasks</a>( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01135"></a><span class="lineno"> 1135</span>&#160;</div>
-<div class="line"><a name="l01144"></a><span class="lineno"> 1144</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="group__pip2-exit.html#ga49a4a9ee014ffdaf0c26df18adf965ad">pip_abort</a>(<span class="keywordtype">void</span>);</div>
-<div class="line"><a name="l01145"></a><span class="lineno"> 1145</span>&#160;</div>
-<div class="line"><a name="l01150"></a><span class="lineno"> 1150</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
-<div class="line"><a name="l01151"></a><span class="lineno"> 1151</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01152"></a><span class="lineno"> 1152</span>&#160;  pid_t  pip_gettid( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01153"></a><span class="lineno"> 1153</span>&#160;  <span class="keywordtype">void</span>   pip_glibc_lock( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01154"></a><span class="lineno"> 1154</span>&#160;  <span class="keywordtype">void</span>   pip_glibc_unlock( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01155"></a><span class="lineno"> 1155</span>&#160;  <span class="keywordtype">void</span>   pip_debug_info( <span class="keywordtype">void</span> );</div>
-<div class="line"><a name="l01156"></a><span class="lineno"> 1156</span>&#160;  <span class="keywordtype">size_t</span> pip_idstr( <span class="keywordtype">char</span>*, <span class="keywordtype">size_t</span> );</div>
-<div class="line"><a name="l01157"></a><span class="lineno"> 1157</span>&#160;  <span class="keywordtype">int</span>    pip_check_pie( <span class="keyword">const</span> <span class="keywordtype">char</span>*, <span class="keywordtype">int</span> );</div>
-<div class="line"><a name="l01158"></a><span class="lineno"> 1158</span>&#160;</div>
-<div class="line"><a name="l01159"></a><span class="lineno"> 1159</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l01160"></a><span class="lineno"> 1160</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l01161"></a><span class="lineno"> 1161</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l01162"></a><span class="lineno"> 1162</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01163"></a><span class="lineno"> 1163</span>&#160;<span class="preprocessor">#include &lt;pip_blt.h&gt;</span></div>
-<div class="line"><a name="l01164"></a><span class="lineno"> 1164</span>&#160;<span class="preprocessor">#include &lt;pip_dlfcn.h&gt;</span></div>
-<div class="line"><a name="l01165"></a><span class="lineno"> 1165</span>&#160;<span class="preprocessor">#include &lt;pip_signal.h&gt;</span></div>
-<div class="line"><a name="l01166"></a><span class="lineno"> 1166</span>&#160;</div>
-<div class="line"><a name="l01167"></a><span class="lineno"> 1167</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l01168"></a><span class="lineno"> 1168</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l01169"></a><span class="lineno"> 1169</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">/* _pip_h_ */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__pip-0-init-fin_html_ga20439326ff318c2dd0752bd544dca0e2"><div class="ttname"><a href="group__pip-0-init-fin.html#ga20439326ff318c2dd0752bd544dca0e2">pip_init</a></div><div class="ttdeci">int pip_init(int *pipidp, int *ntasks, void **root_expp, uint32_t opts)</div></div>
-<div class="ttc" id="group__pip2-exit_html_gab7ba5cc62101240c68acf07905e36772"><div class="ttname"><a href="group__pip2-exit.html#gab7ba5cc62101240c68acf07905e36772">pip_kill_all_tasks</a></div><div class="ttdeci">int pip_kill_all_tasks(void)</div><div class="ttdoc">kill all PiP tasks </div></div>
-<div class="ttc" id="group__pip-5-misc_html_ga6f1045bdbf682cb2ac504f09b57b73e9"><div class="ttname"><a href="group__pip-5-misc.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a></div><div class="ttdeci">int pip_isa_root(void)</div><div class="ttdoc">check if calling PiP task is a PiP root or not </div></div>
-<div class="ttc" id="group__pip-5-misc_html_gab603f68c1ce972a5f3bfb8c95fcfb555"><div class="ttname"><a href="group__pip-5-misc.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a></div><div class="ttdeci">int pip_get_mode(int *modep)</div><div class="ttdoc">get the PiP execution mode </div></div>
-<div class="ttc" id="group__pip-5-misc_html_ga4e715bb8c325e9acc81af0745908dc0e"><div class="ttname"><a href="group__pip-5-misc.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a></div><div class="ttdeci">int pip_get_pipid(int *pipidp)</div><div class="ttdoc">get PiP ID of the calling task </div></div>
-<div class="ttc" id="group__pip-5-misc_html_ga9786d5aafa2a3882714c35ecc9f39a5a"><div class="ttname"><a href="group__pip-5-misc.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a></div><div class="ttdeci">int pip_get_ntasks(int *ntasksp)</div><div class="ttdoc">get the maximum number of the PiP tasks </div></div>
-<div class="ttc" id="group__pip2-exit_html_ga49a4a9ee014ffdaf0c26df18adf965ad"><div class="ttname"><a href="group__pip2-exit.html#ga49a4a9ee014ffdaf0c26df18adf965ad">pip_abort</a></div><div class="ttdeci">void pip_abort(void)</div><div class="ttdoc">Kill all PiP tasks and then kill PiP root. </div></div>
-<div class="ttc" id="group__pip1-spawn_html_gaf1fcc4cb85ec3eda734afe2beb0c6a36"><div class="ttname"><a href="group__pip1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36">pip_task_spawn</a></div><div class="ttdeci">int pip_task_spawn(pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp)</div><div class="ttdoc">Spawning a PiP task. </div></div>
-<div class="ttc" id="group__pip1-spawn_html_ga0b1e746befd27c418355d28a830b2db6"><div class="ttname"><a href="group__pip1-spawn.html#ga0b1e746befd27c418355d28a830b2db6">pip_spawn_from_main</a></div><div class="ttdeci">void pip_spawn_from_main(pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp)</div><div class="ttdoc">Setting information to invoke a PiP task starting from the main function. </div><div class="ttdef"><b>Definition:</b> pip.h:314</div></div>
-<div class="ttc" id="group__pip-5-misc_html_ga180ece8f3f537d84db8e70921f3ae099"><div class="ttname"><a href="group__pip-5-misc.html#ga180ece8f3f537d84db8e70921f3ae099">pip_is_shared_fd</a></div><div class="ttdeci">int pip_is_shared_fd(int *flagp)</div><div class="ttdoc">check if file descriptors are shared or not. This is equivalent with the pip_is_threaded function...</div></div>
-<div class="ttc" id="group__pip1-spawn_html_ga6ebadd5070ca345daf8d7465f4926fc0"><div class="ttname"><a href="group__pip1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0">pip_spawn_from_func</a></div><div class="ttdeci">void pip_spawn_from_func(pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp)</div><div class="ttdoc">Setting information to invoke a PiP task starting from a function defined in a program. </div><div class="ttdef"><b>Definition:</b> pip.h:373</div></div>
-<div class="ttc" id="group__pip-0-init-fin_html_gac4654282785abb9434ce81573fdf16ed"><div class="ttname"><a href="group__pip-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a></div><div class="ttdeci">int pip_fin(void)</div></div>
-<div class="ttc" id="group__pip-5-misc_html_gadf3d9e96b46d7a58bf4ce6dda173091a"><div class="ttname"><a href="group__pip-5-misc.html#gadf3d9e96b46d7a58bf4ce6dda173091a">pip_get_system_id</a></div><div class="ttdeci">int pip_get_system_id(int pipid, pip_id_t *idp)</div><div class="ttdoc">deliver a process or thread ID defined by the system </div></div>
-<div class="ttc" id="group__pip3-wait_html_ga9e786d15401af041842f3f503c962a4b"><div class="ttname"><a href="group__pip3-wait.html#ga9e786d15401af041842f3f503c962a4b">pip_trywait</a></div><div class="ttdeci">int pip_trywait(int pipid, int *status)</div><div class="ttdoc">wait for the termination of a PiP task in a non-blocking way </div></div>
-<div class="ttc" id="group__pip1-spawn_html_ga4698d85283b03f0443fb0991e1119d35"><div class="ttname"><a href="group__pip1-spawn.html#ga4698d85283b03f0443fb0991e1119d35">pip_spawn</a></div><div class="ttdeci">int pip_spawn(char *filename, char **argv, char **envv, uint32_t coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</div><div class="ttdoc">spawn a PiP task (PiP v1 API and deprecated) </div></div>
-<div class="ttc" id="group__pip-4-export_html_ga68bcfa436ddc6acaf25f67fc30430fc1"><div class="ttname"><a href="group__pip-4-export.html#ga68bcfa436ddc6acaf25f67fc30430fc1">pip_named_import</a></div><div class="ttdeci">int int pip_named_import(int pipid, void **expp, const char *format,...) __attribute__((format(printf</div><div class="ttdoc">import the named exported address </div></div>
-<div class="ttc" id="group__pip-5-misc_html_ga0e12c95fe7abc5c356acfd45a89ad5d8"><div class="ttname"><a href="group__pip-5-misc.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a></div><div class="ttdeci">const char * pip_get_mode_str(void)</div><div class="ttdoc">get a character string of the current execution mode </div></div>
-<div class="ttc" id="group__pip-5-misc_html_gabbec4ae2f820b13400f63cba55a53399"><div class="ttname"><a href="group__pip-5-misc.html#gabbec4ae2f820b13400f63cba55a53399">pip_is_initialized</a></div><div class="ttdeci">int pip_is_initialized(void)</div><div class="ttdoc">Query is PiP library is already initialized. </div></div>
-<div class="ttc" id="group__pip2-exit_html_ga55171ea8db2c2693f005560e427485c2"><div class="ttname"><a href="group__pip2-exit.html#ga55171ea8db2c2693f005560e427485c2">pip_exit</a></div><div class="ttdeci">void pip_exit(int status)</div><div class="ttdoc">terminate the calling PiP task </div></div>
-<div class="ttc" id="group__pip-4-export_html_ga205d73fdb294d3cbfe095c14d5e63637"><div class="ttname"><a href="group__pip-4-export.html#ga205d73fdb294d3cbfe095c14d5e63637">pip_named_tryimport</a></div><div class="ttdeci">int int int pip_named_tryimport(int pipid, void **expp, const char *format,...) __attribute__((format(printf</div><div class="ttdoc">import the named exported address (non-blocking) </div></div>
-<div class="ttc" id="group__pip-5-misc_html_ga0455093d5040ae45585cc88a5f3f002b"><div class="ttname"><a href="group__pip-5-misc.html#ga0455093d5040ae45585cc88a5f3f002b">pip_is_threaded</a></div><div class="ttdeci">int pip_is_threaded(int *flagp)</div><div class="ttdoc">check if PiP execution mode is pthread or not </div></div>
-<div class="ttc" id="group__pip-4-export_html_ga92d98dc8bafe8c73d4332d40d77be6cb"><div class="ttname"><a href="group__pip-4-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb">pip_export</a></div><div class="ttdeci">int int int int pip_export(void *exp)</div><div class="ttdoc">export an address </div></div>
-<div class="ttc" id="group__pip3-wait_html_gae04520bc29d3ec85d7090f7e645de27d"><div class="ttname"><a href="group__pip3-wait.html#gae04520bc29d3ec85d7090f7e645de27d">pip_wait</a></div><div class="ttdeci">int pip_wait(int pipid, int *status)</div><div class="ttdoc">wait for the termination of a PiP task </div></div>
-<div class="ttc" id="group__pip3-wait_html_ga697a16f7400d2a2ed2b8ffa230ca83d9"><div class="ttname"><a href="group__pip3-wait.html#ga697a16f7400d2a2ed2b8ffa230ca83d9">pip_trywait_any</a></div><div class="ttdeci">int pip_trywait_any(int *pipid, int *status)</div><div class="ttdoc">non-blocking version of pip_wait_any </div></div>
-<div class="ttc" id="group__pip-4-export_html_ga3613eaa34ad5a4985007ff9177eb6542"><div class="ttname"><a href="group__pip-4-export.html#ga3613eaa34ad5a4985007ff9177eb6542">pip_named_export</a></div><div class="ttdeci">int pip_named_export(void *exp, const char *format,...) __attribute__((format(printf</div><div class="ttdoc">export an address of the calling PiP root or a PiP task to the others. </div></div>
-<div class="ttc" id="group__pip-5-misc_html_gaf0283e47ad2d415206d6a3fa61e8a0a9"><div class="ttname"><a href="group__pip-5-misc.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a></div><div class="ttdeci">int pip_isa_task(void)</div><div class="ttdoc">check if calling PiP task is a PiP task or not </div></div>
-<div class="ttc" id="group__pip1-spawn_html_ga1c3f1d9e029f68dbcfb7d78b7dfa1533"><div class="ttname"><a href="group__pip1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">pip_spawn_hook</a></div><div class="ttdeci">void pip_spawn_hook(pip_spawn_hook_t *hook, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</div><div class="ttdoc">Setting invocation hook information. </div><div class="ttdef"><b>Definition:</b> pip.h:446</div></div>
-<div class="ttc" id="group__pip-4-export_html_ga6d7ac596a9da824e40d7c06528f42e5f"><div class="ttname"><a href="group__pip-4-export.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a></div><div class="ttdeci">int pip_import(int pipid, void **expp)</div><div class="ttdoc">import exported address of a PiP task </div></div>
-<div class="ttc" id="group__pip3-wait_html_ga621bba73fda6b2bbe3c04e0c65006d36"><div class="ttname"><a href="group__pip3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36">pip_wait_any</a></div><div class="ttdeci">int pip_wait_any(int *pipid, int *status)</div><div class="ttdoc">Wait for the termination of any PiP task. </div></div>
+<div class="line"><a name="l00994"></a><span class="lineno">  994</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-4-query.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a>( <span class="keywordtype">int</span> *ntasksp );</div>
+<div class="line"><a name="l00995"></a><span class="lineno">  995</span>&#160;</div>
+<div class="line"><a name="l01012"></a><span class="lineno"> 1012</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-4-query.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a>( <span class="keywordtype">int</span> *modep );</div>
+<div class="line"><a name="l01013"></a><span class="lineno"> 1013</span>&#160;</div>
+<div class="line"><a name="l01028"></a><span class="lineno"> 1028</span>&#160;  const <span class="keywordtype">char</span> *<a class="code" href="group__PiP-4-query.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01029"></a><span class="lineno"> 1029</span>&#160;</div>
+<div class="line"><a name="l01052"></a><span class="lineno"> 1052</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-4-query.html#gadf3d9e96b46d7a58bf4ce6dda173091a">pip_get_system_id</a>( <span class="keywordtype">int</span> pipid, pip_id_t *idp );</div>
+<div class="line"><a name="l01053"></a><span class="lineno"> 1053</span>&#160;</div>
+<div class="line"><a name="l01066"></a><span class="lineno"> 1066</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__PiP-4-query.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01067"></a><span class="lineno"> 1067</span>&#160;</div>
+<div class="line"><a name="l01080"></a><span class="lineno"> 1080</span>&#160;  <span class="keywordtype">int</span>  <a class="code" href="group__PiP-4-query.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01081"></a><span class="lineno"> 1081</span>&#160;</div>
+<div class="line"><a name="l01097"></a><span class="lineno"> 1097</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-4-query.html#ga0455093d5040ae45585cc88a5f3f002b">pip_is_threaded</a>( <span class="keywordtype">int</span> *flagp );</div>
+<div class="line"><a name="l01098"></a><span class="lineno"> 1098</span>&#160;</div>
+<div class="line"><a name="l01114"></a><span class="lineno"> 1114</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-4-query.html#ga180ece8f3f537d84db8e70921f3ae099">pip_is_shared_fd</a>( <span class="keywordtype">int</span> *flagp );</div>
+<div class="line"><a name="l01115"></a><span class="lineno"> 1115</span>&#160;</div>
+<div class="line"><a name="l01155"></a><span class="lineno"> 1155</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="group__PiP-5-exit.html#ga55171ea8db2c2693f005560e427485c2">pip_exit</a>( <span class="keywordtype">int</span> status );</div>
+<div class="line"><a name="l01156"></a><span class="lineno"> 1156</span>&#160;</div>
+<div class="line"><a name="l01173"></a><span class="lineno"> 1173</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-5-exit.html#gab7ba5cc62101240c68acf07905e36772">pip_kill_all_tasks</a>( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01174"></a><span class="lineno"> 1174</span>&#160;</div>
+<div class="line"><a name="l01183"></a><span class="lineno"> 1183</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="group__PiP-5-exit.html#ga49a4a9ee014ffdaf0c26df18adf965ad">pip_abort</a>(<span class="keywordtype">void</span>);</div>
+<div class="line"><a name="l01184"></a><span class="lineno"> 1184</span>&#160;</div>
+<div class="line"><a name="l01189"></a><span class="lineno"> 1189</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
+<div class="line"><a name="l01190"></a><span class="lineno"> 1190</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l01191"></a><span class="lineno"> 1191</span>&#160;  pid_t  pip_gettid( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01192"></a><span class="lineno"> 1192</span>&#160;  <span class="keywordtype">void</span>   pip_glibc_lock( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01193"></a><span class="lineno"> 1193</span>&#160;  <span class="keywordtype">void</span>   pip_glibc_unlock( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01194"></a><span class="lineno"> 1194</span>&#160;  <span class="keywordtype">void</span>   pip_debug_info( <span class="keywordtype">void</span> );</div>
+<div class="line"><a name="l01195"></a><span class="lineno"> 1195</span>&#160;  <span class="keywordtype">size_t</span> pip_idstr( <span class="keywordtype">char</span>*, <span class="keywordtype">size_t</span> );</div>
+<div class="line"><a name="l01196"></a><span class="lineno"> 1196</span>&#160;  <span class="keywordtype">int</span>    pip_check_pie( <span class="keyword">const</span> <span class="keywordtype">char</span>*, <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l01197"></a><span class="lineno"> 1197</span>&#160;</div>
+<div class="line"><a name="l01198"></a><span class="lineno"> 1198</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l01199"></a><span class="lineno"> 1199</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;<span class="preprocessor">#include &lt;pip_blt.h&gt;</span></div>
+<div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;<span class="preprocessor">#include &lt;pip_dlfcn.h&gt;</span></div>
+<div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;<span class="preprocessor">#include &lt;pip_signal.h&gt;</span></div>
+<div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;</div>
+<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;<span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">/* _pip_h_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__PiP-0-init-fin_html_ga20439326ff318c2dd0752bd544dca0e2"><div class="ttname"><a href="group__PiP-0-init-fin.html#ga20439326ff318c2dd0752bd544dca0e2">pip_init</a></div><div class="ttdeci">int pip_init(int *pipidp, int *ntasks, void **root_expp, uint32_t opts)</div><div class="ttdoc">Initialize the PiP library. </div></div>
+<div class="ttc" id="group__PiP-0-init-fin_html_gac4654282785abb9434ce81573fdf16ed"><div class="ttname"><a href="group__PiP-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a></div><div class="ttdeci">int pip_fin(void)</div><div class="ttdoc">Finalize the PiP library. </div></div>
+<div class="ttc" id="group__PiP-5-exit_html_ga55171ea8db2c2693f005560e427485c2"><div class="ttname"><a href="group__PiP-5-exit.html#ga55171ea8db2c2693f005560e427485c2">pip_exit</a></div><div class="ttdeci">void pip_exit(int status)</div><div class="ttdoc">terminate the calling PiP task </div></div>
+<div class="ttc" id="group__PiP-4-query_html_gabbec4ae2f820b13400f63cba55a53399"><div class="ttname"><a href="group__PiP-4-query.html#gabbec4ae2f820b13400f63cba55a53399">pip_is_initialized</a></div><div class="ttdeci">int pip_is_initialized(void)</div><div class="ttdoc">Query is PiP library is already initialized. </div></div>
+<div class="ttc" id="group__PiP-2-export_html_ga3613eaa34ad5a4985007ff9177eb6542"><div class="ttname"><a href="group__PiP-2-export.html#ga3613eaa34ad5a4985007ff9177eb6542">pip_named_export</a></div><div class="ttdeci">int pip_named_export(void *exp, const char *format,...) __attribute__((format(printf</div><div class="ttdoc">export an address of the calling PiP root or a PiP task to the others. </div></div>
+<div class="ttc" id="group__PiP-4-query_html_gaf0283e47ad2d415206d6a3fa61e8a0a9"><div class="ttname"><a href="group__PiP-4-query.html#gaf0283e47ad2d415206d6a3fa61e8a0a9">pip_isa_task</a></div><div class="ttdeci">int pip_isa_task(void)</div><div class="ttdoc">check if calling PiP task is a PiP task or not </div></div>
+<div class="ttc" id="group__PiP-1-spawn_html_ga6ebadd5070ca345daf8d7465f4926fc0"><div class="ttname"><a href="group__PiP-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0">pip_spawn_from_func</a></div><div class="ttdeci">void pip_spawn_from_func(pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp)</div><div class="ttdoc">Setting information to invoke a PiP task starting from a function defined in a program. </div><div class="ttdef"><b>Definition:</b> pip.h:376</div></div>
+<div class="ttc" id="group__PiP-2-export_html_ga205d73fdb294d3cbfe095c14d5e63637"><div class="ttname"><a href="group__PiP-2-export.html#ga205d73fdb294d3cbfe095c14d5e63637">pip_named_tryimport</a></div><div class="ttdeci">int int int pip_named_tryimport(int pipid, void **expp, const char *format,...) __attribute__((format(printf</div><div class="ttdoc">import the named exported address (non-blocking) </div></div>
+<div class="ttc" id="group__PiP-3-wait_html_ga621bba73fda6b2bbe3c04e0c65006d36"><div class="ttname"><a href="group__PiP-3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36">pip_wait_any</a></div><div class="ttdeci">int pip_wait_any(int *pipid, int *status)</div><div class="ttdoc">Wait for the termination of any PiP task. </div></div>
+<div class="ttc" id="group__PiP-4-query_html_gadf3d9e96b46d7a58bf4ce6dda173091a"><div class="ttname"><a href="group__PiP-4-query.html#gadf3d9e96b46d7a58bf4ce6dda173091a">pip_get_system_id</a></div><div class="ttdeci">int pip_get_system_id(int pipid, pip_id_t *idp)</div><div class="ttdoc">deliver a process or thread ID defined by the system </div></div>
+<div class="ttc" id="group__PiP-2-export_html_ga92d98dc8bafe8c73d4332d40d77be6cb"><div class="ttname"><a href="group__PiP-2-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb">pip_export</a></div><div class="ttdeci">int int int int pip_export(void *exp)</div><div class="ttdoc">export an address </div></div>
+<div class="ttc" id="group__PiP-3-wait_html_ga9e786d15401af041842f3f503c962a4b"><div class="ttname"><a href="group__PiP-3-wait.html#ga9e786d15401af041842f3f503c962a4b">pip_trywait</a></div><div class="ttdeci">int pip_trywait(int pipid, int *status)</div><div class="ttdoc">wait for the termination of a PiP task in a non-blocking way </div></div>
+<div class="ttc" id="group__PiP-1-spawn_html_ga0b1e746befd27c418355d28a830b2db6"><div class="ttname"><a href="group__PiP-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6">pip_spawn_from_main</a></div><div class="ttdeci">void pip_spawn_from_main(pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp)</div><div class="ttdoc">Setting information to invoke a PiP task starting from the main function. </div><div class="ttdef"><b>Definition:</b> pip.h:316</div></div>
+<div class="ttc" id="group__PiP-4-query_html_ga6f1045bdbf682cb2ac504f09b57b73e9"><div class="ttname"><a href="group__PiP-4-query.html#ga6f1045bdbf682cb2ac504f09b57b73e9">pip_isa_root</a></div><div class="ttdeci">int pip_isa_root(void)</div><div class="ttdoc">check if calling PiP task is a PiP root or not </div></div>
+<div class="ttc" id="group__PiP-2-export_html_ga6d7ac596a9da824e40d7c06528f42e5f"><div class="ttname"><a href="group__PiP-2-export.html#ga6d7ac596a9da824e40d7c06528f42e5f">pip_import</a></div><div class="ttdeci">int pip_import(int pipid, void **expp)</div><div class="ttdoc">import exported address of a PiP task </div></div>
+<div class="ttc" id="group__PiP-4-query_html_ga0455093d5040ae45585cc88a5f3f002b"><div class="ttname"><a href="group__PiP-4-query.html#ga0455093d5040ae45585cc88a5f3f002b">pip_is_threaded</a></div><div class="ttdeci">int pip_is_threaded(int *flagp)</div><div class="ttdoc">check if PiP execution mode is pthread or not </div></div>
+<div class="ttc" id="group__PiP-3-wait_html_ga697a16f7400d2a2ed2b8ffa230ca83d9"><div class="ttname"><a href="group__PiP-3-wait.html#ga697a16f7400d2a2ed2b8ffa230ca83d9">pip_trywait_any</a></div><div class="ttdeci">int pip_trywait_any(int *pipid, int *status)</div><div class="ttdoc">non-blocking version of pip_wait_any </div></div>
+<div class="ttc" id="group__PiP-3-wait_html_gae04520bc29d3ec85d7090f7e645de27d"><div class="ttname"><a href="group__PiP-3-wait.html#gae04520bc29d3ec85d7090f7e645de27d">pip_wait</a></div><div class="ttdeci">int pip_wait(int pipid, int *status)</div><div class="ttdoc">wait for the termination of a PiP task </div></div>
+<div class="ttc" id="group__PiP-4-query_html_ga180ece8f3f537d84db8e70921f3ae099"><div class="ttname"><a href="group__PiP-4-query.html#ga180ece8f3f537d84db8e70921f3ae099">pip_is_shared_fd</a></div><div class="ttdeci">int pip_is_shared_fd(int *flagp)</div><div class="ttdoc">check if file descriptors are shared or not. This is equivalent with the pip_is_threaded function...</div></div>
+<div class="ttc" id="group__PiP-1-spawn_html_gaf1fcc4cb85ec3eda734afe2beb0c6a36"><div class="ttname"><a href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36">pip_task_spawn</a></div><div class="ttdeci">int pip_task_spawn(pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp)</div><div class="ttdoc">Spawning a PiP task. </div></div>
+<div class="ttc" id="group__PiP-4-query_html_ga0e12c95fe7abc5c356acfd45a89ad5d8"><div class="ttname"><a href="group__PiP-4-query.html#ga0e12c95fe7abc5c356acfd45a89ad5d8">pip_get_mode_str</a></div><div class="ttdeci">const char * pip_get_mode_str(void)</div><div class="ttdoc">get a character string of the current execution mode </div></div>
+<div class="ttc" id="group__PiP-4-query_html_ga9786d5aafa2a3882714c35ecc9f39a5a"><div class="ttname"><a href="group__PiP-4-query.html#ga9786d5aafa2a3882714c35ecc9f39a5a">pip_get_ntasks</a></div><div class="ttdeci">int pip_get_ntasks(int *ntasksp)</div><div class="ttdoc">get the maximum number of the PiP tasks </div></div>
+<div class="ttc" id="group__PiP-5-exit_html_ga49a4a9ee014ffdaf0c26df18adf965ad"><div class="ttname"><a href="group__PiP-5-exit.html#ga49a4a9ee014ffdaf0c26df18adf965ad">pip_abort</a></div><div class="ttdeci">void pip_abort(void)</div><div class="ttdoc">Kill all PiP tasks and then kill PiP root. </div></div>
+<div class="ttc" id="group__PiP-1-spawn_html_ga4698d85283b03f0443fb0991e1119d35"><div class="ttname"><a href="group__PiP-1-spawn.html#ga4698d85283b03f0443fb0991e1119d35">pip_spawn</a></div><div class="ttdeci">int pip_spawn(char *filename, char **argv, char **envv, uint32_t coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</div><div class="ttdoc">spawn a PiP task (PiP v1 API and deprecated) </div></div>
+<div class="ttc" id="group__PiP-4-query_html_gab603f68c1ce972a5f3bfb8c95fcfb555"><div class="ttname"><a href="group__PiP-4-query.html#gab603f68c1ce972a5f3bfb8c95fcfb555">pip_get_mode</a></div><div class="ttdeci">int pip_get_mode(int *modep)</div><div class="ttdoc">get the PiP execution mode </div></div>
+<div class="ttc" id="group__PiP-2-export_html_ga68bcfa436ddc6acaf25f67fc30430fc1"><div class="ttname"><a href="group__PiP-2-export.html#ga68bcfa436ddc6acaf25f67fc30430fc1">pip_named_import</a></div><div class="ttdeci">int int pip_named_import(int pipid, void **expp, const char *format,...) __attribute__((format(printf</div><div class="ttdoc">import the named exported address </div></div>
+<div class="ttc" id="group__PiP-5-exit_html_gab7ba5cc62101240c68acf07905e36772"><div class="ttname"><a href="group__PiP-5-exit.html#gab7ba5cc62101240c68acf07905e36772">pip_kill_all_tasks</a></div><div class="ttdeci">int pip_kill_all_tasks(void)</div><div class="ttdoc">kill all PiP tasks </div></div>
+<div class="ttc" id="group__PiP-1-spawn_html_ga1c3f1d9e029f68dbcfb7d78b7dfa1533"><div class="ttname"><a href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">pip_spawn_hook</a></div><div class="ttdeci">void pip_spawn_hook(pip_spawn_hook_t *hook, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</div><div class="ttdoc">Setting invocation hook information. </div><div class="ttdef"><b>Definition:</b> pip.h:449</div></div>
+<div class="ttc" id="group__PiP-4-query_html_ga4e715bb8c325e9acc81af0745908dc0e"><div class="ttname"><a href="group__PiP-4-query.html#ga4e715bb8c325e9acc81af0745908dc0e">pip_get_pipid</a></div><div class="ttdeci">int pip_get_pipid(int *pipidp)</div><div class="ttdoc">get PiP ID of the calling task </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

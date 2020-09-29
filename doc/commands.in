@@ -1,6 +1,10 @@
 
 # Commands
 - pipcc
+- pip-check
+- pip-exec
+- pip-man
+- pip-mode
 - pips
 - printpipmode
 

@@ -1,7 +1,7 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
-  * 	  System Software Devlopment Team. All rights researved$
-  * $PIP_VERSION: Version 1.0$
+  * $RIKEN_copyright: Riken Center for Computational Sceience,
+  * System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+  * $PIP_VERSION: Version 3.0.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
@@ -238,7 +238,7 @@ extern "C" {
 #endif
 
   /**
-   * \addtogroup pip1-spawn
+   * \addtogroup PiP-1-spawn
    * @{
    */
 
@@ -346,8 +346,12 @@ extern "C" {
    * If the root process is multithreaded, only the main
    * thread can call this function.
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3),
-   * pip_spawn_from_func(3), pip_spawn_hook(3), pip_task_spawn(3), pip_spawn(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_main
+   * \sa pip_spawn_from_func
+   * \sa pip_spawn_hook
+   * \sa pip_task_spawn
+   * \sa pip_spawn
    */
 #ifdef DOXYGEN_INPROGRESS
 int pip_blt_spawn( pip_spawn_program_t *progp,
@@ -375,7 +379,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp0-yield Yielding Functionns
+   * \defgroup ULP-0-yield Yielding Functionns
    * @{
    * \page pip-yield Yielding functions
    * \description Yielding execution of the calling BLT/ULP
@@ -403,7 +407,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * If \b PIP_YIELD_DEFAULT or zero, then both \b PIP_YIELD_USER and
    * \b PIP_YIELD_SYSTEM will be effective.
    *
-   * \sa pip_yield_to(3)
+   * \sa pip_yield_to
    */
   int pip_yield( int flag );
 
@@ -429,7 +433,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM The specified task belongs to the other scheduling
    * domain.
    *
-   * \sa pip_yield(3)
+   * \sa pip_yield
    */
   int pip_yield_to( pip_task_t *task );
 
@@ -438,7 +442,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp1-task-queue Task Queue Operations
+   * \defgroup ULP-1-task-queue Task Queue Operations
    * @{
    * \page ulp-task-queue Task queue operations
    * \description Manipulating ULP/BLT task queue functions
@@ -775,7 +779,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp2-suspension Suspending and Resuming BLT/ULP
+   * \defgroup ULP-2-suspension Suspending and Resuming BLT/ULP
    * @{
    * \page ulp-suspension Suspending and resuming BLT/ULP
    * \description Suspending and resuming BLT/ULP
@@ -811,7 +815,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM  PiP library is not initialized yet
    * \retval EINVAL \p queue is \p NULL
    *
-   * \sa pip_enqueu_and_suspend_nolock(3), pip_dequeue_and_resume(3)
+   * \sa pip_enqueue_and_suspend_nolock
+   * \sa pip_dequeue_and_resume
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_suspend_and_enqueue( pip_task_queue_t *queue,
@@ -1029,7 +1034,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp--misc BLT/ULP Miscellaneous Function
+   * \defgroup ULP-3-misc BLT/ULP Miscellaneous Function
    * @{
    * \page ulp-misc BLT/ULP miscellaneous function
    * \description BLT/ULP miscellaneous function
@@ -1105,7 +1110,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    *
-   * \sa pip_get_aux(3)
+   * \sa pip_get_aux
    */
   int pip_set_aux( pip_task_t *task, void *aux );
 
@@ -1127,7 +1132,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    *
-   * \sa pip_set_aux(3)
+   * \sa pip_set_aux
    */
   int pip_get_aux( pip_task_t *task, void **auxp );
 
@@ -1147,13 +1152,12 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * finalized
    */
   int pip_get_sched_domain( pip_task_t **domainp );
-
   /**
    * @}
    */
 
   /**
-   * \defgroup ulp3-barrier BLT/ULP Barrier Functions
+   * \defgroup ULP-4-barrier BLT/ULP Barrier Functions
    * @{
    * \page ulp-barrier BLT/ULP barrier synchronization functions
    * \description BLT/ULP barrier synchronization functions
@@ -1179,7 +1183,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    *
    * \note This barrier works on PiP tasks only.
    *
-   * \sa pip_barrier_init(3), pip_barrier_fin(3),
+   * \sa pip_barrier_init
+   * \sa pip_barrier_fin
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_barrier_init( pip_barrier_t *barrp, int n );
@@ -1205,7 +1210,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    *
-   * \sa pip_barrier_init(3), pip_barrier_fin(3),
+   * \sa pip_barrier_init
+   * \sa pip_barrier_fin
    *
    */
 #ifdef DOXYGEN_INPROGRESS
@@ -1233,7 +1239,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EBUSY there are some tasks wating for barrier
    * synchronization
    *
-   * \sa  pip_barrier_init(3), pip_barrier_wait(3),
+   * \sa pip_barrier_init
+   * \sa pip_barrier_wait
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_barrier_fin( pip_barrier_t *barrp );
@@ -1248,7 +1255,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp4-mutex BLT/ULP Mutex Functions
+   * \defgroup ULP-5-mutex BLT/ULP Mutex Functions
    * @{
    * \page ulp-barrier BLT/ULP mutex functions
    * \description BLT/ULP mutex  functions
@@ -1269,7 +1276,9 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    *
-   * \sa pip_mutex_lock(3), pip_mutex_unlock(3), pip_mutex_fin(3)
+   * \sa pip_mutex_lock
+   * \sa pip_mutex_unlock
+   * \sa pip_mutex_fin
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_init( pip_mutex_t *mutex );
@@ -1294,7 +1303,9 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    *
-   * \sa pip_mutex_init(3), pip_mutex_unlock(3), pip_mutex_fin(3)
+   * \sa pip_mutex_init
+   * \sa pip_mutex_unlock
+   * \sa pip_mutex_fin
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_lock( pip_mutex_t *mutex );
@@ -1319,7 +1330,9 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * \retval EPERM PiP library is not yet initialized or already
    * finalized
    *
-   * \sa pip_mutex_init(3), pip_mutex_lock(3), pip_mutex_fin(3)
+   * \sa pip_mutex_init
+   * \sa pip_mutex_lock
+   * \sa pip_mutex_fin
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_unlock( pip_mutex_t *mutex );
@@ -1345,7 +1358,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    * finalized
    * \retval EBUSY There is one or more waiting PiP task
    *
-   * \sa pip_mutex_lock(3), pip_mutex_unlock(3)
+   * \sa pip_mutex_lock
+   * \sa pip_mutex_unlock
    */
 #ifdef DOXYGEN_INPROGRESS
   int pip_mutex_fin( pip_mutex_t *mutex );
@@ -1360,7 +1374,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup ulp5-coupling BLT/ULP Coupling/Decoupling Functions
+   * \defgroup ULP-6-coupling BLT/ULP Coupling/Decoupling Functions
    * @{
    * \page ulp-coupling BLT/ULP coupling/decoupling functions
    * \description BLT/ULP coupling/decoupling functions

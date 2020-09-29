@@ -1,4 +1,4 @@
-# $PIP_VERSION: Version 1.0$
+# $PIP_VERSION: Version 3.0.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,8 +25,8 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
-# 	  System Software Devlopment Team. All rights researved$
+# $RIKEN_copyright: Riken Center for Computational Sceience,
+# System Software Development Team, 2016, 2017, 2018, 2019, 2020$
 
 top_builddir = .
 top_srcdir = .
@@ -91,25 +91,27 @@ check-installed: do-check-installed
 
 ### doc
 
-doxygen : doc
+doc-install:
 	$(MAKE) -C doc
-.PHONY: doc
-
-doc-install :
-	$(MAKE) -C doc install
 .PHONY: doc-install
+
+doc: doc-install
+.PHONY: doc
 
 doc-reset:
 	$(MAKE) -C doc doc-reset
 .PHONE: doc-reset
 
-docclean:
-	$(MAKE) -C doc docclean
+doc-clean:
+	$(MAKE) -C doc clean
 .PHONE: docclean
 
 post-distclean-hook:
 	$(MAKE) -C doc post-distclean-hook
 .PHONY: post-distclean-hook
+
+post-documents-hook:
+	$(MAKE) -C doc documents
 
 ###
 
@@ -129,9 +131,9 @@ post-clean-hook:
 	$(MAKE) -C test clean
 
 post-veryclean-hook:
-	$(RM) config.sh lib/fcontext.mk
-	$(MAKE) -C sample veryclean
-	$(MAKE) -C test veryclean
+	$(RM) config.log config.status include/config.h
+	$(RM) lib/fcontext.mk
+	$(MAKE) subdir-veryclean
 
 .PHONY: TAGS
 TAGS:

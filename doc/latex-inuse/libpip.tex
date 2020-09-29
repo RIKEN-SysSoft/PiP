@@ -1,6 +1,6 @@
 \section*{Process-\/in-\/\-Process (Pi\-P)}
 
-Pi\-P is a user-\/level library to have the best of the both worlds of multi-\/process and multi-\/thread parallel execution models. Pi\-P allows a process to create sub-\/processes into the same virtual address space where the parent process runs. The parent process and sub-\/processes share the same address space, however, each process has its own variable set. So, each process runs independently from the other process. If some or all processes agree, then data own by a process can be accessed by the other processes. Those processes share the same address space, just like pthreads, and each process has its own variables like a process. The parent process is called Pi\-P process and a sub-\/process are called a Pi\-P task.
+Pi\-P is a user-\/level library to have the best of the both worlds of multi-\/process and multi-\/thread parallel execution models. Pi\-P allows a process to create sub-\/processes into the same virtual address space where the parent process runs. The parent process and sub-\/processes share the same address space, however, each process has its own variable set. So, each process runs independently from the other process. If some or all processes agree, then data owned by a process can be accessed by the other processes. Those processes share the same address space, just like pthreads, but each process has its own variables like the process execution model. Hereinafter, the parent process is called Pi\-P process and a sub-\/process are called a Pi\-P task.
 
 \subsection*{Pi\-P Versions}
 
@@ -26,34 +26,55 @@ As described, Pi\-P allows Pi\-P tasks to share the same virtual address space. 
 
 \subsection*{Execution Mode}
 
-There are several Pi\-P implementation modes which can be selected at the runtime. These implementations can be categorized into two according to the behavior of Pi\-P tasks,
+There are several Pi\-P implementation modes which can be selected at the runtime. These implementations can be categorized into two;
 
 
 \begin{DoxyItemize}
 \item Process and
-\item (P)Thread
+\item (P)Thread.
 \end{DoxyItemize}
 
-In the pthread mode, although each Pi\-P task has its own variables unlike thread, Pi\-P task behaves more like P\-Thread, having a T\-I\-D, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on. In the process mode, Pi\-P task behaves more like a process, having a P\-I\-D, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on. The above mentioned U\-L\-P can only work with the process mode.
+In the pthread mode, although each Pi\-P task has its own static variables unlike thread, Pi\-P task behaves more like P\-Thread, having a T\-I\-D, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on. In the process mode, a Pi\-P task behaves more like a process, having a P\-I\-D, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on. The above mentioned U\-L\-P can only work with the process mode.
 
-When the {\ttfamily P\-I\-P\-\_\-\-M\-O\-D\-E} environment variable set to \char`\"{}thread\char`\"{} or \char`\"{}pthread\char`\"{} then the Pi\-P library runs based on the pthread mode, and it is set to \char`\"{}process\char`\"{} then it runs with the process mode. There are also three implementations in the process mode; \char`\"{}process\-:preload,\char`\"{} \char`\"{}process\-:pipclone\char`\"{} and \char`\"{}process\-:got.\char`\"{} The \char`\"{}process\-:preload\char`\"{} mode must be with the L\-D\-\_\-\-P\-R\-E\-L\-O\-A\-D environment variable setting so that the clone() system call wrapper can work with. The \char`\"{}process\-:pipclone\char`\"{} mode can only be specified with the P\-I\-P-\/patched glibc library (see below\-: G\-L\-I\-B\-C issues).
+When the {\ttfamily P\-I\-P\-\_\-\-M\-O\-D\-E} environment variable set to \char`\"{}()thread\char`\"{} then the Pi\-P library runs in the pthread mode, and if it is set to \char`\"{}process\char`\"{} then it runs in the process mode. There are also three implementations in the process mode; \char`\"{}process\-:preload,\char`\"{} \char`\"{}process\-:pipclone\char`\"{} and \char`\"{}process\-:got.\char`\"{} The \char`\"{}process\-:preload\char`\"{} mode must be with the L\-D\-\_\-\-P\-R\-E\-L\-O\-A\-D environment variable setting so that the clone() system call wrapper can work with. The \char`\"{}process\-:pipclone\char`\"{} mode is only effective with the P\-I\-P-\/patched glibc library (see below).
 
-There several function provided by the Pi\-P library to absorb the difference due to the execution mode
+Several function are made available by the Pi\-P library to absorb the functional differences due to the execution modes.
 
 \section*{License}
 
-This project is licensed under the 2-\/clause simplified B\-S\-D License -\/ see the \mbox{[}L\-I\-C\-E\-N\-S\-E\mbox{]}(L\-I\-C\-E\-N\-S\-E) file for details.
+This package is licensed under the 2-\/clause simplified B\-S\-D License -\/ see the \mbox{[}L\-I\-C\-E\-N\-S\-E\mbox{]}(L\-I\-C\-E\-N\-S\-E) file for details.
 
 \section*{Installation}
 
-\subsection*{Pi\-P Trial by using Docker image}
+There are several ways to install Pi\-P; Docker, Spack, R\-P\-M, and building fromm the source code.
+
+\subsection*{Docker image}
 
 Download and run the Pi\-P Docker image. \begin{DoxyVerb}$ docker pull rikenpip/pip-vN
 $ sudo docker run -it rikenpip/pip-vN /bin/bash
 \end{DoxyVerb}
 
 
-\subsection*{Source Repositories}
+\subsection*{\href{https://spack.readthedocs.io/}{\tt Spack}}
+
+Download spack and do the follwoing; \begin{DoxyVerb}$ git clone https://github.com/spack/spack.git
+$ cd spack/bin
+$ spack install process-in-process
+\end{DoxyVerb}
+
+
+\subsection*{Installation from R\-P\-Ms}
+
+R\-P\-M packages and their yum repository are also available for Cent\-O\-S 7 / R\-H\-E\-L7. \begin{DoxyVerb}$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
+$ sudo yum install pip-glibc
+$ sudo yum install pip pip-debuginfo
+$ sudo yum install pip-gdb
+\end{DoxyVerb}
+
+
+If Pi\-P packages are installed by the above R\-P\-Ms, {\bfseries P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R} will be \char`\"{}/usr.\char`\"{}
+
+\subsection*{Source Code}
 
 The installation of Pi\-P related packages must follow the order below;
 
@@ -64,7 +85,7 @@ The installation of Pi\-P related packages must follow the order below;
 \item Build Pi\-P-\/gdb (optional)
 \end{DoxyEnumerate}
 
-Note that if Pi\-P-\/gdb will not work at all without Pi\-P-\/glibc. Further, Pi\-P can only create up to around ten Pi\-P tasks without installing Pi\-P-\/glibc.
+By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbugged by using Pi\-P-\/gdb. In other words, without installing Pi\-P-\/glibc, users can create up to around 10 Pi\-P tasks (the number depends on the program) and cannot debug by using Pi\-P-\/gdb. Above Docker image and Spack include Pi\-P-\/glibc and Pi\-P-\/gdb.
 
 
 \begin{DoxyItemize}
@@ -98,42 +119,27 @@ Build Pi\-P-\/glibc
 
 The same source code can be ussed for Cent\-O\-S7 and Cent\-O\-S8 (R\-H\-E\-L7 and R\-H\-E\-L8).
 
-\$ git clone -\/b pip-\/\-N \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-Pi\-P \$ cd P\-I\-P\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ ./configure --prefix=P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R \mbox{[} --with-\/glibc-\/libdir=G\-L\-I\-B\-C\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R/lib \mbox{]} \$ make install doxgyen-\/install \$ cd P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R/bin \$ ./piplnlibs
+\$ git clone -\/b pip-\/\-N \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-Pi\-P \$ cd P\-I\-P\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ ./configure --prefix=P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R \mbox{[} --with-\/glibc-\/libdir=G\-L\-I\-B\-C\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R/lib \mbox{]} \$ make install doc
 
 If you want to make sure if the Pi\-P library is correctly installed, then do the following;
 
-\$ cd P\-I\-P\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ make install-\/test
-
-Important note\-: The prefix directory of Pi\-P-\/glibc and the prefix directory of Pi\-P itself must N\-O\-T be the same.
+\$ cd P\-I\-P\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ make check-\/installed
 \item Build Pi\-P-\/gdb (optional)
 
-Fetch source tree (Cent\-O\-S7 or R\-H\-E\-L7)\-:
+Fetch source tree; Cent\-O\-S7 or R\-H\-E\-L7
 
 \$ git clone -\/b pip-\/centos7 \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-P\-I\-P-\/gdb
 
-Ftech source tree (Cent\-O\-S8 or R\-H\-E\-L8)\-:
+Cent\-O\-S8 or R\-H\-E\-L8
 
 \$ git clone -\/b pip-\/centos8 \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-P\-I\-P-\/gdb
 
 Build Pi\-P-\/gdb
 
-\$ cd G\-L\-I\-B\-C\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ ./build.sh --prefix=G\-L\-I\-B\-C\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R --with-\/pip=P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R
-
-The prefix directory of Pi\-P-\/gdb can be the same with the prefix directory of Pi\-P library.
+\$ cd G\-D\-B\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ ./build.sh --prefix=G\-D\-B\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R --with-\/pip=P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R
 \end{DoxyEnumerate}
 
-\subsection*{Installation from R\-P\-Ms}
-
-R\-P\-M packages and their yum repository are also available for Cent\-O\-S 7 / R\-H\-E\-L7. \begin{DoxyVerb}$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
-$ sudo yum install pip-glibc
-$ sudo yum install pip pip-debuginfo
-$ sudo yum install pip-gdb
-\end{DoxyVerb}
-
-
-If Pi\-P packages are installed by the above R\-P\-Ms, {\bfseries P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R} is \char`\"{}/usr.\char`\"{}
-
-\section*{Pi\-P documents}
+\section*{Pi\-P Documents}
 
 The following Pi\-P documents are created by using \href{https://www.doxygen.nl/}{\tt Doxygen}.
 
@@ -151,7 +157,11 @@ The above two exammples will show you the same document you are reading.
 
 \subsection*{P\-D\-F}
 
-P\-D\-F documents will be installed at {\bfseries P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R}/share/doc/pip/pdf.
+P\-D\-F documents will be installed at {\bfseries P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R}/share/pdf.
+
+\subsection*{H\-T\-M\-L}
+
+H\-T\-M\-L documents will be installed at {\bfseries P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R}/share/html.
 
 \section*{Getting Started}
 
@@ -174,13 +184,13 @@ $ pipcc -Wall -O2 -g -o pip-prog pip-prog.c
 \item pip-\/exec(1) command (piprun(1) in Pi\-P v1)
 \end{DoxyItemize}
 
-Let's assume your that have a non-\/\-Pi\-P program(s) and wnat to run as Pi\-P tasks. All you have to do is to compile your program by using the above pipcc(1) command and to use the pip-\/exec(1) command to run your program as Pi\-P tasks. \begin{DoxyVerb}$ pipcc myprog.c -o myprog
+Let's assume that you have a non-\/\-Pi\-P program(s) and wnat to run as Pi\-P tasks. All you have to do is to compile your program by using the above pipcc(1) command and to use the pip-\/exec(1) command to run your program as Pi\-P tasks. \begin{DoxyVerb}$ pipcc myprog.c -o myprog
 $ pip-exec -n 8 ./myprog
 $ ./myprog
 \end{DoxyVerb}
 
 
-In this case, the pip-\/exec(1) command becomes the Pi\-P root and your program runs as 8 Pi\-P tasks. Your program can also run as a normal (non-\/\-Pi\-P) program without using the pip-\/exec(1) command. Note that the 'myprog.\-c' may or may not call any Pi\-P functions.
+In this case, the pip-\/exec(1) command becomes the Pi\-P root and your program runs as 8 Pi\-P tasks. Note that the 'myprog.\-c' may or may not call any Pi\-P functions. Your program can also run as a normal program (not as a Pi\-P task) without using the pip-\/exec(1) command.
 
 You may write your own Pi\-P programs whcih includes the Pi\-P root programming. In this case, your program can run without using the pip-\/exec(1) command.
 
@@ -199,7 +209,7 @@ Above example shows that the 'a.\-out' program can run as a Pi\-P root and Pi\-P
 \begin{DoxyItemize}
 \item pips(1) command (from v2)
 
-You can check if your Pi\-P program is running or not by using the pips(1) command.
+You can see how your Pi\-P program is running in realtimme by using the pips(1) command.
 \end{DoxyItemize}
 
 List the Pi\-P tasks via the 'ps' command; \begin{DoxyVerb}$ pips -l [ COMMAND ]
@@ -218,7 +228,7 @@ Additionally you can kill all of your Pi\-P tasks by using the same pips(1) comm
 
 \subsection*{Debugging your Pi\-P programs by the pip-\/gdb command}
 
-The following procedure attaches all Pi\-P tasks, which are created by same Pi\-P root task, as G\-D\-B inferiors. \begin{DoxyVerb}$ pip-gdb
+The following procedure attaches all Pi\-P tasks and Pi\-P root which created those tasks. Each Pi\-P 'processes' is treated as a G\-D\-B inferior in Pi\-P-\/gdb. \begin{DoxyVerb}$ pip-gdb
 (gdb) attach PID
 \end{DoxyVerb}
 
@@ -271,7 +281,7 @@ You can attach all relevant Pi\-P tasks by\-: \begin{DoxyVerb}$ pip-gdb -p PID-o
 
 (from v2)
 
-If the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H environment is set to the path pointing to Pi\-P-\/gdb executable file, then Pi\-P-\/gdb is automatically attached when an excetion signal (S\-I\-G\-S\-E\-G\-V and S\-I\-G\-H\-U\-P by default) is delivered. The exception signals can also be defined by setting the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-S\-I\-G\-N\-A\-L\-S environment. Signal names (case insensitive) can be concatenated by the '+' or '-\/' symbol. 'all' is reserved to specify most of the signals. For example, 'A\-L\-L-\/\-T\-E\-R\-M' means all signals excepting S\-I\-G\-T\-E\-R\-M, another example, 'P\-I\-P\-E+\-I\-N\-T' means S\-I\-G\-P\-I\-P\-E and S\-I\-G\-I\-N\-T. If one of the defined or default signals is delivered, then Pi\-P-\/gdb will be attached. The Pi\-P-\/gdb will show backtrace by default. If users specify P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-C\-O\-M\-M\-A\-N\-D that a filename containing some G\-D\-B commands, then those G\-D\-B commands will be executed by the G\-D\-B, instead of backtrace, in batch mode. If the P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T environment is set (to any value), then the Pi\-P library delivers S\-I\-G\-S\-T\-O\-P to a spawned Pi\-P task which is about to start user program.
+If the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H environment is set to the path pointing to Pi\-P-\/gdb executable file, then Pi\-P-\/gdb is automatically attached when an excetion signal (S\-I\-G\-S\-E\-G\-V and S\-I\-G\-H\-U\-P by default) is delivered. The exception signals can also be defined by setting the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-S\-I\-G\-N\-A\-L\-S environment. Signal names (case insensitive) can be concatenated by the '+' or '-\/' symbol. 'all' is reserved to specify most of the signals. For example, 'A\-L\-L-\/\-T\-E\-R\-M' means all signals excepting S\-I\-G\-T\-E\-R\-M, another example, 'P\-I\-P\-E+\-I\-N\-T' means S\-I\-G\-P\-I\-P\-E and S\-I\-G\-I\-N\-T. If one of the specified or default signals is delivered, then Pi\-P-\/gdb will be attached automatically. The Pi\-P-\/gdb will show backtrace by default. If users specify P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-C\-O\-M\-M\-A\-N\-D that a filename containing some G\-D\-B commands, then those G\-D\-B commands will be executed by Pi\-P-\/gdb, instead of backtrace, in batch mode. If the P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T environment is set (to any value), then the Pi\-P library delivers S\-I\-G\-S\-T\-O\-P to a spawned Pi\-P task which is about to start user program.
 
 \section*{Mailing List}
 
@@ -281,13 +291,24 @@ If the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H environment is set to the path p
 
 \subsection*{Research papers}
 
-A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. \char`\"{}\-Process-\/in-\/process\-: techniques for practical address-\/space sharing,\char`\"{} In Proceedings of the 27th International Symposium on High-\/\-Performance Parallel and Distributed Computing (H\-P\-D\-C '18). A\-C\-M, New York, N\-Y, U\-S\-A, 131-\/143. D\-O\-I\-: \href{https://doi.org/10.1145/3208040.3208045}{\tt https\-://doi.\-org/10.\-1145/3208040.\-3208045}
+Atsushi Hori, Min Si, Balazs Gerofi, Masamichi Takagi, Jay Dayal, Pavan Balaji, and Yutaka Ishikawa. \char`\"{}\-Process-\/in-\/process\-: techniques for
+practical address-\/space sharing,\char`\"{} In Proceedings of the 27th International Symposium on High-\/\-Performance Parallel and Distributed Computing (H\-P\-D\-C '18). A\-C\-M, New York, N\-Y, U\-S\-A, 131-\/143. D\-O\-I\-: \href{https://doi.org/10.1145/3208040.3208045}{\tt https\-://doi.\-org/10.\-1145/3208040.\-3208045}
+
+Atsushi Hori, Balazs Gerofi, and Yuataka Ishikawa. \char`\"{}\-An Implementation
+of User-\/\-Level Processes using Address Space Sharing,\char`\"{} 2020 I\-E\-E\-E International Parallel and Distributed Processing Symposium Workshops (I\-P\-D\-P\-S\-W), New Orleans, L\-A, U\-S\-A, 2020, pp. 976-\/984, D\-O\-I\-: \href{https://doi.org/10.1109/IPDPSW50202.2020.00161}{\tt https\-://doi.\-org/10.\-1109/\-I\-P\-D\-P\-S\-W50202.\-2020.\-00161}.
+
+Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. \char`\"{}\-C\-A\-B-\/\-M\-P\-I\-: Exploring Interprocess Work Stealing toward Balanced
+\-M\-P\-I Communication,\char`\"{} in S\-C’20 (to appear)
 
 \section*{Commands}
 
 
 \begin{DoxyItemize}
 \item pipcc
+\item pip-\/check
+\item pip-\/exec
+\item pip-\/man
+\item pip-\/mode
 \item pips
 \item printpipmode
 \end{DoxyItemize}
@@ -296,9 +317,6 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. \cha
 
 
 \begin{DoxyItemize}
-\item pip1-\/spawn
-\item pip2-\/exit
-\item pip3-\/wait
 \item pip\-\_\-abort
 \item pip\-\_\-barrier\-\_\-fin
 \item pip\-\_\-barrier\-\_\-init
@@ -365,16 +383,10 @@ A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. \cha
 \item pip\-\_\-wait\-\_\-any
 \item pip\-\_\-yield
 \item pip\-\_\-yield\-\_\-to
-\item ulp0-\/yield
-\item ulp1-\/task-\/queue
-\item ulp2-\/suspension
-\item ulp3-\/barrier
-\item ulp4-\/mutex
-\item ulp5-\/coupling
 \end{DoxyItemize}
 
 \section*{Author}
 
-Atsushi Hori \par
-Riken Center for Commputational Science (R-\/\-C\-C\-S) \par
-Japan \par
+Atsushi Hori\par
+Riken Center for Commputational Science (R-\/\-C\-C\-S)\par
+Japan\par

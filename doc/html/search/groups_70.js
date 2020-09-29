@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['pip_20initialization_2ffinalization',['PiP Initialization/Finalization',['../group__pip-0-init-fin.html',1,'']]],
-  ['pip_20miscellaneous_20functions',['PiP Miscellaneous Functions',['../group__pip-5-misc.html',1,'']]],
-  ['pip_20signaling_20functions',['PiP Signaling Functions',['../group__pip-signal.html',1,'']]]
+  ['pip_20initialization_2ffinalization',['PiP Initialization/Finalization',['../group__PiP-0-init-fin.html',1,'']]],
+  ['pip_20query_20functions',['PiP Query Functions',['../group__PiP-4-query.html',1,'']]],
+  ['pip_20signaling_20functions',['PiP Signaling Functions',['../group__PiP-6-signal.html',1,'']]]
 ];

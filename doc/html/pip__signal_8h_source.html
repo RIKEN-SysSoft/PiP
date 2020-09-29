@@ -88,9 +88,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,</span></div>
-<div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="comment">  *       System Software Devlopment Team. All rights researved$</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">  * $PIP_VERSION: Version 1.0$</span></div>
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">  * $RIKEN_copyright: Riken Center for Computational Sceience,
+<div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="comment">  * System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">  * $PIP_VERSION: Version 3.0.0$</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">  * $PIP_license: &lt;Simplified BSD License&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">  * Redistribution and use in source and binary forms, with or without</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">  * modification, are permitted provided that the following conditions are</span></div>
@@ -131,26 +131,26 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-signal.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> signal );</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-signal.html#gaf546ee24368b118e937aadd2dbea2217">pip_sigmask</a>( <span class="keywordtype">int</span> how, <span class="keyword">const</span> sigset_t *sigmask, sigset_t *oldmask );</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__pip-signal.html#ga2048e7685a030e61e8c529c474899feb">pip_signal_wait</a>( <span class="keywordtype">int</span> signal );</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;  <span class="keywordtype">int</span>  pip_tgkill( <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span> );</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;  <span class="keywordtype">int</span>  pip_tkill( <span class="keywordtype">int</span>, <span class="keywordtype">int</span> );</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor"></span>}</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN */</span><span class="preprocessor"></span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">/* _pip_signal_h_ */</span><span class="preprocessor"></span></div>
-<div class="ttc" id="group__pip-signal_html_gaf546ee24368b118e937aadd2dbea2217"><div class="ttname"><a href="group__pip-signal.html#gaf546ee24368b118e937aadd2dbea2217">pip_sigmask</a></div><div class="ttdeci">int pip_sigmask(int how, const sigset_t *sigmask, sigset_t *oldmask)</div><div class="ttdoc">set signal mask of the current PiP task </div></div>
-<div class="ttc" id="group__pip-signal_html_ga2048e7685a030e61e8c529c474899feb"><div class="ttname"><a href="group__pip-signal.html#ga2048e7685a030e61e8c529c474899feb">pip_signal_wait</a></div><div class="ttdeci">int pip_signal_wait(int signal)</div><div class="ttdoc">wait for a signal </div></div>
-<div class="ttc" id="group__pip-signal_html_ga4a396f38920d94b71dcfd3c898fbb82b"><div class="ttname"><a href="group__pip-signal.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a></div><div class="ttdeci">int pip_kill(int pipid, int signal)</div><div class="ttdoc">deliver a signal to PiP task </div></div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-6-signal.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a>( <span class="keywordtype">int</span> pipid, <span class="keywordtype">int</span> signal );</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-6-signal.html#gaf546ee24368b118e937aadd2dbea2217">pip_sigmask</a>( <span class="keywordtype">int</span> how, <span class="keyword">const</span> sigset_t *sigmask, sigset_t *oldmask );</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;  <span class="keywordtype">int</span> <a class="code" href="group__PiP-6-signal.html#ga2048e7685a030e61e8c529c474899feb">pip_signal_wait</a>( <span class="keywordtype">int</span> signal );</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;<span class="preprocessor">#ifndef DOXYGEN_INPROGRESS</span></div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;  <span class="keywordtype">int</span>  pip_tgkill( <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;  <span class="keywordtype">int</span>  pip_tkill( <span class="keywordtype">int</span>, <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;<span class="preprocessor">#ifdef __cplusplus</span></div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<span class="preprocessor"></span>}</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif </span><span class="comment">/* DOXYGEN */</span><span class="preprocessor"></span></div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;<span class="preprocessor">#endif  </span><span class="comment">/* _pip_signal_h_ */</span><span class="preprocessor"></span></div>
+<div class="ttc" id="group__PiP-6-signal_html_ga2048e7685a030e61e8c529c474899feb"><div class="ttname"><a href="group__PiP-6-signal.html#ga2048e7685a030e61e8c529c474899feb">pip_signal_wait</a></div><div class="ttdeci">int pip_signal_wait(int signal)</div><div class="ttdoc">wait for a signal </div></div>
+<div class="ttc" id="group__PiP-6-signal_html_gaf546ee24368b118e937aadd2dbea2217"><div class="ttname"><a href="group__PiP-6-signal.html#gaf546ee24368b118e937aadd2dbea2217">pip_sigmask</a></div><div class="ttdeci">int pip_sigmask(int how, const sigset_t *sigmask, sigset_t *oldmask)</div><div class="ttdoc">set signal mask of the current PiP task </div></div>
+<div class="ttc" id="group__PiP-6-signal_html_ga4a396f38920d94b71dcfd3c898fbb82b"><div class="ttname"><a href="group__PiP-6-signal.html#ga4a396f38920d94b71dcfd3c898fbb82b">pip_kill</a></div><div class="ttdeci">int pip_kill(int pipid, int signal)</div><div class="ttdoc">deliver a signal to PiP task </div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

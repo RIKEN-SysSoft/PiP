@@ -1,7 +1,7 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
-  * 	  System Software Devlopment Team. All rights researved$
-  * $PIP_VERSION: Version 1.0$
+  * $RIKEN_copyright: Riken Center for Computational Sceience,
+  * System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+  * $PIP_VERSION: Version 3.0.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
@@ -126,7 +126,7 @@ extern "C" {
 #endif /* DOXYGEN */
 
   /**
-   * \defgroup pip-0-init-fin PiP Initialization/Finalization
+   * \defgroup PiP-0-init-fin PiP Initialization/Finalization
    * @{
    * \page pip-intialize-finalize PiP Initialization/Finalization
    * \description PiP initialization/finalization functions
@@ -134,8 +134,7 @@ extern "C" {
   /**
    * \PiPManEntry{pip_init}
    *
-   * \name
-   * Initialize the PiP library
+   * \brief Initialize the PiP library
    *
    * \synopsis
    * \#include <pip.h> \n
@@ -145,11 +144,11 @@ extern "C" {
    * This function initializes the PiP library. The PiP root process
    * must call this. A PiP task is not required to call this function
    * unless the PiP task calls any PiP functions.
-   * \par
+   * \description
    * When this function is called by a PiP root, \c ntasks, and \c root_expp
    * are input parameters. If this is called by a PiP task, then those parameters are output
    * returning the same values input by the root.
-   * \par
+   * \description
    * A PiP task may or may not call this function. If \c pip_init is not called by a PiP task
    * explicitly, then \c pip_init is called magically and implicitly even if the PiP task program
    * is NOT linked with the PiP library.
@@ -168,7 +167,7 @@ extern "C" {
    *  returns the exported address by the PiP root, if any.
    * \param[in] opts Specifying the PiP execution mode and See below.
    *
-   * @par Execution mode option
+   * \par Execution mode option
    * Users may explicitly specify the PiP execution mode.
    * This execution mode can be categorized in two; process mode and
    * thread mode. In the process execution mode, each PiP task may
@@ -192,8 +191,8 @@ extern "C" {
    * error number is returned.
    *
    * \retval EINVAL \a ntasks is negative
-   * \retval EBUSY PiP root called this function twice or more without calling \c
-   * pip_fin(1).
+   * \retval EBUSY PiP root called this function twice or more without calling \ref
+   * pip_fin.
    * \retval EPERM \a opts is invalid or unacceptable
    * \retval EOVERFLOW \a ntasks is too large
    * \retval ELIBSCN verssion miss-match between PiP root and PiP task
@@ -238,7 +237,11 @@ extern "C" {
    * specified by the \a ntasks argument. There are some limitations
    * come from outside of the PiP library (from GLIBC).
    * \n\n
-   * \sa pip_named_export(3), pip_export(3), pip_fin(3), pip-mode(1), pips(1)
+   * \sa pip_named_export
+   * \sa pip_export
+   * \sa pip_fin
+   * \sa pip-mode(PiP 1)
+   * \sa pips(PiP 1)
    * \n\n
    */
   int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
@@ -246,8 +249,7 @@ extern "C" {
   /**
    * \PiPManEntry{pip_fin}
    *
-   * \name
-   * Finalize the PiP library
+   * \brief Finalize the PiP library
    *
    * \synopsis
    * \#include <pip.h> \n
@@ -262,11 +264,10 @@ extern "C" {
    * \retval EBUSY \c one or more PiP tasks are not yet terminated
    *
    * \notes
-   * The behavior of calling \c pip_init after calling this \c pip_fin
+   * The behavior of calling \ref pip_init after calling this \ref pip_fin
    * is note defined and recommended to do so.
    *
-   * \n\n
-   * \sa pip_init(3)
+   * \sa pip_init
    */
   int pip_fin( void );
 
@@ -275,7 +276,7 @@ extern "C" {
    */
 
   /**
-   * \defgroup pip1-spawn Spawning PiP task
+   * \defgroup PiP-1-spawn Spawning PiP task
    * @{
    * \page pip-spawn PiP Spawnig PiP (ULP/BLT) task
    * \description Spawning PiP task or ULP/BLT task
@@ -305,7 +306,8 @@ extern "C" {
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_func(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_func
    *
    */
 #ifndef DOXYGEN_INPROGRESS
@@ -364,7 +366,8 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_main
    *
    */
 #ifndef DOXYGEN_INPROGRESS
@@ -437,7 +440,7 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
    * handlers are shared between PiP root and PiP tasks in the pthread
    * execution mode.
    *
-   * \sa pip_task_spawn(3)
+   * \sa pip_task_spawn
    *
    */
 #ifndef DOXYGEN_INPROGRESS
@@ -511,8 +514,12 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * If the root process is multithreaded, only the main
    * thread can call this function.
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3),
-   * pip_spawn_from_func(3), pip_spawn_hook(3), pip_spawn(3), pip_blt_spawn(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_main
+   * \sa pip_spawn_from_func
+   * \sa pip_spawn_hook
+   * \sa pip_spawn
+   * \sa pip_blt_spawn
    */
 int pip_task_spawn( pip_spawn_program_t *progp,
 		    uint32_t coreno,
@@ -585,8 +592,12 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * If the root process is multithreaded, only the main
    * thread can call this function.
    *
-   * \sa pip_task_spawn(3), pip_spawn_from_main(3),
-   * pip_spawn_from_func(3), pip_spawn_hook(3), pip_task_spawn(3), pip_blt_spawn(3)
+   * \sa pip_task_spawn
+   * \sa pip_spawn_from_main
+   * \sa pip_spawn_from_func
+   * \sa pip_spawn_hook
+   * \sa pip_task_spawn
+   * \sa pip_blt_spawn
    */
   int pip_spawn( char *filename, char **argv, char **envv,
 		 uint32_t coreno, int *pipidp,
@@ -597,7 +608,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip-4-export Export/Import Functions
+   * \defgroup PiP-2-export Export/Import Functions
    * @{
    * \page pip-export PiP Export and Import
    * \description Export and import functions to exchange addresses among tasks
@@ -631,10 +642,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ENOMEM Not enough memory
    *
    * \note
-   * The addresses exported by \p pip_named_export cannot be imported
-   * by calling \p pip_import, and vice versa.
+   * The addresses exported by \ref pip_named_export cannot be imported
+   * by calling \ref pip_import, and vice versa.
    *
-   * \sa pip_named_import(3)
+   * \sa pip_named_import
    */
   int pip_named_export( void *exp, const char *format, ... )
     __attribute__ ((format (printf, 2, 3)));
@@ -663,8 +674,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * There is possibility of deadlock when two or more tasks are
    * mutually waiting for exported addresses.
    * \par
-   * The addresses exported by \p pip_export cannot be imported
-   * by calling \p pip_named_import, and vice versa.
+   * The addresses exported by \ref pip_export cannot be imported
+   * by calling \ref pip_named_import, and vice versa.
    *
    * \return zero is returned if this function succeeds. On error, an
    * error number is returned.
@@ -675,7 +686,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EDEADLK \p pipid is the calling task and tries to block
    * itself
    *
-   * \sa pip_named_export(3), pip_named_tryimport(3), pip_export(3), pip_import(3)
+   * \sa pip_named_export
+   * \sa pip_named_tryimport
+   * \sa pip_export
+   * \sa pip_import
    */
   int pip_named_import( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
@@ -700,8 +714,8 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \param[in] format a \c printf format to give the exported address a name
    *
    * \note
-   * The addresses exported by \p pip_export cannot be imported
-   * by calling \p pip_named_import, and vice versa.
+   * The addresses exported by \ref pip_export cannot be imported
+   * by calling \ref pip_named_import, and vice versa.
    *
    * \return Zero is returned if this function succeeds. On error, an
    * error number is returned.
@@ -711,7 +725,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECANCELED The target task is terminated
    * \retval EAGAIN Target is not exported yet
    *
-   * \sa pip_named_export(3), pip_named_import(3), pip_export(3), pip_import(3)
+   * \sa pip_named_export
+   * \sa pip_named_import
+   * \sa pip_export
+   * \sa pip_import
    */
   int pip_named_tryimport( int pipid, void **expp, const char *format, ... )
     __attribute__ ((format (printf, 3, 4)));
@@ -736,7 +753,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not initialized yet
    *
-   * \sa pip_import(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3)
+   * \sa pip_import
+   * \sa pip_named_export
+   * \sa pip_named_import
+   * \sa pip_named_tryimport
    */
   int pip_export( void *exp );
 
@@ -761,7 +781,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not initialized yet
    *
-   * \sa pip_export(3), pip_named_export(3), pip_named_import(3), pip_named_tryimport(3)
+   * \sa pip_export
+   * \sa pip_named_export
+   * \sa pip_named_import
+   * \sa pip_named_tryimport
    */
   int pip_import( int pipid, void **expp );
 
@@ -770,7 +793,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip3-wait Waiting for PiP task termination
+   * \defgroup PiP-3-wait Waiting for PiP task termination
    * @{
    * \page pip-wait Waiting for PiP task termination
    * \description Functions to wait for PiP task termination.
@@ -803,7 +826,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECHILD The target PiP task does not exist or it was already
    * terminated and waited for
    *
-   * \sa pip_exit(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
+   * \sa pip_exit
+   * \sa pip_trywait
+   * \sa pip_wait_any
+   * \sa pip_trywait_any
    */
   int pip_wait( int pipid, int *status );
 
@@ -839,7 +865,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECHILD The target PiP task does not exist or it was already
    * terminated and waited for
    *
-   * \sa pip_exit(3), pip_wait(3), pip_wait_any(3), pip_trywait_any(3)
+   * \sa pip_exit
+   * \sa pip_wait
+   * \sa pip_wait_any
+   * \sa pip_trywait_any
    */
   int pip_trywait( int pipid, int *status );
 
@@ -867,7 +896,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval ECHILD The target PiP task does not exist or it was already
    * terminated and waited for
    *
-   * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_trywait_any(3)
+   * \sa pip_exit
+   * \sa pip_wait
+   * \sa pip_trywait
+   * \sa pip_trywait_any
    *
    */
   int pip_wait_any( int *pipid, int *status );
@@ -895,7 +927,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \retval EPERM This function is called other than PiP root
    * \retval ECHILD There is no PiP task to wait for
    *
-   * \sa pip_exit(3), pip_wait(3), pip_trywait(3), pip_wait_any(3)
+   * \sa pip_exit
+   * \sa pip_wait
+   * \sa pip_trywait
+   * \sa pip_wait_any
    */
   int pip_trywait_any( int *pipid, int *status );
 
@@ -904,10 +939,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip-5-misc PiP Miscellaneous Functions
+   * \defgroup PiP-4-query PiP Query Functions
    * @{
-   * \page pip-misc PiP miscellaneous functions
-   * \description Miscellaneous functions for PiP task (not BLT/ULP)
+   * \page pip-misc PiP query functions
+   * \description Query functions for PiP task
    */
 
   /**
@@ -972,7 +1007,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized
    *
-   * \sa pip_get_mode_str(3)
+   * \sa pip_get_mode_str
    */
   int pip_get_mode( int *modep );
 
@@ -988,6 +1023,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \return Return the name string of the current execution mode. If
    * PiP library is note initialized yet, then thiss return \p NULL.
    *
+   * \sa pip_get_mode
    */
   const char *pip_get_mode_str( void );
 
@@ -1082,7 +1118,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    */
 
   /**
-   * \defgroup pip2-exit Terminating PiP Task
+   * \defgroup PiP-5-exit Terminating PiP Task
    * @{
    * \page pip-exit Terminating PiP task
    * \description Function to ternminate PiP task normally or
@@ -1101,7 +1137,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \description
    * When the main function or the start function of a PiP task
    * returns with an integer value, then it has the same effect of
-   * calling \p pip_exit with the returned value.
+   * calling \ref pip_exit with the returned value.
    *
    * \param[in] status This status is returned to PiP root.
    *
@@ -1110,7 +1146,10 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \p exit(3) is called in the process mode and \p pthread_exit(3)
    * is called in the pthread mode.
    *
-   * \sa pip_wait(3), pip_trywait(3), pip_wait_any(3), pip_trywait_any(3)
+   * \sa pip_wait
+   * \sa pip_trywait
+   * \sa pip_wait_any
+   * \sa pip_trywait_any
    *
    */
   void pip_exit( int status );

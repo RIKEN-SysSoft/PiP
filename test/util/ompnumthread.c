@@ -1,7 +1,7 @@
 /*
- * $RIKEN_copyright: 2018 Riken Center for Computational Sceience, 
- * 	  System Software Devlopment Team. All rights researved$
- * $PIP_VERSION: Version 1.0$
+ * $RIKEN_copyright: Riken Center for Computational Sceience,
+ * System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+ * $PIP_VERSION: Version 3.0.0$
  * $PIP_license: <Simplified BSD License>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are

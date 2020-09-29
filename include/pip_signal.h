@@ -1,7 +1,7 @@
 /*
-  * $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
-  * 	  System Software Devlopment Team. All rights researved$
-  * $PIP_VERSION: Version 1.0$
+  * $RIKEN_copyright: Riken Center for Computational Sceience,
+  * System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+  * $PIP_VERSION: Version 3.0.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
   * modification, are permitted provided that the following conditions are
@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
   /**
-   * \defgroup pip-signal PiP Signaling Functions
+   * \defgroup PiP-6-signal PiP Signaling Functions
    * @{
    * \page pip-signal PiP signaling functions
    * \description Signal manupilating functions. All functions listed
@@ -53,6 +53,9 @@ extern "C" {
    * \PiPManEntry{pip_kill}
    *
    * \brief deliver a signal to PiP task
+   *
+   * \description
+   * This function is agnostic to the PiP execution mode.
    *
    * \synopsis
    * \#include <pip.h> \n
@@ -66,7 +69,7 @@ extern "C" {
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
    *
-   * \sa tkill(2)
+   * \sa tkill(Linux 2)
    */
   int pip_kill( int pipid, int signal );
 
@@ -91,7 +94,8 @@ extern "C" {
    * \retval EINVAL An invalid signal number or invalid PiP ID is
    * specified
    *
-   * \sa sigprocmask, pthread_sigmask
+   * \sa sigprocmask(Linux 2)
+   * \sa pthread_sigmask(Linux 2)
    */
   int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
 
@@ -111,10 +115,12 @@ extern "C" {
    *
    * \return Return 0 on success. Return an error code on error.
    *
-   * \note This function does NOT return the \p EINTR error. This case
+   * \note
+   * This function does NOT return the \p EINTR error. This case
    * is treated as normal return;
    *
-   * \sa sigwait, sigsuspend
+   * \sa sigwait(Linux 2)
+   * \sa sigsuspend(Linux 2)
    */
   int pip_signal_wait( int signal );
 

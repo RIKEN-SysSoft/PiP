@@ -1,4 +1,4 @@
-# $PIP_VERSION: Version 1.0$
+# $PIP_VERSION: Version 3.0.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,8 +25,8 @@
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: 2018 Riken Center for Computational Sceience,
-# 	  System Software Devlopment Team. All rights researved$
+# $RIKEN_copyright: Riken Center for Computational Sceience,
+# System Software Development Team, 2016, 2017, 2018, 2019, 2020$
 
 top_builddir = ..
 top_srcdir = $(top_builddir)
@@ -37,9 +37,11 @@ MAN7_SRCS = README-html.md
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk
 
+all: install
+
 ### doxygen
 
-doxygen:
+documents:
 	-@$(RM) -r man latex html
 	echo -n "" > doxygen-man713.log
 	@doxy_dirs=$$(find .. -name .doxygen_latex -print | while read file; do \
@@ -71,13 +73,13 @@ doxygen:
 		echo ""; \
 		) | doxygen - >> doxygen-man713.log 2>&1; \
 	done
-	grep -e "warning" -e "error" doxygen-man713.log | cat
+	-@grep -e "warning" -e "error" doxygen-man713.log && ( echo "Doxygen failed"; exit 1; )
 	./markdown.sh "# Commands"  1 "-" > commands.in
 	./markdown.sh "# Functions" 3 "-" > functions.in
-	cat README.md.in commands.in functions.in Slides-md.md Author.md.in > README.md
-	cat README-man.doxy  README.md.in commands.in functions.in Author.md.in > README-man.md
-	cat README-html.doxy README.md.in Slides-html.md Author.md.in > README-html.md
-	echo ==== README.md =====;
+	cat README.md.in commands.in functions.in Slides-md.md Author-md.md > README.md
+	cat README-man.doxy  README.md.in commands.in functions.in Author-md.md > README-man.md
+	cat README-html.doxy README.md.in Slides-html.md Author-html.md > README-html.md
+	@echo ==== README.md =====;
 	echo -n "" > doxygen-readme.log
 	( \
 		cat "config-common.doxy"; \
@@ -87,11 +89,11 @@ doxygen:
 		echo "STRIP_FROM_PATH = $(top_srcdir)"; \
 		printf "INPUT = README-man.md"; \
 		echo ""; \
-	) | doxygen - >> doxygen-readme.log 2>&1;
-	grep -e "warning" -e "error" doxygen-readme.log | cat
+	) | doxygen - >> doxygen-readme.log 2>&1
+	-@grep -e "warning" -e "error" doxygen-readme.log && ( echo "Doxygen failed"; exit 1; )
 	$(MAKE) -C latex-inuse
 	$(CP) README.md $(top_srcdir)
-	echo ==== html =====;
+	@echo ==== html =====;
 	echo -n "" > doxygen-html.log
 	( \
 	cat "config-common.doxy"; \
@@ -108,29 +110,28 @@ doxygen:
 		done <$$file; \
 	done | tr '\012' ' '; \
 	) | doxygen - >> doxygen-html.log 2>&1;
-	grep -e "warning" -e "error" doxygen-html.log | cat
-	echo ==== mandb =====; \
+	-@grep -e "warning" -e "error" doxygen-html.log && ( echo "Doxygen failed"; exit 1; )
+	@echo ==== mandb =====; \
 	if which mandb; then mandb ./man -c -u; fi
 
-doc: doxygen
-
-all: doc
+all: install
 
 install:
-	echo "Installing .. " $(mandir)
-	$(MKDIR_P) $(mandir);
-	(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
-	echo "Installing .. " $(pdfdir)
-	$(MKDIR_P) $(pdfdir);
-	$(CP) ./latex-inuse/libpip-manpages.pdf $(pdfdir)
-	$(MKDIR_P) $(slidedir);
-	$(CP) ./slides/* $(slidedir)
-	echo "Installing .. " $(htmldir)
-	$(MKDIR_P) $(htmldir);
-	(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
+	@echo "Installing man pages ->" $(mandir)
+	@$(MKDIR_P) $(mandir);
+	@(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
+	@echo "Installing pdf ->" $(pdfdir)
+	@$(MKDIR_P) $(pdfdir);
+	@$(CP) ./latex-inuse/libpip-manpages.pdf $(pdfdir)
+	@$(MKDIR_P) $(slidedir);
+	@echo "Installing html ->" $(htmldir)
+	@$(MKDIR_P) $(htmldir);
+	@(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
+	@$(CP) ./slides/* $(slidedir)
+.PHONY: doc-install
 
 doc-reset:
-	git checkout man latex latex-inuse
+	git checkout man latex latex-inuse html slides
 .PHONE: doc-reset
 
 clean:
@@ -140,4 +141,5 @@ clean:
 	$(MAKE) -C latex-inuse clean
 
 veryclean: clean
-	$(RM) -r man latex html
+	$(RM) Slides-html.md
+	$(MAKE) -C latex-inuse veryclean
