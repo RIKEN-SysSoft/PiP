@@ -1,6 +1,6 @@
 /*
   * $RIKEN_copyright: Riken Center for Computational Sceience,
-  * System Software Development Team, 2016, 2017, 2018, 2019$
+  * System Software Development Team, 2016, 2017, 2018, 2019, 2020$
   * $PIP_VERSION: Version 2.0.0$
   * $PIP_license: <Simplified BSD License>
   * Redistribution and use in source and binary forms, with or without
@@ -168,11 +168,11 @@ extern "C" {
    * This function initializes the PiP library. The PiP root process
    * must call this. A PiP task is not required to call this function
    * unless the PiP task calls any PiP functions.
-   * \par
+   * \description
    * When this function is called by a PiP root, \c ntasks, and \c root_expp
    * are input parameters. If this is called by a PiP task, then those parameters are output
    * returning the same values input by the root.
-   * \par
+   * \description
    * A PiP task may or may not call this function. If \c pip_init is not called by a PiP task
    * explicitly, then \c pip_init is called magically and implicitly even if the PiP task program
    * is NOT linked with the PiP library.
@@ -191,7 +191,7 @@ extern "C" {
    *  returns the exported address by the PiP root, if any.
    * \param[in] opts Specifying the PiP execution mode and See below.
    *
-   * @par Execution mode option
+   * \par Execution mode option
    * Users may explicitly specify the PiP execution mode.
    * This execution mode can be categorized in two; process mode and
    * thread mode. In the process execution mode, each PiP task may
@@ -215,8 +215,8 @@ extern "C" {
    * error number is returned.
    *
    * \retval EINVAL \a ntasks is negative
-   * \retval EBUSY PiP root called this function twice or more without calling \c
-   * pip_fin(1).
+   * \retval EBUSY PiP root called this function twice or more without calling \ref
+   * pip_fin.
    * \retval EPERM \a opts is invalid or unacceptable
    * \retval EOVERFLOW \a ntasks is too large
    * \retval ELIBSCN verssion miss-match between PiP root and PiP task
@@ -229,7 +229,7 @@ extern "C" {
    * to the \c pip_preload.so file, if the PiP execution mode is
    * \c PIP_MODE_PROCESS_PRELOAD (the \c opts in \c pip_init) and/or
    * the PIP_MODE ennvironment is set to \c process:preload. See also
-   * the pip_mode(1) command to set the environment variable appropriately and
+   * the \ref pip_mode command to set the environment variable appropriately and
    * easily.
    * \arg \b PIP_STACKSZ Sepcifying the stack size (in bytes). The
    * \b KMP_STACKSIZE and \b OMP_STACKSIZE are also effective. The 't',
@@ -254,7 +254,7 @@ extern "C" {
    * \arg \b PIP_SHOW_MAPS If the value is 'on' and one of the above exection signals is delivered,
    * then the memory map will be shown.
    * \arg \b PIP_SHOW_PIPS If the value is 'on' and one of the above exection signals is delivered,
-   * then the process status by using the \c pips command (see also pips(1)) will be shown.
+   * then the process status by using the \c pips command (see also \ref pips) will be shown.
    *
    * \bugs
    * Is is NOT guaranteed that users can spawn tasks up to the number
@@ -288,7 +288,7 @@ extern "C" {
    * \retval EBUSY \c one or more PiP tasks are not yet terminated
    *
    * \notes
-   * The behavior of calling \c pip_init after calling this \c pip_fin
+   * The behavior of calling \ref pip_init after calling this \ref pip_fin
    * is note defined and recommended to do so.
    *
    * \sa pip_init
@@ -677,8 +677,8 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \retval ENOMEM Not enough memory
    *
    * \note
-   * The addresses exported by \p pip_named_export cannot be imported
-   * by calling \p pip_import, and vice versa.
+   * The addresses exported by \ref pip_named_export cannot be imported
+   * by calling \ref pip_import, and vice versa.
    *
    * \sa pip_named_import
    * \sa pip_named_tryimport
@@ -712,8 +712,8 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * There is a possibility of deadlock when two or more tasks are
    * mutually waiting for exported addresses.
    * \par
-   * The addresses exported by \p pip_export cannot be imported
-   * by calling \p pip_named_import, and vice versa.
+   * The addresses exported by \ref pip_export cannot be imported
+   * by calling \ref pip_named_import, and vice versa.
    *
    * \return zero is returned if this function succeeds. On error, an
    * error number is returned.
@@ -752,8 +752,8 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \param[in] format a \c printf format to give the exported address a name
    *
    * \note
-   * The addresses exported by \p pip_export cannot be imported
-   * by calling \p pip_named_import, and vice versa.
+   * The addresses exported by \ref pip_export cannot be imported
+   * by calling \ref pip_named_import, and vice versa.
    *
    * \return Zero is returned if this function succeeds. On error, an
    * error number is returned.
@@ -1196,7 +1196,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \description
    * When the main function or the start function of a PiP task
    * returns with an integer value, then it has the same effect of
-   * calling \p pip_exit with the returned value.
+   * calling \ref pip_exit with the returned value.
    *
    * \param[in] status This status is returned to PiP root.
    *

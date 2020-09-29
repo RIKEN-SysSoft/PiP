@@ -26,7 +26,7 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 # $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019$
+# System Software Development Team, 2016, 2017, 2018, 2019, 2020$
 
 top_builddir = ..
 top_srcdir = $(top_builddir)
@@ -79,7 +79,7 @@ documents:
 	cat README.md.in commands.in functions.in Slides-md.md Author-md.md > README.md
 	cat README-man.doxy  README.md.in commands.in functions.in Author-md.md > README-man.md
 	cat README-html.doxy README.md.in Slides-html.md Author-html.md > README-html.md
-	echo ==== README.md =====;
+	@echo ==== README.md =====;
 	echo -n "" > doxygen-readme.log
 	( \
 		cat "config-common.doxy"; \
@@ -93,7 +93,7 @@ documents:
 	-@grep -e "warning" -e "error" doxygen-readme.log && ( echo "Doxygen failed"; exit 1; )
 	$(MAKE) -C latex-inuse
 	$(CP) README.md $(top_srcdir)
-	echo ==== html =====;
+	@echo ==== html =====;
 	echo -n "" > doxygen-html.log
 	( \
 	cat "config-common.doxy"; \
@@ -111,7 +111,7 @@ documents:
 	done | tr '\012' ' '; \
 	) | doxygen - >> doxygen-html.log 2>&1;
 	-@grep -e "warning" -e "error" doxygen-html.log && ( echo "Doxygen failed"; exit 1; )
-	echo ==== mandb =====; \
+	@echo ==== mandb =====; \
 	if which mandb; then mandb ./man -c -u; fi
 .PHONY: doxygen
 

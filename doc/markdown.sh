@@ -9,7 +9,9 @@ items=`ls man/man$sec/*.$sec`;
 for item in $items; do
     bn=`basename -s.$sec $item`
     case $bn in
-	md_*) true;;
+	md_*)  true;;
+	PiP-*) true;;
+	ULP-*) true;;
 	*) list="$list $bn";;
     esac
 done

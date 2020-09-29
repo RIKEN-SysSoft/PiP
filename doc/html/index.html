@@ -79,7 +79,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h1>Process-in-Process (PiP)</h1>
-<p>PiP is a user-level library to have the best of the both worlds of multi-process and multi-thread parallel execution models. PiP allows a process to create sub-processes into the same virtual address space where the parent process runs. The parent process and sub-processes share the same address space, however, each process has its own variable set. So, each process runs independently from the other process. If some or all processes agree, then data own by a process can be accessed by the other processes. Those processes share the same address space, just like pthreads, and each process has its own variables like a process. The parent process is called PiP process and a sub-process are called a PiP task.</p>
+<p>PiP is a user-level library to have the best of the both worlds of multi-process and multi-thread parallel execution models. PiP allows a process to create sub-processes into the same virtual address space where the parent process runs. The parent process and sub-processes share the same address space, however, each process has its own variable set. So, each process runs independently from the other process. If some or all processes agree, then data owned by a process can be accessed by the other processes. Those processes share the same address space, just like pthreads, but each process has its own variables like the process execution model. Hereinafter, the parent process is called PiP process and a sub-process are called a PiP task.</p>
 <h2>PiP Versions</h2>
 <p>Currently there are three PiP library versions:</p>
 <ul>
@@ -94,29 +94,42 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <h2>User-Level Process (ULP, from v3)</h2>
 <p>As described, PiP allows PiP tasks to share the same virtual address space. This mans that a PiP task can context-switch to the other PiP task at user-level. This is called User-Level Process where processes may be derived from the same program or different programs. Threads basically share most of the kernel resources, such as address space, file descriptors, a process id, and so on whilst processes do not. Every process has its ows file descriptor space, for example. When a ULP is scheduled by a KLT having PID 1000, then the getpid() is called by the ULP returns 1000. Further, when the ULT is migrated to be scheduled by the other KLT, then the returned PID is different. So, when implemnting a ULP system, this systemcall consistency must be preserved. In ULP on PiP, the consistency can be maintained by utilizing the above BLT mechanism. When a ULT tries to call a system call, it is coupled with its kernel thread which was created at the beginning as a KLT. It should be note that Thread Local Storage (TLS) regions are also switched when switching ULP (and BLT) contexts.</p>
 <h2>Execution Mode</h2>
-<p>There are several PiP implementation modes which can be selected at the runtime. These implementations can be categorized into two according to the behavior of PiP tasks,</p>
+<p>There are several PiP implementation modes which can be selected at the runtime. These implementations can be categorized into two;</p>
 <ul>
 <li>Process and</li>
-<li>(P)Thread</li>
+<li>(P)Thread.</li>
 </ul>
-<p>In the pthread mode, although each PiP task has its own variables unlike thread, PiP task behaves more like PThread, having a TID, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on. In the process mode, PiP task behaves more like a process, having a PID, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on. The above mentioned ULP can only work with the process mode.</p>
-<p>When the <code>PIP_MODE</code> environment variable set to "thread" or "pthread" then the PiP library runs based on the pthread mode, and it is set to "process" then it runs with the process mode. There are also three implementations in the process mode; "process:preload," "process:pipclone" and "process:got." The "process:preload" mode must be with the LD_PRELOAD environment variable setting so that the clone() system call wrapper can work with. The "process:pipclone" mode can only be specified with the PIP-patched glibc library (see below: GLIBC issues).</p>
-<p>There several function provided by the PiP library to absorb the difference due to the execution mode</p>
+<p>In the pthread mode, although each PiP task has its own static variables unlike thread, PiP task behaves more like PThread, having a TID, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on. In the process mode, a PiP task behaves more like a process, having a PID, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on. The above mentioned ULP can only work with the process mode.</p>
+<p>When the <code>PIP_MODE</code> environment variable set to "()thread" then the PiP library runs in the pthread mode, and if it is set to "process" then it runs in the process mode. There are also three implementations in the process mode; "process:preload," "process:pipclone" and "process:got." The "process:preload" mode must be with the LD_PRELOAD environment variable setting so that the clone() system call wrapper can work with. The "process:pipclone" mode is only effective with the PIP-patched glibc library (see below).</p>
+<p>Several function are made available by the PiP library to absorb the functional differences due to the execution modes.</p>
 <h1>License</h1>
-<p>This project is licensed under the 2-clause simplified BSD License - see the [LICENSE](LICENSE) file for details.</p>
+<p>This package is licensed under the 2-clause simplified BSD License - see the [LICENSE](LICENSE) file for details.</p>
 <h1>Installation</h1>
-<h2>PiP Trial by using Docker image</h2>
+<p>There are several ways to install PiP; Docker, Spack, RPM, and building fromm the source code.</p>
+<h2>Docker image</h2>
 <p>Download and run the PiP Docker image. </p>
 <pre class="fragment">$ docker pull rikenpip/pip-vN
 $ sudo docker run -it rikenpip/pip-vN /bin/bash
-</pre><h2>Source Repositories</h2>
+</pre><h2><a href="https://spack.readthedocs.io/">Spack</a></h2>
+<p>Download spack and do the follwoing; </p>
+<pre class="fragment">$ git clone https://github.com/spack/spack.git
+$ cd spack/bin
+$ spack install process-in-process
+</pre><h2>Installation from RPMs</h2>
+<p>RPM packages and their yum repository are also available for CentOS 7 / RHEL7. </p>
+<pre class="fragment">$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
+$ sudo yum install pip-glibc
+$ sudo yum install pip pip-debuginfo
+$ sudo yum install pip-gdb
+</pre><p>If PiP packages are installed by the above RPMs, <b>PIP_INSTALL_DIR</b> will be "/usr."</p>
+<h2>Source Code</h2>
 <p>The installation of PiP related packages must follow the order below;</p>
 <ol type="1">
 <li>Build PiP-glibc (optional)</li>
 <li>Build PiP</li>
 <li>Build PiP-gdb (optional)</li>
 </ol>
-<p>Note that if PiP-gdb will not work at all without PiP-glibc. Further, PiP can only create up to around ten PiP tasks without installing PiP-glibc.</p>
+<p>By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb. Above Docker image and Spack include PiP-glibc and PiP-gdb.</p>
 <ul>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-glibc">PiP-glibc</a> - patched GNU libc for PiP</li>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP">PiP</a> - Process in Process (this package)</li>
@@ -136,29 +149,20 @@ $ sudo docker run -it rikenpip/pip-vN /bin/bash
 </li>
 <li><p class="startli">Build PiP library</p>
 <p class="startli">The same source code can be ussed for CentOS7 and CentOS8 (RHEL7 and RHEL8).</p>
-<p class="startli">$ git clone -b pip-N <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PiP $ cd PIP_SRC_DIR $ ./configure &ndash;prefix=PIP_INSTALL_DIR [ &ndash;with-glibc-libdir=GLIBC_INSTALL_DIR/lib ] $ make install doxgyen-install $ cd PIP_INSTALL_DIR/bin $ ./piplnlibs</p>
+<p class="startli">$ git clone -b pip-N <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PiP $ cd PIP_SRC_DIR $ ./configure &ndash;prefix=PIP_INSTALL_DIR [ &ndash;with-glibc-libdir=GLIBC_INSTALL_DIR/lib ] $ make install doc</p>
 <p class="startli">If you want to make sure if the PiP library is correctly installed, then do the following;</p>
-<p class="startli">$ cd PIP_SRC_DIR $ make install-test</p>
-<p class="startli">Important note: The prefix directory of PiP-glibc and the prefix directory of PiP itself must NOT be the same.</p>
+<p class="startli">$ cd PIP_SRC_DIR $ make check-installed</p>
 </li>
 <li><p class="startli">Build PiP-gdb (optional)</p>
-<p class="startli">Fetch source tree (CentOS7 or RHEL7):</p>
+<p class="startli">Fetch source tree; CentOS7 or RHEL7</p>
 <p class="startli">$ git clone -b pip-centos7 <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PIP-gdb</p>
-<p class="startli">Ftech source tree (CentOS8 or RHEL8):</p>
+<p class="startli">CentOS8 or RHEL8</p>
 <p class="startli">$ git clone -b pip-centos8 <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PIP-gdb</p>
 <p class="startli">Build PiP-gdb</p>
-<p class="startli">$ cd GLIBC_SRC_DIR $ ./build.sh &ndash;prefix=GLIBC_INSTALL_DIR &ndash;with-pip=PIP_INSTALL_DIR</p>
-<p class="startli">The prefix directory of PiP-gdb can be the same with the prefix directory of PiP library.</p>
+<p class="startli">$ cd GDB_SRC_DIR $ ./build.sh &ndash;prefix=GDB_INSTALL_DIR &ndash;with-pip=PIP_INSTALL_DIR</p>
 </li>
 </ol>
-<h2>Installation from RPMs</h2>
-<p>RPM packages and their yum repository are also available for CentOS 7 / RHEL7. </p>
-<pre class="fragment">$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
-$ sudo yum install pip-glibc
-$ sudo yum install pip pip-debuginfo
-$ sudo yum install pip-gdb
-</pre><p>If PiP packages are installed by the above RPMs, <b>PIP_INSTALL_DIR</b> is "/usr."</p>
-<h1>PiP documents</h1>
+<h1>PiP Documents</h1>
 <p>The following PiP documents are created by using <a href="https://www.doxygen.nl/">Doxygen</a>.</p>
 <h2>Man pages</h2>
 <p>Man pages will be installed at <b>PIP_INSTALL_DIR</b>/share/man. </p>
@@ -167,7 +171,9 @@ $ sudo yum install pip-gdb
 <pre class="fragment">$ PIP_INSTALL_DIR/bin/pip-man 7 libpip
 </pre><p>The above two exammples will show you the same document you are reading.</p>
 <h2>PDF</h2>
-<p>PDF documents will be installed at <b>PIP_INSTALL_DIR</b>/share/doc/pip/pdf.</p>
+<p>PDF documents will be installed at <b>PIP_INSTALL_DIR</b>/share/pdf.</p>
+<h2>HTML</h2>
+<p>HTML documents will be installed at <b>PIP_INSTALL_DIR</b>/share/html.</p>
 <h1>Getting Started</h1>
 <h2>Compile and link your PiP programs</h2>
 <ul>
@@ -180,11 +186,11 @@ $ pipcc -Wall -O2 -g -o pip-prog pip-prog.c
 <ul>
 <li>pip-exec(1) command (piprun(1) in PiP v1)</li>
 </ul>
-<p>Let's assume your that have a non-PiP program(s) and wnat to run as PiP tasks. All you have to do is to compile your program by using the above pipcc(1) command and to use the pip-exec(1) command to run your program as PiP tasks. </p>
+<p>Let's assume that you have a non-PiP program(s) and wnat to run as PiP tasks. All you have to do is to compile your program by using the above pipcc(1) command and to use the pip-exec(1) command to run your program as PiP tasks. </p>
 <pre class="fragment">$ pipcc myprog.c -o myprog
 $ pip-exec -n 8 ./myprog
 $ ./myprog
-</pre><p>In this case, the pip-exec(1) command becomes the PiP root and your program runs as 8 PiP tasks. Your program can also run as a normal (non-PiP) program without using the pip-exec(1) command. Note that the 'myprog.c' may or may not call any PiP functions.</p>
+</pre><p>In this case, the pip-exec(1) command becomes the PiP root and your program runs as 8 PiP tasks. Note that the 'myprog.c' may or may not call any PiP functions. Your program can also run as a normal program (not as a PiP task) without using the pip-exec(1) command.</p>
 <p>You may write your own PiP programs whcih includes the PiP root programming. In this case, your program can run without using the pip-exec(1) command.</p>
 <p>If you get the following message when you try to run your program; </p>
 <pre class="fragment">PiP-ERR(19673) './myprog' is not PIE
@@ -194,7 +200,7 @@ a.out : Root&amp;Task
 </pre><p>Above example shows that the 'a.out' program can run as a PiP root and PiP tasks.</p>
 <ul>
 <li><p class="startli">pips(1) command (from v2)</p>
-<p class="startli">You can check if your PiP program is running or not by using the pips(1) command.</p>
+<p class="startli">You can see how your PiP program is running in realtimme by using the pips(1) command.</p>
 </li>
 </ul>
 <p>List the PiP tasks via the 'ps' command; </p>
@@ -205,7 +211,7 @@ a.out : Root&amp;Task
 <p>Additionally you can kill all of your PiP tasks by using the same pips(1) command; </p>
 <pre class="fragment">$ pips -s KILL [ COMMAND ]
 </pre><h2>Debugging your PiP programs by the pip-gdb command</h2>
-<p>The following procedure attaches all PiP tasks, which are created by same PiP root task, as GDB inferiors. </p>
+<p>The following procedure attaches all PiP tasks and PiP root which created those tasks. Each PiP 'processes' is treated as a GDB inferior in PiP-gdb. </p>
 <pre class="fragment">$ pip-gdb
 (gdb) attach PID
 </pre><p>The attached inferiors can be seen by the following GDB command: </p>
@@ -247,12 +253,17 @@ Added inferior 4
 </pre><p>You can attach all relevant PiP tasks by: </p>
 <pre class="fragment">$ pip-gdb -p PID-of-your-PiP-program
 </pre><p>(from v2)</p>
-<p>If the PIP_GDB_PATH environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered. The exception signals can also be defined by setting the PIP_GDB_SIGNALS environment. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol. 'all' is reserved to specify most of the signals. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If one of the defined or default signals is delivered, then PiP-gdb will be attached. The PiP-gdb will show backtrace by default. If users specify PIP_GDB_COMMAND that a filename containing some GDB commands, then those GDB commands will be executed by the GDB, instead of backtrace, in batch mode. If the PIP_STOP_ON_START environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program.</p>
+<p>If the PIP_GDB_PATH environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered. The exception signals can also be defined by setting the PIP_GDB_SIGNALS environment. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol. 'all' is reserved to specify most of the signals. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If one of the specified or default signals is delivered, then PiP-gdb will be attached automatically. The PiP-gdb will show backtrace by default. If users specify PIP_GDB_COMMAND that a filename containing some GDB commands, then those GDB commands will be executed by PiP-gdb, instead of backtrace, in batch mode. If the PIP_STOP_ON_START environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program.</p>
 <h1>Mailing List</h1>
 <p><a href="#" onclick="location.href='mai'+'lto:'+'pip'+'@m'+'l.r'+'ik'+'en.'+'jp'; return false;">pip@m<span style="display: none;">.nosp@m.</span>l.ri<span style="display: none;">.nosp@m.</span>ken.j<span style="display: none;">.nosp@m.</span>p</a></p>
 <h1>Publications</h1>
 <h2>Research papers</h2>
-<p>A. Hori, M. Si, B. Gerofi, M. Takagi, J. Dayal, P. Balaji, and Y. Ishikawa. "Process-in-process: techniques for practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: <a href="https://doi.org/10.1145/3208040.3208045">https://doi.org/10.1145/3208040.3208045</a></p>
+<p>Atsushi Hori, Min Si, Balazs Gerofi, Masamichi Takagi, Jay Dayal, Pavan Balaji, and Yutaka Ishikawa. "Process-in-process: techniques for
+practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: <a href="https://doi.org/10.1145/3208040.3208045">https://doi.org/10.1145/3208040.3208045</a></p>
+<p>Atsushi Hori, Balazs Gerofi, and Yuataka Ishikawa. "An Implementation
+of User-Level Processes using Address Space Sharing," 2020 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW), New Orleans, LA, USA, 2020, pp. 976-984, DOI: <a href="https://doi.org/10.1109/IPDPSW50202.2020.00161">https://doi.org/10.1109/IPDPSW50202.2020.00161</a>.</p>
+<p>Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
+MPI Communication," in SC’20 (to appear)</p>
 <h2>Presentation Slides</h2>
 <ul>
 <li>[HPDC'18] <a href="file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18.pdf</a></li>

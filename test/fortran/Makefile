@@ -26,7 +26,7 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 # $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019$
+# System Software Development Team, 2016, 2017, 2018, 2019, 2020$
 
 top_builddir = ../..
 top_srcdir = $(top_builddir)
