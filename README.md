@@ -14,12 +14,12 @@ other process. If some or all processes agree, then data own by a
 process can be accessed by the other processes. Those processes share
 the same address space, just like pthreads, and each process has its
 own variables like a process. The parent process is called PiP process
-and a sub-process are called a PiP task. 
+and a sub-process are called a PiP task.
 
 ## License
 
 This project is licensed under the 2-clause simplified BSD License -
-see the [LICENSE](LICENSE) file for details. 
+see the [LICENSE](LICENSE) file for details.
 
 ## Installation
 
@@ -58,7 +58,7 @@ at the top of the source directory after "make install".
 
 ### To compile and link your PiP programs
 
-* PiP root process (spawning PiP tasks)  
+* PiP root process (spawning PiP tasks)
     must be linked with the PiP library and must specify the link
     option as follows if you have the patched GLIBC,
 
@@ -66,15 +66,10 @@ at the top of the source directory after "make install".
 
     Once you specify this option, PiP root process uses the patched
     GLIBC libraries, no matter how LD_LIBRARY_PATH is
-    specified. The PiP root process is not required to be PIE.  
-    Note that the other SOLIBs are already symbolic linked into
-    the <GLIBC_INSTALL_DIR>/lib directory by the "piplnlibs" command.
-    The piplnlibs command is automatically invoked by the RPM pakcage
-    installation, or should be manually invoked in the case of
-    source installation.  
+    specified. The PiP root process is not required to be PIE.
     (In case of the RPM binary distribution, <GLIBC_INSTALL_DIR> is "/opt/pip")
 
-* PiP task (spawned by PiP root process)  
+* PiP task (spawned by PiP root process)
     must be compiled with "-fPIE -pthread", must be linked with "-pie
     -rdynamic -pthread" options. PiP task programs are not required to be
     linked with the PiP library. Thus programs to be ran as PiP tasks
@@ -82,9 +77,9 @@ at the top of the source directory after "make install".
     PiP task(s) share the same (virtual) address space and ld-linux.so
     is already loaded by PiP root, PiP tasks use the patched GLIBC.
 
-* pipcc(1) command  
+* pipcc(1) command
 
-    You can use pipcc(1) command to compile and link your PiP programs.  
+    You can use pipcc(1) command to compile and link your PiP programs.
     e.g.
 
         $ pipcc -Wall -O2 -g -c pipmodule.c
@@ -92,11 +87,11 @@ at the top of the source directory after "make install".
 
 ### To run your PiP programs
 
-* Running PiP programs  
+* Running PiP programs
     Consult [EXECMODE](EXECMODE) file located at the same directory with
     this file for details.
 
-* How to check if PiP programs run under PiP environment  
+* How to check if PiP programs run under PiP environment
     check if they are shared the same address space by the following
     command,
 
@@ -131,7 +126,7 @@ You can select and debug an inferior by the following GDB command:
 When an already-attached program calls pip_spawn() and becomes
 a PiP root task, the newly created PiP child tasks aren't attached
 automatically, but you can add empty inferiors and then attach
-the PiP child tasks to the inferiors.  
+the PiP child tasks to the inferiors.
 e.g.
 
     .... type Control-Z to stop the root task.
@@ -142,17 +137,17 @@ e.g.
     Added inferior 2
     (gdb) inferior 2
     (gdb) attach 1902
-    
+
     (gdb) add-inferior
     Added inferior 3
     (gdb) inferior 3
     (gdb) attach 1903
-    
+
     (gdb) add-inferior
     Added inferior 4
     (gdb) inferior 4
     (gdb) attach 1904
-    
+
     (gdb) info inferiors
       Num  Description              Executable
     * 4    process 1904 (pip 2)     /somewhere/pip-task-2
@@ -172,12 +167,12 @@ In that case, you can attach all relevant PiP tasks by:
 
 ### FAQ
 
-* Does MPI with PiP exist?  
+* Does MPI with PiP exist?
     Currently, we are working with ANL to develop MPICH using PiP.
     This repository, located at ANL, is not yet open to public
     at the time of writing.
 
-* After installation, any commands aborted with SIGSEGV  
+* After installation, any commands aborted with SIGSEGV
     This can happen when you specify LD_PRELOAD to include the installed
     PiP library. The LD_PRELOAD environment must be specified only when
     running PiP program with the "process:preload" running mode.

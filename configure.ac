@@ -51,6 +51,5 @@ AC_CONFIG_FILES([
 	bin/pipcc
 	build/config.mk
 	release/version.conf
-	util/piplnlibs
 ])
 AC_OUTPUT
