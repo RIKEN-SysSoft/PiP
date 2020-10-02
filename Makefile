@@ -89,6 +89,9 @@ do-check-installed: check-installed-programs
 check-installed: do-check-installed
 	$(MAKE) clean-check-installed
 
+installcheck: check-installed
+.PHONE: installcheck
+
 ### doc
 
 doc-install:
