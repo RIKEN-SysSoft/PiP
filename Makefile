@@ -34,7 +34,7 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SUBDIRS = lib include gdbif bin preload util sample \
+SUBDIRS = lib include gdbif bin preload sample \
 	test/util \
 	test/basics \
 	test/spawn \
@@ -46,10 +46,10 @@ SUBDIRS = lib include gdbif bin preload util sample \
 
 include $(top_srcdir)/build/rule.mk
 
-doc: doxygen
+doc: doc-install
 .PHONY: doc
 
-install: doxygen-install
+install: doc-install
 .PHONY: install
 
 debug:
@@ -92,12 +92,12 @@ doxygen:
 	done
 .PHONY: doxygen
 
-doxygen-install:
+doc-install:
 	$(MKDIR_P) $(DESTDIR)/$(mandir);
 	(cd ./man  && tar cf - . ) | (cd $(DESTDIR)/$(mandir)  && tar xf -)
 	$(MKDIR_P) $(DESTDIR)/$(htmldir);
 	(cd ./html && tar cf - . ) | (cd $(DESTDIR)/$(htmldir) && tar xf -)
-.PHONY: doxygen-install
+.PHONY: doc-install
 
 # clean generated documents before "git commit"
 docclean:
@@ -112,6 +112,10 @@ post-distclean-hook:
 check:
 	( cd test && ./test.sh -A )
 .PHONY: check
+
+## pip-v1 has no check-installed
+check-installed: check
+.PHONY: check-installed
 
 eval:
 	( cd eval && make && ./eval.sh )

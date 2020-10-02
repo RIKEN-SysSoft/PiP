@@ -47,13 +47,6 @@ At the PiP configuration, you must specify the installed PiP-glibc.
     $ make
     $ make install
 
-After the successful PiP installation, you must do the following,
-
-    $ <PIP_INSTALL_DIR>/bin/piplnlibs
-
-This command creates a number of symbolic links to the SOLIBs which
-are not installed by the patched GLIBC installation.
-
 ### Building PiP-gdb
 
 The following procedure installs the pip-gdb(1) command
