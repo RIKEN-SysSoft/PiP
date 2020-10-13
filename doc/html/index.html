@@ -115,7 +115,7 @@ $ sudo docker run -it rikenpip/pip-vN /bin/bash
 <pre class="fragment">$ git clone https://github.com/spack/spack.git
 $ cd spack/bin
 $ spack install process-in-process
-</pre><h2>Installation from RPMs</h2>
+</pre><h2>RPMs</h2>
 <p>RPM packages and their yum repository are also available for CentOS 7 / RHEL7. </p>
 <pre class="fragment">$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
 $ sudo yum install pip-glibc
@@ -141,7 +141,7 @@ $ sudo yum install pip-gdb
 <ul>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-pip">PiP-pip</a> - PiP package installing program</li>
 </ul>
-<p>This is the easiest way to install PiP packages from the source code is using the <code>pip-pip</code> command. This command clones source codes from the GITHUB repos, build and install them including PiP documents. Here is the usage of PiP-pip command; </p>
+<p>This is the easiest way to install PiP packages from the source code. This program clones all source code from the GITHUB repos, build and install them including PiP documents. Here is the usage of PiP-pip command; </p>
 <pre class="fragment">$ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
 $ cd PiP-pip
 $ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR

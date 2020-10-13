@@ -113,7 +113,7 @@ Download spack and do the follwoing;
     $ cd spack/bin
     $ spack install process-in-process
 
-## Installation from RPMs
+## RPMs
 
 RPM packages and their yum repository are also available for CentOS 7 / RHEL7.
 
@@ -155,8 +155,8 @@ installing program.
 * [PiP-pip](https://github.com/RIKEN-SysSoft/PiP-pip) - PiP package
   installing program
 
-This is the easiest way to install PiP packages from the source code
-is using the `pip-pip` command. This command clones source codes from
+This is the easiest way to install PiP packages from the source
+code. This program clones all source code from
 the GITHUB repos, build and install them including PiP documents. Here
 is the usage of PiP-pip command;
 
