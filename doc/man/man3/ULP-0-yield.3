@@ -1,0 +1,112 @@
+.TH "Yielding Functionns" 3 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Yielding Functionns \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_yield\fP (int flag)"
+.br
+.RI "\fIYield\&. \fP"
+.ti -1c
+.RI "int \fBpip_yield_to\fP (pip_task_t *task)"
+.br
+.RI "\fIYield to the specified PiP task\&. \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+Yielding functions
+
+.PP
+\fBDescription\fP
+.RS 4
+Yielding execution of the calling BLT/ULP 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_yield (intflag)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_yield
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_yield( int flag )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflag\fP to specify the behavior of yielding\&. See below\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+No context-switch takes place during the call, then this returns zero\&. If the context-switch to the other BLT happens, then this returns \fCEINTR\fP\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflag\fP If \fBPIP_YIELD_USER\fP, the calling task is scheduling PiP task(s) then the calling task switch to the next eligible-to-run BLT\&. If \fBPIP_YIELD_SYSTEM\fP, regardless if the calling task is active or inactive, it calls \fCsched_yield\fP\&. If \fBPIP_YIELD_DEFAULT\fP or zero, then both \fBPIP_YIELD_USER\fP and \fBPIP_YIELD_SYSTEM\fP will be effective\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_yield_to\fP 
+.RE
+.PP
+
+.SS "int pip_yield_to (pip_task_t *task)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_yield_to
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_yield( pip_task_t *task );
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+Context-switch to the specified PiP task\&. If \fCtask\fP is \fCNULL\fP, then this works the same as what \fCpip_yield(3)\fP does with \fCPIP_YIELD_DEFAULT\fP\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fItask\fP Target PiP task to switch\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return \fCZero\fP or EINTR on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already 
+.br
+\fIEPERM\fP The specified task belongs to the other scheduling domain\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_yield\fP 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

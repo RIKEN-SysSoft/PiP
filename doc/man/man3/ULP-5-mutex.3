@@ -1,0 +1,193 @@
+.TH "BLT/ULP Mutex Functions" 3 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+BLT/ULP Mutex Functions \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_mutex_init\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fIInitialize PiP mutex\&. \fP"
+.ti -1c
+.RI "int \fBpip_mutex_lock\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fILock PiP mutex\&. \fP"
+.ti -1c
+.RI "int \fBpip_mutex_unlock\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fIUnlock PiP mutex\&. \fP"
+.ti -1c
+.RI "int \fBpip_mutex_fin\fP (pip_mutex_t *mutex)"
+.br
+.RI "\fIFinalize PiP mutex\&. \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_mutex_init (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_mutex_init
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_mutex_init( pip_mutex_t *mutex )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_mutex_lock\fP 
+.PP
+\fBpip_mutex_unlock\fP 
+.PP
+\fBpip_mutex_fin\fP 
+.RE
+.PP
+
+.SS "int pip_mutex_lock (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_mutex_lock
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_mutex_lock( pip_mutex_t *mutex )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_mutex_init\fP 
+.PP
+\fBpip_mutex_unlock\fP 
+.PP
+\fBpip_mutex_fin\fP 
+.RE
+.PP
+
+.SS "int pip_mutex_unlock (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_mutex_unlock
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_mutex_unlock( pip_mutex_t *mutex )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_mutex_init\fP 
+.PP
+\fBpip_mutex_lock\fP 
+.PP
+\fBpip_mutex_fin\fP 
+.RE
+.PP
+
+.SS "int pip_mutex_fin (pip_mutex_t *mutex)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_mutex_fin
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_mutex_fin( pip_mutex_t *mutex )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fImutex\fP pointer to the PiP task mutex
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized or already finalized 
+.br
+\fIEBUSY\fP There is one or more waiting PiP task
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_mutex_lock\fP 
+.PP
+\fBpip_mutex_unlock\fP 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

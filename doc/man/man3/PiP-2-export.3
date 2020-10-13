@@ -1,0 +1,326 @@
+.TH "Export/Import Functions" 3 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Export/Import Functions \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_named_export\fP (void *exp, const char *format,\&.\&.\&.) __attribute__((format(printf"
+.br
+.RI "\fIexport an address of the calling PiP root or a PiP task to the others\&. \fP"
+.ti -1c
+.RI "int int \fBpip_named_import\fP (int pipid, void **expp, const char *format,\&.\&.\&.) __attribute__((format(printf"
+.br
+.RI "\fIimport the named exported address \fP"
+.ti -1c
+.RI "int int int \fBpip_named_tryimport\fP (int pipid, void **expp, const char *format,\&.\&.\&.) __attribute__((format(printf"
+.br
+.RI "\fIimport the named exported address (non-blocking) \fP"
+.ti -1c
+.RI "int int int int \fBpip_export\fP (void *exp)"
+.br
+.RI "\fIexport an address \fP"
+.ti -1c
+.RI "int \fBpip_import\fP (int pipid, void **expp)"
+.br
+.RI "\fIimport exported address of a PiP task \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+PiP Export and Import
+
+.PP
+\fBDescription\fP
+.RS 4
+Export and import functions to exchange addresses among tasks 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_named_export (void *exp, const char *format, \&.\&.\&.)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_named_export
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_named_export( void *exp, const char *format, \&.\&.\&. )
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+Pass an address of a memory region to the other PiP task\&. Unlike the simmple \fCpip_export\fP and \fCpip_import\fP functions which can only export one address per task, \fCpip_named_export\fP and \fCpip_named_import\fP can associate a name with an address so that PiP root or PiP task can exchange arbitrary number of addressess\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIexp\fP an address to be passed to the other PiP task 
+.br
+\fIformat\fP a \fCprintf\fP format to give the exported address a name\&. If this is \fCNULL\fP, then the name is assumed to be ''\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP \fCpip_init\fP is not yet called\&. 
+.br
+\fIEBUSY\fP The name is already registered\&. 
+.br
+\fIENOMEM\fP Not enough memory
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+The addresses exported by \fBpip_named_export\fP cannot be imported by calling \fBpip_import\fP, and vice versa\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_named_import\fP 
+.RE
+.PP
+
+.SS "int int pip_named_import (intpipid, void **expp, const char *format, \&.\&.\&.)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_named_import
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int pip_named_import( int pipid, void **expp, const char *format, \&.\&.\&. )
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+Import an address exported by the specified PiP task and having the specified name\&. If it is not exported yet, the calling task will be blocked\&. The
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PiP ID to import the exposed address 
+.br
+\fIexpp\fP The starting address of the exposed region of the PiP task specified by the \fIpipid\fP\&. 
+.br
+\fIformat\fP a \fCprintf\fP format to give the exported address a name
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+There is possibility of deadlock when two or more tasks are mutually waiting for exported addresses\&. 
+.RE
+.PP
+\fB\fP
+.RS 4
+The addresses exported by \fBpip_export\fP cannot be imported by calling \fBpip_named_import\fP, and vice versa\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP \fCpip_init\fP is not yet called\&. 
+.br
+\fIEINVAL\fP The specified \fCpipid\fP is invalid 
+.br
+\fIENOMEM\fP Not enough memory 
+.br
+\fIECANCELED\fP The target task is terminated 
+.br
+\fIEDEADLK\fP \fCpipid\fP is the calling task and tries to block itself
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_named_export\fP 
+.PP
+\fBpip_named_tryimport\fP 
+.PP
+\fBpip_export\fP 
+.PP
+\fBpip_import\fP 
+.RE
+.PP
+
+.SS "int int int pip_named_tryimport (intpipid, void **expp, const char *format, \&.\&.\&.)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_named_tryimport
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int pip_named_tryimport( int pipid, void **expp, const char *format, \&.\&.\&. )
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+Import an address exported by the specified PiP task and having the specified name\&. If it is not exported yet, this returns \fCEAGAIN\fP\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PiP ID to import the exposed address 
+.br
+\fIexpp\fP The starting address of the exposed region of the PiP task specified by the \fIpipid\fP\&. 
+.br
+\fIformat\fP a \fCprintf\fP format to give the exported address a name
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+The addresses exported by \fBpip_export\fP cannot be imported by calling \fBpip_named_import\fP, and vice versa\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Zero is returned if this function succeeds\&. On error, an error number is returned\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP \fCpip_init\fP is not yet called\&. 
+.br
+\fIEINVAL\fP The specified \fCpipid\fP is invalid 
+.br
+\fIENOMEM\fP Not enough memory 
+.br
+\fIECANCELED\fP The target task is terminated 
+.br
+\fIEAGAIN\fP Target is not exported yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_named_export\fP 
+.PP
+\fBpip_named_import\fP 
+.PP
+\fBpip_export\fP 
+.PP
+\fBpip_import\fP 
+.RE
+.PP
+
+.SS "int int int int pip_export (void *exp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_export
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int \fBpip_export( void *exp )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+Pass an address of a memory region to the other PiP task\&. This is a very naive implementation in PiP v1 and deprecated\&. Once a task export an address, there is no way to change the exported address or undo export\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIexp\fP An addresss
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not initialized yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_import\fP 
+.PP
+\fBpip_named_export\fP 
+.PP
+\fBpip_named_import\fP 
+.PP
+\fBpip_named_tryimport\fP 
+.RE
+.PP
+
+.SS "int pip_import (intpipid, void **expp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_import
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int pip_export( void **expp );
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+Get an address exported by the specified PiP task\&. This is a very naive implementation in PiP v1 and deprecated\&. If the address is not yet exported at the time of calling this function, then \fCNULL\fP is returned\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP The PiP ID to import the exportedaddress 
+.br
+\fIexpp\fP The exported address
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not initialized yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_export\fP 
+.PP
+\fBpip_named_export\fP 
+.PP
+\fBpip_named_import\fP 
+.PP
+\fBpip_named_tryimport\fP 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.
