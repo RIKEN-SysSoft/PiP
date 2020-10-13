@@ -59,7 +59,7 @@ $ sudo docker run -it rikenpip/pip-vNN /bin/bash
 
 Download spack and do the follwoing; \begin{DoxyVerb}$ git clone https://github.com/spack/spack.git
 $ cd spack/bin
-$ spack install process-in-process
+$ spack install process-in-process[@NN]
 \end{DoxyVerb}
 
 
@@ -86,7 +86,7 @@ The installation of Pi\-P related packages must follow the order below;
 \item Build Pi\-P-\/gdb (optional)
 \end{DoxyEnumerate}
 
-By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbugged by using Pi\-P-\/gdb. In other words, without installing Pi\-P-\/glibc, users can create up to around 10 Pi\-P tasks (the number depends on the program) and cannot debug by using Pi\-P-\/gdb. Above Docker image contains Pi\-P-\/glibc and Pi\-P-\/gdb, and the S\-Pack recipe installs Pi\-P-\/glibc and Pi\-P-\/gdb additionally.
+By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbugged by using Pi\-P-\/gdb. In other words, without installing Pi\-P-\/glibc, users can create up to around 10 Pi\-P tasks (the number depends on the program) and cannot debug by using Pi\-P-\/gdb. Above Docker image contains Pi\-P-\/glibc and Pi\-P-\/gdb, and the Spack recipe installs Pi\-P-\/glibc and Pi\-P-\/gdb additionally.
 
 
 \begin{DoxyItemize}

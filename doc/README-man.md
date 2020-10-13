@@ -112,7 +112,7 @@ Download spack and do the follwoing;
 
     $ git clone https://github.com/spack/spack.git
     $ cd spack/bin
-    $ spack install process-in-process
+    $ spack install process-in-process[@NN]
 
 ## RPMs
 
@@ -139,7 +139,7 @@ By using PiP-glibc, users can create up to 300 PiP tasks which can be
 dbugged by using PiP-gdb.  In other words, without installing
 PiP-glibc, users can create up to around 10 PiP tasks (the number
 depends on the program) and cannot debug by using PiP-gdb. Above
-Docker image contains PiP-glibc and PiP-gdb, and the SPack recipe
+Docker image contains PiP-glibc and PiP-gdb, and the Spack recipe
 installs PiP-glibc and PiP-gdb additionally.
 
 * [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
