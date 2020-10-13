@@ -155,6 +155,12 @@ extern int pip_debug_env( void );
       } else { DBG_PRNT(": returns %d",__xxx); }			\
       DBG_OUTPUT; } return (__xxx); } while(0)
 
+#define RETURN_NE(X)							\
+  do { int __xxx=(X);							\
+    if(DBGSW) { DBG_PRTBUF; DBG_TAG_LEAVE;				\
+      DBG_PRNT(": returns %d",__xxx);					\
+      DBG_OUTPUT; } return (__xxx); } while(0)
+
 #define RETURNV								\
   do { if(DBGSW) { DBG_PRTBUF; DBG_TAG_LEAVE; DBG_OUTPUT; }		\
     return; } while(0)
@@ -177,6 +183,7 @@ extern int pip_debug_env( void );
 #define ENTER
 #define ENTERF(...)
 #define RETURN(X)		return(X)
+#define RETURN_NE(X)		return(X)
 #define RETURNV			return
 #define ASSERTD(X)
 #define DPAUSE
@@ -188,6 +195,18 @@ extern int pip_debug_env( void );
 #define ASSERT(X)							\
   if(X){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
     pip_abort(); } else { DBGF( "{%s} -- Assertion OK", #X ); }
+
+#define CHECK(X)							\
+  if(X){NL_EMSG("{%s} Check FAILED !!!!!!\n",#X);			\
+    pip_abort(); } else { DBGF( "{%s} -- Check OK", #X ); }
+
+#define ASSERTS(X)							\
+  if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
+	  pip_debug_info(); pip_abort(); }
+
+#define CHECKS(X)							\
+  if(X) { NL_EMSG("{%s} Check FAILED !!!!!!\n",#X);			\
+	  pip_debug_info(); pip_abort(); }
 
 #define NEVER_REACH_HERE						\
   do { NL_EMSG( "Should never reach here !!!!!!\n" ); } while(0)

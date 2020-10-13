@@ -478,15 +478,18 @@ static void pip_set_gdb_sigset( char *env, sigset_t *sigs ) {
 void pip_page_alloc( size_t sz, void **allocp ) {
   size_t pgsz;
 
-  if( pip_root == NULL ) {	/* no pip_root yet */
+  if( pip_root == NULL ) {
     pgsz = sysconf( _SC_PAGESIZE );
-  } else if( pip_root->page_size == 0 ) {
-    pip_root->page_size = pgsz = sysconf( _SC_PAGESIZE );
+    pgsz = ( pgsz <= 0 ) ? 4096 : pgsz;
+  } else if ( pip_root->page_size == 0 ) {
+    pgsz = sysconf( _SC_PAGESIZE );
+    pgsz = ( pgsz <= 0 ) ? 4096 : pgsz;
+    pip_root->page_size = pgsz;
   } else {
     pgsz = pip_root->page_size;
   }
   sz = ROUNDUP( sz, pgsz );
-  ASSERT( posix_memalign( allocp, pgsz, sz ) != 0 &&
+  CHECKS( posix_memalign( allocp, pgsz, sz ) != 0 &&
 	  *allocp == NULL );
 }
 

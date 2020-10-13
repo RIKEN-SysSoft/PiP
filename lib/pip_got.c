@@ -61,10 +61,12 @@ static void pip_unprotect_page( void *addr ) {
   char	 *line;
   char	 perm[4];
   void	 *sta, *end;
-  void   *page = (void*) ( (uintptr_t)addr & ~( pgsz - 1 ) );
+  void   *page;
 
   ASSERT( pgsz <= 0 );
-  ASSERT( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) == NULL );
+  CHECK( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) == NULL );
+
+  page = (void*) ( (uintptr_t)addr & ~( pgsz - 1 ) );
 
   line = NULL;
   sz   = 0;
@@ -79,7 +81,7 @@ static void pip_unprotect_page( void *addr ) {
 	if( perm[0] == 'r' && perm[1] == 'w' ) {
 	  /* the target page is already readable and writable */
 	} else {
-	  ASSERT( mprotect( page, pgsz, PROT_READ | PROT_WRITE ) );
+	  ASSERT( mprotect( page, (size_t) pgsz, PROT_READ | PROT_WRITE ) );
 	}
 	break;
       }
@@ -211,7 +213,7 @@ int pip_patch_GOT( char *dsoname, char *symname, void *new_addr ) {
   itr_args.symname  = symname;
   itr_args.new_addr = new_addr;
   (void) dl_iterate_phdr( pip_replace_clone_itr, (void*) &itr_args );
-  RETURN( pip_got_patch_ok );
+  RETURN_NE( pip_got_patch_ok );
 }
 
 void pip_undo_patch_GOT( void ) {

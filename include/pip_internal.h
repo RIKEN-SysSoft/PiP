@@ -59,6 +59,7 @@
 #endif
 
 #include <sys/wait.h>
+#include <sys/resource.h>
 #include <semaphore.h>
 #include <ucontext.h>
 #include <pthread.h>
@@ -68,6 +69,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <libgen.h>
+
+#include <config.h>
 
 #include <pip_dlfcn.h>
 #include <pip_machdep.h>
@@ -102,8 +105,9 @@
 #define PIP_EXIT_WAITED		(2)
 #define PIP_ABORT		(9)
 
-#define PIP_STACK_SIZE		(8*1024*1024) /* 8 MiB */
-#define PIP_MIN_STACK_SIZE	(1*1024*1024) /* 1 MiB */
+#define PIP_STACK_SIZE		(8*1024*1024LU) /* 8 MiB */
+#define PIP_STACK_SIZE_MIN	(1*1024*1024LU) /* 1 MiB */
+#define PIP_STACK_SIZE_MAX	(16*1024*1024*1024LU) /* 16 GiB */
 #define PIP_STACK_ALIGN		(256)
 
 #define PIP_MASK32		(0xFFFFFFFF)

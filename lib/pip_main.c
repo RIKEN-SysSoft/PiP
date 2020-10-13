@@ -33,9 +33,8 @@
  * Written by Atsushi HORI <ahori@riken.jp>
  */
 
-#include <config.h>
-#include <build.h>
 #include <pip_internal.h>
+#include <build.h>
 #include <getopt.h>
 
 const char interp[] __attribute__((section(".interp"))) = INTERP;
@@ -116,14 +115,21 @@ static int parse_cmdline( char ***argvp ) {
 
   if( ( fd = open( procfs, O_RDONLY ) ) < 0 ) return -1;
   if( ( argstr = (char*) malloc( szs ) ) == NULL ) return -1;
+  memset( argstr, 0, szs );
   while( 1 ) {
     if( ( sz = read( fd, argstr, szs ) ) < szs ) break;
     if( lseek( fd, 0, SEEK_SET ) < 0 ) {
+      free( argstr );
       close( fd );
       return -1;
     }
     szs *= 2;
-    if( ( argstr = (char*) realloc( argstr, szs ) ) == NULL ) return -1;
+    if( ( argstr = (char*) realloc( argstr, szs ) ) == NULL ) {
+      free( argstr );
+      close( fd );
+      return -1;
+    }
+    memset( argstr, 0, szs );
   }
   close( fd );
   argc = 0;
@@ -131,6 +137,7 @@ static int parse_cmdline( char ***argvp ) {
     if( argstr[i] == '\0' ) argc++;
   }
   argvec = (char**) malloc( sizeof(char*) * ( argc + 1 ) );
+  if( argvec == NULL ) return -1;
   for( c=0, i=0; c<argc; c++ ) {
     argvec[c] = &argstr[i];
     for( ; argstr[i]!='\0'; i++ );
