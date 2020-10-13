@@ -1,4 +1,4 @@
-.TH "libpip" 7 "Tue Sep 29 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "libpip" 7 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -18,10 +18,10 @@ Version 1 - Deprecated
 .IP "\(bu" 2
 Version 2 - Stable version
 .IP "\(bu" 2
-Version 3 - Stable version supporting BLT and ULP
+Version 3 - Stable version supporting BLT and ULP (experimental)
 .PP
 .PP
-In this document, \fBN\fP denotes the PiP version number\&.
+Unfortunately each version has unique ABI and there is no ABI compatibility among them\&. The functionality of PiP-v1 is almost the same with PiP-v2, however, PiP-v2's API is a subset of the PiP-v3's API\&. Hereafter \fBN\fP denotes the PiP version number\&.
 .PP
 .SS "Bi-Level Thread (BLT, from v3)"
 .PP
@@ -108,7 +108,7 @@ Build PiP
 Build PiP-gdb (optional)
 .PP
 .PP
-By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb\&. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb\&. Above Docker image and Spack include PiP-glibc and PiP-gdb\&.
+By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb\&. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb\&. Above Docker image contains PiP-glibc and PiP-gdb, and the SPack recipe installs PiP-glibc and PiP-gdb additionally\&.
 .PP
 .IP "\(bu" 2
 \fCPiP-glibc\fP - patched GNU libc for PiP
@@ -118,50 +118,24 @@ By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by
 \fCPiP-gdb\fP - patched gdb to debug PiP root and PiP tasks\&.
 .PP
 .PP
-Before installing PiP, we strongly recommend you to install PiP-glibc\&.
-.PP
-After installing PiP, PiP-gdb can be installed too\&.
+Before installing PiP, we strongly recommend you to install PiP-glibc\&. After installing PiP, PiP-gdb can be installed\&.
 .PP
 .SS "Installation from the source code\&."
 .PP
-.IP "1." 4
-Building PiP-glibc (optional)
+In addition to the above three PiP related packages, there is PiP installing program\&.
 .PP
-Fetch source tree (CentOS7 or RHEL7):
+.IP "\(bu" 2
+\fCPiP-pip\fP - PiP package installing program
 .PP
-$ git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-glibc
 .PP
-Fetch source tree (CentOS8 or RHEL8):
+This is the easiest way to install PiP packages from the source code is using the \fCpip-pip\fP command\&. This command clones source codes from the GITHUB repos, build and install them including PiP documents\&. Here is the usage of PiP-pip command; 
 .PP
-$ git clone -b pip-centos8 git@git.sys.aics.riken.jp:software/PIP-glibc
-.PP
-Build PiP-glibc
-.PP
-$ mkdir GLIBC_BUILD_DIR $ cd GLIBC_BUILD_DIR $ GLIBC_SRC_DIR/build\&.sh --prefix=GLIBC_INSTALL_DIR
-.IP "2." 4
-Build PiP library
-.PP
-The same source code can be ussed for CentOS7 and CentOS8 (RHEL7 and RHEL8)\&.
-.PP
-$ git clone -b pip-N git@git.sys.aics.riken.jp:software/PiP $ cd PIP_SRC_DIR $ \&./configure --prefix=PIP_INSTALL_DIR [ --with-glibc-libdir=GLIBC_INSTALL_DIR/lib ] $ make install doc
-.PP
-If you want to make sure if the PiP library is correctly installed, then do the following;
-.PP
-$ cd PIP_SRC_DIR $ make check-installed
-.IP "3." 4
-Build PiP-gdb (optional)
-.PP
-Fetch source tree; CentOS7 or RHEL7
-.PP
-$ git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-gdb
-.PP
-CentOS8 or RHEL8
-.PP
-$ git clone -b pip-centos8 git@git.sys.aics.riken.jp:software/PIP-gdb
-.PP
-Build PiP-gdb
-.PP
-$ cd GDB_SRC_DIR $ \&./build\&.sh --prefix=GDB_INSTALL_DIR --with-pip=PIP_INSTALL_DIR
+.nf
+$ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
+$ cd PiP-pip
+$ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
+
+.fi
 .PP
 .PP
 .SH "PiP Documents"
@@ -404,22 +378,6 @@ printpipmode
 .SH "Functions"
 .PP
 .PP
-.IP "\(bu" 2
-PiP-0-init-fin
-.IP "\(bu" 2
-PiP-1-spawn
-.IP "\(bu" 2
-PiP-2-export
-.IP "\(bu" 2
-PiP-3-wait
-.IP "\(bu" 2
-PiP-4-query
-.IP "\(bu" 2
-PiP-5-exit
-.IP "\(bu" 2
-PiP-6-signal
-.IP "\(bu" 2
-PiP-7-sync
 .IP "\(bu" 2
 pip_abort
 .IP "\(bu" 2

@@ -10,10 +10,10 @@ Currently there are three Pi\-P library versions\-:
 \begin{DoxyItemize}
 \item Version 1 -\/ Deprecated
 \item Version 2 -\/ Stable version
-\item Version 3 -\/ Stable version supporting B\-L\-T and U\-L\-P
+\item Version 3 -\/ Stable version supporting B\-L\-T and U\-L\-P (experimental)
 \end{DoxyItemize}
 
-In this document, {\bfseries N} denotes the Pi\-P version number.
+Unfortunately each version has unique A\-B\-I and there is no A\-B\-I compatibility among them. The functionality of Pi\-P-\/v1 is almost the same with Pi\-P-\/v2, however, Pi\-P-\/v2's A\-P\-I is a subset of the Pi\-P-\/v3's A\-P\-I. Hereafter {\bfseries N} denotes the Pi\-P version number.
 
 \subsection*{Bi-\/\-Level Thread (B\-L\-T, from v3)}
 
@@ -85,7 +85,7 @@ The installation of Pi\-P related packages must follow the order below;
 \item Build Pi\-P-\/gdb (optional)
 \end{DoxyEnumerate}
 
-By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbugged by using Pi\-P-\/gdb. In other words, without installing Pi\-P-\/glibc, users can create up to around 10 Pi\-P tasks (the number depends on the program) and cannot debug by using Pi\-P-\/gdb. Above Docker image and Spack include Pi\-P-\/glibc and Pi\-P-\/gdb.
+By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbugged by using Pi\-P-\/gdb. In other words, without installing Pi\-P-\/glibc, users can create up to around 10 Pi\-P tasks (the number depends on the program) and cannot debug by using Pi\-P-\/gdb. Above Docker image contains Pi\-P-\/glibc and Pi\-P-\/gdb, and the S\-Pack recipe installs Pi\-P-\/glibc and Pi\-P-\/gdb additionally.
 
 
 \begin{DoxyItemize}
@@ -94,50 +94,22 @@ By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbug
 \item \href{https://github.com/RIKEN-SysSoft/PiP-gdb}{\tt Pi\-P-\/gdb} -\/ patched gdb to debug Pi\-P root and Pi\-P tasks.
 \end{DoxyItemize}
 
-Before installing Pi\-P, we strongly recommend you to install Pi\-P-\/glibc.
-
-After installing Pi\-P, Pi\-P-\/gdb can be installed too.
+Before installing Pi\-P, we strongly recommend you to install Pi\-P-\/glibc. After installing Pi\-P, Pi\-P-\/gdb can be installed.
 
 \subsection*{Installation from the source code.}
 
+In addition to the above three Pi\-P related packages, there is Pi\-P installing program.
 
-\begin{DoxyEnumerate}
-\item Building Pi\-P-\/glibc (optional)
 
-Fetch source tree (Cent\-O\-S7 or R\-H\-E\-L7)\-:
+\begin{DoxyItemize}
+\item \href{https://github.com/RIKEN-SysSoft/PiP-pip}{\tt Pi\-P-\/pip} -\/ Pi\-P package installing program
+\end{DoxyItemize}
 
-\$ git clone -\/b pip-\/centos7 \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-P\-I\-P-\/glibc
+This is the easiest way to install Pi\-P packages from the source code is using the {\ttfamily pip-\/pip} command. This command clones source codes from the G\-I\-T\-H\-U\-B repos, build and install them including Pi\-P documents. Here is the usage of Pi\-P-\/pip command; \begin{DoxyVerb}$ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
+$ cd PiP-pip
+$ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
+\end{DoxyVerb}
 
-Fetch source tree (Cent\-O\-S8 or R\-H\-E\-L8)\-:
-
-\$ git clone -\/b pip-\/centos8 \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-P\-I\-P-\/glibc
-
-Build Pi\-P-\/glibc
-
-\$ mkdir G\-L\-I\-B\-C\-\_\-\-B\-U\-I\-L\-D\-\_\-\-D\-I\-R \$ cd G\-L\-I\-B\-C\-\_\-\-B\-U\-I\-L\-D\-\_\-\-D\-I\-R \$ G\-L\-I\-B\-C\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R/build.\-sh --prefix=G\-L\-I\-B\-C\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R
-\item Build Pi\-P library
-
-The same source code can be ussed for Cent\-O\-S7 and Cent\-O\-S8 (R\-H\-E\-L7 and R\-H\-E\-L8).
-
-\$ git clone -\/b pip-\/\-N \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-Pi\-P \$ cd P\-I\-P\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ ./configure --prefix=P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R \mbox{[} --with-\/glibc-\/libdir=G\-L\-I\-B\-C\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R/lib \mbox{]} \$ make install doc
-
-If you want to make sure if the Pi\-P library is correctly installed, then do the following;
-
-\$ cd P\-I\-P\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ make check-\/installed
-\item Build Pi\-P-\/gdb (optional)
-
-Fetch source tree; Cent\-O\-S7 or R\-H\-E\-L7
-
-\$ git clone -\/b pip-\/centos7 \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-P\-I\-P-\/gdb
-
-Cent\-O\-S8 or R\-H\-E\-L8
-
-\$ git clone -\/b pip-\/centos8 \href{mailto:git@git.sys.aics.riken.jp}{\tt git@git.\-sys.\-aics.\-riken.\-jp}\-:software/\-P\-I\-P-\/gdb
-
-Build Pi\-P-\/gdb
-
-\$ cd G\-D\-B\-\_\-\-S\-R\-C\-\_\-\-D\-I\-R \$ ./build.sh --prefix=G\-D\-B\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R --with-\/pip=P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R
-\end{DoxyEnumerate}
 
 \section*{Pi\-P Documents}
 
@@ -304,9 +276,9 @@ Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. \char`\"{}\
 
 
 \begin{DoxyItemize}
-\item \mbox{[}H\-P\-D\-C'18\mbox{]} \href{file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18.pdf}{\tt file\-:/home/ahori/\-Pi\-P/x86\-\_\-64/pip-\/2/install/share/slides/\-H\-P\-D\-C18.\-pdf}
-\item \mbox{[}R\-O\-S\-S'18\mbox{]} \href{file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/HPDC18-ROSS.pdf}{\tt file\-:/home/ahori/\-Pi\-P/x86\-\_\-64/pip-\/2/install/share/slides/\-H\-P\-D\-C18-\/\-R\-O\-S\-S.\-pdf}
-\item \mbox{[}I\-P\-D\-P\-S/\-R\-A\-D\-R'20\mbox{]} \href{file:/home/ahori/PiP/x86_64/pip-2/install/share/slides/IPDPS-RSADR-2020.pdf}{\tt file\-:/home/ahori/\-Pi\-P/x86\-\_\-64/pip-\/2/install/share/slides/\-I\-P\-D\-P\-S-\/\-R\-S\-A\-D\-R-\/2020.\-pdf} \section*{Author}
+\item \mbox{[}H\-P\-D\-C'18\mbox{]} \href{file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-2/pip-install/share/slides/HPDC18.pdf}{\tt file\-:/home/ahori/\-Pi\-P/\-Pi\-P-\/pip/install/x86\-\_\-64\-\_\-redhat-\/7\-\_\-pip-\/2/pip-\/install/share/slides/\-H\-P\-D\-C18.\-pdf}
+\item \mbox{[}R\-O\-S\-S'18\mbox{]} \href{file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-2/pip-install/share/slides/HPDC18-ROSS.pdf}{\tt file\-:/home/ahori/\-Pi\-P/\-Pi\-P-\/pip/install/x86\-\_\-64\-\_\-redhat-\/7\-\_\-pip-\/2/pip-\/install/share/slides/\-H\-P\-D\-C18-\/\-R\-O\-S\-S.\-pdf}
+\item \mbox{[}I\-P\-D\-P\-S/\-R\-A\-D\-R'20\mbox{]} \href{file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-2/pip-install/share/slides/IPDPS-RSADR-2020.pdf}{\tt file\-:/home/ahori/\-Pi\-P/\-Pi\-P-\/pip/install/x86\-\_\-64\-\_\-redhat-\/7\-\_\-pip-\/2/pip-\/install/share/slides/\-I\-P\-D\-P\-S-\/\-R\-S\-A\-D\-R-\/2020.\-pdf} \section*{Author}
 \end{DoxyItemize}
 
 Atsushi Hori Riken Center for Commputational Science (R-\/\-C\-C\-S) Japan 
