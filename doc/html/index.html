@@ -87,7 +87,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>Version 2 - Stable version</li>
 <li>Version 3 - Stable version supporting BLT and ULP (experimental)</li>
 </ul>
-<p>Unfortunately each version has unique ABI and there is no ABI compatibility among them. The functionality of PiP-v1 is almost the same with PiP-v2, however, PiP-v2's API is a subset of the PiP-v3's API. Hereafter <b>N</b> denotes the PiP version number.</p>
+<p>Unfortunately each version has unique ABI and there is no ABI compatibility among them. The functionality of PiP-v1 is almost the same with PiP-v2, however, PiP-v2's API is a subset of the PiP-v3's API. Hereafter <b>NN</b> denotes the PiP version number.</p>
 <h2>Bi-Level Thread (BLT, from v3)</h2>
 <p>PiP also provides new thread implementation named "Bi-Level Thread
 (BLT)", again, to take the best of two worlds, Kernel-Level Thread (KLT) and User-Level Thread (ULT) here. A BLT is a PiP task. When a PiP task is created it runs as a KLT. At any point the KLT can becomme a ULT by decoupling the associated kernel thread from the KLT. The decoupled kernel thread becommes idle. Later, the ULT can become KLT again by coupling with the kernel thread.</p>
@@ -100,7 +100,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>(P)Thread.</li>
 </ul>
 <p>In the pthread mode, although each PiP task has its own static variables unlike thread, PiP task behaves more like PThread, having a TID, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on. In the process mode, a PiP task behaves more like a process, having a PID, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on. The above mentioned ULP can only work with the process mode.</p>
-<p>When the <code>PIP\_MODE</code> environment variable set to "()thread" then the PiP library runs in the pthread mode, and if it is set to "process" then it runs in the process mode. There are also three implementations in the process mode; "process:preload," "process:pipclone" and "process:got." The "process:preload" mode must be with the <code>LD\_PRELOAD</code> environment variable setting so that the clone() system call wrapper can work with. The "process:pipclone" mode is only effective with the PIP-patched glibc library (see below).</p>
+<p>When the <b>PIP_MODE</b> environment variable set to "()thread" then the PiP library runs in the pthread mode, and if it is set to "process" then it runs in the process mode. There are also three implementations in the process mode; "process:preload," "process:pipclone" and "process:got." The "process:preload" mode must be with the <b>LD_PRELOAD</b> environment variable setting so that the clone() system call wrapper can work with. The "process:pipclone" mode is only effective with the PIP-patched glibc library (see below).</p>
 <p>Several function are made available by the PiP library to absorb the functional differences due to the execution modes.</p>
 <h1>License</h1>
 <p>This package is licensed under the 2-clause simplified BSD License - see the [LICENSE](LICENSE) file for details.</p>
@@ -108,8 +108,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>There are several ways to install PiP; Docker, Spack, RPM, and building fromm the source code.</p>
 <h2>Docker image</h2>
 <p>Download and run the PiP Docker image. </p>
-<pre class="fragment">$ docker pull rikenpip/pip-vN
-$ sudo docker run -it rikenpip/pip-vN /bin/bash
+<pre class="fragment">$ docker pull rikenpip/pip-vNN
+$ sudo docker run -it rikenpip/pip-vNN /bin/bash
 </pre><h2><a href="https://spack.readthedocs.io/">Spack</a></h2>
 <p>Download spack and do the follwoing; </p>
 <pre class="fragment">$ git clone https://github.com/spack/spack.git
@@ -117,11 +117,12 @@ $ cd spack/bin
 $ spack install process-in-process
 </pre><h2>RPMs</h2>
 <p>RPM packages and their yum repository are also available for CentOS 7 / RHEL7. </p>
-<pre class="fragment">$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
+<pre class="fragment">$ sudo rpm -Uvh
+https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-NN-0.noarch.rpm
 $ sudo yum install pip-glibc
 $ sudo yum install pip pip-debuginfo
 $ sudo yum install pip-gdb
-</pre><p>If PiP packages are installed by the above RPMs, <code>PIP\_INSTALL\_DIR</code> will be "/usr."</p>
+</pre><p>If PiP packages are installed by the above RPMs, all packages will be install in "/usr" directory.</p>
 <h2>Source Code</h2>
 <p>The installation of PiP related packages must follow the order below;</p>
 <ol type="1">
@@ -154,9 +155,9 @@ $ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
 <pre class="fragment">$ PIP_INSTALL_DIR/bin/pip-man 7 libpip
 </pre><p>The above two exammples will show you the same document you are reading.</p>
 <h2>PDF</h2>
-<p>PDF documents will be installed at <b>PIP_INSTALL_DIR</b>/share/pdf.</p>
+<p><a href="doc/latex-inuse/libpip-manpages.pdf">PDF documents</a> will be installed at <b>PIP_INSTALL_DIR</b>/share/pdf.</p>
 <h2>HTML</h2>
-<p>HTML documents will be installed at <b>PIP_INSTALL_DIR</b>/share/html.</p>
+<p><a href="doc/html/">HTML documents</a> will be installed at <b>PIP_INSTALL_DIR</b>/share/html.</p>
 <h1>Getting Started</h1>
 <h2>Compile and link your PiP programs</h2>
 <ul>
@@ -236,7 +237,7 @@ Added inferior 4
 </pre><p>You can attach all relevant PiP tasks by: </p>
 <pre class="fragment">$ pip-gdb -p PID-of-your-PiP-program
 </pre><p>(from v2)</p>
-<p>If the <code>PIP\_GDB\_PATH</code> environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered. The exception signals can also be defined by setting the <code>PIP\_GDB\_SIGNALS</code> environment. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol. 'all' is reserved to specify most of the signals. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If one of the specified or default signals is delivered, then PiP-gdb will be attached automatically. The PiP-gdb will show backtrace by default. If users specify <code>PIP\_GDB\_COMMAND</code> that a filename containing some GDB commands, then those GDB commands will be executed by PiP-gdb, instead of backtrace, in batch mode. If the <code>PIP\_STOP\_ON\_START</code> environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program.</p>
+<p>If the <b>PIP_GDB_PATH</b> environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered. The exception signals can also be defined by setting the <b>PIP_GDB_SIGNALS</b> environment. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol. 'all' is reserved to specify most of the signals. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If one of the specified or default signals is delivered, then PiP-gdb will be attached automatically. The PiP-gdb will show backtrace by default. If users specify <b>PIP_GDB_COMMAND</b> that a filename containing some GDB commands, then those GDB commands will be executed by PiP-gdb, instead of backtrace, in batch mode. If the <b>PIP_STOP_ON_START</b> environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program.</p>
 <h1>Mailing List</h1>
 <p><a href="#" onclick="location.href='mai'+'lto:'+'pip'+'@m'+'l.r'+'ik'+'en.'+'jp'; return false;">pip@m<span style="display: none;">.nosp@m.</span>l.ri<span style="display: none;">.nosp@m.</span>ken.j<span style="display: none;">.nosp@m.</span>p</a></p>
 <h1>Publications</h1>

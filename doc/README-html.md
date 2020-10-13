@@ -25,7 +25,7 @@ Currently there are three PiP library versions:
 Unfortunately each version has unique ABI and there is no ABI
 compatibility among them. The functionality of PiP-v1 is almost the
 same with PiP-v2, however, PiP-v2's API is a subset of the PiP-v3's
-API. Hereafter **N** denotes the PiP version number.
+API. Hereafter **NN** denotes the PiP version number.
 
 ## Bi-Level Thread (BLT, from v3)
 
@@ -75,13 +75,13 @@ a PID, having an independent file descriptor space, having the same
 signal delivery semantics as Linux process does, and so on. The
 above mentioned ULP can only work with the process mode.
 
-When the `PIP\_MODE` environment variable set to "()thread"
+When the **PIP\_MODE** environment variable set to "()thread"
 then
 the PiP library runs in the pthread mode, and if it is set to
 "process" then it runs in the process mode. There are also three
 implementations in the process mode; "process:preload,"
 "process:pipclone" and "process:got." The "process:preload" mode
-must be with the `LD\_PRELOAD` environment variable setting so that
+must be with the **LD\_PRELOAD** environment variable setting so that
 the clone() system call wrapper can work with. The
 "process:pipclone" mode is only effective with the PIP-patched
 glibc library (see below).
@@ -103,8 +103,8 @@ building fromm the source code.
 
 Download and run the PiP Docker image.
 
-    $ docker pull rikenpip/pip-vN
-    $ sudo docker run -it rikenpip/pip-vN /bin/bash
+    $ docker pull rikenpip/pip-vNN
+    $ sudo docker run -it rikenpip/pip-vNN /bin/bash
 
 ## [Spack](https://spack.readthedocs.io/)
 
@@ -118,13 +118,14 @@ Download spack and do the follwoing;
 
 RPM packages and their yum repository are also available for CentOS 7 / RHEL7.
 
-    $ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
+    $ sudo rpm -Uvh
+    https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-NN-0.noarch.rpm
     $ sudo yum install pip-glibc
     $ sudo yum install pip pip-debuginfo
     $ sudo yum install pip-gdb
 
-If PiP packages are installed by the above RPMs, `PIP\_INSTALL\_DIR`
-will be "/usr."
+If PiP packages are installed by the above RPMs, all packages will be
+install in "/usr" directory.
 
 ## Source Code
 
@@ -183,12 +184,12 @@ The above two exammples will show you the same document you are reading.
 
 ## PDF
 
-PDF documents will be installed at
+[PDF documents](doc/latex-inuse/libpip-manpages.pdf) will be installed at
 **PIP\_INSTALL\_DIR**/share/pdf.
 
 ## HTML
 
-HTML documents will be installed at
+[HTML documents](doc/html/) will be installed at
 **PIP\_INSTALL\_DIR**/share/html.
 
 # Getting Started
@@ -316,20 +317,20 @@ You can attach all relevant PiP tasks by:
 
 (from v2)
 
-If the `PIP\_GDB\_PATH` environment is set to the path pointing to PiP-gdb
+If the **PIP\_GDB\_PATH** environment is set to the path pointing to PiP-gdb
 executable file, then PiP-gdb is automatically attached when an
 excetion signal (SIGSEGV and SIGHUP by default) is delivered. The
 exception signals can also be defined by
-setting the `PIP\_GDB\_SIGNALS` environment. Signal names (case
+setting the **PIP\_GDB\_SIGNALS** environment. Signal names (case
 insensitive) can be
 concatenated by the '+' or '-' symbol. 'all' is reserved to specify most
 of the signals. For example, 'ALL-TERM' means all signals excepting
 SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If
 one of the specified or default signals is delivered, then PiP-gdb will be
 attached automatically. The PiP-gdb will show backtrace by default. If users
-specify `PIP\_GDB\_COMMAND` that a filename containing some GDB
+specify **PIP\_GDB\_COMMAND** that a filename containing some GDB
 commands, then those GDB commands will be executed by PiP-gdb, instead
-of backtrace, in batch mode. If the `PIP\_STOP\_ON\_START` environment is
+of backtrace, in batch mode. If the **PIP\_STOP\_ON\_START** environment is
 set (to any value), then the PiP library delivers SIGSTOP to a spawned
 PiP task which is about to start user program.
 
