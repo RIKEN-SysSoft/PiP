@@ -85,9 +85,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <ul>
 <li>Version 1 - Deprecated</li>
 <li>Version 2 - Stable version</li>
-<li>Version 3 - Stable version supporting BLT and ULP</li>
+<li>Version 3 - Stable version supporting BLT and ULP (experimental)</li>
 </ul>
-<p>In this document, <b>N</b> denotes the PiP version number.</p>
+<p>Unfortunately each version has unique ABI and there is no ABI compatibility among them. The functionality of PiP-v1 is almost the same with PiP-v2, however, PiP-v2's API is a subset of the PiP-v3's API. Hereafter <b>N</b> denotes the PiP version number.</p>
 <h2>Bi-Level Thread (BLT, from v3)</h2>
 <p>PiP also provides new thread implementation named "Bi-Level Thread
 (BLT)", again, to take the best of two worlds, Kernel-Level Thread (KLT) and User-Level Thread (ULT) here. A BLT is a PiP task. When a PiP task is created it runs as a KLT. At any point the KLT can becomme a ULT by decoupling the associated kernel thread from the KLT. The decoupled kernel thread becommes idle. Later, the ULT can become KLT again by coupling with the kernel thread.</p>
@@ -129,40 +129,23 @@ $ sudo yum install pip-gdb
 <li>Build PiP</li>
 <li>Build PiP-gdb (optional)</li>
 </ol>
-<p>By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb. Above Docker image and Spack include PiP-glibc and PiP-gdb.</p>
+<p>By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb. Above Docker image contains PiP-glibc and PiP-gdb, and the SPack recipe installs PiP-glibc and PiP-gdb additionally.</p>
 <ul>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-glibc">PiP-glibc</a> - patched GNU libc for PiP</li>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP">PiP</a> - Process in Process (this package)</li>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-gdb">PiP-gdb</a> - patched gdb to debug PiP root and PiP tasks.</li>
 </ul>
-<p>Before installing PiP, we strongly recommend you to install PiP-glibc.</p>
-<p>After installing PiP, PiP-gdb can be installed too.</p>
+<p>Before installing PiP, we strongly recommend you to install PiP-glibc. After installing PiP, PiP-gdb can be installed.</p>
 <h2>Installation from the source code.</h2>
-<ol type="1">
-<li><p class="startli">Building PiP-glibc (optional)</p>
-<p class="startli">Fetch source tree (CentOS7 or RHEL7):</p>
-<p class="startli">$ git clone -b pip-centos7 <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PIP-glibc</p>
-<p class="startli">Fetch source tree (CentOS8 or RHEL8):</p>
-<p class="startli">$ git clone -b pip-centos8 <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PIP-glibc</p>
-<p class="startli">Build PiP-glibc</p>
-<p class="startli">$ mkdir GLIBC_BUILD_DIR $ cd GLIBC_BUILD_DIR $ GLIBC_SRC_DIR/build.sh &ndash;prefix=GLIBC_INSTALL_DIR</p>
-</li>
-<li><p class="startli">Build PiP library</p>
-<p class="startli">The same source code can be ussed for CentOS7 and CentOS8 (RHEL7 and RHEL8).</p>
-<p class="startli">$ git clone -b pip-N <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PiP $ cd PIP_SRC_DIR $ ./configure &ndash;prefix=PIP_INSTALL_DIR [ &ndash;with-glibc-libdir=GLIBC_INSTALL_DIR/lib ] $ make install doc</p>
-<p class="startli">If you want to make sure if the PiP library is correctly installed, then do the following;</p>
-<p class="startli">$ cd PIP_SRC_DIR $ make check-installed</p>
-</li>
-<li><p class="startli">Build PiP-gdb (optional)</p>
-<p class="startli">Fetch source tree; CentOS7 or RHEL7</p>
-<p class="startli">$ git clone -b pip-centos7 <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PIP-gdb</p>
-<p class="startli">CentOS8 or RHEL8</p>
-<p class="startli">$ git clone -b pip-centos8 <a href="#" onclick="location.href='mai'+'lto:'+'git'+'@g'+'it.'+'sy'+'s.a'+'ic'+'s.r'+'ik'+'en.'+'jp'; return false;">git@g<span style="display: none;">.nosp@m.</span>it.s<span style="display: none;">.nosp@m.</span>ys.ai<span style="display: none;">.nosp@m.</span>cs.r<span style="display: none;">.nosp@m.</span>iken.<span style="display: none;">.nosp@m.</span>jp</a>:software/PIP-gdb</p>
-<p class="startli">Build PiP-gdb</p>
-<p class="startli">$ cd GDB_SRC_DIR $ ./build.sh &ndash;prefix=GDB_INSTALL_DIR &ndash;with-pip=PIP_INSTALL_DIR</p>
-</li>
-</ol>
-<h1>PiP Documents</h1>
+<p>In addition to the above three PiP related packages, there is PiP installing program.</p>
+<ul>
+<li><a href="https://github.com/RIKEN-SysSoft/PiP-pip">PiP-pip</a> - PiP package installing program</li>
+</ul>
+<p>This is the easiest way to install PiP packages from the source code is using the <code>pip-pip</code> command. This command clones source codes from the GITHUB repos, build and install them including PiP documents. Here is the usage of PiP-pip command; </p>
+<pre class="fragment">$ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
+$ cd PiP-pip
+$ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
+</pre><h1>PiP Documents</h1>
 <p>The following PiP documents are created by using <a href="https://www.doxygen.nl/">Doxygen</a>.</p>
 <h2>Man pages</h2>
 <p>Man pages will be installed at <b>PIP_INSTALL_DIR</b>/share/man. </p>
@@ -266,9 +249,9 @@ of User-Level Processes using Address Space Sharing," 2020 IEEE International Pa
 MPI Communication," in SC’20 (to appear)</p>
 <h2>Presentation Slides</h2>
 <ul>
-<li>[HPDC'18] <a href="file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/HPDC18.pdf</a></li>
-<li>[ROSS'18] <a href="file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/HPDC18-ROSS.pdf</a></li>
-<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
+<li>[HPDC'18] <a href="file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18.pdf</a></li>
+<li>[ROSS'18] <a href="file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18-ROSS.pdf</a></li>
+<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
 </li>
 </ul>
 <p>Atsushi Hori Riken Center for Commputational Science (R-CCS) Japan </p>

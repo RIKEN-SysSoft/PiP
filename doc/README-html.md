@@ -20,9 +20,12 @@ Currently there are three PiP library versions:
 
 * Version 1 - Deprecated
 * Version 2 - Stable version
-* Version 3 - Stable version supporting BLT and ULP
+* Version 3 - Stable version supporting BLT and ULP (experimental)
 
-In this document, **N** denotes the PiP version number.
+Unfortunately each version has unique ABI and there is no ABI
+compatibility among them. The functionality of PiP-v1 is almost the
+same with PiP-v2, however, PiP-v2's API is a subset of the PiP-v3's
+API. Hereafter **N** denotes the PiP version number.
 
 ## Bi-Level Thread (BLT, from v3)
 
@@ -135,63 +138,32 @@ By using PiP-glibc, users can create up to 300 PiP tasks which can be
 dbugged by using PiP-gdb.  In other words, without installing
 PiP-glibc, users can create up to around 10 PiP tasks (the number
 depends on the program) and cannot debug by using PiP-gdb. Above
-Docker image and Spack include PiP-glibc and PiP-gdb.
+Docker image contains PiP-glibc and PiP-gdb, and the SPack recipe
+installs PiP-glibc and PiP-gdb additionally.
 
 * [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
 * [PiP](https://github.com/RIKEN-SysSoft/PiP) - Process in Process (this package)
 * [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
 
 Before installing PiP, we strongly recommend you to install PiP-glibc.
-
-After installing PiP, PiP-gdb can be installed too.
+After installing PiP, PiP-gdb can be installed.
 
 ## Installation from the source code.
 
-1. Building PiP-glibc (optional)
+In addition to the above three PiP related packages, there is PiP
+installing program.
 
-  Fetch source tree (CentOS7 or RHEL7):
+* [PiP-pip](https://github.com/RIKEN-SysSoft/PiP-pip) - PiP package
+  installing program
 
-    $ git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-glibc
+This is the easiest way to install PiP packages from the source code
+is using the `pip-pip` command. This command clones source codes from
+the GITHUB repos, build and install them including PiP documents. Here
+is the usage of PiP-pip command;
 
-  Fetch source tree (CentOS8 or RHEL8):
-
-    $ git clone -b pip-centos8 git@git.sys.aics.riken.jp:software/PIP-glibc
-
-  Build PiP-glibc
-
-    $ mkdir GLIBC_BUILD_DIR
-    $ cd GLIBC_BUILD_DIR
-    $ GLIBC_SRC_DIR/build.sh --prefix=GLIBC_INSTALL_DIR
-
-2. Build PiP library
-
-  The same source code can be ussed for CentOS7 and CentOS8 (RHEL7 and RHEL8).
-
-    $ git clone -b pip-N git@git.sys.aics.riken.jp:software/PiP
-    $ cd PIP_SRC_DIR
-    $ ./configure --prefix=PIP_INSTALL_DIR [ --with-glibc-libdir=GLIBC_INSTALL_DIR/lib ]
-    $ make install doc
-
-  If you want to make sure if the PiP library is correctly installed, then do the following;
-
-    $ cd PIP_SRC_DIR
-    $ make check-installed
-
-3.  Build PiP-gdb (optional)
-
-  Fetch source tree;
-  CentOS7 or RHEL7
-
-    $ git clone -b pip-centos7 git@git.sys.aics.riken.jp:software/PIP-gdb
-
-  CentOS8 or RHEL8
-
-    $ git clone -b pip-centos8 git@git.sys.aics.riken.jp:software/PIP-gdb
-
-  Build PiP-gdb
-
-    $ cd GDB_SRC_DIR
-    $ ./build.sh --prefix=GDB_INSTALL_DIR --with-pip=PIP_INSTALL_DIR
+    $ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
+    $ cd PiP-pip
+    $ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
 
 # PiP Documents
 
@@ -388,9 +360,9 @@ MPI Communication," in SC’20 (to appear)
 
 ## Presentation Slides
 
-* [HPDC'18] file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/HPDC18.pdf
-* [ROSS'18] file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/HPDC18-ROSS.pdf
-* [IPDPS/RADR'20] file:/home/ahori/PiP/x86_64/pip-2-blt/install/share/slides/IPDPS-RSADR-2020.pdf
+* [HPDC'18] file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18.pdf
+* [ROSS'18] file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18-ROSS.pdf
+* [IPDPS/RADR'20] file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/IPDPS-RSADR-2020.pdf
 # Author
 Atsushi Hori
 Riken Center for Commputational Science (R-CCS)
