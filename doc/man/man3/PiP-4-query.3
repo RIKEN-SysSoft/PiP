@@ -1,0 +1,394 @@
+.TH "PiP Query Functions" 3 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+PiP Query Functions \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_get_pipid\fP (int *pipidp)"
+.br
+.RI "\fIget PiP ID of the calling task \fP"
+.ti -1c
+.RI "int \fBpip_is_initialized\fP (void)"
+.br
+.RI "\fIQuery is PiP library is already initialized\&. \fP"
+.ti -1c
+.RI "int \fBpip_get_ntasks\fP (int *ntasksp)"
+.br
+.RI "\fIget the maximum number of the PiP tasks \fP"
+.ti -1c
+.RI "int \fBpip_get_mode\fP (int *modep)"
+.br
+.RI "\fIget the PiP execution mode \fP"
+.ti -1c
+.RI "const char * \fBpip_get_mode_str\fP (void)"
+.br
+.RI "\fIget a character string of the current execution mode \fP"
+.ti -1c
+.RI "int \fBpip_get_system_id\fP (int pipid, pip_id_t *idp)"
+.br
+.RI "\fIdeliver a process or thread ID defined by the system \fP"
+.ti -1c
+.RI "int \fBpip_isa_root\fP (void)"
+.br
+.RI "\fIcheck if calling PiP task is a PiP root or not \fP"
+.ti -1c
+.RI "int \fBpip_isa_task\fP (void)"
+.br
+.RI "\fIcheck if calling PiP task is a PiP task or not \fP"
+.ti -1c
+.RI "int \fBpip_is_threaded\fP (int *flagp)"
+.br
+.RI "\fIcheck if PiP execution mode is pthread or not \fP"
+.ti -1c
+.RI "int \fBpip_is_shared_fd\fP (int *flagp)"
+.br
+.RI "\fIcheck if file descriptors are shared or not\&. This is equivalent with the \fCpip_is_threaded\fP function\&. \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+PiP Query functions
+
+.PP
+\fBDescription\fP
+.RS 4
+Query functions for PiP task 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_get_pipid (int *pipidp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_pipid
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int \fBpip_get_pipid( int *pipidp )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipidp\fP This parameter points to the variable which will be set to the PiP ID of the calling task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not initialized yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_init\fP 
+.RE
+.PP
+
+.SS "int pip_is_initialized (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_is_initialized
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int \fBpip_is_initialized( void )\fP;
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return a non-zero value if PiP is already initialized\&. Otherwise this returns zero\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_init\fP 
+.RE
+.PP
+
+.SS "int pip_get_ntasks (int *ntasksp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_ntasks
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int \fBpip_get_ntasks( int *ntasksp )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIntasksp\fP Maximum number of PiP tasks is returned
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_init\fP 
+.RE
+.PP
+
+.SS "int pip_get_mode (int *modep)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_mode
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ int \fBpip_get_mode( int *modep )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fImodep\fP Returned PiP execution mode
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_get_mode_str\fP 
+.RE
+.PP
+
+.SS "const char* pip_get_mode_str (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_mode_str
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+ char *pip_get_mode_str( void );
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return the name string of the current execution mode\&. If PiP library is note initialized yet, then thiss return \fCNULL\fP\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_get_mode\fP 
+.RE
+.PP
+
+.SS "int pip_get_system_id (intpipid, pip_id_t *idp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_get_system_id
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int pip_get_system_id( int *pipid, uintptr_t *idp );
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+The returned object depends on the PiP execution mode\&. In the process mode it returns TID (Thread ID, not PID) and in the thread mode it returns thread (\fCpthread_t\fP) associated with the PiP task This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of a target PiP task 
+.br
+\fIidp\fP a pointer to store the ID value
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+getpid(Linux 2) 
+.PP
+pthread_self(Linux 3) 
+.RE
+.PP
+
+.SS "int pip_isa_root (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_isa_root
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_isa_root( void )\fP;
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return a non-zero value if the caller is the PiP root\&. Otherwise this returns zero\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_init\fP 
+.RE
+.PP
+
+.SS "int pip_isa_task (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_isa_task
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_isa_task( void )\fP;
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return a non-zero value if the caller is the PiP task\&. Otherwise this returns zero\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_init\fP 
+.RE
+.PP
+
+.SS "int pip_is_threaded (int *flagp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_is_threaded
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_is_threaded( int *flagp )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflagp\fP set to a non-zero value if PiP execution mode is Pthread
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_init\fP 
+.RE
+.PP
+
+.SS "int pip_is_shared_fd (int *flagp)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_is_shared_fd
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_is_shared_fd( int *flagp )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIflagp\fP set to a non-zero value if FDs are shared
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_init\fP 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

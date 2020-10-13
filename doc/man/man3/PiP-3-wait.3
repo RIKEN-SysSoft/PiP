@@ -1,0 +1,277 @@
+.TH "Waiting for PiP task termination" 3 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+Waiting for PiP task termination \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_wait\fP (int pipid, int *status)"
+.br
+.RI "\fIwait for the termination of a PiP task \fP"
+.ti -1c
+.RI "int \fBpip_trywait\fP (int pipid, int *status)"
+.br
+.RI "\fIwait for the termination of a PiP task in a non-blocking way \fP"
+.ti -1c
+.RI "int \fBpip_wait_any\fP (int *pipid, int *status)"
+.br
+.RI "\fIWait for the termination of any PiP task\&. \fP"
+.ti -1c
+.RI "int \fBpip_trywait_any\fP (int *pipid, int *status)"
+.br
+.RI "\fInon-blocking version of \fCpip_wait_any\fP \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+Waiting for PiP task termination
+
+.PP
+\fBDescription\fP
+.RS 4
+Functions to wait for PiP task termination\&. All functions listed here must only be called from PiP root\&. 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_wait (intpipid, int *status)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_wait
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_wait( int pipid, int *status )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. This function blocks until the specified PiP task terminates\&. The macros such as \fCWIFEXITED\fP and so on defined in Glibc can be applied to the returned \fCstatus\fP value\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID to wait for\&. 
+.br
+\fIstatus\fP Status value of the terminated PiP task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not initialized yet 
+.br
+\fIEPERM\fP This function is called other than PiP root 
+.br
+\fIEDEADLK\fP The specified \fCpipid\fP is the one of PiP root 
+.br
+\fIECHILD\fP The target PiP task does not exist or it was already terminated and waited for
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_exit\fP 
+.PP
+\fBpip_trywait\fP 
+.PP
+\fBpip_wait_any\fP 
+.PP
+\fBpip_trywait_any\fP 
+.PP
+wait(Linux 2) 
+.RE
+.PP
+
+.SS "int pip_trywait (intpipid, int *status)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_trywait
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_trywait( int pipid, int *status )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. This function behaves like the \fCwait\fP function of glibc and the macros such as \fCWIFEXITED\fP and so on can be applied to the returned \fCstatus\fP value\&.
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_trywait( int pipid, int *status )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID to wait for\&. 
+.br
+\fIstatus\fP Status value of the terminated PiP task
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet 
+.br
+\fIEPERM\fP This function is called other than PiP root 
+.br
+\fIEDEADLK\fP The specified \fCpipid\fP is the one of PiP root 
+.br
+\fIECHILD\fP The target PiP task does not exist or it was already terminated and waited for
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_exit\fP 
+.PP
+\fBpip_wait\fP 
+.PP
+\fBpip_wait_any\fP 
+.PP
+\fBpip_trywait_any\fP 
+.PP
+wait(Linux 2) 
+.RE
+.PP
+
+.SS "int pip_wait_any (int *pipid, int *status)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_wait_any
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_wait_any( int *pipid, int *status )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. This function blocks until any of PiP tasks terminates\&. The macros such as \fCWIFEXITED\fP and so on defined in Glibc can be applied to the returned \fCstatus\fP value\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of terminated PiP task\&. 
+.br
+\fIstatus\fP Exit statusof the terminated PiP task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet 
+.br
+\fIEPERM\fP This function is called other than PiP root 
+.br
+\fIECHILD\fP The target PiP task does not exist or it was already terminated and waited for
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_exit\fP 
+.PP
+\fBpip_wait\fP 
+.PP
+\fBpip_trywait\fP 
+.PP
+\fBpip_trywait_any\fP 
+.PP
+wait(Linux 2) 
+.RE
+.PP
+
+.SS "int pip_trywait_any (int *pipid, int *status)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_trywait_any
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip\&.h\fP> 
+.br
+int \fBpip_trywait_any( int *pipid, int *status )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. This function blocks until any of PiP tasks terminates\&. The macros such as \fCWIFEXITED\fP and so on defined in Glibc can be applied to the returned \fCstatus\fP value\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of terminated PiP task\&. 
+.br
+\fIstatus\fP Exit status of the terminated PiP task
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet 
+.br
+\fIEPERM\fP This function is called other than PiP root 
+.br
+\fIECHILD\fP There is no PiP task to wait for
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_exit\fP 
+.PP
+\fBpip_wait\fP 
+.PP
+\fBpip_trywait\fP 
+.PP
+\fBpip_wait_any\fP 
+.PP
+wait(Linux 2) 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.
