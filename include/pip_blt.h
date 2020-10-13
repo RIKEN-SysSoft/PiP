@@ -38,7 +38,6 @@
 
 #ifndef DOXYGEN_INPROGRESS
 
-#include <pip.h>
 #include <pip_machdep.h>
 #include <string.h>
 

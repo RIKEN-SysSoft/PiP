@@ -253,13 +253,8 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
   }
   if( desired & PIP_MODE_PTHREAD_BIT ) {
     newmod = PIP_MODE_PTHREAD;
-    goto done;
   }
 
-  if( newmod == 0 ) {
-    pip_warn_mesg( "pip_init() implemenation error. desired = 0x%x", desired );
-    RETURN( EOPNOTSUPP );
-  }
  done:
   *optsp = ( opts & ~PIP_MODE_MASK ) | newmod;
   RETURN( 0 );

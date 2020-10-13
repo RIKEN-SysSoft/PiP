@@ -85,7 +85,7 @@ static int pip_copy_vec( char **vecadd,
     return ENOMEM;
   }
   if( ( strs   = (char*)  PIP_MALLOC( veccc ) ) == NULL ) {
-    PIP_FREE( strs );
+    PIP_FREE( vecdst );
     return ENOMEM;
   }
   p = strs;
@@ -124,8 +124,8 @@ static int pip_copy_env( char **envsrc, int pipid,
 
 size_t pip_stack_size( void ) {
   char 		*env, *endptr;
-  ssize_t 	sz, scale;
-  int 		i;
+  ssize_t 	s, sz, scale, smax;
+  struct rlimit rlimit;
 
   if( ( sz = pip_root->stack_size_blt ) == 0 ) {
     if( ( env = getenv( PIP_ENV_STACKSZ ) ) == NULL &&
@@ -133,13 +133,18 @@ size_t pip_stack_size( void ) {
 	( env = getenv( "OMP_STACKSIZE" ) ) == NULL ) {
       sz = PIP_STACK_SIZE;	/* default */
     } else {
-      if( ( sz = (ssize_t) strtol( env, &endptr, 10 ) ) <= 0 ) {
+      if( ( sz = (ssize_t) strtoll( env, &endptr, 10 ) ) <= 0 ) {
 	pip_err_mesg( "stacksize: '%s' is illegal and "
-		      "default size (%d KiB) is set",
+		      "default size (%lu KiB) is set",
 		      env,
 		      PIP_STACK_SIZE / 1024 );
 	sz = PIP_STACK_SIZE;	/* default */
       } else {
+	if( getrlimit( RLIMIT_STACK, &rlimit ) != 0 ) {
+	  smax = PIP_STACK_SIZE_MAX;
+	} else {
+	  smax = rlimit.rlim_cur;
+	}
 	scale = 1;
 	switch( *endptr ) {
 	case 'T': case 't':
@@ -157,16 +162,17 @@ size_t pip_stack_size( void ) {
 	  sz *= scale;
 	  break;
 	case 'B': case 'b':
-	  for( i=PIP_STACK_SIZE_MIN; i<sz; i*=2 );
-	  sz = i;
+	  for( s=PIP_STACK_SIZE_MIN; s<sz && s<smax; s*=2 );
 	  break;
 	default:
-	  pip_err_mesg( "stacksize: '%s' is illegal and default is used",
-			env );
 	  sz = PIP_STACK_SIZE;
+	  pip_err_mesg( "stacksize: '%s' is illegal and "
+			"default size (%ldB) is used instead",
+			env, sz );
 	  break;
 	}
 	sz = ( sz < PIP_STACK_SIZE_MIN ) ? PIP_STACK_SIZE_MIN : sz;
+	sz = ( sz > smax               ) ? smax               : sz;
       }
     }
     pip_root->stack_size_blt = sz;
@@ -183,10 +189,13 @@ int pip_isa_coefd( int fd ) {
 static int pip_list_coe_fds( int *fd_listp[] ) {
   DIR *dir;
   struct dirent *direntp;
+  int *fdlist;
   int i, fd, err = 0;
 
   ENTER;
-  if( ( dir = opendir( PROCFD_PATH ) ) != NULL ) {
+  if( ( dir = opendir( PROCFD_PATH ) ) == NULL ) {
+    err = errno;
+  } else {
     int fd_dir = dirfd( dir );
     int nfds = 0;
 
@@ -200,8 +209,8 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
       }
     }
     if( nfds > 0 ) {
-      *fd_listp = (int*) PIP_MALLOC( sizeof(int) * ( nfds + 1 ) );
-      if( fd_listp == NULL ) {
+      fdlist = (int*) PIP_MALLOC( sizeof(int) * ( nfds + 1 ) );
+      if( fdlist == NULL ) {
 	err = ENOMEM;
       } else {
 	rewinddir( dir );
@@ -213,10 +222,11 @@ static int pip_list_coe_fds( int *fd_listp[] ) {
 	      errno == 0					&&
 	      fd != fd_dir                         		&&
 	      pip_isa_coefd( fd ) ) {
-	    (*fd_listp)[i++] = fd;
+	    fdlist[i++] = fd;
 	  }
 	}
-	(*fd_listp)[i] = -1;
+	fdlist[i] = -1;
+	*fd_listp = fdlist;
       }
     }
     (void) closedir( dir );
@@ -789,15 +799,10 @@ static void *pip_spawn_top( void *thargs )  {
   }
   if( ( err = pip_do_corebind( 0, coreno, NULL ) ) != 0 ) {
     pip_warn_mesg( "failed to bound CPU core:%d (%d)", coreno, err );
-    err = 0;
   }
-  if( err == 0 ) {
-    PIP_RUN( self );
-    pip_start_user_func( args, self );
-  } else {
-    pip_set_extval( self, err );
-    pip_do_exit( self );
-  }
+  PIP_RUN( self );
+  pip_start_user_func( args, self );
+
   NEVER_REACH_HERE;
   return( NULL );		/* dummy */
 }

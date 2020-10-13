@@ -353,7 +353,7 @@ void pip_do_exit( pip_task_internal_t *taski ) {
   ENTERF( "PIPID:%d", TA(taski)->pipid );
 
  try_again:
-  ASSERTS( ( schedi = TA(taski)->task_sched ) == NULL );
+  CHECKS( ( schedi = TA(taski)->task_sched ) == NULL );
   queue = &TA(schedi)->schedq;
   if( pip_takein_ood_task( schedi ) ) {
     /* taski cannot terminate itself        */
@@ -365,7 +365,7 @@ void pip_do_exit( pip_task_internal_t *taski ) {
     if( taski != schedi ) {
       /* if taski is NOT a scheduling task,  */
       /* then wakeup taski to terminate and  */
-      ASSERTS( --TA(schedi)->schedq_len < 0 );
+      CHECKS( --TA(schedi)->schedq_len < 0 );
       TA(nexti)->deffered_proc = pip_deffered_wakeup;
       TA(nexti)->deffered_arg  = (void*) taski;
     } else {

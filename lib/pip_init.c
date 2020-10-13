@@ -209,7 +209,7 @@ int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
     } else if( PIP_ISA_TASK( taski ) ) {
       n = pip_pipid_str( p, sz, TA(taski)->pipid, taski==TA(taski)->task_sched );
       sz -= n; p += n;
-//#define WITH_RFC
+      //#define WITH_RFC
 #ifdef WITH_RFC
       n += snprintf( p, sz, ".%d", (int) taski->refcount );
 #endif
@@ -541,12 +541,15 @@ static void pip_set_gdb_sigset( char *env, sigset_t *sigs ) {
 #define ROUNDUP(X,Y)		((((X)+(Y)-1)/(Y))*(Y))
 
 void pip_page_alloc( size_t sz, void **allocp ) {
-  size_t pgsz;
+  ssize_t pgsz = 0;
 
-  if( pip_root == NULL ) {	/* no pip_root yet */
+  if( pip_root == NULL ) {
     pgsz = sysconf( _SC_PAGESIZE );
-  } else if( pip_root->page_size == 0 ) {
-    pip_root->page_size = pgsz = sysconf( _SC_PAGESIZE );
+    pgsz = ( pgsz <= 0 ) ? 4096 : pgsz;
+  } else if ( pip_root->page_size == 0 ) {
+    pgsz = sysconf( _SC_PAGESIZE );
+    pgsz = ( pgsz <= 0 ) ? 4096 : pgsz;
+    pip_root->page_size = pgsz;
   } else {
     pgsz = pip_root->page_size;
   }

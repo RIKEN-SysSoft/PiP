@@ -62,6 +62,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/resource.h>
 #include <pthread.h>
 #include <semaphore.h>
 #include <sched.h>
@@ -87,6 +88,7 @@
 #include <concat.h>
 #endif
 
+#include <pip.h>
 #include <pip_blt.h>
 #include <pip_clone.h>
 #include <pip_context.h>
@@ -118,8 +120,9 @@
 #define PIP_MAGIC_WORD		"PrcInPrc"
 #define PIP_MAGIC_WLEN		(8)
 
-#define PIP_STACK_SIZE		(8*1024*1024) /* 8 MiB */
-#define PIP_STACK_SIZE_MIN	(1*1024*1024) /* 1 MiB */
+#define PIP_STACK_SIZE		(8*1024*1024LU) /* 8 MiB */
+#define PIP_STACK_SIZE_MIN	(1*1024*1024LU) /* 1 MiB */
+#define PIP_STACK_SIZE_MAX	(16*1024*1024*1024LU) /* 16 GiB */
 #define PIP_STACK_ALIGN		(256)
 
 #define PIP_EXITED		(1)
