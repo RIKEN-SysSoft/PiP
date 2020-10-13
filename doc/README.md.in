@@ -183,12 +183,12 @@ The above two exammples will show you the same document you are reading.
 
 ## PDF
 
-PDF documents will be installed at
+[PDF documents](doc/latex-inuse/libpip-manpages.pdf) will be installed at
 **PIP\_INSTALL\_DIR**/share/pdf.
 
 ## HTML
 
-HTML documents will be installed at
+[HTML documents](doc/html/index.html) will be installed at
 **PIP\_INSTALL\_DIR**/share/html.
 
 # Getting Started

@@ -229,7 +229,7 @@ extern "C" {
    * to the \c pip_preload.so file, if the PiP execution mode is
    * \c PIP_MODE_PROCESS_PRELOAD (the \c opts in \c pip_init) and/or
    * the PIP_MODE ennvironment is set to \c process:preload. See also
-   * the \ref pip_mode command to set the environment variable appropriately and
+   * the \ref pip-mode command to set the environment variable appropriately and
    * easily.
    * \arg \b PIP_STACKSZ Sepcifying the stack size (in bytes). The
    * \b KMP_STACKSIZE and \b OMP_STACKSIZE are also effective. The 't',
