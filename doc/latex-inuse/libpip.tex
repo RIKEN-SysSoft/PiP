@@ -13,7 +13,7 @@ Currently there are three Pi\-P library versions\-:
 \item Version 3 -\/ Stable version supporting B\-L\-T and U\-L\-P (experimental)
 \end{DoxyItemize}
 
-Unfortunately each version has unique A\-B\-I and there is no A\-B\-I compatibility among them. The functionality of Pi\-P-\/v1 is almost the same with Pi\-P-\/v2, however, Pi\-P-\/v2's A\-P\-I is a subset of the Pi\-P-\/v3's A\-P\-I. Hereafter {\bfseries N} denotes the Pi\-P version number.
+Unfortunately each version has unique A\-B\-I and there is no A\-B\-I compatibility among them. The functionality of Pi\-P-\/v1 is almost the same with Pi\-P-\/v2, however, Pi\-P-\/v2's A\-P\-I is a subset of the Pi\-P-\/v3's A\-P\-I. Hereafter {\bfseries N\-N} denotes the Pi\-P version number.
 
 \subsection*{Bi-\/\-Level Thread (B\-L\-T, from v3)}
 
@@ -36,7 +36,7 @@ There are several Pi\-P implementation modes which can be selected at the runtim
 
 In the pthread mode, although each Pi\-P task has its own static variables unlike thread, Pi\-P task behaves more like P\-Thread, having a T\-I\-D, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on. In the process mode, a Pi\-P task behaves more like a process, having a P\-I\-D, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on. The above mentioned U\-L\-P can only work with the process mode.
 
-When the {\ttfamily P\-I\-P\-\_\-\-M\-O\-D\-E} environment variable set to \char`\"{}()thread\char`\"{} then the Pi\-P library runs in the pthread mode, and if it is set to \char`\"{}process\char`\"{} then it runs in the process mode. There are also three implementations in the process mode; \char`\"{}process\-:preload,\char`\"{} \char`\"{}process\-:pipclone\char`\"{} and \char`\"{}process\-:got.\char`\"{} The \char`\"{}process\-:preload\char`\"{} mode must be with the L\-D\-\_\-\-P\-R\-E\-L\-O\-A\-D environment variable setting so that the clone() system call wrapper can work with. The \char`\"{}process\-:pipclone\char`\"{} mode is only effective with the P\-I\-P-\/patched glibc library (see below).
+When the {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E} environment variable set to \char`\"{}()thread\char`\"{} then the Pi\-P library runs in the pthread mode, and if it is set to \char`\"{}process\char`\"{} then it runs in the process mode. There are also three implementations in the process mode; \char`\"{}process\-:preload,\char`\"{} \char`\"{}process\-:pipclone\char`\"{} and \char`\"{}process\-:got.\char`\"{} The \char`\"{}process\-:preload\char`\"{} mode must be with the {\bfseries L\-D\-\_\-\-P\-R\-E\-L\-O\-A\-D} environment variable setting so that the clone() system call wrapper can work with. The \char`\"{}process\-:pipclone\char`\"{} mode is only effective with the P\-I\-P-\/patched glibc library (see below).
 
 Several function are made available by the Pi\-P library to absorb the functional differences due to the execution modes.
 
@@ -50,8 +50,8 @@ There are several ways to install Pi\-P; Docker, Spack, R\-P\-M, and building fr
 
 \subsection*{Docker image}
 
-Download and run the Pi\-P Docker image. \begin{DoxyVerb}$ docker pull rikenpip/pip-vN
-$ sudo docker run -it rikenpip/pip-vN /bin/bash
+Download and run the Pi\-P Docker image. \begin{DoxyVerb}$ docker pull rikenpip/pip-vNN
+$ sudo docker run -it rikenpip/pip-vNN /bin/bash
 \end{DoxyVerb}
 
 
@@ -65,14 +65,15 @@ $ spack install process-in-process
 
 \subsection*{R\-P\-Ms}
 
-R\-P\-M packages and their yum repository are also available for Cent\-O\-S 7 / R\-H\-E\-L7. \begin{DoxyVerb}$ sudo rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-N-0.noarch.rpm
+R\-P\-M packages and their yum repository are also available for Cent\-O\-S 7 / R\-H\-E\-L7. \begin{DoxyVerb}$ sudo rpm -Uvh
+https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-NN-0.noarch.rpm
 $ sudo yum install pip-glibc
 $ sudo yum install pip pip-debuginfo
 $ sudo yum install pip-gdb
 \end{DoxyVerb}
 
 
-If Pi\-P packages are installed by the above R\-P\-Ms, {\bfseries P\-I\-P\-\_\-\-I\-N\-S\-T\-A\-L\-L\-\_\-\-D\-I\-R} will be \char`\"{}/usr.\char`\"{}
+If Pi\-P packages are installed by the above R\-P\-Ms, all packages will be install in \char`\"{}/usr\char`\"{} directory.
 
 \subsection*{Source Code}
 
@@ -253,7 +254,7 @@ You can attach all relevant Pi\-P tasks by\-: \begin{DoxyVerb}$ pip-gdb -p PID-o
 
 (from v2)
 
-If the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H environment is set to the path pointing to Pi\-P-\/gdb executable file, then Pi\-P-\/gdb is automatically attached when an excetion signal (S\-I\-G\-S\-E\-G\-V and S\-I\-G\-H\-U\-P by default) is delivered. The exception signals can also be defined by setting the P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-S\-I\-G\-N\-A\-L\-S environment. Signal names (case insensitive) can be concatenated by the '+' or '-\/' symbol. 'all' is reserved to specify most of the signals. For example, 'A\-L\-L-\/\-T\-E\-R\-M' means all signals excepting S\-I\-G\-T\-E\-R\-M, another example, 'P\-I\-P\-E+\-I\-N\-T' means S\-I\-G\-P\-I\-P\-E and S\-I\-G\-I\-N\-T. If one of the specified or default signals is delivered, then Pi\-P-\/gdb will be attached automatically. The Pi\-P-\/gdb will show backtrace by default. If users specify P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-C\-O\-M\-M\-A\-N\-D that a filename containing some G\-D\-B commands, then those G\-D\-B commands will be executed by Pi\-P-\/gdb, instead of backtrace, in batch mode. If the P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T environment is set (to any value), then the Pi\-P library delivers S\-I\-G\-S\-T\-O\-P to a spawned Pi\-P task which is about to start user program.
+If the {\bfseries P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H} environment is set to the path pointing to Pi\-P-\/gdb executable file, then Pi\-P-\/gdb is automatically attached when an excetion signal (S\-I\-G\-S\-E\-G\-V and S\-I\-G\-H\-U\-P by default) is delivered. The exception signals can also be defined by setting the {\bfseries P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-S\-I\-G\-N\-A\-L\-S} environment. Signal names (case insensitive) can be concatenated by the '+' or '-\/' symbol. 'all' is reserved to specify most of the signals. For example, 'A\-L\-L-\/\-T\-E\-R\-M' means all signals excepting S\-I\-G\-T\-E\-R\-M, another example, 'P\-I\-P\-E+\-I\-N\-T' means S\-I\-G\-P\-I\-P\-E and S\-I\-G\-I\-N\-T. If one of the specified or default signals is delivered, then Pi\-P-\/gdb will be attached automatically. The Pi\-P-\/gdb will show backtrace by default. If users specify {\bfseries P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-C\-O\-M\-M\-A\-N\-D} that a filename containing some G\-D\-B commands, then those G\-D\-B commands will be executed by Pi\-P-\/gdb, instead of backtrace, in batch mode. If the {\bfseries P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T} environment is set (to any value), then the Pi\-P library delivers S\-I\-G\-S\-T\-O\-P to a spawned Pi\-P task which is about to start user program.
 
 \section*{Mailing List}
 
