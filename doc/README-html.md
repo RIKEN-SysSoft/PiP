@@ -75,13 +75,13 @@ a PID, having an independent file descriptor space, having the same
 signal delivery semantics as Linux process does, and so on. The
 above mentioned ULP can only work with the process mode.
 
-When the \c PIP\_MODE environment variable set to "()thread"
+When the `PIP\_MODE` environment variable set to "()thread"
 then
 the PiP library runs in the pthread mode, and if it is set to
 "process" then it runs in the process mode. There are also three
 implementations in the process mode; "process:preload,"
 "process:pipclone" and "process:got." The "process:preload" mode
-must be with the LD\_PRELOAD environment variable setting so that
+must be with the `LD\_PRELOAD` environment variable setting so that
 the clone() system call wrapper can work with. The
 "process:pipclone" mode is only effective with the PIP-patched
 glibc library (see below).
@@ -123,7 +123,7 @@ RPM packages and their yum repository are also available for CentOS 7 / RHEL7.
     $ sudo yum install pip pip-debuginfo
     $ sudo yum install pip-gdb
 
-If PiP packages are installed by the above RPMs, **PIP\_INSTALL\_DIR**
+If PiP packages are installed by the above RPMs, `PIP\_INSTALL\_DIR`
 will be "/usr."
 
 ## Source Code
@@ -316,20 +316,20 @@ You can attach all relevant PiP tasks by:
 
 (from v2)
 
-If the PIP\_GDB\_PATH environment is set to the path pointing to PiP-gdb
+If the `PIP\_GDB\_PATH` environment is set to the path pointing to PiP-gdb
 executable file, then PiP-gdb is automatically attached when an
 excetion signal (SIGSEGV and SIGHUP by default) is delivered. The
 exception signals can also be defined by
-setting the PIP\_GDB\_SIGNALS environment. Signal names (case
+setting the `PIP\_GDB\_SIGNALS` environment. Signal names (case
 insensitive) can be
 concatenated by the '+' or '-' symbol. 'all' is reserved to specify most
 of the signals. For example, 'ALL-TERM' means all signals excepting
 SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If
 one of the specified or default signals is delivered, then PiP-gdb will be
 attached automatically. The PiP-gdb will show backtrace by default. If users
-specify PIP\_GDB\_COMMAND that a filename containing some GDB
+specify `PIP\_GDB\_COMMAND` that a filename containing some GDB
 commands, then those GDB commands will be executed by PiP-gdb, instead
-of backtrace, in batch mode. If the PIP\_STOP\_ON\_START environment is
+of backtrace, in batch mode. If the `PIP\_STOP\_ON\_START` environment is
 set (to any value), then the PiP library delivers SIGSTOP to a spawned
 PiP task which is about to start user program.
 

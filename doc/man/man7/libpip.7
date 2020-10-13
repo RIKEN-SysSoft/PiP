@@ -44,7 +44,7 @@ Process and
 .PP
 In the pthread mode, although each PiP task has its own static variables unlike thread, PiP task behaves more like PThread, having a TID, having the same file descriptor space, having the same signal delivery semantics as Pthread does, and so on\&. In the process mode, a PiP task behaves more like a process, having a PID, having an independent file descriptor space, having the same signal delivery semantics as Linux process does, and so on\&. The above mentioned ULP can only work with the process mode\&.
 .PP
-When the \fCPIP_MODE\fP environment variable set to '()thread' then the PiP library runs in the pthread mode, and if it is set to 'process' then it runs in the process mode\&. There are also three implementations in the process mode; 'process:preload,' 'process:pipclone' and 'process:got\&.' The 'process:preload' mode must be with the LD_PRELOAD environment variable setting so that the clone() system call wrapper can work with\&. The 'process:pipclone' mode is only effective with the PIP-patched glibc library (see below)\&.
+When the \fCPIP\\_MODE\fP environment variable set to '()thread' then the PiP library runs in the pthread mode, and if it is set to 'process' then it runs in the process mode\&. There are also three implementations in the process mode; 'process:preload,' 'process:pipclone' and 'process:got\&.' The 'process:preload' mode must be with the \fCLD\\_PRELOAD\fP environment variable setting so that the clone() system call wrapper can work with\&. The 'process:pipclone' mode is only effective with the PIP-patched glibc library (see below)\&.
 .PP
 Several function are made available by the PiP library to absorb the functional differences due to the execution modes\&.
 .PP
@@ -94,7 +94,7 @@ $ sudo yum install pip-gdb
 .fi
 .PP
 .PP
-If PiP packages are installed by the above RPMs, \fBPIP_INSTALL_DIR\fP will be '/usr\&.'
+If PiP packages are installed by the above RPMs, \fCPIP\\_INSTALL\\_DIR\fP will be '/usr\&.'
 .PP
 .SS "Source Code"
 .PP
@@ -335,7 +335,7 @@ $ pip-gdb -p PID-of-your-PiP-program
 .PP
 (from v2)
 .PP
-If the PIP_GDB_PATH environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered\&. The exception signals can also be defined by setting the PIP_GDB_SIGNALS environment\&. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol\&. 'all' is reserved to specify most of the signals\&. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT\&. If one of the specified or default signals is delivered, then PiP-gdb will be attached automatically\&. The PiP-gdb will show backtrace by default\&. If users specify PIP_GDB_COMMAND that a filename containing some GDB commands, then those GDB commands will be executed by PiP-gdb, instead of backtrace, in batch mode\&. If the PIP_STOP_ON_START environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program\&.
+If the \fCPIP\\_GDB\\_PATH\fP environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered\&. The exception signals can also be defined by setting the \fCPIP\\_GDB\\_SIGNALS\fP environment\&. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol\&. 'all' is reserved to specify most of the signals\&. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT\&. If one of the specified or default signals is delivered, then PiP-gdb will be attached automatically\&. The PiP-gdb will show backtrace by default\&. If users specify \fCPIP\\_GDB\\_COMMAND\fP that a filename containing some GDB commands, then those GDB commands will be executed by PiP-gdb, instead of backtrace, in batch mode\&. If the \fCPIP\\_STOP\\_ON\\_START\fP environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program\&.
 .PP
 .SH "Mailing List"
 .PP
