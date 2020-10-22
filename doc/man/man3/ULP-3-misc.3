@@ -1,4 +1,4 @@
-.TH "BLT/ULP Miscellaneous Function" 3 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Miscellaneous Function" 3 "Thu Oct 22 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -19,11 +19,11 @@ BLT/ULP Miscellaneous Function \-
 .br
 .RI "\fIget PiP task from PiP ID \fP"
 .ti -1c
-.RI "int \fBpip_set_aux\fP (pip_task_t *task, void *aux)"
+.RI "int \fBpip_set_aux\fP (void *aux)"
 .br
 .RI "\fIAssociate user data with a PiP task\&. \fP"
 .ti -1c
-.RI "int \fBpip_get_aux\fP (pip_task_t *task, void **auxp)"
+.RI "int \fBpip_get_aux\fP (void **auxp)"
 .br
 .RI "\fIRetrieve the user data associated with a PiP task\&. \fP"
 .ti -1c
@@ -137,7 +137,7 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "int pip_set_aux (pip_task_t *task, void *aux)"
+.SS "int pip_set_aux (void *aux)"
 
 .PP
 \fBName\fP
@@ -149,14 +149,12 @@ pip_set_aux
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int \fBpip_set_aux( pip_task_t *task, void *aux )\fP;
+int \fBpip_set_aux( void *aux )\fP;
 .RE
 .PP
 \fBParameters:\fP
 .RS 4
-\fItask\fP PiP task\&. If \fCNULL\fP, then the data is associated with the current PiP task 
-.br
-\fIaux\fP Pointer to the user dat to assocate with
+\fIaux\fP Pointer to the user dats to assocate with the calling PiP task
 .RE
 .PP
 \fBReturns:\fP
@@ -175,7 +173,7 @@ Return 0 on success\&. Return an error code on error\&.
 .RE
 .PP
 
-.SS "int pip_get_aux (pip_task_t *task, void **auxp)"
+.SS "int pip_get_aux (void **auxp)"
 
 .PP
 \fBName\fP
@@ -187,13 +185,11 @@ pip_get_aux
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-int \fBpip_get_aux( pip_task_t *task, void **auxp )\fP;
+int \fBpip_get_aux( void **auxp )\fP;
 .RE
 .PP
 \fBParameters:\fP
 .RS 4
-\fItask\fP PiP task\&. If \fCNULL\fP, then the data is associated with the current PiP task 
-.br
 \fIauxp\fP Returned user data
 .RE
 .PP

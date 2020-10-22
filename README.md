@@ -95,75 +95,35 @@ see the [LICENSE](LICENSE) file for details.
 
 # Installation
 
-There are several ways to install PiP; Docker, Spack, RPM, and
-building fromm the source code.
-
-## Docker image
-
-Download and run the PiP Docker image.
-
-    $ docker pull rikenpip/pip-vNN
-    $ sudo docker run -it rikenpip/pip-vNN /bin/bash
-
-## [Spack](https://spack.readthedocs.io/)
-
-Download spack and do the follwoing;
-
-    $ git clone https://github.com/spack/spack.git
-    $ cd spack/bin
-    $ spack install process-in-process[@NN]
-
-## RPMs
-
-RPM packages and their yum repository are also available for CentOS 7 / RHEL7.
-
-    $ sudo rpm -Uvh
-    https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-NN-0.noarch.rpm
-    $ sudo yum install pip-glibc
-    $ sudo yum install pip pip-debuginfo
-    $ sudo yum install pip-gdb
-
-If PiP packages are installed by the above RPMs, all packages will be
-install in "/usr" directory.
-
-## Source Code
-
-The installation of PiP related packages must follow the order below;
-
-1. Build PiP-glibc (optional)
-2. Build PiP
-3. Build PiP-gdb (optional)
-
-By using PiP-glibc, users can create up to 300 PiP tasks which can be
-dbugged by using PiP-gdb.  In other words, without installing
-PiP-glibc, users can create up to around 10 PiP tasks (the number
-depends on the program) and cannot debug by using PiP-gdb. Above
-Docker image contains PiP-glibc and PiP-gdb, and the Spack recipe
-installs PiP-glibc and PiP-gdb additionally.
+Basically PiP requires the following three software packages;
 
 * [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
 * [PiP](https://github.com/RIKEN-SysSoft/PiP) - Process in Process (this package)
 * [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
 
-Before installing PiP, we strongly recommend you to install PiP-glibc.
-After installing PiP, PiP-gdb can be installed.
+By using PiP-glibc, users can create up to 300 PiP tasks which can be
+dbugged by using PiP-gdb.  In other words, without installing
+PiP-glibc, users can create up to around 10 PiP tasks (the number
+depends on the program) and cannot debug by using PiP-gdb.
 
-## Installation from the source code.
-
-In addition to the above three PiP related packages, there is PiP
-installing program.
+There are several ways to install the PiP packages; Yum (RPM), Docker,
+Spack, and building from the source code. It is strongly recommended
+to use the following PiP package installation program (pip-pip):
 
 * [PiP-pip](https://github.com/RIKEN-SysSoft/PiP-pip) - PiP package
   installing program
 
-This is the easiest way to install PiP packages from the source
-code. This program clones all source code from
-the GITHUB repos, build and install them including PiP documents. Here
-is the usage of PiP-pip command;
+This is the easiest way to install PiP packages in any form. Here is
+the example of `pip-pip` usage:
 
     $ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
     $ cd PiP-pip
-    $ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
+    $ ./pip-pip --how=HOW --pip=PIP_VERSION --work=BUILD_DIR --prefix=INSTALL_DIR
+
+**HOW** can be one of `yum`, `docker`, `spack` and `github`, or any
+  combination of them. `pip-pip --help` will show you how to use the
+  program. `yum`, `docker` and `spack` include all three packages;
+  PiP-glibc, PiP-lib, and PiP-gdb.
 
 # PiP Documents
 
@@ -442,7 +402,11 @@ MPI Communication," in SC’20 (to appear)
 * [HPDC'18](presentation/HPDC18.pdf)
 * [ROSS'18](presentation/HPDC18-ROSSpdf)
 * [IPDPS/RADR'20](presentation/IPDPS-RSADR-2020.pdf)
+
 # Author
-Atsushi Hori\n
-Riken Center for Commputational Science (R-CCS)\n
-Japan\n
+
+Atsushi Hori
+
+Riken Center for Commputational Science (R-CCS)
+
+Japan

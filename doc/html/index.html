@@ -105,48 +105,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <h1>License</h1>
 <p>This package is licensed under the 2-clause simplified BSD License - see the [LICENSE](LICENSE) file for details.</p>
 <h1>Installation</h1>
-<p>There are several ways to install PiP; Docker, Spack, RPM, and building fromm the source code.</p>
-<h2>Docker image</h2>
-<p>Download and run the PiP Docker image. </p>
-<pre class="fragment">$ docker pull rikenpip/pip-vNN
-$ sudo docker run -it rikenpip/pip-vNN /bin/bash
-</pre><h2><a href="https://spack.readthedocs.io/">Spack</a></h2>
-<p>Download spack and do the follwoing; </p>
-<pre class="fragment">$ git clone https://github.com/spack/spack.git
-$ cd spack/bin
-$ spack install process-in-process[@NN]
-</pre><h2>RPMs</h2>
-<p>RPM packages and their yum repository are also available for CentOS 7 / RHEL7. </p>
-<pre class="fragment">$ sudo rpm -Uvh
-https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-NN-0.noarch.rpm
-$ sudo yum install pip-glibc
-$ sudo yum install pip pip-debuginfo
-$ sudo yum install pip-gdb
-</pre><p>If PiP packages are installed by the above RPMs, all packages will be install in "/usr" directory.</p>
-<h2>Source Code</h2>
-<p>The installation of PiP related packages must follow the order below;</p>
-<ol type="1">
-<li>Build PiP-glibc (optional)</li>
-<li>Build PiP</li>
-<li>Build PiP-gdb (optional)</li>
-</ol>
-<p>By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb. Above Docker image contains PiP-glibc and PiP-gdb, and the Spack recipe installs PiP-glibc and PiP-gdb additionally.</p>
+<p>Basically PiP requires the following three software packages;</p>
 <ul>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-glibc">PiP-glibc</a> - patched GNU libc for PiP</li>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP">PiP</a> - Process in Process (this package)</li>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-gdb">PiP-gdb</a> - patched gdb to debug PiP root and PiP tasks.</li>
 </ul>
-<p>Before installing PiP, we strongly recommend you to install PiP-glibc. After installing PiP, PiP-gdb can be installed.</p>
-<h2>Installation from the source code.</h2>
-<p>In addition to the above three PiP related packages, there is PiP installing program.</p>
+<p>By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb.</p>
+<p>There are several ways to install the PiP packages; Yum (RPM), Docker, Spack, and building from the source code. It is strongly recommended to use the following PiP package installation program (pip-pip):</p>
 <ul>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-pip">PiP-pip</a> - PiP package installing program</li>
 </ul>
-<p>This is the easiest way to install PiP packages from the source code. This program clones all source code from the GITHUB repos, build and install them including PiP documents. Here is the usage of PiP-pip command; </p>
+<p>This is the easiest way to install PiP packages in any form. Here is the example of <code>pip-pip</code> usage: </p>
 <pre class="fragment">$ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
 $ cd PiP-pip
-$ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
-</pre><h1>PiP Documents</h1>
+$ ./pip-pip --how=HOW --pip=PIP_VERSION --work=BUILD_DIR --prefix=INSTALL_DIR
+</pre><p><b>HOW</b> can be one of <code>yum</code>, <code>docker</code>, <code>spack</code> and <code>github</code>, or any combination of them. <code>pip-pip --help</code> will show you how to use the program. <code>yum</code>, <code>docker</code> and <code>spack</code> include all three packages; PiP-glibc, PiP-lib, and PiP-gdb.</p>
+<h1>PiP Documents</h1>
 <p>The following PiP documents are created by using <a href="https://www.doxygen.nl/">Doxygen</a>.</p>
 <h2>Man pages</h2>
 <p>Man pages will be installed at <b>PIP_INSTALL_DIR</b>/share/man. </p>
@@ -250,9 +225,9 @@ of User-Level Processes using Address Space Sharing," 2020 IEEE International Pa
 MPI Communication," in SC’20 (to appear)</p>
 <h2>Presentation Slides</h2>
 <ul>
-<li>[HPDC'18] <a href="file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18.pdf</a></li>
-<li>[ROSS'18] <a href="file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/HPDC18-ROSS.pdf</a></li>
-<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/PiP-pip/install/x86_64_redhat-7_pip-3/pip-install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
+<li>[HPDC'18] <a href="file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/HPDC18.pdf</a></li>
+<li>[ROSS'18] <a href="file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/HPDC18-ROSS.pdf</a></li>
+<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
 </li>
 </ul>
 <p>Atsushi Hori Riken Center for Commputational Science (R-CCS) Japan </p>
