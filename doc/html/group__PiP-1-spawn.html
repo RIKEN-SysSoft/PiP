@@ -83,12 +83,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ga0b1e746befd27c418355d28a830b2db6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PiP-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6">pip_spawn_from_main</a> (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp)</td></tr>
-<tr class="memdesc:ga0b1e746befd27c418355d28a830b2db6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setting information to invoke a PiP task starting from the main function.  <a href="#ga0b1e746befd27c418355d28a830b2db6">More...</a><br/></td></tr>
-<tr class="separator:ga0b1e746befd27c418355d28a830b2db6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga6ebadd5070ca345daf8d7465f4926fc0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PiP-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0">pip_spawn_from_func</a> (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp)</td></tr>
-<tr class="memdesc:ga6ebadd5070ca345daf8d7465f4926fc0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setting information to invoke a PiP task starting from a function defined in a program.  <a href="#ga6ebadd5070ca345daf8d7465f4926fc0">More...</a><br/></td></tr>
-<tr class="separator:ga6ebadd5070ca345daf8d7465f4926fc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad7708867e5370ae0a4ae71b16f446f16"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PiP-1-spawn.html#gad7708867e5370ae0a4ae71b16f446f16">pip_spawn_from_main</a> (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp, void *aux)</td></tr>
+<tr class="memdesc:gad7708867e5370ae0a4ae71b16f446f16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setting information to invoke a PiP task starting from the main function.  <a href="#gad7708867e5370ae0a4ae71b16f446f16">More...</a><br/></td></tr>
+<tr class="separator:gad7708867e5370ae0a4ae71b16f446f16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga71d2d053e9c7153adc167e2cf1adf12e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PiP-1-spawn.html#ga71d2d053e9c7153adc167e2cf1adf12e">pip_spawn_from_func</a> (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp, void *aux)</td></tr>
+<tr class="memdesc:ga71d2d053e9c7153adc167e2cf1adf12e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setting information to invoke a PiP task starting from a function defined in a program.  <a href="#ga71d2d053e9c7153adc167e2cf1adf12e">More...</a><br/></td></tr>
+<tr class="separator:ga71d2d053e9c7153adc167e2cf1adf12e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga1c3f1d9e029f68dbcfb7d78b7dfa1533"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">pip_spawn_hook</a> (pip_spawn_hook_t *hook, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg)</td></tr>
 <tr class="memdesc:ga1c3f1d9e029f68dbcfb7d78b7dfa1533"><td class="mdescLeft">&#160;</td><td class="mdescRight">Setting invocation hook information.  <a href="#ga1c3f1d9e029f68dbcfb7d78b7dfa1533">More...</a><br/></td></tr>
 <tr class="separator:ga1c3f1d9e029f68dbcfb7d78b7dfa1533"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -104,7 +104,7 @@ Functions</h2></td></tr>
 
 <h3><a class="anchor" id="pip-spawn"></a>PiP Spawnig PiP (ULP/BLT) task</h3><div class="textblock"><dl class="section user"><dt>Description</dt><dd>Spawning PiP task or ULP/BLT task </dd></dl>
 </div><h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ga0b1e746befd27c418355d28a830b2db6"></a>
+<a class="anchor" id="gad7708867e5370ae0a4ae71b16f446f16"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -136,7 +136,13 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>exp</em>&#160;</td>
+          <td class="paramname"><em>exp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>aux</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -145,9 +151,9 @@ Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section user"><dt>Name</dt><dd>pip_spawn_from_main<a name="ga0b1e746befd27c418355d28a830b2db6_pip_spawn_from_main"></a></dd></dl>
+<dl class="section user"><dt>Name</dt><dd>pip_spawn_from_main<a name="gad7708867e5370ae0a4ae71b16f446f16_pip_spawn_from_main"></a></dd></dl>
 <dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
-void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp )</dd></dl>
+void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp, void *aux )</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function sets up the <code>pip_spawn_program_t</code> structure for spawning a PiP task, starting from the mmain function.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -155,17 +161,18 @@ void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, c
     <tr><td class="paramdir">[in]</td><td class="paramname">prog</td><td>Path to the executiable file. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">argv</td><td>Argument vector. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">envv</td><td>Environment variables. If this is <code>NULL</code>, then the <code>environ</code> variable is used for the spawning PiP task. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">exp</td><td>Export value to the spawning PiP task</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">exp</td><td>Export value to the spawning PiP task </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aux</td><td>Auxiliary data to be associated with the created PiP task</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
 <dd>
-<a class="el" href="group__PiP-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd></dl>
+<a class="el" href="group__PiP-1-spawn.html#ga71d2d053e9c7153adc167e2cf1adf12e" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ga6ebadd5070ca345daf8d7465f4926fc0"></a>
+<a class="anchor" id="ga71d2d053e9c7153adc167e2cf1adf12e"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -203,7 +210,13 @@ void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, c
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>exp</em>&#160;</td>
+          <td class="paramname"><em>exp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>aux</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -212,9 +225,9 @@ void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, c
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section user"><dt>Name</dt><dd>pip_spawn_from_func<a name="ga6ebadd5070ca345daf8d7465f4926fc0_pip_spawn_from_func"></a></dd></dl>
+<dl class="section user"><dt>Name</dt><dd>pip_spawn_from_func<a name="ga71d2d053e9c7153adc167e2cf1adf12e_pip_spawn_from_func"></a></dd></dl>
 <dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
-pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp );</dd></dl>
+pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp, void *aux );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function sets the required information to invoke a program, starting from the <code>main()</code> function. The function should have the function prototype as shown below; <div class="fragment"><div class="line"><span class="keywordtype">int</span> start_func( <span class="keywordtype">void</span> *arg )</div>
 </div><!-- fragment --> This start function must be globally defined in the program.. The returned integer of the start function will be treated in the same way as the <code>main</code> function. This implies that the <code>pip_wait</code> function family called from the PiP root can retrieve the return code.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -224,13 +237,14 @@ pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, voi
     <tr><td class="paramdir">[in]</td><td class="paramname">funcname</td><td>Function name to be started </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">arg</td><td>Argument which will be passed to the start function </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">envv</td><td>Environment variables. If this is <code>NULL</code>, then the <code>environ</code> variable is used for the spawning PiP task. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">exp</td><td>Export value to the spawning PiP task</td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">exp</td><td>Export value to the spawning PiP task </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">aux</td><td>Auxiliary data to be associated with the created PiP task</td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
 <dd>
-<a class="el" href="group__PiP-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd></dl>
+<a class="el" href="group__PiP-1-spawn.html#gad7708867e5370ae0a4ae71b16f446f16" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd></dl>
 
 </div>
 </div>
@@ -371,9 +385,9 @@ int pip_task_spawn( pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, 
 <dl class="section user"><dt></dt><dd>If the root process is multithreaded, only the main thread can call this function.</dd></dl>
 <dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
 <dd>
-<a class="el" href="group__PiP-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
+<a class="el" href="group__PiP-1-spawn.html#gad7708867e5370ae0a4ae71b16f446f16" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
 <dd>
-<a class="el" href="group__PiP-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
+<a class="el" href="group__PiP-1-spawn.html#ga71d2d053e9c7153adc167e2cf1adf12e" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
 <dd>
 <a class="el" href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533" title="Setting invocation hook information. ">pip_spawn_hook</a> </dd>
 <dd>
@@ -477,9 +491,9 @@ int pip_spawn( char *filename, char **argv, char **envv, uint32_t coreno, int *p
 <dl class="section user"><dt></dt><dd>If the root process is multithreaded, only the main thread can call this function.</dd></dl>
 <dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
 <dd>
-<a class="el" href="group__PiP-1-spawn.html#ga0b1e746befd27c418355d28a830b2db6" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
+<a class="el" href="group__PiP-1-spawn.html#gad7708867e5370ae0a4ae71b16f446f16" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
 <dd>
-<a class="el" href="group__PiP-1-spawn.html#ga6ebadd5070ca345daf8d7465f4926fc0" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
+<a class="el" href="group__PiP-1-spawn.html#ga71d2d053e9c7153adc167e2cf1adf12e" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
 <dd>
 <a class="el" href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533" title="Setting invocation hook information. ">pip_spawn_hook</a> </dd>
 <dd>

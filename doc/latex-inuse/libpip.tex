@@ -46,47 +46,7 @@ This package is licensed under the 2-\/clause simplified B\-S\-D License -\/ see
 
 \section*{Installation}
 
-There are several ways to install Pi\-P; Docker, Spack, R\-P\-M, and building fromm the source code.
-
-\subsection*{Docker image}
-
-Download and run the Pi\-P Docker image. \begin{DoxyVerb}$ docker pull rikenpip/pip-vNN
-$ sudo docker run -it rikenpip/pip-vNN /bin/bash
-\end{DoxyVerb}
-
-
-\subsection*{\href{https://spack.readthedocs.io/}{\tt Spack}}
-
-Download spack and do the follwoing; \begin{DoxyVerb}$ git clone https://github.com/spack/spack.git
-$ cd spack/bin
-$ spack install process-in-process[@NN]
-\end{DoxyVerb}
-
-
-\subsection*{R\-P\-Ms}
-
-R\-P\-M packages and their yum repository are also available for Cent\-O\-S 7 / R\-H\-E\-L7. \begin{DoxyVerb}$ sudo rpm -Uvh
-https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-NN-0.noarch.rpm
-$ sudo yum install pip-glibc
-$ sudo yum install pip pip-debuginfo
-$ sudo yum install pip-gdb
-\end{DoxyVerb}
-
-
-If Pi\-P packages are installed by the above R\-P\-Ms, all packages will be install in \char`\"{}/usr\char`\"{} directory.
-
-\subsection*{Source Code}
-
-The installation of Pi\-P related packages must follow the order below;
-
-
-\begin{DoxyEnumerate}
-\item Build Pi\-P-\/glibc (optional)
-\item Build Pi\-P
-\item Build Pi\-P-\/gdb (optional)
-\end{DoxyEnumerate}
-
-By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbugged by using Pi\-P-\/gdb. In other words, without installing Pi\-P-\/glibc, users can create up to around 10 Pi\-P tasks (the number depends on the program) and cannot debug by using Pi\-P-\/gdb. Above Docker image contains Pi\-P-\/glibc and Pi\-P-\/gdb, and the Spack recipe installs Pi\-P-\/glibc and Pi\-P-\/gdb additionally.
+Basically Pi\-P requires the following three software packages;
 
 
 \begin{DoxyItemize}
@@ -95,22 +55,22 @@ By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbug
 \item \href{https://github.com/RIKEN-SysSoft/PiP-gdb}{\tt Pi\-P-\/gdb} -\/ patched gdb to debug Pi\-P root and Pi\-P tasks.
 \end{DoxyItemize}
 
-Before installing Pi\-P, we strongly recommend you to install Pi\-P-\/glibc. After installing Pi\-P, Pi\-P-\/gdb can be installed.
+By using Pi\-P-\/glibc, users can create up to 300 Pi\-P tasks which can be dbugged by using Pi\-P-\/gdb. In other words, without installing Pi\-P-\/glibc, users can create up to around 10 Pi\-P tasks (the number depends on the program) and cannot debug by using Pi\-P-\/gdb.
 
-\subsection*{Installation from the source code.}
-
-In addition to the above three Pi\-P related packages, there is Pi\-P installing program.
+There are several ways to install the Pi\-P packages; Yum (R\-P\-M), Docker, Spack, and building from the source code. It is strongly recommended to use the following Pi\-P package installation program (pip-\/pip)\-:
 
 
 \begin{DoxyItemize}
 \item \href{https://github.com/RIKEN-SysSoft/PiP-pip}{\tt Pi\-P-\/pip} -\/ Pi\-P package installing program
 \end{DoxyItemize}
 
-This is the easiest way to install Pi\-P packages from the source code. This program clones all source code from the G\-I\-T\-H\-U\-B repos, build and install them including Pi\-P documents. Here is the usage of Pi\-P-\/pip command; \begin{DoxyVerb}$ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
+This is the easiest way to install Pi\-P packages in any form. Here is the example of {\ttfamily pip-\/pip} usage\-: \begin{DoxyVerb}$ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
 $ cd PiP-pip
-$ ./pip-pip --pip=PIP_VERSION --build=BUILD_DIR --prefix=INSTALL_DIR
+$ ./pip-pip --how=HOW --pip=PIP_VERSION --work=BUILD_DIR --prefix=INSTALL_DIR
 \end{DoxyVerb}
 
+
+{\bfseries H\-O\-W} can be one of {\ttfamily yum}, {\ttfamily docker}, {\ttfamily spack} and {\ttfamily github}, or any combination of them. {\ttfamily pip-\/pip -\/-\/help} will show you how to use the program. {\ttfamily yum}, {\ttfamily docker} and {\ttfamily spack} include all three packages; Pi\-P-\/glibc, Pi\-P-\/lib, and Pi\-P-\/gdb.
 
 \section*{Pi\-P Documents}
 
@@ -297,6 +257,7 @@ Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. \char`\"{}\
 \item pip\-\_\-exit
 \item pip\-\_\-export
 \item pip\-\_\-fin
+\item pip\-\_\-get\-\_\-aux
 \item pip\-\_\-get\-\_\-mode
 \item pip\-\_\-get\-\_\-mode\-\_\-str
 \item pip\-\_\-get\-\_\-ntasks
@@ -314,6 +275,7 @@ Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. \char`\"{}\
 \item pip\-\_\-named\-\_\-export
 \item pip\-\_\-named\-\_\-import
 \item pip\-\_\-named\-\_\-tryimport
+\item pip\-\_\-set\-\_\-aux
 \item pip\-\_\-sigmask
 \item pip\-\_\-signal\-\_\-wait
 \item pip\-\_\-spawn
@@ -331,5 +293,6 @@ Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. \char`\"{}\
 \section*{Author}
 
 Atsushi Hori\par
-Riken Center for Commputational Science (R-\/\-C\-C\-S)\par
-Japan\par
+ Riken Center for Commputational Science (R-\/\-C\-C\-S)\par
+ Japan\par
+ 

@@ -1,4 +1,4 @@
-.TH "Spawning PiP task" 3 "Tue Oct 13 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Spawning PiP task" 3 "Thu Oct 22 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -7,11 +7,11 @@ Spawning PiP task \-
 
 .in +1c
 .ti -1c
-.RI "void \fBpip_spawn_from_main\fP (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp)"
+.RI "void \fBpip_spawn_from_main\fP (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp, void *aux)"
 .br
 .RI "\fISetting information to invoke a PiP task starting from the main function\&. \fP"
 .ti -1c
-.RI "void \fBpip_spawn_from_func\fP (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp)"
+.RI "void \fBpip_spawn_from_func\fP (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp, void *aux)"
 .br
 .RI "\fISetting information to invoke a PiP task starting from a function defined in a program\&. \fP"
 .ti -1c
@@ -40,7 +40,7 @@ Spawning PiP task or ULP/BLT task
 
 .SH "Function Documentation"
 .PP 
-.SS "void pip_spawn_from_main (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp)"
+.SS "void pip_spawn_from_main (pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp, void *aux)"
 
 .PP
 \fBName\fP
@@ -52,7 +52,7 @@ pip_spawn_from_main
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp )
+void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp, void *aux )
 .RE
 .PP
 \fBDescription\fP
@@ -70,7 +70,9 @@ This function sets up the \fCpip_spawn_program_t\fP structure for spawning a PiP
 .br
 \fIenvv\fP Environment variables\&. If this is \fCNULL\fP, then the \fCenviron\fP variable is used for the spawning PiP task\&. 
 .br
-\fIexp\fP Export value to the spawning PiP task
+\fIexp\fP Export value to the spawning PiP task 
+.br
+\fIaux\fP Auxiliary data to be associated with the created PiP task
 .RE
 .PP
 \fBSee Also:\fP
@@ -81,7 +83,7 @@ This function sets up the \fCpip_spawn_program_t\fP structure for spawning a PiP
 .RE
 .PP
 
-.SS "void pip_spawn_from_func (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp)"
+.SS "void pip_spawn_from_func (pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp, void *aux)"
 
 .PP
 \fBName\fP
@@ -93,7 +95,7 @@ pip_spawn_from_func
 .RS 4
 #include <\fBpip\&.h\fP> 
 .br
-pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp );
+pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp, void *aux );
 .RE
 .PP
 \fBDescription\fP
@@ -120,7 +122,9 @@ int start_func( void *arg )
 .br
 \fIenvv\fP Environment variables\&. If this is \fCNULL\fP, then the \fCenviron\fP variable is used for the spawning PiP task\&. 
 .br
-\fIexp\fP Export value to the spawning PiP task
+\fIexp\fP Export value to the spawning PiP task 
+.br
+\fIaux\fP Auxiliary data to be associated with the created PiP task
 .RE
 .PP
 \fBSee Also:\fP
