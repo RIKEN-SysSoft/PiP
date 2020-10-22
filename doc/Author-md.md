@@ -1,8 +1,6 @@
 
 # Author
 
-Atsushi Hori
-
-Riken Center for Commputational Science (R-CCS)
-
+Atsushi Hori<br>
+Riken Center for Commputational Science (R-CCS)<br>
 Japan
