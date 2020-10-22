@@ -85,7 +85,7 @@ int main( int argc, char **argv ) {
 	 return(EXIT_FAIL) );
 
   pip_spawn_from_func( &prog, argv[0], "static_user_func", (void*) &arg,
-		       NULL, NULL );
+		       NULL, NULL, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=EPERM,
@@ -112,7 +112,7 @@ int main( int argc, char **argv ) {
 
   memset( &prog, 0, sizeof(prog) );
   pip_spawn_from_func( &prog, argv[0], "static_user_func", (void*) &arg,
-		       NULL, NULL );
+		       NULL, NULL, NULL );
   pipid = PIP_PIPID_ANY;
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV!=ENOEXEC,
@@ -121,7 +121,7 @@ int main( int argc, char **argv ) {
   memset( &prog, 0, sizeof(prog) );
   pipid = arg = 8;
   pip_spawn_from_func( &prog, argv[0], "global_user_func", (void*) &arg,
-		       NULL, NULL );
+		       NULL, NULL, NULL );
   CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	 RV,
 	 return(EXIT_FAIL) );

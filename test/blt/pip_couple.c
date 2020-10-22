@@ -41,7 +41,7 @@ int main( int argc, char **argv ) {
   }
   niters = ( niters <= 0 ) ? NITERS : niters;
 
-  pip_spawn_from_main( &prog, argv[0], argv, NULL, NULL );
+  pip_spawn_from_main( &prog, argv[0], argv, NULL, NULL, NULL );
   expp = &exprt;
 
   CHECK( pip_init(&pipid,&ntasks,(void*)&expp,0), RV, return(EXIT_FAIL) );

@@ -746,30 +746,19 @@ int pip_yield_to( pip_task_t *target ) {
   RETURN( EINTR );
 }
 
-int pip_set_aux( pip_task_t *task, void *aux ) {
-  pip_task_internal_t 	*taski;
+int pip_set_aux( void *aux ) {
+  pip_task_internal_t 	*taski = pip_task;
 
-  IF_UNLIKELY( pip_task == NULL ) RETURN( EPERM  );
-  if( task == NULL ) {
-    taski = pip_task;
-  } else {
-    taski = PIP_TASKI( task );
-  }
   AA(taski)->aux = aux;
   RETURN( 0 );
 }
 
-int pip_get_aux( pip_task_t *task, void **auxp ) {
-  pip_task_internal_t 	*taski;
+int pip_get_aux( void **auxp ) {
+  pip_task_internal_t 	*taski = pip_task;
 
-  IF_UNLIKELY( pip_task == NULL ) RETURN( EPERM  );
-  IF_UNLIKELY( auxp     == NULL ) RETURN( EINVAL );
-  if( task == NULL ) {
-    taski = pip_task;
-  } else {
-    taski = PIP_TASKI( task );
+  IF_LIKELY( auxp != NULL ) {
+    *auxp = AA(taski)->aux;
   }
-  *auxp = AA(taski)->aux;
   RETURN( 0 );
 }
 

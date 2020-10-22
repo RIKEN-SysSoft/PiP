@@ -917,6 +917,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
 
   AA(task)->opts          = opts;
   AA(task)->task_root     = pip_root;
+  AA(task)->aux           = progp->aux;
   if( progp->exp != NULL ) {
     AA(task)->import_root = progp->exp;
   } else {
@@ -1126,7 +1127,7 @@ int pip_spawn( char *prog,
 
   ENTER;
   if( prog == NULL ) return EINVAL;
-  pip_spawn_from_main( &program, prog, argv, envv, NULL );
+  pip_spawn_from_main( &program, prog, argv, envv, NULL, NULL );
   pip_spawn_hook( &hook, before, after, hookarg );
   RETURN( pip_task_spawn( &program, coreno, 0, pipidp, &hook ) );
 }

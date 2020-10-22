@@ -29,35 +29,64 @@
  * are those of the authors and should not be interpreted as representing
  * official policies, either expressed or implied, of the PiP project.$
  */
-/*
- * Written by Atsushi HORI <ahori@riken.jp>
- */
 
 #include <test.h>
 
-int task_main( void *arg ) {
-  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
+int user_func( void *argp ) {
+  void *auxp;
+  int pipid, *aux;
+
+  CHECK( ( pip_get_pipid( &pipid ) ), RV, return(EXIT_FAIL) );
+  CHECK( ( pip_get_aux(   &auxp  ) ), RV, return(EXIT_FAIL) );
+  aux = (int*) auxp;
+  if( *aux != pipid * 100 ) return 1;
   return 0;
 }
 
 int main( int argc, char **argv ) {
   pip_spawn_program_t prog;
-  int pipid, ntasks;
+  int pipid, arg, ntasks, ntenv;
+  int *aux, i;
+  int status = 0, extval = 0;
+  char*env;
 
-  CHECK( pip_fin(), RV!=EPERM, return(EXIT_FAIL) );
-  ntasks = 1;
-  CHECK( pip_init( &pipid, &ntasks, NULL, 0), RV, return(EXIT_FAIL) );
-  if( pipid == PIP_PIPID_ROOT ) {
-    pip_spawn_from_func( &prog, argv[0], "task_main",
-			 NULL, NULL, NULL, NULL );
-    pipid = 0;
+
+  ntasks = 0;
+  if( argc > 1 ) {
+    ntasks = strtol( argv[1], NULL, 10 );
+  }
+  ntasks = ( ntasks <= 0 ) ? NTASKS : ntasks;
+  if( ( env = getenv( "NTASKS" ) ) != NULL ) {
+    ntenv = strtol( env, NULL, 10 );
+    if( ntasks > ntenv ) return(EXIT_UNTESTED);
+  } else {
+    if( ntasks > NTASKS ) return(EXIT_UNTESTED);
+  }
+
+  CHECK( pip_init( NULL, &ntasks, NULL, 0 ), RV, return(EXIT_FAIL) );
+
+  CHECK( ( aux = (int*) malloc( sizeof(int) * ntasks ) ),
+	 RV==0, return(EXIT_FAIL) );
+
+  for( i=0; i<ntasks; i++ ) {
+    aux[i] = i * 100;
+    memset( &prog, 0, sizeof(prog) );
+    pip_spawn_from_func( &prog, argv[0], "user_func", (void*) &arg,
+			 NULL, NULL, (void*) &aux[i] );
+    pipid = i;
     CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	   RV,
 	   return(EXIT_FAIL) );
-    CHECK( pip_fin(), 		RV!=EBUSY, return(EXIT_FAIL) );
-    CHECK( pip_wait( 0, NULL ), RV,	   return(EXIT_FAIL) );
-    CHECK( pip_fin(), 		RV, 	   return(EXIT_FAIL) );
-    CHECK( pip_fin(),           RV!=EPERM, return(EXIT_FAIL) );
   }
+  for( i=0; i<ntasks; i++ ) {
+    CHECK( pip_wait( i, &status ), RV, return(EXIT_FAIL) );
+    if( WIFEXITED( status ) ) {
+      extval = WEXITSTATUS( status );
+      CHECK( extval!=0, RV, return(EXIT_FAIL) );
+    } else {
+      CHECK( 1, RV, return(EXIT_UNRESOLVED) );
+    }
+  }
+  CHECK( pip_fin(), RV, return(EXIT_FAIL) );
   return EXIT_PASS;
 }

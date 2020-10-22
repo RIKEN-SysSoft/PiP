@@ -45,3 +45,7 @@ timer 2 ./pip_barrier2 1  10
 timer 2 ./pip_barrier2 8 10
 timer 1  pip_task 2    ./pip_namexp
 timer 1  pip_task 8    ./pip_namexp
+timer 1  pip_task 2    ./pip_namexp
+timer 1  pip_task 8    ./pip_namexp
+timer 1  ./pip_aux  2
+timer 1  ./pip_aux  8

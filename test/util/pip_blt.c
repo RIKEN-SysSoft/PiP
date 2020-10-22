@@ -58,7 +58,7 @@ int main( int argc, char **argv ) {
 
   sprintf( env_ntasks, "%s=%d", PIP_TEST_NTASKS_ENV, ntasks );
   putenv( env_ntasks );
-  pip_spawn_from_main( &prog, argv[3], &argv[3], NULL, NULL );
+  pip_spawn_from_main( &prog, argv[3], &argv[3], NULL, NULL, NULL );
 
   nc = 0;
 #ifdef DO_COREBIND

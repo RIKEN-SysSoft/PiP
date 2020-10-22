@@ -78,7 +78,7 @@ pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
     va_end( ap );
   } while( 0 );
   pip_spin_unlock( &pip_lock_got_clone );
-  RETURN( retval );
+  RETURN_NE( retval );
 }
 
 int pip_wrap_clone( void ) {

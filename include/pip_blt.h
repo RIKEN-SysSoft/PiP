@@ -1099,11 +1099,9 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    *
    * \synopsis
    * \#include <pip.h> \n
-   * int pip_set_aux( pip_task_t *task, void *aux );
+   * int pip_set_aux( void *aux );
    *
-   * \param[in] task PiP task. If \c NULL, then the data is associated
-   * with the current PiP task
-   * \param[in] aux Pointer to the user dat to assocate with
+   * \param[in] aux Pointer to the user dats to assocate with the calling PiP task
    *
    * \return Return 0 on success. Return an error code on error.
    * \retval EPERM PiP library is not yet initialized or already
@@ -1111,7 +1109,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    *
    * \sa pip_get_aux
    */
-  int pip_set_aux( pip_task_t *task, void *aux );
+  int pip_set_aux( void *aux );
 
   /**
    * \PiPManEntry{pip_get_aux}
@@ -1120,10 +1118,8 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    *
    * \synopsis
    * \#include <pip.h> \n
-   * int pip_get_aux( pip_task_t *task, void **auxp );
+   * int pip_get_aux( void **auxp );
    *
-   * \param[in] task PiP task. If \c NULL, then the data is associated
-   * with the current PiP task
    * \param[out] auxp Returned user data
    *
    * \return Return 0 on success. Return an error code on error.
@@ -1133,7 +1129,7 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
    *
    * \sa pip_set_aux
    */
-  int pip_get_aux( pip_task_t *task, void **auxp );
+  int pip_get_aux( void **auxp );
 
   /**
    * \PiPManEntry{pip_get_sched_domain}

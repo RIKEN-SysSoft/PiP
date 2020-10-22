@@ -101,6 +101,7 @@ typedef struct {
   char		*funcname;
   void		*arg;
   void		*exp;
+  void		*aux;
   void		*reserved[2];
 } pip_spawn_program_t;
 
@@ -292,7 +293,7 @@ extern "C" {
    * \#include <pip.h> \n
    * void pip_spawn_from_main( pip_spawn_program_t *progp,
    *			       char *prog, char **argv, char **envv,
-   *		               void *exp )
+   *		               void *exp, void *aux )
    *
    * \description
    * This function sets up the \c pip_spawn_program_t structure for
@@ -305,6 +306,7 @@ extern "C" {
    * \param[in] envv Environment variables. If this is \c NULL, then
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
+   * \param[in] aux Auxiliary data to be associated with the created PiP task
    *
    * \sa pip_task_spawn
    * \sa pip_spawn_from_func
@@ -315,14 +317,14 @@ INLINE
 #endif
 void pip_spawn_from_main( pip_spawn_program_t *progp,
 			  char *prog, char **argv, char **envv,
-			  void *exp ) {
+			  void *exp, void *aux ) {
   memset( progp, 0, sizeof(pip_spawn_program_t) );
   if( prog != NULL ) {
-    progp->prog   = prog;
+    progp->prog = prog;
   } else {
-    progp->prog   = argv[0];
+    progp->prog = argv[0];
   }
-  progp->argv     = argv;
+  progp->argv   = argv;
   if( envv == NULL ) {
     extern char **environ;
     progp->envv = environ;
@@ -330,6 +332,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
     progp->envv = envv;
   }
   progp->exp = exp;
+  progp->aux = aux;
 }
 
   /**
@@ -342,7 +345,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    * \#include <pip.h> \n
    * pip_spawn_from_func( pip_spawn_program_t *progp,
    *		     char *prog, char *funcname, void *arg, char **envv,
-   *		     void *exp );
+   *		     void *exp, void *aux );
    *
    * \description
    * This function sets the required information to invoke a program,
@@ -365,6 +368,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    * \param[in] envv Environment variables. If this is \c NULL, then
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
+   * \param[in] aux Auxiliary data to be associated with the created PiP task
    *
    * \sa pip_task_spawn
    * \sa pip_spawn_from_main
@@ -375,7 +379,7 @@ INLINE
 #endif
 void pip_spawn_from_func( pip_spawn_program_t *progp,
 			  char *prog, char *funcname, void *arg, char **envv,
-			  void *exp ) {
+			  void *exp, void *aux ) {
   memset( progp, 0, sizeof(pip_spawn_program_t) );
   progp->prog     = prog;
   progp->funcname = funcname;
@@ -387,6 +391,7 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
     progp->envv = envv;
   }
   progp->exp = exp;
+  progp->aux = aux;
 }
 
   /**
