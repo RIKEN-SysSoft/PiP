@@ -400,10 +400,10 @@ int main( int argc, char **argv ) {
     nargv[i] = NULL;
     if( spawn->func == NULL ) {
       pip_spawn_from_main( &prog, nargv[0], nargv,
-			   NULL, NULL );
+			   NULL, NULL, NULL );
     } else {
       pip_spawn_from_func( &prog, nargv[0], spawn->func, NULL,
-			   NULL, NULL );
+			   NULL, NULL, NULL );
     }
     for( i=0; i<spawn->ntasks; i++ ) {
 #ifdef NOT_YET

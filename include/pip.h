@@ -114,6 +114,7 @@ typedef struct {
   char		*funcname;
   void		*arg;
   void		*exp;
+  void		*aux;
   void		*reserved[2];
 } pip_spawn_program_t;
 
@@ -317,7 +318,7 @@ extern "C" {
    * \#include <pip.h> \n
    * void pip_spawn_from_main( pip_spawn_program_t *progp,
    *			       char *prog, char **argv, char **envv,
-   *		               void *exp )
+   *		               void *exp, void *aux )
    *
    * \description
    * This function sets up the \c pip_spawn_program_t structure for
@@ -330,6 +331,7 @@ extern "C" {
    * \param[in] envv Environment variables. If this is \c NULL, then
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
+   * \param[in] aux Auxiliary data to be associated with the created PiP task
    *
    * \sa pip_task_spawn
    * \sa pip_spawn_from_func
@@ -340,7 +342,7 @@ INLINE
 #endif
 void pip_spawn_from_main( pip_spawn_program_t *progp,
 			  char *prog, char **argv, char **envv,
-			  void *exp ) {
+			  void *exp, void *aux ) {
   memset( progp, 0, sizeof(pip_spawn_program_t) );
   if( prog != NULL ) {
     progp->prog   = prog;
@@ -355,6 +357,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
     progp->envv = envv;
   }
   progp->exp = exp;
+  progp->aux = aux;
 }
 
   /**
@@ -367,7 +370,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    * \#include <pip.h> \n
    * pip_spawn_from_func( pip_spawn_program_t *progp,
    *		     char *prog, char *funcname, void *arg, char **envv,
-   *		     void *exp );
+   *		     void *exp, void *aux );
    *
    * \description
    * This function sets the required information to invoke a program,
@@ -390,6 +393,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    * \param[in] envv Environment variables. If this is \c NULL, then
    * the \c environ variable is used for the spawning PiP task.
    * \param[in] exp Export value to the spawning PiP task
+   * \param[in] aux Auxiliary data to be associated with the created PiP task
    *
    * \sa pip_task_spawn
    * \sa pip_spawn_from_main
@@ -399,7 +403,7 @@ INLINE
 #endif
 void pip_spawn_from_func( pip_spawn_program_t *progp,
 			  char *prog, char *funcname, void *arg, char **envv,
-			  void *exp ) {
+			  void *exp, void *aux ) {
   memset( progp, 0, sizeof(pip_spawn_program_t) );
   progp->prog     = prog;
   progp->funcname = funcname;
@@ -411,6 +415,7 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
     progp->envv = envv;
   }
   progp->exp = exp;
+  progp->aux = aux;
 }
 
   /**
@@ -825,6 +830,45 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \sa pip_named_tryimport
    */
   int pip_import( int pipid, void **expp );
+
+  /**
+   * \PiPManEntry{pip_set_aux}
+   *
+   * \brief Associate user data with a PiP task
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_set_aux( void *aux );
+   *
+   * \param[in] aux Pointer to the user dats to assocate with the calling PiP task
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   *
+   * \sa pip_get_aux
+   */
+  int pip_set_aux( void *aux );
+
+  /**
+   * \PiPManEntry{pip_get_aux}
+   *
+   * \brief Retrieve the user data associated with a PiP task
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_get_aux( void **auxp );
+   *
+   * \param[out] auxp Returned user data
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c domainp is \c NULL or \c auxp is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   *
+   * \sa pip_set_aux
+   */
+  int pip_get_aux( void **auxp );
 
   /**
    * @}

@@ -49,7 +49,7 @@ int main( int argc, char **argv ) {
   CHECK( pip_init( &pipid, &ntasks, NULL, 0), RV, return(EXIT_FAIL) );
   if( pipid == PIP_PIPID_ROOT ) {
     pip_spawn_from_func( &prog, argv[0], "task_main",
-			 NULL, NULL, NULL );
+			 NULL, NULL, NULL, NULL );
     pipid = 0;
     CHECK( pip_task_spawn( &prog, PIP_CPUCORE_ASIS, 0, &pipid, NULL ),
 	   RV,

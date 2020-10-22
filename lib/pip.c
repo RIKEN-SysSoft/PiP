@@ -1600,7 +1600,7 @@ int pip_spawn( char *prog,
 
   ENTER;
   if( prog == NULL ) return EINVAL;
-  pip_spawn_from_main( &program, prog, argv, envv, NULL );
+  pip_spawn_from_main( &program, prog, argv, envv, NULL, NULL );
   pip_spawn_hook( &hook, before, after, hookarg );
   RETURN( pip_task_spawn( &program, coreno, 0, pipidp, &hook ) );
 }
@@ -1764,6 +1764,20 @@ int pip_yield( int flag ) {
     sched_yield();
   }
   return 0;
+}
+
+int pip_set_aux( void *aux ) {
+  if( !pip_is_initialized() ) RETURN( EPERM );
+  pip_task->aux = aux;
+  RETURN( 0 );
+}
+
+int pip_get_aux( void **auxp ) {
+  if( !pip_is_initialized() ) RETURN( EPERM );
+  if( auxp != NULL ) {
+    *auxp = pip_task->aux;
+  }
+  RETURN( 0 );
 }
 
 /* energy-saving spin-lock */

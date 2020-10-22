@@ -191,6 +191,7 @@ typedef struct pip_task {
   void			*export;
   void			*import_root;
   void			*named_exptab;
+  void			*aux;
 
   void			*loaded;
   pip_symbols_t		symbols;
