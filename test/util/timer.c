@@ -132,6 +132,8 @@ int main( int argc, char **argv ) {
   if( time <  0 ) {
     time = -time;
     flag_debug = 1;
+  } else {
+    time *= 2;
   }
 
   if( pip_test_timer_scale != NULL && isdigit(pip_test_timer_scale[0]) ) {
