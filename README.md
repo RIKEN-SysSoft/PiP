@@ -100,12 +100,11 @@ Basically PiP requires the following three software packages;
 * [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
 * [PiP](https://github.com/RIKEN-SysSoft/PiP) - Process in Process (this package)
 * [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
-* [PiP-Testsuite](https://github.com/RIKEN-SysSoft/PiP-Testsuite) - Testsuite for Process in Process
 
 By using PiP-glibc, users can create up to 300 PiP tasks which can be
 dbugged by using PiP-gdb.  In other words, without installing
-PiP-glibc, users can create up to around 10 PiP tasks (this number
-depends on user programs) and cannot debug by using PiP-gdb.
+PiP-glibc, users can create up to around 10 PiP tasks (the number
+depends on the program) and cannot debug by using PiP-gdb.
 
 There are several ways to install the PiP packages; Yum (RPM), Docker,
 Spack, and building from the source code. It is strongly recommended
@@ -400,12 +399,12 @@ MPI Communication," in SC’20 (to appear)
 
 ## Presentation Slides
 
-* [HPDC'18](presentation/HPDC18.pdf)
-* [ROSS'18](presentation/HPDC18-ROSSpdf)
-* [IPDPS/RADR'20](presentation/IPDPS-RSADR-2020.pdf)
+* [HPDC'18](doc/slides/HPDC18.pdf)
+* [ROSS'18](doc/slides/HPDC18-ROSS.pdf)
+* [IPDPS/RADR'20](doc/slides/IPDPS-RADR-2020.pdf)
 
 # Author
 
 Atsushi Hori<br>
 Riken Center for Commputational Science (R-CCS)<br>
-Japan
+Japan<br>

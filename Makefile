@@ -135,7 +135,8 @@ post-veryclean-hook:
 	$(MAKE) subdir-veryclean
 
 post-distclean-hook:
-	$(RM) build/config.mk lib/fcontext.mk
+	$(RM) lib/fcontext.mk lib/fctx_defs.mk release/version.conf
+	$(RM) build/config.mk
 
 .PHONY: TAGS
 TAGS:

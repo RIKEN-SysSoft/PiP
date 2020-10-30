@@ -92,12 +92,6 @@ Functions</h2></td></tr>
 <tr class="memitem:ga147decca4226959d822b73b7c31a4465"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__ULP-3-misc.html#ga147decca4226959d822b73b7c31a4465">pip_get_task_by_pipid</a> (int pipid, pip_task_t **taskp)</td></tr>
 <tr class="memdesc:ga147decca4226959d822b73b7c31a4465"><td class="mdescLeft">&#160;</td><td class="mdescRight">get PiP task from PiP ID  <a href="#ga147decca4226959d822b73b7c31a4465">More...</a><br/></td></tr>
 <tr class="separator:ga147decca4226959d822b73b7c31a4465"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabe36293dba51fe90f94057bb4f82f328"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__ULP-3-misc.html#gabe36293dba51fe90f94057bb4f82f328">pip_set_aux</a> (void *aux)</td></tr>
-<tr class="memdesc:gabe36293dba51fe90f94057bb4f82f328"><td class="mdescLeft">&#160;</td><td class="mdescRight">Associate user data with a PiP task.  <a href="#gabe36293dba51fe90f94057bb4f82f328">More...</a><br/></td></tr>
-<tr class="separator:gabe36293dba51fe90f94057bb4f82f328"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga779abad7e346657a6fd3c024e204addb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__ULP-3-misc.html#ga779abad7e346657a6fd3c024e204addb">pip_get_aux</a> (void **auxp)</td></tr>
-<tr class="memdesc:ga779abad7e346657a6fd3c024e204addb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieve the user data associated with a PiP task.  <a href="#ga779abad7e346657a6fd3c024e204addb">More...</a><br/></td></tr>
-<tr class="separator:ga779abad7e346657a6fd3c024e204addb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga32119e3a41a4073b52ade76bf87a5589"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__ULP-3-misc.html#ga32119e3a41a4073b52ade76bf87a5589">pip_get_sched_domain</a> (pip_task_t **domainp)</td></tr>
 <tr class="memdesc:ga32119e3a41a4073b52ade76bf87a5589"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the task representing the scheduling domain.  <a href="#ga32119e3a41a4073b52ade76bf87a5589">More...</a><br/></td></tr>
 <tr class="separator:ga32119e3a41a4073b52ade76bf87a5589"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -213,73 +207,6 @@ int <a class="el" href="group__ULP-3-misc.html#ga147decca4226959d822b73b7c31a446
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a class="anchor" id="gabe36293dba51fe90f94057bb4f82f328"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_set_aux </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>aux</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="section user"><dt>Name</dt><dd>pip_set_aux<a name="gabe36293dba51fe90f94057bb4f82f328_pip_set_aux"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
-int <a class="el" href="group__ULP-3-misc.html#gabe36293dba51fe90f94057bb4f82f328" title="Associate user data with a PiP task. ">pip_set_aux( void *aux )</a>;</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">aux</td><td>Pointer to the user dats to assocate with the calling PiP task</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">EPERM</td><td>PiP library is not yet initialized or already finalized</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__ULP-3-misc.html#ga779abad7e346657a6fd3c024e204addb" title="Retrieve the user data associated with a PiP task. ">pip_get_aux</a> </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="ga779abad7e346657a6fd3c024e204addb"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int pip_get_aux </td>
-          <td>(</td>
-          <td class="paramtype">void **&#160;</td>
-          <td class="paramname"><em>auxp</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="section user"><dt>Name</dt><dd>pip_get_aux<a name="ga779abad7e346657a6fd3c024e204addb_pip_get_aux"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
-int <a class="el" href="group__ULP-3-misc.html#ga779abad7e346657a6fd3c024e204addb" title="Retrieve the user data associated with a PiP task. ">pip_get_aux( void **auxp )</a>;</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">auxp</td><td>Returned user data</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
-<dl class="retval"><dt>Return values</dt><dd>
-  <table class="retval">
-    <tr><td class="paramname">EINAVL</td><td><code>domainp</code> is <code>NULL</code> or <code>auxp</code> is <code>NULL</code> </td></tr>
-    <tr><td class="paramname">EPERM</td><td>PiP library is not yet initialized or already finalized</td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__ULP-3-misc.html#gabe36293dba51fe90f94057bb4f82f328" title="Associate user data with a PiP task. ">pip_set_aux</a> </dd></dl>
 
 </div>
 </div>

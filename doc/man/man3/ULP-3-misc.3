@@ -1,4 +1,4 @@
-.TH "BLT/ULP Miscellaneous Function" 3 "Thu Oct 22 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Miscellaneous Function" 3 "Fri Oct 30 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -18,14 +18,6 @@ BLT/ULP Miscellaneous Function \-
 .RI "int \fBpip_get_task_by_pipid\fP (int pipid, pip_task_t **taskp)"
 .br
 .RI "\fIget PiP task from PiP ID \fP"
-.ti -1c
-.RI "int \fBpip_set_aux\fP (void *aux)"
-.br
-.RI "\fIAssociate user data with a PiP task\&. \fP"
-.ti -1c
-.RI "int \fBpip_get_aux\fP (void **auxp)"
-.br
-.RI "\fIRetrieve the user data associated with a PiP task\&. \fP"
 .ti -1c
 .RI "int \fBpip_get_sched_domain\fP (pip_task_t **domainp)"
 .br
@@ -134,80 +126,6 @@ Return 0 on success\&. Return an error code on error\&.
 \fIENOENT\fP No such PiP task 
 .br
 \fIERANGE\fP The specified \fCpipid\fP is out of ramge 
-.RE
-.PP
-
-.SS "int pip_set_aux (void *aux)"
-
-.PP
-\fBName\fP
-.RS 4
-pip_set_aux
-.RE
-.PP
-\fBSynopsis\fP
-.RS 4
-#include <\fBpip\&.h\fP> 
-.br
-int \fBpip_set_aux( void *aux )\fP;
-.RE
-.PP
-\fBParameters:\fP
-.RS 4
-\fIaux\fP Pointer to the user dats to assocate with the calling PiP task
-.RE
-.PP
-\fBReturns:\fP
-.RS 4
-Return 0 on success\&. Return an error code on error\&. 
-.RE
-.PP
-\fBReturn values:\fP
-.RS 4
-\fIEPERM\fP PiP library is not yet initialized or already finalized
-.RE
-.PP
-\fBSee Also:\fP
-.RS 4
-\fBpip_get_aux\fP 
-.RE
-.PP
-
-.SS "int pip_get_aux (void **auxp)"
-
-.PP
-\fBName\fP
-.RS 4
-pip_get_aux
-.RE
-.PP
-\fBSynopsis\fP
-.RS 4
-#include <\fBpip\&.h\fP> 
-.br
-int \fBpip_get_aux( void **auxp )\fP;
-.RE
-.PP
-\fBParameters:\fP
-.RS 4
-\fIauxp\fP Returned user data
-.RE
-.PP
-\fBReturns:\fP
-.RS 4
-Return 0 on success\&. Return an error code on error\&. 
-.RE
-.PP
-\fBReturn values:\fP
-.RS 4
-\fIEINAVL\fP \fCdomainp\fP is \fCNULL\fP or \fCauxp\fP is \fCNULL\fP 
-.br
-\fIEPERM\fP PiP library is not yet initialized or already finalized
-.RE
-.PP
-\fBSee Also:\fP
-.RS 4
-\fBpip_set_aux\fP 
 .RE
 .PP
 

@@ -13,7 +13,11 @@ int int int \hyperlink{group__PiP-2-export_ga205d73fdb294d3cbfe095c14d5e63637}{p
 int int int int \hyperlink{group__PiP-2-export_ga92d98dc8bafe8c73d4332d40d77be6cb}{pip\-\_\-export} (void $\ast$exp)
 \begin{DoxyCompactList}\small\item\em export an address \end{DoxyCompactList}\item 
 int \hyperlink{group__PiP-2-export_ga6d7ac596a9da824e40d7c06528f42e5f}{pip\-\_\-import} (int pipid, void $\ast$$\ast$expp)
-\begin{DoxyCompactList}\small\item\em import exported address of a Pi\-P task \end{DoxyCompactList}\end{DoxyCompactItemize}
+\begin{DoxyCompactList}\small\item\em import exported address of a Pi\-P task \end{DoxyCompactList}\item 
+int \hyperlink{group__PiP-2-export_gabe36293dba51fe90f94057bb4f82f328}{pip\-\_\-set\-\_\-aux} (void $\ast$aux)
+\begin{DoxyCompactList}\small\item\em Associate user data with a Pi\-P task. \end{DoxyCompactList}\item 
+int \hyperlink{group__PiP-2-export_ga779abad7e346657a6fd3c024e204addb}{pip\-\_\-get\-\_\-aux} (void $\ast$$\ast$auxp)
+\begin{DoxyCompactList}\small\item\em Retrieve the user data associated with a Pi\-P task. \end{DoxyCompactList}\end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
@@ -265,4 +269,66 @@ Return 0 on success. Return an error code on error.
 \hyperlink{group__PiP-2-export_ga68bcfa436ddc6acaf25f67fc30430fc1}{pip\-\_\-named\-\_\-import} 
 
 \hyperlink{group__PiP-2-export_ga205d73fdb294d3cbfe095c14d5e63637}{pip\-\_\-named\-\_\-tryimport} 
+\end{DoxySeeAlso}
+\hypertarget{group__PiP-2-export_gabe36293dba51fe90f94057bb4f82f328}{\index{Export/\-Import Functions@{Export/\-Import Functions}!pip\-\_\-set\-\_\-aux@{pip\-\_\-set\-\_\-aux}}
+\index{pip\-\_\-set\-\_\-aux@{pip\-\_\-set\-\_\-aux}!Export/Import Functions@{Export/\-Import Functions}}
+\subsubsection[{pip\-\_\-set\-\_\-aux}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-set\-\_\-aux (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{aux}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-2-export_gabe36293dba51fe90f94057bb4f82f328}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-set\-\_\-aux\index{pip_set_aux@{pip\-\_\-set\-\_\-aux}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-2-export_gabe36293dba51fe90f94057bb4f82f328}{pip\-\_\-set\-\_\-aux( void $\ast$aux )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em aux} & Pointer to the user dats to assocate with the calling Pi\-P task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__PiP-2-export_ga779abad7e346657a6fd3c024e204addb}{pip\-\_\-get\-\_\-aux} 
+\end{DoxySeeAlso}
+\hypertarget{group__PiP-2-export_ga779abad7e346657a6fd3c024e204addb}{\index{Export/\-Import Functions@{Export/\-Import Functions}!pip\-\_\-get\-\_\-aux@{pip\-\_\-get\-\_\-aux}}
+\index{pip\-\_\-get\-\_\-aux@{pip\-\_\-get\-\_\-aux}!Export/Import Functions@{Export/\-Import Functions}}
+\subsubsection[{pip\-\_\-get\-\_\-aux}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-aux (
+\begin{DoxyParamCaption}
+\item[{void $\ast$$\ast$}]{auxp}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-2-export_ga779abad7e346657a6fd3c024e204addb}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-aux\index{pip_get_aux@{pip\-\_\-get\-\_\-aux}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-2-export_ga779abad7e346657a6fd3c024e204addb}{pip\-\_\-get\-\_\-aux( void $\ast$$\ast$auxp )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em auxp} & Returned user data\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-I\-N\-A\-V\-L} & {\ttfamily domainp} is {\ttfamily N\-U\-L\-L} or {\ttfamily auxp} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__PiP-2-export_gabe36293dba51fe90f94057bb4f82f328}{pip\-\_\-set\-\_\-aux} 
 \end{DoxySeeAlso}

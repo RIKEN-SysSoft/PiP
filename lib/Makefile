@@ -137,7 +137,4 @@ post-clean-hook:
 	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)
 
 post-veryclean-hook:
-	$(RM) build.h concat.h concat
-
-post-distclean-hook:
-	$(RM) fctx_defs.mk
+	$(RM) $(PIP_INCDIR)//build.h $(PIP_INCDIR)//concat.h concat

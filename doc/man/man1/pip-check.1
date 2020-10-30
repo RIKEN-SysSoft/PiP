@@ -1,4 +1,4 @@
-.TH "pip-check" 1 "Thu Oct 22 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "pip-check" 1 "Fri Oct 30 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -7,7 +7,7 @@ PiP binary checking program if a progarm can run sa a PiP root and/or PiP task
 .PP
 \fBSynopsis\fP
 .RS 4
-pipcheck [ OPTION ] pip-prog [\&.\&.\&.]
+pip-check [ OPTION ] PIP-PROG [\&.\&.\&.]
 .RE
 .PP
 \fBParameters:\fP
@@ -16,7 +16,7 @@ pipcheck [ OPTION ] pip-prog [\&.\&.\&.]
 .br
 \fI-t\fP check if a\&.out can be PiP task 
 .br
-\fI-b\fP check if a\&.out can be PiP root and/or PiP task 
+\fI-b\fP check if a\&.out can be PiP root and/or PiP task (default) 
 .br
 \fI-v\fP show reason 
 .br
@@ -25,7 +25,7 @@ pipcheck [ OPTION ] pip-prog [\&.\&.\&.]
 .PP
 \fBSee Also:\fP
 .RS 4
-pipcc(1) 
+pipcc 
 .RE
 .PP
 
