@@ -52,7 +52,7 @@ struct option opttab[] =
     OPTION( prefix,    5 ),
     OPTION( glibc,     6 ),
     OPTION( ldlinux,   7 ),
-    OPTION( hash,      8 ),
+    OPTION( commit,    8 ),
     OPTION( context,   9 ),
     OPTION( debug,    10 ),
     OPTION( sizes,    11 ),

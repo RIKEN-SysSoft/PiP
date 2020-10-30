@@ -113,8 +113,7 @@ documents:
 	-@grep -e "warning" -e "error" doxygen-html.log && ( echo "Doxygen failed"; exit 1; )
 	@echo ==== mandb =====; \
 	if which mandb; then mandb ./man -c -u; fi
-
-all: install
+.PHONY: doxygen
 
 install:
 	@echo "Installing man pages ->" $(mandir)

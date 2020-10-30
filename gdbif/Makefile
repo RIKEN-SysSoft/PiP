@@ -42,7 +42,7 @@ TARGET   = $(HEADERS)
 MYREADELF = pip_readelf
 SRCS     = $(srcdir)/pip_readelf.c
 
-DEPINCS  = ../include/pip_gdbif.h
+DEPINCS  = $(PIP_INCDIR)/pip_gdbif.h
 
 $(TARGET) : pip_gdbif.c $(MYREADELF) $(DEPINCS)
 	$(CC) $(CPPFLAGS) -c pip_gdbif.c -o pip_gdbif.o

@@ -132,6 +132,7 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
       desired =
 	PIP_MODE_PROCESS_PRELOAD_BIT |
+	PIP_MODE_PROCESS_GOT_BIT     |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
       desired = PIP_MODE_PROCESS_PRELOAD_BIT;
@@ -187,6 +188,7 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
   }
 
   if( desired & PIP_MODE_PROCESS_GOT_BIT ) {
+    int pip_wrap_clone( void );
     /* check if the __clone() systemcall wrapper exists or not */
     if( pip_wrap_clone() == 0 ) {
       newmod = PIP_MODE_PROCESS_GOT;
@@ -642,10 +644,6 @@ int pip_import( int pipid, void **expp  ) {
   RETURN( 0 );
 }
 
-int pip_is_initialized( void ) {
-  return pip_task != NULL && pip_root != NULL;
-}
-
 int pip_isa_task( void ) {
   return
     pip_is_initialized() &&
@@ -748,21 +746,6 @@ int pip_kill_all_tasks( void ) {
     }
   }
   return err;
-}
-
-void pip_abort( void ) NORETURN;
-void pip_abort( void ) {
-  /* thin function may be called either root or tasks */
-  /* SIGTERM is delivered to root so that PiP tasks   */
-  /* are forced to ternminate                         */
-  ENTER;
-  if( pip_root != NULL ) {
-    (void) pip_raise_signal( pip_root->task_root, SIGTERM );
-  } else {
-    kill( getpid(), SIGTERM );
-  }
-  while( 1 ) sleep( 1 );	/* wait for being killed */
-  NEVER_REACH_HERE;
 }
 
 int pip_get_system_id( int pipid, pip_id_t *idp ) {

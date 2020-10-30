@@ -82,6 +82,8 @@ pip_clone( int(*fn)(void*), void *child_stack, int flags, void *args, ... ) {
 }
 
 int pip_wrap_clone( void ) {
+  int pip_patch_GOT( char*, char*, void* );
+
   ENTER;
   pip_clone_orig = pip_dlsym( RTLD_DEFAULT, "__clone" );
   if( pip_clone_orig == NULL ) RETURN( ENOSYS );

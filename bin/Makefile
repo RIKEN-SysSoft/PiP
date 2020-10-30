@@ -39,14 +39,17 @@ PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
 	pips printpipmode
 
 #PROGRAMS  = # do not compile at build, compile at install
-PROGRAMS  = pip-exec printpipmode
+PROGRAMS  = pip-exec printpipmode .change-mode
 
 MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 	pips printpipmode.c
 
-CPPFLAGS += $(PIP_CPPFLAGS)
+CPPFLAGS += $(PIP_CPPFLAGS) $(DGBFLAG)
 
 DEPINCS = $(top_srcdir)/include
+
+debug:
+	DBGFLAG=-DDEBUG $(MAKE) all
 
 include $(top_srcdir)/build/rule.mk
 
@@ -58,8 +61,12 @@ pip-exec: pip-exec.c $(DEPINCS) $(PIP_LIBS) Makefile
 printpipmode: printpipmode.c $(DEPINCS) $(PIP_LIBS) Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
+.change-mode: pipcc pip-check
+	chmod +x pipcc pip-check pip-mode pip-man
+	touch .change-mode
+
 post-clean-hook:
 	$(RM) *.E *.log
 
 post-veryclean-hook: post-clean-hook
-	$(RM) pip-exec pipcc pip-mode pip-check pip-man printpipmode
+	$(RM) pip-exec pipcc pip-mode pip-check pip-man printpipmode .change-mode

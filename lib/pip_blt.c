@@ -749,6 +749,7 @@ int pip_yield_to( pip_task_t *target ) {
 int pip_set_aux( void *aux ) {
   pip_task_internal_t 	*taski = pip_task;
 
+  if( !pip_is_initialized() ) RETURN( EPERM );
   AA(taski)->aux = aux;
   RETURN( 0 );
 }
@@ -756,6 +757,7 @@ int pip_set_aux( void *aux ) {
 int pip_get_aux( void **auxp ) {
   pip_task_internal_t 	*taski = pip_task;
 
+  if( !pip_is_initialized() ) RETURN( EPERM );
   IF_LIKELY( auxp != NULL ) {
     *auxp = AA(taski)->aux;
   }

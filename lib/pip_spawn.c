@@ -436,7 +436,7 @@ int pip_do_corebind( pid_t tid, uint32_t coreno, cpu_set_t *oldsetp ) {
       ( flags & PIP_CPUCORE_ABS  ) != flags ) RETURN( EINVAL );
   if( flags & PIP_CPUCORE_ASIS ) RETURN( 0 );
   coreno &= PIP_CPUCORE_CORENO_MASK;
-  if( coreno >= PIP_CPUCORE_CORENO_MAX ) RETURN ( EINVAL );
+  if( coreno >= PIP_CPUCORE_CORENO_MAX ) RETURN( EINVAL );
   if( tid == 0 ) tid = pip_gettid();
 
   if( oldsetp != NULL ) {

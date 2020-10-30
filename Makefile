@@ -120,7 +120,7 @@ check:
 .PHONY: check
 
 prog-distclean:
-	$(RM) config.log config.status include/config.h build/config.mk
+	$(RM) config.log config.status include/pip_config.h
 .PHONY: prog-distclean
 
 post-install-hook:
@@ -131,9 +131,11 @@ post-clean-hook:
 	$(MAKE) -C test clean
 
 post-veryclean-hook:
-	$(RM) config.log config.status include/config.h
-	$(RM) lib/fcontext.mk
+	$(RM) config.log config.status include/pip_config.h
 	$(MAKE) subdir-veryclean
+
+post-distclean-hook:
+	$(RM) build/config.mk lib/fcontext.mk
 
 .PHONY: TAGS
 TAGS:

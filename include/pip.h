@@ -94,6 +94,10 @@
 #define PIP_CPUCORE_ABS 		(0x2U<<PIP_CPUCORE_FLAG_SHIFT)
 #define PIP_CPUCORE_CORENO_MASK		((0x1U<<PIP_CPUCORE_FLAG_SHIFT)-1)
 
+#define PIP_YIELD_DEFAULT		(0x0U)
+#define PIP_YIELD_USER			(0x1U)
+#define PIP_YIELD_SYSTEM		(0x2U)
+
 typedef struct {
   char		*prog;
   char		**argv;
@@ -792,6 +796,45 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    * \sa pip_named_tryimport
    */
   int pip_import( int pipid, void **expp );
+
+  /**
+   * \PiPManEntry{pip_set_aux}
+   *
+   * \brief Associate user data with a PiP task
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_set_aux( void *aux );
+   *
+   * \param[in] aux Pointer to the user dats to assocate with the calling PiP task
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   *
+   * \sa pip_get_aux
+   */
+  int pip_set_aux( void *aux );
+
+  /**
+   * \PiPManEntry{pip_get_aux}
+   *
+   * \brief Retrieve the user data associated with a PiP task
+   *
+   * \synopsis
+   * \#include <pip.h> \n
+   * int pip_get_aux( void **auxp );
+   *
+   * \param[out] auxp Returned user data
+   *
+   * \return Return 0 on success. Return an error code on error.
+   * \retval EINAVL \c domainp is \c NULL or \c auxp is \c NULL
+   * \retval EPERM PiP library is not yet initialized or already
+   * finalized
+   *
+   * \sa pip_set_aux
+   */
+  int pip_get_aux( void **auxp );
 
   /**
    * @}

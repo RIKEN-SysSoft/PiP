@@ -48,8 +48,8 @@
 ### \param -T 'thread' mode
 ### \param -u Show usage
 ###
-### \sa
-### pip-exec(1)
+### \sa pip-exec
+### \sa printpipmode
 ###
 
 INSTALLTOP=@prefix@

@@ -1,0 +1,135 @@
+\hypertarget{group__PiP-0-init-fin}{\section{Pi\-P Initialization/\-Finalization}
+\label{group__PiP-0-init-fin}\index{Pi\-P Initialization/\-Finalization@{Pi\-P Initialization/\-Finalization}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{group__PiP-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{pip\-\_\-init} (int $\ast$pipidp, int $\ast$ntasks, void $\ast$$\ast$root\-\_\-expp, uint32\-\_\-t opts)
+\begin{DoxyCompactList}\small\item\em Initialize the Pi\-P library. \end{DoxyCompactList}\item 
+int \hyperlink{group__PiP-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin} (void)
+\begin{DoxyCompactList}\small\item\em Finalize the Pi\-P library. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-intialize-finalize}{}\subsubsection{Pi\-P Initialization/\-Finalization}\label{pip-intialize-finalize}
+\begin{DoxyParagraph}{Description}
+Pi\-P initialization/finalization functions 
+\end{DoxyParagraph}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__PiP-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{\index{Pi\-P Initialization/\-Finalization@{Pi\-P Initialization/\-Finalization}!pip\-\_\-init@{pip\-\_\-init}}
+\index{pip\-\_\-init@{pip\-\_\-init}!PiP Initialization/Finalization@{Pi\-P Initialization/\-Finalization}}
+\subsubsection[{pip\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{int $\ast$}]{pipidp, }
+\item[{int $\ast$}]{ntasks, }
+\item[{void $\ast$$\ast$}]{root\-\_\-expp, }
+\item[{uint32\-\_\-t}]{opts}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-init\index{pip_init@{pip\-\_\-init}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{pip\-\_\-init( int $\ast$pipidp, int $\ast$ntasks, void $\ast$$\ast$root\-\_\-expp, uint32\-\_\-t opts )};
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+This function initializes the Pi\-P library. The Pi\-P root process must call this. A Pi\-P task is not required to call this function unless the Pi\-P task calls any Pi\-P functions. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+When this function is called by a Pi\-P root, {\ttfamily ntasks}, and {\ttfamily root\-\_\-expp} are input parameters. If this is called by a Pi\-P task, then those parameters are output returning the same values input by the root. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+A Pi\-P task may or may not call this function. If {\ttfamily pip\-\_\-init} is not called by a Pi\-P task explicitly, then {\ttfamily pip\-\_\-init} is called magically and implicitly even if the Pi\-P task program is N\-O\-T linked with the Pi\-P library.
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em pipidp} & When this is called by the Pi\-P root process, then this returns {\ttfamily P\-I\-P\-\_\-\-P\-I\-P\-I\-D\-\_\-\-R\-O\-O\-T}, otherwise it returns the Pi\-P I\-D of the calling Pi\-P task. \\
+\hline
+\mbox{\tt in,out}  & {\em ntasks} & When called by the Pi\-P root, it specifies the maximum number of Pi\-P tasks. When called by a Pi\-P task, then it returns the number specified by the Pi\-P root. \\
+\hline
+\mbox{\tt in,out}  & {\em root\-\_\-expp} & If the root Pi\-P is ready to export a memory region to any Pi\-P task(s), then this parameter is to pass the exporting address. If the Pi\-P root is not ready to export or has nothing to export then this variable can be N\-U\-L\-L. When called by a Pi\-P task, it returns the exported address by the Pi\-P root, if any. \\
+\hline
+\mbox{\tt in}  & {\em opts} & Specifying the Pi\-P execution mode and See below.\\
+\hline
+\end{DoxyParams}
+\begin{DoxyParagraph}{Execution mode option}
+Users may explicitly specify the Pi\-P execution mode. This execution mode can be categorized in two; process mode and thread mode. In the process execution mode, each Pi\-P task may have its own file descriptors, signal handlers, and so on, just like a process. Contrastingly, in the pthread executionn mode, file descriptors and signal handlers are shared among Pi\-P root and Pi\-P tasks while maintaining the privatized variables. 
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{}
+To spawn a Pi\-P task in the process mode, the Pi\-P library modifies the {\bfseries clone()} flag so that the created Pi\-P task can exhibit the alomost same way with that of normal Linux process. There are three ways implmented; using L\-D\-\_\-\-P\-R\-E\-L\-O\-A\-D, modifying G\-L\-I\-B\-C, and modifying G\-I\-O\-T entry of the {\bfseries clone()} systemcall. One of the option flag values; {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-T\-H\-R\-E\-A\-D}, {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S}, {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S\-\_\-\-P\-R\-E\-L\-O\-A\-D}, {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S\-\_\-\-P\-I\-P\-C\-L\-O\-N\-E}, or {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S\-\_\-\-G\-O\-T} can be specified as the option flag. Or, users may specify the execution mode by the {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E} environment described below.
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+Zero is returned if this function succeeds. Otherwise an error number is returned.
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-I\-N\-V\-A\-L} & {\itshape ntasks} is negative \\
+\hline
+{\em E\-B\-U\-S\-Y} & Pi\-P root called this function twice or more without calling \hyperlink{group__PiP-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin}. \\
+\hline
+{\em E\-P\-E\-R\-M} & {\itshape opts} is invalid or unacceptable \\
+\hline
+{\em E\-O\-V\-E\-R\-F\-L\-O\-W} & {\itshape ntasks} is too large \\
+\hline
+{\em E\-L\-I\-B\-S\-C\-N} & verssion miss-\/match between Pi\-P root and Pi\-P task\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Environment}
+\begin{DoxyItemize}
+\item {\bfseries P\-I\-P\-\_\-\-M\-O\-D\-E} Specifying the Pi\-P execution mmode. Its value can be either {\ttfamily thread}, {\ttfamily pthread}, {\ttfamily process}, {\ttfamily process\-:preload}, {\ttfamily process\-:pipclone}, or {\ttfamily process\-:got}. \item {\bfseries L\-D\-\_\-\-P\-R\-E\-L\-O\-A\-D} This is required to set appropriately to hold the path to the {\ttfamily pip\-\_\-preload.\-so} file, if the Pi\-P execution mode is {\ttfamily P\-I\-P\-\_\-\-M\-O\-D\-E\-\_\-\-P\-R\-O\-C\-E\-S\-S\-\_\-\-P\-R\-E\-L\-O\-A\-D} (the {\ttfamily opts} in {\ttfamily pip\-\_\-init}) and/or the P\-I\-P\-\_\-\-M\-O\-D\-E ennvironment is set to {\ttfamily process\-:preload}. See also the pip\-\_\-mode(1) command to set the environment variable appropriately and easily. \item {\bfseries P\-I\-P\-\_\-\-S\-T\-A\-C\-K\-S\-Z} Sepcifying the stack size (in bytes). The {\bfseries K\-M\-P\-\_\-\-S\-T\-A\-C\-K\-S\-I\-Z\-E} and {\bfseries O\-M\-P\-\_\-\-S\-T\-A\-C\-K\-S\-I\-Z\-E} are also effective. The 't', 'g', 'm', 'k' and 'b' posfix character can be used. \item {\bfseries P\-I\-P\-\_\-\-S\-T\-O\-P\-\_\-\-O\-N\-\_\-\-S\-T\-A\-R\-T} Specifying the P\-I\-P I\-D to stop on start to debug the specified Pi\-P task from the beginning. If the before hook is specified, then the Pi\-P task will be stopped just before calling the before hook. \item {\bfseries P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-P\-A\-T\-H} If thisenvironment is set to the path pointing to the Pi\-P-\/gdb executable file, then Pi\-P-\/gdb is automatically attached when an excetion signal (S\-I\-G\-S\-E\-G\-V and S\-I\-G\-H\-U\-P by default) is delivered. The signals which triggers the Pi\-P-\/gdb invokation can be specified the {\ttfamily P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-S\-I\-G\-N\-A\-L\-S} environment described below. \item {\bfseries P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-C\-O\-M\-M\-A\-N\-D} If this P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-C\-O\-M\-M\-A\-N\-D is set to a filename containing some G\-D\-B commands, then those G\-D\-B commands will be executed by the G\-D\-B in batch mode, instead of backtrace. \item {\bfseries P\-I\-P\-\_\-\-G\-D\-B\-\_\-\-S\-I\-G\-N\-A\-L\-S} Specifying the signal(s) resulting automatic Pi\-P-\/gdb attach. Signal names (case insensitive) can be concatenated by the '+' or '-\/' symbol. 'all' is reserved to specify most of the signals. For example, 'A\-L\-L-\/\-T\-E\-R\-M' means all signals excepting {\ttfamily S\-I\-G\-T\-E\-R\-M}, another example, 'P\-I\-P\-E+\-I\-N\-T' means {\ttfamily S\-I\-G\-P\-I\-P\-E} and {\ttfamily S\-I\-G\-I\-N\-T}. Some signals such as S\-I\-G\-K\-I\-L\-L and S\-I\-G\-C\-O\-N\-T cannot be specified. \item {\bfseries P\-I\-P\-\_\-\-S\-H\-O\-W\-\_\-\-M\-A\-P\-S} If the value is 'on' and one of the above exection signals is delivered, then the memory map will be shown. \item {\bfseries P\-I\-P\-\_\-\-S\-H\-O\-W\-\_\-\-P\-I\-P\-S} If the value is 'on' and one of the above exection signals is delivered, then the process status by using the {\ttfamily pips} command (see also pips(1)) will be shown.\end{DoxyItemize}
+
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Bugs}
+Is is N\-O\-T guaranteed that users can spawn tasks up to the number specified by the {\itshape ntasks} argument. There are some limitations come from outside of the Pi\-P library (from G\-L\-I\-B\-C). \par
+\par
+
+\end{DoxyParagraph}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__PiP-2-export_ga3613eaa34ad5a4985007ff9177eb6542}{pip\-\_\-named\-\_\-export} 
+
+\hyperlink{group__PiP-2-export_ga92d98dc8bafe8c73d4332d40d77be6cb}{pip\-\_\-export} 
+
+\hyperlink{group__PiP-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin} 
+
+pip-\/mode(Pi\-P 1) 
+
+pips(\-Pi\-P 1) \par
+\par
+
+\end{DoxySeeAlso}
+\hypertarget{group__PiP-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{\index{Pi\-P Initialization/\-Finalization@{Pi\-P Initialization/\-Finalization}!pip\-\_\-fin@{pip\-\_\-fin}}
+\index{pip\-\_\-fin@{pip\-\_\-fin}!PiP Initialization/Finalization@{Pi\-P Initialization/\-Finalization}}
+\subsubsection[{pip\-\_\-fin}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-fin (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-0-init-fin_gac4654282785abb9434ce81573fdf16ed}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-fin\index{pip_fin@{pip\-\_\-fin}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin( void )};
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Description}
+This function finalizes the Pi\-P library. After calling this, most of the Pi\-P functions will return the error code {\ttfamily E\-P\-E\-R\-M}.
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+zero is returned if this function succeeds. On error, error number is returned. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & {\ttfamily pip\-\_\-init} is not yet called \\
+\hline
+{\em E\-B\-U\-S\-Y} & {\ttfamily one} or more Pi\-P tasks are not yet terminated\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxyParagraph}{Notes}
+The behavior of calling \hyperlink{group__PiP-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{pip\-\_\-init} after calling this \hyperlink{group__PiP-0-init-fin_gac4654282785abb9434ce81573fdf16ed}{pip\-\_\-fin} is note defined and recommended to do so.
+\end{DoxyParagraph}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__PiP-0-init-fin_ga20439326ff318c2dd0752bd544dca0e2}{pip\-\_\-init} 
+\end{DoxySeeAlso}

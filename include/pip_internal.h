@@ -78,7 +78,7 @@
 #include <dlfcn.h>
 #include <ucontext.h>
 
-#include <config.h>
+#include <pip_config.h>
 
 #ifndef CACHE_LINE_SIZE
 #define CACHE_LINE_SIZE		(64)

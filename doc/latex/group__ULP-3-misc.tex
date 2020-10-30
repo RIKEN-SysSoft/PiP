@@ -1,0 +1,200 @@
+\hypertarget{group__ULP-3-misc}{\section{B\-L\-T/\-U\-L\-P Miscellaneous Function}
+\label{group__ULP-3-misc}\index{B\-L\-T/\-U\-L\-P Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+pip\-\_\-task\-\_\-t $\ast$ \hyperlink{group__ULP-3-misc_gaf09a1abfd580696c74d4aa7be8255ad0}{pip\-\_\-task\-\_\-self} (void)
+\begin{DoxyCompactList}\small\item\em Return the current task. \end{DoxyCompactList}\item 
+int \hyperlink{group__ULP-3-misc_ga14a1b03ec6564885a5dd97dbc27167aa}{pip\-\_\-get\-\_\-task\-\_\-pipid} (pip\-\_\-task\-\_\-t $\ast$task, int $\ast$pipidp)
+\begin{DoxyCompactList}\small\item\em Return P\-I\-P\-I\-D of a Pi\-P task. \end{DoxyCompactList}\item 
+int \hyperlink{group__ULP-3-misc_ga147decca4226959d822b73b7c31a4465}{pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid} (int pipid, pip\-\_\-task\-\_\-t $\ast$$\ast$taskp)
+\begin{DoxyCompactList}\small\item\em get Pi\-P task from Pi\-P I\-D \end{DoxyCompactList}\item 
+int \hyperlink{group__ULP-3-misc_gabe36293dba51fe90f94057bb4f82f328}{pip\-\_\-set\-\_\-aux} (void $\ast$aux)
+\begin{DoxyCompactList}\small\item\em Associate user data with a Pi\-P task. \end{DoxyCompactList}\item 
+int \hyperlink{group__ULP-3-misc_ga779abad7e346657a6fd3c024e204addb}{pip\-\_\-get\-\_\-aux} (void $\ast$$\ast$auxp)
+\begin{DoxyCompactList}\small\item\em Retrieve the user data associated with a Pi\-P task. \end{DoxyCompactList}\item 
+int \hyperlink{group__ULP-3-misc_ga32119e3a41a4073b52ade76bf87a5589}{pip\-\_\-get\-\_\-sched\-\_\-domain} (pip\-\_\-task\-\_\-t $\ast$$\ast$domainp)
+\begin{DoxyCompactList}\small\item\em Return the task representing the scheduling domain. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{ulp-misc}{}\subsubsection{B\-L\-T/\-U\-L\-P miscellaneous function}\label{ulp-misc}
+\begin{DoxyParagraph}{Description}
+B\-L\-T/\-U\-L\-P miscellaneous function 
+\end{DoxyParagraph}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__ULP-3-misc_gaf09a1abfd580696c74d4aa7be8255ad0}{\index{B\-L\-T/\-U\-L\-P Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}!pip\-\_\-task\-\_\-self@{pip\-\_\-task\-\_\-self}}
+\index{pip\-\_\-task\-\_\-self@{pip\-\_\-task\-\_\-self}!BLT/ULP Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}}
+\subsubsection[{pip\-\_\-task\-\_\-self}]{\setlength{\rightskip}{0pt plus 5cm}pip\-\_\-task\-\_\-t$\ast$ pip\-\_\-task\-\_\-self (
+\begin{DoxyParamCaption}
+\item[{void}]{}
+\end{DoxyParamCaption}
+)}}\label{group__ULP-3-misc_gaf09a1abfd580696c74d4aa7be8255ad0}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-task\-\_\-self\index{pip_task_self@{pip\-\_\-task\-\_\-self}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+pip\-\_\-task\-\_\-t $\ast$pip\-\_\-task\-\_\-self( void );
+\end{DoxyParagraph}
+\begin{DoxyReturn}{Returns}
+Return the current task. 
+\end{DoxyReturn}
+\hypertarget{group__ULP-3-misc_ga14a1b03ec6564885a5dd97dbc27167aa}{\index{B\-L\-T/\-U\-L\-P Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}!pip\-\_\-get\-\_\-task\-\_\-pipid@{pip\-\_\-get\-\_\-task\-\_\-pipid}}
+\index{pip\-\_\-get\-\_\-task\-\_\-pipid@{pip\-\_\-get\-\_\-task\-\_\-pipid}!BLT/ULP Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}}
+\subsubsection[{pip\-\_\-get\-\_\-task\-\_\-pipid}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-task\-\_\-pipid (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-t $\ast$}]{task, }
+\item[{int $\ast$}]{pipidp}
+\end{DoxyParamCaption}
+)}}\label{group__ULP-3-misc_ga14a1b03ec6564885a5dd97dbc27167aa}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-task\-\_\-pipid\index{pip_get_task_pipid@{pip\-\_\-get\-\_\-task\-\_\-pipid}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__ULP-3-misc_ga14a1b03ec6564885a5dd97dbc27167aa}{pip\-\_\-get\-\_\-task\-\_\-pipid( pip\-\_\-task\-\_\-t $\ast$task, int $\ast$pipidp )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em task} & a Pi\-P task \\
+\hline
+\mbox{\tt out}  & {\em pipidp} & Pi\-P I\-D of the specified task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-I\-N\-A\-V\-L} & {\ttfamily task} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{group__ULP-3-misc_ga147decca4226959d822b73b7c31a4465}{\index{B\-L\-T/\-U\-L\-P Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}!pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid@{pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid}}
+\index{pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid@{pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid}!BLT/ULP Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}}
+\subsubsection[{pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid (
+\begin{DoxyParamCaption}
+\item[{int}]{pipid, }
+\item[{pip\-\_\-task\-\_\-t $\ast$$\ast$}]{taskp}
+\end{DoxyParamCaption}
+)}}\label{group__ULP-3-misc_ga147decca4226959d822b73b7c31a4465}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid\index{pip_get_task_by_pipid@{pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__ULP-3-misc_ga147decca4226959d822b73b7c31a4465}{pip\-\_\-get\-\_\-task\-\_\-by\-\_\-pipid( int pipid, pip\-\_\-task\-\_\-t $\ast$$\ast$taskp )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em pipid} & Pi\-P I\-D \\
+\hline
+\mbox{\tt out}  & {\em taskp} & returning Pi\-P task of the specified Pi\-P I\-D\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+{\em E\-N\-O\-E\-N\-T} & No such Pi\-P task \\
+\hline
+{\em E\-R\-A\-N\-G\-E} & The specified {\ttfamily pipid} is out of ramge \\
+\hline
+\end{DoxyRetVals}
+\hypertarget{group__ULP-3-misc_gabe36293dba51fe90f94057bb4f82f328}{\index{B\-L\-T/\-U\-L\-P Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}!pip\-\_\-set\-\_\-aux@{pip\-\_\-set\-\_\-aux}}
+\index{pip\-\_\-set\-\_\-aux@{pip\-\_\-set\-\_\-aux}!BLT/ULP Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}}
+\subsubsection[{pip\-\_\-set\-\_\-aux}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-set\-\_\-aux (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{aux}
+\end{DoxyParamCaption}
+)}}\label{group__ULP-3-misc_gabe36293dba51fe90f94057bb4f82f328}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-set\-\_\-aux\index{pip_set_aux@{pip\-\_\-set\-\_\-aux}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__ULP-3-misc_gabe36293dba51fe90f94057bb4f82f328}{pip\-\_\-set\-\_\-aux( void $\ast$aux )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em aux} & Pointer to the user dats to assocate with the calling Pi\-P task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__ULP-3-misc_ga779abad7e346657a6fd3c024e204addb}{pip\-\_\-get\-\_\-aux} 
+\end{DoxySeeAlso}
+\hypertarget{group__ULP-3-misc_ga779abad7e346657a6fd3c024e204addb}{\index{B\-L\-T/\-U\-L\-P Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}!pip\-\_\-get\-\_\-aux@{pip\-\_\-get\-\_\-aux}}
+\index{pip\-\_\-get\-\_\-aux@{pip\-\_\-get\-\_\-aux}!BLT/ULP Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}}
+\subsubsection[{pip\-\_\-get\-\_\-aux}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-aux (
+\begin{DoxyParamCaption}
+\item[{void $\ast$$\ast$}]{auxp}
+\end{DoxyParamCaption}
+)}}\label{group__ULP-3-misc_ga779abad7e346657a6fd3c024e204addb}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-aux\index{pip_get_aux@{pip\-\_\-get\-\_\-aux}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__ULP-3-misc_ga779abad7e346657a6fd3c024e204addb}{pip\-\_\-get\-\_\-aux( void $\ast$$\ast$auxp )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em auxp} & Returned user data\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-I\-N\-A\-V\-L} & {\ttfamily domainp} is {\ttfamily N\-U\-L\-L} or {\ttfamily auxp} is {\ttfamily N\-U\-L\-L} \\
+\hline
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__ULP-3-misc_gabe36293dba51fe90f94057bb4f82f328}{pip\-\_\-set\-\_\-aux} 
+\end{DoxySeeAlso}
+\hypertarget{group__ULP-3-misc_ga32119e3a41a4073b52ade76bf87a5589}{\index{B\-L\-T/\-U\-L\-P Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}!pip\-\_\-get\-\_\-sched\-\_\-domain@{pip\-\_\-get\-\_\-sched\-\_\-domain}}
+\index{pip\-\_\-get\-\_\-sched\-\_\-domain@{pip\-\_\-get\-\_\-sched\-\_\-domain}!BLT/ULP Miscellaneous Function@{B\-L\-T/\-U\-L\-P Miscellaneous Function}}
+\subsubsection[{pip\-\_\-get\-\_\-sched\-\_\-domain}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-get\-\_\-sched\-\_\-domain (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-task\-\_\-t $\ast$$\ast$}]{domainp}
+\end{DoxyParamCaption}
+)}}\label{group__ULP-3-misc_ga32119e3a41a4073b52ade76bf87a5589}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-get\-\_\-sched\-\_\-domain\index{pip_get_sched_domain@{pip\-\_\-get\-\_\-sched\-\_\-domain}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__ULP-3-misc_ga32119e3a41a4073b52ade76bf87a5589}{pip\-\_\-get\-\_\-sched\-\_\-domain( pip\-\_\-task\-\_\-t $\ast$$\ast$domainp )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt out}  & {\em domainp} & Returned scheduling domain of the current task\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+\end{DoxyRetVals}

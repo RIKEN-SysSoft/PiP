@@ -44,6 +44,56 @@ struct pip_gdbif_root	*pip_gdbif_root PIP_PRIVATE;
 static char *pip_path_gdb;
 static char *pip_command_gdb;
 
+int pip_is_initialized( void ) {
+  return pip_task != NULL && pip_root != NULL;
+}
+
+int pip_tkill( int tid, int signal ) {
+  return (int) syscall( (long int) SYS_tkill, tid, signal );
+}
+
+/* for internal use */
+int pip_raise_signal( pip_task_internal_t *taski, int sig ) {
+  int err = ESRCH;
+
+  DBGF( "raise signal (%s) to PIPID:%d", strsignal(sig), TA(taski)->pipid );
+  if( AA(taski)->flag_exit == 0 ) {
+    if( TA(taski)->task_sched != taski &&
+	TA(taski)->schedq_len > 0 ) {
+      /* Not allowed to a signal to an inactive task */
+      RETURN( EPERM );
+    } else if( AA(taski)->tid > 0 ) {
+      DBGF( "taski->annex->tid: %d", AA(taski)->tid );
+      if( pip_is_threaded_() ) {
+	err = pthread_kill( MA(taski)->thread, sig );
+      } else {
+	errno = 0;
+	if( pip_tkill( AA(taski)->tid, sig ) ) {
+	  RETURN( errno );
+	}
+	err = 0;
+      }
+    }
+  }
+  RETURN( err );
+}
+
+
+void pip_abort( void ) __attribute__((noreturn));
+void pip_abort( void ) {
+  /* thin function may be called either root or tasks */
+  /* SIGTERM is delivered to root so that PiP tasks   */
+  /* are forced to ternminate                         */
+  ENTER;
+  if( pip_root != NULL ) {
+    (void) pip_raise_signal( pip_root->task_root, SIGTERM );
+  } else {
+    kill( pip_gettid(), SIGTERM );
+  }
+  while( 1 ) sleep( 1 );	/* wait for being killed */
+  NEVER_REACH_HERE;
+}
+
 pid_t pip_gettid( void ) {
   return (pid_t) syscall( (long int) SYS_gettid );
 }

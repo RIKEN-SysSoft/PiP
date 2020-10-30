@@ -40,7 +40,7 @@
  * \synopsis
  * printpipmode
  *
- * \sa pip-mode(1)
+ * \sa pip-mode
  */
 
 #include <pip.h>

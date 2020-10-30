@@ -36,15 +36,15 @@
 ### PiP root and/or PiP task
 ###
 ### \synopsis
-### pipcheck [ OPTION ] pip-prog [...]
+### pip-check [ OPTION ] PIP-PROG [...]
 ###
 ### \param -r check if a.out can be PiP root
 ### \param -t check if a.out can be PiP task
-### \param -b check if a.out can be PiP root and/or PiP task
+### \param -b check if a.out can be PiP root and/or PiP task (default)
 ### \param -v show reason
 ### \param -h show this message
 ###
-### \sa pipcc(1)
+### \sa pipcc
 ###
 
 ldso="@dynamic_linker@"

@@ -41,12 +41,11 @@ LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 
 LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
-
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
 INTERP = $(dynamic_linker)
 
-CPPFLAGS += $(PIP_CPPFLAGS)  $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
+CPPFLAGS += $(PIP_CPPFLAGS) $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
 	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
 	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
@@ -56,27 +55,10 @@ CPPFLAGS += $(PIP_CPPFLAGS)  $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
 	-DPREFIX=\"$(prefix)\" \
 	-DLDLINUX=\"$(dynamic_linker)\" \
 	$(CPPFLAGS_DEBUG)
-CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
-LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
+CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREADFLAG)
+LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREADFLAG)
 
 LIBMAIN = -Wl,-e,pip_main
-
-DEPINCS =  $(PIP_INCDIR)/config.h		\
-	   $(PIP_INCDIR)/pip.h			\
-	   $(PIP_INCDIR)/pip_blt.h		\
-	   $(PIP_INCDIR)/pip_internal.h		\
-	   $(PIP_INCDIR)/pip_context.h		\
-	   $(PIP_INCDIR)/pip_clone.h		\
-	   $(PIP_INCDIR)/pip_util.h		\
-	   $(PIP_INCDIR)/pip_dlfcn.h		\
-	   $(PIP_INCDIR)/pip_signal.h		\
-	   $(PIP_INCDIR)/pip_machdep.h 		\
-	   $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
-	   $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
-	   $(PIP_INCDIR)/pip_debug.h 		\
-	   $(PIP_INCDIR)/pip_gdbif.h		\
-	   $(PIP_INCDIR)/pip_gdbif_func.h	\
-	   $(PIP_INCDIR)/pip_gdbif_queue.h
 
 SRCS  = pip_main.c pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 	pip_blt.c pip_sync.c pip_util.c pip_gdbif.c pip_namexp.c \
@@ -84,10 +66,27 @@ SRCS  = pip_main.c pip.c pip_spawn.c pip_wait.c pip_got.c pip_clone.c \
 
 OBJS_PIPINIT = pip_init.o
 
-OBJS  = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
+OBJS = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
 	pip_context.o
+
+DEPINCS =  $(PIP_INCDIR)/pip_config.h		\
+	   $(PIP_INCDIR)/pip.h			\
+	   $(PIP_INCDIR)/pip_blt.h		\
+	   $(PIP_INCDIR)/pip_internal.h		\
+	   $(PIP_INCDIR)/pip_context.h		\
+	   $(PIP_INCDIR)/pip_clone.h		\
+	   $(PIP_INCDIR)/pip_dlfcn.h		\
+	   $(PIP_INCDIR)/pip_signal.h		\
+	   $(PIP_INCDIR)/pip_machdep.h 		\
+	   $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
+	   $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
+	   $(PIP_INCDIR)/pip_gdbif.h		\
+	   $(PIP_INCDIR)/pip_gdbif_func.h	\
+	   $(PIP_INCDIR)/pip_gdbif_queue.h	\
+	   $(PIP_INCDIR)/pip_util.h		\
+	   $(PIP_INCDIR)/pip_debug.h
 
 all: $(LIBRARIES)
 
@@ -139,3 +138,6 @@ post-clean-hook:
 
 post-veryclean-hook:
 	$(RM) build.h concat.h concat
+
+post-distclean-hook:
+	$(RM) fctx_defs.mk

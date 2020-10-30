@@ -38,7 +38,7 @@
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
-#include <config.h>
+#include <pip_config.h>
 #include <pip_machdep.h>
 
 #ifdef PIP_USE_FCONTEXT

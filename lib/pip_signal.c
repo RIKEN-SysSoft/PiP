@@ -39,36 +39,6 @@ int pip_tgkill( int tgid, int tid, int signal ) {
   return (int) syscall( (long int) SYS_tgkill, tgid, tid, signal );
 }
 
-int pip_tkill( int tid, int signal ) {
-  return (int) syscall( (long int) SYS_tkill, tid, signal );
-}
-
-/* for internal use */
-int pip_raise_signal( pip_task_internal_t *taski, int sig ) {
-  int err = ESRCH;
-
-  DBGF( "raise signal (%s) to PIPID:%d", strsignal(sig), TA(taski)->pipid );
-  if( AA(taski)->flag_exit == 0 ) {
-    if( TA(taski)->task_sched != taski &&
-	TA(taski)->schedq_len > 0 ) {
-      /* Not allowed to a signal to an inactive task */
-      RETURN( EPERM );
-    } else if( AA(taski)->tid > 0 ) {
-      DBGF( "taski->annex->tid: %d", AA(taski)->tid );
-      if( pip_is_threaded_() ) {
-	err = pthread_kill( MA(taski)->thread, sig );
-      } else {
-	errno = 0;
-	if( pip_tkill( AA(taski)->tid, sig ) ) {
-	  RETURN( errno );
-	}
-	err = 0;
-      }
-    }
-  }
-  RETURN( err );
-}
-
 int pip_kill( int pipid, int signal ) {
   int err;
   if( pip_root == NULL            ) RETURN( EPERM  );

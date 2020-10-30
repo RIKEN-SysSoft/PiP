@@ -1093,45 +1093,6 @@ int pip_blt_spawn_( pip_spawn_program_t *progp,
   int pip_get_task_by_pipid( int pipid, pip_task_t **taskp );
 
   /**
-   * \PiPManEntry{pip_set_aux}
-   *
-   * \brief Associate user data with a PiP task
-   *
-   * \synopsis
-   * \#include <pip.h> \n
-   * int pip_set_aux( void *aux );
-   *
-   * \param[in] aux Pointer to the user dats to assocate with the calling PiP task
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EPERM PiP library is not yet initialized or already
-   * finalized
-   *
-   * \sa pip_get_aux
-   */
-  int pip_set_aux( void *aux );
-
-  /**
-   * \PiPManEntry{pip_get_aux}
-   *
-   * \brief Retrieve the user data associated with a PiP task
-   *
-   * \synopsis
-   * \#include <pip.h> \n
-   * int pip_get_aux( void **auxp );
-   *
-   * \param[out] auxp Returned user data
-   *
-   * \return Return 0 on success. Return an error code on error.
-   * \retval EINAVL \c domainp is \c NULL or \c auxp is \c NULL
-   * \retval EPERM PiP library is not yet initialized or already
-   * finalized
-   *
-   * \sa pip_set_aux
-   */
-  int pip_get_aux( void **auxp );
-
-  /**
    * \PiPManEntry{pip_get_sched_domain}
    *
    * \brief Return the task representing the scheduling domain
