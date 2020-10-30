@@ -225,17 +225,19 @@ static spawn_t *new_spawn( void ) {
   return spawn;
 }
 
+static void free_arg( arg_t *arg ) {
+  if( arg == NULL ) return;
+  free_arg( arg->next );
+  free( arg );
+}
+
+static void free_corebind( corebind_t *cb ) {
+  if( cb == NULL ) return;
+  free_corebind( cb->next );
+  free( cb );
+}
+
 static void free_spawn( spawn_t *spawn ) {
-  void free_arg( arg_t *arg ) {
-    if( arg == NULL ) return;
-    free_arg( arg->next );
-    free( arg );
-  }
-  void free_corebind( corebind_t *cb ) {
-    if( cb == NULL ) return;
-    free_corebind( cb->next );
-    free( cb );
-  }
   if( spawn == NULL ) return;
   free_spawn( spawn->next );
   free_arg( spawn->args );

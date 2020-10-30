@@ -47,10 +47,6 @@ int pip_is_debug_build() {
 #endif
 }
 
-int pip_is_initialized( void ) {
-  return pip_task != NULL && pip_root != NULL;
-}
-
 int pip_isa_task( void ) {
   return pip_root != NULL && pip_task != NULL &&
     pip_root->task_root != pip_task;

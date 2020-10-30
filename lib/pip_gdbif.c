@@ -31,7 +31,7 @@
  */
 /*
  * Written by Noriyuki Soda (soda@sra.co.jp) and
- * Atsushi HORI <ahori@riken.jp>, 2018, 2019
+ * Atsushi HORI <ahori@riken.jp>
  */
 
 #include <pip_internal.h>

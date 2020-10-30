@@ -1837,7 +1837,7 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 
-ac_config_headers="$ac_config_headers include/config.h"
+ac_config_headers="$ac_config_headers include/pip_config.h"
 
 
 # Specialized system macros
@@ -3856,7 +3856,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "include/config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/config.h" ;;
+    "include/pip_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/pip_config.h" ;;
     "build/config.mk") CONFIG_FILES="$CONFIG_FILES build/config.mk" ;;
     "release/version.conf") CONFIG_FILES="$CONFIG_FILES release/version.conf" ;;
     "bin/pipcc") CONFIG_FILES="$CONFIG_FILES bin/pipcc" ;;

@@ -30,17 +30,11 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2017
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_internal_h_
 #define _pip_internal_h_
-
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
 
 #ifdef DOXYGEN_INPROGRESS
 #ifndef INLINE
@@ -52,13 +46,16 @@
 #endif
 #endif
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
 
 #include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/resource.h>
 #include <semaphore.h>
 #include <ucontext.h>
@@ -68,9 +65,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <dirent.h>
 #include <libgen.h>
+#include <fcntl.h>
+#include <link.h>
 
-#include <config.h>
+#include <pip_config.h>
 
 #include <pip_dlfcn.h>
 #include <pip_machdep.h>

@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_h_
@@ -38,20 +38,11 @@
 
 #ifndef DOXYGEN_INPROGRESS
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <pthread.h>
-#include <link.h>
-#include <dlfcn.h>
-#include <dirent.h>
-#include <fcntl.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include <stddef.h>
+#include <string.h>
 #include <signal.h>
 #include <stdio.h>
-#include <string.h>
 #include <errno.h>
 
 #define PIP_OPTS_NONE			(0x0)
@@ -118,7 +109,7 @@ typedef struct {
   void		*reserved[2];
 } pip_spawn_program_t;
 
-typedef int  (*pip_spawnhook_t)      ( void* );
+typedef int  (*pip_spawnhook_t)( void* );
 
 typedef struct {
   pip_spawnhook_t	before;

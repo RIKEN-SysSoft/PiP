@@ -1,0 +1,154 @@
+\hypertarget{group__PiP-7-sync}{\section{Pi\-P Synchronization Functions}
+\label{group__PiP-7-sync}\index{Pi\-P Synchronization Functions@{Pi\-P Synchronization Functions}}
+}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+int \hyperlink{group__PiP-7-sync_ga50469f21446ce86ea18ddd282cf15894}{pip\-\_\-yield} (int flag)
+\begin{DoxyCompactList}\small\item\em Yield. \end{DoxyCompactList}\item 
+int \hyperlink{group__PiP-7-sync_ga84022f9c64f431e7d513342aeed0b61e}{pip\-\_\-barrier\-\_\-init} (pip\-\_\-barrier\-\_\-t $\ast$barrp, int n)
+\begin{DoxyCompactList}\small\item\em initialize barrier synchronization structure \end{DoxyCompactList}\item 
+int \hyperlink{group__PiP-7-sync_gaca103c9732a8e28ee8faf79ef4a69e4f}{pip\-\_\-barrier\-\_\-wait} (pip\-\_\-barrier\-\_\-t $\ast$barrp)
+\begin{DoxyCompactList}\small\item\em wait on barrier synchronization in a busy-\/wait way \end{DoxyCompactList}\item 
+int \hyperlink{group__PiP-7-sync_ga70dab15271b84fe05d7088a6cf8bf784}{pip\-\_\-barrier\-\_\-fin} (pip\-\_\-barrier\-\_\-t $\ast$barrp)
+\begin{DoxyCompactList}\small\item\em finalize barrier synchronization structure \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+\hypertarget{pip-sync}{}\subsubsection{Pi\-P synchronization functions}\label{pip-sync}
+\begin{DoxyParagraph}{Description}
+Synchronization functions for Pi\-P tasks 
+\end{DoxyParagraph}
+
+
+\subsection{Function Documentation}
+\hypertarget{group__PiP-7-sync_ga50469f21446ce86ea18ddd282cf15894}{\index{Pi\-P Synchronization Functions@{Pi\-P Synchronization Functions}!pip\-\_\-yield@{pip\-\_\-yield}}
+\index{pip\-\_\-yield@{pip\-\_\-yield}!PiP Synchronization Functions@{Pi\-P Synchronization Functions}}
+\subsubsection[{pip\-\_\-yield}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-yield (
+\begin{DoxyParamCaption}
+\item[{int}]{flag}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-7-sync_ga50469f21446ce86ea18ddd282cf15894}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-yield\index{pip_yield@{pip\-\_\-yield}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-7-sync_ga50469f21446ce86ea18ddd282cf15894}{pip\-\_\-yield( int flag )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em flag} & to specify the behavior of yielding. Unused and reserved for B\-L\-T/\-U\-L\-P (in Pi\-P-\/v3)\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Thuis function always succeeds and returns zero.
+\end{DoxyReturn}
+\begin{DoxySeeAlso}{See Also}
+sched\-\_\-yield(\-Linux 2) 
+
+pthread\-\_\-yield(\-Linux 3) 
+\end{DoxySeeAlso}
+\hypertarget{group__PiP-7-sync_ga84022f9c64f431e7d513342aeed0b61e}{\index{Pi\-P Synchronization Functions@{Pi\-P Synchronization Functions}!pip\-\_\-barrier\-\_\-init@{pip\-\_\-barrier\-\_\-init}}
+\index{pip\-\_\-barrier\-\_\-init@{pip\-\_\-barrier\-\_\-init}!PiP Synchronization Functions@{Pi\-P Synchronization Functions}}
+\subsubsection[{pip\-\_\-barrier\-\_\-init}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-barrier\-\_\-init (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-barrier\-\_\-t $\ast$}]{barrp, }
+\item[{int}]{n}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-7-sync_ga84022f9c64f431e7d513342aeed0b61e}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-barrier\-\_\-init\index{pip_barrier_init@{pip\-\_\-barrier\-\_\-init}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-7-sync_ga84022f9c64f431e7d513342aeed0b61e}{pip\-\_\-barrier\-\_\-init( pip\-\_\-barrier\-\_\-t $\ast$barrp, int n )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em barrp} & pointer to a Pi\-P barrier structure \\
+\hline
+\mbox{\tt in}  & {\em n} & number of participants of this barrier synchronization\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error.
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+{\em E\-I\-N\-A\-V\-L} & {\ttfamily n} is invalid\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__PiP-7-sync_gaca103c9732a8e28ee8faf79ef4a69e4f}{pip\-\_\-barrier\-\_\-wait} 
+
+\hyperlink{group__PiP-7-sync_ga70dab15271b84fe05d7088a6cf8bf784}{pip\-\_\-barrier\-\_\-fin} 
+\end{DoxySeeAlso}
+\hypertarget{group__PiP-7-sync_gaca103c9732a8e28ee8faf79ef4a69e4f}{\index{Pi\-P Synchronization Functions@{Pi\-P Synchronization Functions}!pip\-\_\-barrier\-\_\-wait@{pip\-\_\-barrier\-\_\-wait}}
+\index{pip\-\_\-barrier\-\_\-wait@{pip\-\_\-barrier\-\_\-wait}!PiP Synchronization Functions@{Pi\-P Synchronization Functions}}
+\subsubsection[{pip\-\_\-barrier\-\_\-wait}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-barrier\-\_\-wait (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-barrier\-\_\-t $\ast$}]{barrp}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-7-sync_gaca103c9732a8e28ee8faf79ef4a69e4f}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-barrier\-\_\-wait\index{pip_barrier_wait@{pip\-\_\-barrier\-\_\-wait}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-7-sync_gaca103c9732a8e28ee8faf79ef4a69e4f}{pip\-\_\-barrier\-\_\-wait( pip\-\_\-barrier\-\_\-t $\ast$barrp )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em barrp} & pointer to a Pi\-P barrier structure\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error.
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__PiP-7-sync_ga84022f9c64f431e7d513342aeed0b61e}{pip\-\_\-barrier\-\_\-init} 
+
+\hyperlink{group__PiP-7-sync_ga70dab15271b84fe05d7088a6cf8bf784}{pip\-\_\-barrier\-\_\-fin} 
+\end{DoxySeeAlso}
+\hypertarget{group__PiP-7-sync_ga70dab15271b84fe05d7088a6cf8bf784}{\index{Pi\-P Synchronization Functions@{Pi\-P Synchronization Functions}!pip\-\_\-barrier\-\_\-fin@{pip\-\_\-barrier\-\_\-fin}}
+\index{pip\-\_\-barrier\-\_\-fin@{pip\-\_\-barrier\-\_\-fin}!PiP Synchronization Functions@{Pi\-P Synchronization Functions}}
+\subsubsection[{pip\-\_\-barrier\-\_\-fin}]{\setlength{\rightskip}{0pt plus 5cm}int pip\-\_\-barrier\-\_\-fin (
+\begin{DoxyParamCaption}
+\item[{pip\-\_\-barrier\-\_\-t $\ast$}]{barrp}
+\end{DoxyParamCaption}
+)}}\label{group__PiP-7-sync_ga70dab15271b84fe05d7088a6cf8bf784}
+\begin{DoxyParagraph}{Name}
+pip\-\_\-barrier\-\_\-fin\index{pip_barrier_fin@{pip\-\_\-barrier\-\_\-fin}}
+\end{DoxyParagraph}
+\begin{DoxyParagraph}{Synopsis}
+\#include $<$\hyperlink{pip_8h_source}{pip.\-h}$>$ \par
+int \hyperlink{group__PiP-7-sync_ga70dab15271b84fe05d7088a6cf8bf784}{pip\-\_\-barrier\-\_\-fin( pip\-\_\-barrier\-\_\-t $\ast$barrp )};
+\end{DoxyParagraph}
+
+\begin{DoxyParams}[1]{Parameters}
+\mbox{\tt in}  & {\em barrp} & pointer to a Pi\-P barrier structure\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+Return 0 on success. Return an error code on error. 
+\end{DoxyReturn}
+
+\begin{DoxyRetVals}{Return values}
+{\em E\-P\-E\-R\-M} & Pi\-P library is not yet initialized or already finalized \\
+\hline
+{\em E\-B\-U\-S\-Y} & there are some tasks wating for barrier synchronization\\
+\hline
+\end{DoxyRetVals}
+\begin{DoxySeeAlso}{See Also}
+\hyperlink{group__PiP-7-sync_ga84022f9c64f431e7d513342aeed0b61e}{pip\-\_\-barrier\-\_\-init} 
+
+\hyperlink{group__PiP-7-sync_gaca103c9732a8e28ee8faf79ef4a69e4f}{pip\-\_\-barrier\-\_\-wait} 
+\end{DoxySeeAlso}

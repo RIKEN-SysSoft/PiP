@@ -36,12 +36,6 @@
 #ifndef _pip_dlfcn_h_
 #define _pip_dlfcn_h_
 
-#ifdef DOXYGEN_SHOULD_SKIP_THIS
-#ifndef DOXYGEN_INPROGRESS
-#define DOXYGEN_INPROGRESS
-#endif
-#endif
-
 #ifndef DOXYGEN_INPROGRESS
 
 #ifdef __cplusplus

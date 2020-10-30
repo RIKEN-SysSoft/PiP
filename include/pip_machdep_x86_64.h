@@ -30,13 +30,13 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016-2017
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_machdep_x86_64_h
 #define _pip_machdep_x86_64_h
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
 /**** Spin Lock ****/
 

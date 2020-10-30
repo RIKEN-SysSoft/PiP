@@ -30,7 +30,7 @@
  * official policies, either expressed or implied, of the PiP project.$
  */
 /*
- * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
+ * Written by Atsushi HORI <ahori@riken.jp>
  */
 
 #include <pip_internal.h>
@@ -238,11 +238,13 @@ static int pip_check_opt_and_env( int *optsp ) {
     RETURN( EINVAL );
   }
 
-  if( opts & PIP_MODE_PTHREAD &&
-      opts & PIP_MODE_PROCESS ) RETURN( EINVAL );
-  if( opts & PIP_MODE_PROCESS ) {
-    if( ( opts & PIP_MODE_PROCESS_PRELOAD  ) == PIP_MODE_PROCESS_PRELOAD &&
-	( opts & PIP_MODE_PROCESS_PIPCLONE ) == PIP_MODE_PROCESS_PIPCLONE){
+  if( mode & PIP_MODE_PTHREAD &&
+      mode & PIP_MODE_PROCESS ) RETURN( EINVAL );
+  if( mode & PIP_MODE_PROCESS ) {
+    if( mode != PIP_MODE_PROCESS_PRELOAD &&
+	mode != PIP_MODE_PROCESS_GOT     &&
+	mode != PIP_MODE_PROCESS_PIPCLONE ) {
+      DBGF( "mode:0x%x", mode );
       RETURN (EINVAL );
     }
   }
@@ -261,6 +263,7 @@ static int pip_check_opt_and_env( int *optsp ) {
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
       desired =
 	PIP_MODE_PROCESS_PRELOAD_BIT |
+	PIP_MODE_PROCESS_GOT_BIT     |
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
       desired = PIP_MODE_PROCESS_PRELOAD_BIT;
@@ -1467,6 +1470,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     }
     args->start_arg = progp->arg;
   }
+  task->aux           = progp->aux;
   if( progp->exp != NULL ) {
     task->import_root = progp->exp;
   } else {
@@ -1684,21 +1688,6 @@ void pip_exit( int extval ) {
   } else {
     pip_return_from_start_func( pip_task, extval );
   }
-  NEVER_REACH_HERE;
-}
-
-void pip_abort( void ) __attribute__((noreturn));
-void pip_abort( void ) {
-  /* thin function may be called either root or tasks */
-  /* SIGTERM is delivered to root so that PiP tasks   */
-  /* are forced to ternminate                         */
-  ENTER;
-  if( pip_root != NULL ) {
-    (void) pip_raise_signal( pip_root->task_root, SIGTERM );
-  } else {
-    kill( pip_gettid(), SIGTERM );
-  }
-  while( 1 ) sleep( 1 );	/* wait for being killed */
   NEVER_REACH_HERE;
 }
 

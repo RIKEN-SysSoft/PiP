@@ -61,9 +61,9 @@ dynamic_linker=@dynamic_linker@
 
 : ${CC:=cc}
 
-self=$0;
-pipccdir=`dirname $self`;
-pipccdir=`cd $pipccdir; pwd`;
+self=$0
+dir=`dirname $self`
+pipccdir=`cd $dir; pwd`
 
 err_nostatic() {
     echo "$self does not support static linking" >&2;
@@ -109,21 +109,32 @@ if ${no_pip}; then
 fi
 
 if $pipbuild ; then
-    PIP_INCFLAGS="-I${SRCTOP}/include";
-    PIP_LDFLAGS="-L ${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib";
+    PIP_INCDIR=${SRCTOP}/include
+    PIP_LIBDIR=${SRCTOP}/lib
 elif $pipinstall ; then
-    PIP_INCFLAGS="-I${PREFIX}/include";
-    PIP_LDFLAGS="-L${PREFIX}/lib -Wl,-rpath=${PREFIX}/lib";
+    PIP_INCDIR=${PREFIX}/include
+    PIP_LIBDIR=${PREFIX}/lib
 else
     case $pipccdir in
-	${SRCTOP}/*)
-	    PIP_INCFLAGS="-I${SRCTOP}/include";
-	    PIP_LDFLAGS="-L${SRCTOP}/lib -Wl,-rpath=${SRCTOP}/lib";;
-	${PREFIX}/*)
-	    PIP_INCFLAGS="-I${PREFIX}/include";
-	    PIP_LDFLAGS="-L${PREFIX}/lib -Wl,-rpath=${PREFIX}/lib";;
+	${SRCTOP}/bin)
+	    PIP_INCDIR=${SRCTOP}/include;
+	    PIP_LIBDIR=${SRCTOP}/lib ;;
+	${PREFIX}/bin)
+	    PIP_INCDIR=${PREFIX}/include;
+	    PIP_LIBDIR=${PREFIX}/lib ;;
     esac
 fi
+
+if ! [ -f ${PIP_INCDIR}/pip.h ]; then
+    echo "Unable to find pip.h"
+    exit 1
+fi
+
+PIP_INCFLAGS="-I${PIP_INCDIR}"
+PIP_LDFLAGS="-L${PIP_LIBDIR} -Wl,-rpath=${PIP_LIBDIR}"
+PIP_LIB=${PIP_LIBDIR}/libpip.so
+
+PIP_VERSION_MAJOR=`grep PACKAGE_VERSION ${PIP_INCDIR}/pip_config.h | cut -d '.' -f 1`
 
 GLIBC_CFLAGS=""
 GLIBC_LDFLAGS=""

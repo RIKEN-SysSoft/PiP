@@ -26,7 +26,6 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 # $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019, 2020$
 
 top_builddir = ../..
 top_srcdir = $(top_builddir)
@@ -34,22 +33,13 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-CFLAGS  = $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH)
-
-DEPINCS = $(PIP_INCDIR)/pip.h
-
-SRCS  = hello.c
-
-PROGRAMS  = hello
-
+SRCS     = hello.c
+PROGRAMS = hello
 PROGRAMS_TO_INSTALL = # nothing
 
 EXAMPLES = hello.c
 
 include $(top_srcdir)/build/rule.mk
 
-%: %.c $(SRCS) $(DEPINCS) $(PIP_LIBS) Makefile
-	$(CC) $(CFLAGS) $< -o $@
-
-post-clean-hook:
-	$(RM) *.E *.log
+%: %.c Makefile
+	$(PIPCC) $< -o $@

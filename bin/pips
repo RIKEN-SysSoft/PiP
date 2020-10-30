@@ -30,22 +30,25 @@
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pips pips
+### \page pips pips
 ###
 ### \brief List or kill running PiP tasks
 ###
 ### \synopsis
-### pips [OPTIONS] [PIP-COMMAND ...]
+### pips [ OPTION ] [ PIP-PROG-NAME ...]
 ###
-### \param -s Send the specified signal (followed by the "-b" option)
-### to the specified PiP tasks
-### \param -k same as \b -s
-### \param -l List (using the Linux ps command) running PiP tasks specified.
-### This is the default action.
+### \description
+### The following options are avilable.
+###
+### \param "-s SIGNAL" Send the specified signal to the specified PiP tasks
+### \param -k Same as 'pips -s TERM'
+### \param -l  List (ps command) running PiP tasks specified. This is the default action.
+### \param "--list" Same as 'pips -l'
 ### \param -t Show running PiP tasks specified by using the top command.
-### Due to the top command limitation, only 20 PiP tasks will be shown.
+### \param -v Verbose mode
+### \param "--top" Same sa 'pip -t'
 ###
-### \sa pip-exec
+### \sa ps(1), top(1)
 ###
 
 isa_pip_program() {
@@ -152,7 +155,7 @@ done
 
 pipcmds=$@
 if [ "x$pipcmds" == x ]; then
-    ##echo "ps H -no-headers -u $user --format '%c %p'"
+    ##echo "ps H $NOHEADER_OPT -u $user --format '%c %p'"
     ps=`ps H $NOHEADER_OPT -u $user --format '%c %p'`
     decompose_psout $ps;
 else
@@ -197,7 +200,7 @@ else
 	fi
     elif $flag_top; then
 	tpids=`top_pids $pids`;
-	echo top H -p$tpids;
+	##echo top H -p$tpids;
 	top H -p$tpids;
 	extval=$?;
     else

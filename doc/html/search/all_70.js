@@ -5,11 +5,11 @@ var searchData=
   ['pip_20task_20termination',['PiP task termination',['../group__PiP-5-exit.html',1,'']]],
   ['pip_20siganling_20functions',['PiP Siganling Functions',['../group__PiP-6-signal.html',1,'']]],
   ['pip_20synchronization_20functions',['PiP Synchronization Functions',['../group__PiP-7-sync.html',1,'']]],
-  ['pip_2dcheck',['pip-check',['../group__pip-check.html',1,'']]],
+  ['pip_2dcheck',['pip-check',['../pip-check.html',1,'']]],
   ['pip_2dexec',['pip-exec',['../pip-exec.html',1,'']]],
   ['pip_20export_20and_20import',['PiP Export and Import',['../group__PiP-2-export.html',1,'']]],
   ['pip_20initialization_2ffinalization',['PiP Initialization/Finalization',['../group__PiP-0-init-fin.html',1,'']]],
-  ['pip_2dman',['pip-man',['../group__pip-man.html',1,'']]],
+  ['pip_2dman',['pip-man',['../pip-man.html',1,'']]],
   ['pip_2dmode',['pip-mode',['../pip-mode.html',1,'']]],
   ['pip_20query_20functions',['PiP Query functions',['../group__PiP-4-query.html',1,'']]],
   ['pip_20signaling_20functions',['PiP signaling functions',['../group__PiP-6-signal.html',1,'']]],
@@ -54,6 +54,6 @@ var searchData=
   ['pip_5fwait_5fany',['pip_wait_any',['../group__PiP-3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36',1,'pip.h']]],
   ['pip_5fyield',['pip_yield',['../group__PiP-7-sync.html#ga50469f21446ce86ea18ddd282cf15894',1,'pip.h']]],
   ['pipcc',['pipcc',['../pipcc.html',1,'']]],
-  ['pips',['pips',['../group__pips.html',1,'']]],
-  ['printpipmode',['printpipmode',['../group__printpipmode.html',1,'']]]
+  ['pips',['pips',['../pips.html',1,'']]],
+  ['printpipmode',['printpipmode',['../printpipmode.html',1,'']]]
 ];

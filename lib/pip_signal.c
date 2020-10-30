@@ -40,29 +40,6 @@ int pip_tgkill( int tgid, int tid, int signal ) {
   return (int) syscall( (long int) SYS_tgkill, tgid, tid, signal );
 }
 
-int pip_tkill( int tid, int signal ) {
-  return (int) syscall( (long int) SYS_tkill, tid, signal );
-}
-
-/* for internal use */
-int pip_raise_signal( pip_task_t *task, int sig ) {
-  int err = ESRCH;
-
-  DBGF( "raise signal (%s) to PIPID:%d PID:%d TID:%d",
-	strsignal(sig),
-	task->pipid,
-	getpid(),
-	task->tid );
-  if( task->flag_exit == 0 ) {
-    if( task->tid > 0 ) {
-      errno = 0;
-      (void) pip_tkill( task->tid, sig );
-      err = errno;
-    }
-  }
-  RETURN( err );
-}
-
 int pip_kill( int pipid, int signal ) {
   int err;
   if( pip_root == NULL             ) RETURN( EPERM  );

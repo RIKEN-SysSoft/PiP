@@ -24,7 +24,7 @@ veryclean: clean testclean \
 
 distclean: veryclean \
 	subdir-distclean header-veryclean lib-distclean prog-distclean \
-	doxygen-distclean distclean-here post-distclean-hook
+	distclean-here post-distclean-hook
 .PHONY: distclean
 
 documents: subdir-documents doc-here post-documents-hook

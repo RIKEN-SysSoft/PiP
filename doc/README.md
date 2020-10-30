@@ -374,7 +374,9 @@ MPI Communication," in SC’20 (to appear)
 * [HPDC'18](doc/slides/HPDC18.pdf)
 * [ROSS'18](doc/slides/HPDC18-ROSS.pdf)
 * [IPDPS/RADR'20](doc/slides/IPDPS-RADR-2020.pdf)
+
 # Author
+
 Atsushi Hori<br>
 Riken Center for Commputational Science (R-CCS)<br>
 Japan<br>

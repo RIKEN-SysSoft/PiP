@@ -36,11 +36,12 @@ HEADERS = pip.h pip_util.h pip_clone.h pip_internal.h \
 	pip_machdep.h pip_machdep_x86_64.h pip_machdep_aarch64.h \
 	pip_gdbif.h pip_gdbif_enums.h pip_gdbif_queue.h \
 	xpmem.h
+
 MAN3_SRCS = pip.h
 
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk
 
 post-veryclean-hook:
-	$(RM) config.h
+	$(RM) pip_config.h
 	$(RM) .doxygen_*

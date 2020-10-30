@@ -30,7 +30,7 @@
   * official policies, either expressed or implied, of the PiP project.$
 */
 /*
-  * Written by Atsushi HORI <ahori@riken.jp>, 2016, 2017
+  * Written by Atsushi HORI <ahori@riken.jp>
 */
 
 #ifndef _pip_util_h_
@@ -40,7 +40,7 @@
 /* The following functions are just utilities for debugging */
 /************************************************************/
 
-#ifndef DOXYGEN_SHOULD_SKIP_THIS
+#ifndef DOXYGEN_INPROGRESS
 
 #include <pip.h>
 

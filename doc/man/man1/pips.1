@@ -1,34 +1,40 @@
-.TH "pips" 1 "Thu Oct 22 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "pips" 1 "Fri Oct 30 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
-pips \- 
-.PP
-List or kill running PiP tasks\&.  
-
+pips \- pips 
+List or kill running PiP tasks
 .PP
 \fBSynopsis\fP
 .RS 4
-pips [OPTIONS] [PIP-COMMAND \&.\&.\&.]
+pips [ OPTION ] [ PIP-PROG-NAME \&.\&.\&.]
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+The following options are avilable\&.
 .RE
 .PP
 \fBParameters:\fP
 .RS 4
-\fI-s\fP Send the specified signal (followed by the '-b' option) to the specified PiP tasks 
+\fI-s SIGNAL\fP Send the specified signal to the specified PiP tasks 
 .br
-\fI-k\fP same as \fB-s\fP 
+\fI-k\fP Same as 'pips -s TERM' 
 .br
-\fI-l\fP List (using the Linux ps command) running PiP tasks specified\&. This is the default action\&. 
+\fI-l\fP List (ps command) running PiP tasks specified\&. This is the default action\&. 
 .br
-\fI-t\fP Show running PiP tasks specified by using the top command\&. Due to the top command limitation, only 20 PiP tasks will be shown\&.
+\fI--list\fP Same as 'pips -l' 
+.br
+\fI-t\fP Show running PiP tasks specified by using the top command\&. 
+.br
+\fI-v\fP Verbose mode 
+.br
+\fI--top\fP Same sa 'pip -t'
 .RE
 .PP
 \fBSee Also:\fP
 .RS 4
-pip-exec 
+ps(1), top(1) 
 .RE
 .PP
 
-.SH "Author"
-.PP 
-Generated automatically by Doxygen for Process-in-Process from the source code\&.

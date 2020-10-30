@@ -41,6 +41,47 @@ pip_root_t		*pip_root PIP_PRIVATE;
 pip_task_t		*pip_task PIP_PRIVATE;
 struct pip_gdbif_root	*pip_gdbif_root PIP_PRIVATE;
 
+int pip_is_initialized( void ) {
+  return pip_task != NULL && pip_root != NULL;
+}
+
+int pip_tkill( int tid, int signal ) {
+  return (int) syscall( (long int) SYS_tkill, tid, signal );
+}
+
+int pip_raise_signal( pip_task_t *task, int sig ) {
+  int err = ESRCH;
+
+  DBGF( "raise signal (%s) to PIPID:%d PID:%d TID:%d",
+	strsignal(sig),
+	task->pipid,
+	getpid(),
+	task->tid );
+  if( task->flag_exit == 0 ) {
+    if( task->tid > 0 ) {
+      errno = 0;
+      (void) pip_tkill( task->tid, sig );
+      err = errno;
+    }
+  }
+  RETURN( err );
+}
+
+void pip_abort( void ) __attribute__((noreturn));
+void pip_abort( void ) {
+  /* thin function may be called either root or tasks */
+  /* SIGTERM is delivered to root so that PiP tasks   */
+  /* are forced to ternminate                         */
+  ENTER;
+  if( pip_root != NULL ) {
+    (void) pip_raise_signal( pip_root->task_root, SIGTERM );
+  } else {
+    kill( pip_gettid(), SIGTERM );
+  }
+  while( 1 ) sleep( 1 );	/* wait for being killed */
+  NEVER_REACH_HERE;
+}
+
 pid_t pip_gettid( void ) {
   return (pid_t) syscall( (long int) SYS_gettid );
 }

@@ -166,7 +166,7 @@ int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );</dd><
 <li><b>PIP_GDB_COMMAND</b> If this PIP_GDB_COMMAND is set to a filename containing some GDB commands, then those GDB commands will be executed by the GDB in batch mode, instead of backtrace. </li>
 <li><b>PIP_GDB_SIGNALS</b> Specifying the signal(s) resulting automatic PiP-gdb attach. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol. 'all' is reserved to specify most of the signals. For example, 'ALL-TERM' means all signals excepting <code>SIGTERM</code>, another example, 'PIPE+INT' means <code>SIGPIPE</code> and <code>SIGINT</code>. Some signals such as SIGKILL and SIGCONT cannot be specified. </li>
 <li><b>PIP_SHOW_MAPS</b> If the value is 'on' and one of the above exection signals is delivered, then the memory map will be shown. </li>
-<li><b>PIP_SHOW_PIPS</b> If the value is 'on' and one of the above exection signals is delivered, then the process status by using the <code>pips</code> command (see also <a class="el" href="group__pips.html">pips</a>) will be shown.</li>
+<li><b>PIP_SHOW_PIPS</b> If the value is 'on' and one of the above exection signals is delivered, then the process status by using the <code>pips</code> command (see also <a class="el" href="pips.html">pips</a>) will be shown.</li>
 </ul>
 </dd></dl>
 <dl class="section user"><dt>Bugs</dt><dd>Is is NOT guaranteed that users can spawn tasks up to the number specified by the <em>ntasks</em> argument. There are some limitations come from outside of the PiP library (from GLIBC).</dd></dl>
@@ -178,7 +178,7 @@ int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );</dd><
 <dd>
 pip-mode </dd>
 <dd>
-<a class="el" href="group__pips.html" title="List or kill running PiP tasks. ">pips</a> </dd></dl>
+pips </dd></dl>
 
 </div>
 </div>

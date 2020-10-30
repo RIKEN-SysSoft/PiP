@@ -44,7 +44,7 @@ LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
 INTERP = $(dynamic_linker)
 
-CPPFLAGS += -I. $(PIP_CPPFLAGS) -DINTERP=\"$(INTERP)\" \
+CPPFLAGS += $(PIP_CPPFLAGS) -DINTERP=\"$(INTERP)\" \
 	-DPIP_INSTALL_GLIBCDIR=\"$(glibc_libdir)\" \
 	-DPIP_INSTALL_GLIBC=\"$(glibc_lib)\" \
 	-DPIP_INSTALL_LIBPIPINIT=\"$(default_libdir)/$(LIBRARY_PIPINIT)\" \
@@ -54,12 +54,12 @@ CPPFLAGS += -I. $(PIP_CPPFLAGS) -DINTERP=\"$(INTERP)\" \
 	-DPREFIX=\"$(prefix)\" \
 	-DLDLINUX=\"$(dynamic_linker)\" \
 	$(CPPFLAGS_DEBUG)
-CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
-LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY)
+CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREADFLAG)
+LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREADFLAG)
 
 LIBMAIN = -Wl,-e,pip_main
 
-SRCS     = pip_main.c pip.c pip_init.c pip_util.c pip_gdb.c pip_2_backport.c pip_signal.c \
+SRCS = pip_main.c pip.c pip_init.c pip_util.c pip_gdb.c pip_2_backport.c pip_signal.c \
 	pip_wait.c pip_dlfcn.c pip_gdbif.c pip_got.c pip_clone.c pip_namexp.c
 
 OBJS_PIPINIT = pip_init.o
@@ -67,26 +67,30 @@ OBJS_PIPINIT = pip_init.o
 OBJS	 = pip_main.o pip.o pip_util.o pip_2_backport.o pip_signal.o pip_wait.o \
 	pip_dlfcn.o pip_gdbif.o pip_got.o pip_clone.o pip_namexp.o $(OBJS_PIPINIT)
 
-DEPINCS  = ./build.h                            \
-	   $(PIP_INCDIR)/config.h		\
+DEPINCS =  $(PIP_INCDIR)/pip_config.h		\
 	   $(PIP_INCDIR)/pip.h			\
+	   $(PIP_INCDIR)/pip_internal.h		\
 	   $(PIP_INCDIR)/pip_clone.h		\
 	   $(PIP_INCDIR)/pip_dlfcn.h		\
 	   $(PIP_INCDIR)/pip_debug.h		\
 	   $(PIP_INCDIR)/pip_gdbif.h		\
-	   $(PIP_INCDIR)/pip_internal.h 	\
 	   $(PIP_INCDIR)/pip_machdep.h 		\
 	   $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
 	   $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
+	   $(PIP_INCDIR)/pip_gdbif.h		\
+	   $(PIP_INCDIR)/pip_gdbif_func.h	\
+	   $(PIP_INCDIR)/pip_gdbif_queue.h	\
 	   $(PIP_INCDIR)/pip_queue.h 		\
-	   $(PIP_INCDIR)/pip_util.h
+	   $(PIP_INCDIR)/pip_util.h		\
+	   $(PIP_INCDIR)/pip_debug.h
 
 include $(top_srcdir)/build/rule.mk
 
-build.h: build-header.sh
-	./build-header.sh $(CC)
+$(PIP_INCDIR)/build.h: FORCE
+	./build-header.sh $(CC) > $(PIP_INCDIR)/build.h
+.PHONY: FORCE
 
-$(OBJS): $(DEPINCS) Makefile
+$(OBJS): $(DEPINCS) $(PIP_INCDIR)/build.h Makefile
 
 $(LIBRARY): $(OBJS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
@@ -112,5 +116,8 @@ debug:
 cdebug: clean
 	CPPFLAGS="-DDEBUG" $(MAKE) all;
 
+TAGS:
+	ctags -Re
+
 post-clean-hook:
-	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT) build.h
+	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)

@@ -122,8 +122,8 @@ check:
 	$(MAKE) test
 .PHONY: check
 
-prog-distclean:
-	$(RM) config.log config.status include/config.h build/config.mk
+post-distclean-hook:
+	$(RM) config.log config.status include/pip_config.h build/config.mk
 .PHONY: prog-distclean
 
 post-install-hook:
@@ -134,7 +134,7 @@ post-clean-hook:
 	$(MAKE) -C test clean
 
 post-veryclean-hook:
-	$(RM) config.log config.status include/config.h
+	$(RM) config.log config.status include/pip_config.h
 	$(MAKE) subdir-veryclean
 
 .PHONY: TAGS

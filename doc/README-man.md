@@ -369,7 +369,9 @@ MPI Communication," in SC’20 (to appear)
 - pip\_wait\_any
 - pip\_yield
 
+
 # Author
+
 Atsushi Hori<br>
 Riken Center for Commputational Science (R-CCS)<br>
 Japan<br>

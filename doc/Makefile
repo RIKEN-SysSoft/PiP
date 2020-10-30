@@ -37,7 +37,7 @@ MAN7_SRCS = README-html.md
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk
 
-all: doc-install
+all: install
 
 ### doxygen
 
@@ -115,7 +115,7 @@ documents:
 	if which mandb; then mandb ./man -c -u; fi
 .PHONY: doxygen
 
-doc-install:
+install:
 	@echo "Installing man pages ->" $(mandir)
 	@$(MKDIR_P) $(mandir);
 	@(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
