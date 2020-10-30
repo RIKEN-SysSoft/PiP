@@ -1,19 +1,19 @@
 #!/bin/sh
 
 # $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019$
-# $PIP_VERSION: Version 1.0.0$
+# System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+# $PIP_VERSION: Version 3.0.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-# 
+#
 # 1. Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
 # 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the 
+#    notice, this list of conditions and the following disclaimer in the
 #    documentation and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -25,44 +25,167 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# 
+#
 # The views and conclusions contained in the software and documentation
 # are those of the authors and should not be interpreted as representing
 # official policies, either expressed or implied, of the PiP project.$
 
-### \addtogroup pipcc pipcc
+### \page pipcc pipcc
 ###
 ### \brief C compiler driver for PiP
 ###
-### \section synopsis SYNOPSIS
+### \synopsis
+### pipcc [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]
 ###
-###	\c \b pipcc [<b>cc-command-options</b>]
+### \param -piproot the compile (and link) as a PiP root
+### \param -piptask the compile (and link) as a PiP task
+### \param -nopip No PiP related settings will be applied
+###
+### \note The \b -piproot and \b -piptask options can be specified at the same time. In this case,
+### the compiled object can be both of PiP root and PiP task. This is also the default behavior when
+### none of them is not specified.
+###
+### \environment
+### if \p CC environment  is set then \p \$(CC) will be used as a C compiler
+###
+### \sa
+### pip-exec(1), pip-mode(1)
 ###
 
-prefix=@prefix@
-exec_prefix=@exec_prefix@
+PREFIX=@prefix@
+SRCTOP=@srcdir_top@
 
-includedir=@includedir@
-libdir=@libdir@
+glibc_incdir=@glibc_incdir@
+glibc_libdir=@glibc_libdir@
 dynamic_linker=@dynamic_linker@
 
 : ${CC:=cc}
 
-PIP_CFLAGS="-fPIE -I${includedir} -pthread"
-PIP_LDFLAGS="-pie -L${libdir} -Wl,-rpath=${libdir} -rdynamic -Wl,--dynamic-linker=${dynamic_linker}"
-PIP_LDLIBS="-lpip -ldl"
+self=$0
+dir=`dirname $self`
+pipccdir=`cd $dir; pwd`
+
+err_nostatic() {
+    echo "$self does not support static linking" >&2;
+    exit 1;
+}
 
 is_linking=true
+pip_root=true
+pip_task=true
+no_pip=false
+pipbuild=false
+pipinstall=false
+dryrun=false
+silent=false
 
-for i
-do
-	case $i in
-	-c|-E)	is_linking=false;;
-	esac
+while [ "$1" != "" ]; do
+    case $1 in
+	-c|-E|-S)  is_linking=false; opts="${opts} $1";;
+	--piproot|-piproot|--pip-root|-pip-root) pip_task=false;;
+	--piptask|-piptask|--pip-task|-pip-task) pip_root=false;;
+	--pipbuild) pipbuild=true;;
+	--pipinstall) pipinstall=true;;
+	--nopip)   no_pip=true;;
+	--silent)  silent=true;;
+	--dryrun)  dryrun=true;;
+	-Bstatic|-static) err_nostatic;;
+	*)         opts="${opts} $1";;
+    esac
+    shift;
 done
 
-if ${is_linking}; then
-	${CC} ${PIP_CFLAGS} ${PIP_LDFLAGS} "$@" ${PIP_LDLIBS}
+do_exec () {
+    if [ !${silent} ]; then
+	echo $@
+    fi
+    if [ !${dryrun} ]; then
+	exec $@
+    fi
+}
+
+if ${no_pip}; then
+    do_exec ${CC} ${opts}
+fi
+
+if $pipbuild ; then
+    PIP_INCDIR=${SRCTOP}/include
+    PIP_LIBDIR=${SRCTOP}/lib
+elif $pipinstall ; then
+    PIP_INCDIR=${PREFIX}/include
+    PIP_LIBDIR=${PREFIX}/lib
 else
-	${CC} ${PIP_CFLAGS} "$@"
+    case $pipccdir in
+	${SRCTOP}/bin)
+	    PIP_INCDIR=${SRCTOP}/include;
+	    PIP_LIBDIR=${SRCTOP}/lib ;;
+	${PREFIX}/bin)
+	    PIP_INCDIR=${PREFIX}/include;
+	    PIP_LIBDIR=${PREFIX}/lib ;;
+    esac
+fi
+
+if ! [ -f ${PIP_INCDIR}/pip.h ]; then
+    echo "Unable to find pip.h"
+    exit 1
+fi
+
+PIP_INCFLAGS="-I${PIP_INCDIR}"
+PIP_LDFLAGS="-L${PIP_LIBDIR} -Wl,-rpath=${PIP_LIBDIR}"
+PIP_LIB=${PIP_LIBDIR}/libpip.so
+
+PIP_VERSION_MAJOR=`grep PACKAGE_VERSION ${PIP_INCDIR}/pip_config.h | cut -d '.' -f 1`
+
+GLIBC_CFLAGS=""
+GLIBC_LDFLAGS=""
+GLIBC_LDLINUX=""
+if [ "${dynamic_linker}" != "" ]; then
+    GLIBC_CFLAGS="-I${glibc_incdir}"
+    GLIBC_LDFLAGS="-L${glibc_libdir} -Wl,-rpath=${glibc_libdir}"
+    GLIBC_LDLINUX="-Wl,--dynamic-linker=${dynamic_linker}"
+fi
+
+PIP_COMMON_CFLAGS="${PIP_INCFLAGS} ${GLIBC_CFLAGS}"
+PIP_COMMON_LDFLAGS="${PIP_LDFLAGS} ${GLIBC_LDFLAGS}"
+PIP_COMMON_LDLIBS="-lpip -ldl"
+
+PIP_ROOT_CFLAGS="${PIP_COMMON_CFLAGS}"
+PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
+PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
+
+PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} -fPIC"
+PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} -pie -rdynamic"
+PIP_TASK_LDLIBS="${PIP_COMMON_LDLIBS}"
+
+PIP_BOTH_CFLAGS="${PIP_COMMON_CFLAGS} -fPIC"
+PIP_BOTH_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} -pie -rdynamic"
+PIP_BOTH_LDLIBS="${PIP_COMMON_LDLIBS}"
+
+if ${pip_root} && ${pip_task}; then
+    PIP_CFLAGS="${PIP_BOTH_CFLAGS}"
+    PIP_LDFLAGS="${PIP_BOTH_LDFLAGS}"
+    PIP_LDLIBS="${PIP_BOTH_LDLIBS}"
+elif ${pip_root}; then
+    PIP_CFLAGS="${PIP_ROOT_CFLAGS}"
+    PIP_LDFLAGS="${PIP_ROOT_LDFLAGS}"
+    PIP_LDLIBS="${PIP_ROOT_LDLIBS}"
+elif ${pip_task}; then
+    PIP_CFLAGS="${PIP_TASK_CFLAGS}"
+    PIP_LDFLAGS="${PIP_TASK_LDFLAGS}"
+    PIP_LDLIBS="${PIP_TASK_LDLIBS}"
+else
+    PIP_CFLAGS="${PIP_BOTH_CFLAGS}"
+    PIP_LDFLAGS="${PIP_BOTH_LDFLAGS}"
+    PIP_LDLIBS="${PIP_BOTH_LDLIBS}"
+fi
+
+PTHREAD_FLAG="-pthread"
+
+PIPCC_DEF="-DPIPCC"
+
+if ${is_linking}; then
+    do_exec ${CC} ${PIPCC_DEF} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	${PTHREAD_FLAG} ${opts}
+else
+    do_exec ${CC} ${PIPCC_DEF} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
 fi

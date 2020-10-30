@@ -2,13 +2,33 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([pip], [1.1.0])
+AC_INIT([Process-in-Processs], [1.2.0], [pip@ml.riken.jp], [proc-in-proc],
+                               [https://github.com/RIKEN-SysSoft/PiP])
 AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
-AC_CONFIG_HEADERS([include/config.h])
+AC_CONFIG_HEADERS([include/pip_config.h])
 
 # Specialized system macros
+AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
+
+case "$target_os" in
+     linux*) true;;
+     *) AC_MSG_ERROR([Unsupported OS]);;
+esac
+
+case "$target" in
+      x86_64-*)  true;;
+      aarch64-*) true;;
+      *) AC_MSG_ERROR([Unsupported target CPU architecture]);;
+esac;
+
+# srcdir_top
+
+cwd=`dirname $0`;
+srcdir_top=`realpath $cwd`;
+AC_SUBST(srcdir_top)
 
 # Checks for command line options
 
@@ -23,12 +43,18 @@ dynamic_linker=`ls -d "${with_glibc_libdir}"/ld-@<:@0-9@:>@*.so | sed -n '$p'`
 if test -d "${with_glibc_libdir}" -a -x "${dynamic_linker}"; then
   AC_MSG_RESULT([${with_glibc_libdir}])
   glibc_libdir=${with_glibc_libdir}
+  glibc_incdir="`realpath ${with_glibc_libdir}/../include`"
 else
   AC_MSG_ERROR([can't find ld.so.])
 fi
+
+AC_SUBST(prefix)
+AC_SUBST(exec_prefix)
+AC_SUBST(includedir)
+AC_SUBST(libdir)
+AC_SUBST(glibc_incdir)
 AC_SUBST(glibc_libdir)
 AC_SUBST(dynamic_linker)
-
 
 # Checks for programs.
 AC_PROG_CC
@@ -49,6 +75,9 @@ fi
 
 AC_CONFIG_FILES([
 	bin/pipcc
+	bin/pip-mode
+	bin/pip-check
+	bin/pip-man
 	build/config.mk
 	release/version.conf
 ])

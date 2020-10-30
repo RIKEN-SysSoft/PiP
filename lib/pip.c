@@ -1245,6 +1245,8 @@ static int pip_do_corebind( int coreno, cpu_set_t *oldsetp ) {
   if( coreno != PIP_CPUCORE_ASIS ) {
     cpu_set_t cpuset;
 
+    if( coreno < 0 ) RETURN( EINVAL );
+
     CPU_ZERO( &cpuset );
     CPU_SET( coreno, &cpuset );
 
@@ -1300,6 +1302,7 @@ static int pip_corebind( int coreno ) {
     DBG;
   } else {
     DBGF( "coreno=%d", coreno );
+    RETURN( EINVAL );
   }
   DBG;
   RETURN( 0 );
@@ -1530,22 +1533,27 @@ static int pip_find_a_free_task( int *pipidp ) {
     } else {
       int i;
 
+      DBGF( "ntasks:%d  curr:%d", pip_root->ntasks, pip_root->pipid_curr );
       for( i=pip_root->pipid_curr; i<pip_root->ntasks; i++ ) {
+	DBGF( "i:%d", i );
 	if( pip_root->tasks[i].pipid == PIP_PIPID_NONE ) {
 	  pipid = i;
 	  goto found;
 	}
       }
       for( i=0; i<pip_root->pipid_curr; i++ ) {
+	DBGF( "i:%d", i );
 	if( pip_root->tasks[i].pipid == PIP_PIPID_NONE ) {
 	  pipid = i;
 	  goto found;
 	}
       }
+      DBG;
       err = EAGAIN;
       goto unlock;
     }
   found:
+    DBGF( "err:%d", err );
     pip_root->tasks[pipid].pipid = pipid;	/* mark it as occupied */
     pip_root->pipid_curr = pipid + 1;
     *pipidp = pipid;
@@ -1577,6 +1585,8 @@ int pip_spawn( char *prog,
   DBGF( ">> pip_spawn()" );
 
   if( pip_root == NULL ) RETURN( EPERM );
+  if( pip_task == NULL ) RETURN( EPERM );
+  if( pip_task->pipid != PIP_PIPID_ROOT ) RETURN( EPERM );
   if( pipidp   == NULL ) RETURN( EINVAL );
   if( argv     == NULL ) RETURN( EINVAL );
   if( prog     == NULL ) prog = argv[0];
@@ -1752,8 +1762,8 @@ int pip_fin( void ) {
 }
 
 int pip_get_mode( int *mode ) {
-  if( pip_root == NULL ) RETURN( EPERM  );
   if( mode     == NULL ) RETURN( EINVAL );
+  if( pip_root == NULL ) RETURN( EPERM  );
   *mode = ( pip_root->opts & PIP_MODE_MASK );
   RETURN( 0 );
 }
@@ -1802,8 +1812,11 @@ int pip_kill( int pipid, int signal ) {
 
 int pip_exit( int retval ) {
   fflush( NULL );
-  DBG;
-  if( !pip_root_p_() && !pip_task_p_() ) {
+  DBGF( "pip_exit(%d)", retval );
+  if( pip_root_p_() ) {
+    exit( retval );
+
+  } else if( !pip_task_p_() ) {
     DBG;
     /* since we must replace exit() with pip_exit(), pip_exit() */
     /* must be able to use even if it is NOT a PIP environment. */
@@ -1821,6 +1834,7 @@ int pip_exit( int retval ) {
     exit( retval );
   } else {
     DBGF( "?????" );
+    exit( retval );
   }
   /* never reach here */
   DBG;
@@ -1899,6 +1913,7 @@ static int pip_do_wait( int pipid, int flag_try, int *retvalp ) {
 
   if( pip_is_pthread_() ) { /* thread mode */
     DBG;
+    if( task->thread == 0 ) RETURN( ECHILD );
     if( flag_try ) {
       err = pthread_tryjoin_np( task->thread, NULL );
       DBGF( "pthread_tryjoin_np()=%d", err );
@@ -1922,8 +1937,10 @@ static int pip_do_wait( int pipid, int flag_try, int *retvalp ) {
     DBG;
     if( WIFEXITED( status ) ) {
       task->retval = WEXITSTATUS( status );
-      task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
-      task->gdbif_task->exit_code = task->retval;
+      if( task->gdbif_task != NULL ) {
+	task->gdbif_task->status = PIP_GDBIF_STATUS_TERMINATED;
+	task->gdbif_task->exit_code = task->retval;
+      }
     } else if( WIFSIGNALED( status ) ) {
       pip_warn_mesg( "Signaled %s", strsignal( WTERMSIG( status ) ) );
     }
@@ -2035,6 +2052,8 @@ void pip_free( void *ptr ) {
     free( ptr );
   }
 }
+
+#ifdef WITH_EXPERIMENTAL
 
 /*-----------------------------------------------------*/
 /* ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP ULP */
@@ -2324,3 +2343,4 @@ void pip_ulp_describe( pip_ulp_t *ulp ) {
     pip_info_mesg( "ULP[](nil)" );
   }
 }
+#endif

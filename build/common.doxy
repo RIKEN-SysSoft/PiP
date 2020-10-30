@@ -220,7 +220,10 @@ TAB_SIZE               = 4
 # "Side Effects:". You can put \n's in the value part of an alias to insert
 # newlines.
 
-ALIASES                =
+ALIASES = "name=@par Name\n" "synopsis=@par Synopsis\n" "description=@par Description\n" \
+	"notes=@par Notes\n" "example=@par Example\n" "bugs=@par Bugs\n" \
+	"environment=@par Environment\n" \
+	"PiPManEntry{1}=\name \1 \addindex \1"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"

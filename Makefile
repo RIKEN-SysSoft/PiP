@@ -103,10 +103,6 @@ doc-install:
 docclean:
 	git checkout html latex man
 
-post-distclean-hook:
-	$(RM) -r man html
-.PHONY: post-distclean-hook
-
 ###
 
 check:
@@ -122,7 +118,7 @@ eval:
 .PHONY: eval
 
 prog-distclean:
-	$(RM) config.log config.status include/config.h build/config.mk
+	$(RM) config.log config.status include/pip_config.h build/config.mk
 .PHONY: prog-distclean
 
 .PHONY: TAGS

@@ -1,6 +1,7 @@
 var searchData=
 [
   ['pip_20overview_20of_20process_2din_2dprocess_20_28pip_29',['pip Overview of Process-in-Process (PiP)',['../index.html',1,'']]],
+  ['pip_2dcheck',['pip-check',['../pip-check.html',1,'']]],
   ['pip_2eh',['pip.h',['../pip_8h.html',1,'']]],
   ['pip_5fbarrier_5finit',['pip_barrier_init',['../group__libpip.html#ga29d3dd9e65abc2106c5d0bbbd69e4c10',1,'pip.h']]],
   ['pip_5fbarrier_5fwait',['pip_barrier_wait',['../group__libpip.html#gac80e7da03f81dfb87b7f3e4c45176fc2',1,'pip.h']]],
@@ -20,7 +21,7 @@ var searchData=
   ['pip_5fspawn',['pip_spawn',['../group__libpip.html#gae9187ea22ecf0623fa3ecfba5337f52d',1,'pip.h']]],
   ['pip_5ftrywait',['pip_trywait',['../group__libpip.html#ga02cab8b77b62ffcd98bd1bbb1e32b7e7',1,'pip.h']]],
   ['pip_5fwait',['pip_wait',['../group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b',1,'pip.h']]],
-  ['pipcc',['pipcc',['../group__pipcc.html',1,'']]],
-  ['pipmap',['pipmap',['../group__pipmap.html',1,'']]],
-  ['piprun',['piprun',['../group__piprun.html',1,'']]]
+  ['pipcc',['pipcc',['../pipcc.html',1,'']]],
+  ['piprun',['piprun',['../group__piprun.html',1,'']]],
+  ['printpipmode',['printpipmode',['../printpipmode.html',1,'']]]
 ];
