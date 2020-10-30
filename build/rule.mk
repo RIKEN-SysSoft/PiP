@@ -40,10 +40,10 @@ misc-clean:
 
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
-		echo \
-		$(RM) Makefile .doxygen_html .doxygen_latex \
-		$(RM) Makefile .doxygen_man1 .doxygen_man3 .doxygen_man7; \
+		echo; \
+		$(RM) Makefile; \
 	fi
+	$(RM) .doxygen_*
 .PHONY: distclean-here
 
 testclean-here:

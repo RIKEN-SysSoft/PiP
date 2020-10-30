@@ -55,43 +55,6 @@ test: all
 testclean:
 	$(MAKE) -C test testclean
 
-TEST_MKS = build/config.mk build/var.mk build/rule.mk
-
-### install test programs and run
-CONFIG_MKS = build/config.mk build/var-install.mk
-RULES_MKS  = build/rule.mk
-
-install_test_dirtop = $(prefix)/pip-test
-install_test_dir = $(prefix)/pip-test/test
-test_build_dir = $(install_test_dirtop)/build
-
-.PHONY: clean-check-installed
-clean-check-installed:
-	-$(RM) -r $(install_test_dirtop)
-
-.PHONY: check-installed-prepare
-check-installed-prepare: clean-check-installed install
-	$(MKDIR_P) $(install_test_dirtop)
-	ln -f -s $(prefix)/bin $(install_test_dirtop)
-	$(MKDIR_P) $(test_build_dir)
-	cat $(CONFIG_MKS) > $(test_build_dir)/var.mk
-	$(INSTALL) -C -m 644 $(RULES_MKS) $(test_build_dir)
-
-.PHONY: check-installed-programs
-check-installed-programs: check-installed-prepare
-	install_test_dir=$(install_test_dir) $(MAKE) -C test do-check-installed
-
-.PHONY: do-check-installed
-do-check-installed: check-installed-programs
-	install_test_dir=$(install_test_dir) $(MAKE) -C $(install_test_dir) test
-
-.PHONY: check-installed
-check-installed: do-check-installed
-	$(MAKE) clean-check-installed
-
-installcheck: check-installed
-.PHONE: installcheck
-
 ### doc
 
 doc-install:
@@ -122,9 +85,13 @@ check:
 	$(MAKE) test
 .PHONY: check
 
+post-veryclean-hook: subdir-veryclean
+
 post-distclean-hook:
-	$(RM) config.log config.status include/pip_config.h build/config.mk
-.PHONY: prog-distclean
+	$(RM) config.log config.status include/pip_config.h
+	$(RM) release/version.conf
+	$(RM) build/config.mk
+.PHONY: prog-distclean-hook
 
 post-install-hook:
 	$(MAKE) -C sample
@@ -133,9 +100,12 @@ post-clean-hook:
 	$(RM) test.log.* test.out.*
 	$(MAKE) -C test clean
 
-post-veryclean-hook:
+post-veryclean-hook: subdir-veryclean
+
+post-distclean-hook:
 	$(RM) config.log config.status include/pip_config.h
-	$(MAKE) subdir-veryclean
+	$(RM) release/version.conf
+	$(RM) build/config.mk
 
 .PHONY: TAGS
 TAGS:

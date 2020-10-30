@@ -56,8 +56,8 @@ all :
 
 clean:
 	$(RM) -f *.ps *.dvi *.aux *.toc *.idx *.ind *.ilg *.log *.out *.brf *.blg *.bbl
+	$(RM) -f libpip.tex
 	$(RM) -f *-inputs.tex
 	$(RM) -f \#*\# *~
 
-veryclean:
-	$(RM) -f $(LIBPIP).tex
+veryclean: clean

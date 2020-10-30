@@ -108,7 +108,7 @@ Zero is returned if this function succeeds\&. Otherwise an error number is retur
 .IP "\(bu" 2
 \fBPIP_MODE\fP Specifying the PiP execution mmode\&. Its value can be either \fCthread\fP, \fCpthread\fP, \fCprocess\fP, \fCprocess:preload\fP, \fCprocess:pipclone\fP, or \fCprocess:got\fP\&. 
 .IP "\(bu" 2
-\fBLD_PRELOAD\fP This is required to set appropriately to hold the path to the \fCpip_preload\&.so\fP file, if the PiP execution mode is \fCPIP_MODE_PROCESS_PRELOAD\fP (the \fCopts\fP in \fCpip_init\fP) and/or the PIP_MODE ennvironment is set to \fCprocess:preload\fP\&. See also the \fBpip-mode\fP command to set the environment variable appropriately and easily\&. 
+\fBLD_PRELOAD\fP This is required to set appropriately to hold the path to the \fCpip_preload\&.so\fP file, if the PiP execution mode is \fCPIP_MODE_PROCESS_PRELOAD\fP (the \fCopts\fP in \fCpip_init\fP) and/or the PIP_MODE ennvironment is set to \fCprocess:preload\fP\&. See also the \fCpip-mode\fP command to set the environment variable appropriately and easily\&. 
 .IP "\(bu" 2
 \fBPIP_STACKSZ\fP Sepcifying the stack size (in bytes)\&. The \fBKMP_STACKSIZE\fP and \fBOMP_STACKSIZE\fP are also effective\&. The 't', 'g', 'm', 'k' and 'b' posfix character can be used\&. 
 .IP "\(bu" 2
@@ -122,7 +122,7 @@ Zero is returned if this function succeeds\&. Otherwise an error number is retur
 .IP "\(bu" 2
 \fBPIP_SHOW_MAPS\fP If the value is 'on' and one of the above exection signals is delivered, then the memory map will be shown\&. 
 .IP "\(bu" 2
-\fBPIP_SHOW_PIPS\fP If the value is 'on' and one of the above exection signals is delivered, then the process status by using the \fCpips\fP command (see also \fBpips\fP) will be shown\&.
+\fBPIP_SHOW_PIPS\fP If the value is 'on' and one of the above exection signals is delivered, then the process status by using the \fCpips\fP command will be shown\&.
 .PP
 .RE
 .PP

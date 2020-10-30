@@ -207,8 +207,8 @@ extern "C" {
    * error number is returned.
    *
    * \retval EINVAL \a ntasks is negative
-   * \retval EBUSY PiP root called this function twice or more without calling \ref
-   * pip_fin.
+   * \retval EBUSY PiP root called this function twice or more without
+   * calling \ref pip_fin.
    * \retval EPERM \a opts is invalid or unacceptable
    * \retval EOVERFLOW \a ntasks is too large
    * \retval ELIBSCN verssion miss-match between PiP root and PiP task
@@ -221,7 +221,7 @@ extern "C" {
    * to the \c pip_preload.so file, if the PiP execution mode is
    * \c PIP_MODE_PROCESS_PRELOAD (the \c opts in \c pip_init) and/or
    * the PIP_MODE ennvironment is set to \c process:preload. See also
-   * the \ref pip-mode command to set the environment variable appropriately and
+   * the \c pip-mode command to set the environment variable appropriately and
    * easily.
    * \arg \b PIP_STACKSZ Sepcifying the stack size (in bytes). The
    * \b KMP_STACKSIZE and \b OMP_STACKSIZE are also effective. The 't',
@@ -246,7 +246,7 @@ extern "C" {
    * \arg \b PIP_SHOW_MAPS If the value is 'on' and one of the above exection signals is delivered,
    * then the memory map will be shown.
    * \arg \b PIP_SHOW_PIPS If the value is 'on' and one of the above exection signals is delivered,
-   * then the process status by using the \c pips command (see also \ref pips) will be shown.
+   * then the process status by using the \c pips command will be shown.
    *
    * \bugs
    * Is is NOT guaranteed that users can spawn tasks up to the number
