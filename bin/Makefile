@@ -35,10 +35,12 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = piprun
-PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc printpipmode \
-	pip-check pip-mode pips pip-man .change-mode
-PROGRAMS = $(PROGRAMS_TO_INSTALL)
-MAN1_SRCS = piprun.c pipcc.in pip-check.in pips  printpipmode.c
+PROGRAMS = $(PROGRAM) printpipmode
+PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
+	pips printpipmode
+
+MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
+	pips printpipmode.c
 
 CFLAGS += -pthread
 CPPFLAGS += -I$(PIPINCDIR) -DPROGRAM=\"$(PROGRAM)\"
@@ -52,16 +54,13 @@ piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \
 	-Wl,--dynamic-linker=$(dynamic_linker) $< -o $@ $(LDLIBS)
 
-hello: hello.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
-	$(CC) -I$(PIPINCDIR) $(LDFLAGS) -O2 \
-	-fpie -pie -rdynamic $< -o $@ -pthread $(LDLIBS)
-
 printpipmode: printpipmode.c $(DEPINCS) $(PIP_LIBS) Makefile
-	$(PIPCC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
-
-.change-mode: pipcc pip-check
 	chmod +x pipcc pip-check pip-mode pip-man
-	touch .change-mode
+	./pipcc -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
+
+post-veryclean-hook: post-clean-hook
+	$(RM) pip-exec pipcc pip-mode pip-check pip-man printpipmode
+	$(RM) .doxygen_*
