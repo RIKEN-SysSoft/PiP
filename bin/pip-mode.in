@@ -54,6 +54,7 @@
 
 INSTALLTOP=@prefix@
 SRCTOP=@srcdir_top@
+HAVE_PIPGLIBC=@have_pipglibc@
 
 function usage() {
     echo $self "-p|-l|-g|-c|-t [<command> ...]";
@@ -88,7 +89,11 @@ for i; do
     case $i in
 	-p|-P|--process)
 	    if [[ x${preload} == "x" ]]; then
-		pip_mode="process:pipclone";
+		if ${HAVE_PIPGLIBC}; then
+		    pip_mode="process:pipclone";
+		else
+		    pip_mode="process:got";
+		fi
 	    else
 		pip_mode="process:preload";
 	    fi;;
@@ -99,10 +104,13 @@ for i; do
 	    else
 		pip_mode="process:preload";
 	    fi;;
+	-c|-C|--process:pipclone)
+	    if ! ${HAVE_PIPGLIBC}; then
+		echo "Not using PiP-glibc";
+	    fi
+	    pip_mode="process:pipclone";;
 	-g|-G|--process:got)
 	    pip_mode="process:got";;
-	-c|-C|--process:pipclone)
-	    pip_mode="process:pipclone";;
 	-t|-T|--thread|--pthread)
 	    pip_mode=pthread;;
 	--pipbuild)
