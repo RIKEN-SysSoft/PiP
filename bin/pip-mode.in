@@ -57,12 +57,12 @@ SRCTOP=@srcdir_top@
 HAVE_PIPGLIBC=@have_pipglibc@
 
 function usage() {
-    echo $self "-p|-l|-g|-c|-t [<command> ...]";
-    echo "    -P: 'process' mode";
-    echo "    -L: 'process:preload' mode";
-    echo "    -G: 'process:got' mode";
-    echo "    -C: 'process:pipclone' mode";
-    echo "    -T: 'pthread' mode";
+    echo >&2 $self "-p|-l|-g|-c|-t [<command> ...]";
+    echo >&2 "    -P: 'process' mode";
+    echo >&2 "    -L: 'process:preload' mode";
+    echo >&2 "    -G: 'process:got' mode";
+    echo >&2 "    -C: 'process:pipclone' mode";
+    echo >&2 "    -T: 'pthread' mode";
     exit 0;
 }
 
@@ -89,28 +89,29 @@ for i; do
     case $i in
 	-p|-P|--process)
 	    if [[ x${preload} == "x" ]]; then
-		if ${HAVE_PIPGLIBC}; then
-		    pip_mode="process:pipclone";
-		else
-		    pip_mode="process:got";
+		if ! ${HAVE_PIPGLIBC}; then
+		    echo >&2 "'process' mode is not available";
+		    exit 1;
 		fi
 	    else
 		pip_mode="process:preload";
 	    fi;;
 	-l|-L|--process:preload)
 	    if [[ "x${preload}" == "x" ]]; then
-		echo "Unable to find PiP preload library";
+		echo >&2 "Unable to find PiP preload library";
 		exit 1;
 	    else
 		pip_mode="process:preload";
 	    fi;;
 	-c|-C|--process:pipclone)
 	    if ! ${HAVE_PIPGLIBC}; then
-		echo "Not using PiP-glibc";
+		echo >&2 "Not using PiP-glibc";
+		exit 1;
 	    fi
 	    pip_mode="process:pipclone";;
 	-g|-G|--process:got)
-	    pip_mode="process:got";;
+	    echo >&2 "'process:got' mode is not available";
+	    exit 1;;
 	-t|-T|--thread|--pthread)
 	    pip_mode=pthread;;
 	--pipbuild)
@@ -118,7 +119,7 @@ for i; do
 	-u|--help)
 	    usage;;
 	-*)
-	    echo "Unknown option '$1'";
+	    echo >&2 "Unknown option '$1'";
 	    exit 1;;
 	*)
 	    shift;
