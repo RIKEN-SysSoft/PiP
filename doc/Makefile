@@ -138,7 +138,7 @@ clean:
 	$(RM) doxygen*.log
 	$(RM) *~ \#*\#
 	$(MAKE) -C latex-inuse clean
+	$(RM) -r latex/
 
 veryclean: clean
-	$(RM) Slides-html.md
 	$(MAKE) -C latex-inuse veryclean

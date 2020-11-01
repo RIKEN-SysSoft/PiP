@@ -25,7 +25,6 @@ veryclean: clean testclean \
 distclean: veryclean \
 	subdir-distclean header-veryclean lib-distclean prog-distclean \
 	distclean-here post-distclean-hook
-	$(RM) .doxygen_*
 .PHONY: distclean
 
 documents: subdir-documents doc-here post-documents-hook
@@ -42,9 +41,9 @@ misc-clean:
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
 		echo \
-		$(RM) Makefile .doxygen_html .doxygen_latex \
-		$(RM) Makefile .doxygen_man1 .doxygen_man3 .doxygen_man7; \
+		$(RM) Makefile \
 	fi
+	$(RM) .doxygen_*
 .PHONY: distclean-here
 
 testclean-here:
