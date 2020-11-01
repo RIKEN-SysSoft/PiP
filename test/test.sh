@@ -98,9 +98,18 @@ if [ $OMP_NUM_THREADS -lt 4 ]; then
     exit 1;
 fi
 
-if test -f "$dir_real/../preload/pip_preload.so"; then
+if test -x "$dir_real/../lib/libpip.so"; then
+    debug=`$dir_real/../lib/libpip.so --debug`
+elif test -x "$dir_real/../../lib/libpip.so"; then
+    debug=`$dir_real/../../lib/libpip.so --debug`
+else
+    echo "Unable to execute libpip.so";
+    exit 2;
+fi
+
+if test -x "$dir_real/../preload/pip_preload.so"; then
     export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
-elif test -f "$dir_real/../../lib/pip_preload.so"; then
+elif test -x "$dir_real/../../lib/pip_preload.so"; then
     export LD_PRELOAD=$dir_real/../../lib/pip_preload.so;
 else
     echo "Unable to find pip_preload.so";
@@ -279,9 +288,13 @@ else
 fi
 
 if [ x"$SUMMARY_FILE" = x ]; then
+    echo "libpip.so -- DEBUG:" $debug
     echo LD_PRELOAD=$LD_PRELOAD
     echo 'NTASKS:  ' ${NTASKS}
     echo 'NTHERADS:' ${OMP_NUM_THREADS}
+    if [ x"$MCEXEC" != x ]; then
+	echo 'MCEXEC: ' $MCEXEC
+    fi
 fi
 
 # check whether each $PIP_MODE is testable or not
@@ -378,7 +391,7 @@ while read line; do
 
 		SECONDS=0
 		PIP_MODE=${pip_mode_name} \
-		    ${cmd} > ${TEST_OUT_STDOUT} 2> ${TEST_OUT_STDERR} \
+		    ${MCEXEC} ${cmd} > ${TEST_OUT_STDOUT} 2> ${TEST_OUT_STDERR} \
 		    < /dev/null;
 		test_exit_status=$?
 		t=$SECONDS
