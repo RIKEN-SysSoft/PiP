@@ -107,9 +107,9 @@ else
     exit 2;
 fi
 
-if test -f "$dir_real/../preload/pip_preload.so"; then
+if test -x "$dir_real/../preload/pip_preload.so"; then
     export LD_PRELOAD=$dir_real/../preload/pip_preload.so;
-elif test -f "$dir_real/../../lib/pip_preload.so"; then
+elif test -x "$dir_real/../../lib/pip_preload.so"; then
     export LD_PRELOAD=$dir_real/../../lib/pip_preload.so;
 else
     echo "Unable to find pip_preload.so";
@@ -279,6 +279,9 @@ fi
 
 if [ -n "$MCEXEC" ]; then
     pip_mode_list_all='T';
+    if [ x"$quiet" = x ]; then
+	echo MCEXEC=$MCEXEC
+    fi
 else
     pip_mode_list_all='L G C T';
 fi

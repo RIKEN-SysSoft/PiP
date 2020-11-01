@@ -45,7 +45,7 @@ all: $(PROGRAMS) hello.c
 
 debug: all
 
-pipcc: ../../bin/pipcc Makefile
+pipcc: ../../bin/pipcc
 	ln -f -s ../../bin/pipcc .
 
 pip-check: ../../bin/pip-check Makefile
