@@ -35,7 +35,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = pip-exec
-PROGRAMS  = $(PROGRAM printpipmode
+PROGRAMS  = $(PROGRAM) printpipmode
 PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
 	pips printpipmode
 
