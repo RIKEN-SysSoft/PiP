@@ -251,7 +251,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 
   switch( mode ) {
   case 0:
-    if( env == NULL ) {
+    if( env == NULL || env[0] == '\0' ) {
       desired =
 	PIP_MODE_PTHREAD_BIT 	     |
 	PIP_MODE_PROCESS_PRELOAD_BIT |

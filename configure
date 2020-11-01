@@ -605,6 +605,7 @@ dynamic_linker
 glibc_lib
 glibc_libdir
 glibc_incdir
+have_pipglibc
 srcdir_top
 target_os
 target_vendor
@@ -1836,7 +1837,6 @@ ac_config_sub="$SHELL $ac_aux_dir/config.sub"  # Please don't use this var.
 ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
-
 ac_config_headers="$ac_config_headers include/pip_config.h"
 
 
@@ -1971,6 +1971,7 @@ srcdir_top=`realpath $cwd`;
 
 # Checks for command line options
 
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for glibc libdir" >&5
 $as_echo_n "checking for glibc libdir... " >&6; }
 
@@ -1980,7 +1981,8 @@ if test "${with_glibc_libdir+set}" = set; then :
 fi
 
 case "$with_glibc_libdir" in
-""|yes|no) with_glibc_libdir="/usr/lib64";;
+""|yes|no) have_pipglibc=false; with_glibc_libdir="/usr/lib64";;
+*) have_pipglibc=true;;
 esac
 dynamic_linker=`ls -d "${with_glibc_libdir}"/ld-[0-9]*.so | sed -n '$p'`
 glibc_lib=`ls -d "${with_glibc_libdir}"/libc-[0-9]*.so | sed -n '$p'`
@@ -1997,6 +1999,7 @@ if ! test -d "${glibc_incdir}" ; then
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: ${glibc_incdir}" >&5
 $as_echo "${glibc_incdir}" >&6; }
+
 
 
 

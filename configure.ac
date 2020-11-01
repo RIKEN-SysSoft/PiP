@@ -32,12 +32,14 @@ AC_SUBST(srcdir_top)
 
 # Checks for command line options
 
+
 AC_MSG_CHECKING([for glibc libdir])
 AC_ARG_WITH([glibc-libdir],
   [AS_HELP_STRING([--with-glibc-libdir=DIR],
                   [glibc lib directory @<:@default=/usr/lib64@:>@])])
 case "$with_glibc_libdir" in
-""|yes|no) with_glibc_libdir="/usr/lib64";;
+""|yes|no) have_pipglibc=false; with_glibc_libdir="/usr/lib64";;
+*) have_pipglibc=true;;
 esac
 dynamic_linker=`ls -d "${with_glibc_libdir}"/ld-@<:@0-9@:>@*.so | sed -n '$p'`
 glibc_lib=`ls -d "${with_glibc_libdir}"/libc-@<:@0-9@:>@*.so | sed -n '$p'`
@@ -57,6 +59,7 @@ AC_SUBST(prefix)
 AC_SUBST(exec_prefix)
 AC_SUBST(includedir)
 AC_SUBST(libdir)
+AC_SUBST(have_pipglibc)
 AC_SUBST(glibc_incdir)
 AC_SUBST(glibc_libdir)
 AC_SUBST(glibc_lib)
