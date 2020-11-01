@@ -94,7 +94,7 @@ include $(top_srcdir)/build/rule.mk
 include fcontext.mk
 
 $(PIP_INCDIR)/build.h: FORCE
-	./build-header.sh $(CC) > $(PIP_INCDIR)/build.h
+	./build-header.sh $(CC) $(PIP_INCDIR)/build.h
 .PHONY: FORCE
 
 concat: concat.c $(PIP_INCDIR)/pip_internal.h

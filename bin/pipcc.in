@@ -122,6 +122,16 @@ else
 	${PREFIX}/bin)
 	    PIP_INCDIR=${PREFIX}/include;
 	    PIP_LIBDIR=${PREFIX}/lib ;;
+	*)
+	    if [ ${PREFIX}/bin/pipcc -ef ${self} ] ; then
+		PIP_INCDIR=${PREFIX}/include
+		PIP_LIBDIR=${PREFIX}/lib
+	    elif [ ${SRCTOP}/bin/pipcc -ef ${self} ]; then
+		PIP_INCDIR=${SRCTOP}/include;
+		PIP_LIBDIR=${SRCTOP}/lib;
+	    else
+		echo "Unknown $self"
+	    fi;;
     esac
 fi
 

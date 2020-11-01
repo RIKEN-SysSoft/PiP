@@ -72,10 +72,6 @@ doc-clean:
 	$(MAKE) -C doc clean
 .PHONE: docclean
 
-post-distclean-hook:
-	$(MAKE) -C doc post-distclean-hook
-.PHONY: post-distclean-hook
-
 post-documents-hook:
 	$(MAKE) -C doc documents
 
@@ -87,12 +83,6 @@ check:
 
 post-veryclean-hook: subdir-veryclean
 
-post-distclean-hook:
-	$(RM) config.log config.status include/pip_config.h
-	$(RM) release/version.conf
-	$(RM) build/config.mk
-.PHONY: prog-distclean-hook
-
 post-install-hook:
 	$(MAKE) -C sample
 
@@ -103,9 +93,11 @@ post-clean-hook:
 post-veryclean-hook: subdir-veryclean
 
 post-distclean-hook:
+	$(MAKE) -C doc post-distclean-hook
 	$(RM) config.log config.status include/pip_config.h
 	$(RM) lib/fcontext.mk lib/fctx_defs.mk release/version.conf
 	$(RM) build/config.mk
+.PHONY: post-distclean-hook
 
 .PHONY: TAGS
 TAGS:

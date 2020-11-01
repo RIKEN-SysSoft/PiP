@@ -38,8 +38,6 @@ PROGRAMS = pip-exec abc def ghi xyz hello
 
 PROGRAMS_TO_INSTALL = # nothing
 
-PIPCC = ../scripts/pipcc
-
 include $(top_srcdir)/build/rule.mk
 include $(srcdir)/../Test.common
 

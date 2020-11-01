@@ -27,11 +27,6 @@ ev=$?
 if [ $ev != 0 ]; then
     exit $ev;
 fi
-./pip_blt 8 24 $PROG_RPATH
-ev=$?
-if [ $ev != 0 ]; then
-    exit $ev;
-fi
 
 ./pip_task 1 $PROG_APATH
 ev=$?
@@ -50,11 +45,6 @@ if [ $ev != 0 ]; then
     exit $ev;
 fi
 ./pip_blt 4 4 $PROG_APATH
-ev=$?
-if [ $ev != 0 ]; then
-    exit $ev;
-fi
-./pip_blt 8 24 $PROG_APATH
 ev=$?
 if [ $ev != 0 ]; then
     exit $ev;

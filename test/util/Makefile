@@ -61,19 +61,19 @@ timer: timer.c Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(DBGFLAG) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 pip_is_debug_build : pip_is_debug_build.c Makefile
-	../scripts/pipcc -g -O2 $(DBGFLAG) $< -o $@
+	$(PIPCC) -g -O2 $(DBGFLAG) $< -o $@
 
 pip_mode_check : pip_mode_check.c Makefile
-	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
+	$(PIPCC) -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 pip_task : pip_task.c Makefile
-	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
+	$(PIPCC) -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 pip_blt : pip_blt.c Makefile
-	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
+	$(PIPCC) -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 inf : inf.c Makefile
-	../scripts/pipcc -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
+	$(PIPCC) -g -O2 -I.. $(DBGFLAG) $< --piptask -o $@
 
 test :
 	$(MAKE) -C ../prog
