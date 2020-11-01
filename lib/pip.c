@@ -1290,21 +1290,16 @@ static int pip_undo_corebind( int coreno, cpu_set_t *oldsetp ) {
 static int pip_corebind( int coreno ) {
   cpu_set_t cpuset;
 
-  if( coreno != PIP_CPUCORE_ASIS &&
-      coreno >= 0                &&
-      coreno <  sizeof(cpuset) * 8 ) {
-    DBG;
-    CPU_ZERO( &cpuset );
-    DBG;
-    CPU_SET( coreno, &cpuset );
-    DBG;
-    if( sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) RETURN( errno );
-    DBG;
-  } else {
+  if( coreno == PIP_CPUCORE_ASIS ) {
     DBGF( "coreno=%d", coreno );
+  } else if( coreno >= 0 &&
+	     coreno <  sizeof(cpuset) * 8 ) {
+    CPU_ZERO( &cpuset );
+    CPU_SET( coreno, &cpuset );
+    if( sched_setaffinity( 0, sizeof(cpuset), &cpuset ) != 0 ) RETURN( errno );
+  } else {
     RETURN( EINVAL );
   }
-  DBG;
   RETURN( 0 );
 }
 

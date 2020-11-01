@@ -2,7 +2,7 @@
 
 # $RIKEN_copyright: Riken Center for Computational Sceience,
 # System Software Development Team, 2016, 2017, 2018, 2019, 2020$
-# $PIP_VERSION: Version 3.0.0$
+# $PIP_VERSION: Version 2.0.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -48,8 +48,8 @@
 ### \environment
 ### if \p CC environment  is set then \p \$(CC) will be used as a C compiler
 ###
-### \sa
-### pip-exec(1), pip-mode(1)
+### \sa pip-exec
+### \sa pip-mode
 ###
 
 PREFIX=@prefix@
@@ -62,11 +62,10 @@ dynamic_linker=@dynamic_linker@
 : ${CC:=cc}
 
 self=$0
-dir=`dirname $self`
-pipccdir=`cd $dir; pwd`
+cmd=`basename ${self}`
 
 err_nostatic() {
-    echo "$self does not support static linking" >&2;
+    echo "${cmd} does not support static linking" >&2;
     exit 1;
 }
 
@@ -78,6 +77,7 @@ pipbuild=false
 pipinstall=false
 dryrun=false
 silent=false
+which=false
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -88,7 +88,8 @@ while [ "$1" != "" ]; do
 	--pipinstall) pipinstall=true;;
 	--nopip)   no_pip=true;;
 	--silent)  silent=true;;
-	--dryrun)  dryrun=true;;
+	--dryrun|--dry)  dryrun=true;;
+	--which)   which=true;;
 	-Bstatic|-static) err_nostatic;;
 	*)         opts="${opts} $1";;
     esac
@@ -96,10 +97,10 @@ while [ "$1" != "" ]; do
 done
 
 do_exec () {
-    if [ !${silent} ]; then
+    if ! ${silent}; then
 	echo $@
     fi
-    if [ !${dryrun} ]; then
+    if ! ${dryrun}; then
 	exec $@
     fi
 }
@@ -115,19 +116,25 @@ elif $pipinstall ; then
     PIP_INCDIR=${PREFIX}/include
     PIP_LIBDIR=${PREFIX}/lib
 else
-    case $pipccdir in
-	${SRCTOP}/bin)
-	    PIP_INCDIR=${SRCTOP}/include;
-	    PIP_LIBDIR=${SRCTOP}/lib ;;
-	${PREFIX}/bin)
-	    PIP_INCDIR=${PREFIX}/include;
-	    PIP_LIBDIR=${PREFIX}/lib ;;
-    esac
+    if [ ${self} -ef ${PREFIX}/bin/pipcc ] ; then
+	PIP_INCDIR=${PREFIX}/include
+	PIP_LIBDIR=${PREFIX}/lib
+    elif [ ${self} -ef ${SRCTOP}/bin/pipcc ]; then
+	PIP_INCDIR=${SRCTOP}/include;
+	PIP_LIBDIR=${SRCTOP}/lib;
+    else
+	echo "Unknown ${self}"
+	exit 1
+    fi
 fi
 
 if ! [ -f ${PIP_INCDIR}/pip.h ]; then
     echo "Unable to find pip.h"
     exit 1
+fi
+
+if ${which}; then
+    ( cd ${PIP_LIBDIR}/../bin/; pipcc_path=`pwd`; echo "${pipcc_path}/pipcc" )
 fi
 
 PIP_INCFLAGS="-I${PIP_INCDIR}"
