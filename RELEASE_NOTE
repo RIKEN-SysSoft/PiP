@@ -1,6 +1,9 @@
 Github:
 	https://github.com/RIKEN-SysSoft/PiP
 
+Version 1.2.0 (6 Nov. 2020)
+	Fix some bugs.  New pips (python version) is released
+	Note that we have newer PiP-v2 (and v3) and this version is deprecated
 Version 1.1.0 (24 Mar. 2020)
 	Fix PiP-gdb bug (unable to find inferiors when PiP root is not PIE)
 	Adding pips command to show or kill all PiP root and tasks
