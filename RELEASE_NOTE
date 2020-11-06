@@ -1,13 +1,21 @@
 Github:
 	https://github.com/RIKEN-SysSoft/PiP
 
+Version 3.0 (25 Nov. 2020)
+	- Introducing Bi-Level-Task (BLT) and User-Level-Process (ULP)
+	  This was the only difference from PiP-v2
+	- New PiP execution mode 'process:got' was added
+	- New pips (Python version) was released
+	- piplnlibs was moved to PiP-glibc
+	- piprun was renamed and enhanced as pip-exec
+	- PiP task program can start from any function including main
+	- Fix various bugs and much more stable than PiP-v1
+	- Testsuites was enhanced and decoupled to another repo (PiP-Testsuite)
+	- New interface between PiP lib. and PiP-gdb
+Version 1.1.0 (24 Mar. 2020)
+	Fix PiP-gdb bug (unable to find inferiors when PiP root is not PIE)
+	Adding pips command to show or kill all PiP root and tasks
+Version 1.0.2 (13 Feb. 2020)
+	- regenerate the RPM file to fix a problem that piprun fails with segmenation fault
 Version 1.0.0 (27 Feb. 2019)
-	The first release version (deprecated)
-
-Version 2.0.0 (XX YY 2020)
-	The first stable version
-	Supporting CentOS8/RHEL8
-
-Version 3.0.0 (XX YY 2020)
-	Adding BLT and ULP features
-	Supporting CentOS8/RHEL8
+	The first release version
