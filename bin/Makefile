@@ -39,7 +39,7 @@ PROGRAMS = $(PROGRAM) printpipmode
 PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
 	pips printpipmode
 
-MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
+MAN1_SRCS = piprun.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 	pips-doxygen.c printpipmode.c
 
 CFLAGS += -pthread

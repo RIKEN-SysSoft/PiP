@@ -24,6 +24,7 @@ var searchData=
   ['pip_5ftrywait',['pip_trywait',['../group__libpip.html#ga02cab8b77b62ffcd98bd1bbb1e32b7e7',1,'pip.h']]],
   ['pip_5fwait',['pip_wait',['../group__libpip.html#ga3adad6a3e2311a46b2bfdd9d9062811b',1,'pip.h']]],
   ['pipcc',['pipcc',['../pipcc.html',1,'']]],
+  ['piprun',['piprun',['../group__piprun.html',1,'']]],
   ['pips',['pips',['../pips.html',1,'']]],
   ['printpipmode',['printpipmode',['../printpipmode.html',1,'']]]
 ];
