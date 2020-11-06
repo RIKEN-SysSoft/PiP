@@ -37,9 +37,9 @@ SRCS     = hello.c
 PROGRAMS = hello
 PROGRAMS_TO_INSTALL = # nothing
 
-EXAMPLES = hello.c
-
 include $(top_srcdir)/build/rule.mk
 
-%: %.c Makefile
+PIPCC = $(top_srcdir)/bin/pipcc
+
+%: %.c $(SRCS) Makefile
 	$(PIPCC) $< -o $@

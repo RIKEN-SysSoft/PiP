@@ -437,7 +437,8 @@ int main( int argc, char **argv ) {
   extval = 0;
   for( i=0; i<ntasks; i++ ) {
     int status, ex;
-    if( ( err = pip_wait_any( &pipid, &status ) ) < 0 ) break;
+    pipid = i;
+    if( ( err = pip_wait( pipid, &status ) ) < 0 ) break;
     if( WIFEXITED( status ) ) {
       ex = WEXITSTATUS( status );
       if( ex > extval ) extval = ex;

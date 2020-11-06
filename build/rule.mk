@@ -31,7 +31,6 @@ documents: subdir-documents doc-here post-documents-hook
 .PHONY: documents
 
 misc-clean:
-	@echo \
 	$(RM) *.E *.S
 	$(RM) \#*\# .\#* *~
 	$(RM) core.*
@@ -40,7 +39,6 @@ misc-clean:
 
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
-		echo; \
 		$(RM) Makefile; \
 	fi
 	$(RM) .doxygen_*
@@ -129,7 +127,7 @@ header-veryclean:
 header-distclean:
 	@case "$(EXEC_HEADERS)" in \
 	'')	;; \
-	*)	echo \
+	*)	echo; \
 		$(RM) $(EXEC_HEADERS); \
 		$(RM) $(EXEC_HEADERS);; \
 	esac

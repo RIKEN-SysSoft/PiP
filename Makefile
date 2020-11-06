@@ -93,9 +93,6 @@ post-distclean-hook:
 	$(RM) build/config.mk
 .PHONY: prog-distclean-hook
 
-post-install-hook:
-	$(MAKE) -C sample
-
 post-clean-hook:
 	$(RM) test.log.* test.out.*
 	$(MAKE) -C test clean

@@ -308,8 +308,9 @@ int pip_wait_any( int *pipidp, int *statusp ) {
   int pipid, err = 0;
 
   ENTER;
-  if( !pip_is_initialized() ) RETURN( EPERM );
-  if( !pip_isa_root() )       RETURN( EPERM );
+  if( !pip_is_initialized() ) RETURN( EPERM  );
+  if( !pip_isa_root() )       RETURN( EPERM  );
+  //if( pip_is_threaded_() )    RETURN( ENOSYS );
 
   pipid = pip_blocking_waitany();
   if( pipid == PIP_PIPID_ANY ) {

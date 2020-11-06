@@ -40,6 +40,8 @@ PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
+PIPCC = $(top_srcdir)/bin/pipcc
+
 %: %.c Makefile
 	$(PIPCC)  $< -o $@
 
