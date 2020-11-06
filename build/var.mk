@@ -61,6 +61,7 @@ GLIBC_LDFLAGS = -L$(glibc_libdir) -Wl,-rpath=$(GLIBCLIBDIR)
 PIP_INCDIR    = $(srcdir_top)/include
 PIP_LIBDIR    = $(srcdir_top)/lib
 PIP_LIBS      = $(srcdir_top)/lib/libpip.so $(srcdir_top)/lib/libpip_init.so
+PIP_BINDIR    = $(srcdir_top)/bin
 
 PIP_CPPFLAGS  = -I$(PIP_INCDIR) -I$(GLIBC_INCDIR)
 PIP_LDFLAGS   = -L$(PIP_LIBDIR) -Wl,-rpath=$(PIP_LIBDIR) $(GLIBC_LDFLAGS) -lpip -ldl $(PTHREAD_FLAG)
@@ -73,3 +74,5 @@ PIP_LDFLAGS_TASK = $(PIP_LDFLAGS) $(RDYNAMIC_FLAG) $(PTHREAD_FLAG) $(PIE_LDFLAG)
 
 PIP_CFLAGS_BOTH  = $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
 PIP_LDFLAGS_BOTH = $(PIP_LDFLAGS) $(RDYNAMIC_FLAG) $(DYLINKER_FLAG) $(PTHREAD_FLAG) $(PIE_LDFLAG)
+
+PIPCC = $(PIP_BINDIR)/pipcc

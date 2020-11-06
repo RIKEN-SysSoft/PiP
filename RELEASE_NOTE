@@ -1,8 +1,15 @@
 Github:
 	https://github.com/RIKEN-SysSoft/PiP
 
-Version 2.0 (25 Sep. 2020)
-	The first stable version
+Version 2.0 (25 Nov. 2020)
+	- New PiP execution mode 'process:got' was added
+	- New pips (Python version) was released
+	- piplnlibs was moved to PiP-glibc
+	- piprun was renamed and enhanced as pip-exec
+	- PiP task program can start from any function including main
+	- Fix various bugs and much more stable than PiP-v1
+	- Testsuites was enhanced and decoupled to another repo (PiP-Testsuite)
+	- New interface between PiP lib. and PiP-gdb
 Version 1.1.0 (24 Mar. 2020)
 	Fix PiP-gdb bug (unable to find inferiors when PiP root is not PIE)
 	Adding pips command to show or kill all PiP root and tasks
