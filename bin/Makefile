@@ -40,7 +40,7 @@ PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
 	pips printpipmode
 
 MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
-	pips printpipmode.c
+	pips-doxygen.c printpipmode.c
 
 CPPFLAGS += $(PIP_CPPFLAGS) $(DBGFLAG)
 
