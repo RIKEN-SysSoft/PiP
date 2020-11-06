@@ -43,7 +43,8 @@ include $(srcdir)/../Test.common
 
 all: $(PROGRAMS) hello.c
 
-debug: all
+debug:
+	CPPFLAGS+="-DDEBUG" $(MAKE) all;
 
 pipcc: ../../bin/pipcc
 	ln -f -s ../../bin/pipcc .

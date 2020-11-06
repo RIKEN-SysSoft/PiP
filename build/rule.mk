@@ -40,8 +40,8 @@ misc-clean:
 
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
-		echo \
-		$(RM) Makefile \
+		echo; \
+		$(RM) Makefile; \
 	fi
 	$(RM) .doxygen_*
 .PHONY: distclean-here

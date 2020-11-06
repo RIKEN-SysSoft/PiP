@@ -142,7 +142,6 @@ void pip_finalize_task_RC( pip_task_internal_t *taski ) {
   PIP_FREE( MA(taski)->args.fd_list );
   MA(taski)->args.fd_list = NULL;
   pip_sem_fin( &AA(taski)->sleep );
-
   //pip_reset_task_struct( taski );
 }
 
@@ -372,8 +371,9 @@ pip_do_waitany( int *pipidp, int *statusp, int flag_blk ) {
   int pipid, st, err = 0;
 
   ENTER;
-  if( !pip_is_initialized() ) RETURN( EPERM );
-  if( !pip_isa_root() )       RETURN( EPERM );
+  if( !pip_is_initialized() ) RETURN( EPERM  );
+  if( !pip_isa_root() )       RETURN( EPERM  );
+  //if( pip_is_threaded_() )    RETURN( ENOSYS );
 
   if( flag_blk ) {
     while( ( st = pip_nonblocking_waitany( &pipid ) ) == NOT_YET ) {

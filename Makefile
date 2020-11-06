@@ -83,9 +83,6 @@ check:
 
 post-veryclean-hook: subdir-veryclean
 
-post-install-hook:
-	$(MAKE) -C sample
-
 post-clean-hook:
 	$(RM) test.log.* test.out.*
 	$(MAKE) -C test clean
