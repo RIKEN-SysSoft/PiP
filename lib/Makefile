@@ -87,11 +87,7 @@ DEPINCS =  $(PIP_INCDIR)/pip_config.h		\
 include $(top_srcdir)/build/rule.mk
 
 $(PIP_INCDIR)/build.h: FORCE
-	@./build-header.sh $(CC) > $(PIP_INCDIR)/.build.h
-	@if ! diff $(PIP_INCDIR)/.build.h $(PIP_INCDIR)/build.h > /dev/null 2>&1; then \
-	    mv -f $(PIP_INCDIR)/.build.h $(PIP_INCDIR)/build.h; \
-	fi
-	@$(RM) $(PIP_INCDIR)/.build.h > /dev/null 2>&1
+	./build-header.sh $(CC) $(PIP_INCDIR)/build.h
 .PHONY: FORCE
 
 $(OBJS): $(DEPINCS) $(PIP_INCDIR)/build.h Makefile
