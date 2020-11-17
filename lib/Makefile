@@ -91,6 +91,7 @@ $(PIP_INCDIR)/build.h: FORCE
 	@if ! diff $(PIP_INCDIR)/.build.h $(PIP_INCDIR)/build.h > /dev/null 2>&1; then \
 	    mv -f $(PIP_INCDIR)/.build.h $(PIP_INCDIR)/build.h; \
 	fi
+	@$(RM) $(PIP_INCDIR)/.build.h > /dev/null 2>&1
 .PHONY: FORCE
 
 $(OBJS): $(DEPINCS) $(PIP_INCDIR)/build.h Makefile
