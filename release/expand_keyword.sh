@@ -8,4 +8,4 @@ if test -z $1; then
 fi
 
 keyword=$1
-exec $keyword -config keywords,version -tag copyright,version,bsd2 ../
+exec $keyword -config keywords,version -tag copyright,version,license,author ../
