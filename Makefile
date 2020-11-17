@@ -81,8 +81,6 @@ check:
 	$(MAKE) test
 .PHONY: check
 
-post-veryclean-hook: subdir-veryclean
-
 post-clean-hook:
 	$(RM) test.log.* test.out.*
 	$(MAKE) -C test clean
@@ -93,6 +91,7 @@ post-distclean-hook:
 	$(MAKE) -C doc post-distclean-hook
 	$(RM) config.log config.status include/pip_config.h
 	$(RM) lib/fcontext.mk lib/fctx_defs.mk release/version.conf
+	$(RM) release/version.conf
 	$(RM) build/config.mk
 .PHONY: post-distclean-hook
 

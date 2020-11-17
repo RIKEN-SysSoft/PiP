@@ -44,8 +44,6 @@ MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 
 CPPFLAGS += $(PIP_CPPFLAGS) $(DGBFLAG)
 
-DEPINCS = $(top_srcdir)/include
-
 debug:
 	DBGFLAG=-DDEBUG $(MAKE) all
 
