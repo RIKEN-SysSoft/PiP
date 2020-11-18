@@ -4,6 +4,7 @@ Github:
 Version 3.0 (25 Nov. 2020)
 	- Introducing Bi-Level-Task (BLT) and User-Level-Process (ULP)
 	  This was the only difference from PiP-v2
+	- Include files were moved from include/ to include/pip/
 	- New PiP execution mode 'process:got' was added
 	- New pips (Python version) was released
 	- piplnlibs was moved to PiP-glibc
