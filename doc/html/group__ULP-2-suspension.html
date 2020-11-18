@@ -137,7 +137,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_suspend_and_enqueue<a name="ga7dbf7e64e78cd00ef62c3bb04f289a68_pip_suspend_and_enqueue"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int pip_suspend_and_enqueue( pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>The <b>queue</b> is locked just before the calling task is enqueued and unlocked after the calling task is enqueued. After then the <b>callback</b> function is called. </dd></dl>
 <dl class="section user"><dt></dt><dd>As the result of this suspension, a context-switch takes place if there is at least one elgible-to-run task in the scheduling queue (this is hidden from users). If there is no other task to schedule then the kernel thread of the current task will be blocked.</dd></dl>
@@ -193,7 +193,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_suspend_and_enqueue_nolock<a name="gab78d289ab89fa2981f2910849b1b2df7_pip_suspend_and_enqueue_nolock"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>Unlike <code>pip_suspend_and_enqueue</code>, this function never locks the queue. It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function. The <b>callback</b> function can be used for unlocking. </dd></dl>
 <dl class="section user"><dt></dt><dd>As the result of this suspension, a context-switch takes place if there is at least one elgible-to-run task in the scheduling queue (this is hidden from users). If there is no other task to schedule then the kernel thread of the current task will be blocked.</dd></dl>
@@ -241,7 +241,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_dequeue_and_resume<a name="gaaff299f195e2397f17cf11016c8a394f_pip_dequeue_and_resume"></a></dd></dl>
 <dl class="section user"><dt>Description</dt><dd>The <b>queue</b> is locked and then unlocked when to dequeued a task.</dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__ULP-2-suspension.html#gaaff299f195e2397f17cf11016c8a394f" title="dequeue a task and make it runnable ">pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched )</a>;</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -286,7 +286,7 @@ int <a class="el" href="group__ULP-2-suspension.html#gaaff299f195e2397f17cf11016
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_dequeue_and_resume_nolock<a name="gab3c26770ac6de70ad11239dc301bd403_pip_dequeue_and_resume_nolock"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__ULP-2-suspension.html#gaaff299f195e2397f17cf11016c8a394f" title="dequeue a task and make it runnable ">pip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>Task in the queue is dequeued and scheduled by the specified <code>sched</code>. If <code>sched</code> is NULL, then the task is enqueued into the scheduling queue of calling task. </dd></dl>
 <dl class="section user"><dt></dt><dd>It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function.</dd></dl>
@@ -339,7 +339,7 @@ int <a class="el" href="group__ULP-2-suspension.html#gaaff299f195e2397f17cf11016
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_dequeue_and_resume_N<a name="gac26e54557d8e89fcdcb52a9df6c65998_pip_dequeue_and_resume_%4e"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int pip_dequeue_and_resume_N( pip_task_queue_t *queue, pip_task_t *sched, int *np );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>The specified number of tasks are dequeued and scheduled by the specified <code>sched</code>. If <code>sched</code> is NULL, then the task is enqueued into the scheduling queue of calling task. </dd></dl>
 <dl class="section user"><dt></dt><dd>The <b>queue</b> is locked and unlocked when dequeued.</dd></dl>
@@ -395,7 +395,7 @@ int <a class="el" href="group__ULP-2-suspension.html#gaaff299f195e2397f17cf11016
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_dequeue_and_resume_N_nolock<a name="ga939e70924803be491c2f6f10b364e803_pip_dequeue_and_resume_%4e_nolock"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue, pip_task_t *sched, int *np );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>The specified number of tasks are dequeued and scheduled by the specified <code>sched</code>. If <code>sched</code> is NULL, then the task is enqueued into the scheduling queue of calling task. </dd></dl>
 <dl class="section user"><dt></dt><dd>It is the user's responsibility to lock the queue beofre calling this function and unlock the queue after calling this function.</dd></dl>

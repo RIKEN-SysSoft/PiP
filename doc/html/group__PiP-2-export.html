@@ -140,7 +140,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_named_export<a name="ga3613eaa34ad5a4985007ff9177eb6542_pip_named_export"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int pip_named_export( void *exp, const char *format, ... )</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>Pass an address of a memory region to the other PiP task. Unlike the simmple <code>pip_export</code> and <code>pip_import</code> functions which can only export one address per task, <code>pip_named_export</code> and <code>pip_named_import</code> can associate a name with an address so that PiP root or PiP task can exchange arbitrary number of addressess.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -200,7 +200,7 @@ int pip_named_export( void *exp, const char *format, ... )</dd></dl>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_named_import<a name="ga68bcfa436ddc6acaf25f67fc30430fc1_pip_named_import"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int pip_named_import( int pipid, void **expp, const char *format, ... )</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>Import an address exported by the specified PiP task and having the specified name. If it is not exported yet, the calling task will be blocked. The</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -270,7 +270,7 @@ int pip_named_export( void *exp, const char *format, ... )</dd></dl>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_named_tryimport<a name="ga205d73fdb294d3cbfe095c14d5e63637_pip_named_tryimport"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int pip_named_tryimport( int pipid, void **expp, const char *format, ... )</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>Import an address exported by the specified PiP task and having the specified name. If it is not exported yet, this returns <code>EAGAIN</code>.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -317,7 +317,7 @@ int pip_named_export( void *exp, const char *format, ... )</dd></dl>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_export<a name="ga92d98dc8bafe8c73d4332d40d77be6cb_pip_export"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int <a class="el" href="group__PiP-2-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb" title="export an address ">pip_export( void *exp )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>Pass an address of a memory region to the other PiP task. This is a very naive implementation in PiP v1 and deprecated. Once a task export an address, there is no way to change the exported address or undo export.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -367,7 +367,7 @@ int pip_named_export( void *exp, const char *format, ... )</dd></dl>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_import<a name="ga6d7ac596a9da824e40d7c06528f42e5f_pip_import"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  int pip_export( void **expp );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>Get an address exported by the specified PiP task. This is a very naive implementation in PiP v1 and deprecated. If the address is not yet exported at the time of calling this function, then <code>NULL</code> is returned.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -408,7 +408,7 @@ int pip_named_export( void *exp, const char *format, ... )</dd></dl>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_set_aux<a name="gabe36293dba51fe90f94057bb4f82f328_pip_set_aux"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-2-export.html#gabe36293dba51fe90f94057bb4f82f328" title="Associate user data with a PiP task. ">pip_set_aux( void *aux )</a>;</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -441,7 +441,7 @@ int <a class="el" href="group__PiP-2-export.html#gabe36293dba51fe90f94057bb4f82f
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_get_aux<a name="ga779abad7e346657a6fd3c024e204addb_pip_get_aux"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-2-export.html#ga779abad7e346657a6fd3c024e204addb" title="Retrieve the user data associated with a PiP task. ">pip_get_aux( void **auxp )</a>;</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">

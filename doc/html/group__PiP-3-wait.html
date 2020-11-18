@@ -125,7 +125,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_wait<a name="gae04520bc29d3ec85d7090f7e645de27d_pip_wait"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-3-wait.html#gae04520bc29d3ec85d7090f7e645de27d" title="wait for the termination of a PiP task ">pip_wait( int pipid, int *status )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function can be used regardless to the PiP execution mode. This function blocks until the specified PiP task terminates. The macros such as <code>WIFEXITED</code> and so on defined in Glibc can be applied to the returned <code>status</code> value.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -179,10 +179,10 @@ int <a class="el" href="group__PiP-3-wait.html#gae04520bc29d3ec85d7090f7e645de27
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_trywait<a name="ga9e786d15401af041842f3f503c962a4b_pip_trywait"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-3-wait.html#ga9e786d15401af041842f3f503c962a4b" title="wait for the termination of a PiP task in a non-blocking way ">pip_trywait( int pipid, int *status )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function can be used regardless to the PiP execution mode. This function behaves like the <code>wait</code> function of glibc and the macros such as <code>WIFEXITED</code> and so on can be applied to the returned <code>status</code> value.</dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-3-wait.html#ga9e786d15401af041842f3f503c962a4b" title="wait for the termination of a PiP task in a non-blocking way ">pip_trywait( int pipid, int *status )</a>;</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -236,7 +236,7 @@ int <a class="el" href="group__PiP-3-wait.html#ga9e786d15401af041842f3f503c962a4
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_wait_any<a name="ga621bba73fda6b2bbe3c04e0c65006d36_pip_wait_any"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36" title="Wait for the termination of any PiP task. ">pip_wait_any( int *pipid, int *status )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function can be used regardless to the PiP execution mode. This function blocks until any of PiP tasks terminates. The macros such as <code>WIFEXITED</code> and so on defined in Glibc can be applied to the returned <code>status</code> value.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -289,7 +289,7 @@ int <a class="el" href="group__PiP-3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d3
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_trywait_any<a name="ga697a16f7400d2a2ed2b8ffa230ca83d9_pip_trywait_any"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-3-wait.html#ga697a16f7400d2a2ed2b8ffa230ca83d9" title="non-blocking version of pip_wait_any ">pip_trywait_any( int *pipid, int *status )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function can be used regardless to the PiP execution mode. This function blocks until any of PiP tasks terminates. The macros such as <code>WIFEXITED</code> and so on defined in Glibc can be applied to the returned <code>status</code> value.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>

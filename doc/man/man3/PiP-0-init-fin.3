@@ -1,4 +1,4 @@
-.TH "PiP Initialization/Finalization" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Initialization/Finalization" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -38,7 +38,7 @@ pip_init
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts )\fP;
 .RE
@@ -158,7 +158,7 @@ pip_fin
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_fin( void )\fP;
 .RE

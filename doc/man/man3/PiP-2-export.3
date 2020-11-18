@@ -1,4 +1,4 @@
-.TH "Export/Import Functions" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Export/Import Functions" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -58,7 +58,7 @@ pip_named_export
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int pip_named_export( void *exp, const char *format, \&.\&.\&. )
 .RE
@@ -110,7 +110,7 @@ pip_named_import
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_named_import( int pipid, void **expp, const char *format, \&.\&.\&. )
 .RE
@@ -179,7 +179,7 @@ pip_named_tryimport
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_named_tryimport( int pipid, void **expp, const char *format, \&.\&.\&. )
 .RE
@@ -243,7 +243,7 @@ pip_export
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int \fBpip_export( void *exp )\fP;
 .RE
@@ -290,7 +290,7 @@ pip_import
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_export( void **expp );
 .RE
@@ -339,7 +339,7 @@ pip_set_aux
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_set_aux( void *aux )\fP;
 .RE
@@ -375,7 +375,7 @@ pip_get_aux
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_get_aux( void **auxp )\fP;
 .RE

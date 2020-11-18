@@ -1,4 +1,4 @@
-.TH "Spawning PiP task" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Spawning PiP task" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -54,7 +54,7 @@ pip_spawn_from_main
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp, void *aux )
 .RE
@@ -97,7 +97,7 @@ pip_spawn_from_func
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp, void *aux );
 .RE
@@ -149,7 +149,7 @@ pip_spawn_hook
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 void pip_spawn_hook( pip_spawn_hook_t *hook, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg );
 .RE
@@ -206,7 +206,7 @@ pip_task_spawn
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int pip_task_spawn( pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp );
 .RE
@@ -296,7 +296,7 @@ pip_spawn
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int pip_spawn( char *filename, char **argv, char **envv, uint32_t coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
 .RE
@@ -392,7 +392,7 @@ pip_blt_spawn
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int pip_blt_spawn( pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp );
 .RE

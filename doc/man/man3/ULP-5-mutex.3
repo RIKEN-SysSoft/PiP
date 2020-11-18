@@ -1,4 +1,4 @@
-.TH "BLT/ULP Mutex Functions" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Mutex Functions" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -38,7 +38,7 @@ pip_mutex_init
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_mutex_init( pip_mutex_t *mutex )\fP;
 .RE
@@ -78,7 +78,7 @@ pip_mutex_lock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_mutex_lock( pip_mutex_t *mutex )\fP;
 .RE
@@ -118,7 +118,7 @@ pip_mutex_unlock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_mutex_unlock( pip_mutex_t *mutex )\fP;
 .RE
@@ -158,7 +158,7 @@ pip_mutex_fin
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_mutex_fin( pip_mutex_t *mutex )\fP;
 .RE

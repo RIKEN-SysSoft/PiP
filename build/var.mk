@@ -25,8 +25,8 @@ FFLAGS   = $(DEFAULT_FFLAGS)
 LDFLAGS  = $(DEFAULT_LDFLAGS)
 LIBS     = $(DEFAULT_LIBS)
 
-INCLUDE_BUILDDIR = $(top_builddir)/include
-INCLUDE_SRCDIR   = $(top_srcdir)/include
+INCLUDE_BUILDDIR = $(top_builddir)/include/pip
+INCLUDE_SRCDIR   = $(top_srcdir)/include/pip
 
 INSTALL = $(DEFAULT_INSTALL)
 INSTALL_PROGRAM = $(DEFAULT_INSTALL_PROGRAM)
@@ -56,7 +56,7 @@ GLIBC_INCDIR  = $(glibc_incdir)
 GLIBC_LIBDIR  = $(glibc_libdir)
 GLIBC_LDFLAGS = -L$(glibc_libdir) -Wl,-rpath=$(GLIBCLIBDIR)
 
-PIP_INCDIR    = $(srcdir_top)/include
+PIP_INCDIR    = $(srcdir_top)/include/
 PIP_LIBDIR    = $(srcdir_top)/lib
 PIP_LIBS      = $(srcdir_top)/lib/libpip.so $(srcdir_top)/lib/libpip_init.so
 PIP_BINDIR    = $(srcdir_top)/bin
@@ -75,24 +75,24 @@ PIP_LDFLAGS_BOTH = $(PIP_LDFLAGS) $(RDYNAMIC_FLAG) $(DYLINKER_FLAG) $(PTHREAD_FL
 
 PIPCC = $(PIP_BINDIR)/pipcc
 
-DEPINCS = $(PIP_INCDIR)/build.h			\
-	  $(PIP_INCDIR)/pip_config.h		\
-	  $(PIP_INCDIR)/pip.h			\
-	  $(PIP_INCDIR)/pip_blt.h		\
-	  $(PIP_INCDIR)/pip_dlfcn.h		\
-	  $(PIP_INCDIR)/pip_signal.h		\
-	  $(PIP_INCDIR)/pip_internal.h		\
-	  $(PIP_INCDIR)/pip_clone.h		\
-	  $(PIP_INCDIR)/pip_machdep.h 		\
-	  $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
-	  $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
-	  $(PIP_INCDIR)/pip_gdbif.h		\
-	  $(PIP_INCDIR)/pip_gdbif_func.h	\
-	  $(PIP_INCDIR)/pip_gdbif_queue.h	\
-	  $(PIP_INCDIR)/pip_util.h		\
-	  $(PIP_INCDIR)/pip_debug.h
+DEPINCS = $(PIP_INCDIR)/pip/build.h			\
+	  $(PIP_INCDIR)/pip/pip_config.h		\
+	  $(PIP_INCDIR)/pip/pip.h			\
+	  $(PIP_INCDIR)/pip/pip_blt.h			\
+	  $(PIP_INCDIR)/pip/pip_dlfcn.h			\
+	  $(PIP_INCDIR)/pip/pip_signal.h		\
+	  $(PIP_INCDIR)/pip/pip_internal.h		\
+	  $(PIP_INCDIR)/pip/pip_clone.h			\
+	  $(PIP_INCDIR)/pip/pip_machdep.h 		\
+	  $(PIP_INCDIR)/pip/pip_machdep_aarch64.h 	\
+	  $(PIP_INCDIR)/pip/pip_machdep_x86_64.h 	\
+	  $(PIP_INCDIR)/pip/pip_gdbif.h			\
+	  $(PIP_INCDIR)/pip/pip_gdbif_func.h		\
+	  $(PIP_INCDIR)/pip/pip_gdbif_queue.h		\
+	  $(PIP_INCDIR)/pip/pip_util.h			\
+	  $(PIP_INCDIR)/pip/pip_debug.h
 
-DEPLIBS = $(PIP_LIBDIR)/libpip.so 		\
+DEPLIBS = $(PIP_LIBDIR)/libpip.so 			\
 	  $(PIP_LIBDIR)/libpip_init.so
 
 DEPS = $(DEPINCS) $(DEPLIBS)

@@ -321,9 +321,9 @@ MPI Communication," in SC’20 (to appear)
 
 ## Presentation Slides
 
-* [HPDC'18] file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/HPDC18.pdf
-* [ROSS'18] file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/HPDC18-ROSS.pdf
-* [IPDPS/RADR'20] file:/home/ahori/PiP/x86_64-redhat-7_pip-3/install/share/slides/IPDPS-RSADR-2020.pdf
+* [HPDC'18] file:/home/ahori/PiP/pip-3/install/share/slides/HPDC18.pdf
+* [ROSS'18] file:/home/ahori/PiP/pip-3/install/share/slides/HPDC18-ROSS.pdf
+* [IPDPS/RADR'20] file:/home/ahori/PiP/pip-3/install/share/slides/IPDPS-RSADR-2020.pdf
 # Author
 Atsushi Hori
 Riken Center for Commputational Science (R-CCS)

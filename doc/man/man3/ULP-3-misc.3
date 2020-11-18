@@ -1,4 +1,4 @@
-.TH "BLT/ULP Miscellaneous Function" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Miscellaneous Function" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -46,7 +46,7 @@ pip_task_self
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 pip_task_t *pip_task_self( void );
 .RE
@@ -67,7 +67,7 @@ pip_get_task_pipid
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_get_task_pipid( pip_task_t *task, int *pipidp )\fP;
 .RE
@@ -102,7 +102,7 @@ pip_get_task_by_pipid
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_get_task_by_pipid( int pipid, pip_task_t **taskp )\fP;
 .RE
@@ -139,7 +139,7 @@ pip_get_sched_domain
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_get_sched_domain( pip_task_t **domainp )\fP;
 .RE

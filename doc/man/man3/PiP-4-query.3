@@ -1,4 +1,4 @@
-.TH "PiP Query Functions" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Query Functions" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -70,7 +70,7 @@ pip_get_pipid
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int \fBpip_get_pipid( int *pipidp )\fP;
 .RE
@@ -101,7 +101,7 @@ pip_is_initialized
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int \fBpip_is_initialized( void )\fP;
 .RE
@@ -122,7 +122,7 @@ pip_get_ntasks
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int \fBpip_get_ntasks( int *ntasksp )\fP;
 .RE
@@ -153,7 +153,7 @@ pip_get_mode
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int \fBpip_get_mode( int *modep )\fP;
 .RE
@@ -189,7 +189,7 @@ pip_get_mode_str
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  char *pip_get_mode_str( void );
 .RE
@@ -215,7 +215,7 @@ pip_get_system_id
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int pip_get_system_id( int *pipid, uintptr_t *idp );
 .RE
@@ -253,7 +253,7 @@ pip_isa_root
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_isa_root( void )\fP;
 .RE
@@ -274,7 +274,7 @@ pip_isa_task
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_isa_task( void )\fP;
 .RE
@@ -295,7 +295,7 @@ pip_is_threaded
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_is_threaded( int *flagp )\fP;
 .RE
@@ -326,7 +326,7 @@ pip_is_shared_fd
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_is_shared_fd( int *flagp )\fP;
 .RE

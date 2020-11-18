@@ -131,7 +131,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_init<a name="ga20439326ff318c2dd0752bd544dca0e2_pip_init"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-0-init-fin.html#ga20439326ff318c2dd0752bd544dca0e2" title="Initialize the PiP library. ">pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function initializes the PiP library. The PiP root process must call this. A PiP task is not required to call this function unless the PiP task calls any PiP functions. </dd></dl>
 <dl class="section user"><dt>Description</dt><dd>When this function is called by a PiP root, <code>ntasks</code>, and <code>root_expp</code> are input parameters. If this is called by a PiP task, then those parameters are output returning the same values input by the root. </dd></dl>
@@ -201,7 +201,7 @@ pips(PiP 1) <br/>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_fin<a name="gac4654282785abb9434ce81573fdf16ed_pip_fin"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed" title="Finalize the PiP library. ">pip_fin( void )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function finalizes the PiP library. After calling this, most of the PiP functions will return the error code <code>EPERM</code>.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>zero is returned if this function succeeds. On error, error number is returned. </dd></dl>

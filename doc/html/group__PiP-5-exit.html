@@ -112,7 +112,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_exit<a name="ga55171ea8db2c2693f005560e427485c2_pip_exit"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
  void <a class="el" href="group__PiP-5-exit.html#ga55171ea8db2c2693f005560e427485c2" title="terminate the calling PiP task ">pip_exit( int status )</a>;</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>When the main function or the start function of a PiP task returns with an integer value, then it has the same effect of calling <a class="el" href="group__PiP-5-exit.html#ga55171ea8db2c2693f005560e427485c2">pip_exit</a> with the returned value.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -146,7 +146,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_kill_all_tasks<a name="gab7ba5cc62101240c68acf07905e36772_pip_kill_all_tasks"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int <a class="el" href="group__PiP-5-exit.html#gab7ba5cc62101240c68acf07905e36772" title="kill all PiP tasks ">pip_kill_all_tasks( void )</a>;</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>This function must be called from PiP root.</dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>Return 0 on success. Return an error code on error. </dd></dl>
@@ -174,7 +174,7 @@ int <a class="el" href="group__PiP-5-exit.html#gab7ba5cc62101240c68acf07905e3677
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_abort<a name="ga49a4a9ee014ffdaf0c26df18adf965ad_pip_abort"></a> </dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 void <a class="el" href="group__PiP-5-exit.html#ga49a4a9ee014ffdaf0c26df18adf965ad" title="Kill all PiP tasks and then kill PiP root. ">pip_abort( void )</a>; </dd></dl>
 
 </div>

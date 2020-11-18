@@ -1,4 +1,4 @@
-.TH "Task Queue Operations" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Task Queue Operations" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -70,7 +70,7 @@ pip_task_queue_init
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_task_queue_init( pip_task_queue_t *queue, pip_task_queue_methods_t *methods );
 .RE
@@ -98,7 +98,7 @@ pip_task_queue_trylock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_task_queue_trylock( pip_task_queue_t *queue )\fP;
 .RE
@@ -124,7 +124,7 @@ pip_task_queue_lock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_task_queue_lock( pip_task_queue_t *queue )\fP;
 .RE
@@ -150,7 +150,7 @@ pip_task_queue_unlock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_task_queue_unlock( pip_task_queue_t *queue )\fP;
 .RE
@@ -176,7 +176,7 @@ pip_task_queue_isempty
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_task_queue_isempty( pip_task_queue_t *queue )\fP;
 .RE
@@ -202,7 +202,7 @@ pip_task_queue_count
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_task_queue_count( pip_task_queue_t *queue, int *np )\fP;
 .RE
@@ -237,7 +237,7 @@ pip_task_queue_enqueue
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 void pip_task_queue_enqueue( pip_task_queue_t *queue, pip_task_t *task );
 .RE
@@ -265,7 +265,7 @@ pip_task_queue_dequeue
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 pip_task_t* \fBpip_task_queue_dequeue( pip_task_queue_t *queue )\fP;
 .RE
@@ -296,7 +296,7 @@ pip_task_queue_describe
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 void \fBpip_task_queue_describe( pip_task_queue_t *queue, FILE *fp )\fP;
 .RE
@@ -319,7 +319,7 @@ pip_task_queue_fin
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int \fBpip_task_queue_fin( pip_task_queue_t *queue )\fP;
 .RE

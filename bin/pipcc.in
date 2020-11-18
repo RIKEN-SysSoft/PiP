@@ -3,14 +3,14 @@
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
-# 
+#
 #     Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
 #     and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -124,14 +124,9 @@ else
 	PIP_INCDIR=${SRCTOP}/include;
 	PIP_LIBDIR=${SRCTOP}/lib;
     else
-	echo "Unknown ${self}"
+	echo "${cmd}: Unknown ${self}"
 	exit 1
     fi
-fi
-
-if ! [ -f ${PIP_INCDIR}/pip.h ]; then
-    echo "Unable to find pip.h"
-    exit 1
 fi
 
 if ${which}; then
@@ -142,7 +137,12 @@ PIP_INCFLAGS="-I${PIP_INCDIR}"
 PIP_LDFLAGS="-L${PIP_LIBDIR} -Wl,-rpath=${PIP_LIBDIR}"
 PIP_LIB=${PIP_LIBDIR}/libpip.so
 
-PIP_VERSION_MAJOR=`grep PACKAGE_VERSION ${PIP_INCDIR}/pip_config.h | cut -d '.' -f 1`
+if [ -f ${PIP_INCDIR}/pip/pip_config.h ]; then
+    PIP_VERSION_MAJOR=`grep PACKAGE_VERSION ${PIP_INCDIR}/pip/pip_config.h | cut -d '.' -f 1`
+else
+    echo "${cmd}: Unable to find pip_config.h"
+    exit 1
+fi
 
 GLIBC_CFLAGS=""
 GLIBC_LDFLAGS=""

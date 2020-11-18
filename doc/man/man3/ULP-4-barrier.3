@@ -1,4 +1,4 @@
-.TH "BLT/ULP Barrier Functions" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "BLT/ULP Barrier Functions" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -47,7 +47,7 @@ pip_barrier_init
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_barrier_init( pip_barrier_t *barrp, int n )\fP;
 .RE
@@ -94,7 +94,7 @@ pip_barrier_wait
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_barrier_wait( pip_barrier_t *barrp )\fP;
 .RE
@@ -132,7 +132,7 @@ pip_barrier_fin
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_barrier_fin( pip_barrier_t *barrp )\fP;
 .RE

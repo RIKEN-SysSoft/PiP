@@ -155,7 +155,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_spawn_from_main<a name="gad7708867e5370ae0a4ae71b16f446f16_pip_spawn_from_main"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, char **envv, void *exp, void *aux )</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function sets up the <code>pip_spawn_program_t</code> structure for spawning a PiP task, starting from the mmain function.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
@@ -229,7 +229,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp, char *prog, char **argv, c
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_spawn_from_func<a name="ga71d2d053e9c7153adc167e2cf1adf12e_pip_spawn_from_func"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, void *arg, char **envv, void *exp, void *aux );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function sets the required information to invoke a program, starting from the <code>main()</code> function. The function should have the function prototype as shown below; <div class="fragment"><div class="line"><span class="keywordtype">int</span> start_func( <span class="keywordtype">void</span> *arg )</div>
 </div><!-- fragment --> This start function must be globally defined in the program.. The returned integer of the start function will be treated in the same way as the <code>main</code> function. This implies that the <code>pip_wait</code> function family called from the PiP root can retrieve the return code.</dd></dl>
@@ -287,7 +287,7 @@ pip_spawn_from_func( pip_spawn_program_t *progp, char *prog, char *funcname, voi
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_spawn_hook<a name="ga1c3f1d9e029f68dbcfb7d78b7dfa1533_pip_spawn_hook"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 void pip_spawn_hook( pip_spawn_hook_t *hook, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd></dd></dl>
 <p>The <em>before</em> and <em>after</em> functions are introduced to follow the programming model of the <code>fork</code> and <code>exec</code>. <em>before</em> function does the prologue found between the <code>fork</code> and <code>exec</code>. <em>after</em> function is to free the argument if it is <code>malloc()ed</code>, for example. </p>
@@ -351,7 +351,7 @@ The before and after hook functions should have the function prototype as shown 
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_task_spawn<a name="gaf1fcc4cb85ec3eda734afe2beb0c6a36_pip_task_spawn"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int pip_task_spawn( pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_spawn_hook_t *hookp );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function spawns a PiP task specified by <code>progp</code>. </dd></dl>
 <dl class="section user"><dt></dt><dd>In the process execution mode, the file descriptors having the <code>FD_CLOEXEC</code> flag is closed and will not be passed to the spawned PiP task. This simulated close-on-exec will not take place in the pthread execution mode.</dd></dl>
@@ -456,7 +456,7 @@ int pip_task_spawn( pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, 
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_spawn<a name="ga4698d85283b03f0443fb0991e1119d35_pip_spawn"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int pip_spawn( char *filename, char **argv, char **envv, uint32_t coreno, int *pipidp, pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function spawns a PiP task. </dd></dl>
 <dl class="section user"><dt></dt><dd>In the process execution mode, the file descriptors having the <code>FD_CLOEXEC</code> flag is closed and will not be passed to the spawned PiP task. This simulated close-on-exec will not take place in the pthread execution mode.</dd></dl>
@@ -558,7 +558,7 @@ int pip_spawn( char *filename, char **argv, char **envv, uint32_t coreno, int *p
       </table>
 </div><div class="memdoc">
 <dl class="section user"><dt>Name</dt><dd>pip_blt_spawn<a name="ga8b31bc23b6e165ae50d3bdea655539c5_pip_blt_spawn"></a></dd></dl>
-<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip.h</a>&gt; <br/>
+<dl class="section user"><dt>Synopsis</dt><dd>#include &lt;<a class="el" href="pip_8h_source.html">pip/pip.h</a>&gt; <br/>
 int pip_blt_spawn( pip_spawn_program_t *progp, uint32_t coreno, uint32_t opts, int *pipidp, pip_task_t **bltp, pip_task_queue_t *queue, pip_spawn_hook_t *hookp );</dd></dl>
 <dl class="section user"><dt>Description</dt><dd>This function spawns a BLT (PiP task) specified by <code>progp</code>. The created annd returned BLT is another form of a PiP task. It is an opaque object, essentially a double-linked list. Thus created BLT can be enqueued or dequeued to/from a <code>pip_task_queue_t</code>. </dd></dl>
 <dl class="section user"><dt></dt><dd>In the process execution mode, the file descriptors having the <code>FD_CLOEXEC</code> flag is closed and will not be passed to the spawned PiP task. This simulated close-on-exec will not take place in the pthread execution mode.</dd></dl>

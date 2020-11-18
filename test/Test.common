@@ -32,7 +32,7 @@ CFLAGS += -I$(srcdir_top)/test $(PIP_CFLAGS_BOTH)
 
 LDFLAGS += $(PIP_LDFLAGS_BOTH)
 
-DEPINCS = ../test.h $(PIP_INCDIR)/pip.h $(PIP_INCDIR)/pip_blt.h
+DEPINCS += ../test.h
 
 PROGRAMS_TO_INSTALL = # nothing
 

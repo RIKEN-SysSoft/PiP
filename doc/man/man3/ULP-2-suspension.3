@@ -1,4 +1,4 @@
-.TH "Suspending and Resuming BLT/ULP" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Suspending and Resuming BLT/ULP" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -54,7 +54,7 @@ pip_suspend_and_enqueue
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_suspend_and_enqueue( pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg );
 .RE
@@ -108,7 +108,7 @@ pip_suspend_and_enqueue_nolock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_suspend_and_enqueue_nolock( pip_task_queue_t *queue, pip_enqueue_callback_t callback, void *cbarg );
 .RE
@@ -160,7 +160,7 @@ The \fBqueue\fP is locked and then unlocked when to dequeued a task\&.
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched )\fP;
 .RE
@@ -197,7 +197,7 @@ pip_dequeue_and_resume_nolock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_dequeue_and_resume( pip_task_queue_t *queue, pip_task_t *sched )\fP;
 .RE
@@ -244,7 +244,7 @@ pip_dequeue_and_resume_N
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_dequeue_and_resume_N( pip_task_queue_t *queue, pip_task_t *sched, int *np );
 .RE
@@ -295,7 +295,7 @@ pip_dequeue_and_resume_N_nolock
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
  int pip_dequeue_and_resume_N_nolock( pip_task_queue_t *queue, pip_task_t *sched, int *np );
 .RE

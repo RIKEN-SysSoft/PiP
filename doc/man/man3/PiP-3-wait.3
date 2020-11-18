@@ -1,4 +1,4 @@
-.TH "Waiting for PiP task termination" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "Waiting for PiP task termination" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -46,7 +46,7 @@ pip_wait
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_wait( int pipid, int *status )\fP;
 .RE
@@ -101,7 +101,7 @@ pip_trywait
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_trywait( int pipid, int *status )\fP;
 .RE
@@ -113,7 +113,7 @@ This function can be used regardless to the PiP execution mode\&. This function 
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_trywait( int pipid, int *status )\fP;
 .RE
@@ -168,7 +168,7 @@ pip_wait_any
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_wait_any( int *pipid, int *status )\fP;
 .RE
@@ -221,7 +221,7 @@ pip_trywait_any
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_trywait_any( int *pipid, int *status )\fP;
 .RE

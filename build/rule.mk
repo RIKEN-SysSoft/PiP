@@ -106,17 +106,17 @@ header-all: $(HEADERS)
 header-install:
 	@for i in -- $(HEADERS); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(includedir); \
+		$(MKDIR_P) $(includedir)/pip; \
 		echo \
-		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/$$i; \
-		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/pip/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/pip/$$i; \
 	done
 	@for i in -- $(EXEC_HEADERS); do \
 		case $$i in --) continue;; esac; \
 		$(MKDIR_P) $(exec_includedir); \
 		echo \
-		$(INSTALL_DATA) $$i $(includedir)/$$i; \
-		$(INSTALL_DATA) $$i $(includedir)/$$i; \
+		$(INSTALL_DATA) $$i $(includedir)/pip/$$i; \
+		$(INSTALL_DATA) $$i $(includedir)/pip/$$i; \
 	done
 .PHONY: header-install
 

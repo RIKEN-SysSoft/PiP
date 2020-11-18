@@ -1,4 +1,4 @@
-.TH "PiP Signaling Functions" 3 "Fri Nov 6 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "PiP Signaling Functions" 3 "Wed Nov 18 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -47,7 +47,7 @@ This function is agnostic to the PiP execution mode\&.
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_kill( int pipid, int signal )\fP;
 .RE
@@ -87,7 +87,7 @@ pip_sigmask
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask )\fP;
 .RE
@@ -136,7 +136,7 @@ pip_signal_wait
 .PP
 \fBSynopsis\fP
 .RS 4
-#include <\fBpip\&.h\fP> 
+#include <\fBpip/pip\&.h\fP> 
 .br
 int \fBpip_signal_wait( int signal )\fP;
 .RE

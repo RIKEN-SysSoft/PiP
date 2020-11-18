@@ -82,7 +82,7 @@ $(PIP_INCDIR)/build.h: FORCE
 	./build-header.sh $(CC) $(PIP_INCDIR)/build.h
 .PHONY: FORCE
 
-concat: concat.c $(PIP_INCDIR)/pip_internal.h
+concat: concat.c $(DEPINCS)
 	$(CC) -I$(PIP_INCDIR) -O concat.c -o concat
 
 $(PIP_INCDIR)/concat.h: concat
