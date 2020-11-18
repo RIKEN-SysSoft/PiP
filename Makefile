@@ -73,6 +73,10 @@ doc-clean:
 	$(MAKE) -C doc clean
 .PHONE: docclean
 
+doc-veryclean:
+	$(MAKE) -C doc veryclean
+.PHONE: docclean
+
 post-documents-hook:
 	$(MAKE) -C doc documents
 
