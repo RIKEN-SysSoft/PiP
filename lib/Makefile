@@ -2,14 +2,14 @@
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
-# 
+#
 #     Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
 #     and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -57,8 +57,8 @@ CPPFLAGS += $(PIP_CPPFLAGS) $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
 	-DPREFIX=\"$(prefix)\" \
 	-DLDLINUX=\"$(dynamic_linker)\" \
 	$(CPPFLAGS_DEBUG)
-CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREADFLAG)
-LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREADFLAG)
+CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
+LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREAD_FLAG)
 
 LIBMAIN = -Wl,-e,pip_main
 
@@ -72,23 +72,6 @@ OBJS = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_blt.o pip_sync.o pip_util.o pip_gdbif.o pip_namexp.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
 	pip_context.o
-
-DEPINCS =  $(PIP_INCDIR)/pip_config.h		\
-	   $(PIP_INCDIR)/pip.h			\
-	   $(PIP_INCDIR)/pip_blt.h		\
-	   $(PIP_INCDIR)/pip_internal.h		\
-	   $(PIP_INCDIR)/pip_context.h		\
-	   $(PIP_INCDIR)/pip_clone.h		\
-	   $(PIP_INCDIR)/pip_dlfcn.h		\
-	   $(PIP_INCDIR)/pip_signal.h		\
-	   $(PIP_INCDIR)/pip_machdep.h 		\
-	   $(PIP_INCDIR)/pip_machdep_aarch64.h 	\
-	   $(PIP_INCDIR)/pip_machdep_x86_64.h 	\
-	   $(PIP_INCDIR)/pip_gdbif.h		\
-	   $(PIP_INCDIR)/pip_gdbif_func.h	\
-	   $(PIP_INCDIR)/pip_gdbif_queue.h	\
-	   $(PIP_INCDIR)/pip_util.h		\
-	   $(PIP_INCDIR)/pip_debug.h
 
 all: $(LIBRARIES)
 
@@ -105,24 +88,22 @@ concat: concat.c $(PIP_INCDIR)/pip_internal.h
 $(PIP_INCDIR)/concat.h: concat
 	./concat > $(PIP_INCDIR)/concat.h
 
-$(OBJS): $(DEPINCS) $(PIP_INCDIR)/concat.h $(PIP_INCDIR)/build.h Makefile
+$(OBJS): $(PIP_INCDIR)/build.h $(PIP_INCDIR)/concat.h
 
-$(LIBRARY): $(OBJS)
+$(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
-	rm -f $(LIBNAME)
+	$(RM) $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
-$(LIBRARY_PIPINIT): $(OBJS_PIPINIT) Makefile
+$(LIBRARY_PIPINIT): $(OBJS_PIPINIT) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS_PIPINIT) -o $@
 	rm -f $(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY_PIPINIT) $(LIBNAME_PIPINIT)
 
 # chmod is to make rpmbuild happy
 install:
-	chmod 0755 $(libdir)/$(LIBRARY) \
-	$(libdir)/$(LIBRARY_PIPINIT)
-	rm -f $(libdir)/$(LIBNAME) \
-	$(libdir)/$(LIBNAME_PIPINIT)
+	chmod 0755 $(libdir)/$(LIBRARY) $(libdir)/$(LIBRARY_PIPINIT)
+	$(RM) $(libdir)/$(LIBNAME) $(libdir)/$(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY) $(libdir)/$(LIBNAME)
 	ln -s $(LIBRARY_PIPINIT) $(libdir)/$(LIBNAME_PIPINIT)
 
