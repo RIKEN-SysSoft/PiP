@@ -50,11 +50,12 @@
 ### if \p CC environment  is set then \p \$(CC) will be used as a C compiler
 ###
 ### \sa
-### pip-exec(1), pip-mode(1)
+### pip-run(1), pip-mode(1)
 ###
 
 PREFIX=@prefix@
 SRCTOP=@srcdir_top@
+PIP_VERSION=@PACKAGE_VERSION@
 
 glibc_incdir=@glibc_incdir@
 glibc_libdir=@glibc_libdir@
@@ -64,10 +65,20 @@ dynamic_linker=@dynamic_linker@
 
 self=$0
 cmd=`basename ${self}`
+cmdline="$cmd $@"
+
+print_usage () {
+    echo >&2 "Error: ${cmdline}"
+    echo >&2 "${cmd} [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]"
+    echo >&2 "   --piproot: the compile (and link) as a PiP root"
+    echo >&2 "   --piptask: the compile (and link) as a PiP task"
+    echo >&2 "   --nopip:   No PiP related settings will be applied"
+    exit 2
+}
 
 err_nostatic() {
-    echo "${cmd} does not support static linking" >&2;
-    exit 1;
+    echo >&2 "${cmd} does not support static linking";
+    print_usage
 }
 
 is_linking=true
@@ -89,7 +100,7 @@ while [ "$1" != "" ]; do
 	--pipinstall) pipinstall=true;;
 	--nopip)   no_pip=true;;
 	--silent)  silent=true;;
-	--dryrun)  dryrun=true;;
+	--dryrun|--dry)  dryrun=true;;
 	--which)   which=true;;
 	-Bstatic|-static) err_nostatic;;
 	*)         opts="${opts} $1";;
@@ -110,27 +121,36 @@ if ${no_pip}; then
     do_exec ${CC} ${opts}
 fi
 
-if $pipbuild ; then
-    PIP_INCDIR=${SRCTOP}/include
-    PIP_LIBDIR=${SRCTOP}/lib
-elif $pipinstall ; then
+if $pipinstall && $pipbuild ; then
+    print_usage
+fi
+
+if $pipinstall ; then
     PIP_INCDIR=${PREFIX}/include
     PIP_LIBDIR=${PREFIX}/lib
+    pipcc_path=${PREFIX}/bin/pipcc
+elif $pipbuild ; then
+    PIP_INCDIR=${SRCTOP}/include
+    PIP_LIBDIR=${SRCTOP}/lib
+    pipcc_path=${SRCTOP}/bin/pipcc
 else
     if [ ${PREFIX}/bin/pipcc -ef ${self} ] ; then
 	PIP_INCDIR=${PREFIX}/include
 	PIP_LIBDIR=${PREFIX}/lib
+	pipcc_path=${PREFIX}/bin/pipcc
     elif [ ${SRCTOP}/bin/pipcc -ef ${self} ]; then
 	PIP_INCDIR=${SRCTOP}/include;
 	PIP_LIBDIR=${SRCTOP}/lib;
+	pipcc_path=${SRCTOP}/bin/pipcc
     else
-	echo "${cmd}: Unknown ${self}"
+	echo >&2 "${cmd}: Unknown ${self}"
 	exit 1
     fi
 fi
 
 if ${which}; then
     ( cd ${PIP_LIBDIR}/../bin/; pipcc_path=`pwd`; echo "${pipcc_path}/pipcc" )
+    exit 0
 fi
 
 PIP_INCFLAGS="-I${PIP_INCDIR}"
@@ -138,7 +158,9 @@ PIP_LDFLAGS="-L${PIP_LIBDIR} -Wl,-rpath=${PIP_LIBDIR}"
 PIP_LIB=${PIP_LIBDIR}/libpip.so
 
 if [ -f ${PIP_INCDIR}/pip/pip_config.h ]; then
-    PIP_VERSION_MAJOR=`grep PACKAGE_VERSION ${PIP_INCDIR}/pip/pip_config.h | cut -d '.' -f 1`
+    PIP_VERSION_MAJOR=`echo "${PIP_VERSION}" | cut -d '.' -f 1`
+    PIP_VERSION_MINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 2`
+    PIP_VERSION_SUBMINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 3`
 else
     echo "${cmd}: Unable to find pip_config.h"
     exit 1
@@ -189,11 +211,15 @@ fi
 
 PTHREAD_FLAG="-pthread"
 
-PIPCC_DEF="-DPIPCC"
+PIPCC_DEFS="-DPIPCC \
+-DPIP_VERSION=${PIP_VERSION} \
+-DPIP_VERSION_MAJOR=${PIP_VERSION_MAJOR} \
+-DPIP_VERSION_MINOR=${PIP_VERSION_MINOR} \
+-DPIP_VERSION_SUBMINOR=${PIP_VERSION_SUBMINOR}"
 
 if ${is_linking}; then
-    do_exec ${CC} ${PIPCC_DEF} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+    do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
 	${PTHREAD_FLAG} ${opts}
 else
-    do_exec ${CC} ${PIPCC_DEF} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
+    do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
 fi

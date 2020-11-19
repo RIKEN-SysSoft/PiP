@@ -35,9 +35,8 @@ top_srcdir = $(top_builddir)
 srcdir = .
 
 HEADERS = pip.h pip_blt.h pip_util.h pip_dlfcn.h pip_signal.h \
-	pip_gdbif_enums.h pip_machdep.h \
-	pip_machdep_x86_64.h pip_machdep_aarch64.h \
-	pip_config.h \
+	pip_machdep.h pip_machdep_x86_64.h pip_machdep_aarch64.h \
+	pip_gdbif_enums.h pip_config.h \
 	xpmem.h
 
 MAN3_SRCS = pip.h pip_blt.h pip_signal.h

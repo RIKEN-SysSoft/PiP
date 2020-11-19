@@ -36,7 +36,7 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = pip-exec
-PROGRAMS  = $(PROGRAM) printpipmode
+PROGRAMS  = $(PROGRAM) printpipmode pipcc pip-check pip-mode pip-man
 PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pip-mode pip-check pip-man \
 	pips printpipmode
 
@@ -45,6 +45,8 @@ MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 
 CPPFLAGS += $(PIP_CPPFLAGS) $(DGBFLAG)
 
+all: $(PROGRAMS)
+
 debug:
 	DBGFLAG=-DDEBUG $(MAKE) all
 
@@ -52,11 +54,13 @@ include $(top_srcdir)/build/rule.mk
 
 pre-install-hook: pip-exec printpipmode
 
+pipcc: ../config.log
+	chmod +x pipcc pip-check pip-mode pip-man
+
 pip-exec: pip-exec.c $(DEPS) Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 printpipmode: printpipmode.c $(DEPS) Makefile
-	chmod +x pipcc pip-check pip-mode pip-man
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
 post-clean-hook:
