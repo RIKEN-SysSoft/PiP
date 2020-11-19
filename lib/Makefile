@@ -71,12 +71,6 @@ OBJS	 = pip_main.o pip.o pip_util.o pip_2_backport.o pip_signal.o pip_wait.o \
 
 include $(top_srcdir)/build/rule.mk
 
-$(PIP_INCDIR)/pip/build.h: FORCE
-	./build-header.sh $(CC) $(PIP_INCDIR)/pip/build.h
-.PHONY: FORCE
-
-$(OBJS): $(PIP_INCDIR)/pip/build.h Makefile
-
 $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
 	$(RM) $(LIBNAME)

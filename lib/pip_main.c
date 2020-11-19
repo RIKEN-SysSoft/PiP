@@ -32,7 +32,7 @@
  */
 
 #include <pip/pip_internal.h>
-#include <build.h>
+#include <pip/build.h>
 #include <getopt.h>
 
 const char interp[] __attribute__((section(".interp"))) = INTERP;
