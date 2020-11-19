@@ -75,7 +75,7 @@ $(PIP_INCDIR)/pip/build.h: FORCE
 	./build-header.sh $(CC) $(PIP_INCDIR)/pip/build.h
 .PHONY: FORCE
 
-$(OBJS): $(PIP_INCDIR)/build.h Makefile
+$(OBJS): $(PIP_INCDIR)/pip/build.h Makefile
 
 $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
