@@ -83,7 +83,7 @@
 #endif
 
 #ifndef CONCAT
-#include <concat.h>
+#include <pip/concat.h>
 #endif
 
 #include <pip/pip.h>

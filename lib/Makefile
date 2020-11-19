@@ -86,7 +86,7 @@ concat: concat.c $(DEPINCS)
 	$(CC) -I$(PIP_INCDIR) -O concat.c -o concat
 
 $(PIP_INCDIR)/concat.h: concat
-	./concat > $(PIP_INCDIR)/concat.h
+	./concat > $(PIP_INCDIR)/pip/concat.h
 
 $(OBJS): $(PIP_INCDIR)/pip/build.h $(PIP_INCDIR)/pip/concat.h
 
