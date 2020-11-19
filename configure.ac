@@ -6,7 +6,7 @@ AC_INIT([Process-in-Processs], [2.0.0], [pip@ml.riken.jp], [proc-in-proc],
                                [https://github.com/RIKEN-SysSoft/PiP])
 AC_CONFIG_SRCDIR([RELEASE_NOTE])
 AC_CONFIG_AUX_DIR([build])
-AC_CONFIG_HEADERS([include/pip_config.h])
+AC_CONFIG_HEADERS([include/pip/pip_config.h])
 
 # Specialized system macros
 AC_CANONICAL_BUILD
