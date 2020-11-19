@@ -42,4 +42,23 @@ HEADERS = pip.h pip_blt.h pip_util.h pip_dlfcn.h pip_signal.h \
 MAN3_SRCS = pip.h pip_blt.h pip_signal.h
 
 include $(top_srcdir)/build/var.mk
+
+all: build.h concat.h
+
 include $(top_srcdir)/build/rule.mk
+
+build.h: Makefile
+	./build-header.sh build.h $(CC)
+
+concat.h: concat Makefile
+	./concat > concat.h
+
+concat: concat.c $(DEPINCS) Makefile
+	$(CC) -I.. -O concat.c -o concat
+
+post-clean-hook:
+	$(RM) concat
+
+post-veryclean-hook:
+	$(RM) build.h concat.h pip_config.h
+	$(RM) .doxygen_*

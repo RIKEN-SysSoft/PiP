@@ -78,18 +78,6 @@ all: $(LIBRARIES)
 include $(top_srcdir)/build/rule.mk
 include fcontext.mk
 
-$(PIP_INCDIR)/pip/build.h: FORCE
-	./build-header.sh $(CC) $(PIP_INCDIR)/pip/build.h
-.PHONY: FORCE
-
-concat: concat.c $(DEPINCS)
-	$(CC) -I$(PIP_INCDIR) -O concat.c -o concat
-
-$(PIP_INCDIR)/concat.h: concat
-	./concat > $(PIP_INCDIR)/pip/concat.h
-
-$(OBJS): $(PIP_INCDIR)/pip/build.h $(PIP_INCDIR)/pip/concat.h
-
 $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
 	$(RM) $(LIBNAME)
@@ -120,4 +108,4 @@ post-clean-hook:
 	$(RM) $(OBJS_PIPINIT) $(LIBNAME) $(LIBNAME_PIPINIT)
 
 post-veryclean-hook:
-	$(RM) $(PIP_INCDIR)//build.h $(PIP_INCDIR)//concat.h concat
+	$(RM) fcontext.mk fctx_defs.mk
