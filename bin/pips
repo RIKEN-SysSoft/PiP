@@ -186,11 +186,11 @@ if check_gen is not None and check_out is not None:
     print_usage( '????' )
 # generating test data for checking afterwords
 if check_gen is not None:
-    check_input  = open( check_gen+'.input',  mode='w', encoding='ascii' )
-    check_output = open( check_gen+'.output', mode='w', encoding='ascii' )
+    check_input  = open( check_gen+'.input',  mode='w' )
+    check_output = open( check_gen+'.output', mode='w' )
     print( 'simply ignore this line', file=check_input )
 if check_out is not None:
-    check_output = open( check_out+'.check',  mode='w', encoding='ascii' )
+    check_output = open( check_out+'.check',  mode='w' )
 
 if len(sys.argv) > 0:
     args = sys.argv
@@ -437,12 +437,12 @@ def read_ps_output( fstream ):
 header = None
 
 if check_out is None:
-    with sp.Popen( ps_cmd, stdout=sp.PIPE, encoding='ascii' ) as psproc:
+    with sp.Popen( ps_cmd, stdout=sp.PIPE ) as psproc:
         read_ps_output( psproc.stdout )
     if check_gen is not None:
         check_input.close()
 else:
-    with open( check_out+'.input', mode='r', encoding='ascii' ) as fstream:
+    with open( check_out+'.input', mode='r' ) as fstream:
         fstream.readline() # skip the very first line
         read_ps_output( fstream )
 #try:
