@@ -1768,14 +1768,10 @@ int pip_get_aux( void **auxp ) {
 }
 
 /* energy-saving spin-lock */
-void pip_glibc_lock( void ) __attribute__ ((unused));
-/* actually this is being used */
 void pip_glibc_lock( void ) {
   if( pip_root != NULL ) pip_sem_wait( &pip_root->lock_glibc );
 }
 
-void pip_glibc_unlock( void ) __attribute__ ((unused));
-/* actually this is being used */
 void pip_glibc_unlock( void ) {
   if( pip_root != NULL ) pip_sem_post( &pip_root->lock_glibc );
 }

@@ -363,8 +363,6 @@ void pip_gdbif_initialize_root( int ) PIP_PRIVATE;
 void pip_gdbif_finalize_task( pip_task_t* ) PIP_PRIVATE;
 void pip_gdbif_hook_before( pip_task_t* ) PIP_PRIVATE;
 void pip_gdbif_hook_after( pip_task_t* ) PIP_PRIVATE;
-void pip_glibc_lock( void ) PIP_PRIVATE;
-void pip_glibc_unlock( void ) PIP_PRIVATE;
 
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
 

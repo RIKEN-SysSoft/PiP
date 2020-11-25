@@ -2,14 +2,14 @@
  * $PIP_license: <Simplified BSD License>
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *     Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
- * 
+ *
  *     Redistributions in binary form must reproduce the above copyright notice,
  *     this list of conditions and the following disclaimer in the documentation
  *     and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -151,7 +151,7 @@ extern "C" {
    * Initialize the PiP library
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_init( int *pipidp, int *ntasks, void **root_expp, uint32_t opts );
    *
    * \description
@@ -266,7 +266,7 @@ extern "C" {
    * Finalize the PiP library
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_fin( void );
    *
    * \description
@@ -279,7 +279,7 @@ extern "C" {
    *
    * \notes
    * The behavior of calling \ref pip_init after calling this \ref pip_fin
-   * is note defined and recommended to do so.
+   * is not defined and recommended not to do so.
    *
    * \sa pip_init
    */
@@ -304,7 +304,7 @@ extern "C" {
    *  main function
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * void pip_spawn_from_main( pip_spawn_program_t *progp,
    *			       char *prog, char **argv, char **envv,
    *		               void *exp, void *aux )
@@ -356,7 +356,7 @@ void pip_spawn_from_main( pip_spawn_program_t *progp,
    * function defined in a program
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * pip_spawn_from_func( pip_spawn_program_t *progp,
    *		     char *prog, char *funcname, void *arg, char **envv,
    *		     void *exp, void *aux );
@@ -413,7 +413,7 @@ void pip_spawn_from_func( pip_spawn_program_t *progp,
    * \brief Setting invocation hook information
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * void pip_spawn_hook( pip_spawn_hook_t *hook,
    *                      pip_spawnhook_t before,
    *			  pip_spawnhook_t after,
@@ -477,7 +477,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Spawning a PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_task_spawn( pip_spawn_program_t *progp,
    * 		    uint32_t coreno,
    *		    uint32_t opts,
@@ -562,7 +562,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief spawn a PiP task (PiP v1 API and deprecated)
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_spawn( char *filename, char **argv, char **envv,
    *		 uint32_t coreno, int *pipidp,
    *		 pip_spawnhook_t before, pip_spawnhook_t after, void *hookarg);
@@ -650,7 +650,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * the others.
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_named_export( void *exp, const char *format, ... )
    *
    * \description
@@ -688,7 +688,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief import the named exported address
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_named_import( int pipid, void **expp, const char
    * *format, ... )
    *
@@ -732,7 +732,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief import the named exported address (non-blocking)
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_named_tryimport( int pipid, void **expp, const char
    * *format, ... )
    *
@@ -771,7 +771,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief export an address
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_export( void *exp );
    *
    * \description
@@ -798,7 +798,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief import exported address of a PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_export( void **expp );
    *
    * \description
@@ -826,7 +826,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Associate user data with a PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_set_aux( void *aux );
    *
    * \param[in] aux Pointer to the user dats to assocate with the calling PiP task
@@ -845,7 +845,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Retrieve the user data associated with a PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_get_aux( void **auxp );
    *
    * \param[out] auxp Returned user data
@@ -878,7 +878,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief wait for the termination of a PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_wait( int pipid, int *status );
    *
    * \description
@@ -912,7 +912,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief wait for the termination of a PiP task in a non-blocking way
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_trywait( int pipid, int *status );
    *
    * \description
@@ -922,7 +922,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * returned \p status value.
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_trywait( int pipid, int *status );
    *
    * \param[in] pipid PiP ID to wait for.
@@ -952,7 +952,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Wait for the termination of any PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_wait_any( int *pipid, int *status );
    *
    * \description
@@ -984,7 +984,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief non-blocking version of \p pip_wait_any
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_trywait_any( int *pipid, int *status );
    *
    * \description
@@ -1027,7 +1027,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief get PiP ID of the calling task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_get_pipid( int *pipidp );
    *
    * \param[out] pipidp This parameter points to the variable which
@@ -1046,7 +1046,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Query is PiP library is already initialized
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_is_initialized( void );
    *
    * \return Return a non-zero value if PiP is already
@@ -1062,7 +1062,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief get the maximum number of the PiP tasks
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_get_ntasks( int *ntasksp );
    *
    * \param[out] ntasksp Maximum number of PiP tasks is returned
@@ -1080,7 +1080,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief get the PiP execution mode
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  int pip_get_mode( int *modep );
    *
    * \param[out] modep Returned PiP execution mode
@@ -1098,11 +1098,11 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief get a character string of the current execution mode
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  char *pip_get_mode_str( void );
    *
    * \return Return the name string of the current execution mode. If
-   * PiP library is note initialized yet, then thiss return \p NULL.
+   * PiP library is not initialized yet, then this returns \p NULL.
    *
    * \sa pip_get_mode
    */
@@ -1114,7 +1114,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief deliver a process or thread ID defined by the system
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_get_system_id( int *pipid, uintptr_t *idp );
    *
    * \description
@@ -1141,7 +1141,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief check if calling PiP task is a PiP root or not
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_isa_root( void );
    *
    * \return Return a non-zero value if the caller is the PiP
@@ -1157,7 +1157,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief check if calling PiP task is a PiP task or not
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_isa_task( void );
    *
    * \return Return a non-zero value if the caller is the PiP
@@ -1173,7 +1173,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief check if PiP execution mode is pthread or not
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_is_threaded( int *flagp );
    *
    * \param[out] flagp set to a non-zero value if PiP execution mode is
@@ -1193,7 +1193,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * This is equivalent with the \p pip_is_threaded function.
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_is_shared_fd( int *flagp );
    *
    * \param[out] flagp set to a non-zero value if FDs are shared
@@ -1223,7 +1223,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief terminate the calling PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    *  void pip_exit( int status );
    *
    * \description
@@ -1253,7 +1253,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief kill all PiP tasks
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_kill_all_tasks( void );
    *
    * \note
@@ -1270,7 +1270,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Kill all PiP tasks and then kill PiP root
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * void pip_abort( void );
    */
   void pip_abort(void);
@@ -1281,7 +1281,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief deliver a signal to PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_kill( int pipid, int signal );
    *
    * \param[out] pipid PiP ID of a target PiP task to deliver the signal
@@ -1314,7 +1314,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief set signal mask of the current PiP task
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask );
    *
    * \description
@@ -1340,7 +1340,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief wait for a signal
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_signal_wait( int signal );
    *
    * \description
@@ -1376,7 +1376,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief Yield
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_yield( int flag );
    *
    * \param[in] flag to specify the behavior of yielding. Unused and
@@ -1395,7 +1395,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief initialize barrier synchronization structure
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_barrier_init( pip_barrier_t *barrp, int n );
    *
    * \param[in] barrp pointer to a PiP barrier structure
@@ -1418,7 +1418,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief wait on barrier synchronization in a busy-wait way
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_barrier_wait( pip_barrier_t *barrp );
    *
    * \param[in] barrp pointer to a PiP barrier structure
@@ -1439,7 +1439,7 @@ void pip_spawn_hook( pip_spawn_hook_t *hook,
    * \brief finalize barrier synchronization structure
    *
    * \synopsis
-   * \#include <pip.h> \n
+   * \#include <pip/pip.h> \n
    * int pip_barrier_fin( pip_barrier_t *barrp );
    *
    * \param[in] barrp pointer to a PiP barrier structure
