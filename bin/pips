@@ -436,18 +436,23 @@ def read_ps_output( fstream ):
 
 header = None
 
-if check_out is None:
-    with sp.Popen( ps_cmd, stdout=sp.PIPE ) as psproc:
-        read_ps_output( psproc.stdout )
-    if check_gen is not None:
-        check_input.close()
-else:
-    with open( check_out+'.input', mode='r' ) as fstream:
+try:
+    fstream = None
+    if check_out == None:
+        psproc = sp.Popen( ps_cmd, stdout=sp.PIPE )
+        fstream = psproc.stdout
+        read_ps_output( fstream )
+    else:
+        fstream = open( check_out+'.input', mode='r' )
         fstream.readline() # skip the very first line
         read_ps_output( fstream )
-#try:
-#except Exception as e:
-#    ex_print( 'ps command error: ' + str(e) )
+except Exception as e:
+    ex_print( 'ps.Popen('+str(ps_cmd)+') error: ' + str(e) )
+finally:
+    if fstream is not None:
+        fstream.close()
+    if check_gen != None:
+        check_input.close()
 
 patterns = []
 for select in selections:

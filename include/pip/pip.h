@@ -1067,7 +1067,7 @@ int pip_task_spawn( pip_spawn_program_t *progp,
    *  char *pip_get_mode_str( void );
    *
    * \return Return the name string of the current execution mode. If
-   * PiP library is note initialized yet, then thiss return \p NULL.
+   * PiP library is note initialized yet, then this return \p NULL.
    *
    * \sa pip_get_mode
    */
