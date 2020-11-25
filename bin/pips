@@ -1,35 +1,38 @@
 #!/usr/bin/env python
 # -*- mode:python -*-
 
-# $PIP_TEST_VERSION: Version 3.0.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
+# modification, are permitted provided that the following conditions are met:
 #
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the distribution.
+#     Redistributions of source code must retain the above copyright notice,
+#     this list of conditions and the following disclaimer.
 #
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#     Redistributions in binary form must reproduce the above copyright notice,
+#     this list of conditions and the following disclaimer in the documentation
+#     and/or other materials provided with the distribution.
 #
-# The views and conclusions contained in the software and documentation
-# are those of the authors and should not be interpreted as representing
-# official policies, either expressed or implied, of the PiP project.$
-# $RIKEN_copyright: Riken Center for Computational Sceience,
-# System Software Development Team, 2016, 2017, 2018, 2019, 2020$
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+# $
+# $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
+# System Software Development Team, 2016-2020
+# $
+# $PIP_VERSION: Version 2.0.0$
+#
+# $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
+# $
+
+"pips: Show status of runnning PiP tasks"
 
 from __future__ import print_function
 import os
@@ -56,29 +59,32 @@ check_out    = None
 check_output = None
 
 def print_usage( errmsg ):
+    "print usage and exit"
     global check_gen, check_out, check_output
     print( cmdself+':', errmsg, file=sys.stderr )
-    if check_gen != None or check_out != None:
+    if check_gen is not None or check_out is not None:
         print( cmdself+':', errmsg, file=check_output )
     print( 'Usage:', cmdself, '[a][u][x] <PIPS_OPTIONS> [<CMDS>]', file=sys.stderr )
     sys.exit( 1 )
 
 def eprint( msg ):
+    "error message"
     global check_gen, check_out, check_output
     print( cmdself.upper()+':', msg, file=sys.stderr )
-    if check_gen != None or check_out != None:
+    if check_gen is not None or check_out is not None:
         print( cmdself.upper()+':', msg, file=check_output )
 
 def ex_print( msg ):
+    "print error message and exit"
     eprint( msg )
     try:
-        if check_out != None:
+        if check_out is not None:
             check_output.close()
     except:
         pass
     sys.exit( 1 )
 
-sigtab = [ ( 'HUP',   signal.SIGHUP  ), # 1
+SIGTAB = [ ( 'HUP',   signal.SIGHUP  ), # 1
            ( 'INT',   signal.SIGINT  ), # 2
            ( 'QUIT',  signal.SIGQUIT ), # 3
            ( 'ILL',   signal.SIGILL  ), # 4
@@ -107,40 +113,42 @@ sigtab = [ ( 'HUP',   signal.SIGHUP  ), # 1
            ( 'PROF',  signal.SIGPROF ), # 27
            ( 'WINCH', signal.SIGWINCH ), # 28
            ( 'IO',    signal.SIGIO   ), # 29
-           ( 'PWR',   signal.SIGPWR  ), # 30
+##         ( 'PWR',   signal.SIGPWR  ), # 30
            ( 'SYS',   signal.SIGSYS  )  # 31
 ]
 
 def check_signal( sig ):
-    global sigtab
+    "check if the specified signal is valid or not"
+    global SIGTAB
     try:
         signum = int( sig )
         if signum < 0 or signum > signal.NSIG:
             return None
-        for ( name, sig ) in sigtab:
+        for ( name, sig ) in SIGTAB:
             if signum == sig:
                 return ( name, sig )
         return None
-    except ValueError as e:
+    except ValueError:
         try:
             signame = sig.upper()
             if signame[0:3] == 'SIG':
                 signame = signame[3:]
-            for ( name, sig ) in sigtab:
+            for ( name, sig ) in SIGTAB:
                 if signame == name:
                     return ( name, sig )
             return None
-        except KeyError as e:
+        except KeyError:
             return None
 
-def delimit( list, delimiter ):
-    if list == [] or list == None:
+def delimit( lst, delimiter ):
+    "flatten list"
+    if lst == [] or lst is None:
         return []
 
-    token = list.pop( 0 )
-    if delimiter != None and delimiter in token:
-        return token.split( delimiter ) + flatten( list, delimiter )
-    return [ token ] + flatten( list, delimiter )
+    token = lst.pop( 0 )
+    if delimiter is not None and delimiter in token:
+        return token.split( delimiter ) + delimit( lst, delimiter )
+    return [ token ] + delimit( lst, delimiter )
 
 error = False
 
@@ -160,27 +168,29 @@ killsig      = None
 selections = []
 
 def is_option( opt ):
-    if opt == None:
+    "check if option"
+    if opt is None:
         return False
     return opt[0] == '-'
 
 def is_skip( opt ):
-    if opt == None:
+    "check if the skip argument"
+    if opt is None:
         return True
-    return opt == '-' or opt == '--'
+    return opt in [ '-', '--' ]
 
 check_gen = os.environ.get( 'PIPS_CHECK_GEN' )
 check_out = os.environ.get( 'PIPS_CHECK_OUT' )
 # for checking
-if check_gen != None and check_out != None:
+if check_gen is not None and check_out is not None:
     print_usage( '????' )
 # generating test data for checking afterwords
-if check_gen != None:
-    check_input  = open( check_gen+'.input',  mode='w', encoding='ascii' )
-    check_output = open( check_gen+'.output', mode='w', encoding='ascii' )
+if check_gen is not None:
+    check_input  = open( check_gen+'.input',  mode='w' )
+    check_output = open( check_gen+'.output', mode='w' )
     print( 'simply ignore this line', file=check_input )
-if check_out != None:
-    check_output = open( check_out+'.check',  mode='w', encoding='ascii' )
+if check_out is not None:
+    check_output = open( check_out+'.check',  mode='w' )
 
 if len(sys.argv) > 0:
     args = sys.argv
@@ -207,16 +217,16 @@ if len(sys.argv) > 0:
             nxt = args[idx]
         else:
             nxt = None
-        if opt == '--root' or opt == '-r':
+        if opt in [ '--root', '-r' ]:
             flag_root = True
-        elif opt == '--task' or opt == '-t':
+        elif opt in [ '--task', '-t' ]:
             flag_task = True
-        elif opt == '--family' or opt == '-f':
+        elif opt in [ '--family', '-f' ]:
             flag_family = True
-        elif opt == '--kill' or opt == '-k':
+        elif opt in [ '--kill', '-k' ]:
             flag_kill = True
-        elif opt == '--signal' or opt == '-s':
-            if killsig != None:
+        elif opt in [ '--signal', '-s' ]:
+            if killsig is not None:
                 print_usage( 'Multiple signal options' )
             if is_skip( nxt ) or is_option( nxt ):
                 print_usage( 'No signal specified' )
@@ -224,19 +234,19 @@ if len(sys.argv) > 0:
             if killsig == None:
                 print_usage( 'Invalid signal' )
             idx += 1
-        elif opt == '--ps' or opt == '-P':
-            if ps_opts == None:
+        elif opt in [ '--ps', '-P' ]:
+            if ps_opts is None:
                 ps_opts = []
             if not is_skip( nxt ):
                 ps_opts = ps_opts + nxt.split( ',' )
                 idx += 1
-        elif opt == '--top' or opt == '-T':
-            if top_opts == None:
+        elif opt in [ '--top', '-T' ]:
+            if top_opts is None:
                 top_opts = []
             if not is_skip( nxt ):
                 top_opts = top_opts + nxt.split( ',' )
                 idx += 1
-        elif opt == '--verbose' or opt == '-v':
+        elif opt in [ '--verbose', '-v' ]:
             flag_verbose = True
         elif opt == '--debug':
             flag_debug = True
@@ -252,54 +262,60 @@ if len(sys.argv) > 0:
 if flag_debug:
     print( 'Selections:', selections )
 
-if ps_opts != None and top_opts != None:
+if ps_opts is not None and top_opts is not None:
     ex_print( '--ps and --top options are exclusive' )
 
-if flag_kill and killsig != None:
+if flag_kill and killsig is not None:
     ex_print( '--kill and --signal options are exclusive' )
 if flag_kill:
     killsig = ( 'TERM',  signal.SIGTERM )
 
-if flag_kill and ps_opts != None:
+if flag_kill and ps_opts is not None:
     ex_print( '( --kill and --ps options are exclusive' )
-if flag_kill and top_opts != None:
+if flag_kill and top_opts is not None:
     ex_print( '( --kill and --top options are exclusive' )
 
-if killsig != None and ps_opts != None:
+if killsig is not None and ps_opts is not None:
     ex_print( '( --signal and --ps options are exclusive' )
-if killsig != None and top_opts != None:
+if killsig is not None and top_opts is not None:
     ex_print( '( --signal and --top options are exclusive' )
 
 pips_postfix = 'comm tid pid ppid'
 if flag_bsd_u:
-    format = 'user pid tid %cpu %mem vsz rss tty stat start_time cputime'
+    fmt = 'user pid tid %cpu %mem vsz rss tty stat start_time cputime'
 elif ps_ax == '':
-    format = 'pid tid tty time'
+    fmt = 'pid tid tty time'
 else:
-    format = 'pid tid tty stat time'
-ps_cmd = [ 'ps', ps_ax+'H', '--format' ] + [ format + ' ' + pips_postfix ]
+    fmt = 'pid tid tty stat time'
+ps_cmd = [ 'ps', ps_ax+'H', '--format' ] + [ fmt + ' ' + pips_postfix ]
 
 if flag_debug:
     print( ps_cmd, file=sys.stderr )
 
 def get_command( psline ):
+    "get command from the ps output line"
     return psline[-4]
 
 def get_tid( psline ):
+    "get TID from the ps output line"
     return psline[-3]
 
 def get_pid( psline ):
+    "get PID from the ps output line"
     return psline[-2]
 
 def get_ppid( psline ):
+    "get PPID from the ps output line"
     return psline[-1]
 
 def format_header( header ):
+    "re-format the header line of ps output"
     head = header[:-3]
     head.insert( -1, 'PIP' )
     return head
 
 def format_psline( psline ):
+    "re-format from the ps format to the pips format"
     cmd = get_command( psline )
     first  = cmd[0]
     second = cmd[1]
@@ -318,42 +334,50 @@ def format_psline( psline ):
     return line
 
 def pip_symbol( sym ):
+    "check if sym is a pip symbol"
     if sym in ":;.|?":
         return True
     return False
 
 def pip_root_symbol( sym ):
+    "check if sym is the root symbol"
     if sym == 'R':
         return True
     return False
 
 def pip_task_symbol( sym ):
+    "check if sym is the task symbol"
     if sym in '0123456789':
         return True
     return False
 
 def get_mode( ps ):
+    "return PiP execution mode symbol"
     cmd = get_command( ps )
     return cmd[1]
 
 def is_threaded( mode ):
+    "check if the execution mode is thread"
     if mode == '|':
         return True
     return False
 
 def isa_piproot( cmd ):
+    "check if root task or not"
     global thread_mode
     if pip_root_symbol( cmd[0] ):
         return True
     return False
 
 def isa_piptask( cmd ):
+    "check if the PiP task or not"
     global thread_mode
     if pip_task_symbol( cmd[0] ):
         return True
     return False
 
 def is_selected( ps, cmd, patterns ):
+    "check if the psline matches the patterns"
     if patterns == []:
         return True
     if len(cmd) > 2 and cmd[2:] in patterns:
@@ -372,6 +396,7 @@ def is_selected( ps, cmd, patterns ):
     return False
 
 def has_pc_relation( parent, child ):
+    "check if they have the parent-child relationship"
     mp = get_mode( parent )
     mc = get_mode( child  )
     if mp != mc:
@@ -380,26 +405,26 @@ def has_pc_relation( parent, child ):
         if get_pid( parent ) == get_pid( child ):
             return True
         return False
-    else:
-        if get_pid( parent ) == get_ppid( child ):
-            return True
-        return False
+    if get_pid( parent ) == get_ppid( child ):
+        return True
+    return False
 
 os.environ['LANG'] = 'C'
 piplines = []
 
 def read_ps_output( fstream ):
+    "parse the ps output"
     global piplines, thread_mode, header
 
     while True:
         ps = fstream.readline()
         if ps == '':
-            break;
-        if check_gen != None:
+            break
+        if check_gen is not None:
             print( ps, end='', file=check_input )
 
         psl = ps.split()
-        if header == None:
+        if header is None:
             header = psl
         else:
             cmd = get_command( psl )
@@ -411,18 +436,23 @@ def read_ps_output( fstream ):
 
 header = None
 
-if check_out == None:
-    with sp.Popen( ps_cmd, stdout=sp.PIPE, encoding='ascii' ) as psproc:
-        read_ps_output( psproc.stdout )
-    if check_gen != None:
-        check_input.close()
-else:
-    with open( check_out+'.input', mode='r', encoding='ascii' ) as fstream:
+try:
+    fstream = None
+    if check_out == None:
+        psproc = sp.Popen( ps_cmd, stdout=sp.PIPE )
+        fstream = psproc.stdout
+        read_ps_output( fstream )
+    else:
+        fstream = open( check_out+'.input', mode='r' )
         fstream.readline() # skip the very first line
         read_ps_output( fstream )
-#try:
-#except Exception as e:
-#    ex_print( 'ps command error: ' + str(e) )
+except Exception as e:
+    ex_print( 'ps.Popen('+str(ps_cmd)+') error: ' + str(e) )
+finally:
+    if fstream is not None:
+        fstream.close()
+    if check_gen != None:
+        check_input.close()
 
 patterns = []
 for select in selections:
@@ -465,6 +495,7 @@ if flag_family:
     pip_tasks = fmly_tasks
 
 def sort_tid( psline ):
+    "sort lines with TID"
     return int( get_tid( psline ) )
 
 pip_roots.sort( key=sort_tid )
@@ -479,14 +510,14 @@ if flag_debug:
     for ps in all_tasks:
         print( ps )
 
-if killsig != None:
+if killsig is not None:
     ( signame, signum ) = killsig
     try:
         for ps in all_tasks:
             tid = get_tid( ps )
             if flag_verbose:
                 eprint( 'kill -s ' + signame + ' ' + tid )
-            if check_gen == None and check_out == None:
+            if check_gen is None and check_out is None:
                 os.kill( int(tid), signum )
             else:
                 print( 'kill', tid, signame, file=check_output )
@@ -494,7 +525,7 @@ if killsig != None:
         error = True
         eprint( 'kill(' + signame + ',' + tid + '): ' + str(e) )
 
-elif ps_opts != None:
+elif ps_opts is not None:
     ps_cmd = 'ps'
     ps_uH = ''
     if flag_bsd_u:
@@ -508,7 +539,7 @@ elif ps_opts != None:
         if not pid in pid_list:
             pid_list += [ pid ]
     try:
-        if check_gen == None and check_out == None:
+        if check_gen is None and check_out is None:
             if flag_debug:
                 print( ps_cmd, ps_opts, pid_list )
             os.execvp( ps_cmd, [ps_cmd] + ps_opts + pid_list )
@@ -519,7 +550,7 @@ elif ps_opts != None:
         error = True
         eprint( 'execvp(ps):' + str(e) )
 
-elif top_opts != None:
+elif top_opts is not None:
     top_cmd = 'top'
     if thread_mode:
         top_opts += [ '-H' ]
@@ -528,7 +559,7 @@ elif top_opts != None:
         pid_list += [ get_pid( ps ) ]
     pid_opt = [ '-p', ','.join( pid_list ) ]
     try:
-        if check_gen == None and check_out == None:
+        if check_gen is None and check_out is None:
             if flag_debug:
                 print( ps_cmd, top_opts, pid_opt )
             os.execvp( top_cmd, [top_cmd] + top_opts + pid_opt )
@@ -579,14 +610,14 @@ else:
         idx = 0
         for tkn in line:
             print( tkn.ljust(w[idx]), end='' )
-            if check_gen != None or check_out != None:
+            if check_gen is not None or check_out is not None:
                 print( tkn.ljust(w[idx]), end='', file=check_output )
             idx += 1
         print( '' )             # newline
-        if check_gen != None or check_out != None:
+        if check_gen is not None or check_out is not None:
             print( '', file=check_output )
 
-if check_gen != None or check_out != None:
+if check_gen is not None or check_out is not None:
     check_output.close()
 
 if error:

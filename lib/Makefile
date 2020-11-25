@@ -1,15 +1,15 @@
-# $PIP_VERSION: Version 1.2.0$
+
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
-# 
+#
 #     Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
 #     and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -24,6 +24,10 @@
 # $
 # $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
 # System Software Development Team, 2016-2020
+# $
+# $PIP_VERSION: Version 1.2.0$
+#
+# $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
 # $
 
 top_builddir = ..
@@ -47,8 +51,7 @@ LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPGDB)
 
 SRCS     = pip.c pip_util.c pip_gdb.c
-OBJS	 = pip.o pip_util.o
-OBJS_PIPGDB = pip_gdb.o
+OBJS	 = pip.o pip_util.o pip_gdb.o
 
 DEPINCS  = $(PIPINCDIR)/pip.h			\
 	   $(PIPINCDIR)/pip_clone.h		\
@@ -71,8 +74,8 @@ $(LIBRARY): $(OBJS) Makefile
 	rm -f $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
-$(LIBRARY_PIPGDB): $(OBJS_PIPGDB) Makefile
-	$(CC) $(LDFLAGS) $(OBJS_PIPGDB) -o $@
+$(LIBRARY_PIPGDB): $(OBJS) Makefile
+	$(CC) $(LDFLAGS) pip_gdb.o -o $@
 
 # chmod is to make rpmbuild happy
 install:
