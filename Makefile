@@ -65,18 +65,14 @@ post-documents-hook:
 
 ###
 
-post-clean-hook:
-	$(RM) test.log.* test.out.*
-	$(MAKE) -C test clean
-
 post-veryclean-hook: subdir-veryclean
-
-post-distclean-hook:
-	$(RM) build/config.mk
+	$(RM) -r autom4te.cache
 	$(RM) release/version.conf
 	$(RM) config.log config.status include/pip_config.h
-	$(MAKE) -C doc post-distclean-hook
-.PHONY: post-distclean-hook
+	$(MAKE) -C doc post-veryclean-hook
+	$(RM) build/config.mk
+
+post-distclean-hook: post-veryclean-hook
 
 TAGS:
 	ctags -Re
