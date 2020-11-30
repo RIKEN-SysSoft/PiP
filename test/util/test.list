@@ -1,7 +1,0 @@
-NG.sh timer 0 ./inf
-NG.sh timer 0 ./pip_task 1    ./inf
-NG.sh timer 0 ./pip_task 8    ./inf
-NG.sh timer 0 ./pip_blt  1 1  ./inf
-NG.sh timer 0 ./pip_blt  4 4  ./inf
-NG.sh timer 0 ./pip_blt  8 24 ./inf
-timer 1 ./path-test.sh

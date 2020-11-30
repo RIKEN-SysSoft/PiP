@@ -42,20 +42,6 @@ include $(top_srcdir)/build/rule.mk
 debug:
 	CPPFLAGS+="-DDEBUG" $(MAKE) clean all;
 
-### build test programs and run
-.PHONY: test-progs
-test-progs:
-	$(MAKE) -C test test-progs
-
-.PHONY: test
-test: all
-	$(MAKE) test-progs
-	$(MAKE) -C test test
-
-.PHONY: testclean
-testclean:
-	$(MAKE) -C test testclean
-
 ### doc
 
 doc-install:
@@ -71,35 +57,24 @@ doc-reset:
 
 doc-clean:
 	$(MAKE) -C doc clean
-.PHONE: docclean
+.PHONE: doc-clean
 
 doc-veryclean:
 	$(MAKE) -C doc veryclean
-.PHONE: docclean
+.PHONE: doc-veryclean
 
 post-documents-hook:
 	$(MAKE) -C doc documents
 
 ###
 
-check:
-	$(MAKE) test
-.PHONY: check
-
-post-clean-hook:
-	$(RM) test.log.* test.out.*
-	$(MAKE) -C test clean
-
-post-veryclean-hook: subdir-veryclean
-
-post-distclean-hook:
-	$(MAKE) -C doc post-distclean-hook
-	$(RM) config.log config.status include/pip_config.h
-	$(RM) lib/fcontext.mk lib/fctx_defs.mk release/version.conf
+post-veryclean-hook:
+	$(RM) -r autom4te.cache
 	$(RM) release/version.conf
+	$(RM) config.log config.status include/pip_config.h
+	$(MAKE) -C doc post-veryclean-hook
 	$(RM) build/config.mk
-.PHONY: post-distclean-hook
 
-.PHONY: TAGS
 TAGS:
 	ctags -Re
+.PHONY: TAGS
