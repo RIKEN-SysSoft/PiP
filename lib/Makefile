@@ -56,36 +56,42 @@ CPPFLAGS += $(PIP_CPPFLAGS) -DINTERP=\"$(INTERP)\" \
 	-DPREFIX=\"$(prefix)\" \
 	-DLDLINUX=\"$(dynamic_linker)\" \
 	$(CPPFLAGS_DEBUG)
-CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
+CFLAGS   += $(PIC_CFLAG) $(PTHREAD_FLAG)
 LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREAD_FLAG)
 
 LIBMAIN = -Wl,-e,pip_main
 
-SRCS = pip_main.c pip.c pip_init.c pip_util.c pip_gdb.c pip_2_backport.c pip_signal.c \
+SRCS  = pip_main.c pip.c pip_init.c pip_util.c pip_gdb.c pip_2_backport.c pip_signal.c \
 	pip_wait.c pip_dlfcn.c pip_gdbif.c pip_got.c pip_clone.c pip_namexp.c
 
 OBJS_PIPINIT = pip_init.o
 
-OBJS	 = pip_main.o pip.o pip_util.o pip_2_backport.o pip_signal.o pip_wait.o \
+OBJS = pip_main.o pip.o pip_util.o pip_2_backport.o pip_signal.o pip_wait.o \
 	pip_dlfcn.o pip_gdbif.o pip_got.o pip_clone.o pip_namexp.o $(OBJS_PIPINIT)
 
 include $(top_srcdir)/build/rule.mk
+
+BUILD_H = $(top_srcdir)/include/pip/build.h
+
+$(BUILD_H): $(top_srcdir)/include/pip/pip_config.h
+	( cd ../include/pip ; $(MAKE) header )
+
+$(OBJS): $(BUILD_H)
 
 $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
 	$(RM) $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
-$(LIBRARY_PIPINIT): $(OBJS_PIPINIT) $(DEPINCS) Makefile
+$(LIBRARY_PIPINIT): $(LIBRARY) $(OBJS_PIPINIT) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS_PIPINIT) -o $@
 	$(RM) $(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY_PIPINIT) $(LIBNAME_PIPINIT)
 
 # chmod is to make rpmbuild happy
 install:
-	chmod 0755 $(libdir)/$(LIBRARY)
-	$(RM) $(libdir)/$(LIBNAME)
-	$(RM) $(libdir)/$(LIBNAME_PIPINIT)
+	chmod 0755 $(libdir)/$(LIBRARY) $(libdir)/$(LIBRARY_PIPINIT)
+	$(RM) $(libdir)/$(LIBNAME) $(libdir)/$(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY) $(libdir)/$(LIBNAME)
 	ln -s $(LIBRARY_PIPINIT) $(libdir)/$(LIBNAME_PIPINIT)
 
