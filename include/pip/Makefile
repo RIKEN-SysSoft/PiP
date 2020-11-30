@@ -56,6 +56,9 @@ include $(top_srcdir)/build/rule.mk
 build.h: Makefile
 	./build-header.sh build.h $(CC)
 
-post-veryclean-hook:
-	$(RM) build.h pip_config.h
+clean:
+	$(RM) build.h
+
+post-veryclean-hook: clean
+	$(RM) pip_config.h
 	$(RM) .doxygen_*

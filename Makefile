@@ -65,14 +65,13 @@ post-documents-hook:
 
 ###
 
-post-veryclean-hook: subdir-veryclean
+post-veryclean-hook:
+	$(MAKE) subdir-veryclean
 	$(RM) -r autom4te.cache
 	$(RM) release/version.conf
 	$(RM) config.log config.status include/pip_config.h
 	$(MAKE) -C doc post-veryclean-hook
 	$(RM) build/config.mk
-
-post-distclean-hook: post-veryclean-hook
 
 TAGS:
 	ctags -Re
