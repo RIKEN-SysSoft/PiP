@@ -33,12 +33,11 @@ misc-clean:
 
 distclean-here:
 	@if [ -f $(srcdir)/Makefile.in ]; then \
+		echo; \
 		$(RM) Makefile; \
 	fi
 	$(RM) .doxygen_*
 .PHONY: distclean-here
-
-.PHONY: check-installed
 
 ### subdir rules
 

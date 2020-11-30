@@ -1,4 +1,3 @@
-
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -58,7 +57,11 @@ doc-reset:
 
 doc-clean:
 	$(MAKE) -C doc clean
-.PHONE: docclean
+.PHONE: doc-clean
+
+doc-veryclean:
+	$(MAKE) -C doc veryclean
+.PHONE: doc-veryclean
 
 post-documents-hook:
 	$(MAKE) -C doc documents
@@ -66,7 +69,6 @@ post-documents-hook:
 ###
 
 post-veryclean-hook:
-	$(MAKE) subdir-veryclean
 	$(RM) -r autom4te.cache
 	$(RM) release/version.conf
 	$(RM) config.log config.status include/pip_config.h

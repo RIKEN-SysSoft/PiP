@@ -132,7 +132,7 @@ install:
 .PHONY: doc-install
 
 doc-reset:
-	git checkout man latex latex-inuse html slides
+	git checkout man latex-inuse html slides
 .PHONE: doc-reset
 
 post-clean-hook:
