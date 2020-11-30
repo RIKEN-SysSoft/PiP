@@ -43,8 +43,7 @@ LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 
 LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
-LIBS = $(LIBRARY) $(LIBRARY_PIPINIT)
-LIBRARIES = HEADERS
+LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
 INTERP = $(dynamic_linker)
 
@@ -77,19 +76,19 @@ OBJS = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 include $(top_srcdir)/build/rule.mk
 include fcontext.mk
 
-HEADERS:
-	( cd ../include/pip ; $(MAKE) build.h concat.h )
-	$(MAKE) $(LIBS)
-.PHONY: HEADERS
+BUILD_H = $(top_srcdir)/include/pip/build.h
 
-OBJS: $(DEPINC) $(OBJS)
+$(BUILD_H): $(top_srcdir)/include/pip/pip_config.h
+	( cd ../include/pip ; $(MAKE) headers )
+
+$(OBJS): $(BUILD_H)
 
 $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
 	$(RM) $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
-$(LIBRARY_PIPINIT): $(OBJS_PIPINIT) $(DEPINCS) Makefile
+$(LIBRARY_PIPINIT): $(LIBRARY) $(OBJS_PIPINIT) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS_PIPINIT) -o $@
 	$(RM) $(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY_PIPINIT) $(LIBNAME_PIPINIT)

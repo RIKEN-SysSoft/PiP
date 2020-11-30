@@ -43,6 +43,8 @@ MAN3_SRCS = pip.h pip_blt.h pip_signal.h
 
 all:
 
+headers: build.h concat.h
+
 include $(top_srcdir)/build/var.mk
 include $(top_srcdir)/build/rule.mk
 
@@ -56,8 +58,8 @@ concat: concat.c pip_internal.h  Makefile
 	$(CC) -I.. -O concat.c -o concat
 
 post-clean-hook:
-	$(RM) concat
+	$(RM) build.h concat concat.h
 
 post-veryclean-hook:
-	$(RM) build.h concat.h pip_config.h
+	$(RM) pip_config.h
 	$(RM) .doxygen_*
