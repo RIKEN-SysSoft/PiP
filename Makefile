@@ -43,20 +43,6 @@ include $(top_srcdir)/build/rule.mk
 debug:
 	CPPFLAGS+="-DDEBUG" $(MAKE) clean all;
 
-### build test programs and run
-.PHONY: test-progs
-test-progs:
-	$(MAKE) -C test test-progs
-
-.PHONY: test
-test: all
-	$(MAKE) test-progs
-	$(MAKE) -C test test
-
-.PHONY: testclean
-testclean:
-	$(MAKE) -C test testclean
-
 ### doc
 
 doc-install:
@@ -79,10 +65,6 @@ post-documents-hook:
 
 ###
 
-check:
-	$(MAKE) test
-.PHONY: check
-
 post-clean-hook:
 	$(RM) test.log.* test.out.*
 	$(MAKE) -C test clean
@@ -90,12 +72,12 @@ post-clean-hook:
 post-veryclean-hook: subdir-veryclean
 
 post-distclean-hook:
-	$(MAKE) -C doc post-distclean-hook
-	$(RM) config.log config.status include/pip_config.h
-	$(RM) release/version.conf
 	$(RM) build/config.mk
+	$(RM) release/version.conf
+	$(RM) config.log config.status include/pip_config.h
+	$(MAKE) -C doc post-distclean-hook
 .PHONY: post-distclean-hook
 
-.PHONY: TAGS
 TAGS:
 	ctags -Re
+.PHONY: TAGS
