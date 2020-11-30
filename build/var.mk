@@ -76,6 +76,7 @@ PIP_LDFLAGS_BOTH = $(PIP_LDFLAGS) $(RDYNAMIC_FLAG) $(DYLINKER_FLAG) $(PTHREAD_FL
 PIPCC = $(PIP_BINDIR)/pipcc
 
 DEPINCS = $(PIP_INCDIR)/pip/build.h			\
+	  $(PIP_INCDIR)/pip/concat.h			\
 	  $(PIP_INCDIR)/pip/pip_config.h		\
 	  $(PIP_INCDIR)/pip/pip.h			\
 	  $(PIP_INCDIR)/pip/pip_blt.h			\

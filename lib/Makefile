@@ -43,7 +43,8 @@ LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 
 LIBNAME_PIPINIT = libpip_init.so
 LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
-LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
+LIBS = $(LIBRARY) $(LIBRARY_PIPINIT)
+LIBRARIES = HEADERS
 
 INTERP = $(dynamic_linker)
 
@@ -57,7 +58,7 @@ CPPFLAGS += $(PIP_CPPFLAGS) $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
 	-DPREFIX=\"$(prefix)\" \
 	-DLDLINUX=\"$(dynamic_linker)\" \
 	$(CPPFLAGS_DEBUG)
-CFLAGS   += $(PIP_CPPFLAGS) $(PIC_CFLAG) $(PTHREAD_FLAG)
+CFLAGS   += $(PIC_CFLAG) $(PTHREAD_FLAG)
 LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREAD_FLAG)
 
 LIBMAIN = -Wl,-e,pip_main
@@ -73,10 +74,15 @@ OBJS = pip_main.o pip.o pip_spawn.o pip_wait.o pip_got.o pip_clone.o \
 	pip_dlfcn.o pip_signal.o $(FCTXOBJS) $(OBJS_PIPINIT) \
 	pip_context.o
 
-all: $(LIBRARIES)
-
 include $(top_srcdir)/build/rule.mk
 include fcontext.mk
+
+HEADERS:
+	( cd ../include/pip ; $(MAKE) build.h concat.h )
+	$(MAKE) $(LIBS)
+.PHONY: HEADERS
+
+OBJS: $(DEPINC) $(OBJS)
 
 $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
@@ -85,7 +91,7 @@ $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
 
 $(LIBRARY_PIPINIT): $(OBJS_PIPINIT) $(DEPINCS) Makefile
 	$(CC) $(LDFLAGS) $(OBJS_PIPINIT) -o $@
-	rm -f $(LIBNAME_PIPINIT)
+	$(RM) $(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY_PIPINIT) $(LIBNAME_PIPINIT)
 
 # chmod is to make rpmbuild happy
@@ -96,10 +102,10 @@ install:
 	ln -s $(LIBRARY_PIPINIT) $(libdir)/$(LIBNAME_PIPINIT)
 
 debug:
-	CPPFLAGS_DEBUG="-DDEBUG" $(MAKE) all;
+	CPPFLAGS="-DDEBUG" $(MAKE) all;
 
-cdebug:
-	$(MAKE) clean debug;
+cdebug: clean
+	CPPFLAGS="-DDEBUG" $(MAKE) all;
 
 TAGS:
 	ctags -Re
