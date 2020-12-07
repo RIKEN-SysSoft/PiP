@@ -3,14 +3,14 @@
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
-# 
+#
 #     Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
 #     and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -90,6 +90,7 @@ pipinstall=false
 dryrun=false
 silent=false
 which=false
+ccopts=false
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -102,6 +103,7 @@ while [ "$1" != "" ]; do
 	--silent)  silent=true;;
 	--dryrun|--dry)  dryrun=true;;
 	--which)   which=true;;
+	--ccopts)  ccopts=true;;
 	-Bstatic|-static) err_nostatic;;
 	*)         opts="${opts} $1";;
     esac
@@ -217,6 +219,15 @@ PIPCC_DEFS="-DPIPCC \
 -DPIP_VERSION_MINOR=${PIP_VERSION_MINOR} \
 -DPIP_VERSION_SUBMINOR=${PIP_VERSION_SUBMINOR}"
 
+if ${ccopts}; then
+    if ${is_linking}; then
+	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	    ${PTHREAD_FLAG} ${opts}
+    else
+	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
+    fi
+    exit 0
+fi
 if ${is_linking}; then
     do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
 	${PTHREAD_FLAG} ${opts}
