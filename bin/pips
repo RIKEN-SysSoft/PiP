@@ -292,6 +292,14 @@ ps_cmd = [ 'ps', ps_ax+'H', '--format' ] + [ fmt + ' ' + pips_postfix ]
 if flag_debug:
     print( ps_cmd, file=sys.stderr )
 
+def byte_to_char( byte_str ):
+    "convert byte string to char (for compatibility between Python2 and 3)"
+    try:
+        ch_str = byte_str.decode() # python 3
+    except:
+        ch_str = byte_str.encode() # python 2
+    return ch_str
+
 def get_command( psline ):
     "get command from the ps output line"
     return psline[-4]
@@ -417,7 +425,7 @@ def read_ps_output( fstream ):
     global piplines, thread_mode, header
 
     while True:
-        ps = fstream.readline()
+        ps = byte_to_char( fstream.readline() )
         if ps == '':
             break
         if check_gen is not None:
@@ -436,23 +444,23 @@ def read_ps_output( fstream ):
 
 header = None
 
-try:
-    fstream = None
-    if check_out == None:
-        psproc = sp.Popen( ps_cmd, stdout=sp.PIPE )
-        fstream = psproc.stdout
-        read_ps_output( fstream )
-    else:
-        fstream = open( check_out+'.input', mode='r' )
-        fstream.readline() # skip the very first line
-        read_ps_output( fstream )
-except Exception as e:
-    ex_print( 'ps.Popen('+str(ps_cmd)+') error: ' + str(e) )
-finally:
-    if fstream is not None:
-        fstream.close()
-    if check_gen != None:
-        check_input.close()
+fstream = None
+if check_out == None:
+    psproc = sp.Popen( ps_cmd, stdout=sp.PIPE )
+    fstream = psproc.stdout
+    read_ps_output( fstream )
+else:
+    fstream = open( check_out+'.input', mode='r' )
+    fstream.readline() # skip the very first line
+    read_ps_output( fstream )
+#try:
+#except Exception as e:
+#    ex_print( 'ps.Popen('+str(ps_cmd)+') error: ' + str(e) )
+#finally:
+#    if fstream is not None:
+#        fstream.close()
+#    if check_gen != None:
+#        check_input.close()
 
 patterns = []
 for select in selections:
