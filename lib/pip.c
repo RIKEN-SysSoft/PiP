@@ -95,13 +95,13 @@ static void pip_set_name( char *symbol, char *progname ) {
   if( progname == NULL ) {
     char prg[16];
     prctl( PR_GET_NAME, prg, 0, 0, 0 );
-    snprintf( nam, 16, "%s%s",      symbol, prg );
+    snprintf( nam, 16, "%s%s", symbol, prg );
   } else {
     char *p;
     if( ( p = strrchr( progname, '/' ) ) != NULL) {
       progname = p + 1;
     }
-    snprintf( nam, 16, "%s%s",    symbol, progname );
+    snprintf( nam, 16, "%s%s", symbol, progname );
   }
   if( !pip_is_pthread_() ) {
 #define FMT "/proc/self/task/%u/comm"
@@ -118,6 +118,29 @@ static void pip_set_name( char *symbol, char *progname ) {
     (void) pthread_setname_np( pthread_self(), nam );
   }
 #endif
+}
+
+static char pip_cmd_name_symbol( int opts ) {
+  char sym;
+
+  switch( opts & PIP_MODE_MASK ) {
+  case PIP_MODE_PROCESS_PRELOAD:
+    sym = ':';
+    break;
+  case PIP_MODE_PROCESS_PIPCLONE:
+    sym = ';';
+    break;
+  case PIP_MODE_PROCESS_GOT:
+    sym = '.';
+    break;
+  case PIP_MODE_PTHREAD:
+    sym = '|';
+    break;
+  default:
+    sym = '?';
+    break;
+  }
+  return sym;
 }
 
 static int pip_count_vec( char **vecsrc ) {
@@ -509,23 +532,9 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, int opts ) {
     pip_root->task_root->tid    = pip_gettid();
     pip_task = pip_root->task_root;
     unsetenv( PIP_ROOT_ENV );
-
     {
-      char *sym;
-      switch( pip_root->opts & PIP_MODE_MASK ) {
-      case PIP_MODE_PROCESS_PRELOAD:
-	sym = "R:";
-	break;
-      case PIP_MODE_PROCESS_PIPCLONE:
-	sym = "R;";
-	break;
-      case PIP_MODE_PTHREAD:
-	sym = "R|";
-	break;
-      default:
-	sym = "R?";
-	break;
-      }
+      char sym[] = "R*";
+      sym[1] = pip_cmd_name_symbol( pip_root->opts );
       pip_set_name( sym, NULL );
     }
     DBGF( "PiP Execution Mode: %s", pip_get_mode_str() );
@@ -1269,10 +1278,9 @@ static void *pip_do_spawn( void *thargs )  {
     err = 0;
   }
   {
-    char sym[3];
-    sym[0] = ( pipid % 10 ) + '0';
-    sym[1] = ':';
-    sym[2] = '\0';
+    char sym[] = "0*";
+    sym[0] += ( pipid % 10 );
+    sym[1] = pip_cmd_name_symbol( pip_root->opts );
     pip_set_name( sym, args->prog );
   }
   if( !pip_is_threaded_() ) {
