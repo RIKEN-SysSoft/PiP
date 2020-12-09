@@ -61,6 +61,12 @@ glibc_incdir=@glibc_incdir@
 glibc_libdir=@glibc_libdir@
 dynamic_linker=@dynamic_linker@
 
+FLAG_FPIC="-fPIC"
+FLAG_FPIE="-fpie"
+FLAG_PIE="-pie"
+FLAG_RDYN="-rdynamic"
+FLAG_PTHREAD="-pthread"
+
 : ${CC:=cc}
 
 self=$0
@@ -89,8 +95,11 @@ pipbuild=false
 pipinstall=false
 dryrun=false
 silent=false
-which=false
+where=false
 ccopts=false
+cflags=false
+lflags=false
+version=
 
 while [ "$1" != "" ]; do
     case $1 in
@@ -102,9 +111,12 @@ while [ "$1" != "" ]; do
 	--nopip)   no_pip=true;;
 	--silent)  silent=true;;
 	--dryrun|--dry)  dryrun=true;;
-	--which)   which=true;;
+	--where)   where=true;;
 	--ccopts)  ccopts=true;;
+	--cflags)  cflags=true;;
+	--lflags)  lflags=true;;
 	-Bstatic|-static) err_nostatic;;
+	--version|-v) version=$1; opts="${opts} $1";;
 	*)         opts="${opts} $1";;
     esac
     shift;
@@ -123,41 +135,44 @@ if ${no_pip}; then
     do_exec ${CC} ${opts}
 fi
 
-if $pipinstall && $pipbuild ; then
+if ${pipinstall} && ${pipbuild} ; then
     print_usage
 fi
 
-if $pipinstall ; then
+if ${pipinstall} ; then
     PIP_INCDIR=${PREFIX}/include
     PIP_LIBDIR=${PREFIX}/lib
-    pipcc_path=${PREFIX}/bin/pipcc
-elif $pipbuild ; then
+elif ${pipbuild} ; then
     PIP_INCDIR=${SRCTOP}/include
     PIP_LIBDIR=${SRCTOP}/lib
-    pipcc_path=${SRCTOP}/bin/pipcc
 else
-    if [ ${self} -ef ${PREFIX}/bin/pipcc ] ; then
+    if [ ${PREFIX}/bin/pipcc -ef ${self} ] ; then
 	PIP_INCDIR=${PREFIX}/include
 	PIP_LIBDIR=${PREFIX}/lib
-	pipcc_path=${PREFIX}/bin/pipcc
-    elif [ ${self} -ef ${SRCTOP}/bin/pipcc ]; then
+    elif [ ${SRCTOP}/bin/pipcc -ef ${self} ]; then
 	PIP_INCDIR=${SRCTOP}/include;
 	PIP_LIBDIR=${SRCTOP}/lib;
-	pipcc_path=${SRCTOP}/bin/pipcc
     else
-	echo >&2 "${cmd}: Unknown ${self}"
+	echo >&2 "${cmd}: Failed to identify ${self}"
 	exit 1
     fi
 fi
 
-if ${which}; then
+if [ x"${version}" != x ]; then
+    echo "pipcc (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
+    case ${version} in
+	-v) ${PIP_LIBDIR}/libpip.so;;
+	*) silent=true;;
+    esac
+fi
+
+if ${where}; then
     ( cd ${PIP_LIBDIR}/../bin/; pipcc_path=`pwd`; echo "${pipcc_path}/pipcc" )
     exit 0
 fi
 
-PIP_INCFLAGS="-I${PIP_INCDIR}"
+PIP_CFLAGS="-I${PIP_INCDIR}"
 PIP_LDFLAGS="-L${PIP_LIBDIR} -Wl,-rpath=${PIP_LIBDIR}"
-PIP_LIB=${PIP_LIBDIR}/libpip.so
 
 if [ -f ${PIP_INCDIR}/pip_config.h ]; then
     PIP_VERSION_MAJOR=`echo "${PIP_VERSION}" | cut -d '.' -f 1`
@@ -171,13 +186,16 @@ fi
 GLIBC_CFLAGS=""
 GLIBC_LDFLAGS=""
 GLIBC_LDLINUX=""
-if [ "${dynamic_linker}" != "" ]; then
-    GLIBC_CFLAGS="-I${glibc_incdir}"
-    GLIBC_LDFLAGS="-L${glibc_libdir} -Wl,-rpath=${glibc_libdir}"
-    GLIBC_LDLINUX="-Wl,--dynamic-linker=${dynamic_linker}"
+if [ x"${dynamic_linker}" != x"" ]; then
+    case ${dynamic_linker} in
+	/lib/ld-*|/lib64/ld-*|/usr/lib/ld-*|/usr/lib64/ld-*) :;;
+	*)  GLIBC_CFLAGS="-I${glibc_incdir}";
+	    GLIBC_LDFLAGS="-L${glibc_libdir} -Wl,-rpath=${glibc_libdir}";
+	    GLIBC_LDLINUX="-Wl,--dynamic-linker=${dynamic_linker}";;
+    esac
 fi
 
-PIP_COMMON_CFLAGS="${PIP_INCFLAGS} ${GLIBC_CFLAGS}"
+PIP_COMMON_CFLAGS="${PIP_CFLAGS} ${GLIBC_CFLAGS}"
 PIP_COMMON_LDFLAGS="${PIP_LDFLAGS} ${GLIBC_LDFLAGS}"
 PIP_COMMON_LDLIBS="-lpip -ldl"
 
@@ -185,12 +203,12 @@ PIP_ROOT_CFLAGS="${PIP_COMMON_CFLAGS}"
 PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
 PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
 
-PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} -fPIC"
-PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} -pie -rdynamic"
+PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
+PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
 PIP_TASK_LDLIBS="${PIP_COMMON_LDLIBS}"
 
-PIP_BOTH_CFLAGS="${PIP_COMMON_CFLAGS} -fPIC"
-PIP_BOTH_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} -pie -rdynamic"
+PIP_BOTH_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
+PIP_BOTH_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
 PIP_BOTH_LDLIBS="${PIP_COMMON_LDLIBS}"
 
 if ${pip_root} && ${pip_task}; then
@@ -211,8 +229,6 @@ else
     PIP_LDLIBS="${PIP_BOTH_LDLIBS}"
 fi
 
-PTHREAD_FLAG="-pthread"
-
 PIPCC_DEFS="-DPIPCC \
 -DPIP_VERSION=${PIP_VERSION} \
 -DPIP_VERSION_MAJOR=${PIP_VERSION_MAJOR} \
@@ -222,15 +238,28 @@ PIPCC_DEFS="-DPIPCC \
 if ${ccopts}; then
     if ${is_linking}; then
 	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
-	    ${PTHREAD_FLAG} ${opts}
+	    ${FLAG_PTHREAD} ${opts}
     else
-	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
+	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
     fi
     exit 0
 fi
+if ${cflags} || ${lflags}; then
+    # note that ${opts} will not be printed, unlike --ccopts (above)
+    if ${cflags} && ${lflags}; then
+	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	    ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
+    elif ${cflags}; then
+	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD}
+    else
+	echo ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
+    fi
+    exit 0
+fi
+
 if ${is_linking}; then
     do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
-	${PTHREAD_FLAG} ${opts}
+	${FLAG_PTHREAD} ${opts}
 else
-    do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PTHREAD_FLAG} ${opts}
+    do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
 fi
