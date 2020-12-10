@@ -4,10 +4,10 @@ title=$1;
 sec=$2;
 prefix=$3;
 
-items=`ls man/man$sec/*.$sec`;
+items=`ls man/man${sec}/*.${sec}`;
 
 for item in $items; do
-    bn=`basename -s.$sec $item`
+    bn=`basename -s.${sec} ${item}`
     case $bn in
 	md_*)  true;;
 	PiP-*) true;;

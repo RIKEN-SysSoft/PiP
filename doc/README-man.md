@@ -331,11 +331,54 @@ Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
 MPI Communication," in SC’20
 
 # Commands
-- libpip
+- pipcc
+- pip-check
+- pip-exec
+- pip-man
+- pip-mode
+- pips
+- printpipmode
 
 
 # Functions
-- libpip
+- pip\_abort
+- pip\_barrier\_fin
+- pip\_barrier\_init
+- pip\_barrier\_wait
+- pip\_exit
+- pip\_export
+- pip\_fin
+- pip\_get\_aux
+- pip\_get\_mode
+- pip\_get\_mode\_str
+- pip\_get\_ntasks
+- pip\_get\_pipid
+- pip\_get\_system\_id
+- pip\_import
+- pip\_init
+- pip\_isa\_root
+- pip\_isa\_task
+- pip\_is\_initialized
+- pip\_is\_shared\_fd
+- pip\_is\_threaded
+- pip\_kill
+- pip\_kill\_all\_tasks
+- pip\_named\_export
+- pip\_named\_import
+- pip\_named\_tryimport
+- pip\_set\_aux
+- pip\_sigmask
+- pip\_signal\_wait
+- pip\_spawn
+- pip\_spawn\_from\_func
+- pip\_spawn\_from\_main
+- pip\_spawn\_hook
+- pip\_task\_spawn
+- pip\_trywait
+- pip\_trywait\_any
+- pip\_wait
+- pip\_wait\_any
+- pip\_yield
 
 
 # Author
