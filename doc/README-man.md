@@ -334,6 +334,7 @@ MPI Communication," in SC’20
 - pipcc
 - pip-check
 - pip-exec
+- pipfc
 - pip-man
 - pip-mode
 - pips

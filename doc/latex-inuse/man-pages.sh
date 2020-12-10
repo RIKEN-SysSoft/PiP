@@ -3,13 +3,9 @@
 prog=$0;
 
 man1_input="man1-inputs.tex"
-man3_pip_input="man3-pip-inputs.tex"
-man3_ulp_input="man3-ulp-inputs.tex"
 man3_input="man3-inputs.tex"
 
 echo > $man1_input;
-echo > $man3_pip_input;
-echo > $man3_ulp_input;
 echo > $man3_input;
 
 # man7
