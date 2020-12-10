@@ -2,14 +2,14 @@
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
-# 
+#
 #     Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
 #     and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -25,7 +25,7 @@
 # $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
 # System Software Development Team, 2016-2020
 # $
-# $PIP_VERSION: Version 2.0.0$
+# $PIP_VERSION: Version 3.0.0$
 #
 # $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
 # $
@@ -36,25 +36,19 @@ pdf: all
 
 all :
 	./man-pages.sh
-	pdflatex $(LIBPIP) > /dev/null 2>&1
+	-pdflatex $(LIBPIP) > /dev/null 2>&1
 	makeindex $(LIBPIP).idx > /dev/null 2>&1
-	pdflatex $(LIBPIP) > /dev/null 2>&1
-	latex_count=5 ; \
+	-pdflatex $(LIBPIP) > /dev/null 2>&1
+	latex_count=10 ; \
 	while egrep -s 'Rerun (LaTeX|to get cross-references right)' $(LIBPIP).log && \
 		[ $$latex_count -gt 0 ] ;\
 	    do \
 	      echo "Rerunning latex...." ;\
-	      pdflatex $(LIBPIP) > /dev/null 2>&1 ;\
+	      -pdflatex $(LIBPIP) > /dev/null 2>&1 ;\
 	      latex_count=`expr $$latex_count - 1` ;\
 	    done
 	makeindex $(LIBPIP).idx > /dev/null 2>&1
-	pdflatex $(LIBPIP) > /dev/null 2>&1
-	-@grep  -e "LaTeX\ Warning" \
-		-e "Package\ natbib\ Warning" \
-		-e "undefined" \
-		-e "multiply\ defined" \
-		$(LIBPIP).log \
-	&& ( echo "Latex failed"; exit 1; )
+	-pdflatex $(LIBPIP) > /dev/null 2>&1
 
 clean:
 	$(RM) -f *.ps *.dvi *.aux *.toc *.idx *.ind *.ilg *.log *.out *.brf *.blg *.bbl
@@ -63,3 +57,4 @@ clean:
 	$(RM) -f \#*\# *~
 
 veryclean: clean
+	$(RM) libpip-manpages.tex

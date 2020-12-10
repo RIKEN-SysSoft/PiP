@@ -191,9 +191,10 @@ If you get the following message when you try to run your program;
 
     PiP-ERR(19673) './myprog' is not PIE
 
-Then this means that the 'myprog' is not compiled by using the pipcc(1) command
-properly. You may check if your program(s) can run as a PiP root and/or PiP task
-by using the pip-check(1) command (from v2);
+Then this means that the 'myprog' (having PID 19673) is not compiled
+by using the pipcc(1) command properly. You may check if your
+program(s) can run as a PiP root and/or PiP task by using the
+pip-check(1) command (from v2);
 
     $ pip-check a.out
     a.out : Root&Task
@@ -202,23 +203,23 @@ Above example shows that the 'a.out' program can run as a PiP root and PiP tasks
 
 * pips(1) command (from v2)
 
-  You can see how your PiP program is running in realtimme  by using the pips(1)
-  command.
+  Similar to the Linux `ps` command, you can see how your PiP program(s)
+  is (are) running by using the `pips(1)` command. `pips` can accept
+  'a', 'u' and 'x' options just like the `ps` command.
 
-List the PiP tasks via the 'ps' command;
+    $ pips [a][u][x] [PIPS-OPTIONS] [-] [PATTERN ..]
 
-    $ pips [aux] [ COMMAND ]
+  List the PiP tasks via the 'ps' command;
 
-or, show the activities of PiP tasks via the 'top' command;
+    $ pips --ps [ PATTERN .. ]
 
-    $ pips --top [ COMMAND ]
+  or, show the activities of PiP tasks via the 'top' command;
 
-Here **COMMAND** are program name(s) and/or PID(s) you are
-interested in.
+    $ pips --top [ PATTERN .. ]
 
-Additionally you can kill all of your PiP tasks by using the same pips(1) command;
+  Additionally you can kill all of your PiP tasks by using the same pips(1) command;
 
-    $ pips -s KILL [ COMMAND ]
+    $ pips -s KILL [ PATTERN .. ]
 
 ## Debugging your PiP programs by the pip-gdb command
 
@@ -326,7 +327,7 @@ https://doi.org/10.1109/IPDPSW50202.2020.00161.
 
 Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan
 Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
-MPI Communication," in SC’20 (to appear)
+MPI Communication," in SC’20
 
 # Commands
 - libpip

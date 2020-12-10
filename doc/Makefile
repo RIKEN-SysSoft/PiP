@@ -141,6 +141,6 @@ post-clean-hook:
 	$(RM) -r latex/
 	$(MAKE) -C latex-inuse clean
 
-post-veryclean-hook: clean
+veryclean: clean
 	$(RM) Slides-html.md
 	$(MAKE) -C latex-inuse veryclean
