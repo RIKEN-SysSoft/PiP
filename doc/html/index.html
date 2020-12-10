@@ -38,8 +38,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
     <ul class="tablist">
       <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
-      <li><a href="modules.html"><span>Modules</span></a></li>
-      <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -64,7 +62,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -79,7 +77,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><h1>Process-in-Process (PiP)</h1>
-<p>PiP is a user-level library to have the best of the both worlds of multi-process and multi-thread parallel execution models. PiP allows a process to create sub-processes into the same virtual address space where the parent process runs. The parent process and sub-processes share the same address space, however, each process has its own variable set. So, each process runs independently from the other process. If some or all processes agree, then data owned by a process can be accessed by the other processes. Those processes share the same address space, just like pthreads, but each process has its own variables like the process execution model. Hereinafter, the parent process is called PiP process and a sub-process are called a PiP task.</p>
+<p>PiP is a user-level library to have the best of the both worlds of multi-process and multi-thread parallel execution models. PiP allows a process to create sub-processes into the same virtual address space where the parent process runs. The parent process and sub-processes share the same address space, however, each process has its own variable set. So, each process runs independently from the other process. If some or all processes agree, then data owned by a process can be accessed by the other processes. Those processes share the same address space, just like pthreads, but each process has its own variables like the process execution model. Hereinafter, the parent process is called PiP process and sub-processes are called PiP tasks.</p>
 <h2>PiP Versions</h2>
 <p>Currently there are three PiP library versions:</p>
 <ul>
@@ -107,11 +105,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <h1>Installation</h1>
 <p>Basically PiP requires the following three software packages;</p>
 <ul>
-<li><a href="https://github.com/RIKEN-SysSoft/PiP-glibc">PiP-glibc</a> - patched GNU libc for PiP</li>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP">PiP</a> - Process in Process (this package)</li>
+<li><a href="https://github.com/RIKEN-SysSoft/PiP-Testsuite">PiP-Testsuite</a> - Testsuite for PiP</li>
+<li><a href="https://github.com/RIKEN-SysSoft/PiP-glibc">PiP-glibc</a> - patched GNU libc for PiP</li>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-gdb">PiP-gdb</a> - patched gdb to debug PiP root and PiP tasks.</li>
 </ul>
-<p>By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb.</p>
+<p>By using PiP-glibc, users can create up to 300 PiP tasks which can be dbugged by using PiP-gdb. In other words, without installing PiP-glibc, users can create up to around 10 PiP tasks (the number depends on the program) and cannot debug by using PiP-gdb. Note that PiP will not run at all without PiP-glibc on CentOS/RedHat 8.</p>
 <p>There are several ways to install the PiP packages; Yum (RPM), Docker, Spack, and building from the source code. It is strongly recommended to use the following PiP package installation program (pip-pip):</p>
 <ul>
 <li><a href="https://github.com/RIKEN-SysSoft/PiP-pip">PiP-pip</a> - PiP package installing program</li>
@@ -140,7 +139,7 @@ $ ./pip-pip --how=HOW --pip=PIP_VERSION --work=BUILD_DIR --prefix=INSTALL_DIR
 </ul>
 <p>You can use pipcc(1) command to compile and link your PiP programs. </p>
 <pre class="fragment">$ pipcc -Wall -O2 -g -c pip-prog.c
-$ pipcc -Wall -O2 -g -o pip-prog pip-prog.c
+$ pipcc -Wall -O2 -g pip-prog.c -o pip-prog 
 </pre><h2>Run your PiP programs</h2>
 <ul>
 <li>pip-exec(1) command (piprun(1) in PiP v1)</li>
@@ -149,7 +148,7 @@ $ pipcc -Wall -O2 -g -o pip-prog pip-prog.c
 <pre class="fragment">$ pipcc myprog.c -o myprog
 $ pip-exec -n 8 ./myprog
 $ ./myprog
-</pre><p>In this case, the pip-exec(1) command becomes the PiP root and your program runs as 8 PiP tasks. Note that the 'myprog.c' may or may not call any PiP functions. Your program can also run as a normal program (not as a PiP task) without using the pip-exec(1) command.</p>
+</pre><p>In this case, the pip-exec(1) command becomes the PiP root and your program runs as 8 PiP tasks. Note that the 'myprog.c' may or may not call any PiP functions. Your program can also run as a normal program (not as a PiP task) without using the pip-exec(1) command. In either case, your proghrams must be compiled and linked by using the pipcc(1) command described above.</p>
 <p>You may write your own PiP programs whcih includes the PiP root programming. In this case, your program can run without using the pip-exec(1) command.</p>
 <p>If you get the following message when you try to run your program; </p>
 <pre class="fragment">PiP-ERR(19673) './myprog' is not PIE
@@ -163,47 +162,47 @@ a.out : Root&amp;Task
 </li>
 </ul>
 <p>List the PiP tasks via the 'ps' command; </p>
-<pre class="fragment">$ pips -l [ COMMAND ]
+<pre class="fragment">$ pips [aux] [ COMMAND ]
 </pre><p>or, show the activities of PiP tasks via the 'top' command; </p>
-<pre class="fragment">$ pips -t [ COMMAND ]
-</pre><p>Here <b>COMMAND</b> is the name (not a path) of PiP program you are running.</p>
+<pre class="fragment">$ pips --top [ COMMAND ]
+</pre><p>Here <b>COMMAND</b> are program name(s) and/or PID(s) you are interested in.</p>
 <p>Additionally you can kill all of your PiP tasks by using the same pips(1) command; </p>
 <pre class="fragment">$ pips -s KILL [ COMMAND ]
 </pre><h2>Debugging your PiP programs by the pip-gdb command</h2>
-<p>The following procedure attaches all PiP tasks and PiP root which created those tasks. Each PiP 'processes' is treated as a GDB inferior in PiP-gdb. </p>
+<p>The following procedure attaches all PiP tasks and PiP root which created those tasks. Each PiP task is treated as a GDB inferior in PiP-gdb. Note that PiP-glibc and PiP-gdb packages are required to do this. </p>
 <pre class="fragment">$ pip-gdb
-(gdb) attach PID
+(pip-gdb) attach PID
 </pre><p>The attached inferiors can be seen by the following GDB command: </p>
-<pre class="fragment">(gdb) info inferiors
+<pre class="fragment">(pip-gdb) info inferiors
   Num  Description              Executable
   4    process 6453 (pip 2)     /somewhere/pip-task-2
   3    process 6452 (pip 1)     /somewhere/pip-task-1
   2    process 6451 (pip 0)     /somewhere/pip-task-0
 * 1    process 6450 (pip root)  /somewhere/pip-root
 </pre><p>You can select and debug an inferior by the following GDB command: </p>
-<pre class="fragment">(gdb) inferior 2
+<pre class="fragment">(pip-gdb) inferior 2
 [Switching to inferior 2 [process 6451 (pip 0)] (/somewhere/pip-task-0)]
-</pre><p>When an already-attached program calls '<a class="el" href="group__PiP-1-spawn.html#gae9187ea22ecf0623fa3ecfba5337f52d" title="spawn a PiP task (PiP v1 API and deprecated) ">pip_spawn()</a>' and becomes a PiP root task, the newly created PiP child tasks aren't attached automatically, but you can add empty inferiors and then attach the PiP child tasks to the inferiors. e.g. </p>
+</pre><p>When an already-attached program calls 'pip_spawn()' and becomes a PiP root task, the newly created PiP child tasks aren't attached automatically, but you can add empty inferiors and then attach the PiP child tasks to the inferiors. e.g. </p>
 <pre class="fragment">.... type Control-Z to stop the root task.
 ^Z
 Program received signal SIGTSTP, Stopped (user).
 
-(gdb) add-inferior
+(pip-gdb) add-inferior
 Added inferior 2
-(gdb) inferior 2
-(gdb) attach 1902
+(pip-gdb) inferior 2
+(pip-gdb) attach 1902
 
-(gdb) add-inferior
+(pip-gdb) add-inferior
 Added inferior 3
-(gdb) inferior 3
-(gdb) attach 1903
+(pip-gdb) inferior 3
+(pip-gdb) attach 1903
 
-(gdb) add-inferior
+(pip-gdb) add-inferior
 Added inferior 4
-(gdb) inferior 4
-(gdb) attach 1904
+(pip-gdb) inferior 4
+(pip-gdb) attach 1904
 
-(gdb) info inferiors
+(pip-gdb) info inferiors
   Num  Description              Executable
 * 4    process 1904 (pip 2)     /somewhere/pip-task-2
   3    process 1903 (pip 1)     /somewhere/pip-task-1
@@ -212,7 +211,7 @@ Added inferior 4
 </pre><p>You can attach all relevant PiP tasks by: </p>
 <pre class="fragment">$ pip-gdb -p PID-of-your-PiP-program
 </pre><p>(from v2)</p>
-<p>If the <b>PIP_GDB_PATH</b> environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered. The exception signals can also be defined by setting the <b>PIP_GDB_SIGNALS</b> environment. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol. 'all' is reserved to specify most of the signals. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If one of the specified or default signals is delivered, then PiP-gdb will be attached automatically. The PiP-gdb will show backtrace by default. If users specify <b>PIP_GDB_COMMAND</b> that a filename containing some GDB commands, then those GDB commands will be executed by PiP-gdb, instead of backtrace, in batch mode. If the <b>PIP_STOP_ON_START</b> environment is set (to any value), then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program.</p>
+<p>If the <b>PIP_GDB_PATH</b> environment is set to the path pointing to PiP-gdb executable file, then PiP-gdb is automatically attached when an excetion signal (SIGSEGV and SIGHUP by default) is delivered. The exception signals can also be defined by setting the <b>PIP_GDB_SIGNALS</b> environment. Signal names (case insensitive) can be concatenated by the '+' or '-' symbol. 'all' is reserved to specify most of the signals. For example, 'ALL-TERM' means all signals excepting SIGTERM, another example, 'PIPE+INT' means SIGPIPE and SIGINT. If one of the specified or default signals is delivered, then PiP-gdb will be attached automatically. The PiP-gdb will show backtrace by default. If users specify <b>PIP_GDB_COMMAND</b>, a filename containing some GDB commands, then those GDB commands will be executed by PiP-gdb in batch mode. If the <b>PIP_STOP_ON_START</b> environment is set, then the PiP library delivers SIGSTOP to a spawned PiP task which is about to start user program. If its value is a number in decimal, then the PiP task whose PiP-ID is the same with the specified number will be stopped. If the number is minus, then all PiP tasks will be stopped at the very beginning. Do not forget to compile your programs with a debug option.</p>
 <h1>Mailing List</h1>
 <p><a href="#" onclick="location.href='mai'+'lto:'+'pip'+'@m'+'l.r'+'ik'+'en.'+'jp'; return false;">pip@m<span style="display: none;">.nosp@m.</span>l.ri<span style="display: none;">.nosp@m.</span>ken.j<span style="display: none;">.nosp@m.</span>p</a></p>
 <h1>Publications</h1>
@@ -225,9 +224,9 @@ of User-Level Processes using Address Space Sharing," 2020 IEEE International Pa
 MPI Communication," in SC’20 (to appear)</p>
 <h2>Presentation Slides</h2>
 <ul>
-<li>[HPDC'18] <a href="file:/home/ahori/PiP/x86_64-redhat-7_pip-2/install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/x86_64-redhat-7_pip-2/install/share/slides/HPDC18.pdf</a></li>
-<li>[ROSS'18] <a href="file:/home/ahori/PiP/x86_64-redhat-7_pip-2/install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/x86_64-redhat-7_pip-2/install/share/slides/HPDC18-ROSS.pdf</a></li>
-<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/x86_64-redhat-7_pip-2/install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/x86_64-redhat-7_pip-2/install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
+<li>[HPDC'18] <a href="file:/home/ahori/PiP/pip-2/install/share/slides/HPDC18.pdf">file:/home/ahori/PiP/pip-2/install/share/slides/HPDC18.pdf</a></li>
+<li>[ROSS'18] <a href="file:/home/ahori/PiP/pip-2/install/share/slides/HPDC18-ROSS.pdf">file:/home/ahori/PiP/pip-2/install/share/slides/HPDC18-ROSS.pdf</a></li>
+<li>[IPDPS/RADR'20] <a href="file:/home/ahori/PiP/pip-2/install/share/slides/IPDPS-RSADR-2020.pdf">file:/home/ahori/PiP/pip-2/install/share/slides/IPDPS-RSADR-2020.pdf</a> <h1>Author</h1>
 </li>
 </ul>
 <p>Atsushi Hori Riken Center for Commputational Science (R-CCS) Japan </p>
