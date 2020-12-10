@@ -204,6 +204,11 @@ PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
 PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
 
 PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
+# LDLINUX must be specified even with PiP tasks
+# because they  should be able to run as normal programs, 
+# not as PiP tasks.
+# they are compiled with the patched header files
+# so they must be "linked" with the pacthed ld-linux.
 PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
 PIP_TASK_LDLIBS="${PIP_COMMON_LDLIBS}"
 
