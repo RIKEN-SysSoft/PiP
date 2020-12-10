@@ -75,6 +75,8 @@ if test "$GCC" = yes; then
   CFLAGS="$CFLAGS -Wall"
 fi
 
+AC_CHECK_PROGS([FC],[gfortran g95 g77])
+
 # Checks for libraries.
 
 # Checks for header files.
@@ -87,6 +89,7 @@ AC_CONFIG_FILES([
 	build/config.mk
 	release/version.conf
 	bin/pipcc
+	bin/pipfc
 	bin/pip-mode
 	bin/pip-check
 	bin/pip-man

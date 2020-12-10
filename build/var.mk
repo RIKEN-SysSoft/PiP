@@ -18,7 +18,8 @@ slidedir = $(datarootdir)/slides
 sysconfdir = $(default_sysconfdir)
 localedir = $(default_localedir)
 
-CC = $(DEFAULT_CC)
+CC       = $(DEFAULT_CC)
+FC       = $(DEFAULT_FC)
 CFLAGS   = $(DEFAULT_CFLAGS)
 CXXFLAGS = $(DEFAULT_CFLAGS)
 FFLAGS   = $(DEFAULT_FFLAGS)

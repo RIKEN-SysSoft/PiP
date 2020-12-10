@@ -47,7 +47,7 @@
 ### none of them is not specified.
 ###
 ### \environment
-### if \p CC environment  is set then \p \$(CC) will be used as a C compiler
+### \p \$(CC) is used to specify a C compiler
 ###
 ### \sa
 ### pip-exec(1), pip-mode(1)
@@ -121,6 +121,11 @@ while [ "$1" != "" ]; do
     esac
     shift;
 done
+
+if [ x"${CC}" == x ]; then
+    echo >&2 "${self}: \$\{CC\} is not defined"
+    exit 1;
+fi
 
 do_exec () {
     if ! ${silent}; then
