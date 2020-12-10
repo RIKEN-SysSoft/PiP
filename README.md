@@ -220,7 +220,7 @@ Above example shows that the 'a.out' program can run as a PiP root and PiP tasks
 ## Debugging your PiP programs by the pip-gdb command
 
 The following procedure attaches all PiP tasks and PiP root which
-created those tasks. Each PiP 'processes' is treated as a GDB inferior
+created those tasks. Each PiP task is treated as a GDB inferior
 in PiP-gdb.
 
     $ pip-gdb
