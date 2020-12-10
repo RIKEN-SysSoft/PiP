@@ -224,11 +224,11 @@ created those tasks. Each PiP 'processes' is treated as a GDB inferior
 in PiP-gdb.
 
     $ pip-gdb
-    (gdb) attach PID
+    (pip-gdb) attach PID
 
 The attached inferiors can be seen by the following GDB command:
 
-    (gdb) info inferiors
+    (pip-gdb) info inferiors
       Num  Description              Executable
       4    process 6453 (pip 2)     /somewhere/pip-task-2
       3    process 6452 (pip 1)     /somewhere/pip-task-1
@@ -237,7 +237,7 @@ The attached inferiors can be seen by the following GDB command:
 
 You can select and debug an inferior by the following GDB command:
 
-    (gdb) inferior 2
+    (pip-gdb) inferior 2
     [Switching to inferior 2 [process 6451 (pip 0)] (/somewhere/pip-task-0)]
 
 When an already-attached program calls 'pip_spawn()' and becomes
@@ -250,22 +250,22 @@ e.g.
     ^Z
     Program received signal SIGTSTP, Stopped (user).
 
-    (gdb) add-inferior
+    (pip-gdb) add-inferior
     Added inferior 2
-    (gdb) inferior 2
-    (gdb) attach 1902
+    (pip-gdb) inferior 2
+    (pip-gdb) attach 1902
 
-    (gdb) add-inferior
+    (pip-gdb) add-inferior
     Added inferior 3
-    (gdb) inferior 3
-    (gdb) attach 1903
+    (pip-gdb) inferior 3
+    (pip-gdb) attach 1903
 
-    (gdb) add-inferior
+    (pip-gdb) add-inferior
     Added inferior 4
-    (gdb) inferior 4
-    (gdb) attach 1904
+    (pip-gdb) inferior 4
+    (pip-gdb) attach 1904
 
-    (gdb) info inferiors
+    (pip-gdb) info inferiors
       Num  Description              Executable
     * 4    process 1904 (pip 2)     /somewhere/pip-task-2
       3    process 1903 (pip 1)     /somewhere/pip-task-1
