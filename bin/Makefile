@@ -38,8 +38,7 @@ include $(top_srcdir)/build/var.mk
 
 PROGRAM = pip-exec
 PROGRAMS = $(PROGRAM) printpipmode
-PROGRAMS_TO_INSTALL = $(PROGRAM) pipcc pipfc pip-mode pip-check pip-man \
-	pips printpipmode
+PROGRAMS_TO_INSTALL = $(PROGRAMS) pipcc pipfc pip-mode pip-check pip-man pips 
 
 MAN1_SRCS = pip-exec.c pipcc.in pip-mode.in pip-check.in pip-man.in \
 	pips-doxygen.c printpipmode.c
@@ -58,7 +57,7 @@ pip-exec: pip-exec.c $(DEPS) Makefile
 
 printpipmode: printpipmode.c $(DEPS) Makefile
 	chmod +x pipcc pipfc pip-check pip-mode pip-man
-	./pipcc -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
+	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
