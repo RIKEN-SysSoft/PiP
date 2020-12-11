@@ -1,0 +1,275 @@
+#!/bin/sh
+
+# $PIP_license: <Simplified BSD License>
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#     Redistributions of source code must retain the above copyright notice,
+#     this list of conditions and the following disclaimer.
+#
+#     Redistributions in binary form must reproduce the above copyright notice,
+#     this list of conditions and the following disclaimer in the documentation
+#     and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+# THE POSSIBILITY OF SUCH DAMAGE.
+# $
+# $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
+# System Software Development Team, 2016-2020
+# $
+# $PIP_VERSION: Version 3.0.0$
+#
+# $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
+# $
+
+### \page pipfc pipfc
+###
+### \brief Fortran compiler driver for PiP
+###
+### \synopsis
+### pipfc [PIP-OPTIONS] [FC-COMMAND-OPTIONS_AND_ARGS]
+###
+### \param -piproot the compile (and link) as a PiP root
+### \param -piptask the compile (and link) as a PiP task
+### \param -nopip No PiP related settings will be applied
+###
+### \note The \b -piproot and \b -piptask options can be specified at the same time. In this case,
+### the compiled object can be both of PiP root and PiP task. This is also the default behavior when
+### none of them is not specified.
+###
+### \environment
+### \p \$(FC) is used to specify a Fortran compiler
+###
+### \sa
+### pip-exec(1), pip-mode(1)
+###
+
+PREFIX=@prefix@
+SRCTOP=@srcdir_top@
+PIP_VERSION=@PACKAGE_VERSION@
+
+glibc_incdir=@glibc_incdir@
+glibc_libdir=@glibc_libdir@
+dynamic_linker=@dynamic_linker@
+
+FLAG_FPIC="-fPIC"
+FLAG_FPIE="-fpie"
+FLAG_PIE="-pie"
+FLAG_RDYN="-rdynamic"
+FLAG_PTHREAD="-pthread"
+
+: ${FC:=gfortran}
+
+self=$0
+cmd=`basename ${self}`
+cmdline="$cmd $@"
+
+print_usage () {
+    echo >&2 "Error: ${cmdline}"
+    echo >&2 "${cmd} [PIP-OPTIONS] [FC-COMMAND-OPTIONS_AND_ARGS]"
+    echo >&2 "   --piproot: the compile (and link) as a PiP root"
+    echo >&2 "   --piptask: the compile (and link) as a PiP task"
+    echo >&2 "   --nopip:   No PiP related settings will be applied"
+    exit 2
+}
+
+err_nostatic() {
+    echo >&2 "${cmd} does not support static linking";
+    print_usage
+}
+
+is_linking=true
+pip_root=true
+pip_task=true
+no_pip=false
+pipbuild=false
+pipinstall=false
+dryrun=false
+silent=false
+where=false
+ccopts=false
+cflags=false
+lflags=false
+version=
+
+while [ "$1" != "" ]; do
+    case $1 in
+	-c|-E|-S)  is_linking=false; opts="${opts} $1";;
+	--piproot|-piproot|--pip-root|-pip-root) pip_task=false;;
+	--piptask|-piptask|--pip-task|-pip-task) pip_root=false;;
+	--pipbuild) pipbuild=true;;
+	--pipinstall) pipinstall=true;;
+	--nopip)   no_pip=true;;
+	--silent)  silent=true;;
+	--dryrun|--dry)  dryrun=true;;
+	--where)   where=true;;
+	--ccopts)  ccopts=true;;
+	--cflags)  cflags=true;;
+	--lflags)  lflags=true;;
+	-Bstatic|-static) err_nostatic;;
+	--version|-v) version=$1; opts="${opts} $1";;
+	*)         opts="${opts} $1";;
+    esac
+    shift;
+done
+
+if [ x"${FC}" == x ]; then
+    echo >&2 "${self}: \$\{FC\} is not defined"
+    exit 1;
+fi
+
+do_exec () {
+    if ! ${silent}; then
+	echo $@
+    fi
+    if ! ${dryrun}; then
+	exec $@
+    fi
+}
+
+if ${no_pip}; then
+    do_exec ${FC} ${opts}
+fi
+
+if ${pipinstall} && ${pipbuild} ; then
+    print_usage
+fi
+
+if ${pipinstall} ; then
+    PIP_INCDIR=${PREFIX}/include
+    PIP_LIBDIR=${PREFIX}/lib
+elif ${pipbuild} ; then
+    PIP_INCDIR=${SRCTOP}/include
+    PIP_LIBDIR=${SRCTOP}/lib
+else
+    if [ ${PREFIX}/bin/pipfc -ef ${self} ] ; then
+	PIP_INCDIR=${PREFIX}/include
+	PIP_LIBDIR=${PREFIX}/lib
+    elif [ ${SRCTOP}/bin/pipfc -ef ${self} ]; then
+	PIP_INCDIR=${SRCTOP}/include;
+	PIP_LIBDIR=${SRCTOP}/lib;
+    else
+	echo >&2 "${cmd}: Failed to identify ${self}"
+	exit 1
+    fi
+fi
+
+if [ x"${version}" != x ]; then
+    echo "$self (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
+    case ${version} in
+	-v) ${PIP_LIBDIR}/libpip.so;;
+	*) silent=true;;
+    esac
+fi
+
+if ${where}; then
+    ( cd ${PIP_LIBDIR}/../bin/; pipfc_path=`pwd`; echo "${pipfc_path}/pipfc" )
+    exit 0
+fi
+
+PIP_CFLAGS="-I${PIP_INCDIR}"
+PIP_LDFLAGS="-L${PIP_LIBDIR} -Wl,-rpath=${PIP_LIBDIR}"
+
+if [ -f ${PIP_INCDIR}/pip/pip_config.h ]; then
+    PIP_VERSION_MAJOR=`echo "${PIP_VERSION}" | cut -d '.' -f 1`
+    PIP_VERSION_MINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 2`
+    PIP_VERSION_SUBMINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 3`
+else
+    echo "${cmd}: Unable to find pip_config.h"
+    exit 1
+fi
+
+GLIBC_CFLAGS=""
+GLIBC_LDFLAGS=""
+GLIBC_LDLINUX=""
+if [ x"${dynamic_linker}" != x"" ]; then
+    case ${dynamic_linker} in
+	/lib/ld-*|/lib64/ld-*|/usr/lib/ld-*|/usr/lib64/ld-*) :;;
+	*)  GLIBC_CFLAGS="-I${glibc_incdir}";
+	    GLIBC_LDFLAGS="-L${glibc_libdir} -Wl,-rpath=${glibc_libdir}";
+	    GLIBC_LDLINUX="-Wl,--dynamic-linker=${dynamic_linker}";;
+    esac
+fi
+
+PIP_COMMON_CFLAGS="${PIP_CFLAGS} ${GLIBC_CFLAGS}"
+PIP_COMMON_LDFLAGS="${PIP_LDFLAGS} ${GLIBC_LDFLAGS}"
+PIP_COMMON_LDLIBS="-lpip -ldl"
+
+PIP_ROOT_CFLAGS="${PIP_COMMON_CFLAGS}"
+PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
+PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
+
+PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
+# LDLINUX must be specified even with PiP tasks
+# because they  should be able to run as normal programs, 
+# not as PiP tasks.
+# they are compiled with the patched header files
+# so they must be "linked" with the pacthed ld-linux.
+PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
+PIP_TASK_LDLIBS="${PIP_COMMON_LDLIBS}"
+
+PIP_BOTH_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
+PIP_BOTH_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
+PIP_BOTH_LDLIBS="${PIP_COMMON_LDLIBS}"
+
+if ${pip_root} && ${pip_task}; then
+    PIP_CFLAGS="${PIP_BOTH_CFLAGS}"
+    PIP_LDFLAGS="${PIP_BOTH_LDFLAGS}"
+    PIP_LDLIBS="${PIP_BOTH_LDLIBS}"
+elif ${pip_root}; then
+    PIP_CFLAGS="${PIP_ROOT_CFLAGS}"
+    PIP_LDFLAGS="${PIP_ROOT_LDFLAGS}"
+    PIP_LDLIBS="${PIP_ROOT_LDLIBS}"
+elif ${pip_task}; then
+    PIP_CFLAGS="${PIP_TASK_CFLAGS}"
+    PIP_LDFLAGS="${PIP_TASK_LDFLAGS}"
+    PIP_LDLIBS="${PIP_TASK_LDLIBS}"
+else
+    PIP_CFLAGS="${PIP_BOTH_CFLAGS}"
+    PIP_LDFLAGS="${PIP_BOTH_LDFLAGS}"
+    PIP_LDLIBS="${PIP_BOTH_LDLIBS}"
+fi
+
+PIPFC_DEFS="-DPIPFC \
+-DPIP_VERSION=${PIP_VERSION} \
+-DPIP_VERSION_MAJOR=${PIP_VERSION_MAJOR} \
+-DPIP_VERSION_MINOR=${PIP_VERSION_MINOR} \
+-DPIP_VERSION_SUBMINOR=${PIP_VERSION_SUBMINOR}"
+
+if ${ccopts}; then
+    if ${is_linking}; then
+	echo ${PIPFC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	    ${FLAG_PTHREAD} ${opts}
+    else
+	echo ${PIPFC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
+    fi
+    exit 0
+fi
+if ${cflags} || ${lflags}; then
+    # note that ${opts} will not be printed, unlike --ccopts (above)
+    if ${cflags} && ${lflags}; then
+	echo ${PIPFC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	    ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
+    elif ${cflags}; then
+	echo ${PIPFC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD}
+    else
+	echo ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
+    fi
+    exit 0
+fi
+
+if ${is_linking}; then
+    do_exec ${FC} ${PIPFC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	${FLAG_PTHREAD} ${opts}
+else
+    do_exec ${FC} ${PIPFC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
+fi
