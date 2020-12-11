@@ -93,6 +93,7 @@ pip_task=true
 no_pip=false
 pipbuild=false
 pipinstall=false
+hack=false
 dryrun=false
 silent=false
 where=false
@@ -110,6 +111,7 @@ while [ "$1" != "" ]; do
 	--pipinstall) pipinstall=true;;
 	--nopip)   no_pip=true;;
 	--silent)  silent=true;;
+	--hack)    hack=true;;
 	--dryrun|--dry)  dryrun=true;;
 	--where)   where=true;;
 	--ccopts)  ccopts=true;;
@@ -121,6 +123,14 @@ while [ "$1" != "" ]; do
     esac
     shift;
 done
+
+# from CentOS8/RedHat8, PIE programs cannot be loaded by calling dl(m)open.
+# however, dynamic program can still be loaded. this is the hack for this.
+# note that the compiled programs with this option cannot run as a
+# normal (i.e., not as a PiP task).
+if ${hack}; then
+    FLAG_PIE="-shared"
+fi
 
 if [ x"${CC}" == x ]; then
     echo >&2 "${self}: \$\{CC\} is not defined"
