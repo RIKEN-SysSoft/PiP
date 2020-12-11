@@ -107,17 +107,17 @@ check () {
     fi
 
     if [ "$ldso" != "" ]; then
-	interp=`readelf -p .interp $target | sed -e "s/  \[     0\]  //" -e "1,2d" -e "4d"`;
+	interp=`readelf -p .interp $target 2> /dev/null | sed -e "s/  \[     0\]  //" -e "1,2d" -e "4d"`;
 	if [ "$interp" != "$ldso" ]; then
 	    froot=false;
 	    reason_root="(root) 'ld.so' not specified (not linked with '--dynamic-linker' option)"
 	fi
     fi
-    if ! readelf --dyn-syms $target | grep ' main' > /dev/null 2>&1; then
+    if ! readelf --dyn-syms $target 2> /dev/null | grep ' main' > /dev/null 2>&1; then
 	ftask=false;
 	reason_task0="(task) 'main' symbol not found (not linked with '-rdynamic' option)"
     fi
-    if ! readelf -h $target | grep "DYN (Shared object file)" > /dev/null 2>&1; then
+    if ! readelf -h $target 2> /dev/null | grep "DYN (Shared object file)" > /dev/null 2>&1; then
 	ftask=false;
 	reason_task1="(task) not PIE (not compiled and linked with '-fPIC -pie' options)"
     fi
