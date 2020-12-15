@@ -2429,11 +2429,18 @@ mkdir build &&
 
 (
 	cd build &&
-	DESTDIR="$RPM_BUILD_ROOT" sh ../build.sh -i
+	DESTDIR="$RPM_BUILD_ROOT" sh ../build.sh -i %{pip_glibc_dir}
 )
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf "$RPM_BUILD_ROOT"
+
+%post
+%{pip_glibc_dir}/bin/piplnlibs -rs
+
+%preun
+%{pip_glibc_dir}/bin/piplnlibs -Rs
+
 
 %files
 %defattr(-,root,root)

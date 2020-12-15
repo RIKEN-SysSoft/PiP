@@ -63,15 +63,8 @@ make DESTDIR="$RPM_BUILD_ROOT" \
 %doc %{docdir}
 # libs
 %defattr(-,root,root)
-%attr(0755,root,root) %{_bindir}/piplnlibs
 %attr(0755,root,root) %{_libdir}/libpip.so.%{libpip_version}
 %attr(0755,root,root) %{_libdir}/pip_preload.so
 # devel
 %{_prefix}/include
 %{_libdir}/libpip.so
-
-%post
-%{_bindir}/piplnlibs -rs
-
-%preun
-%{_bindir}/piplnlibs -Rs
