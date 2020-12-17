@@ -1,0 +1,176 @@
+.TH "PiP task termination" 3 "Thu Dec 17 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+PiP task termination \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "void \fBpip_exit\fP (int status)"
+.br
+.RI "\fIterminate the calling PiP task \fP"
+.ti -1c
+.RI "int \fBpip_kill_all_tasks\fP (void)"
+.br
+.RI "\fIkill all PiP tasks \fP"
+.ti -1c
+.RI "void \fBpip_abort\fP (void)"
+.br
+.RI "\fIKill all PiP tasks and then kill PiP root\&. \fP"
+.ti -1c
+.RI "int \fBpip_kill\fP (int pipid, int signal)"
+.br
+.RI "\fIdeliver a signal to PiP task \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+Terminating PiP task
+
+.PP
+\fBDescription\fP
+.RS 4
+Terminating PiP task(s) 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "void pip_exit (intstatus)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_exit
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip/pip\&.h\fP> 
+.br
+ void \fBpip_exit( int status )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+When the main function or the start function of a PiP task returns with an integer value, then it has the same effect of calling \fBpip_exit\fP with the returned value\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIstatus\fP This status is returned to PiP root\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function can be used regardless to the PiP execution mode\&. \fCexit(3)\fP is called in the process mode and \fCpthread_exit(3)\fP is called in the pthread mode\&.
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+\fBpip_wait\fP 
+.PP
+\fBpip_trywait\fP 
+.PP
+\fBpip_wait_any\fP 
+.PP
+\fBpip_trywait_any\fP 
+.PP
+exit(Linux 3) 
+.PP
+pthread_exit(Linux 3) 
+.RE
+.PP
+
+.SS "int pip_kill_all_tasks (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_kill_all_tasks
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip/pip\&.h\fP> 
+.br
+int \fBpip_kill_all_tasks( void )\fP;
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function must be called from PiP root\&.
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP The PiP library is not initialized yet 
+.br
+\fIEPERM\fP Not called from root 
+.RE
+.PP
+
+.SS "void pip_abort (void)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_abort 
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip/pip\&.h\fP> 
+.br
+void \fBpip_abort( void )\fP; 
+.RE
+.PP
+
+.SS "int pip_kill (intpipid, intsignal)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_kill
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip/pip\&.h\fP> 
+.br
+int \fBpip_kill( int pipid, int signal )\fP;
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIpipid\fP PiP ID of a target PiP task to deliver the signal 
+.br
+\fIsignal\fP signal number to be delivered
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized 
+.br
+\fIEINVAL\fP An invalid signal number or invalid PiP ID is specified
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+tkill(Luinux 2) 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.

@@ -1,0 +1,125 @@
+.TH "PiP Siganling Functions" 3 "Thu Dec 17 2020" "Process-in-Process" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+PiP Siganling Functions \- 
+.SS "Functions"
+
+.in +1c
+.ti -1c
+.RI "int \fBpip_sigmask\fP (int how, const sigset_t *sigmask, sigset_t *oldmask)"
+.br
+.RI "\fIset signal mask of the current PiP task \fP"
+.ti -1c
+.RI "int \fBpip_signal_wait\fP (int signal)"
+.br
+.RI "\fIwait for a signal \fP"
+.in -1c
+.SH "Detailed Description"
+.PP 
+PiP signaling functions
+
+.PP
+\fBDescription\fP
+.RS 4
+Signaling functions for PiP task 
+.RE
+.PP
+
+.SH "Function Documentation"
+.PP 
+.SS "int pip_sigmask (inthow, const sigset_t *sigmask, sigset_t *oldmask)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_sigmask
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip/pip\&.h\fP> 
+.br
+int \fBpip_sigmask( int how, const sigset_t *sigmask, sigset_t *oldmask )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+This function is agnostic to the PiP execution mode\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIhow\fP see \fBsigprogmask\fP or \fBpthread_sigmask\fP 
+.br
+\fIsigmask\fP signal mask 
+.br
+\fIoldmask\fP old signal mask
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&. 
+.RE
+.PP
+\fBReturn values:\fP
+.RS 4
+\fIEPERM\fP PiP library is not yet initialized 
+.br
+\fIEINVAL\fP An invalid signal number or invalid PiP ID is specified
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+sigprocmask(Linux 2) 
+.PP
+pthread_sigmask(Linux 3) 
+.RE
+.PP
+
+.SS "int pip_signal_wait (intsignal)"
+
+.PP
+\fBName\fP
+.RS 4
+pip_signal_wait
+.RE
+.PP
+\fBSynopsis\fP
+.RS 4
+#include <\fBpip/pip\&.h\fP> 
+.br
+int \fBpip_signal_wait( int signal )\fP;
+.RE
+.PP
+\fBDescription\fP
+.RS 4
+This function is agnostic to the PiP execution mode\&.
+.RE
+.PP
+\fBParameters:\fP
+.RS 4
+\fIsignal\fP signal to wait
+.RE
+.PP
+\fBReturns:\fP
+.RS 4
+Return 0 on success\&. Return an error code on error\&.
+.RE
+.PP
+\fBNote:\fP
+.RS 4
+This function does NOT return the \fCEINTR\fP error\&. This case is treated as normal return;
+.RE
+.PP
+\fBSee Also:\fP
+.RS 4
+sigwait(Linux 3) 
+.PP
+sigsuspend(Linux 2) 
+.RE
+.PP
+
+.SH "Author"
+.PP 
+Generated automatically by Doxygen for Process-in-Process from the source code\&.
