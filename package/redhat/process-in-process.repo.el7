@@ -1,0 +1,14 @@
+[process-in-process]
+name=PiP: Process in Process version 1.x - $basearch
+baseurl=https://git.sys.r-ccs.riken.jp/PiP/package/el/7/$basearch/pip-1/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Process-in-Process
+
+[process-in-process-source]
+name=PiP: Process in Process version 1.x - Source
+baseurl=https://git.sys.r-ccs.riken.jp/PiP/package/el/SRPMS/pip-1/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Process-in-Process
+
