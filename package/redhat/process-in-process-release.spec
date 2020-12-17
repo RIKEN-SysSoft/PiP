@@ -1,25 +1,25 @@
 %define gpgcheck	1
 
-Name: pip-release
+Name: process-in-process-release
 Version: 1
 Release: 0
 
-Summary: PiP release yum repository settings
+Summary: PiP (Process in Process) release yum repository settings
 Group: System Environment/Libraries
 License: BSD
 URL: https://github.com/RIKEN-SysSoft/PiP/
 Vendor: RIKEN System Software Team
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 
-Source0: pip.repo
+Source0: process-in-process.repo
 %if %{gpgcheck}
-Source1: RPM-GPG-KEY-PiP
+Source1: RPM-GPG-KEY-Process-in-Process
 %endif
 
 BuildArch: noarch
 
 %description
-Yum repository repository settings for PiP - Process in Process
+Yum repository settings for PiP - Process in Process
 
 %prep
 
@@ -28,11 +28,11 @@ Yum repository repository settings for PiP - Process in Process
 %install
 rm -rf $RPM_BUILD_ROOT
 
-# pip.repo
+# process-in-process.repo
 install -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d
 install -pm 644 %{SOURCE0} $RPM_BUILD_ROOT%{_sysconfdir}/yum.repos.d/
 
-# RPM-GPG-KEY-PiP
+# RPM-GPG-KEY-Process-in-Process
 %if %{gpgcheck}
 install -dm 755 $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg
 install -pm 644 %{SOURCE1} $RPM_BUILD_ROOT%{_sysconfdir}/pki/rpm-gpg/
@@ -50,5 +50,5 @@ rm -rf $RPM_BUILD_ROOT
 
 %if %{gpgcheck}
 %post
-rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-PiP
+rpm --import /etc/pki/rpm-gpg/%{SOURCE1}
 %endif
