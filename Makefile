@@ -45,7 +45,7 @@ debug:
 ### doc
 
 doc-install:
-	$(MAKE) -C doc
+	$(MAKE) -C doc install
 .PHONY: doc-install
 
 doc: doc-install
