@@ -12,7 +12,7 @@
 %global debug_package	%{nil}
 
 Name: pip
-Version: 1.2.0
+Version: 2.0.0
 Release: 0%{?dist}
 Epoch: 1
 Source: %{name}-%{version}.tar.gz
