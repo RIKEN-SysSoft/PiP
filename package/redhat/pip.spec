@@ -7,6 +7,10 @@
 %define libpip_version	0
 %define docdir		/usr/share/doc/%{name}-%{version}
 
+# workaround for "error: Empty %files file ..../debugsourcefiles.list"
+# on wallaby2 (this doesn't happen on jupiter05 for some reason)
+%global debug_package	%{nil}
+
 Name: pip
 Version: 1.2.0
 Release: 0%{?dist}
