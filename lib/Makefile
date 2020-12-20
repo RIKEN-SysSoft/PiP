@@ -36,17 +36,21 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+LDFLAGS_COMMON = -shared -L$(glibc_libdir) -ldl
+
+SO_MAJOR = 0
 LIBNAME  = libpip.so
-LIBRARY_PIPGDB = libpip_gdb.so
+LIBRARY  = $(LIBNAME).$(SO_MAJOR)
+LDFLAGS = -Wl,-soname -Wl,$(LIBRARY) $(LDFLAGS_COMMON)
+
+LIBNAME_PIPGDB = libpip_gdb.so
+LIBRARY_PIPGDB = $(LIBNAME_PIPGDB)
+LDFLAGS_PIPGDB = -Wl,-soname -Wl,$(LIBRARY_PIPGDB) $(LDFLAGS_COMMON)
 
 CPPFLAGS += -I$(PIPINCDIR) -I. \
 	-DPIP_INSTALL_LIBPIPGDB=\"$(default_libdir)/$(LIBRARY_PIPGDB)\" \
 	-DPIP_MAKE_LIBPIPGDB=\"`pwd`/$(LIBRARY_PIPGDB)\"
 CFLAGS += $(PICFLAG)
-LDFLAGS  = -shared -Wl,-soname -Wl,$(LIBRARY) -L$(glibc_libdir) -ldl
-
-SO_MAJOR = 0
-LIBRARY  = $(LIBNAME).$(SO_MAJOR)
 
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPGDB)
 
@@ -75,13 +79,14 @@ $(LIBRARY): $(OBJS) Makefile
 	ln -s $(LIBRARY) $(LIBNAME)
 
 $(LIBRARY_PIPGDB): $(OBJS) Makefile
-	$(CC) $(LDFLAGS) pip_gdb.o -o $@
+	$(CC) $(LDFLAGS_PIPGDB) pip_gdb.o -o $@
 
 # chmod is to make rpmbuild happy
 install:
 	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY)
 	rm -f $(DESTDIR)$(libdir)/$(LIBNAME)
 	ln -s $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBNAME)
+	chmod 0755 $(DESTDIR)$(libdir)/$(LIBRARY_PIPGDB)
 
 very-clean:
 	rm -f $(LIBNAME)
