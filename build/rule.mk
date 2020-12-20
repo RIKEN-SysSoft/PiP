@@ -88,17 +88,17 @@ header-all: $(HEADERS)
 header-install:
 	@for i in -- $(HEADERS); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(includedir)/pip; \
+		$(MKDIR_P) $(DESTDIR)$(includedir)/pip; \
 		echo \
-		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/pip/$$i; \
-		$(INSTALL_DATA) $(srcdir)/$$i $(includedir)/pip/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(includedir)/pip/$$i; \
+		$(INSTALL_DATA) $(srcdir)/$$i $(DESTDIR)$(includedir)/pip/$$i; \
 	done
 	@for i in -- $(EXEC_HEADERS); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(exec_includedir)/pip; \
+		$(MKDIR_P) $(DESTDIR)$(exec_includedir)/pip; \
 		echo \
-		$(INSTALL_DATA) $$i $(includedir)/pip/$$i; \
-		$(INSTALL_DATA) $$i $(includedir)/pip/$$i; \
+		$(INSTALL_DATA) $$i $(DESTDIR)$(includedir)/pip/$$i; \
+		$(INSTALL_DATA) $$i $(DESTDIR)$(includedir)/pip/$$i; \
 	done
 .PHONY: header-install
 
@@ -125,10 +125,10 @@ lib-all: $(LIBRARIES)
 lib-install:
 	@for i in -- $(LIBRARIES); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(libdir); \
+		$(MKDIR_P) $(DESTDIR)$(libdir); \
 		echo \
-		$(INSTALL_DATA) $$i $(libdir)/$$i; \
-		$(INSTALL_DATA) $$i $(libdir)/$$i; \
+		$(INSTALL_DATA) $$i $(DESTDIR)$(libdir)/$$i; \
+		$(INSTALL_DATA) $$i $(DESTDIR)$(libdir)/$$i; \
 	done
 .PHONY: lib-install
 
@@ -155,10 +155,10 @@ prog-all: $(PROGRAMS)
 prog-install:
 	@for i in -- $(PROGRAMS_TO_INSTALL); do \
 		case $$i in --) continue;; esac; \
-		$(MKDIR_P) $(bindir); \
+		$(MKDIR_P) $(DESTDIR)$(bindir); \
 		echo \
-		$(INSTALL_PROGRAM) $$i $(bindir)/$$i; \
-		$(INSTALL_PROGRAM) $$i $(bindir)/$$i; \
+		$(INSTALL_PROGRAM) $$i $(DESTDIR)$(bindir)/$$i; \
+		$(INSTALL_PROGRAM) $$i $(DESTDIR)$(bindir)/$$i; \
 	done
 .PHONY: prog-install
 
