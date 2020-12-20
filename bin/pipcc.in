@@ -53,7 +53,12 @@
 ### pip-exec(1), pip-mode(1)
 ###
 
-PREFIX=@prefix@
+# ${prefix} and ${exec_prefix} have to be lowercase,
+# because maybe @includedir@=${prefix}/include and @libdir@={exec_prefix}/lib
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+PREFIX_INCDIR=@includedir@
+PREFIX_LIBDIR=@libdir@
 SRCTOP=@srcdir_top@
 PIP_VERSION=@PACKAGE_VERSION@
 
@@ -155,15 +160,15 @@ if ${pipinstall} && ${pipbuild} ; then
 fi
 
 if ${pipinstall} ; then
-    PIP_INCDIR=${PREFIX}/include
-    PIP_LIBDIR=${PREFIX}/lib
+    PIP_INCDIR="${PREFIX_INCDIR}"
+    PIP_LIBDIR="${PREFIX_LIBDIR}"
 elif ${pipbuild} ; then
     PIP_INCDIR=${SRCTOP}/include
     PIP_LIBDIR=${SRCTOP}/lib
 else
-    if [ ${PREFIX}/bin/pipcc -ef ${self} ] ; then
-	PIP_INCDIR=${PREFIX}/include
-	PIP_LIBDIR=${PREFIX}/lib
+    if [ ${prefix}/bin/pipcc -ef ${self} ] ; then
+	PIP_INCDIR="${PREFIX_INCDIR}"
+	PIP_LIBDIR="${PREFIX_LIBDIR}"
     elif [ ${SRCTOP}/bin/pipcc -ef ${self} ]; then
 	PIP_INCDIR=${SRCTOP}/include;
 	PIP_LIBDIR=${SRCTOP}/lib;
