@@ -37,12 +37,18 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 include fctx_defs.mk
 
-LIBNAME  = libpip.so
 SO_MAJOR = 0
+LIBNAME  = libpip.so
 LIBRARY  = $(LIBNAME).$(SO_MAJOR)
+LDFLAGS_PIP = -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREAD_FLAG)
 
+SO_MAJOR_PIPINIT = 0
 LIBNAME_PIPINIT = libpip_init.so
-LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR)
+LIBRARY_PIPINIT = $(LIBNAME_PIPINIT).$(SO_MAJOR_PIPINIT)
+LDFLAGS_PIPINIT = -shared $(DFLAGS_EXTRA) -Wl,-soname -Wl,$(LIBRARY_PIPINIT)\
+	$(PTHREAD_FLAG)
+
+
 LIBRARIES = $(LIBRARY) $(LIBRARY_PIPINIT)
 
 INTERP = $(dynamic_linker)
@@ -58,7 +64,6 @@ CPPFLAGS += $(PIP_CPPFLAGS) $(FCTXCPPFLAG) -DINTERP=\"$(INTERP)\" \
 	-DLDLINUX=\"$(dynamic_linker)\" \
 	$(CPPFLAGS_DEBUG)
 CFLAGS   += $(PIC_CFLAG) $(PTHREAD_FLAG)
-LDFLAGS  += -shared -Wl,-soname -Wl,$(LIBRARY) $(PTHREAD_FLAG)
 
 LIBMAIN = -Wl,-e,pip_main
 
@@ -84,12 +89,12 @@ $(BUILD_H): $(top_srcdir)/include/pip/pip_config.h
 $(OBJS): $(BUILD_H)
 
 $(LIBRARY): $(OBJS) $(DEPINCS) Makefile
-	$(CC) $(LDFLAGS) $(LIBMAIN) $(OBJS) -o $@
+	$(CC) $(LDFLAGS_PIP) $(LIBMAIN) $(OBJS) -o $@
 	$(RM) $(LIBNAME)
 	ln -s $(LIBRARY) $(LIBNAME)
 
 $(LIBRARY_PIPINIT): $(LIBRARY) $(OBJS_PIPINIT) $(DEPINCS) Makefile
-	$(CC) $(LDFLAGS) $(OBJS_PIPINIT) -o $@
+	$(CC) $(LDFLAGS_PIPINIT) $(OBJS_PIPINIT) -o $@
 	$(RM) $(LIBNAME_PIPINIT)
 	ln -s $(LIBRARY_PIPINIT) $(LIBNAME_PIPINIT)
 
