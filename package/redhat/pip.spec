@@ -5,6 +5,7 @@
 
 %define glibc_libdir	/opt/pip/lib
 %define libpip_version	0
+%define libpip_init_version	0
 %define docdir		/usr/share/doc/%{name}-%{version}
 
 # workaround for "error: Empty %files file ..../debugsourcefiles.list"
@@ -66,20 +67,19 @@ make DESTDIR="$RPM_BUILD_ROOT" install
 %files
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/pipcc
+%attr(0755,root,root) %{_bindir}/pipfc
 %attr(0755,root,root) %{_bindir}/pip-check
+%attr(0755,root,root) %{_bindir}/pip-exec
 %attr(0755,root,root) %{_bindir}/pip-man
 %attr(0755,root,root) %{_bindir}/pip-mode
-%attr(0755,root,root) %{_bindir}/piprun
 %attr(0755,root,root) %{_bindir}/pips
 %attr(0755,root,root) %{_bindir}/printpipmode
-%attr(0644,root,root) %{_mandir}/man1*/[ABD-Zabcd-z]*
-%attr(0644,root,root) %{_mandir}/man3*/[ABD-Zabcd-z]*
-%doc %{docdir}
 # libs
 %defattr(-,root,root)
-%attr(0755,root,root) %{_libdir}/libpip_gdb.so
+%attr(0755,root,root) %{_libdir}/libpip_init.so.%{libpip_init_version}
 %attr(0755,root,root) %{_libdir}/libpip.so.%{libpip_version}
 %attr(0755,root,root) %{_libdir}/pip_preload.so
 # devel
 %{_prefix}/include
+%{_libdir}/libpip_init.so
 %{_libdir}/libpip.so
