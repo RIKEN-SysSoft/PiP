@@ -8,7 +8,7 @@
 %define docdir		/usr/share/doc/%{name}-%{version}
 
 Name: pip
-Version: 1.1.0
+Version: 1.2.0
 Release: 0%{?dist}
 Epoch: 1
 Source: %{name}-%{version}.tar.gz
@@ -56,13 +56,18 @@ make DESTDIR="$RPM_BUILD_ROOT" \
 %files
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/pipcc
+%attr(0755,root,root) %{_bindir}/pip-check
+%attr(0755,root,root) %{_bindir}/pip-man
+%attr(0755,root,root) %{_bindir}/pip-mode
 %attr(0755,root,root) %{_bindir}/piprun
-%attr(0755,root,root) %{_bindir}/pipmap
+%attr(0755,root,root) %{_bindir}/pips
+%attr(0755,root,root) %{_bindir}/printpipmode
 %attr(0644,root,root) %{_mandir}/man1*/[ABD-Zabcd-z]*
 %attr(0644,root,root) %{_mandir}/man3*/[ABD-Zabcd-z]*
 %doc %{docdir}
 # libs
 %defattr(-,root,root)
+%attr(0755,root,root) %{_libdir}/libpip_gdb.so
 %attr(0755,root,root) %{_libdir}/libpip.so.%{libpip_version}
 %attr(0755,root,root) %{_libdir}/pip_preload.so
 # devel
