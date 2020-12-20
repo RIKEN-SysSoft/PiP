@@ -43,16 +43,13 @@ is called PiP process and a sub-process are called a PiP task.
 %setup -n %{name}-%{version}
 
 %build
-./configure --prefix=%{_prefix} --with-glibc-libdir=%{glibc_libdir}
-make default_libdir=%{_libdir}
+./configure --prefix=%{_prefix} --libdir=%{_libdir} --mandir=%{_mandir} --docdir=%{docdir} --with-glibc-libdir=%{glibc_libdir}
+make
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf "$RPM_BUILD_ROOT"
 
-make DESTDIR="$RPM_BUILD_ROOT" \
-	default_docdir=%{docdir} \
-	default_libdir=%{_libdir} \
-	default_mandir=%{_mandir} install
+make DESTDIR="$RPM_BUILD_ROOT" install
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
