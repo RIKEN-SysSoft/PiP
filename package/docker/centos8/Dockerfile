@@ -23,7 +23,7 @@ RUN set -x && \
 		rpm-build \
 		rpm-sign \
 		systemtap && \
-	rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/8/noarch/pip-1/pip-release-2-0.noarch.rpm && \
+	rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/8/noarch/pip-1/pip-release-3-0.noarch.rpm && \
 	yum install -y pip-glibc && \
 	yum install -y --setopt='tsflags=' pip && \
 	yum install -y pip-gdb && \
