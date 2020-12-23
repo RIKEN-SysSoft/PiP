@@ -111,7 +111,14 @@ check () {
 	    froot=false;
 	    reason_root="(root) 'ld-linux.so' is not set properly"
 	fi
+    else
+	lddout=`ldd $target | grep libpip.so 2> /dev/null`
+	if [ x"${lddout}" == x ]; then
+	    froot=false;
+	    reason_root="(root) not linked with libpip.so"
+	fi
     fi
+
     if ! readelf --dyn-syms $target 2> /dev/null | grep ' main' > /dev/null 2>&1; then
 	ftask=false;
 	reason_task0="(task) 'main' symbol not found (not linked with '-rdynamic' option)"
@@ -123,12 +130,12 @@ check () {
 
     if $flag_root; then
 	if ! $froot; then
-	    show_msgs "$target" "cannot be PiP root";
+	    show_msgs "$target" "cannot be a PiP root";
 	    flag_error=true;
 	fi
     elif $flag_task; then
 	if ! $ftask; then
-	    show_msgs "$target" "cannot be PiP task";
+	    show_msgs "$target" "cannot be a PiP task";
 	    flag_error=true;
 	fi
     elif $flag_both; then

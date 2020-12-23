@@ -5,10 +5,15 @@
 
 %define glibc_libdir	/opt/pip/lib
 %define libpip_version	0
+%define libpip_init_version	0
 %define docdir		/usr/share/doc/%{name}-%{version}
 
+# workaround for "error: Empty %files file ..../debugsourcefiles.list"
+# on wallaby2 (this doesn't happen on jupiter05 for some reason)
+%global debug_package	%{nil}
+
 Name: pip
-Version: 1.1.0
+Version: 2.0.0
 Release: 0%{?dist}
 Epoch: 1
 Source: %{name}-%{version}.tar.gz
@@ -20,6 +25,9 @@ URL: https://github.com/RIKEN-SysSoft/PiP/
 Vendor: RIKEN System Software Team
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 BuildRequires: pip-glibc
+
+# see pathfix.py in the %prep section
+BuildRequires: /usr/bin/pathfix.py
 
 %description
 PiP is a user-level library to have the best of the both worlds of
@@ -38,17 +46,20 @@ is called PiP process and a sub-process are called a PiP task.
 
 %setup -n %{name}-%{version}
 
+# Fix Python shebang to avoid the following rpmbuild error:
+#	ERROR: ambiguous python shebang in /usr/bin/pips: #!/usr/bin/env python. Change it to python3 (or python2) explicitly.
+# -n prevents creating ~backup files
+# -i specifies the interpreter for the shebang
+pathfix.py -ni "%{__python3} %{py3_shbang_opts}" ./bin/pips
+
 %build
-./configure --prefix=%{_prefix} --with-glibc-libdir=%{glibc_libdir}
-make default_libdir=%{_libdir}
+./configure --prefix=%{_prefix} --libdir=%{_libdir} --mandir=%{_mandir} --docdir=%{docdir} --with-glibc-libdir=%{glibc_libdir}
+make
 
 %install
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf "$RPM_BUILD_ROOT"
 
-make DESTDIR="$RPM_BUILD_ROOT" \
-	default_docdir=%{docdir} \
-	default_libdir=%{_libdir} \
-	default_mandir=%{_mandir} install
+make DESTDIR="$RPM_BUILD_ROOT" install
 
 %clean
 [ "$RPM_BUILD_ROOT" != "/" ] && rm -rf $RPM_BUILD_ROOT
@@ -56,22 +67,19 @@ make DESTDIR="$RPM_BUILD_ROOT" \
 %files
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/pipcc
-%attr(0755,root,root) %{_bindir}/piprun
-%attr(0755,root,root) %{_bindir}/pipmap
-%attr(0644,root,root) %{_mandir}/man1*/[ABD-Zabcd-z]*
-%attr(0644,root,root) %{_mandir}/man3*/[ABD-Zabcd-z]*
-%doc %{docdir}
+%attr(0755,root,root) %{_bindir}/pipfc
+%attr(0755,root,root) %{_bindir}/pip-check
+%attr(0755,root,root) %{_bindir}/pip-exec
+%attr(0755,root,root) %{_bindir}/pip-man
+%attr(0755,root,root) %{_bindir}/pip-mode
+%attr(0755,root,root) %{_bindir}/pips
+%attr(0755,root,root) %{_bindir}/printpipmode
 # libs
 %defattr(-,root,root)
-%attr(0755,root,root) %{_bindir}/piplnlibs
+%attr(0755,root,root) %{_libdir}/libpip_init.so.%{libpip_init_version}
 %attr(0755,root,root) %{_libdir}/libpip.so.%{libpip_version}
 %attr(0755,root,root) %{_libdir}/pip_preload.so
 # devel
 %{_prefix}/include
+%{_libdir}/libpip_init.so
 %{_libdir}/libpip.so
-
-%post
-%{_bindir}/piplnlibs -rs
-
-%preun
-%{_bindir}/piplnlibs -Rs

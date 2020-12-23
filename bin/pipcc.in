@@ -53,7 +53,13 @@
 ### pip-exec(1), pip-mode(1)
 ###
 
-PREFIX=@prefix@
+# ${prefix} and ${exec_prefix} have to be lowercase,
+# because maybe @includedir@=${prefix}/include and @libdir@={exec_prefix}/lib
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+PREFIX_INCDIR=@includedir@
+PREFIX_LIBDIR=@libdir@
+PREFIX_BINDIR=@bindir@
 SRCTOP=@srcdir_top@
 PIP_VERSION=@PACKAGE_VERSION@
 HAVE_PIPGLIBC=@have_pipglibc@
@@ -167,18 +173,18 @@ if ${pipinstall} && ${pipbuild} ; then
 fi
 
 if ${pipinstall} ; then
-    PIP_INCDIR=${PREFIX}/include
-    PIP_LIBDIR=${PREFIX}/lib
-    PIP_BINDIR=${PREFIX}/bin
+    PIP_INCDIR="${PREFIX_INCDIR}"
+    PIP_LIBDIR="${PREFIX_LIBDIR}"
+    PIP_BINDIR="${PREFIX_BINDIR}"
 elif ${pipbuild} ; then
     PIP_INCDIR=${SRCTOP}/include
     PIP_LIBDIR=${SRCTOP}/lib
     PIP_BINDIR=${SRCTOP}/bin
 else
-    if [ ${PREFIX}/bin/pipcc -ef ${self} ] ; then
-	PIP_INCDIR=${PREFIX}/include
-	PIP_LIBDIR=${PREFIX}/lib
-	PIP_BINDIR=${PREFIX}/bin
+    if [ ${prefix}/bin/pipcc -ef ${self} ] ; then
+	PIP_INCDIR="${PREFIX_INCDIR}"
+	PIP_LIBDIR="${PREFIX_LIBDIR}"
+	PIP_BINDIR="${PREFIX_BINDIR}"
     elif [ ${SRCTOP}/bin/pipcc -ef ${self} ]; then
 	PIP_INCDIR=${SRCTOP}/include;
 	PIP_LIBDIR=${SRCTOP}/lib;
@@ -300,10 +306,10 @@ fi
 if ${is_linking}; then
     do_run ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
 	   ${FLAG_PTHREAD} ${opts}
-    if [ -x ${PIP_BINDIR}/pip_unpie} ]; then
+    if [ -x ${PIP_BINDIR}/pip_unpie ]; then
 	${PIP_BINDIR}/pip_unpie ${target}
     else
-	echo >&2 "${cmd} Warning: Unable to find and invoke pip_unpie"
+	echo >&2 "${cmd} Warning: Unable to find and invoke ${PIP_BINDIR}/pip_unpie"
     fi
 else
     do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
