@@ -129,7 +129,7 @@ install:
 	@$(MKDIR_P) $(htmldir);
 	@(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
 	@$(CP) ./slides/* $(slidedir)
-.PHONY: doc-install
+.PHONY: install
 
 doc-reset:
 	git checkout man latex-inuse html slides
