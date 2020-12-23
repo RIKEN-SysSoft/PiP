@@ -3016,7 +3016,7 @@ python=`which ${PYTHON}`
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files build/config.mk release/version.conf lib/fctx_defs.mk lib/fcontext.mk bin/pipcc bin/pipfc bin/pips bin/pip-mode bin/pip-check bin/pip-man doc/latex-inuse/libpip-manpages.tex doc/Slides-html.md"
+ac_config_files="$ac_config_files build/config.mk release/version.conf lib/fctx_defs.mk lib/fcontext.mk bin/pipcc bin/pipfc bin/pips bin/pip-mode bin/pip-check bin/pip-man doc/latex-inuse/libpip-manpages.tex"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3721,7 +3721,6 @@ do
     "bin/pip-check") CONFIG_FILES="$CONFIG_FILES bin/pip-check" ;;
     "bin/pip-man") CONFIG_FILES="$CONFIG_FILES bin/pip-man" ;;
     "doc/latex-inuse/libpip-manpages.tex") CONFIG_FILES="$CONFIG_FILES doc/latex-inuse/libpip-manpages.tex" ;;
-    "doc/Slides-html.md") CONFIG_FILES="$CONFIG_FILES doc/Slides-html.md" ;;
 
   *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
   esac

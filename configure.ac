@@ -145,6 +145,5 @@ AC_CONFIG_FILES([
 	bin/pip-check
 	bin/pip-man
 	doc/latex-inuse/libpip-manpages.tex
-	doc/Slides-html.md
 ])
 AC_OUTPUT
