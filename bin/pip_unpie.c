@@ -40,6 +40,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <libgen.h>
 #include <error.h>
 #include <errno.h>
 
@@ -47,9 +48,11 @@
 
 #define	DF_1_PIE	0x08000000
 
+char *cmd;
+
 static void read_elf64_header( int fd, Elf64_Ehdr *ehdr ) {
   if( read( fd, ehdr, sizeof(Elf64_Ehdr) ) != sizeof(Elf64_Ehdr) ) {
-    fprintf( stderr, "Unable to read\n" );
+    fprintf( stderr, "%s: Unable to read\n", cmd );
     exit( 2 );
   } else if( ehdr->e_ident[EI_MAG0] != ELFMAG0 ||
 	     ehdr->e_ident[EI_MAG1] != ELFMAG1 ||
@@ -58,7 +61,7 @@ static void read_elf64_header( int fd, Elf64_Ehdr *ehdr ) {
     fprintf( stderr, "Not an ELF\n" );
     exit( 1 );
   } else if( ehdr->e_ident[EI_CLASS] != ELFCLASS64 ) {
-    fprintf( stderr, "32bit class is not supported\n" );
+    fprintf( stderr, "%s: 32bit class is not supported\n", cmd );
     exit( 2 );
   }
 }
@@ -67,11 +70,11 @@ static void
 read_elf64_section_header( int fd, int nth, Elf64_Ehdr *ehdr, Elf64_Shdr *shdr ) {
   off_t off = ehdr->e_shoff + ( ehdr->e_shentsize * nth );
   if( pread( fd, shdr, sizeof(Elf64_Shdr), off ) != sizeof(Elf64_Shdr) ) {
-    fprintf( stderr, "Unable to read section header\n" );
+    fprintf( stderr, "%s: Unable to read section header\n", cmd );
     exit( 2 );
   }
 #ifdef DEBUG
-  printf( "[%d] Type:%d  Name:%d  Link:%d\n",
+  printf( "%s: [%d] Type:%d  Name:%d  Link:%d\n", cmd,
 	  nth, (int) shdr->sh_type, (int) shdr->sh_name, (int) shdr->sh_link );
 #endif
 }
@@ -81,7 +84,7 @@ static void
 write_elf64_section_header( int fd, int nth, Elf64_Ehdr *ehdr, Elf64_Shdr *shdr ) {
   off_t off = ehdr->e_shoff + ( ehdr->e_shentsize * nth );
   if( pwrite( fd, shdr, sizeof(Elf64_Shdr), off ) != sizeof(Elf64_Shdr) ) {
-    fprintf( stderr, "Unable to write section header\n" );
+    fprintf( stderr, "%s: Unable to write section header\n", cmd );
     exit( 2 );
   }
 #ifdef DEBUG
@@ -93,14 +96,14 @@ write_elf64_section_header( int fd, int nth, Elf64_Ehdr *ehdr, Elf64_Shdr *shdr 
 
 void read_elf64_dynamic_section( int fd, off_t offset, size_t size, Elf64_Dyn *dyns ) {
   if( pread( fd, dyns, size, offset ) != size ) {
-    fprintf( stderr, "Unable to read dynamic section\n" );
+    fprintf( stderr, "%s: Unable to read dynamic section\n", cmd );
     exit( 2 );
   }
 }
 
 void write_elf64_dynamic_section( int fd, off_t offset, size_t size, Elf64_Dyn *dyns ) {
   if( pwrite( fd, dyns, size, offset ) != size ) {
-    fprintf( stderr, "Unable to write dynamic section\n" );
+    fprintf( stderr, "%s: Unable to write dynamic section\n", cmd );
     exit( 2 );
   }
 }
@@ -108,12 +111,12 @@ void write_elf64_dynamic_section( int fd, off_t offset, size_t size, Elf64_Dyn *
 static int unpie( char *path, int flag_check ) {
   Elf64_Ehdr 	ehdr;
   Elf64_Shdr	shdr;
-  Elf64_Dyn	*dyns;
+  Elf64_Dyn	*dyns = NULL;
   int		fd, i, j, n;
   int 		flag_dyn = 0, flag_pie = 0, retval = 0;
 
   if( ( fd = open( path, O_RDWR ) ) < 0 ) {
-    fprintf( stderr, "'%s': open() fails (%s)\n", path, strerror( errno ) );
+    fprintf( stderr, "%s: open(%s) fails (%s)\n", cmd, path, strerror( errno ) );
     return 2;
   }
   read_elf64_header( fd, &ehdr );
@@ -140,17 +143,17 @@ static int unpie( char *path, int flag_check ) {
       goto done;
     }
   }
-  fprintf( stderr, "Unable to find DYNAMIC section (statically linked?)\n" );
+  fprintf( stderr, "%s: Unable to find DYNAMIC section (statically linked?)\n", cmd );
   retval = 2;
  done:
   if( flag_check ) {
     if( flag_pie ) {
-      fprintf( stderr, "'%s' is PIE (not 'unpie-ed')\n", path );
+      fprintf( stderr, "%s: '%s' is PIE (not 'unpie-ed' yet)\n", cmd, path );
       retval = 1;
     } else if( flag_dyn ) {
-      fprintf( stderr, "'%s' is 'unpie-ed' PIE\n", path );
+      fprintf( stderr, "%s: '%s' is PIE (already 'unpie-ed' PIE)\n", cmd, path );
     } else {
-      fprintf( stderr, "'%s' is NOT PIE\n", path );
+      fprintf( stderr, "%s: '%s' is NOT PIE\n", cmd, path );
       retval = 1;
     }
   }
@@ -159,20 +162,21 @@ static int unpie( char *path, int flag_check ) {
   return retval;
 }
 
-static void print_usage( char *prog ) {
-  fprintf( stderr, "%s [-c] <PIE>\n", prog );
-  fprintf( stderr, "   -c: fail if <PIE> is PIE\n", prog );
+static void print_usage( void ) {
+  fprintf( stderr, "%s [-c] <PIE>\n", cmd );
+  fprintf( stderr, "   -c: check if <PIE> is PIE\n" );
   exit( 2 );
 }
 
 int main( int argc, char **argv ) {
   int flag_check = 0;
   char *fname = argv[1];
-  
+
+  cmd = basename( argv[0] );
   if( argc == 3 && strcmp( argv[1], "-c" ) == 0 ) {
     fname = argv[2];
     flag_check = 1;
   }
-  if( argc < 2 || argc > 3 ) print_usage( argv[0] );
+  if( argc < 2 || argc > 3 ) print_usage();
   return unpie( fname, flag_check );
 }
