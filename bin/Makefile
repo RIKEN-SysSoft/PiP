@@ -35,28 +35,26 @@ srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
+PROGRAM = pip-exec
+PROGRAMS = $(PROGRAM) printpipmode pip_unpie
 PROGRAMS_TO_INSTALL = $(PROGRAMS) pipcc pipfc pip-mode pip-check pip-man pips 
-EXTRA_PROGRAM_FILES = pip-exec.to-install printpipmode.to-install
+EXTRA_PROGRAMS = pip-exec.to-install printpipmode.to-install
 
 MAN1_SRCS = pip-exec.c pipcc.in pipfc.in pip-mode.in pip-check.in pip-man.in \
 	pips-doxygen.c printpipmode.c
 
-CPPFLAGS += $(PIP_CPPFLAGS) $(DGBFLAG)
-
-all: $(PROGRAMS)
+CPPFLAGS += $(PIP_CPPFLAGS) $(DBGFLAG)
 
 debug:
 	DBGFLAG=-DDEBUG $(MAKE) all
 
 include $(top_srcdir)/build/rule.mk
 
-all:
-	chmod +x pipcc pipfc pip-check pip-mode pip-man
+all: $(EXTRA_PROGRAMS) FORCE
 
-all: $(EXTRA_PROGRAM_FILES)
-
-pipcc: ../config.log
-	chmod +x pipcc pip-check pip-mode pip-man
+FORCE:
+	chmod +x pipcc pip-check pip-mode pip-man pips
+.PHONY: FORCE
 
 pip-exec: pip-exec.c $(DEPS) Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
@@ -75,12 +73,14 @@ install:
 	$(INSTALL_PROGRAM) pip-exec.to-install $(DESTDIR)$(bindir)/pip-exec
 	$(INSTALL_PROGRAM) printpipmode.to-install $(DESTDIR)$(bindir)/printpipmode
 
+pip_unpie: pip_unpie.c
+	$(CC) -g -O2 $< -o $@
+
 post-clean-hook:
 	$(RM) *.E *.log
 
 post-veryclean-hook: post-clean-hook
-	$(RM) pip-exec printpipmode pipcc pip-mode pip-check pip-man \
-		$(EXTRA_PROGRAM_FILES)
+	$(RM) pipcc pipfc pip-mode pip-check pip-man pips $(EXTRA_PROGRAMS)
 	$(RM) .doxygen_*
 
 post-distclean-hook: post-veryclean-hook

@@ -58,6 +58,7 @@ AC_SUBST(prefix)
 AC_SUBST(exec_prefix)
 AC_SUBST(includedir)
 AC_SUBST(libdir)
+AC_SUBST(bindir)
 AC_SUBST(have_pipglibc)
 AC_SUBST(glibc_incdir)
 AC_SUBST(glibc_libdir)
@@ -117,6 +118,13 @@ fi
 
 AC_CHECK_PROGS([FC],[gfortran g95 g77])
 
+AC_CHECK_PROGS([PYTHON],[python3 python36 python38 python2 python],[false])
+if test x"${PYTHON}" == x"false" ; then
+  AC_MSG_ERROR([can't find python.])
+fi
+python=`which ${PYTHON}`
+AC_SUBST(python)
+
 # Checks for libraries.
 
 # Checks for header files.
@@ -132,6 +140,7 @@ AC_CONFIG_FILES([
 	lib/fcontext.mk
 	bin/pipcc
 	bin/pipfc
+	bin/pips
 	bin/pip-mode
 	bin/pip-check
 	bin/pip-man

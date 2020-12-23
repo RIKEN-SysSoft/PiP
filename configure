@@ -587,6 +587,8 @@ PACKAGE_URL='https://github.com/RIKEN-SysSoft/PiP'
 ac_unique_file="RELEASE_NOTE"
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+python
+PYTHON
 FC
 INSTALL_DATA
 INSTALL_SCRIPT
@@ -1975,6 +1977,7 @@ $as_echo "${glibc_incdir}" >&6; }
 
 
 
+
 getconf=`/bin/which getconf`
 if test -x $getconf; then
    cache_line_size=`$getconf LEVEL1_DCACHE_LINESIZE`
@@ -2956,6 +2959,55 @@ fi
 done
 
 
+for ac_prog in python3 python36 python38 python2 python
+do
+  # Extract the first word of "$ac_prog", so it can be a program name with args.
+set dummy $ac_prog; ac_word=$2
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+$as_echo_n "checking for $ac_word... " >&6; }
+if ${ac_cv_prog_PYTHON+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test -n "$PYTHON"; then
+  ac_cv_prog_PYTHON="$PYTHON" # Let the user override the test.
+else
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_prog_PYTHON="$ac_prog"
+    $as_echo "$as_me:${as_lineno-$LINENO}: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+fi
+fi
+PYTHON=$ac_cv_prog_PYTHON
+if test -n "$PYTHON"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $PYTHON" >&5
+$as_echo "$PYTHON" >&6; }
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+$as_echo "no" >&6; }
+fi
+
+
+  test -n "$PYTHON" && break
+done
+test -n "$PYTHON" || PYTHON="false"
+
+if test x"${PYTHON}" == x"false" ; then
+  as_fn_error $? "can't find python." "$LINENO" 5
+fi
+python=`which ${PYTHON}`
+
+
 # Checks for libraries.
 
 # Checks for header files.
@@ -2964,7 +3016,7 @@ done
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files build/config.mk release/version.conf lib/fctx_defs.mk lib/fcontext.mk bin/pipcc bin/pipfc bin/pip-mode bin/pip-check bin/pip-man doc/latex-inuse/libpip-manpages.tex doc/Slides-html.md"
+ac_config_files="$ac_config_files build/config.mk release/version.conf lib/fctx_defs.mk lib/fcontext.mk bin/pipcc bin/pipfc bin/pips bin/pip-mode bin/pip-check bin/pip-man doc/latex-inuse/libpip-manpages.tex doc/Slides-html.md"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3664,6 +3716,7 @@ do
     "lib/fcontext.mk") CONFIG_FILES="$CONFIG_FILES lib/fcontext.mk" ;;
     "bin/pipcc") CONFIG_FILES="$CONFIG_FILES bin/pipcc" ;;
     "bin/pipfc") CONFIG_FILES="$CONFIG_FILES bin/pipfc" ;;
+    "bin/pips") CONFIG_FILES="$CONFIG_FILES bin/pips" ;;
     "bin/pip-mode") CONFIG_FILES="$CONFIG_FILES bin/pip-mode" ;;
     "bin/pip-check") CONFIG_FILES="$CONFIG_FILES bin/pip-check" ;;
     "bin/pip-man") CONFIG_FILES="$CONFIG_FILES bin/pip-man" ;;
