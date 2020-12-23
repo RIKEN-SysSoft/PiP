@@ -77,6 +77,10 @@ fi
 
 AC_CHECK_PROGS([FC],[gfortran g95 g77])
 
+AC_CHECK_PROGS([PYTHON],[python3 python36 python38 python2 python],[false])
+python=`which ${PYTHON}`
+AC_SUBST(python)
+
 # Checks for libraries.
 
 # Checks for header files.
@@ -90,6 +94,7 @@ AC_CONFIG_FILES([
 	release/version.conf
 	bin/pipcc
 	bin/pipfc
+	bin/pips
 	bin/pip-mode
 	bin/pip-check
 	bin/pip-man
