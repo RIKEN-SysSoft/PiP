@@ -120,14 +120,15 @@ documents:
 install:
 	@echo "Installing man pages ->" $(mandir)
 	@$(MKDIR_P) $(mandir);
-	@(cd ./man  && tar cf - . ) | (cd $(mandir) && $(RM) -r * && tar xf -)
+	@( cd ./man  && tar cf - . ) | ( cd $(mandir) && $(RM) -r * && tar xf - )
 	@echo "Installing pdf ->" $(pdfdir)
 	@$(MKDIR_P) $(pdfdir);
 	@$(CP) ./latex-inuse/libpip-manpages.pdf $(pdfdir)
 	@$(MKDIR_P) $(slidedir);
 	@echo "Installing html ->" $(htmldir)
 	@$(MKDIR_P) $(htmldir);
-	@(cd ./html && tar cf - . ) | (cd $(htmldir) && $(RM) -r * && tar xf -)
+	@( cd ./html && tar cf - . ) | ( cd $(htmldir) && $(RM) -r * && tar xf - )
+	@echo "Installing slides ->" $(slidedir)
 	@$(CP) ./slides/* $(slidedir)
 .PHONY: install
 
