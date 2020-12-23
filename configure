@@ -2944,6 +2944,9 @@ fi
 done
 test -n "$PYTHON" || PYTHON="false"
 
+if test x"${PYTHON}" == x"false" ; then
+  as_fn_error $? "can't find python." "$LINENO" 5
+fi
 python=`which ${PYTHON}`
 
 

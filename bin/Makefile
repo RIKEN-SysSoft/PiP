@@ -45,8 +45,6 @@ MAN1_SRCS = pip-exec.c pipcc.in pipfc.in pip-mode.in pip-check.in pip-man.in \
 
 CPPFLAGS += $(PIP_CPPFLAGS) $(DBGFLAG)
 
-all: $(PROGRAMS) FORCE
-
 debug:
 	DBGFLAG=-DDEBUG $(MAKE) all
 
@@ -67,9 +65,6 @@ pip-exec.to-install: pip-exec.c $(DEPS) Makefile
 printpipmode: printpipmode.c $(DEPS) Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
 
-pip_unpie: pip_unpie.c
-	$(CC) -g -O2 $< -o $@
-
 printpipmode.to-install: printpipmode.c $(DEPS) Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH_TO_INSTALL) $< -o $@
 
@@ -78,10 +73,14 @@ install:
 	$(INSTALL_PROGRAM) pip-exec.to-install $(DESTDIR)$(bindir)/pip-exec
 	$(INSTALL_PROGRAM) printpipmode.to-install $(DESTDIR)$(bindir)/printpipmode
 
+pip_unpie: pip_unpie.c
+	$(CC) -g -O2 $< -o $@
+
 post-clean-hook:
 	$(RM) *.E *.log
 
 post-veryclean-hook: post-clean-hook
 	$(RM) pipcc pipfc pip-mode pip-check pip-man pips $(EXTRA_PROGRAMS)
+	$(RM) .doxygen_*
 
 post-distclean-hook: post-veryclean-hook
