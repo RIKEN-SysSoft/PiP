@@ -1,4 +1,3 @@
-
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -37,13 +36,15 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = pip-exec
-PROGRAMS = $(PROGRAM) printpipmode
+PROGRAMS = $(PROGRAM) printpipmode pip_unpie
 PROGRAMS_TO_INSTALL = $(PROGRAMS) pipcc pipfc pip-mode pip-check pip-man pips 
 
 MAN1_SRCS = pip-exec.c pipcc.in pipfc.in pip-mode.in pip-check.in pip-man.in \
 	pips-doxygen.c printpipmode.c
 
 CPPFLAGS += $(PIP_CPPFLAGS) $(DBGFLAG)
+
+all: $(PROGRAMS) FORCE
 
 debug:
 	DBGFLAG=-DDEBUG $(MAKE) all
@@ -52,17 +53,23 @@ include $(top_srcdir)/build/rule.mk
 
 pre-install-hook: pip-exec printpipmode
 
+FORCE:
+	chmod +x pipcc pip-check pip-mode pip-man pips
+.PHONY: FORCE
+
 pip-exec: pip-exec.c $(DEPS) Makefile
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_ROOT) $(PIP_LDFLAGS_ROOT) $< -o $@
 
 printpipmode: printpipmode.c $(DEPS) Makefile
-	chmod +x pipcc pipfc pip-check pip-mode pip-man
 	$(CC) -g -O2 $(CPPFLAGS) $(PIP_CFLAGS_BOTH) $(PIP_LDFLAGS_BOTH) $< -o $@
+
+pip_unpie: pip_unpie.c
+	$(CC) -g -O2 $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
 
 post-veryclean-hook: post-clean-hook
-	$(RM) pip-exec pipcc pip-mode pip-check pip-man printpipmode
+	$(RM) pipcc pipfc pip-mode pip-check pip-man pips
 
 post-distclean-hook: post-veryclean-hook
