@@ -74,7 +74,7 @@ install:
 	$(INSTALL_PROGRAM) printpipmode.to-install $(DESTDIR)$(bindir)/printpipmode
 
 pip_unpie: pip_unpie.c
-	$(CC) -g -O2 $< -o $@
+	$(CC) -g -O2 -Wall $< -o $@
 
 post-clean-hook:
 	$(RM) *.E *.log
