@@ -187,6 +187,11 @@ else
     fi
 fi
 
+if ! [ -x ${PIP_LIBDIR}/libpip.so ]; then
+    echo >&2 "${cmd}: Unable to find libpip.so"
+    exit 1;
+fi
+
 if ${version} || ${where} || ${which}; then
     if ${version}; then
 	echo "$cmd (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
