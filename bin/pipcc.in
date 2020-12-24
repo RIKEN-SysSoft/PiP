@@ -82,7 +82,7 @@ cmdline="$cmd $@"
 
 print_usage () {
     echo >&2 "Error: ${cmdline}"
-    echo >&2 "${cmd} [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]"
+    echo >&2 "${cmd} [PIP-OPTIONS] [CC-COMMAND-OPTIONS-AND-ARGS]"
     echo >&2 "   --piproot: the compile (and link) as a PiP root"
     echo >&2 "   --piptask: the compile (and link) as a PiP task"
     echo >&2 "   --nopip:   No PiP related settings will be applied"
@@ -100,14 +100,14 @@ pip_task=true
 no_pip=false
 pipbuild=false
 pipinstall=false
-hack=false
 dryrun=false
 silent=false
 where=false
+which=false
 ccopts=false
 cflags=false
 lflags=false
-version=
+version=false
 target=
 
 while [ "$1" != "" ]; do
@@ -120,29 +120,21 @@ while [ "$1" != "" ]; do
 	--pipinstall) pipinstall=true;;
 	--nopip)   no_pip=true;;
 	--silent)  silent=true;;
-	--hack)    hack=true;;
 	--dryrun|--dry)  dryrun=true;;
 	--where)   where=true;;
+	--which)   which=true;;
 	--ccopts)  ccopts=true;;
 	--cflags)  cflags=true;;
 	--lflags)  lflags=true;;
 	-Bstatic|-static) err_nostatic;;
-	--version|-v) version=$1; opts="${opts} $1";;
+	--version|-v) version=true; opts="${opts} $1";;
 	*)         opts="${opts} $1";;
     esac
     shift;
 done
 
-# from CentOS8/RedHat8, PIE programs cannot be loaded by calling dl(m)open.
-# however, dynamic program can still be loaded. this is the hack for this.
-# note that the compiled programs with this option cannot run as a
-# normal (i.e., not as a PiP task).
-if ${hack}; then
-    FLAG_PIE="-shared"
-fi
-
 if [ x"${CC}" == x ]; then
-    echo >&2 "${self}: \$\{CC\} is not defined"
+    echo >&2 "${cmd}: \$\{CC\} is not defined"
     exit 1;
 fi
 
@@ -195,16 +187,17 @@ else
     fi
 fi
 
-if [ x"${version}" != x ]; then
-    echo "pipcc (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
-    case ${version} in
-	-v) ${PIP_LIBDIR}/libpip.so;;
-	*) silent=true;;
-    esac
-fi
-
-if ${where}; then
-    ( cd ${PIP_LIBDIR}/../bin/; pipcc_path=`pwd`; echo "${pipcc_path}/pipcc" )
+if ${version} || ${where} || ${which}; then
+    if ${version}; then
+	echo "$cmd (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
+	${PIP_LIBDIR}/libpip.so
+    fi
+    if ${where}; then
+	echo "${PIP_BINDIR}/$cmd"
+    fi
+    if ${which}; then
+	echo "CC=${CC}"
+    fi
     exit 0
 fi
 
@@ -216,7 +209,7 @@ if [ -f ${PIP_INCDIR}/pip/pip_config.h ]; then
     PIP_VERSION_MINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 2`
     PIP_VERSION_SUBMINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 3`
 else
-    echo "${cmd}: Unable to find pip_config.h"
+    echo >&2 "${cmd}: Unable to find pip_config.h"
     exit 1
 fi
 
@@ -241,9 +234,8 @@ PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
 PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
 
 PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
-# LDLINUX must be specified even with PiP tasks
-# because they  should be able to run as normal programs, 
-# not as PiP tasks.
+# LDLINUX must be specified, if any, even with PiP tasks
+# because they should be able to run as normal programs, not as PiP tasks.
 # they are compiled with the patched header files
 # so they must be "linked" with the pacthed ld-linux.
 PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
@@ -307,9 +299,11 @@ if ${is_linking}; then
     do_run ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
 	   ${FLAG_PTHREAD} ${opts}
     if [ -x ${PIP_BINDIR}/pip_unpie ]; then
+	# pip_unpie is the program to unflag the DF_1_PIE flag in ELF dynamic section
+	# this is because PIE cannot be dl(m)open()ed since centos/redhat 8
 	${PIP_BINDIR}/pip_unpie ${target}
     else
-	echo >&2 "${cmd} Warning: Unable to find and invoke ${PIP_BINDIR}/pip_unpie"
+	echo >&2 "${cmd} Warning: Unable to find ${PIP_BINDIR}/pip_unpie"
     fi
 else
     do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
