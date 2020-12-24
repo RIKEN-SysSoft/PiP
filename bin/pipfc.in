@@ -53,9 +53,16 @@
 ### pip-exec(1), pip-mode(1)
 ###
 
-PREFIX=@prefix@
+# ${prefix} and ${exec_prefix} have to be lowercase,
+# because maybe @includedir@=${prefix}/include and @libdir@={exec_prefix}/lib
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+PREFIX_INCDIR=@includedir@
+PREFIX_LIBDIR=@libdir@
+PREFIX_BINDIR=@bindir@
 SRCTOP=@srcdir_top@
 PIP_VERSION=@PACKAGE_VERSION@
+HAVE_PIPGLIBC=@have_pipglibc@
 
 glibc_incdir=@glibc_incdir@
 glibc_libdir=@glibc_libdir@
@@ -75,7 +82,7 @@ cmdline="$cmd $@"
 
 print_usage () {
     echo >&2 "Error: ${cmdline}"
-    echo >&2 "${cmd} [PIP-OPTIONS] [FC-COMMAND-OPTIONS_AND_ARGS]"
+    echo >&2 "${cmd} [PIP-OPTIONS] [FC-COMMAND-OPTIONS-AND-ARGS]"
     echo >&2 "   --piproot: the compile (and link) as a PiP root"
     echo >&2 "   --piptask: the compile (and link) as a PiP task"
     echo >&2 "   --nopip:   No PiP related settings will be applied"
@@ -96,14 +103,17 @@ pipinstall=false
 dryrun=false
 silent=false
 where=false
+which=false
 ccopts=false
 cflags=false
 lflags=false
-version=
+version=false
+target=
 
 while [ "$1" != "" ]; do
     case $1 in
 	-c|-E|-S)  is_linking=false; opts="${opts} $1";;
+	-o)        shift; target=$1; opts="${opts} -o ${target}";;
 	--piproot|-piproot|--pip-root|-pip-root) pip_task=false;;
 	--piptask|-piptask|--pip-task|-pip-task) pip_root=false;;
 	--pipbuild) pipbuild=true;;
@@ -112,11 +122,12 @@ while [ "$1" != "" ]; do
 	--silent)  silent=true;;
 	--dryrun|--dry)  dryrun=true;;
 	--where)   where=true;;
+	--which)   which=true;;
 	--ccopts)  ccopts=true;;
 	--cflags)  cflags=true;;
 	--lflags)  lflags=true;;
 	-Bstatic|-static) err_nostatic;;
-	--version|-v) version=$1; opts="${opts} $1";;
+	--version|-v) version=true; opts="${opts} $1";;
 	*)         opts="${opts} $1";;
     esac
     shift;
@@ -136,6 +147,15 @@ do_exec () {
     fi
 }
 
+do_run () {
+    if ! ${silent}; then
+	echo $@
+    fi
+    if ! ${dryrun}; then
+	$@
+    fi
+}
+
 if ${no_pip}; then
     do_exec ${FC} ${opts}
 fi
@@ -145,34 +165,39 @@ if ${pipinstall} && ${pipbuild} ; then
 fi
 
 if ${pipinstall} ; then
-    PIP_INCDIR=${PREFIX}/include
-    PIP_LIBDIR=${PREFIX}/lib
+    PIP_INCDIR="${PREFIX_INCDIR}"
+    PIP_LIBDIR="${PREFIX_LIBDIR}"
+    PIP_BINDIR="${PREFIX_BINDIR}"
 elif ${pipbuild} ; then
     PIP_INCDIR=${SRCTOP}/include
     PIP_LIBDIR=${SRCTOP}/lib
+    PIP_BINDIR=${SRCTOP}/bin
 else
-    if [ ${PREFIX}/bin/pipfc -ef ${self} ] ; then
-	PIP_INCDIR=${PREFIX}/include
-	PIP_LIBDIR=${PREFIX}/lib
+    if [ ${prefix}/bin/pipfc -ef ${self} ] ; then
+	PIP_INCDIR="${PREFIX_INCDIR}"
+	PIP_LIBDIR="${PREFIX_LIBDIR}"
+	PIP_BINDIR="${PREFIX_BINDIR}"
     elif [ ${SRCTOP}/bin/pipfc -ef ${self} ]; then
 	PIP_INCDIR=${SRCTOP}/include;
 	PIP_LIBDIR=${SRCTOP}/lib;
+	PIP_BINDIR=${SRCTOP}/bin
     else
 	echo >&2 "${cmd}: Failed to identify ${self}"
 	exit 1
     fi
 fi
 
-if [ x"${version}" != x ]; then
-    echo "$self (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
-    case ${version} in
-	-v) ${PIP_LIBDIR}/libpip.so;;
-	*) silent=true;;
-    esac
-fi
-
-if ${where}; then
-    ( cd ${PIP_LIBDIR}/../bin/; pipfc_path=`pwd`; echo "${pipfc_path}/pipfc" )
+if ${version} || ${where} || ${which}; then
+    if ${version}; then
+	echo "$cmd (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
+	${PIP_LIBDIR}/libpip.so
+    fi
+    if ${where}; then
+	echo "${PIP_BINDIR}/$cmd"
+    fi
+    if ${which}; then
+	echo "FC=${FC}"
+    fi
     exit 0
 fi
 
@@ -184,14 +209,14 @@ if [ -f ${PIP_INCDIR}/pip/pip_config.h ]; then
     PIP_VERSION_MINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 2`
     PIP_VERSION_SUBMINOR=`echo "${PIP_VERSION}" | cut -d '.' -f 3`
 else
-    echo "${cmd}: Unable to find pip_config.h"
+    echo >&2 "${cmd}: Unable to find pip_config.h"
     exit 1
 fi
 
 GLIBC_CFLAGS=""
 GLIBC_LDFLAGS=""
 GLIBC_LDLINUX=""
-if [ x"${dynamic_linker}" != x"" ]; then
+if ${HAVE_PIPGLIBC} && [ x"${dynamic_linker}" != x"" ]; then
     case ${dynamic_linker} in
 	/lib/ld-*|/lib64/ld-*|/usr/lib/ld-*|/usr/lib64/ld-*) :;;
 	*)  GLIBC_CFLAGS="-I${glibc_incdir}";
@@ -209,9 +234,8 @@ PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
 PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
 
 PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
-# LDLINUX must be specified even with PiP tasks
-# because they  should be able to run as normal programs, 
-# not as PiP tasks.
+# LDLINUX must be specified, if any, even with PiP tasks
+# because they should be able to run as normal programs, not as PiP tasks.
 # they are compiled with the patched header files
 # so they must be "linked" with the pacthed ld-linux.
 PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
@@ -257,19 +281,30 @@ fi
 if ${cflags} || ${lflags}; then
     # note that ${opts} will not be printed, unlike --ccopts (above)
     if ${cflags} && ${lflags}; then
-	echo ${PIPFC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
-	    ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
+	echo ${PIPFC_DEFS}  ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	     ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
     elif ${cflags}; then
-	echo ${PIPFC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD}
+	echo ${PIPFC_DEFS}  ${PIP_CFLAGS} ${FLAG_PTHREAD}
     else
 	echo ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
     fi
     exit 0
 fi
 
+if [ x"${target}" == x ]; then
+    target="a.out"
+fi
+
 if ${is_linking}; then
-    do_exec ${FC} ${PIPFC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
-	${FLAG_PTHREAD} ${opts}
+    do_run ${FC} ${PIPFC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	   ${FLAG_PTHREAD} ${opts}
+    if [ -x ${PIP_BINDIR}/pip_unpie ]; then
+	# pip_unpie is the program to unflag the DF_1_PIE flag in ELF dynamic section
+	# this is because PIE cannot be dl(m)open()ed since centos/redhat 8
+	${PIP_BINDIR}/pip_unpie ${target}
+    else
+	echo >&2 "${cmd} Warning: Unable to find ${PIP_BINDIR}/pip_unpie"
+    fi
 else
     do_exec ${FC} ${PIPFC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
 fi
