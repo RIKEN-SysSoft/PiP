@@ -83,8 +83,6 @@ cmdline="$cmd $@"
 print_usage () {
     echo >&2 "Error: ${cmdline}"
     echo >&2 "${cmd} [PIP-OPTIONS] [FC-COMMAND-OPTIONS-AND-ARGS]"
-    echo >&2 "   --piproot: the compile (and link) as a PiP root"
-    echo >&2 "   --piptask: the compile (and link) as a PiP task"
     echo >&2 "   --nopip:   No PiP related settings will be applied"
     exit 2
 }
@@ -95,7 +93,7 @@ err_nostatic() {
 }
 
 is_linking=true
-pip_root=true
+pip_root=false # fortran programs are unable to be a PiP root
 pip_task=true
 no_pip=false
 pipbuild=false
@@ -114,8 +112,8 @@ while [ "$1" != "" ]; do
     case $1 in
 	-c|-E|-S)  is_linking=false; opts="${opts} $1";;
 	-o)        shift; target=$1; opts="${opts} -o ${target}";;
-	--piproot|-piproot|--pip-root|-pip-root) pip_task=false;;
-	--piptask|-piptask|--pip-task|-pip-task) pip_root=false;;
+#	--piproot|-piproot|--pip-root|-pip-root) pip_task=false;;
+#	--piptask|-piptask|--pip-task|-pip-task) pip_root=false;;
 	--pipbuild) pipbuild=true;;
 	--pipinstall) pipinstall=true;;
 	--nopip)   no_pip=true;;
