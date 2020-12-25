@@ -64,6 +64,9 @@ SRCTOP=@srcdir_top@
 PIP_VERSION=@PACKAGE_VERSION@
 HAVE_PIPGLIBC=@have_pipglibc@
 
+FCOMP=@FC@
+CCOMP=@CC@
+
 glibc_incdir=@glibc_incdir@
 glibc_libdir=@glibc_libdir@
 dynamic_linker=@dynamic_linker@
@@ -74,18 +77,44 @@ FLAG_PIE="-pie"
 FLAG_RDYN="-rdynamic"
 FLAG_PTHREAD="-pthread"
 
-: ${CC:=cc}
-
 self=$0
 cmd=`basename ${self}`
 cmdline="$cmd $@"
+proglang=
+
+if [ "${cmd}" == "pipfc" ]; then
+    if [ x"${FC}" != x ]; then
+	COMPILER=${FC}
+    elif [ x"${FCOMP}" != x ]; then
+	COMPILER=${FCOMP}
+    else
+	echo >$2 "$cmd: No Fotran compiler. Set the FC environment."
+	exit 1;
+    fi
+    proglang=fortran
+else
+    if [ x"${CC}" != x ]; then
+	COMPILER=${CC}
+    elif [ x"${CCOMP}" != x ]; then
+	COMPILER=${CCOMP}
+    else
+	COMPILER=cc
+    fi
+    proglang=cplus
+fi
+if [ -x ${COMPILER} ]; then
+    echo "$cmd: Unable to find $COMPILER"
+    exit 1;
+fi
 
 print_usage () {
     echo >&2 "Error: ${cmdline}"
-    echo >&2 "${cmd} [PIP-OPTIONS] [CC-COMMAND-OPTIONS-AND-ARGS]"
+    echo >&2 "${cmd} [PIP-OPTIONS] [COMPILER-OPTIONS-AND-ARGS]"
     echo >&2 "   --piproot: the compile (and link) as a PiP root"
     echo >&2 "   --piptask: the compile (and link) as a PiP task"
     echo >&2 "   --nopip:   No PiP related settings will be applied"
+    echo >&2 "   --where:   Print the path where $cmd exists and exit"
+    echo >&2 "   --which:   Print backend compiler and exit"
     exit 2
 }
 
@@ -133,11 +162,6 @@ while [ "$1" != "" ]; do
     shift;
 done
 
-if [ x"${CC}" == x ]; then
-    echo >&2 "${cmd}: \$\{CC\} is not defined"
-    exit 1;
-fi
-
 do_exec () {
     if ! ${silent}; then
 	echo $@
@@ -157,7 +181,7 @@ do_run () {
 }
 
 if ${no_pip}; then
-    do_exec ${CC} ${opts}
+    do_exec ${COMPILER} ${opts}
 fi
 
 if ${pipinstall} && ${pipbuild} ; then
@@ -173,11 +197,11 @@ elif ${pipbuild} ; then
     PIP_LIBDIR=${SRCTOP}/lib
     PIP_BINDIR=${SRCTOP}/bin
 else
-    if [ ${prefix}/bin/pipcc -ef ${self} ] ; then
+    if [ ${prefix}/bin/${cmd} -ef ${self} ] ; then
 	PIP_INCDIR="${PREFIX_INCDIR}"
 	PIP_LIBDIR="${PREFIX_LIBDIR}"
 	PIP_BINDIR="${PREFIX_BINDIR}"
-    elif [ ${SRCTOP}/bin/pipcc -ef ${self} ]; then
+    elif [ ${SRCTOP}/bin/${cmd} -ef ${self} ]; then
 	PIP_INCDIR=${SRCTOP}/include;
 	PIP_LIBDIR=${SRCTOP}/lib;
 	PIP_BINDIR=${SRCTOP}/bin
@@ -201,7 +225,11 @@ if ${version} || ${where} || ${which}; then
 	echo "${PIP_BINDIR}/$cmd"
     fi
     if ${which}; then
-	echo "CC=${CC}"
+	case ${proglang} in
+	    fortran) echo "FC=${COMPILER}";;
+	    cplus)   echo "CC=${COMPILER}";;
+	    *)       echo "$cmd: Unknow compiler"; exit 1;;
+	esac
     fi
     exit 0
 fi
@@ -268,7 +296,7 @@ else
     PIP_LDLIBS="${PIP_BOTH_LDLIBS}"
 fi
 
-PIPCC_DEFS="-DPIPCC \
+PIP_DEFS="-DPIPCC \
 -DPIP_VERSION=${PIP_VERSION} \
 -DPIP_VERSION_MAJOR=${PIP_VERSION_MAJOR} \
 -DPIP_VERSION_MINOR=${PIP_VERSION_MINOR} \
@@ -276,20 +304,20 @@ PIPCC_DEFS="-DPIPCC \
 
 if ${ccopts}; then
     if ${is_linking}; then
-	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	echo ${PIP_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
 	    ${FLAG_PTHREAD} ${opts}
     else
-	echo ${PIPCC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
+	echo ${PIP_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
     fi
     exit 0
 fi
 if ${cflags} || ${lflags}; then
     # note that ${opts} will not be printed, unlike --ccopts (above)
     if ${cflags} && ${lflags}; then
-	echo ${PIPCC_DEFS}  ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	echo ${PIP_DEFS}  ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
 	     ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
     elif ${cflags}; then
-	echo ${PIPCC_DEFS}  ${PIP_CFLAGS} ${FLAG_PTHREAD}
+	echo ${PIP_DEFS}  ${PIP_CFLAGS} ${FLAG_PTHREAD}
     else
 	echo ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
     fi
@@ -301,7 +329,7 @@ if [ x"${target}" == x ]; then
 fi
 
 if ${is_linking}; then
-    do_run ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+    do_run ${COMPILER} ${PIP_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
 	   ${FLAG_PTHREAD} ${opts}
     if [ -x ${PIP_BINDIR}/pip_unpie ]; then
 	# pip_unpie is the program to unflag the DF_1_PIE flag in ELF dynamic section
@@ -311,5 +339,5 @@ if ${is_linking}; then
 	echo >&2 "${cmd} Warning: Unable to find ${PIP_BINDIR}/pip_unpie"
     fi
 else
-    do_exec ${CC} ${PIPCC_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
+    do_exec ${COMPILER} ${PIP_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
 fi
