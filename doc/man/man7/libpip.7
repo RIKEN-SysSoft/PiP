@@ -1,4 +1,4 @@
-.TH "libpip" 7 "Wed Dec 23 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "libpip" 7 "Fri Dec 25 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -291,166 +291,168 @@ practical address-space sharing,' In Proceedings of the 27th International Sympo
 Atsushi Hori, Balazs Gerofi, and Yuataka Ishikawa\&. 'An Implementation
 of User-Level Processes using Address Space Sharing,' 2020 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW), New Orleans, LA, USA, 2020, pp\&. 976-984, DOI: https://doi.org/10.1109/IPDPSW50202.2020.00161\&.
 .PP
-Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji\&. 'CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
-MPI Communication,' in SC’20
+Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen, and Pavan Balaji\&. 2020\&. 'CAB-MPI: exploring interprocess work-stealing towards
+balanced MPI communication,' In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis (SC '20)\&. IEEE Press, Article 36, 1–15\&.
 .PP
 .SH "Commands"
 .PP
 .PP
-.IP "\(bu" 2
-pipcc
-.IP "\(bu" 2
-pip-check
-.IP "\(bu" 2
-pip-exec
-.IP "\(bu" 2
-pipfc
-.IP "\(bu" 2
-pip-man
-.IP "\(bu" 2
-pip-mode
-.IP "\(bu" 2
-pips
-.IP "\(bu" 2
-printpipmode
+\fBSee Also:\fP
+.RS 4
+pipcc 
 .PP
+pip-check 
+.PP
+pip-exec 
+.PP
+pipfc 
+.PP
+pip-man 
+.PP
+pip-mode 
+.PP
+pips 
+.PP
+printpipmode
+.RE
 .PP
 .SH "Functions"
 .PP
 .PP
-.IP "\(bu" 2
-pip_abort
-.IP "\(bu" 2
-pip_barrier_fin
-.IP "\(bu" 2
-pip_barrier_init
-.IP "\(bu" 2
-pip_barrier_wait
-.IP "\(bu" 2
-pip_blt_spawn
-.IP "\(bu" 2
-pip_couple
-.IP "\(bu" 2
-pip_decouple
-.IP "\(bu" 2
-pip_dequeue_and_resume
-.IP "\(bu" 2
-pip_dequeue_and_resume_N
-.IP "\(bu" 2
-pip_dequeue_and_resume_N_nolock
-.IP "\(bu" 2
-pip_dequeue_and_resume_nolock
-.IP "\(bu" 2
-pip_exit
-.IP "\(bu" 2
-pip_export
-.IP "\(bu" 2
-pip_fin
-.IP "\(bu" 2
-pip_get_aux
-.IP "\(bu" 2
-pip_get_mode
-.IP "\(bu" 2
-pip_get_mode_str
-.IP "\(bu" 2
-pip_get_ntasks
-.IP "\(bu" 2
-pip_get_pipid
-.IP "\(bu" 2
-pip_get_sched_domain
-.IP "\(bu" 2
-pip_get_system_id
-.IP "\(bu" 2
-pip_get_task_by_pipid
-.IP "\(bu" 2
-pip_get_task_pipid
-.IP "\(bu" 2
-pip_import
-.IP "\(bu" 2
-pip_init
-.IP "\(bu" 2
-pip_isa_root
-.IP "\(bu" 2
-pip_isa_task
-.IP "\(bu" 2
-pip_is_initialized
-.IP "\(bu" 2
-pip_is_shared_fd
-.IP "\(bu" 2
-pip_is_threaded
-.IP "\(bu" 2
-pip_kill
-.IP "\(bu" 2
-pip_kill_all_tasks
-.IP "\(bu" 2
-pip_mutex_fin
-.IP "\(bu" 2
-pip_mutex_init
-.IP "\(bu" 2
-pip_mutex_lock
-.IP "\(bu" 2
-pip_mutex_unlock
-.IP "\(bu" 2
-pip_named_export
-.IP "\(bu" 2
-pip_named_import
-.IP "\(bu" 2
-pip_named_tryimport
-.IP "\(bu" 2
-pip_set_aux
-.IP "\(bu" 2
-pip_sigmask
-.IP "\(bu" 2
-pip_signal_wait
-.IP "\(bu" 2
-pip_spawn
-.IP "\(bu" 2
-pip_spawn_from_func
-.IP "\(bu" 2
-pip_spawn_from_main
-.IP "\(bu" 2
-pip_spawn_hook
-.IP "\(bu" 2
-pip_suspend_and_enqueue
-.IP "\(bu" 2
-pip_suspend_and_enqueue_nolock
-.IP "\(bu" 2
-pip_task_queue_count
-.IP "\(bu" 2
-pip_task_queue_dequeue
-.IP "\(bu" 2
-pip_task_queue_describe
-.IP "\(bu" 2
-pip_task_queue_enqueue
-.IP "\(bu" 2
-pip_task_queue_fin
-.IP "\(bu" 2
-pip_task_queue_init
-.IP "\(bu" 2
-pip_task_queue_isempty
-.IP "\(bu" 2
-pip_task_queue_lock
-.IP "\(bu" 2
-pip_task_queue_trylock
-.IP "\(bu" 2
-pip_task_queue_unlock
-.IP "\(bu" 2
-pip_task_self
-.IP "\(bu" 2
-pip_task_spawn
-.IP "\(bu" 2
-pip_trywait
-.IP "\(bu" 2
-pip_trywait_any
-.IP "\(bu" 2
-pip_wait
-.IP "\(bu" 2
-pip_wait_any
-.IP "\(bu" 2
-pip_yield
-.IP "\(bu" 2
-pip_yield_to
+\fBSee Also:\fP
+.RS 4
+pip_abort 
 .PP
+pip_barrier_fin 
+.PP
+pip_barrier_init 
+.PP
+pip_barrier_wait 
+.PP
+pip_blt_spawn 
+.PP
+pip_couple 
+.PP
+pip_decouple 
+.PP
+pip_dequeue_and_resume 
+.PP
+pip_dequeue_and_resume_N 
+.PP
+pip_dequeue_and_resume_N_nolock 
+.PP
+pip_dequeue_and_resume_nolock 
+.PP
+pip_exit 
+.PP
+pip_export 
+.PP
+pip_fin 
+.PP
+pip_get_aux 
+.PP
+pip_get_mode 
+.PP
+pip_get_mode_str 
+.PP
+pip_get_ntasks 
+.PP
+pip_get_pipid 
+.PP
+pip_get_sched_domain 
+.PP
+pip_get_system_id 
+.PP
+pip_get_task_by_pipid 
+.PP
+pip_get_task_pipid 
+.PP
+pip_import 
+.PP
+pip_init 
+.PP
+pip_isa_root 
+.PP
+pip_isa_task 
+.PP
+pip_is_initialized 
+.PP
+pip_is_shared_fd 
+.PP
+pip_is_threaded 
+.PP
+pip_kill 
+.PP
+pip_kill_all_tasks 
+.PP
+pip_mutex_fin 
+.PP
+pip_mutex_init 
+.PP
+pip_mutex_lock 
+.PP
+pip_mutex_unlock 
+.PP
+pip_named_export 
+.PP
+pip_named_import 
+.PP
+pip_named_tryimport 
+.PP
+pip_set_aux 
+.PP
+pip_sigmask 
+.PP
+pip_signal_wait 
+.PP
+pip_spawn 
+.PP
+pip_spawn_from_func 
+.PP
+pip_spawn_from_main 
+.PP
+pip_spawn_hook 
+.PP
+pip_suspend_and_enqueue 
+.PP
+pip_suspend_and_enqueue_nolock 
+.PP
+pip_task_queue_count 
+.PP
+pip_task_queue_dequeue 
+.PP
+pip_task_queue_describe 
+.PP
+pip_task_queue_enqueue 
+.PP
+pip_task_queue_fin 
+.PP
+pip_task_queue_init 
+.PP
+pip_task_queue_isempty 
+.PP
+pip_task_queue_lock 
+.PP
+pip_task_queue_trylock 
+.PP
+pip_task_queue_unlock 
+.PP
+pip_task_self 
+.PP
+pip_task_spawn 
+.PP
+pip_trywait 
+.PP
+pip_trywait_any 
+.PP
+pip_wait 
+.PP
+pip_wait_any 
+.PP
+pip_yield 
+.PP
+pip_yield_to
+.RE
 .PP
 .SH "Author"
 .PP

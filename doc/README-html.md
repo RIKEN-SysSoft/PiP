@@ -326,15 +326,91 @@ International Parallel and Distributed Processing Symposium Workshops
 (IPDPSW), New Orleans, LA, USA, 2020, pp. 976-984, DOI:
 https://doi.org/10.1109/IPDPSW50202.2020.00161.
 
-Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan
-Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
-MPI Communication," in SC’20
+Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen, and Pavan
+Balaji. 2020. "CAB-MPI: exploring interprocess work-stealing towards
+balanced MPI communication," In Proceedings of the International
+Conference for High Performance Computing, Networking, Storage and
+Analysis (SC '20). IEEE Press, Article 36, 1–15.
 
-## Presentation Slides
+# Commands
+\sa pipcc
+\sa pip-check
+\sa pip-exec
+\sa pipfc
+\sa pip-man
+\sa pip-mode
+\sa pips
+\sa printpipmode
 
-* [HPDC'18](file:../slides/HPDC18.pdf)
-* [ROSS'18](file:../slides/HPDC18-ROSS.pdf)
-* [IPDPS/RADR'20](file:../slides/IPDPS-RADR-2020.pdf)
+
+# Functions
+\sa pip\_abort
+\sa pip\_barrier\_fin
+\sa pip\_barrier\_init
+\sa pip\_barrier\_wait
+\sa pip\_blt\_spawn
+\sa pip\_couple
+\sa pip\_decouple
+\sa pip\_dequeue\_and\_resume
+\sa pip\_dequeue\_and\_resume\_N
+\sa pip\_dequeue\_and\_resume\_N\_nolock
+\sa pip\_dequeue\_and\_resume\_nolock
+\sa pip\_exit
+\sa pip\_export
+\sa pip\_fin
+\sa pip\_get\_aux
+\sa pip\_get\_mode
+\sa pip\_get\_mode\_str
+\sa pip\_get\_ntasks
+\sa pip\_get\_pipid
+\sa pip\_get\_sched\_domain
+\sa pip\_get\_system\_id
+\sa pip\_get\_task\_by\_pipid
+\sa pip\_get\_task\_pipid
+\sa pip\_import
+\sa pip\_init
+\sa pip\_isa\_root
+\sa pip\_isa\_task
+\sa pip\_is\_initialized
+\sa pip\_is\_shared\_fd
+\sa pip\_is\_threaded
+\sa pip\_kill
+\sa pip\_kill\_all\_tasks
+\sa pip\_mutex\_fin
+\sa pip\_mutex\_init
+\sa pip\_mutex\_lock
+\sa pip\_mutex\_unlock
+\sa pip\_named\_export
+\sa pip\_named\_import
+\sa pip\_named\_tryimport
+\sa pip\_set\_aux
+\sa pip\_sigmask
+\sa pip\_signal\_wait
+\sa pip\_spawn
+\sa pip\_spawn\_from\_func
+\sa pip\_spawn\_from\_main
+\sa pip\_spawn\_hook
+\sa pip\_suspend\_and\_enqueue
+\sa pip\_suspend\_and\_enqueue\_nolock
+\sa pip\_task\_queue\_count
+\sa pip\_task\_queue\_dequeue
+\sa pip\_task\_queue\_describe
+\sa pip\_task\_queue\_enqueue
+\sa pip\_task\_queue\_fin
+\sa pip\_task\_queue\_init
+\sa pip\_task\_queue\_isempty
+\sa pip\_task\_queue\_lock
+\sa pip\_task\_queue\_trylock
+\sa pip\_task\_queue\_unlock
+\sa pip\_task\_self
+\sa pip\_task\_spawn
+\sa pip\_trywait
+\sa pip\_trywait\_any
+\sa pip\_wait
+\sa pip\_wait\_any
+\sa pip\_yield
+\sa pip\_yield\_to
+
 # Author
 Atsushi Hori
 Riken Center for Commputational Science (R-CCS)

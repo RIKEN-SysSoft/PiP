@@ -1,4 +1,4 @@
-.TH "pipfc" 1 "Wed Dec 23 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "pipfc" 1 "Fri Dec 25 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -7,7 +7,7 @@ Fortran compiler driver for PiP
 .PP
 \fBSynopsis\fP
 .RS 4
-pipfc [PIP-OPTIONS] [FC-COMMAND-OPTIONS_AND_ARGS]
+pipfc [PIP-OPTIONS] [COMPILER-OPTIONS-AND-ARGS]
 .RE
 .PP
 \fBParameters:\fP
@@ -16,12 +16,16 @@ pipfc [PIP-OPTIONS] [FC-COMMAND-OPTIONS_AND_ARGS]
 .br
 \fI-piptask\fP the compile (and link) as a PiP task 
 .br
-\fI-nopip\fP No PiP related settings will be applied
+\fI-nopip\fP No PiP related settings will be applied 
+.br
+\fI&ndash;where\fP Print the path where \fBpipfc\fP exists and exit 
+.br
+\fI&ndash;which\fP Print backend compiler and exit
 .RE
 .PP
 \fBNote:\fP
 .RS 4
-The \fB-piproot\fP and \fB-piptask\fP options can be specified at the same time\&. In this case, the compiled object can be both of PiP root and PiP task\&. This is also the default behavior when none of them is not specified\&.
+The \fB-piproot\fP and \fB-piptask\fP options can be specified at the same time\&. In this case, the compiled object can be both of PiP root and PiP task\&. This is also the default behavior when none of them is specified\&.
 .RE
 .PP
 \fBEnvironment\fP

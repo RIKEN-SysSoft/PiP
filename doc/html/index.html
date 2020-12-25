@@ -222,15 +222,157 @@ Added inferior 4
 practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: <a href="https://doi.org/10.1145/3208040.3208045">https://doi.org/10.1145/3208040.3208045</a></p>
 <p>Atsushi Hori, Balazs Gerofi, and Yuataka Ishikawa. "An Implementation
 of User-Level Processes using Address Space Sharing," 2020 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW), New Orleans, LA, USA, 2020, pp. 976-984, DOI: <a href="https://doi.org/10.1109/IPDPSW50202.2020.00161">https://doi.org/10.1109/IPDPSW50202.2020.00161</a>.</p>
-<p>Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
-MPI Communication," in SC’20</p>
-<h2>Presentation Slides</h2>
-<ul>
-<li><a href="file:../slides/HPDC18.pdf">HPDC'18</a></li>
-<li><a href="file:../slides/HPDC18-ROSS.pdf">ROSS'18</a></li>
-<li><a href="file:../slides/IPDPS-RADR-2020.pdf">IPDPS/RADR'20</a> <h1>Author</h1>
-</li>
-</ul>
+<p>Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen, and Pavan Balaji. 2020. "CAB-MPI: exploring interprocess work-stealing towards
+balanced MPI communication," In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis (SC '20). IEEE Press, Article 36, 1–15.</p>
+<h1>Commands</h1>
+<dl class="section see"><dt>See Also</dt><dd>pipcc </dd>
+<dd>
+pip-check </dd>
+<dd>
+pip-exec </dd>
+<dd>
+pipfc </dd>
+<dd>
+pip-man </dd>
+<dd>
+pip-mode </dd>
+<dd>
+pips </dd>
+<dd>
+printpipmode</dd></dl>
+<h1>Functions</h1>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__PiP-5-exit.html#ga49a4a9ee014ffdaf0c26df18adf965ad" title="Kill all PiP tasks and then kill PiP root. ">pip_abort</a> </dd>
+<dd>
+<a class="el" href="group__ULP-4-barrier.html#ga70dab15271b84fe05d7088a6cf8bf784" title="finalize barrier synchronization structure ">pip_barrier_fin</a> </dd>
+<dd>
+<a class="el" href="group__ULP-4-barrier.html#ga84022f9c64f431e7d513342aeed0b61e" title="initialize barrier synchronization structure ">pip_barrier_init</a> </dd>
+<dd>
+<a class="el" href="group__ULP-4-barrier.html#gaca103c9732a8e28ee8faf79ef4a69e4f" title="wait on barrier synchronization in a busy-wait way int pip_barrier_wait( pip_barrier_t *barrp ); ...">pip_barrier_wait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#ga8b31bc23b6e165ae50d3bdea655539c5" title="spawn a PiP BLT/ULP (Bi-Level Task / User-Level Process) ">pip_blt_spawn</a> </dd>
+<dd>
+<a class="el" href="group__ULP-6-coupling.html#ga62b74934c0295bbe1aeab544365eb20f" title="Couple the curren task with the original kernel thread. ">pip_couple</a> </dd>
+<dd>
+<a class="el" href="group__ULP-6-coupling.html#ga1c77a30388d68e5f12667007ae430c1b" title="Decouple the curren task from the kernel thread. ">pip_decouple</a> </dd>
+<dd>
+<a class="el" href="group__ULP-2-suspension.html#gaaff299f195e2397f17cf11016c8a394f" title="dequeue a task and make it runnable ">pip_dequeue_and_resume</a> </dd>
+<dd>
+<a class="el" href="group__ULP-2-suspension.html#gac26e54557d8e89fcdcb52a9df6c65998" title="dequeue multiple tasks and resume the execution of them ">pip_dequeue_and_resume_N</a> </dd>
+<dd>
+<a class="el" href="group__ULP-2-suspension.html#ga939e70924803be491c2f6f10b364e803" title="dequeue tasks and resume the execution of them ">pip_dequeue_and_resume_N_nolock</a> </dd>
+<dd>
+<a class="el" href="group__ULP-2-suspension.html#gab3c26770ac6de70ad11239dc301bd403" title="dequeue a task and make it runnable ">pip_dequeue_and_resume_nolock</a> </dd>
+<dd>
+<a class="el" href="group__PiP-5-exit.html#ga55171ea8db2c2693f005560e427485c2" title="terminate the calling PiP task ">pip_exit</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb" title="export an address ">pip_export</a> </dd>
+<dd>
+<a class="el" href="group__PiP-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed" title="Finalize the PiP library. ">pip_fin</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga779abad7e346657a6fd3c024e204addb" title="Retrieve the user data associated with a PiP task. ">pip_get_aux</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gab603f68c1ce972a5f3bfb8c95fcfb555" title="get the PiP execution mode ">pip_get_mode</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga0e12c95fe7abc5c356acfd45a89ad5d8" title="get a character string of the current execution mode ">pip_get_mode_str</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga9786d5aafa2a3882714c35ecc9f39a5a" title="get the maximum number of the PiP tasks ">pip_get_ntasks</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga4e715bb8c325e9acc81af0745908dc0e" title="get PiP ID of the calling task ">pip_get_pipid</a> </dd>
+<dd>
+<a class="el" href="group__ULP-3-misc.html#ga32119e3a41a4073b52ade76bf87a5589" title="Return the task representing the scheduling domain. ">pip_get_sched_domain</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gadf3d9e96b46d7a58bf4ce6dda173091a" title="deliver a process or thread ID defined by the system ">pip_get_system_id</a> </dd>
+<dd>
+<a class="el" href="group__ULP-3-misc.html#ga147decca4226959d822b73b7c31a4465" title="get PiP task from PiP ID ">pip_get_task_by_pipid</a> </dd>
+<dd>
+<a class="el" href="group__ULP-3-misc.html#ga14a1b03ec6564885a5dd97dbc27167aa" title="Return PIPID of a PiP task. ">pip_get_task_pipid</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga6d7ac596a9da824e40d7c06528f42e5f" title="import exported address of a PiP task ">pip_import</a> </dd>
+<dd>
+<a class="el" href="group__PiP-0-init-fin.html#ga20439326ff318c2dd0752bd544dca0e2" title="Initialize the PiP library. ">pip_init</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga6f1045bdbf682cb2ac504f09b57b73e9" title="check if calling PiP task is a PiP root or not ">pip_isa_root</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gaf0283e47ad2d415206d6a3fa61e8a0a9" title="check if calling PiP task is a PiP task or not ">pip_isa_task</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gabbec4ae2f820b13400f63cba55a53399" title="Query is PiP library is already initialized. ">pip_is_initialized</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga180ece8f3f537d84db8e70921f3ae099" title="check if file descriptors are shared or not. This is equivalent with the pip_is_threaded function...">pip_is_shared_fd</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga0455093d5040ae45585cc88a5f3f002b" title="check if PiP execution mode is pthread or not ">pip_is_threaded</a> </dd>
+<dd>
+<a class="el" href="group__PiP-6-signal.html#ga4a396f38920d94b71dcfd3c898fbb82b" title="deliver a signal to PiP task ">pip_kill</a> </dd>
+<dd>
+<a class="el" href="group__PiP-5-exit.html#gab7ba5cc62101240c68acf07905e36772" title="kill all PiP tasks ">pip_kill_all_tasks</a> </dd>
+<dd>
+<a class="el" href="group__ULP-5-mutex.html#ga884fae0413bd07dbdb5f3940129b7b20" title="Finalize PiP mutex. ">pip_mutex_fin</a> </dd>
+<dd>
+<a class="el" href="group__ULP-5-mutex.html#gaff168395426838d385ad6720c9fb4184" title="Initialize PiP mutex. ">pip_mutex_init</a> </dd>
+<dd>
+<a class="el" href="group__ULP-5-mutex.html#ga14f77d2413590f58d7a45a3b56960c90" title="Lock PiP mutex. ">pip_mutex_lock</a> </dd>
+<dd>
+<a class="el" href="group__ULP-5-mutex.html#ga370bb79d84360fdb96169fc5cea789ee" title="Unlock PiP mutex. ">pip_mutex_unlock</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga3613eaa34ad5a4985007ff9177eb6542" title="export an address of the calling PiP root or a PiP task to the others. ">pip_named_export</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga68bcfa436ddc6acaf25f67fc30430fc1" title="import the named exported address ">pip_named_import</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga205d73fdb294d3cbfe095c14d5e63637" title="import the named exported address (non-blocking) ">pip_named_tryimport</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#gabe36293dba51fe90f94057bb4f82f328" title="Associate user data with a PiP task. ">pip_set_aux</a> </dd>
+<dd>
+<a class="el" href="group__PiP-6-signal.html#gaf546ee24368b118e937aadd2dbea2217" title="set signal mask of the current PiP task ">pip_sigmask</a> </dd>
+<dd>
+<a class="el" href="group__PiP-6-signal.html#ga2048e7685a030e61e8c529c474899feb" title="wait for a signal ">pip_signal_wait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#ga4698d85283b03f0443fb0991e1119d35" title="spawn a PiP task (PiP v1 API and deprecated) ">pip_spawn</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#ga71d2d053e9c7153adc167e2cf1adf12e" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#gad7708867e5370ae0a4ae71b16f446f16" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533" title="Setting invocation hook information. ">pip_spawn_hook</a> </dd>
+<dd>
+<a class="el" href="group__ULP-2-suspension.html#ga7dbf7e64e78cd00ef62c3bb04f289a68" title="suspend the curren task and enqueue it with lock ">pip_suspend_and_enqueue</a> </dd>
+<dd>
+<a class="el" href="group__ULP-2-suspension.html#gab78d289ab89fa2981f2910849b1b2df7" title="suspend the curren task and enqueue it without locking the queue ">pip_suspend_and_enqueue_nolock</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#ga5a043af776eb89933bfc0a057790cc82" title="Count the length of task queue. ">pip_task_queue_count</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#ga943bace202c72533951df9fc43f62277" title="Dequeue a task from a task queue. ">pip_task_queue_dequeue</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#ga7fdea4628abd0c38779276b6cd8ebd3f" title="Describe queue. ">pip_task_queue_describe</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#gae0f80336f51c43c3da988dd0467453cf" title="Enqueue a BLT. ">pip_task_queue_enqueue</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#ga45d0eaa7122e459ea19187c148b9da10" title="Finalize a task queue. ">pip_task_queue_fin</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#ga9c50d9b2b810d97a75a5fe9c332902e0" title="Initialize task queue. ">pip_task_queue_init</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#gabf772cd5ea121458291801a26dea5c9d" title="Query function if the current task has some tasks to be scheduled with. ">pip_task_queue_isempty</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#gaf7f6e26e29752a148704108bdcc7756f" title="Lock task queue. ">pip_task_queue_lock</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#ga20d50746c585f1ede68f2c9aefc39a5c" title="Try locking task queue. ">pip_task_queue_trylock</a> </dd>
+<dd>
+<a class="el" href="group__ULP-1-task-queue.html#gaf4cfe9905f1862718f65ba2fda961b84" title="Unlock task queue. ">pip_task_queue_unlock</a> </dd>
+<dd>
+<a class="el" href="group__ULP-3-misc.html#gaf09a1abfd580696c74d4aa7be8255ad0" title="Return the current task. ">pip_task_self</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#ga9e786d15401af041842f3f503c962a4b" title="wait for the termination of a PiP task in a non-blocking way ">pip_trywait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#ga697a16f7400d2a2ed2b8ffa230ca83d9" title="non-blocking version of pip_wait_any ">pip_trywait_any</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#gae04520bc29d3ec85d7090f7e645de27d" title="wait for the termination of a PiP task ">pip_wait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36" title="Wait for the termination of any PiP task. ">pip_wait_any</a> </dd>
+<dd>
+<a class="el" href="group__ULP-0-yield.html#ga50469f21446ce86ea18ddd282cf15894" title="Yield. ">pip_yield</a> </dd>
+<dd>
+<a class="el" href="group__ULP-0-yield.html#gac30cf124b28a8d80dac34c5e1bdb66ba" title="Yield to the specified PiP task. ">pip_yield_to</a></dd></dl>
+<h1>Author</h1>
 <p>Atsushi Hori Riken Center for Commputational Science (R-CCS) Japan </p>
 </div></div><!-- contents -->
 <!-- start footer part -->

@@ -79,16 +79,18 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>Fortran compiler driver for PiP</p>
-<dl class="section user"><dt>Synopsis</dt><dd>pipfc [PIP-OPTIONS] [FC-COMMAND-OPTIONS_AND_ARGS]</dd></dl>
+<dl class="section user"><dt>Synopsis</dt><dd>pipfc [PIP-OPTIONS] [COMPILER-OPTIONS-AND-ARGS]</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">-piproot</td><td>the compile (and link) as a PiP root </td></tr>
     <tr><td class="paramname">-piptask</td><td>the compile (and link) as a PiP task </td></tr>
-    <tr><td class="paramname">-nopip</td><td>No PiP related settings will be applied</td></tr>
+    <tr><td class="paramname">-nopip</td><td>No PiP related settings will be applied </td></tr>
+    <tr><td class="paramname">&amp;ndash;where</td><td>Print the path where <b>pipfc</b> exists and exit </td></tr>
+    <tr><td class="paramname">&amp;ndash;which</td><td>Print backend compiler and exit</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>The <b>-piproot</b> and <b>-piptask</b> options can be specified at the same time. In this case, the compiled object can be both of PiP root and PiP task. This is also the default behavior when none of them is not specified.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The <b>-piproot</b> and <b>-piptask</b> options can be specified at the same time. In this case, the compiled object can be both of PiP root and PiP task. This is also the default behavior when none of them is specified.</dd></dl>
 <dl class="section user"><dt>Environment</dt><dd><code>$</code>(FC) is used to specify a Fortran compiler</dd></dl>
 <dl class="section see"><dt>See Also</dt><dd>pip-exec(1), pip-mode(1) </dd></dl>
 </div></div><!-- contents -->

@@ -326,88 +326,90 @@ International Parallel and Distributed Processing Symposium Workshops
 (IPDPSW), New Orleans, LA, USA, 2020, pp. 976-984, DOI:
 https://doi.org/10.1109/IPDPSW50202.2020.00161.
 
-Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan
-Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
-MPI Communication," in SC’20
+Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen, and Pavan
+Balaji. 2020. "CAB-MPI: exploring interprocess work-stealing towards
+balanced MPI communication," In Proceedings of the International
+Conference for High Performance Computing, Networking, Storage and
+Analysis (SC '20). IEEE Press, Article 36, 1–15.
 
 # Commands
-- pipcc
-- pip-check
-- pip-exec
-- pipfc
-- pip-man
-- pip-mode
-- pips
-- printpipmode
+\sa pipcc
+\sa pip-check
+\sa pip-exec
+\sa pipfc
+\sa pip-man
+\sa pip-mode
+\sa pips
+\sa printpipmode
 
 
 # Functions
-- pip\_abort
-- pip\_barrier\_fin
-- pip\_barrier\_init
-- pip\_barrier\_wait
-- pip\_blt\_spawn
-- pip\_couple
-- pip\_decouple
-- pip\_dequeue\_and\_resume
-- pip\_dequeue\_and\_resume\_N
-- pip\_dequeue\_and\_resume\_N\_nolock
-- pip\_dequeue\_and\_resume\_nolock
-- pip\_exit
-- pip\_export
-- pip\_fin
-- pip\_get\_aux
-- pip\_get\_mode
-- pip\_get\_mode\_str
-- pip\_get\_ntasks
-- pip\_get\_pipid
-- pip\_get\_sched\_domain
-- pip\_get\_system\_id
-- pip\_get\_task\_by\_pipid
-- pip\_get\_task\_pipid
-- pip\_import
-- pip\_init
-- pip\_isa\_root
-- pip\_isa\_task
-- pip\_is\_initialized
-- pip\_is\_shared\_fd
-- pip\_is\_threaded
-- pip\_kill
-- pip\_kill\_all\_tasks
-- pip\_mutex\_fin
-- pip\_mutex\_init
-- pip\_mutex\_lock
-- pip\_mutex\_unlock
-- pip\_named\_export
-- pip\_named\_import
-- pip\_named\_tryimport
-- pip\_set\_aux
-- pip\_sigmask
-- pip\_signal\_wait
-- pip\_spawn
-- pip\_spawn\_from\_func
-- pip\_spawn\_from\_main
-- pip\_spawn\_hook
-- pip\_suspend\_and\_enqueue
-- pip\_suspend\_and\_enqueue\_nolock
-- pip\_task\_queue\_count
-- pip\_task\_queue\_dequeue
-- pip\_task\_queue\_describe
-- pip\_task\_queue\_enqueue
-- pip\_task\_queue\_fin
-- pip\_task\_queue\_init
-- pip\_task\_queue\_isempty
-- pip\_task\_queue\_lock
-- pip\_task\_queue\_trylock
-- pip\_task\_queue\_unlock
-- pip\_task\_self
-- pip\_task\_spawn
-- pip\_trywait
-- pip\_trywait\_any
-- pip\_wait
-- pip\_wait\_any
-- pip\_yield
-- pip\_yield\_to
+\sa pip\_abort
+\sa pip\_barrier\_fin
+\sa pip\_barrier\_init
+\sa pip\_barrier\_wait
+\sa pip\_blt\_spawn
+\sa pip\_couple
+\sa pip\_decouple
+\sa pip\_dequeue\_and\_resume
+\sa pip\_dequeue\_and\_resume\_N
+\sa pip\_dequeue\_and\_resume\_N\_nolock
+\sa pip\_dequeue\_and\_resume\_nolock
+\sa pip\_exit
+\sa pip\_export
+\sa pip\_fin
+\sa pip\_get\_aux
+\sa pip\_get\_mode
+\sa pip\_get\_mode\_str
+\sa pip\_get\_ntasks
+\sa pip\_get\_pipid
+\sa pip\_get\_sched\_domain
+\sa pip\_get\_system\_id
+\sa pip\_get\_task\_by\_pipid
+\sa pip\_get\_task\_pipid
+\sa pip\_import
+\sa pip\_init
+\sa pip\_isa\_root
+\sa pip\_isa\_task
+\sa pip\_is\_initialized
+\sa pip\_is\_shared\_fd
+\sa pip\_is\_threaded
+\sa pip\_kill
+\sa pip\_kill\_all\_tasks
+\sa pip\_mutex\_fin
+\sa pip\_mutex\_init
+\sa pip\_mutex\_lock
+\sa pip\_mutex\_unlock
+\sa pip\_named\_export
+\sa pip\_named\_import
+\sa pip\_named\_tryimport
+\sa pip\_set\_aux
+\sa pip\_sigmask
+\sa pip\_signal\_wait
+\sa pip\_spawn
+\sa pip\_spawn\_from\_func
+\sa pip\_spawn\_from\_main
+\sa pip\_spawn\_hook
+\sa pip\_suspend\_and\_enqueue
+\sa pip\_suspend\_and\_enqueue\_nolock
+\sa pip\_task\_queue\_count
+\sa pip\_task\_queue\_dequeue
+\sa pip\_task\_queue\_describe
+\sa pip\_task\_queue\_enqueue
+\sa pip\_task\_queue\_fin
+\sa pip\_task\_queue\_init
+\sa pip\_task\_queue\_isempty
+\sa pip\_task\_queue\_lock
+\sa pip\_task\_queue\_trylock
+\sa pip\_task\_queue\_unlock
+\sa pip\_task\_self
+\sa pip\_task\_spawn
+\sa pip\_trywait
+\sa pip\_trywait\_any
+\sa pip\_wait
+\sa pip\_wait\_any
+\sa pip\_yield
+\sa pip\_yield\_to
 
 
 # Author
