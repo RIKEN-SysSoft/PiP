@@ -26,28 +26,30 @@
 # $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
 # System Software Development Team, 2016-2020
 # $
-# $PIP_VERSION: Version 3.0.0$
+# $PIP_VERSION: Version 2.0.0$
 #
 # $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
 # $
 
-### \page pipcc pipcc
+### \page =PROG= =PROG=
 ###
-### \brief C compiler driver for PiP
+### \brief =LANG= compiler driver for PiP
 ###
 ### \synopsis
-### pipcc [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]
+### =PROG= [PIP-OPTIONS] [COMPILER-OPTIONS-AND-ARGS]
 ###
 ### \param -piproot the compile (and link) as a PiP root
 ### \param -piptask the compile (and link) as a PiP task
 ### \param -nopip No PiP related settings will be applied
+### \param --where Print the path where \b =PROG= exists and exit
+### \param --which Print backend compiler and exit
 ###
 ### \note The \b -piproot and \b -piptask options can be specified at the same time. In this case,
 ### the compiled object can be both of PiP root and PiP task. This is also the default behavior when
 ### none of them is specified.
 ###
 ### \environment
-### \p \$(CC) is used to specify a C compiler
+### \p \$(=CC=) is used to specify a =LANG= compiler
 ###
 ### \sa
 ### pip-exec(1), pip-mode(1)
@@ -209,11 +211,6 @@ else
 	echo >&2 "${cmd}: Failed to identify ${self}"
 	exit 1
     fi
-fi
-
-if ! [ -x ${PIP_LIBDIR}/libpip.so ]; then
-    echo >&2 "${cmd}: Unable to find libpip.so"
-    exit 1;
 fi
 
 if ${version} || ${where} || ${which}; then

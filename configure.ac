@@ -141,7 +141,7 @@ AC_CONFIG_FILES([
 	release/version.conf
 	lib/fctx_defs.mk
 	lib/fcontext.mk
-	bin/pipcc
+	bin/pipcc.in
 	bin/pips
 	bin/pip-mode
 	bin/pip-check
