@@ -2961,7 +2961,7 @@ python=`which ${PYTHON}`
 
 # Checks for library functions.
 
-ac_config_files="$ac_config_files build/config.mk release/version.conf bin/pipcc bin/pips bin/pip-mode bin/pip-check bin/pip-man doc/latex-inuse/libpip-manpages.tex"
+ac_config_files="$ac_config_files build/config.mk release/version.conf bin/pipcc.in bin/pips bin/pip-mode bin/pip-check bin/pip-man doc/latex-inuse/libpip-manpages.tex"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -3657,7 +3657,7 @@ do
     "include/pip/pip_config.h") CONFIG_HEADERS="$CONFIG_HEADERS include/pip/pip_config.h" ;;
     "build/config.mk") CONFIG_FILES="$CONFIG_FILES build/config.mk" ;;
     "release/version.conf") CONFIG_FILES="$CONFIG_FILES release/version.conf" ;;
-    "bin/pipcc") CONFIG_FILES="$CONFIG_FILES bin/pipcc" ;;
+    "bin/pipcc.in") CONFIG_FILES="$CONFIG_FILES bin/pipcc.in" ;;
     "bin/pips") CONFIG_FILES="$CONFIG_FILES bin/pips" ;;
     "bin/pip-mode") CONFIG_FILES="$CONFIG_FILES bin/pip-mode" ;;
     "bin/pip-check") CONFIG_FILES="$CONFIG_FILES bin/pip-check" ;;

@@ -36,11 +36,11 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = pip-exec
-PROGRAMS = $(PROGRAM) printpipmode pip_unpie pipfc
-PROGRAMS_TO_INSTALL = $(PROGRAMS) pipcc pip-mode pip-check pip-man pips 
+PROGRAMS = $(PROGRAM) printpipmode pip_unpie pipcc pipfc
+PROGRAMS_TO_INSTALL = $(PROGRAMS) pip-mode pip-check pip-man pips 
 EXTRA_PROGRAMS = pip-exec.to-install printpipmode.to-install
 
-MAN1_SRCS = pip-exec.c pipcc.in pipfc.in pip-mode.in pip-check.in pip-man.in \
+MAN1_SRCS = pip-exec.c pipcc pipfc pip-mode.in pip-check.in pip-man.in \
 	pips-doxygen.c printpipmode.c
 
 CPPFLAGS += $(PIP_CPPFLAGS) $(DBGFLAG)
@@ -53,7 +53,7 @@ include $(top_srcdir)/build/rule.mk
 all: $(EXTRA_PROGRAMS) FORCE
 
 FORCE:
-	chmod +x pipcc pipfc pip-check pip-mode pip-man pips
+	chmod +x pip-check pip-mode pip-man pips
 .PHONY: FORCE
 
 pip-exec: pip-exec.c $(DEPS) Makefile
@@ -73,8 +73,13 @@ install:
 	$(INSTALL_PROGRAM) pip-exec.to-install $(DESTDIR)$(bindir)/pip-exec
 	$(INSTALL_PROGRAM) printpipmode.to-install $(DESTDIR)$(bindir)/printpipmode
 
-pipfc: pipcc
-	$(CP) pipcc pipfc
+pipcc: pipcc.in
+	sed -e s/\=LANG\=/C/g -e s/\=PROG\=/pipcc/g -e s/\=CC\=/CC/g < pipcc.in > pipcc
+	chmod +x pipcc
+
+pipfc: pipcc.in
+	sed -e s/\=LANG\=/Fortran/g -e s/\=PROG\=/pipfc/g -e s/\=CC\=/FC/g < pipcc.in > pipfc
+	chmod +x pipfc
 
 pip_unpie: pip_unpie.c
 	$(CC) -g -O2 -Wall $< -o $@

@@ -99,7 +99,7 @@ AC_SUBST(python)
 AC_CONFIG_FILES([
 	build/config.mk
 	release/version.conf
-	bin/pipcc
+	bin/pipcc.in
 	bin/pips
 	bin/pip-mode
 	bin/pip-check
