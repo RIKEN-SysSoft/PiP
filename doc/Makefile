@@ -76,12 +76,15 @@ documents:
 		) | doxygen - >> doxygen-man713.log 2>&1; \
 	done
 	-@grep -e "warning" -e "error" doxygen-man713.log && ( echo "Doxygen failed"; exit 1; )
+	@echo ==== mandb =====; \
+	if which mandb; then mandb ./man -c -u; fi
+	@echo ==== README.md =====;
 	./markdown.sh "# Commands"  1 "-" > commands.in
 	./markdown.sh "# Functions" 3 "-" > functions.in
 	cat README.md.in commands.in functions.in Slides-md.md Author-md.md > README.md
-	cat README-man.doxy  README.md.in commands.in functions.in Author-md.md > README-man.md
-	cat README-html.doxy README.md.in Slides-html.md Author-html.md > README-html.md
-	@echo ==== README.md =====;
+	./markdown.sh "# Commands"  1 "\sa" > commands.in
+	./markdown.sh "# Functions" 3 "\sa" > functions.in
+	cat README-man.doxy  README.md.in commands.in functions.in Author-md.md   > README-man.md
 	echo -n "" > doxygen-readme.log
 	( \
 		cat "config-common.doxy"; \
@@ -96,6 +99,7 @@ documents:
 	$(MAKE) -C latex-inuse
 	$(CP) README.md $(top_srcdir)
 	@echo ==== html =====;
+	cat README-html.doxy README.md.in commands.in functions.in Author-html.md > README-html.md
 	echo -n "" > doxygen-html.log
 	( \
 	cat "config-common.doxy"; \
@@ -113,8 +117,6 @@ documents:
 	done | tr '\012' ' '; \
 	) | doxygen - >> doxygen-html.log 2>&1;
 	-@grep -e "warning" -e "error" doxygen-html.log && ( echo "Doxygen failed"; exit 1; )
-	@echo ==== mandb =====; \
-	if which mandb; then mandb ./man -c -u; fi
 .PHONY: doxygen
 
 install:

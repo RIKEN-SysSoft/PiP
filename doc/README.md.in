@@ -325,6 +325,8 @@ International Parallel and Distributed Processing Symposium Workshops
 (IPDPSW), New Orleans, LA, USA, 2020, pp. 976-984, DOI:
 https://doi.org/10.1109/IPDPSW50202.2020.00161.
 
-Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan
-Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
-MPI Communication," in SC’20
+Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen, and Pavan
+Balaji. 2020. "CAB-MPI: exploring interprocess work-stealing towards
+balanced MPI communication," In Proceedings of the International
+Conference for High Performance Computing, Networking, Storage and
+Analysis (SC '20). IEEE Press, Article 36, 1–15.

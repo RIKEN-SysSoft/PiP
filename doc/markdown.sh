@@ -20,7 +20,7 @@ echo;
 echo $title;
 for item in $list; do
     it=${item//_/\\_};
-    echo $prefix $it;
+    echo "$prefix $it";
 done
 echo;
 

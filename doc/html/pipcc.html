@@ -79,12 +79,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <div class="textblock"><p>C compiler driver for PiP</p>
-<dl class="section user"><dt>Synopsis</dt><dd>pipcc [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]</dd></dl>
+<dl class="section user"><dt>Synopsis</dt><dd>pipcc [PIP-OPTIONS] [COMPILER-OPTIONS-AND-ARGS]</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">-piproot</td><td>the compile (and link) as a PiP root </td></tr>
     <tr><td class="paramname">-piptask</td><td>the compile (and link) as a PiP task </td></tr>
-    <tr><td class="paramname">-nopip</td><td>No PiP related settings will be applied</td></tr>
+    <tr><td class="paramname">-nopip</td><td>No PiP related settings will be applied </td></tr>
+    <tr><td class="paramname">&amp;ndash;where</td><td>Print the path where <b>pipcc</b> exists and exit </td></tr>
+    <tr><td class="paramname">&amp;ndash;which</td><td>Print backend compiler and exit</td></tr>
   </table>
   </dd>
 </dl>

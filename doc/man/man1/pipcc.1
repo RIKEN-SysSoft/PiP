@@ -1,4 +1,4 @@
-.TH "pipcc" 1 "Wed Dec 23 2020" "Process-in-Process" \" -*- nroff -*-
+.TH "pipcc" 1 "Fri Dec 25 2020" "Process-in-Process" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
@@ -7,7 +7,7 @@ C compiler driver for PiP
 .PP
 \fBSynopsis\fP
 .RS 4
-pipcc [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]
+pipcc [PIP-OPTIONS] [COMPILER-OPTIONS-AND-ARGS]
 .RE
 .PP
 \fBParameters:\fP
@@ -16,7 +16,11 @@ pipcc [PIP-OPTIONS] [CC-COMMAND-OPTIONS_AND_ARGS]
 .br
 \fI-piptask\fP the compile (and link) as a PiP task 
 .br
-\fI-nopip\fP No PiP related settings will be applied
+\fI-nopip\fP No PiP related settings will be applied 
+.br
+\fI&ndash;where\fP Print the path where \fBpipcc\fP exists and exit 
+.br
+\fI&ndash;which\fP Print backend compiler and exit
 .RE
 .PP
 \fBNote:\fP

@@ -222,14 +222,100 @@ Added inferior 4
 practical address-space sharing," In Proceedings of the 27th International Symposium on High-Performance Parallel and Distributed Computing (HPDC '18). ACM, New York, NY, USA, 131-143. DOI: <a href="https://doi.org/10.1145/3208040.3208045">https://doi.org/10.1145/3208040.3208045</a></p>
 <p>Atsushi Hori, Balazs Gerofi, and Yuataka Ishikawa. "An Implementation
 of User-Level Processes using Address Space Sharing," 2020 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW), New Orleans, LA, USA, 2020, pp. 976-984, DOI: <a href="https://doi.org/10.1109/IPDPSW50202.2020.00161">https://doi.org/10.1109/IPDPSW50202.2020.00161</a>.</p>
-<p>Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen and Pavan Balaji. "CAB-MPI: Exploring Interprocess Work Stealing toward Balanced
-MPI Communication," in SC’20</p>
-<h2>Presentation Slides</h2>
-<ul>
-<li><a href="file:../slides/HPDC18.pdf">HPDC'18</a></li>
-<li><a href="file:../slides/HPDC18-ROSS.pdf">ROSS'18</a></li>
-<li><a href="file:../slides/IPDPS-RADR-2020.pdf">IPDPS/RADR'20</a></li>
-</ul>
+<p>Kaiming Ouyang, Min Si, Atsushi Hori, Zizhong Chen, and Pavan Balaji. 2020. "CAB-MPI: exploring interprocess work-stealing towards
+balanced MPI communication," In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis (SC '20). IEEE Press, Article 36, 1–15.</p>
+<h1>Commands</h1>
+<dl class="section see"><dt>See Also</dt><dd>pipcc </dd>
+<dd>
+pip-check </dd>
+<dd>
+pip-exec </dd>
+<dd>
+pipfc </dd>
+<dd>
+pip-man </dd>
+<dd>
+pip-mode </dd>
+<dd>
+pips </dd>
+<dd>
+printpipmode</dd></dl>
+<h1>Functions</h1>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__PiP-5-exit.html#ga49a4a9ee014ffdaf0c26df18adf965ad" title="Kill all PiP tasks and then kill PiP root. ">pip_abort</a> </dd>
+<dd>
+<a class="el" href="group__PiP-7-sync.html#ga70dab15271b84fe05d7088a6cf8bf784" title="finalize barrier synchronization structure ">pip_barrier_fin</a> </dd>
+<dd>
+<a class="el" href="group__PiP-7-sync.html#ga84022f9c64f431e7d513342aeed0b61e" title="initialize barrier synchronization structure ">pip_barrier_init</a> </dd>
+<dd>
+<a class="el" href="group__PiP-7-sync.html#gaca103c9732a8e28ee8faf79ef4a69e4f" title="wait on barrier synchronization in a busy-wait way ">pip_barrier_wait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-5-exit.html#ga55171ea8db2c2693f005560e427485c2" title="terminate the calling PiP task ">pip_exit</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga92d98dc8bafe8c73d4332d40d77be6cb" title="export an address ">pip_export</a> </dd>
+<dd>
+<a class="el" href="group__PiP-0-init-fin.html#gac4654282785abb9434ce81573fdf16ed">pip_fin</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga779abad7e346657a6fd3c024e204addb" title="Retrieve the user data associated with a PiP task. ">pip_get_aux</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gab603f68c1ce972a5f3bfb8c95fcfb555" title="get the PiP execution mode ">pip_get_mode</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga0e12c95fe7abc5c356acfd45a89ad5d8" title="get a character string of the current execution mode ">pip_get_mode_str</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga9786d5aafa2a3882714c35ecc9f39a5a" title="get the maximum number of the PiP tasks ">pip_get_ntasks</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga4e715bb8c325e9acc81af0745908dc0e" title="get PiP ID of the calling task ">pip_get_pipid</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gadf3d9e96b46d7a58bf4ce6dda173091a" title="deliver a process or thread ID defined by the system ">pip_get_system_id</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga6d7ac596a9da824e40d7c06528f42e5f" title="import exported address of a PiP task ">pip_import</a> </dd>
+<dd>
+<a class="el" href="group__PiP-0-init-fin.html#gad4e0db6c69792b3fa014e3310892a0eb">pip_init</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga6f1045bdbf682cb2ac504f09b57b73e9" title="check if calling PiP task is a PiP root or not ">pip_isa_root</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gaf0283e47ad2d415206d6a3fa61e8a0a9" title="check if calling PiP task is a PiP task or not ">pip_isa_task</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#gabbec4ae2f820b13400f63cba55a53399" title="Query is PiP library is already initialized. ">pip_is_initialized</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga180ece8f3f537d84db8e70921f3ae099" title="check if file descriptors are shared or not. This is equivalent with the pip_is_threaded function...">pip_is_shared_fd</a> </dd>
+<dd>
+<a class="el" href="group__PiP-4-query.html#ga0455093d5040ae45585cc88a5f3f002b" title="check if PiP execution mode is pthread or not ">pip_is_threaded</a> </dd>
+<dd>
+<a class="el" href="group__PiP-5-exit.html#ga4a396f38920d94b71dcfd3c898fbb82b" title="deliver a signal to PiP task ">pip_kill</a> </dd>
+<dd>
+<a class="el" href="group__PiP-5-exit.html#gab7ba5cc62101240c68acf07905e36772" title="kill all PiP tasks ">pip_kill_all_tasks</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga3613eaa34ad5a4985007ff9177eb6542" title="export an address of the calling PiP root or a PiP task to the others. ">pip_named_export</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga68bcfa436ddc6acaf25f67fc30430fc1" title="import the named exported address ">pip_named_import</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#ga205d73fdb294d3cbfe095c14d5e63637" title="import the named exported address (non-blocking) ">pip_named_tryimport</a> </dd>
+<dd>
+<a class="el" href="group__PiP-2-export.html#gabe36293dba51fe90f94057bb4f82f328" title="Associate user data with a PiP task. ">pip_set_aux</a> </dd>
+<dd>
+<a class="el" href="group__PiP-6-signal.html#gaf546ee24368b118e937aadd2dbea2217" title="set signal mask of the current PiP task ">pip_sigmask</a> </dd>
+<dd>
+<a class="el" href="group__PiP-6-signal.html#ga2048e7685a030e61e8c529c474899feb" title="wait for a signal ">pip_signal_wait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#gae9187ea22ecf0623fa3ecfba5337f52d" title="spawn a PiP task (PiP v1 API and deprecated) ">pip_spawn</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#ga71d2d053e9c7153adc167e2cf1adf12e" title="Setting information to invoke a PiP task starting from a function defined in a program. ">pip_spawn_from_func</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#gad7708867e5370ae0a4ae71b16f446f16" title="Setting information to invoke a PiP task starting from the main function. ">pip_spawn_from_main</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#ga1c3f1d9e029f68dbcfb7d78b7dfa1533" title="Setting invocation hook information. ">pip_spawn_hook</a> </dd>
+<dd>
+<a class="el" href="group__PiP-1-spawn.html#gaf1fcc4cb85ec3eda734afe2beb0c6a36" title="Spawning a PiP task. ">pip_task_spawn</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#ga9e786d15401af041842f3f503c962a4b" title="wait for the termination of a PiP task in a non-blocking way ">pip_trywait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#ga697a16f7400d2a2ed2b8ffa230ca83d9" title="non-blocking version of pip_wait_any ">pip_trywait_any</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#gae04520bc29d3ec85d7090f7e645de27d" title="wait for the termination of a PiP task ">pip_wait</a> </dd>
+<dd>
+<a class="el" href="group__PiP-3-wait.html#ga621bba73fda6b2bbe3c04e0c65006d36" title="Wait for the termination of any PiP task. ">pip_wait_any</a> </dd>
+<dd>
+<a class="el" href="group__PiP-7-sync.html#ga50469f21446ce86ea18ddd282cf15894" title="Yield. ">pip_yield</a></dd></dl>
 <h1>Author</h1>
 <p>Atsushi Hori Riken Center for Commputational Science (R-CCS) Japan </p>
 </div></div><!-- contents -->
