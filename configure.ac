@@ -115,8 +115,11 @@ AC_PROG_INSTALL
 if test "$GCC" = yes; then
   CFLAGS="$CFLAGS -Wall"
 fi
+AC_SUBST(CC)
+AC_SUBST(CFLAGS)
 
 AC_CHECK_PROGS([FC],[gfortran g95 g77])
+AC_SUBST(FC)
 
 AC_CHECK_PROGS([PYTHON],[python3 python36 python38 python2 python],[false])
 if test x"${PYTHON}" == x"false" ; then
@@ -139,7 +142,6 @@ AC_CONFIG_FILES([
 	lib/fctx_defs.mk
 	lib/fcontext.mk
 	bin/pipcc
-	bin/pipfc
 	bin/pips
 	bin/pip-mode
 	bin/pip-check

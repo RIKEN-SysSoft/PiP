@@ -36,8 +36,8 @@ srcdir = .
 include $(top_srcdir)/build/var.mk
 
 PROGRAM = pip-exec
-PROGRAMS = $(PROGRAM) printpipmode pip_unpie
-PROGRAMS_TO_INSTALL = $(PROGRAMS) pipcc pipfc pip-mode pip-check pip-man pips 
+PROGRAMS = $(PROGRAM) printpipmode pip_unpie pipfc
+PROGRAMS_TO_INSTALL = $(PROGRAMS) pipcc pip-mode pip-check pip-man pips 
 EXTRA_PROGRAMS = pip-exec.to-install printpipmode.to-install
 
 MAN1_SRCS = pip-exec.c pipcc.in pipfc.in pip-mode.in pip-check.in pip-man.in \
@@ -53,7 +53,7 @@ include $(top_srcdir)/build/rule.mk
 all: $(EXTRA_PROGRAMS) FORCE
 
 FORCE:
-	chmod +x pipcc pip-check pip-mode pip-man pips
+	chmod +x pipcc pipfc pip-check pip-mode pip-man pips
 .PHONY: FORCE
 
 pip-exec: pip-exec.c $(DEPS) Makefile
@@ -72,6 +72,9 @@ install:
 	$(MKDIR_P) $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) pip-exec.to-install $(DESTDIR)$(bindir)/pip-exec
 	$(INSTALL_PROGRAM) printpipmode.to-install $(DESTDIR)$(bindir)/printpipmode
+
+pipfc: pipcc
+	$(CP) pipcc pipfc
 
 pip_unpie: pip_unpie.c
 	$(CC) -g -O2 -Wall $< -o $@
