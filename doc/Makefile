@@ -84,7 +84,7 @@ documents:
 	cat README.md.in commands.in functions.in Slides-md.md Author-md.md > README.md
 	./markdown.sh "# Commands"  1 "\sa" > commands.in
 	./markdown.sh "# Functions" 3 "\sa" > functions.in
-	cat README-man.doxy  README.md.in commands.in functions.in Author-md.md   > README-man.md
+	cat README-man.doxy  README.md.in commands.in functions.in Author-md.md > README-man.md
 	echo -n "" > doxygen-readme.log
 	( \
 		cat "config-common.doxy"; \
