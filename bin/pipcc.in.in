@@ -104,10 +104,6 @@ else
     fi
     proglang=cplus
 fi
-##if [ -f ${COMPILER} ]; then # "-x" does not work with Spack
-##    echo "$cmd: Unable to find $COMPILER"
-##    exit 1;
-##fi
 
 print_usage () {
     echo >&2 "Error: ${cmdline}"
