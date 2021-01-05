@@ -90,7 +90,7 @@ if [ "${cmd}" == "pipfc" ]; then
     elif [ x"${FCOMP}" != x ]; then
 	COMPILER=${FCOMP}
     else
-	echo >$2 "$cmd: No Fotran compiler. Set the FC environment."
+	echo >$2 "${cmd}: No Fotran compiler. Set the FC environment variable."
 	exit 1;
     fi
     proglang=fortran
@@ -103,6 +103,10 @@ else
 	COMPILER=cc
     fi
     proglang=cplus
+fi
+if ! which ${COMPILER}; then
+    echo "${cmd}: Unable to find ${COMPILER}"
+    exit 1;
 fi
 
 print_usage () {
@@ -211,17 +215,17 @@ fi
 
 if ${version} || ${where} || ${which}; then
     if ${version}; then
-	echo "$cmd (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
+	echo "${cmd} (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
 	${PIP_LIBDIR}/libpip.so
     fi
     if ${where}; then
-	echo "${PIP_BINDIR}/$cmd"
+	echo "${PIP_BINDIR}/${cmd}"
     fi
     if ${which}; then
 	case ${proglang} in
 	    fortran) echo "FC=${COMPILER}";;
 	    cplus)   echo "CC=${COMPILER}";;
-	    *)       echo "$cmd: Unknow compiler"; exit 1;;
+	    *)       echo "${cmd}: Unknow compiler"; exit 1;;
 	esac
     fi
     exit 0
