@@ -84,10 +84,9 @@ static uint64_t pip_measure_yieldtime( void ) {
   return c;
 }
 
-pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
-
 static int pip_check_opt_and_env( uint32_t *optsp ) {
   extern pip_spinlock_t pip_lock_got_clone;
+  static pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
   int opts   = *optsp;
   int mode   = ( opts & PIP_MODE_MASK );
   int newmod = 0;
@@ -134,7 +133,7 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
       desired = PIP_MODE_PROCESS_PRELOAD_BIT;
-    } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_GOT  ) == 0 ) {
+    } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_GOT      ) == 0 ) {
       desired = PIP_MODE_PROCESS_GOT_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
@@ -195,15 +194,6 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
     } else if( !( desired & ( PIP_MODE_PTHREAD_BIT         |
 			      PIP_MODE_PROCESS_PRELOAD_BIT |
 			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
-      /* no wrapper found */
-      if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
-	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD environment variable is empty." );
-      } else {
-	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD='%s'",
-		       env );
-      }
       RETURN( EPERM );
     }
   }
@@ -239,15 +229,8 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
       newmod = PIP_MODE_PROCESS_PIPCLONE;
       goto done;
     } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
-      if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
-	pip_warn_mesg("process mode is requested but pip_clone_info symbol "
-		      "is not found in $LD_PRELOAD and "
-		      "pip_clone_mostly_pthread() symbol is not found in "
-		      "glibc" );
-      } else {
-	pip_warn_mesg( "process:pipclone mode is requested but "
-		       "pip_clone_mostly_pthread() is not found in glibc" );
-      }
+      pip_warn_mesg( "process:pipclone mode is requested but "
+		     "pip_clone_mostly_pthread() is not found in (PiP-)glibc" );
       RETURN( EPERM );
     }
   }
@@ -678,6 +661,9 @@ const char *pip_get_mode_str( void ) {
 
   if( pip_root == NULL ) return NULL;
   switch( pip_root->opts & PIP_MODE_MASK ) {
+  case PIP_MODE_PTHREAD:
+    mode = PIP_ENV_MODE_PTHREAD;
+    break;
   case PIP_MODE_PROCESS:
     mode = PIP_ENV_MODE_PROCESS;
     break;
@@ -689,9 +675,6 @@ const char *pip_get_mode_str( void ) {
     break;
   case PIP_MODE_PROCESS_PIPCLONE:
     mode = PIP_ENV_MODE_PROCESS_PIPCLONE;
-    break;
-  case PIP_MODE_PTHREAD:
-    mode = PIP_ENV_MODE_PTHREAD;
     break;
   default:
     mode = "(unknown)";
