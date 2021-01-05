@@ -93,10 +93,10 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
   char *env  = getenv( PIP_ENV_MODE );
 
   enum PIP_MODE_BITS {
-		      PIP_MODE_PTHREAD_BIT          = 1,
-		      PIP_MODE_PROCESS_PRELOAD_BIT  = 2,
-		      PIP_MODE_PROCESS_GOT_BIT      = 4,
-		      PIP_MODE_PROCESS_PIPCLONE_BIT = 8
+    PIP_MODE_PTHREAD_BIT          = 1,
+    PIP_MODE_PROCESS_PRELOAD_BIT  = 2,
+    PIP_MODE_PROCESS_GOT_BIT      = 4,
+    PIP_MODE_PROCESS_PIPCLONE_BIT = 8
   } desired = 0;
 
   if( ( opts & ~PIP_VALID_OPTS ) != 0 ) {
