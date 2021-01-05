@@ -104,7 +104,7 @@ else
     fi
     proglang=cplus
 fi
-if ! which ${COMPILER}; then
+if ! which ${COMPILER} > /dev/null 2>&1; then
     echo "${cmd}: Unable to find ${COMPILER}"
     exit 1;
 fi

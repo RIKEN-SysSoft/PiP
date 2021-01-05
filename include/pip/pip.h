@@ -107,7 +107,7 @@ typedef struct {
   void		*reserved[2];
 } pip_spawn_program_t;
 
-typedef int  (*pip_spawnhook_t)( void* );
+typedef int (*pip_spawnhook_t)( void* );
 
 typedef struct {
   pip_spawnhook_t	before;
