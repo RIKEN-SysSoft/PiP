@@ -48,6 +48,8 @@
 extern char 		**environ;
 extern pip_spinlock_t 	*pip_lock_clone;
 
+ pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
+
 /*** note that the following static variables are   ***/
 /*** located at each PIP task and the root process. ***/
 
@@ -86,7 +88,6 @@ static uint64_t pip_measure_yieldtime( void ) {
 
 static int pip_check_opt_and_env( uint32_t *optsp ) {
   extern pip_spinlock_t pip_lock_got_clone;
-  static pip_clone_mostly_pthread_t pip_clone_mostly_pthread_ptr = NULL;
   int opts   = *optsp;
   int mode   = ( opts & PIP_MODE_MASK );
   int newmod = 0;
