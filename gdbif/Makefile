@@ -54,7 +54,7 @@ $(MYREADELF) : $(SRCS) $(DEPINCS)
 include $(top_srcdir)/build/rule.mk
 
 clean :
-	$(RM) $(TARGET) pip_gdbif.o *~
+	$(RM) $(TARGET) $(MYREADELF) pip_gdbif.o *~
 
 veryclean : clean
 	$(RM) $(MYREADELF)
