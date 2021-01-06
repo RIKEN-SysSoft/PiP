@@ -3,14 +3,14 @@
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 #     Redistributions of source code must retain the above copyright notice,
 #     this list of conditions and the following disclaimer.
-# 
+#
 #     Redistributions in binary form must reproduce the above copyright notice,
 #     this list of conditions and the following disclaimer in the documentation
 #     and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -26,7 +26,7 @@
 # $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
 # System Software Development Team, 2016-2020
 # $
-# $PIP_VERSION: Version 1.2.0$
+# $PIP_VERSION: Version 2.0.0$
 #
 # $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
 # $
@@ -48,17 +48,19 @@
 ### \sa pipcc
 ###
 
+HAVE_PIPGLIBC=@have_pipglibc@
+
 ldso="@dynamic_linker@"
 
 prog=$0;
 
 show_usage () {
-    echo "$0 [-r|-t|-b|-v|-h] a.out ..." > /dev/stderr;
-    echo "  -r: check if a.out can be PiP root" > /dev/stderr;
-    echo "  -t: check if a.out can be PiP task" > /dev/stderr;
-    echo "  -b: check if a.out can be PiP root and/or PiP task" > /dev/stderr;
-    echo "  -v: show reason" > /dev/stderr;
-    echo "  -h: show this message" > /dev/stderr;
+    echo >&2 "$0 [-r|-t|-b|-v|-h] a.out ...";
+    echo >&2 "  -r: check if a.out can be PiP root";
+    echo >&2 "  -t: check if a.out can be PiP task";
+    echo >&2 "  -b: check if a.out can be PiP root and/or PiP task";
+    echo >&2 "  -v: show reason";
+    echo >&2 "  -h: show this message";
     exit 1;
 }
 
@@ -75,7 +77,7 @@ show_msgs () {
     shift;
     for i; do
 	if [ "$i" != "" ]; then
-	    echo "$target :" $i > /dev/stderr;
+	    echo >&2 "$target :" $i;
 	fi
     done
 }
@@ -106,30 +108,37 @@ check () {
 	return 1;
     fi
 
-    if [ "$ldso" != "" ]; then
-	interp=`readelf -p .interp $target | sed -e "s/  \[     0\]  //" -e "1,2d" -e "4d"`;
+    if ${HAVE_PIPGLIBC} && [ "$ldso" != "" ]; then
+	interp=`readelf -p .interp $target 2> /dev/null | sed -e "s/  \[     0\]  //" -e "1,2d" -e "4d"`;
 	if [ "$interp" != "$ldso" ]; then
 	    froot=false;
-	    reason_root="(root) 'ld.so' not specified (not linked with '--dynamic-linker' option)"
+	    reason_root="(root) 'ld-linux.so' is not set properly"
+	fi
+    else
+	lddout=`ldd $target | grep libpip.so 2> /dev/null`
+	if [ x"${lddout}" == x ]; then
+	    froot=false;
+	    reason_root="(root) not linked with libpip.so"
 	fi
     fi
-    if ! readelf --dyn-syms $target | grep ' main' > /dev/null 2>&1; then
+
+    if ! readelf --dyn-syms $target 2> /dev/null | grep ' main' > /dev/null 2>&1; then
 	ftask=false;
 	reason_task0="(task) 'main' symbol not found (not linked with '-rdynamic' option)"
     fi
-    if ! readelf -h $target | grep "DYN (Shared object file)" > /dev/null 2>&1; then
+    if ! readelf -h $target 2> /dev/null | grep "DYN (Shared object file)" > /dev/null 2>&1; then
 	ftask=false;
 	reason_task1="(task) not PIE (not compiled and linked with '-fPIC -pie' options)"
     fi
 
     if $flag_root; then
 	if ! $froot; then
-	    show_msgs "$target" "cannot be PiP root";
+	    show_msgs "$target" "cannot be a PiP root";
 	    flag_error=true;
 	fi
     elif $flag_task; then
 	if ! $ftask; then
-	    show_msgs "$target" "cannot be PiP task";
+	    show_msgs "$target" "cannot be a PiP task";
 	    flag_error=true;
 	fi
     elif $flag_both; then
@@ -165,7 +174,7 @@ for i; do
 	    -v|--verbose)  	 flag_verbose=true;;
 	    -h|--usage)   	 show_usage;;
 	    --ldlinux|--ldso)	 echo ${ldso}; exit 0;;
-	    -*)		  	 echo "Invalid option" > /dev/stderr; exit 1;;
+	    -*)		  	 echo >&2 "Invalid option"; exit 1;;
 	    *)  	  	 files="${files} $i";;
 	esac
 done
