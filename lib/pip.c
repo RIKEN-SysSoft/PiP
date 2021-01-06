@@ -879,7 +879,8 @@ int pip_get_pipid_( void ) {
 }
 
 int pip_get_pipid( int *pipidp ) {
-  if( pipidp == NULL ) RETURN( EINVAL );
+  if( pipidp   == NULL ) RETURN( EINVAL );
+  if( pip_root == NULL ) RETURN( EPERM  );
   *pipidp = pip_get_pipid_();
   RETURN( 0 );
 }
