@@ -181,23 +181,9 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
     desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     break;
   default:
-    pip_warn_mesg( "pip_init() invalid argument opts=0x%x", opts );
     RETURN( EINVAL );
   }
 
-  if( desired & PIP_MODE_PROCESS_GOT_BIT ) {
-    int pip_wrap_clone( void );
-    /* check if the __clone() systemcall wrapper exists or not */
-    if( pip_wrap_clone() == 0 ) {
-      newmod = PIP_MODE_PROCESS_GOT;
-      pip_lock_clone = &pip_lock_got_clone;
-      goto done;
-    } else if( !( desired & ( PIP_MODE_PTHREAD_BIT         |
-			      PIP_MODE_PROCESS_PRELOAD_BIT |
-			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
-      RETURN( EPERM );
-    }
-  }
   if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
     /* check if the __clone() systemcall wrapper exists or not */
     if( pip_cloneinfo == NULL ) {
@@ -208,17 +194,40 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
       newmod = PIP_MODE_PROCESS_PRELOAD;
       pip_lock_clone = &pip_cloneinfo->lock;
       goto done;
-    } else if( !( desired & ( PIP_MODE_PTHREAD_BIT |
+    } else if( !( desired & ( PIP_MODE_PTHREAD_BIT     |
+			      PIP_MODE_PROCESS_GOT_BIT |
 			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
       /* no wrapper found */
       if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
-	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD environment variable is empty." );
+	pip_err_mesg( "%s mode is requested but LD_PRELOAD environment "
+		      "variable is empty", PIP_ENV_MODE_PROCESS_PRELOAD );
       } else {
-	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD='%s'",
-		       env );
+	pip_err_mesg( "%s mode is requested but pip_preload.so "
+		      "cannot be found in LD_PRELOAD='%s'",
+		      PIP_ENV_MODE_PROCESS_PRELOAD, env );
       }
+      RETURN( EPERM );
+    }
+  }
+  if( desired & PIP_MODE_PROCESS_GOT_BIT ) {
+    int pip_wrap_clone( void );
+    /* check if the clone() is already wrapped by LD_PRELOAD */
+    if( pip_cloneinfo == NULL ) {
+      pip_cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
+    }
+    if( pip_cloneinfo != NULL ) {
+      pip_err_mesg( "%s mode is requested but pip_preload.so is "
+		    "specified in LD_PRELOAD environment variable",
+		    PIP_ENV_MODE_PROCESS_GOT );
+      RETURN( EPERM );
+    }
+    /* check if the __clone() systemcall wrapper exists or not */
+    if( pip_wrap_clone() == 0 ) {
+      newmod = PIP_MODE_PROCESS_GOT;
+      pip_lock_clone = &pip_lock_got_clone;
+      goto done;
+    } else if( !( desired & ( PIP_MODE_PTHREAD_BIT |
+			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
       RETURN( EPERM );
     }
   }
@@ -230,8 +239,9 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
       newmod = PIP_MODE_PROCESS_PIPCLONE;
       goto done;
     } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
-      pip_warn_mesg( "process:pipclone mode is requested but "
-		     "pip_clone_mostly_pthread() is not found in (PiP-)glibc" );
+      pip_err_mesg( "%s mode is requested but pip_clone_mostly_pthread() "
+		    "cannot not be found in (PiP-)glibc",
+		    PIP_ENV_MODE_PROCESS_PIPCLONE );
       RETURN( EPERM );
     }
   }
@@ -397,7 +407,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
     if( ntasks <= 0             ) RETURN( EINVAL );
     if( ntasks > PIP_NTASKS_MAX ) RETURN( EOVERFLOW );
 
-    if( pip_check_opt_and_env( &opts ) != 0 ) RETURN( EINVAL );
+    if( ( err = pip_check_opt_and_env( &opts ) ) != 0 ) RETURN( err );
     if( pip_check_sync_flag(   &opts )  < 0 ) RETURN( EINVAL );
 
 #ifndef PIP_CONCAT_STRUCT
