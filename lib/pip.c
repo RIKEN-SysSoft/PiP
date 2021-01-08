@@ -574,7 +574,7 @@ static int pip_check_opt_and_env( int *optsp ) {
 	PIP_MODE_PROCESS_PRELOAD_BIT|
 	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
-      pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
+      pip_err_mesg( "unknown environment setting PIP_MODE='%s'", env );
       RETURN( EPERM );
     }
     break;
@@ -585,7 +585,7 @@ static int pip_check_opt_and_env( int *optsp ) {
     desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     break;
   default:
-    pip_warn_mesg( "pip_init() invalid argument opts=0x%x", opts );
+    pip_err_mesg( "pip_init() invalid argument opts=0x%x", opts );
     RETURN( EINVAL );
   }
 
@@ -602,12 +602,12 @@ static int pip_check_opt_and_env( int *optsp ) {
 			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
       /* no wrapper found */
       if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
-	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD environment variable is empty." );
+	pip_err_mesg( "process:preload mode is requested but "
+		      "LD_PRELOAD environment variable is empty." );
       } else {
-	pip_warn_mesg( "process:preload mode is requested but "
-		       "LD_PRELOAD='%s'",
-		       env );
+	pip_err_mesg( "process:preload mode is requested but "
+		      "LD_PRELOAD='%s'",
+		      env );
       }
       RETURN( EPERM );
     }
@@ -621,13 +621,13 @@ static int pip_check_opt_and_env( int *optsp ) {
       goto done;
     } else if( !( desired & PIP_MODE_PTHREAD_BIT) ) {
       if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
-	pip_warn_mesg("process mode is requested but pip_clone_info symbol "
-		      "is not found in $LD_PRELOAD and "
-		      "pip_clone_mostly_pthread() symbol is not found in "
-		      "glibc" );
+	pip_err_mesg("process mode is requested but pip_clone_info symbol "
+		     "is not found in $LD_PRELOAD and "
+		     "pip_clone_mostly_pthread() symbol is not found in "
+		     "glibc" );
       } else {
-	pip_warn_mesg( "process:pipclone mode is requested but "
-		       "pip_clone_mostly_pthread() is not found in glibc" );
+	pip_err_mesg( "process:pipclone mode is requested but "
+		      "pip_clone_mostly_pthread() is not found in glibc" );
       }
       RETURN( EPERM );
     }

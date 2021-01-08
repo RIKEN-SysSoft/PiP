@@ -52,10 +52,11 @@ DEPINCS = $(PIPINCDIR)/pip.h $(PIPINCDIR)/pip_util.h
 
 include $(top_srcdir)/build/rule.mk
 
-all: $(PROGRAMS)
+all: $(PROGRAMS) FORCE
 
-pipcc: ../config.log
+FORCE:
 	chmod +x pipcc pip-check pip-mode pip-man
+.PHONY: FORCE
 
 piprun: piprun.c $(SRCS) $(DEPINCS) $(PIPLIB) Makefile
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) \

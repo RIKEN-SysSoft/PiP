@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
+# System Software Development Team, 2016-2020
+# $
+# $PIP_VERSION: Version 2.0.0$
 # $PIP_license: <Simplified BSD License>
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -23,13 +27,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 # THE POSSIBILITY OF SUCH DAMAGE.
 # $
-# $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
-# System Software Development Team, 2016-2020
-# $
-# $PIP_VERSION: Version 1.2.0$
-#
-# $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
-# $
 
 ### \page pip-mode pip-mode
 ###
@@ -45,7 +42,6 @@
 ### \param -P 'process' mode
 ### \param -L 'process:preload' mode
 ### \param -C 'process:clone' mode
-### \param -G 'process:got' mode
 ### \param -T 'thread' mode
 ### \param -u Show usage
 ###
@@ -57,70 +53,47 @@ INSTALLTOP=@prefix@
 SRCTOP=@srcdir_top@
 HAVE_PIPGLIBC=@have_pipglibc@
 
+self=$0;
+prog=`basename $self`;
+dir=`dirname $0`;
+cwd=`cd $dir; pwd`;
+
 function usage() {
-    echo >&2 $self "-p|-l|-g|-c|-t [<command> ...]";
+    echo >&2 $prog "-p|-l|-g|-c|-t [<command> ...]";
     echo >&2 "    -P: 'process' mode";
     echo >&2 "    -L: 'process:preload' mode";
-    echo >&2 "    -G: 'process:got' mode";
     echo >&2 "    -C: 'process:pipclone' mode";
     echo >&2 "    -T: 'pthread' mode";
-    exit 0;
+    exit 2;
 }
 
-self=$0;
 prefix=@prefix@;
 flag_help=0;
 flag_show=0;
 pipbuild=false;
-preload="";
-
-if $pipbuld ; then
-    predir=${SRCTOP}/preload;
-    bindir=${SRCTOP}/bin;
-else
-    predir=${INSTALLTOP}/preload;
-    bindir=${INSTALLTOP}/bin;
-fi
-
-if [[ -f ${predir}/pip_preload.so ]]; then
-    preload="${predir}/pip_preload.so";
-fi
+pip_mode=;
+preload=;
 
 for i; do
     case $i in
 	-p|-P|--process)
-	    if [[ x${preload} == "x" ]]; then
-		if ! ${HAVE_PIPGLIBC}; then
-		    echo >&2 "'process' mode is not available";
-		    exit 1;
-		fi
-	    else
-		pip_mode="process:preload";
-	    fi;;
+	    pip_mode="process";;
 	-l|-L|--process:preload)
-	    if [[ "x${preload}" == "x" ]]; then
-		echo >&2 "Unable to find PiP preload library";
-		exit 1;
-	    else
-		pip_mode="process:preload";
-	    fi;;
+	    pip_mode="process:preload";;
 	-c|-C|--process:pipclone)
 	    if ! ${HAVE_PIPGLIBC}; then
-		echo >&2 "Not using PiP-glibc";
+		echo >&2 "${prog}: No PiP-glibc";
 		exit 1;
-	    fi
+	    fi;
 	    pip_mode="process:pipclone";;
-	-g|-G|--process:got)
-	    echo >&2 "'process:got' mode is not available";
-	    exit 1;;
 	-t|-T|--thread|--pthread)
-	    pip_mode=pthread;;
+	    pip_mode="pthread";;
 	--pipbuild)
 	    pipbuild=true;;
 	-u|--help)
 	    usage;;
 	-*)
-	    echo >&2 "Unknown option '$1'";
+	    echo >&2 "${prog}: Unknown option '$1'";
 	    exit 1;;
 	*)
 	    shift;
@@ -129,31 +102,50 @@ for i; do
     esac
 done
 
-export PIP_MODE=${pip_mode};
+if $pipbuld ; then
+    predir=${SRCTOP}/preload;
+    bindir=${SRCTOP}/bin;
+elif [ -d $cwd/preload ]; then
+    predir=${SRCTOP}/preload;
+    bindir=${SRCTOP}/bin;
+else
+    predir=${INSTALLTOP}/lib;
+    bindir=${INSTALLTOP}/bin;
+fi
 
-if [ "${pip_mode}" != "pthread" ]; then
-    if [ "x${preload}" != "x" ]; then
-	if [[ "x${LD_PRELOAD}" == "x" ]]; then
-	    export LD_PRELOAD="${preload}";
+if [[ -f ${predir}/pip_preload.so ]]; then
+    preload="${predir}/pip_preload.so";
+fi
+
+LD_PRELOAD_env=
+if [ x"${pip_mode}" == x"process:preload" ]; then
+    if [ x"${preload}" != x ]; then
+	if [ x"${LD_PRELOAD}" == x ]; then
+	    LD_PRELOAD_env=LD_PRELOAD=${preload}
 	else
-	    export LD_PRELOAD="${preload}:${LD_PRELOAD}";
+	    LD_PRELOAD_env=LD_PRELOAD=${preload}:${LD_PRELOAD}
+	fi
+    else
+	echo >&2 "${prog}: Unable to find PiP preload library";
+	exit 1;
+    fi
+elif [ x"${pip_mode}" == x"process" ]; then
+    if [ x"${preload}" != x ]; then
+	if [ x"${LD_PRELOAD}" == x ]; then
+	    LD_PRELOAD_env=LD_PRELOAD=${preload}
+	else
+	    LD_PRELOAD_env=LD_PRELOAD=${preload}:${LD_PRELOAD}
 	fi
     fi
 fi
 
-if [ "x${cmd}" != "x" ]; then
-    PIP_MODE=${pip_mode} ${cmd};
-elif [ "x${pip_mode}" == "x" ]; then
-    if ${pipbuild} ; then
-	exec ${bindir}/printpipmode --pipbuild;
-    else
-	exec ${bindir}/printpipmode;
-    fi
+if [ x"${cmd}" != x ]; then
+    env ${LD_PRELOAD_env} PIP_MODE=${pip_mode} ${cmd};
+elif [ x"${pip_mode}" == x ]; then
+    env ${LD_PRELOAD_env} PIP_MODE=${pip_mode} exec ${bindir}/printpipmode;
 else
-    if [ "${pip_mode}" != "pthread" ]; then
-	if [ "x${preload}" != "x" ]; then
-	    echo "LD_PRELOAD=${LD_PRELOAD}";
-	fi
+    if [ x"${LD_PRELOAD_env}" != x ]; then
+	echo "${LD_PRELOAD_env}";
     fi
-    echo "PIP_MODE=${PIP_MODE}";
+    echo "PIP_MODE=${pip_mode}";
 fi
