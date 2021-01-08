@@ -104,75 +104,91 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
     /* unknown option(s) specified */
     RETURN( EINVAL );
   }
-
-  if( mode & PIP_MODE_PTHREAD &&
-      mode & PIP_MODE_PROCESS ) RETURN( EINVAL );
-  if( mode & PIP_MODE_PROCESS ) {
-    if( mode != PIP_MODE_PROCESS_PRELOAD &&
-	mode != PIP_MODE_PROCESS_GOT     &&
-	mode != PIP_MODE_PROCESS_PIPCLONE ) {
-      DBGF( "mode:0x%x", mode );
-      RETURN (EINVAL );
+  /* check if pip_preload.so is pre-loaded. if so, */
+  /* PIP_MODE_PROCESS_PRELOAD is the only choice   */
+  if( pip_cloneinfo == NULL ) {
+    pip_cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
+  }
+  DBGF( "cloneinfo:%p", pip_cloneinfo );
+  if( pip_cloneinfo != NULL ) {
+    DBGF( "mode:0x%x", mode );
+    if( mode == 0 || 
+	( mode & PIP_MODE_PROCESS_PRELOAD ) == mode ) {
+      newmod = PIP_MODE_PROCESS_PRELOAD;
+      pip_lock_clone = &pip_cloneinfo->lock;
+      goto done;
+    }
+    if( mode & ~PIP_MODE_PROCESS_PRELOAD ) {
+      pip_err_mesg( "pip_preload.so is already loaded by LD_PRELOAD and "
+		    "process:preload must be specified at pip_init()" );
+      RETURN( EPERM );
+    }
+    if( env == NULL || env[0] == '\0' ) {
+      newmod = PIP_MODE_PROCESS_PRELOAD;
+      pip_lock_clone = &pip_cloneinfo->lock;
+      goto done;
+    }
+    if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD ) == 0 ||
+	strcasecmp( env, PIP_ENV_MODE_PROCESS         ) == 0 ) {
+      newmod = PIP_MODE_PROCESS_PRELOAD;
+      pip_lock_clone = &pip_cloneinfo->lock;
+      goto done;
+    } else {
+      pip_err_mesg( "pip_preload.so is already loaded by LD_PRELOAD and "
+		    "process:preload is the only valid choice of PIP_MODE environment" );
+      RETURN( EPERM );
+    }
+  } else {
+    /* pip_preload.so is not loaded. i.e., LD_PRELOAD does not include pip_preload.so */
+    if( mode != 0 &&
+	( mode & PIP_MODE_PROCESS_PRELOAD ) == mode ) {
+      pip_err_mesg( "pip_preload.so is not loaded by LD_PRELOAD and "
+		    "process:preload might be a wrong choice" );
+      RETURN( EPERM );
+    }
+    if( env != NULL && strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD ) == 0 ) {
+      pip_err_mesg( "pip_preload.so is not loaded by LD_PRELOAD and "
+		    "process:preload is a wrong choice of PIP_MODE environment" );
+      RETURN( EPERM );
     }
   }
 
   switch( mode ) {
   case 0:
     if( env == NULL || env[0] == '\0' ) {
-      desired =
-	PIP_MODE_PTHREAD_BIT         |
-	PIP_MODE_PROCESS_PRELOAD_BIT |
-	PIP_MODE_PROCESS_GOT_BIT     |
-	PIP_MODE_PROCESS_PIPCLONE_BIT;
+      desired = PIP_MODE_PTHREAD_BIT     |
+	        PIP_MODE_PROCESS_GOT_BIT |
+	        PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_THREAD  ) == 0 ||
 	       strcasecmp( env, PIP_ENV_MODE_PTHREAD ) == 0 ) {
       desired = PIP_MODE_PTHREAD_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
-      desired =
-	PIP_MODE_PROCESS_PRELOAD_BIT |
-	PIP_MODE_PROCESS_GOT_BIT     |
-	PIP_MODE_PROCESS_PIPCLONE_BIT;
-    } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
-      desired = PIP_MODE_PROCESS_PRELOAD_BIT;
+      desired = PIP_MODE_PROCESS_GOT_BIT |
+	        PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_GOT      ) == 0 ) {
       desired = PIP_MODE_PROCESS_GOT_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
       pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
-      RETURN( EOPNOTSUPP );
+      RETURN( EPERM );
     }
     break;
   case PIP_MODE_PTHREAD:
     desired = PIP_MODE_PTHREAD_BIT;
     break;
   case PIP_MODE_PROCESS:
-    if ( env == NULL ) {
-      desired =
-	PIP_MODE_PROCESS_PRELOAD_BIT |
-	PIP_MODE_PROCESS_GOT_BIT     |
-	PIP_MODE_PROCESS_PIPCLONE_BIT;
-    } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PRELOAD  ) == 0 ) {
-      desired = PIP_MODE_PROCESS_PRELOAD_BIT;
+    if( env == NULL || env[0] == '\0' ) {
+      desired = PIP_MODE_PROCESS_GOT_BIT |
+	        PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_GOT      ) == 0 ) {
       desired = PIP_MODE_PROCESS_GOT_BIT;
     } else if( strcasecmp( env, PIP_ENV_MODE_PROCESS_PIPCLONE ) == 0 ) {
       desired = PIP_MODE_PROCESS_PIPCLONE_BIT;
-    } else if( strcasecmp( env, PIP_ENV_MODE_THREAD  ) == 0 ||
-	       strcasecmp( env, PIP_ENV_MODE_PTHREAD ) == 0 ||
-	       strcasecmp( env, PIP_ENV_MODE_PROCESS ) == 0 ) {
-      /* ignore PIP_MODE=thread in this case */
-      desired =
-	PIP_MODE_PROCESS_PRELOAD_BIT |
-	PIP_MODE_PROCESS_GOT_BIT     |
-	PIP_MODE_PROCESS_PIPCLONE_BIT;
     } else {
       pip_warn_mesg( "unknown environment setting PIP_MODE='%s'", env );
       RETURN( EPERM );
     }
-    break;
-  case PIP_MODE_PROCESS_PRELOAD:
-    desired = PIP_MODE_PROCESS_PRELOAD_BIT;
     break;
   case PIP_MODE_PROCESS_GOT:
     desired = PIP_MODE_PROCESS_GOT_BIT;
@@ -184,44 +200,8 @@ static int pip_check_opt_and_env( uint32_t *optsp ) {
     RETURN( EINVAL );
   }
 
-  if( desired & PIP_MODE_PROCESS_PRELOAD_BIT ) {
-    /* check if the __clone() systemcall wrapper exists or not */
-    if( pip_cloneinfo == NULL ) {
-      pip_cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
-    }
-    DBGF( "cloneinfo-%p", pip_cloneinfo );
-    if( pip_cloneinfo != NULL ) {
-      newmod = PIP_MODE_PROCESS_PRELOAD;
-      pip_lock_clone = &pip_cloneinfo->lock;
-      goto done;
-    } else if( !( desired & ( PIP_MODE_PTHREAD_BIT     |
-			      PIP_MODE_PROCESS_GOT_BIT |
-			      PIP_MODE_PROCESS_PIPCLONE_BIT ) ) ) {
-      /* no wrapper found */
-      if( ( env = getenv( "LD_PRELOAD" ) ) == NULL ) {
-	pip_err_mesg( "%s mode is requested but LD_PRELOAD environment "
-		      "variable is empty", PIP_ENV_MODE_PROCESS_PRELOAD );
-      } else {
-	pip_err_mesg( "%s mode is requested but pip_preload.so "
-		      "cannot be found in LD_PRELOAD='%s'",
-		      PIP_ENV_MODE_PROCESS_PRELOAD, env );
-      }
-      RETURN( EPERM );
-    }
-  }
   if( desired & PIP_MODE_PROCESS_GOT_BIT ) {
     int pip_wrap_clone( void );
-    /* check if the clone() is already wrapped by LD_PRELOAD */
-    if( pip_cloneinfo == NULL ) {
-      pip_cloneinfo = (pip_clone_t*) dlsym( RTLD_DEFAULT, "pip_clone_info");
-    }
-    if( pip_cloneinfo != NULL ) {
-      pip_err_mesg( "%s mode is requested but pip_preload.so is "
-		    "specified in LD_PRELOAD environment variable",
-		    PIP_ENV_MODE_PROCESS_GOT );
-      RETURN( EPERM );
-    }
-    /* check if the __clone() systemcall wrapper exists or not */
     if( pip_wrap_clone() == 0 ) {
       newmod = PIP_MODE_PROCESS_GOT;
       pip_lock_clone = &pip_lock_got_clone;
