@@ -1488,8 +1488,7 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
     pip_glibc_lock();
     err = pip_clone_mostly_pthread_ptr( &task->thread,
 					flags,
-					coreno == PIP_CPUCORE_ASIS ? - 1 :
-					coreno,
+					-1,
 					stack_size,
 					(void*(*)(void*)) pip_do_spawn,
 					args,
