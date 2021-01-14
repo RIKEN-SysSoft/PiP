@@ -3,10 +3,12 @@
 #	env QA_RPATHS=3 rpmbuild -bb pip.spec
 #
 
-%define glibc_libdir	/opt/pip/lib
+%define base_prefix	/opt/process-in-process
+%define _prefix		%{base_prefix}/pip-2
+
+%define glibc_libdir	%{base_prefix}/pip-glibc/lib
 %define libpip_version	0
 %define libpip_init_version	0
-%define docdir		/usr/share/doc/%{name}-%{version}
 
 # workaround for "error: Empty %files file ..../debugsourcefiles.list"
 # on wallaby2 (this doesn't happen on jupiter05 for some reason)
@@ -44,7 +46,7 @@ is called PiP process and a sub-process are called a PiP task.
 %setup -n %{name}-%{version}
 
 %build
-./configure --prefix=%{_prefix} --libdir=%{_libdir} --mandir=%{_mandir} --docdir=%{docdir} --with-glibc-libdir=%{glibc_libdir}
+./configure --prefix=%{_prefix} --libdir=%{_libdir} --mandir=%{_mandir} --docdir=%{_docdir} --with-glibc-libdir=%{glibc_libdir}
 make
 
 %install
