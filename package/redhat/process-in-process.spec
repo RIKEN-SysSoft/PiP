@@ -26,9 +26,6 @@ Vendor: RIKEN System Software Team
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 BuildRequires: pip-glibc
 
-# see pathfix.py in the %prep section
-BuildRequires: /usr/bin/pathfix.py
-
 %description
 PiP is a user-level library to have the best of the both worlds of
 multi-process and multi-thread parallel execution models.
@@ -45,12 +42,6 @@ is called PiP process and a sub-process are called a PiP task.
 %prep
 
 %setup -n %{name}-%{version}
-
-# Fix Python shebang to avoid the following rpmbuild error:
-#	ERROR: ambiguous python shebang in /usr/bin/pips: #!/usr/bin/env python. Change it to python3 (or python2) explicitly.
-# -n prevents creating ~backup files
-# -i specifies the interpreter for the shebang
-pathfix.py -ni "%{__python3} %{py3_shbang_opts}" ./bin/pips
 
 %build
 ./configure --prefix=%{_prefix} --libdir=%{_libdir} --mandir=%{_mandir} --docdir=%{docdir} --with-glibc-libdir=%{glibc_libdir}
@@ -73,6 +64,7 @@ make DESTDIR="$RPM_BUILD_ROOT" install
 %attr(0755,root,root) %{_bindir}/pip-man
 %attr(0755,root,root) %{_bindir}/pip-mode
 %attr(0755,root,root) %{_bindir}/pips
+%attr(0755,root,root) %{_bindir}/pip_unpie
 %attr(0755,root,root) %{_bindir}/printpipmode
 # libs
 %defattr(-,root,root)
