@@ -119,10 +119,18 @@ static void make_struct_size_str( void ) {
   valtab[11].value = str;
 }
 
+static void free_struct_size_str( void ) {
+  free( valtab[11].value );
+}
+
 static void make_cacheline_size_str( void ) {
   char *str;
   asprintf( &str, "%d", CACHE_LINE_SIZE );
   valtab[12].value = str;
+}
+
+static void free_cacheline_size_str( void ) {
+  free( valtab[12].value );
 }
 
 static void print_item( int item ) {
@@ -148,7 +156,7 @@ static void print_usage( char *argv0 ) {
   exit( 1 );
 }
 
-static int parse_cmdline( char ***argvp ) {
+static int parse_cmdline( char ***argvp, char **argstrp ) {
 #define ARGSTR_SZ	(512)
   char *procfs = "/proc/self/cmdline";
   char *argstr, **argvec;
@@ -156,50 +164,56 @@ static int parse_cmdline( char ***argvp ) {
   int fd, argc, i, c;
 
   if( ( fd = open( procfs, O_RDONLY ) ) < 0 ) return -1;
-  if( ( argstr = (char*) malloc( szs ) ) == NULL ) return -1;
-  memset( argstr, 0, szs );
+  argstr = NULL;
   while( 1 ) {
+    szs *= 2;
+    if( ( argstr = (char*) realloc( argstr, szs ) ) == NULL ) {
+      close( fd );
+      return -1;
+    }
+    memset( argstr, 0, szs );
     if( ( sz = read( fd, argstr, szs ) ) < szs ) break;
     if( lseek( fd, 0, SEEK_SET ) < 0 ) {
       free( argstr );
       close( fd );
       return -1;
     }
-    szs *= 2;
-    if( ( argstr = (char*) realloc( argstr, szs ) ) == NULL ) {
-      free( argstr );
-      close( fd );
-      return -1;
-    }
-    memset( argstr, 0, szs );
   }
+  argstr[sz] = '\0';		/* avoid coverity complaint */
   close( fd );
+
   argc = 0;
   for( i=0; i<sz; i++ ) {
     if( argstr[i] == '\0' ) argc++;
   }
   argvec = (char**) malloc( sizeof(char*) * ( argc + 1 ) );
-  if( argvec == NULL ) return -1;
+  if( argvec == NULL ) {
+    free( argstr );
+    return -1;
+  }
   for( c=0, i=0; c<argc; c++ ) {
     argvec[c] = &argstr[i];
     for( ; argstr[i]!='\0'; i++ );
     i++;			/* skip '\0' */
   }
   argvec[c] = NULL;
-  *argvp = argvec;
+  *argstrp = argstr;
+  *argvp   = argvec;
   return argc;
 }
 
 int pip_main( void ) {
-  char **argv;
+  char **argv, *argstr;
   char *argv0;
   int argc;
 
-  make_struct_size_str();
-  make_cacheline_size_str();
-  if( ( argc = parse_cmdline( &argv ) ) > 0 ) {
+  argv   = NULL;
+  argstr = NULL;
+  if( ( argc = parse_cmdline( &argv, &argstr ) ) > 0 ) {
     argv[0] = argv0 = basename( argv[0] );
   }
+  make_struct_size_str();
+  make_cacheline_size_str();
   if( argc > 1 ) {
     int v;
     while( ( v = getopt_long_only( argc, argv, "", opttab, NULL ) ) >= 0 ) {
@@ -209,6 +223,10 @@ int pip_main( void ) {
   } else {
     print_item( -1 );
   }
+  free_struct_size_str();
+  free_cacheline_size_str();
+  free( argv );
+  free( argstr );
   exit( 0 );
   /* do not return */
 }
