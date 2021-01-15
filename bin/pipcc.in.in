@@ -82,32 +82,6 @@ FLAG_PTHREAD="-pthread"
 self=$0
 cmd=`basename ${self}`
 cmdline="$cmd $@"
-proglang=
-
-if [ "${cmd}" == "pipfc" ]; then
-    if [ x"${FC}" != x ]; then
-	COMPILER=${FC}
-    elif [ x"${FCOMP}" != x ]; then
-	COMPILER=${FCOMP}
-    else
-	echo >$2 "${cmd}: No Fotran compiler. Set the FC environment variable."
-	exit 1;
-    fi
-    proglang=fortran
-else
-    if [ x"${CC}" != x ]; then
-	COMPILER=${CC}
-    elif [ x"${CCOMP}" != x ]; then
-	COMPILER=${CCOMP}
-    else
-	COMPILER=cc
-    fi
-    proglang=cplus
-fi
-if ! which ${COMPILER} > /dev/null 2>&1; then
-    echo >$2 "${cmd}: Unable to find ${COMPILER}"
-    exit 1;
-fi
 
 print_usage () {
     echo >&2 "Error: ${cmdline}"
@@ -164,6 +138,33 @@ while [ "$1" != "" ]; do
     shift;
 done
 
+if [ x"${compiler}" != x ]; then
+    COMPILER=${compiler}
+else
+    if [ "${cmd}" == "pipfc" ]; then
+        if [ x"${FC}" != x ] && ! [ "${FC}" -ef ${self} ]; then
+            COMPILER=${FC}
+        elif [ x"${FCOMP}" != x ] && ! [ "${FCOMP}" -ef ${self} ]; then
+            COMPILER=${FCOMP}
+        else
+            echo >$2 "${cmd}: No Fotran compiler. Set the FC environment variable."
+            exit 1;
+        fi
+    else
+        if [ x"${CC}" != x ] && ! [ "${CC}" -ef ${self} ]; then
+            COMPILER=${CC}
+        elif [ x"${CCOMP}" != x ] && ! [ "${CCOMP}" -ef ${self} ]; then
+            COMPILER=${CCOMP}
+        else
+            COMPILER=cc
+        fi
+    fi
+fi
+if ! which ${COMPILER} > /dev/null 2>&1; then
+    echo >$2 "${cmd}: Unable to find ${COMPILER}"
+    exit 1;
+fi
+
 do_exec () {
     if ! ${silent}; then
 	echo $@
@@ -217,16 +218,13 @@ if ${version} || ${where} || ${which}; then
     if ${version}; then
 	echo "${cmd} (Process-in-Process Compiler Wrapper Script) Version:${PIP_VERSION}"
 	${PIP_LIBDIR}/libpip.so
+        exec ${COMPILER} --version
     fi
     if ${where}; then
 	echo "${PIP_BINDIR}/${cmd}"
     fi
     if ${which}; then
-	case ${proglang} in
-	    fortran) echo "FC=${COMPILER}";;
-	    cplus)   echo "CC=${COMPILER}";;
-	    *)       echo "${cmd}: Unknow compiler"; exit 1;;
-	esac
+	exec which ${COMPILER}
     fi
     exit 0
 fi
@@ -311,7 +309,7 @@ fi
 if ${cflags} || ${lflags}; then
     # note that ${opts} will not be printed, unlike --ccopts (above)
     if ${cflags} && ${lflags}; then
-	echo ${PIP_DEFS}  ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
+	echo ${PIP_DEFS}  ${PIP_CFLAGS} ${PIP_LDFLAGS} \
 	     ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
     elif ${cflags}; then
 	echo ${PIP_DEFS}  ${PIP_CFLAGS} ${FLAG_PTHREAD}
