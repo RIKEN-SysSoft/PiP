@@ -295,7 +295,7 @@ static int pip_check_opt_and_env( int *optsp ) {
   } else {
     /* pip_preload.so is not loaded. i.e., LD_PRELOAD does not include pip_preload.so */
     if( mode != 0 &&
-	( mode & PIP_MODE_PROCESS_PRELOAD ) == mode ) {
+	( mode & PIP_MODE_PROCESS_PRELOAD ) == PIP_MODE_PROCESS_PRELOAD ) {
       pip_err_mesg( "pip_preload.so is not loaded by LD_PRELOAD and "
 		    "process:preload might be a wrong choice" );
       RETURN( EPERM );
