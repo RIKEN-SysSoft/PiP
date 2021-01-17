@@ -104,10 +104,9 @@ Basically PiP requires the following three software packages;
 * [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
 
 By using PiP-glibc, users can create up to 300 PiP tasks which can be
-dbugged by using PiP-gdb.  In other words, without installing
+debugged by using PiP-gdb.  In other words, without installing
 PiP-glibc, users can create up to around 10 PiP tasks (the number
-depends on the program) and cannot debug by using PiP-gdb.  Note that
-PiP will not run at all without PiP-glibc on CentOS/RedHat 8.
+depends on the program) and cannot debug by using PiP-gdb. 
 
 There are several ways to install the PiP packages; Yum (RPM), Docker,
 Spack, and building from the source code. It is strongly recommended
