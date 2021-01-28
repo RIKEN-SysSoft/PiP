@@ -644,7 +644,7 @@ int pip_get_pipid( int *pipidp ) {
 int pip_get_ntasks( int *ntasksp ) {
   if( ntasksp  == NULL ) RETURN( EINVAL );
   if( pip_root == NULL ) return( EPERM  ); /* intentionally using small return */
-  *ntasksp = pip_root->ntasks_curr;
+  *ntasksp = pip_root->ntasks;
   RETURN( 0 );
 }
 
