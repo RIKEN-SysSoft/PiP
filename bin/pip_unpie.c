@@ -46,9 +46,11 @@
 
 #undef DEBUG
 
-#define	DF_1_PIE	0x08000000
+//#define	DF_1_PIE	0x08000000
 
 char *cmd;
+
+#ifdef DF_1_PIE
 
 static void read_elf64_header( int fd, Elf64_Ehdr *ehdr ) {
   if( read( fd, ehdr, sizeof(Elf64_Ehdr) ) != sizeof(Elf64_Ehdr) ) {
@@ -58,7 +60,7 @@ static void read_elf64_header( int fd, Elf64_Ehdr *ehdr ) {
 	     ehdr->e_ident[EI_MAG1] != ELFMAG1 ||
 	     ehdr->e_ident[EI_MAG2] != ELFMAG2 ||
 	     ehdr->e_ident[EI_MAG3] != ELFMAG3 ) {
-    fprintf( stderr, "Not an ELF\n" );
+    fprintf( stderr, "Not ELF\n" );
     exit( 1 );
   } else if( ehdr->e_ident[EI_CLASS] != ELFCLASS64 ) {
     fprintf( stderr, "%s: 32bit class is not supported\n", cmd );
@@ -173,10 +175,22 @@ int main( int argc, char **argv ) {
   char *fname = argv[1];
 
   cmd = basename( argv[0] );
-  if( argc == 3 && strcmp( argv[1], "-c" ) == 0 ) {
-    fname = argv[2];
-    flag_check = 1;
+  if( argc == 3 ) {
+    if( strcmp( argv[1], "-c" ) == 0 ) {
+      fname = argv[2];
+      flag_check = 1;
+    } else {
+      print_usage();
+    }
   }
   if( argc < 2 || argc > 3 ) print_usage();
   return unpie( fname, flag_check );
 }
+
+#else /* DF_1_PIE is not defined */
+
+int main( int argc, char **argv ) {
+  return 0;
+}
+
+#endif
