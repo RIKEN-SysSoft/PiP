@@ -83,7 +83,9 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
       }
       pip_task_queue_enqueue( &queue, t );
     }
+#ifdef DEBUG
     pip_task_queue_describe( &queue, "BARRIER-DONE", stderr );
+#endif
     /* really done. dequeue all tasks in the queue and resume them */
     barrp->count = init;
     pip_memory_barrier();
