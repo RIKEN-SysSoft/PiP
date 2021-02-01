@@ -75,7 +75,7 @@ a PID, having an independent file descriptor space, having the same
 signal delivery semantics as Linux process does, and so on. The
 above mentioned ULP can only work with the process mode.
 
-When the **PIP\_MODE** environment variable set to "()thread"
+When the **PIP\_MODE** environment variable set to "thread"
 then
 the PiP library runs in the pthread mode, and if it is set to
 "process" then it runs in the process mode. There are also three
@@ -285,7 +285,7 @@ You can attach all relevant PiP tasks by:
 
 If the **PIP\_GDB\_PATH** environment is set to the path pointing to PiP-gdb
 executable file, then PiP-gdb is automatically attached when an
-excetion signal (SIGSEGV and SIGHUP by default) is delivered. The
+excetion signal (SIGSEGV or SIGHUP by default) is delivered. The
 exception signals can also be defined by
 setting the **PIP\_GDB\_SIGNALS** environment. Signal names (case
 insensitive) can be
