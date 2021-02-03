@@ -147,7 +147,7 @@ else
         elif [ x"${FCOMP}" != x ] && ! [ "${FCOMP}" -ef ${self} ]; then
             COMPILER=${FCOMP}
         else
-            echo >$2 "${cmd}: No Fotran compiler. Set the FC environment variable."
+            echo >&2 "${cmd}: No Fotran compiler. Set the FC environment variable."
             exit 1;
         fi
     else
@@ -161,7 +161,7 @@ else
     fi
 fi
 if ! which ${COMPILER} > /dev/null 2>&1; then
-    echo >$2 "${cmd}: Unable to find ${COMPILER}"
+    echo >&2 "${cmd}: Unable to find ${COMPILER}"
     exit 1;
 fi
 
