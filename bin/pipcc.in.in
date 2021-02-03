@@ -142,26 +142,27 @@ if [ x"${compiler}" != x ]; then
     COMPILER=${compiler}
 else
     if [ "${cmd}" == "pipfc" ]; then
-        if [ x"${FC}" != x ] && ! [ "${FC}" -ef ${self} ]; then
-            COMPILER=${FC}
-        elif [ x"${FCOMP}" != x ] && ! [ "${FCOMP}" -ef ${self} ]; then
-            COMPILER=${FCOMP}
+        if [ x"${FC}" != x ]; then
+	    COMPILER=${FC}
+        elif [ x"${FCOMP}" != x ]; then
+	    COMPILER=${FCOMP}
         else
             echo >&2 "${cmd}: No Fotran compiler. Set the FC environment variable."
             exit 1;
         fi
     else
-        if [ x"${CC}" != x ] && ! [ "${CC}" -ef ${self} ]; then
+        if [ x"${CC}" != x ]; then
             COMPILER=${CC}
-        elif [ x"${CCOMP}" != x ] && ! [ "${CCOMP}" -ef ${self} ]; then
+        elif [ x"${CCOMP}" != x ]; then
             COMPILER=${CCOMP}
         else
             COMPILER=cc
         fi
     fi
 fi
-if ! which ${COMPILER} > /dev/null 2>&1; then
-    echo >&2 "${cmd}: Unable to find ${COMPILER}"
+for comp in ${COMPILER}; do compcmd=${comp}; break; done
+if ! type -P ${compcmd} > /dev/null 2>&1; then
+    echo >&2 "${cmd}: Unable to find ${compcmd}"
     exit 1;
 fi
 
