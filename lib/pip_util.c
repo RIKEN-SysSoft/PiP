@@ -73,16 +73,20 @@ void pip_print_maps( void ) {
 #define RDLINK_BUF_SP	(RDLINK_BUF+8)
 
 void pip_print_fd( int fd ) {
-  char idstr[64];
   char fdpath[FDPATH_LEN];
   char fdname[RDLINK_BUF_SP];
   ssize_t sz;
 
-  pip_idstr( idstr, 64 );
   sprintf( fdpath, "/proc/self/fd/%d", fd );
   if( ( sz = readlink( fdpath, fdname, RDLINK_BUF ) ) > 0 ) {
     fdname[sz] = '\0';
-    fprintf( stderr, "%s %d -> %s", idstr, fd, fdname );
+    char idstr[64];
+    pip_idstr( idstr, 64 );
+#ifndef DEBUG
+    fprintf( stderr, "%s %d -> %s\n", idstr, fd, fdname );
+#else
+    DBGF( "%d -> %s", fd, fdname );
+#endif
   }
 }
 

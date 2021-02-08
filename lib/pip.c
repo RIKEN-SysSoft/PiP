@@ -753,11 +753,11 @@ static int pip_copy_vec( char **vecadd,
 }
 
 #define ENVLEN	(64)
-static int pip_copy_env( char **envsrc, int pipid,
-			 pip_char_vec_t *vecp ) {
+static int pip_copy_env( char **envsrc, int pipid, pip_char_vec_t *vecp ) {
   char rootenv[ENVLEN], taskenv[ENVLEN];
+  char *mallopt = "MALLOC_MMAP_THRESHOLD_=1";
   char *preload_env = getenv( "LD_PRELOAD" );
-  char *addenv[] = { rootenv, taskenv, preload_env, NULL };
+  char *addenv[] = { rootenv, taskenv, mallopt, preload_env, NULL };
 
   ASSERT( snprintf( rootenv, ENVLEN, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
   ASSERT( snprintf( taskenv, ENVLEN, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
@@ -824,7 +824,7 @@ size_t pip_stack_size( void ) {
 
 int pip_is_coefd( int fd ) {
   int flags = fcntl( fd, F_GETFD );
-  return( flags > 0 && FD_CLOEXEC );
+  return( flags > 0 && ( flags & FD_CLOEXEC ) );
 }
 
 static void pip_close_on_exec( void ) {
@@ -841,14 +841,14 @@ static void pip_close_on_exec( void ) {
     int fd_dir = dirfd( dir );
     while( ( direntp = readdir( dir ) ) != NULL ) {
       if( direntp->d_name[0] != '.' &&
-	  ( fd = atoi( direntp->d_name ) ) >= 0 &&
+	  ( fd = strtol( direntp->d_name, NULL, 10 ) ) >= 0 &&
 	  fd != fd_dir &&
 	  pip_is_coefd( fd ) ) {
+	(void) close( fd );
+	DBGF( "FD:%d is closed (CLOEXEC)", fd );
 #ifdef DEBUG
 	pip_print_fd( fd );
 #endif
-	(void) close( fd );
-	DBGF( "<PID=%d> fd[%d] is closed (CLOEXEC)", pip_gettid(), fd );
       }
     }
     (void) closedir( dir );
@@ -974,6 +974,9 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_t *task) {
     err = ENOEXEC;
     goto error;
   }
+  if( ( err = pip_find_glibc_symbols( loaded, task ) ) ) {
+    goto error;
+  }
   if( ( err = pip_find_user_symbols( progp, loaded, task ) ) ) {
     goto error;
   }
@@ -984,15 +987,6 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_t *task) {
     goto error;
   }
   DBGF( "lmid:%d", (int) lmid );
-  /* load libc explicitly */
-  if( ( ld_glibc = pip_dlmopen( lmid, PIP_INSTALL_GLIBC, flags ) ) == NULL ) {
-    DBGF( "dlmopen(%s): %s", PIP_INSTALL_GLIBC, pip_dlerror() );
-    err = ENXIO;
-    goto error;
-  }
-  if( ( err = pip_find_glibc_symbols( ld_glibc, task ) ) ) {
-    goto error;
-  }
   /* call pip_init_task_implicitly */
   /*** we cannot call pip_ini_task_implicitly() directly here  ***/
   /*** the name space contexts of here and there are different ***/
@@ -1171,9 +1165,14 @@ static void pip_return_from_start_func( pip_task_t *task,
     }
     NEVER_REACH_HERE;
   }
-  if( task->hook_after != NULL &&
-      ( err = task->hook_after( task->hook_arg ) ) != 0 ) {
-    pip_err_mesg( "PIPID:%d after-hook returns %d", task->pipid, err );
+  if( task->hook_after != NULL ) {
+    char **env_save = environ;
+    environ = task->args.envvec.vec;
+    err = task->hook_after( task->hook_arg );
+    environ = env_save;
+    if( err ) {
+      pip_err_mesg( "PIPID:%d after-hook returns %d", task->pipid, err );
+    }
     if( extval == 0 ) extval = err;
   }
   pip_glibc_fin( &task->symbols );
@@ -1283,15 +1282,21 @@ static void *pip_do_spawn( void *thargs )  {
   /* let pip-gdb know */
   pip_gdbif_task_commit( self );
 
-  /* calling hook, if any */
-  if( before != NULL && ( err = before( hook_arg ) ) != 0 ) {
-    pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d",
-		   argv[0], before, err );
-    extval = err;
-  } else {
-    /* argv and/or envv might be changed in the hook function */
+  /* calling before hook, if any */
+  if( before != NULL ) {
+    char **env_save = environ;
+    environ = envv;
+    err = before( hook_arg );
+    args->envvec.vec = environ;
+    environ = env_save;
 
-    //(void) pip_init_glibc( &self->symbols, argv, envv, self->loaded );
+    if( err ) {
+      pip_warn_mesg( "try to spawn(%s), but the before hook at %p returns %d",
+		     argv[0], before, err );
+      extval = err;
+    }
+  }
+  if( !err ) {
     pip_glibc_init( &self->symbols, args );
     if( self->symbols.pip_init != NULL ) {
       err = self->symbols.pip_init( pip_root, self );
@@ -1465,10 +1470,17 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   pip_gdbif_task_new( task );
 
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
-    /* corebinding should take place before loading solibs,       */
-    /* hoping anon maps would be mapped onto the closer numa node */
+    /* corebinding should take place before loading solibs,     */
+    /* hoping anon maps would be mapped onto the same numa node */
+    char **envv_root = environ;
+    /* environ must be saved before loading user program and  */
+    /* set to the specified one. this is because ld-linux and */
+    /* .init functions may refer and alter it                 */
+    environ = args->envvec.vec;
     PIP_ACCUM( time_load_prog,
 	       ( err = pip_load_prog( progp, args, task ) ) == 0 );
+    args->envvec.vec = environ;
+    environ = envv_root;
     /* and of course, the corebinding must be undone */
     (void) pip_undo_corebind( 0, coreno, &cpuset );
   }
