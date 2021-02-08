@@ -1107,14 +1107,14 @@ static void pip_glibc_init( pip_symbols_t *symbols,
     DBGF( "&__libc_argv=%p", symbols->libc_argvp );
     *symbols->libc_argvp = args->argvec.vec;
   }
-  if( symbols->environ != NULL ) {
-    *symbols->environ = args->envvec.vec;	/* setting environment vars */
-  }
   if( symbols->prog != NULL ) {
     *symbols->prog = args->prog;
   }
   if( symbols->prog_full != NULL ) {
     *symbols->prog_full = args->prog_full;
+  }
+  if( symbols->environ != NULL ) {
+    *symbols->environ = args->envvec.vec;	/* setting environment vars */
   }
   if( symbols->ctype_init != NULL ) {
     DBGF( ">> __ctype_init@%p", symbols->ctype_init );
