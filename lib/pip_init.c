@@ -249,7 +249,7 @@ int pip_taski_str( char *p, size_t sz, pip_task_internal_t *taski ) {
   int 	n;
 
   if( taski == NULL ) {
-    n = snprintf( p, sz, "~" );
+    n = snprintf( p, sz, "-" );
   } else {
     if( TA(taski)->type == PIP_TYPE_NULL ) {
       n = snprintf( p, sz, "*" );

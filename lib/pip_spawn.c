@@ -519,14 +519,14 @@ static void pip_glibc_init( pip_symbols_t *symbols,
       DBGF( "&__libc_argv=%p", symbols->libc_argvp );
       *symbols->libc_argvp = args->argvec.vec;
     }
+    if( symbols->prog_full != NULL ) {
+      *symbols->prog_full = args->prog_full;
+    }
     if( symbols->environ != NULL ) {
       *symbols->environ = args->envvec.vec;	/* setting environment vars */
     }
     if( symbols->prog != NULL ) {
       *symbols->prog = args->prog;
-    }
-    if( symbols->prog_full != NULL ) {
-      *symbols->prog_full = args->prog_full;
     }
     if( symbols->ctype_init != NULL ) {
       DBGF( ">> __ctype_init@%p", symbols->ctype_init );
@@ -552,21 +552,36 @@ static void pip_glibc_init( pip_symbols_t *symbols,
   }
 }
 
+extern char **environ;
+
 static int pip_call_before_hook( pip_task_internal_t *taski ) {
   int err = 0;
-  if( MA(taski)->hook_before != NULL &&
-      ( err = MA(taski)->hook_before( MA(taski)->hook_arg ) ) != 0 ) {
-    pip_err_mesg( "PIPID:%d before-hook returns %d", TA(taski)->pipid, err );
+
+  if( MA(taski)->hook_before != NULL ) {
+    char **env_save = environ;
+    environ = MA(taski)->args.envvec.vec;
+    err = MA(taski)->hook_before( MA(taski)->hook_arg );
+    MA(taski)->args.envvec.vec = environ;
+    environ = env_save;
+    if( err ) {
+      pip_err_mesg( "PIPID:%d before-hook returns %d", TA(taski)->pipid, err );
+    }
   }
   return err;
 }
 
 int pip_call_after_hook( pip_task_internal_t *taski, int extval ) {
   int err = 0;
-  if( MA(taski)->hook_after != NULL &&
-      ( err = MA(taski)->hook_after( MA(taski)->hook_arg ) ) != 0 ) {
-    pip_err_mesg( "PIPID:%d after-hook returns %d", TA(taski)->pipid, err );
-    if( extval == 0 ) extval = err;
+  if( MA(taski)->hook_after != NULL ) {
+    char **env_save = environ;
+    environ = MA(taski)->args.envvec.vec;
+    err = MA(taski)->hook_after( MA(taski)->hook_arg );
+    MA(taski)->args.envvec.vec = environ;
+    environ = env_save;
+    if( err ) {
+      pip_err_mesg( "PIPID:%d after-hook returns %d", TA(taski)->pipid, err );
+      if( extval == 0 ) extval = err;
+    }
   }
   return extval;
 }
@@ -967,10 +982,14 @@ static int pip_do_task_spawn( pip_spawn_program_t *progp,
   pip_gdbif_task_new( task );
 
   if( ( err = pip_do_corebind( 0, coreno, &cpuset ) ) == 0 ) {
+    char **env_save = environ;
+    environ = args->envvec.vec;
     /* corebinding should take place before loading solibs,       */
     /* hoping anon maps would be mapped onto the closer numa node */
     PIP_ACCUM( time_load_prog,
 	       ( err = pip_load_prog( progp, args, task ) ) == 0 );
+    args->envvec.vec = environ;
+    environ = env_save;
     /* and of course, the corebinding must be undone */
     (void) pip_undo_corebind( 0, coreno, &cpuset );
   }
