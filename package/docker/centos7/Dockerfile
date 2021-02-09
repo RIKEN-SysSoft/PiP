@@ -1,4 +1,4 @@
-FROM centos:7.3.1611
+FROM centos:7
 
 LABEL maintainer="PiP - Process in Process <pip@ml.riken.jp>"
 RUN set -x && \
@@ -12,6 +12,7 @@ RUN set -x && \
 		diffstat \
 		doxygen \
 		elfutils \
+		expat-devel \
 		flex \
 		gcc \
 		gcc-c++ \
@@ -21,20 +22,29 @@ RUN set -x && \
 		git \
 		indent \
 		intltool \
+		libselinux-devel \
 		libtool \
 		make \
 		man-db \
+		mpfr-devel \
+		ncurses-devel \
 		patch \
 		patchutils \
 		rcs \
+		readline-devel \
 		redhat-rpm-config \
 		rpm-build \
+		rpm-devel \
 		rpm-sign \
-		systemtap && \
-	rpm -Uvh https://git.sys.r-ccs.riken.jp/PiP/package/el/7/noarch/pip-1/pip-release-2-0.noarch.rpm && \
-	yum install -y pip-glibc && \
-	yum install -y --setopt='tsflags=' pip pip-debuginfo && \
-	yum install -y pip-gdb && \
+		systemtap \
+		texinfo \
+		which \
+		xz-devel \
+		zlib-devel \
+		&& \
 	rm -rf /var/cache/yum/* && \
 	yum clean all && \
-	rm -f /tmp/ks-script-* /tmp/yum.log
+	rm -f /tmp/ks-script-* /tmp/yum.log && \
+	git clone https://github.com/RIKEN-SysSoft/PiP-pip && \
+	./PiP-pip/pip-pip --prefix /opt/process-in-process \
+		--yes --nosubdir --notest
