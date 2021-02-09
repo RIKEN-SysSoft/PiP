@@ -2,8 +2,8 @@ FROM centos:8
 
 LABEL maintainer="PiP - Process in Process <pip@ml.riken.jp>"
 RUN set -x && \
-	yum -y install yum-utils &&
-	yum-config-manager --enable powertools &&
+	yum -y install yum-utils && \
+	yum-config-manager --enable powertools && \
 	yum install -y \
 		bison \
 		byacc \
