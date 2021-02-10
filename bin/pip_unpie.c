@@ -23,11 +23,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  * $
  * $RIKEN_copyright: Riken Center for Computational Sceience (R-CCS),
- * System Software Development Team, 2016-2020
+ * System Software Development Team, 2016-2021
  * $
- * $PIP_VERSION: Version 2.0.0$
+ * $PIP_VERSION: Version 3.0.0$
  *
- * $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
+ * $Author: Atsushi Hori (R-CCS)
+ * Query:   procinproc-info+noreply@googlegroups.com
+ * User ML: procinproc-users+noreply@googlegroups.com
  * $
  */
 

@@ -304,9 +304,15 @@ specified number will be stopped.  If the number is minus, then all
 PiP tasks will be stopped at the very beginning. Do not forget to
 compile your programs with a debug option.
 
-# Mailing List
+# Mailing Lists
 
-pip@ml.riken.jp
+If you have any questions or comments on PiP, send e-mails to;
+
+    procinproc-info+noreply@googlegroups.com
+
+Or, join our PiP users' mailing list;
+
+    procinproc-users+noreply@googlegroups.com
 
 # Publications
 
