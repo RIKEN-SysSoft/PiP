@@ -29,7 +29,9 @@
 # $
 # $PIP_VERSION: Version 2.0.0$
 #
-# $Author: Atsushi Hori (R-CCS) mailto: ahori@riken.jp or ahori@me.com
+# $Author: Atsushi Hori (R-CCS)
+# Query:   procinproc-info+noreply@googlegroups.com
+# User ML: procinproc-users+noreply@googlegroups.com
 # $
 
 "pips: Show status of runnning PiP tasks"
