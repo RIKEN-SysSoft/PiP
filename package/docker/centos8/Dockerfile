@@ -1,6 +1,6 @@
 FROM centos:8
 
-LABEL maintainer="PiP - Process in Process <pip@ml.riken.jp>"
+LABEL maintainer="PiP - Process in Process <procinproc-info@googlegroups.com>"
 RUN set -x && \
 	yum -y install yum-utils && \
 	yum-config-manager --enable powertools && \
