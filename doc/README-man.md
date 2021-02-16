@@ -308,11 +308,11 @@ compile your programs with a debug option.
 
 If you have any questions or comments on PiP, send e-mails to;
 
-    procinproc-info+noreply@googlegroups.com
+    procinproc-info@googlegroups.com
 
 Or, join our PiP users' mailing list;
 
-    procinproc-users+noreply@googlegroups.com
+    procinproc-users@googlegroups.com
 
 # Publications
 
