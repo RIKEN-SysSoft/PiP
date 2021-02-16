@@ -27,8 +27,8 @@
 # $PIP_VERSION: Version 3.0.0$
 #
 # $Author: Atsushi Hori (R-CCS)
-# Query:   procinproc-info+noreply@googlegroups.com
-# User ML: procinproc-users+noreply@googlegroups.com
+# Query:   procinproc-info@googlegroups.com
+# User ML: procinproc-users@googlegroups.com
 # $
 
 top_builddir = .
