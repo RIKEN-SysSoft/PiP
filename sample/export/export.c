@@ -42,15 +42,16 @@ struct dat {
   double		data[NDATA];
 } data;
 
+double output = 0.0;
+
 int main( int argc, char **argv ) {
   void *export = (void*) &data;
-  double output = 0.0;
   int  i, ntasks, pipid;
 
-  ntasks = 10;
-  pthread_barrier_init( &data.barrier, NULL, ntasks + 1 );
+  ntasks = 8;
   pip_init( &pipid, &ntasks, (void*) &export, 0 );
   if( pipid == PIP_PIPID_ROOT ) {
+    pthread_barrier_init( &data.barrier, NULL, ntasks + 1 );
     for( i=0; i<NDATA; i++ ) data.data[i] = (double) i;
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
@@ -64,7 +65,7 @@ int main( int argc, char **argv ) {
       output += *((double*)(import));
     }
     pthread_barrier_wait( &data.barrier );
-    for( i=0; i<ntasks; i++ ) wait( NULL );
+    for( i=0; i<ntasks; i++ ) pip_wait( i, NULL );
     printf( "output = %g\n", output );
 
   } else {	/* PIP child task */
@@ -77,7 +78,7 @@ int main( int argc, char **argv ) {
     printf( "PIPID:%d  data[%d-%d]\n", pipid, start, end-1 );
     for( i=start; i<end; i++ ) {
       /* do computation on imported data */
-      output += input[i];;
+      output += input[i];
     }
     /* note that any stack variables can also be exported */
     pip_export( (void*) &output );
