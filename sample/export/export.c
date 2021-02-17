@@ -33,8 +33,7 @@
  * $
  */
 
-#include <pip.h>
-#include <pip_blt.h>
+#include <pip/pip.h>
 
 #define NDATA		1000000
 
@@ -43,15 +42,16 @@ struct dat {
   double	data[NDATA];
 } data;
 
+double output = 0.0;
+
 int main( int argc, char **argv ) {
   void *export = (void*) &data;
-  double output = 0.0;
   int  i, ntasks, pipid;
 
   ntasks = 8;
-  pip_barrier_init( &data.barrier, ntasks + 1 );
   pip_init( &pipid, &ntasks, (void*) &export, 0 );
   if( pipid == PIP_PIPID_ROOT ) {
+    pip_barrier_init( &data.barrier, ntasks + 1 );
     for( i=0; i<NDATA; i++ ) data.data[i] = (double) i;
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
