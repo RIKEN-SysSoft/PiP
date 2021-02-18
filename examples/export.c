@@ -35,14 +35,26 @@
 
 #include <pip/pip.h>
 
+/* Although PiP provides the barrier feature */
+/* pthread_barrier also works */
+#ifdef PTHREAD_BARRIER
+#define BARRIER_T		pthread_barrier_t
+#define BARRIER_INIT(B,C)	pthread_barrier_init(B,NULL,C)
+#define BARRIER_WAIT		pthread_barrier_wait
+#else
+#define BARRIER_T		pip_barrier_t
+#define BARRIER_INIT(B,C)	pip_barrier_init(B,C)
+#define BARRIER_WAIT		pip_barrier_wait
+#endif
+
 #define NDATA		1000000
 
 struct dat {
-  pthread_barrier_t	barrier;
-  double		data[NDATA];
+  BARRIER_T	barrier;
+  float	data[NDATA];
 } data;
 
-double output = 0.0;
+float output = 0.0;
 
 int main( int argc, char **argv ) {
   void *export = (void*) &data;
@@ -51,41 +63,45 @@ int main( int argc, char **argv ) {
   ntasks = 8;
   pip_init( &pipid, &ntasks, (void*) &export, 0 );
   if( pipid == PIP_PIPID_ROOT ) {
-    pthread_barrier_init( &data.barrier, NULL, ntasks + 1 );
-    for( i=0; i<NDATA; i++ ) data.data[i] = (double) i;
+    /* initialize */
+    BARRIER_INIT( &data.barrier, ntasks + 1 );
+    for( i=0; i<NDATA;  i++ ) data.data[i] = (float) i;
+    /* spawning PiP tasks */
     for( i=0; i<ntasks; i++ ) {
       pipid = i;
       pip_spawn( argv[0], argv, NULL, i, &pipid, NULL, NULL, NULL );
     }
-    pthread_barrier_wait( &data.barrier );
+    /* wait for the local summations */
+    BARRIER_WAIT( &data.barrier );
+    /* gather individual result */
     for( i=0; i<ntasks; i++ ) {
       void *import;
-      pip_import( i, &import );
-      /* gather individual result */
-      output += *((double*)(import));
+      pip_named_import( i, &import, "data" );
+      output += *((float*)(import));
     }
-    pthread_barrier_wait( &data.barrier );
+    BARRIER_WAIT( &data.barrier );
+    /* wait for PiP task terminations */
     for( i=0; i<ntasks; i++ ) pip_wait( i, NULL );
-    printf( "output = %g\n", output );
+    printf( "Grand total = %g\n", output );
 
   } else {	/* PIP child task */
     struct dat* import = (struct dat*) export;
-    double *input = import->data;
+    float *input = import->data;
     int start, end;
 
     start = ( NDATA / ntasks ) * pipid;
     end = start + ( NDATA / ntasks );
     printf( "PIPID:%d  data[%d-%d]\n", pipid, start, end-1 );
+    /* do computation on imported data */
     for( i=start; i<end; i++ ) {
-      /* do computation on imported data */
       output += input[i];
     }
-    /* note that any stack variables can also be exported */
-    pip_export( (void*) &output );
+    /* export the local sum */
+    pip_named_export( (void*) &output, "data" );
 
-    pthread_barrier_wait( &import->barrier );
+    BARRIER_WAIT( &import->barrier );
     /* here, the main task gathers child data */
-    pthread_barrier_wait( &import->barrier );
+    BARRIER_WAIT( &import->barrier );
   }
   pip_fin();
   return 0;

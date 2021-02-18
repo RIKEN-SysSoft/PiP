@@ -32,23 +32,19 @@
 # User ML: procinproc-users@googlegroups.com
 # $
 
-top_builddir = ../..
+top_builddir = ..
 top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS     = export.c
-PROGRAMS = export
-
+SRCS     = hello.c export.c
+PROGRAMS = hello export
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
 
 PIPCC = $(top_srcdir)/bin/pipcc
 
-%: %.c Makefile
-	$(PIPCC)  $< -o $@
-
-post-clean-hook:
-	$(RM) *.E *.log
+%: %.c $(SRCS) Makefile
+	$(PIPCC) $< -o $@

@@ -35,10 +35,6 @@
 
 #include <pip/pip.h>
 
-#ifdef PRINT_MAPS
-#include <pip_debug.h>
-#endif
-
 int pipid, ntasks;
 
 int main( int argc, char **argv ) {
