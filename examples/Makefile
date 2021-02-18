@@ -32,14 +32,14 @@
 # User ML: procinproc-users@googlegroups.com
 # $
 
-top_builddir = ../..
+top_builddir = ..
 top_srcdir = $(top_builddir)
 srcdir = .
 
 include $(top_srcdir)/build/var.mk
 
-SRCS     = hello.c
-PROGRAMS = hello
+SRCS     = hello.c export.c
+PROGRAMS = hello export
 PROGRAMS_TO_INSTALL = # nothing
 
 include $(top_srcdir)/build/rule.mk
