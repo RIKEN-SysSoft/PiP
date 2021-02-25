@@ -227,7 +227,7 @@ if ${version} || ${where} || ${which}; then
 	echo "${PIP_BINDIR}/${cmd}"
     fi
     if ${which}; then
-	exec which ${COMPILER}
+	type -p ${COMPILER}
     fi
     exit 0
 fi
@@ -265,9 +265,9 @@ PIP_ROOT_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX}"
 PIP_ROOT_LDLIBS="${PIP_COMMON_LDLIBS}"
 
 PIP_TASK_CFLAGS="${PIP_COMMON_CFLAGS} ${FLAG_FPIC}"
-# LDLINUX must be specified, if any, even with PiP tasks
+# LDLINUX must be specified, if any, even for PiP tasks
 # because they should be able to run as normal programs, not as PiP tasks.
-# they are compiled with the patched header files
+# they are compiled with the patched GLIBC header files
 # so they must be "linked" with the pacthed ld-linux.
 PIP_TASK_LDFLAGS="${PIP_COMMON_LDFLAGS} ${GLIBC_LDLINUX} ${FLAG_PIE} ${FLAG_RDYN}"
 PIP_TASK_LDLIBS="${PIP_COMMON_LDLIBS}"
@@ -300,24 +300,23 @@ PIP_DEFS="-DPIPCC \
 -DPIP_VERSION_MINOR=${PIP_VERSION_MINOR} \
 -DPIP_VERSION_SUBMINOR=${PIP_VERSION_SUBMINOR}"
 
-if ${ccopts}; then
-    if ${is_linking}; then
-	echo ${PIP_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
-	    ${FLAG_PTHREAD} ${opts}
-    else
-	echo ${PIP_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
-    fi
-    exit 0
-fi
-if ${cflags} || ${lflags}; then
-    # note that ${opts} will not be printed, unlike --ccopts (above)
-    if ${cflags} && ${lflags}; then
-	echo ${PIP_DEFS}  ${PIP_CFLAGS} ${PIP_LDFLAGS} \
-	     ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
+CFLAGS="${PIP_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD}"
+LFLAGS="${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}"
+CLFLAGS="${PIP_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}"
+
+if ${ccopts} || ${cflags} || ${lflags}; then
+    if ${ccopts}; then
+	if ${is_linking}; then
+	    echo ${CLFLAGS} ${opts}
+	else
+	    echo ${CFLAGS} ${opts}
+	fi
+    elif ${cflags} && ${lflags}; then
+	echo ${CLFLAGS}
     elif ${cflags}; then
-	echo ${PIP_DEFS}  ${PIP_CFLAGS} ${FLAG_PTHREAD}
+	echo ${CFLAGS}
     else
-	echo ${PIP_LDFLAGS} ${PIP_LDLIBS} ${FLAG_PTHREAD}
+	echo ${LFLAGS}
     fi
     exit 0
 fi
@@ -327,15 +326,16 @@ if [ x"${target}" == x ]; then
 fi
 
 if ${is_linking}; then
-    do_run ${COMPILER} ${PIP_DEFS} ${PIP_CFLAGS} ${PIP_LDFLAGS} ${PIP_LDLIBS} \
-	   ${FLAG_PTHREAD} ${opts}
-    if [ -x ${PIP_BINDIR}/pip_unpie ]; then
-	# pip_unpie is the program to unflag the DF_1_PIE flag in ELF dynamic section
-	# this is because PIE cannot be dl(m)open()ed since centos/redhat 8
-	${PIP_BINDIR}/pip_unpie ${target}
-    else
-	echo >&2 "${cmd} Warning: Unable to find ${PIP_BINDIR}/pip_unpie"
+    do_run ${COMPILER} ${CLFLAGS} ${opts}
+    if [ -x ${target} ]; then
+	if [ -x ${PIP_BINDIR}/pip_unpie ]; then
+	    # pip_unpie is the program to unflag the DF_1_PIE flag in ELF dynamic section
+	    # this is because PIE cannot be dl(m)open()ed since centos/redhat 8
+	    ${PIP_BINDIR}/pip_unpie ${target}
+	else
+	    echo >&2 "${cmd} Warning: Unable to find ${PIP_BINDIR}/pip_unpie"
+	fi
     fi
 else
-    do_exec ${COMPILER} ${PIP_DEFS} ${PIP_CFLAGS} ${FLAG_PTHREAD} ${opts}
+    do_exec ${COMPILER} ${CFLAGS} ${opts}
 fi
