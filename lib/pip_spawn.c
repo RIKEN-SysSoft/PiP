@@ -549,9 +549,11 @@ static void pip_glibc_init( pip_symbols_t *symbols,
 #endif
   }
 #endif
-  if( symbols->malloc_hook != 0x0 ) { /* Kaiming Patch */
+  /*** do we really need this? 
+  if( symbols->malloc_hook != 0x0 ) {
     *symbols->malloc_hook = 0x0;
   }
+  ***/
 }
 
 extern char **environ;
