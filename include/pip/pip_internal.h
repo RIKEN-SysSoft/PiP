@@ -312,13 +312,13 @@ INLINE void pip_sem_init( pip_sem_t *sem ) {
 INLINE void pip_sem_post( pip_sem_t *sem ) {
   errno = 0;
   (void) sem_post( sem );
-  ASSERT( errno );
+  ASSERT( errno == 0 );
 }
 
 INLINE void pip_sem_wait( pip_sem_t *sem ) {
   errno = 0;
   (void) sem_wait( sem );
-  ASSERT( errno !=0 && errno != EINTR );
+  ASSERT( errno == 0 || errno == EINTR );
 }
 
 INLINE void pip_sem_fin( pip_sem_t *sem ) {

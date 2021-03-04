@@ -193,16 +193,8 @@ extern int pip_debug_env( void );
 #endif	/* !DEBUG */
 
 #define ASSERT(X)							\
-  if(X){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
+  if(!(X)){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);		\
     pip_abort(); } else { DBGF( "{%s} -- Assertion OK", #X ); }
-
-#define CHECK(X)							\
-  if(X){NL_EMSG("{%s} Check FAILED !!!!!!\n",#X);			\
-    pip_abort(); } else { DBGF( "{%s} -- Check OK", #X ); }
-
-#define ASSERTS(X)							\
-  if(X) { NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);			\
-	  pip_debug_info(); pip_abort(); }
 
 #define CHECKS(X)							\
   if(X) { NL_EMSG("{%s} Check FAILED !!!!!!\n",#X);			\

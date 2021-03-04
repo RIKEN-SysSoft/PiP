@@ -63,8 +63,8 @@ static void pip_unprotect_page( void *addr ) {
   void	 *sta, *end;
   void   *page;
 
-  ASSERT( pgsz <= 0 );
-  CHECK( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) == NULL );
+  ASSERT( pgsz > 0 );
+  ASSERT( ( fp_maps = fopen( "/proc/self/maps", "r" ) ) != NULL );
 
   page = (void*) ( (uintptr_t)addr & ~( pgsz - 1 ) );
 
@@ -73,7 +73,7 @@ static void pip_unprotect_page( void *addr ) {
   while( ( l = getline( &line, &sz, fp_maps ) ) > 0 ) {
     //DBGF( "l:%d sz:%d line(%p):%s", (int)l, (int)sz, line, line );
     if( l == sz ) {
-      ASSERT( ( line = (char*)realloc(line,l+1) ) == NULL );
+      ASSERT( ( line = (char*)realloc(line,l+1) ) != NULL );
     }
     line[l] = '\0';
     if( sscanf( line, "%p-%p %4s", &sta, &end, perm ) == 3 ) {
@@ -81,7 +81,7 @@ static void pip_unprotect_page( void *addr ) {
 	if( perm[0] == 'r' && perm[1] == 'w' ) {
 	  /* the target page is already readable and writable */
 	} else {
-	  ASSERT( mprotect( page, (size_t) pgsz, PROT_READ | PROT_WRITE ) );
+	  ASSERT( mprotect( page, (size_t) pgsz, PROT_READ | PROT_WRITE ) == 0 );
 	}
 	break;
       }

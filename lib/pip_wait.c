@@ -248,7 +248,7 @@ static int pip_blocking_waitany( void ) {
     pipid = pip_nonblocking_waitany();
     DBGF( "pip_nonblocking_waitany() = %d", pipid );
     if( pipid != PIP_PIPID_NULL ) break;
-    ASSERT( pip_signal_wait( SIGCHLD ) );
+    ASSERT( pip_signal_wait( SIGCHLD ) == 0 );
   }
   return( pipid );
 }
@@ -277,7 +277,7 @@ int pip_wait( int pipid, int *statusp ) {
 	pip_finalize_task( task );
 	break;
       }
-      ASSERT( pip_signal_wait( SIGCHLD ) );
+      ASSERT( pip_signal_wait( SIGCHLD ) == 0 );
     }
   }
   RETURN( err );

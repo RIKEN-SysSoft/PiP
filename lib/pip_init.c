@@ -459,12 +459,12 @@ static void pip_set_gdb_signal( sigset_t *sigs,
 
   if( pip_strncasecmp( "ALL", token, len ) == 0 ) {
     for( i=0; sigtab[i].name!=NULL; i++ ) {
-      ASSERT( sigman( sigs, sigtab[i].signum ) );
+      ASSERT( sigman( sigs, sigtab[i].signum ) == 0 );
     }
   } else {
     for( i=0; sigtab[i].name!=NULL; i++ ) {
       if( pip_strncasecmp( sigtab[i].name, token, len ) == 0 ) {
-	ASSERT( sigman( sigs, sigtab[i].signum ) );
+	ASSERT( sigman( sigs, sigtab[i].signum ) == 0 );
 	goto done;
       }
     }
@@ -490,8 +490,8 @@ static void pip_set_gdb_sigset( char *env, sigset_t *sigs ) {
   if( i > 0 ) {
     pip_set_gdb_signal( sigs, env, i, sigaddset );
   } else {
-    ASSERT( sigaddset( sigs, SIGHUP  ) );
-    ASSERT( sigaddset( sigs, SIGSEGV ) );
+    ASSERT( sigaddset( sigs, SIGHUP  ) == 0 );
+    ASSERT( sigaddset( sigs, SIGSEGV ) == 0 );
   }
   while( 1 ) {
     int  sign, len;
@@ -529,8 +529,8 @@ void pip_page_alloc( size_t sz, void **allocp ) {
     pgsz = pip_root->page_size;
   }
   sz = ROUNDUP( sz, pgsz );
-  CHECKS( posix_memalign( allocp, pgsz, sz ) != 0 &&
-	  *allocp == NULL );
+  ASSERT( posix_memalign( allocp, pgsz, sz ) == 0 &&
+	  *allocp != NULL );
 }
 
 #define PIP_MINSIGSTKSZ 	(MINSIGSTKSZ*2)
@@ -547,8 +547,8 @@ void pip_debug_on_exceptions( pip_task_t *task ) {
 
   if( ( path = pip_root->envs.gdb_path ) != NULL &&
       *path != '\0' ) {
-    ASSERT( sigemptyset( &sigs     ) );
-    ASSERT( sigemptyset( &sigempty ) );
+    ASSERT( sigemptyset( &sigs     ) == 0 );
+    ASSERT( sigemptyset( &sigempty ) == 0 );
 
     if( !pip_is_threaded_() || pip_isa_root() ) {
       if( access( path, X_OK ) != 0 ) {
@@ -562,8 +562,8 @@ void pip_debug_on_exceptions( pip_task_t *task ) {
 	if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	  pip_set_gdb_sigset( signals, &sigs );
 	} else {		/* default signals */
-	  ASSERT( sigaddset( &sigs, SIGHUP  ) );
-	  ASSERT( sigaddset( &sigs, SIGSEGV ) );
+	  ASSERT( sigaddset( &sigs, SIGHUP  ) == 0 );
+	  ASSERT( sigaddset( &sigs, SIGSEGV ) == 0 );
 	}
 	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) != 0 ) {
 	  /* FIXME: since the sigaltstack is allocated  */
@@ -576,7 +576,7 @@ void pip_debug_on_exceptions( pip_task_t *task ) {
 	  memset( &sigstack, 0, sizeof( sigstack ) );
 	  sigstack.ss_sp   = altstack;
 	  sigstack.ss_size = PIP_MINSIGSTKSZ;
-	  ASSERT( sigaltstack( &sigstack, NULL ) );
+	  ASSERT( sigaltstack( &sigstack, NULL ) == 0 );
 
 	  memset( &sigact, 0, sizeof( sigact ) );
 	  sigact.sa_sigaction = pip_exception_handler;
@@ -586,7 +586,7 @@ void pip_debug_on_exceptions( pip_task_t *task ) {
 	  for( i=SIGHUP; i<=SIGUSR2; i++ ) {
 	    if( sigismember( &sigs, i ) ) {
 	      DBGF( "PiP-gdb on signal: %s ", strsignal(i) );
-	      ASSERT( sigaction( i, &sigact, NULL ) );
+	      ASSERT( sigaction( i, &sigact, NULL ) == 0 );
 	    }
 	  }
 	}
@@ -597,12 +597,12 @@ void pip_debug_on_exceptions( pip_task_t *task ) {
       if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	pip_set_gdb_sigset( signals, &sigs );
 	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) ) {
-	  ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
+	  ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) == 0 );
 	}
       } else {			/* default signals */
-	ASSERT( sigaddset( &sigs, SIGHUP  ) );
-	ASSERT( sigaddset( &sigs, SIGSEGV ) );
-	ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
+	ASSERT( sigaddset( &sigs, SIGHUP  ) == 0 );
+	ASSERT( sigaddset( &sigs, SIGSEGV ) == 0 );
+	ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) == 0 );
       }
     }
   }

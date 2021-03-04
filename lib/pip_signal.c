@@ -66,9 +66,9 @@ int pip_signal_wait( int signal ) {
   sigset_t 	sigset;
   int 		sig, err = 0;
 
-  ASSERT( sigemptyset( &sigset ) );
+  ASSERT( sigemptyset( &sigset ) == 0 );
   if( pip_is_threaded_() ) {
-    ASSERT( sigaddset( &sigset, signal ) );
+    ASSERT( sigaddset( &sigset, signal ) == 0 );
     errno = 0;
     sigwait( &sigset, &sig );
     err = errno;
