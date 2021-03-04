@@ -196,10 +196,6 @@ extern int pip_debug_env( void );
   if(!(X)){NL_EMSG("{%s} Assertion FAILED !!!!!!\n",#X);		\
     pip_abort(); } else { DBGF( "{%s} -- Assertion OK", #X ); }
 
-#define CHECKS(X)							\
-  if(X) { NL_EMSG("{%s} Check FAILED !!!!!!\n",#X);			\
-	  pip_debug_info(); pip_abort(); }
-
 #define NEVER_REACH_HERE						\
   do { NL_EMSG( "Should never reach here !!!!!!\n" ); } while(0)
 

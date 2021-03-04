@@ -299,9 +299,12 @@ if flag_debug:
 def byte_to_char( byte_str ):
     "convert byte string to char (for compatibility between Python2 and 3)"
     try:
-        ch_str = byte_str.decode() # python 3
-    except:
-        ch_str = byte_str.encode() # python 2
+        if byte_str == '' or byte_str[0] in 'abc':
+            ch_str = byte_str   # python2
+        else:
+            ch_str = byte_str
+    except:                     # python3
+        ch_str = byte_str.decode()
     return ch_str
 
 def get_command( psline ):
