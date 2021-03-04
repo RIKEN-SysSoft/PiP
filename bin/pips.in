@@ -122,6 +122,8 @@ SIGTAB = [ ( 'HUP',   signal.SIGHUP  ), # 1
 def check_signal( sig ):
     "check if the specified signal is valid or not"
     global SIGTAB
+    if sig is None:
+        return None
     try:
         signum = int( sig )
         if signum < 0 or signum > signal.NSIG:
@@ -228,12 +230,12 @@ if len(sys.argv) > 0:
         elif opt in [ '--kill', '-k' ]:
             flag_kill = True
         elif opt in [ '--signal', '-s' ]:
-            if killsig is not None:
-                print_usage( 'Multiple signal options' )
-            if is_skip( nxt ) or is_option( nxt ):
+            if nxt is None or is_skip( nxt ) or is_option( nxt ):
                 print_usage( 'No signal specified' )
+            if killsig is not None: # killsig is already set
+                print_usage( 'Multiple signal options' )
             killsig = check_signal( nxt )
-            if killsig == None:
+            if killsig is None:
                 print_usage( 'Invalid signal' )
             idx += 1
         elif opt in [ '--ps', '-P' ]:
@@ -437,6 +439,7 @@ def read_ps_output( fstream ):
         if header is None:
             header = psl
         else:
+            print( psl )
             cmd = get_command( psl )
             if isa_piproot( cmd ) or isa_piptask( cmd ):
                 piplines += [ psl ]
