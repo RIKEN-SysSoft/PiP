@@ -953,7 +953,6 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_t *task) {
   char		*libpipinit = NULL;
   pip_init_t	impinit     = NULL;
   void 		*loaded     = NULL;
-  void		*ld_glibc   = NULL;
   void 		*ld_pipinit = NULL;
   int 		flags = RTLD_NOW;
   /* RTLD_GLOBAL is NOT accepted and dlmopen() returns EINVAL */
@@ -1008,7 +1007,6 @@ pip_load_dsos( pip_spawn_program_t *progp, pip_task_t *task) {
 
  error:
   if( loaded     != NULL ) pip_dlclose( loaded    );
-  if( ld_glibc   != NULL ) pip_dlclose( ld_glibc  );
   if( ld_pipinit != NULL ) pip_dlclose( ld_pipinit);
   RETURN( err );
 }
@@ -1690,7 +1688,7 @@ int pip_get_pid_( int pipid, pid_t *pidp ) {
   pid_t	pid;
   int 	err = 0;
 
-  if( pip_root->opts && PIP_MODE_PROCESS ) {
+  if( pip_root->opts & PIP_MODE_PROCESS ) {
     /* only valid with the "process" execution mode */
     if( ( err = pip_check_pipid( &pipid ) ) == 0 ) {
       if( pipid == PIP_PIPID_ROOT ) {

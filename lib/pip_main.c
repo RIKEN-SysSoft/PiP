@@ -113,8 +113,11 @@ static int parse_cmdline( char ***argvp ) {
   size_t szs = ARGSTR_SZ, sz;
   int fd, argc, i, c;
 
-  if( ( fd = open( procfs, O_RDONLY ) ) < 0 ) return -1;
   if( ( argstr = (char*) malloc( szs ) ) == NULL ) return -1;
+  if( ( fd = open( procfs, O_RDONLY ) ) < 0 ) {
+    free( argstr );
+    return -1;
+  }
   memset( argstr, 0, szs );
   while( 1 ) {
     if( ( sz = read( fd, argstr, szs ) ) < szs ) break;
@@ -137,7 +140,10 @@ static int parse_cmdline( char ***argvp ) {
     if( argstr[i] == '\0' ) argc++;
   }
   argvec = (char**) malloc( sizeof(char*) * ( argc + 1 ) );
-  if( argvec == NULL ) return -1;
+  if( argvec == NULL ) {
+    free( argstr );
+    return -1;
+  }
   for( c=0, i=0; c<argc; c++ ) {
     argvec[c] = &argstr[i];
     for( ; argstr[i]!='\0'; i++ );
