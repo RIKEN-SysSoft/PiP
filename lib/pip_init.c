@@ -534,12 +534,12 @@ static void pip_set_gdb_signal( sigset_t *sigs,
 
   if( pip_strncasecmp( "ALL", token, len ) == 0 ) {
     for( i=0; sigtab[i].name!=NULL; i++ ) {
-      ASSERTS( sigman( sigs, sigtab[i].signum ) );
+      ASSERT( sigman( sigs, sigtab[i].signum ) == 0 );
     }
   } else {
     for( i=0; sigtab[i].name!=NULL; i++ ) {
       if( pip_strncasecmp( sigtab[i].name, token, len ) == 0 ) {
-	ASSERTS( sigman( sigs, sigtab[i].signum ) );
+	ASSERT( sigman( sigs, sigtab[i].signum ) == 0 );
 	goto done;
       }
     }
@@ -564,8 +564,8 @@ static void pip_set_gdb_sigset( char *env, sigset_t *sigs ) {
   if( i > 0 ) {
     pip_set_gdb_signal( sigs, env, i, sigaddset );
   } else {
-    ASSERTS( sigaddset( sigs, SIGHUP  ) );
-    ASSERTS( sigaddset( sigs, SIGSEGV ) );
+    ASSERT( sigaddset( sigs, SIGHUP  ) == 0 );
+    ASSERT( sigaddset( sigs, SIGSEGV ) == 0 );
   }
   while( 1 ) {
     int  sign, len;
@@ -603,8 +603,8 @@ void pip_page_alloc( size_t sz, void **allocp ) {
     pgsz = pip_root->page_size;
   }
   sz = ROUNDUP( sz, pgsz );
-  ASSERTS( posix_memalign( allocp, pgsz, sz ) != 0 &&
-	  *allocp == NULL );
+  ASSERT( posix_memalign( allocp, pgsz, sz ) == 0 &&
+	  *allocp != NULL );
 }
 
 #define PIP_MINSIGSTKSZ 	(MINSIGSTKSZ*2)
@@ -621,8 +621,8 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 
   if( ( path = pip_root->envs.gdb_path ) != NULL &&
       *path != '\0' ) {
-    ASSERTS( sigemptyset( &sigs     ) );
-    ASSERTS( sigemptyset( &sigempty ) );
+    ASSERT( sigemptyset( &sigs     ) == 0 );
+    ASSERT( sigemptyset( &sigempty ) == 0 );
 
     if( !pip_is_threaded_() || pip_isa_root() ) {
       if( access( path, X_OK ) != 0 ) {
@@ -636,8 +636,8 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 	if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	  pip_set_gdb_sigset( signals, &sigs );
 	} else {		/* default signals */
-	  ASSERTS( sigaddset( &sigs, SIGHUP  ) );
-	  ASSERTS( sigaddset( &sigs, SIGSEGV ) );
+	  ASSERT( sigaddset( &sigs, SIGHUP  ) == 0 );
+	  ASSERT( sigaddset( &sigs, SIGSEGV ) == 0 );
 	}
 	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) != 0 ) {
 	  /* FIXME: since the sigaltstack is allocated  */
@@ -650,7 +650,7 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
 	  memset( &sigstack, 0, sizeof( sigstack ) );
 	  sigstack.ss_sp   = altstack;
 	  sigstack.ss_size = PIP_MINSIGSTKSZ;
-	  ASSERTS( sigaltstack( &sigstack, NULL ) );
+	  ASSERT( sigaltstack( &sigstack, NULL ) == 0 );
 
 	  memset( &sigact, 0, sizeof( sigact ) );
 	  sigact.sa_sigaction = pip_exception_handler;
@@ -671,12 +671,12 @@ void pip_debug_on_exceptions( pip_task_internal_t *taski ) {
       if( ( signals = pip_root->envs.gdb_signals ) != NULL ) {
 	pip_set_gdb_sigset( signals, &sigs );
 	if( memcmp( &sigs, &sigempty, sizeof(sigs) ) ) {
-	  ASSERTS( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
+	  ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) == 0 );
 	}
       } else {			/* default signals */
-	ASSERTS( sigaddset( &sigs, SIGHUP  ) );
-	ASSERTS( sigaddset( &sigs, SIGSEGV ) );
-	ASSERTS( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) );
+	ASSERT( sigaddset( &sigs, SIGHUP  ) == 0 );
+	ASSERT( sigaddset( &sigs, SIGSEGV ) == 0 );
+	ASSERT( pthread_sigmask( SIG_BLOCK, &sigs, NULL ) == 0 );
       }
     }
   }

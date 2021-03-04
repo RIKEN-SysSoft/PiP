@@ -101,8 +101,8 @@ INLINE int pip_takein_ood_task( pip_task_internal_t *schedi ) {
 void pip_terminate_task( pip_task_internal_t *self ) {
   ENTERF( "PIPID:%d  tid:%d", TA(self)->pipid, AA(self)->tid );
 
-  ASSERTD( (pid_t) AA(self)->tid != pip_gettid() );
-  ASSERTD( TA(self)->schedq_len != 0 );
+  ASSERT( (pid_t) AA(self)->tid == pip_gettid() );
+  ASSERT( TA(self)->schedq_len == 0 );
 
   /* call fflush() in the target context to flush out std* messages */
   if( MA(self)->symbols.libc_fflush != NULL ) {
@@ -118,7 +118,7 @@ void pip_terminate_task( pip_task_internal_t *self ) {
   if( pip_is_threaded_() ) {	/* thread mode */
     AA(self)->flag_sigchld = 1;
     /* simulate process behavior */
-    ASSERT( pip_raise_signal( pip_root->task_root, SIGCHLD ) );
+    ASSERT( pip_raise_signal( pip_root->task_root, SIGCHLD ) == 0 );
     DBGF( "calling pthread_exit()" );
     if( MA(self)->symbols.pthread_exit != NULL ) {
       MA(self)->symbols.pthread_exit( NULL );
@@ -247,13 +247,13 @@ static pip_task_internal_t *pip_schedq_next( pip_task_internal_t *schedi ) {
   pip_task_internal_t 	*nexti;
   pip_task_t		*next;
 
-  ASSERTD( schedi == NULL );
+  ASSERTD( schedi != NULL );
   DBGF( "sched-PIPID:%d", TA(schedi)->pipid );
   if( pip_takein_ood_task( schedi ) ) {
     next = PIP_TASKQ_NEXT( &TA(schedi)->schedq );
     PIP_TASKQ_DEQ( next );
     TA(schedi)->schedq_len --;
-    ASSERTD( TA(schedi)->schedq_len < 0 );
+    ASSERTD( TA(schedi)->schedq_len >= 0 );
     nexti = PIP_TASKI( next );
     DBGF( "next-PIPID:%d", TA(nexti)->pipid );
   } else {
@@ -313,7 +313,7 @@ void pip_suspend_and_enqueue_generic( pip_task_internal_t *taski,
   pip_task_internal_t	*nexti  = pip_schedq_next( schedi );
   struct deffered_enqueue def_enqueue;
 
-  ASSERTD( schedi == NULL );
+  ASSERTD( schedi != NULL );
   PIP_SUSPEND( taski );
   pip_atomic_fetch_and_add( &TA(schedi)->refcount, 1 );
   DBGF( "Sched %d  RFC:%d", TA(schedi)->pipid, (int)TA(schedi)->refcount );
@@ -353,7 +353,7 @@ void pip_do_exit( pip_task_internal_t *taski ) {
   ENTERF( "PIPID:%d", TA(taski)->pipid );
 
  try_again:
-  CHECKS( ( schedi = TA(taski)->task_sched ) == NULL );
+  ASSERT( ( schedi = TA(taski)->task_sched ) != NULL );
   queue = &TA(schedi)->schedq;
   if( pip_takein_ood_task( schedi ) ) {
     /* taski cannot terminate itself        */
@@ -365,7 +365,7 @@ void pip_do_exit( pip_task_internal_t *taski ) {
     if( taski != schedi ) {
       /* if taski is NOT a scheduling task,  */
       /* then wakeup taski to terminate and  */
-      CHECKS( --TA(schedi)->schedq_len < 0 );
+      ASSERT( --TA(schedi)->schedq_len >= 0 );
       TA(nexti)->deffered_proc = pip_deffered_wakeup;
       TA(nexti)->deffered_arg  = (void*) taski;
     } else {
@@ -414,7 +414,7 @@ static int pip_do_resume( pip_task_internal_t *resume,
     ENTERF( "resume(PIPID:%d)  resume->schedi(PIPID:%d)",
 	    TA(resume)->pipid, TA(TA(resume)->task_sched)->pipid );
     sched_new = TA(resume)->task_sched;
-    ASSERTD( sched_new == NULL );
+    ASSERTD( sched_new != NULL );
   } else {
     ENTERF( "resume(PIPID:%d)  schedi(PIPID:%d)",
 	    TA(resume)->pipid, TA(schedi)->pipid );
@@ -439,7 +439,7 @@ static int pip_do_resume( pip_task_internal_t *resume,
     }
   }
 
-  ASSERT( pip_atomic_sub_and_fetch( &TA(sched_curr)->refcount, 1 ) < 0 );
+  ASSERT( pip_atomic_sub_and_fetch( &TA(sched_curr)->refcount, 1 ) >= 0 );
   DBGF( "Sched %d  RFC:%d", TA(sched_curr)->pipid, (int)TA(sched_curr)->refcount );
   if( pip_able_to_terminate_now( sched_curr ) ) {
     pip_wakeup( sched_curr );
@@ -508,7 +508,7 @@ int pip_enqueue_runnable_N( pip_task_queue_t *queue, int *np ) {
   IF_UNLIKELY( np    == NULL ) RETURN( EINVAL );
 
   schedi = TA(taski)->task_sched;
-  ASSERTD( schedi == NULL );
+  ASSERTD( schedi != NULL );
   schedq = &TA(schedi)->schedq;
   n = *np;
   c = 0;
@@ -534,7 +534,7 @@ int pip_enqueue_runnable_N( pip_task_queue_t *queue, int *np ) {
     RETURN( EINVAL );
   }
   TA(schedi)->schedq_len -= c;
-  ASSERTD( TA(schedi)->schedq_len < 0 );
+  ASSERTD( TA(schedi)->schedq_len >= 0 );
   *np = c;
   return 0;
 }
@@ -713,7 +713,7 @@ int pip_yield( int flag ) {
     next = PIP_TASKQ_NEXT( queue );
     PIP_TASKQ_DEQ( next );
     nexti = PIP_TASKI( next );
-    ASSERTD( taski == nexti );
+    ASSERTD( taski != nexti );
     DBGF( "next-PIPID: %d", TA(nexti)->pipid );
     SETCURR( schedi, nexti );
     pip_swap_context( taski, nexti );
@@ -781,7 +781,7 @@ static void pip_deffered_ood_and_wakeup( void *def_arg ) {
 
   ENTER;
   if( ood_schedi != NULL ) {
-    ASSERTD( ood_taski == NULL );
+    ASSERTD( ood_taski != NULL );
     DBGF( "deffered-OOD PIPID:%d/%d",
 	  TA(ood_taski)->pipid, TA(ood_schedi)->pipid );
     pip_sched_ood_task( ood_schedi, ood_taski, ood_wakeup );

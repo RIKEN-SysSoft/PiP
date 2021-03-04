@@ -492,13 +492,13 @@ INLINE void pip_sem_init( pip_sem_t *sem ) {
 }
 
 INLINE void pip_sem_post( pip_sem_t *sem ) {
-  ASSERTS( sem_post( sem ) );
+  ASSERT( sem_post( sem ) == 0 );
 }
 
 INLINE void pip_sem_wait( pip_sem_t *sem ) {
   while( 1 ) {
     if( sem_wait( sem ) == 0 ) break;
-    ASSERTS( errno != EINTR );
+    ASSERT( errno == EINTR );
   }
 }
 

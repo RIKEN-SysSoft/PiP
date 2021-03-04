@@ -89,7 +89,7 @@ void pip_named_export_init( pip_task_internal_t *taski ) {
 
   hashtab = (pip_namexp_list_t*)
     PIP_MALLOC( sizeof( pip_namexp_list_t ) * sz );
-  ASSERTS( hashtab == NULL );
+  ASSERT( hashtab != NULL );
   memset( hashtab, 0, sizeof( pip_namexp_list_t ) * sz );
   for( i=0; i<sz; i++ ) {
     PIP_LIST_INIT( &(hashtab[i].list) );
@@ -97,7 +97,7 @@ void pip_named_export_init( pip_task_internal_t *taski ) {
     //DBGF( "htab[%d]:%p", i, &(hashtab[i]) );
   }
   namexp = (pip_named_exptab_t*) PIP_MALLOC( sizeof( pip_named_exptab_t ) );
-  ASSERTS( namexp == NULL );
+  ASSERT( namexp != NULL );
   memset( namexp, 0, sizeof( pip_named_exptab_t ) );
   namexp->sz         = sz;
   namexp->hash_table = hashtab;
@@ -190,11 +190,11 @@ int pip_named_export( void *exp, const char *format, ... ) {
 
   va_start( ap, format );
   hash = pip_name_hash( &name, format, ap );
-  ASSERTS( name == NULL );
+  ASSERT( name != NULL );
   DBGF( "pipid:%d  name:%s  exp:%p", TA(pip_task)->pipid, name, exp );
 
   namexp = (pip_named_exptab_t*) AA(pip_task)->named_exptab;
-  ASSERTS( namexp == NULL );
+  ASSERT( namexp != NULL );
 
   head = pip_lock_hashtab_head( namexp, hash );
   {
@@ -387,7 +387,7 @@ void pip_named_export_fin( pip_task_internal_t *taski ) {
 	if( !entry->flag_exported ) {
 	  entry->flag_canceled = 1;
 	  err = pip_dequeue_and_resume_nolock( &entry->queue_owner, NULL );
-	  ASSERTS( err );
+	  ASSERT( err == 0 );
 	}
       }
       pip_spin_unlock( &head->lock );
@@ -402,7 +402,7 @@ void pip_named_export_fin_all( void ) {
   int i;
 
   ENTERF( "pip_root->ntasks:%d", pip_root->ntasks );
-  ASSERTD( pip_task != pip_root->task_root );
+  ASSERT( pip_task == pip_root->task_root );
   for( i=0; i<pip_root->ntasks; i++ ) {
     DBGF( "PiP task: %d", i );
     taski  = &pip_root->tasks[i];

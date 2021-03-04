@@ -341,7 +341,7 @@ int pip_wait( int pipid, int *statusp ) {
 	pip_finalize_task_RC( taski );
 	break;
       }
-      ASSERTS( pip_signal_wait( SIGCHLD ) );
+      ASSERT( pip_signal_wait( SIGCHLD ) == 0 );
     }
   }
   RETURN( err );
@@ -377,7 +377,7 @@ pip_do_waitany( int *pipidp, int *statusp, int flag_blk ) {
 
   if( flag_blk ) {
     while( ( st = pip_nonblocking_waitany( &pipid ) ) == NOT_YET ) {
-      ASSERT( pip_signal_wait( SIGCHLD ) );
+      ASSERT( pip_signal_wait( SIGCHLD ) == 0 );
     }
   } else {
     st = pip_nonblocking_waitany( &pipid );

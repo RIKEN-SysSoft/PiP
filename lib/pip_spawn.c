@@ -94,15 +94,15 @@ static int pip_copy_vec( char **vecadd,
     for( i=0; vecadd[i]!=NULL; i++ ) {
       vecdst[j++] = p;
       p = stpcpy( p, vecadd[i] ) + 1;
-      ASSERTD( j      > vecln );
-      ASSERTD( p-strs > veccc );
+      ASSERTD( j      <= vecln );
+      ASSERTD( p-strs <= veccc );
     }
   }
   for( i=0; vecsrc[i]!=NULL; i++ ) {
     vecdst[j++] = p;
     p = stpcpy( p, vecsrc[i] ) + 1;
-    ASSERTD( j      > vecln );
-    ASSERTD( p-strs > veccc );
+    ASSERTD( j      <= vecln );
+    ASSERTD( p-strs <= veccc );
   }
   vecdst[j] = NULL;
   cvecp->vec  = vecdst;
@@ -117,8 +117,8 @@ static int pip_copy_env( char **envsrc, int pipid,
   char *preload_env = getenv( "LD_PRELOAD" );
   char *addenv[4] = { rootenv, taskenv, preload_env, NULL };
 
-  ASSERTS( snprintf( rootenv, ENVLEN, "%s=%p", PIP_ROOT_ENV, pip_root ) <= 0 );
-  ASSERTS( snprintf( taskenv, ENVLEN, "%s=%d", PIP_TASK_ENV, pipid    ) <= 0 );
+  ASSERT( snprintf( rootenv, ENVLEN, "%s=%p", PIP_ROOT_ENV, pip_root ) > 0 );
+  ASSERT( snprintf( taskenv, ENVLEN, "%s=%d", PIP_TASK_ENV, pipid    ) > 0 );
   return pip_copy_vec( addenv, envsrc, vecp );
 }
 
@@ -657,12 +657,12 @@ static void pip_reset_signal_handler( int sig ) {
     struct sigaction	sigact;
     memset( &sigact, 0, sizeof( sigact ) );
     sigact.sa_sigaction = (void(*)(int,siginfo_t*,void*)) SIG_DFL;
-    ASSERTS( sigaction( sig, &sigact, NULL ) != 0 );
+    ASSERT( sigaction( sig, &sigact, NULL ) == 0 );
   } else {
     sigset_t sigmask;
     (void) sigemptyset( &sigmask );
     (void) sigaddset( &sigmask, sig );
-    ASSERTS( pthread_sigmask( SIG_BLOCK, &sigmask, NULL ) != 0 );
+    ASSERT( pthread_sigmask( SIG_BLOCK, &sigmask, NULL ) == 0 );
   }
 }
 

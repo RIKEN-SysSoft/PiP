@@ -81,27 +81,18 @@ typedef struct pip_task {
 #define PIP_TASKQ_PREV_NEXT(L)	(((pip_task_t*)(L))->prev->next)
 #define PIP_TASKQ_NEXT_PREV(L)	(((pip_task_t*)(L))->next->prev)
 
-#ifdef AH
-#define PIP_TASKQ_CHECK(Q)					\
-  ASSERTD( PIP_TASKQ_NEXT(Q) != PIP_TASKQ_PREV(Q) )
-#else
-#define PIP_TASKQ_CHECK(Q)
-#endif
-
 #define PIP_TASKQ_INIT(L)					\
   do { PIP_TASKQ_NEXT(L) = PIP_TASKQ_PREV(L) =			\
       (pip_task_t*)(L); } while(0)
 
 #define PIP_TASKQ_ENQ_FIRST(L,E)				\
-  do { PIP_TASKQ_CHECK(E);					\
-       PIP_TASKQ_NEXT(E)      = PIP_TASKQ_NEXT(L);		\
+  do { PIP_TASKQ_NEXT(E)      = PIP_TASKQ_NEXT(L);		\
        PIP_TASKQ_PREV(E)      = (pip_taskt*)(L);		\
        PIP_TASKQ_NEXT_PREV(L) = (pip_task_t*)(E);		\
        PIP_TASKQ_NEXT(L)      = (pip_task_t*)(E); } while(0)
 
 #define PIP_TASKQ_ENQ_LAST(L,E)					\
-  do { PIP_TASKQ_CHECK(E);					\
-       PIP_TASKQ_NEXT(E)      = (pip_task_t*)(L);		\
+  do { PIP_TASKQ_NEXT(E)      = (pip_task_t*)(L);		\
        PIP_TASKQ_PREV(E)      = PIP_TASKQ_PREV(L);		\
        PIP_TASKQ_PREV_NEXT(L) = (pip_task_t*)(E);		\
        PIP_TASKQ_PREV(L)      = (pip_task_t*)(E); } while(0)

@@ -311,13 +311,13 @@ void pip_set_signal_handler( int sig,
 
   memset( &sigact, 0, sizeof( sigact ) );
   sigact.sa_sigaction = handler;
-  ASSERTS( sigemptyset( &sigact.sa_mask )    != 0 );
-  ASSERTS( sigaddset( &sigact.sa_mask, sig ) != 0 );
-  ASSERTS( sigaction( sig, &sigact, oldp )   != 0 );
+  ASSERT( sigemptyset( &sigact.sa_mask )    == 0 );
+  ASSERT( sigaddset( &sigact.sa_mask, sig ) == 0 );
+  ASSERT( sigaction( sig, &sigact, oldp )   == 0 );
 }
 
 void pip_unset_signal_handler( int sig, struct sigaction *oldp ) {
-  ASSERTS( sigaction( sig, oldp, NULL ) != 0 );
+  ASSERT( sigaction( sig, oldp, NULL ) == 0 );
 }
 
 /* save PiP environments */
@@ -345,7 +345,7 @@ static void pip_sigchld_handler( int sig, siginfo_t *info, void *extra ) {}
 
 static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
   ENTER;
-  ASSERTD( TA(pip_task)->pipid != PIP_PIPID_ROOT );
+  ASSERTD( TA(pip_task)->pipid == PIP_PIPID_ROOT );
   (void) pip_kill_all_tasks();
   (void) kill( getpid(), SIGKILL );
 }
@@ -353,13 +353,13 @@ static void pip_sigterm_handler( int sig, siginfo_t *info, void *extra ) {
 void pip_set_sigmask( int sig ) {
   sigset_t sigmask;
 
-  ASSERTS( sigemptyset( &sigmask ) );
-  ASSERTS( sigaddset(   &sigmask, sig ) );
-  ASSERTS( sigprocmask( SIG_BLOCK, &sigmask, &pip_root->old_sigmask ) );
+  ASSERT( sigemptyset( &sigmask ) == 0);
+  ASSERT( sigaddset(   &sigmask, sig ) == 0 );
+  ASSERT( sigprocmask( SIG_BLOCK, &sigmask, &pip_root->old_sigmask ) == 0 );
 }
 
 void pip_unset_sigmask( void ) {
-  ASSERTS( sigprocmask( SIG_SETMASK, &pip_root->old_sigmask, NULL ) );
+  ASSERT( sigprocmask( SIG_SETMASK, &pip_root->old_sigmask, NULL ) == 0 );
 }
 
 /* API */
@@ -507,7 +507,7 @@ int pip_init( int *pipidp, int *ntasksp, void **rt_expp, uint32_t opts ) {
 
     root  = (pip_root_t*) strtoll( envroot, NULL, 16 );
     pipid = (int) strtol( envtask, NULL, 10 );
-    ASSERTS( pipid < 0 || pipid > root->ntasks );
+    ASSERT( pipid >= 0 && pipid < root->ntasks );
     taski = &pip_root->tasks[pipid];
     if( ( rv = pip_init_task_implicitly( root, taski ) ) == 0 ) {
       ntasks = root->ntasks;

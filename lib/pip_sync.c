@@ -61,7 +61,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
   c = pip_atomic_sub_and_fetch( &barrp->count, 1 );
   DBGF( "init:%d:%d c:%d:%d",
 	init, (int) barrp->count_init, c, (int) barrp->count );
-  ASSERTD( c < 0 );
+  ASSERTD( c >= 0 );
   IF_LIKELY( c > 0 ) {
     /* noy yet. enqueue the current task */
     err = pip_suspend_and_enqueue( qp, NULL, NULL );
@@ -94,7 +94,7 @@ int pip_barrier_wait_( pip_barrier_t *barrp ) {
     n = PIP_TASK_ALL;			/* number of tasks to resume */
     err = pip_dequeue_and_resume_N_( &queue, NULL, &n );
     DBGF( "n:%d  c:%d", n, c );
-    ASSERTD( n != c );
+    ASSERTD( n == c );
   }
   RETURN( err );
 }
