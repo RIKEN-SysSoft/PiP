@@ -146,7 +146,9 @@ fi
 if [ x"${cmd}" != x ]; then
     env ${LD_PRELOAD_env} PIP_MODE=${pip_mode} ${cmd};
 elif [ x"${pip_mode}" == x ]; then
-    env ${LD_PRELOAD_env} PIP_MODE=${pip_mode} exec ${bindir}/printpipmode;
+    if [ x"${LD_PRELOAD_env}" != x ]; then export LD_PRELOAD=${LD_PRELOAD_env}; fi
+    if [ x"${pip_mode}" != x ];       then export PIP_MODE=${pip_mode}; fi
+    exec ${bindir}/printpipmode;
 else
     if [ x"${LD_PRELOAD_env}" != x ]; then
 	echo "${LD_PRELOAD_env}";
