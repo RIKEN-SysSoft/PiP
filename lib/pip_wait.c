@@ -373,7 +373,6 @@ pip_do_waitany( int *pipidp, int *statusp, int flag_blk ) {
   ENTER;
   if( !pip_is_initialized() ) RETURN( EPERM  );
   if( !pip_isa_root() )       RETURN( EPERM  );
-  //if( pip_is_threaded_() )    RETURN( ENOSYS );
 
   if( flag_blk ) {
     while( ( st = pip_nonblocking_waitany( &pipid ) ) == NOT_YET ) {
