@@ -102,7 +102,7 @@ see the [LICENSE](LICENSE) file for details.
 
 Basically PiP requires the following three software packages (**new links**);
 
-* [PiP](https://github.com/pricinproc/PiP) - Process in Process (this package)
+* [PiP](https://github.com/procinproc/PiP) - Process in Process (this package)
 * [PiP-Testsuite](https://github.com/procinproc/PiP-Testsuite) - Testsuite for PiP
 * [PiP-glibc](https://github.com/procinproc/PiP-glibc) - patched GNU libc for PiP
 * [PiP-gdb](https://github.com/procinproc/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
