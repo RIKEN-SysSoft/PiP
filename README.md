@@ -116,13 +116,13 @@ There are several ways to install the PiP packages; Yum (RPM), Docker,
 Spack, and building from the source code. It is strongly recommended
 to use the following PiP package installation program (pip-pip):
 
-* [PiP-pip](https://github.com/RIKEN-SysSoft/PiP-pip) - PiP package
+* [PiP-pip](https://github.com/procinproc/PiP-pip) - PiP package
   installing program
 
 This is the easiest way to install PiP packages in any form. Here is
 the example of `pip-pip` usage:
 
-    $ git clone https://github.com/RIKEN-SysSoft/PiP-pip.git
+    $ git clone https://github.com/procinproc/PiP-pip.git
     $ cd PiP-pip
     $ ./pip-pip --how=HOW --pip=PIP_VERSION --work=BUILD_DIR --prefix=INSTALL_DIR
 
@@ -402,5 +402,6 @@ Analysis (SC '20). IEEE Press, Article 36, 1–15.
 # Author
 
 Atsushi Hori<br>
-Riken Center for Commputational Science (R-CCS)<br>
+National Institute for Informatics<br>
+(formerly Riken Center for Commputational Science)<br>
 Japan<br>
