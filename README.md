@@ -1,3 +1,8 @@
+# **NEWS: Process-in-Process has new GitHub repo**
+  new URL: **https://github.com/procinproc**
+
+This repo is no longer maintained.  Refer to the above new repo.
+
 # Process-in-Process (PiP)
 
 PiP is a user-level library to have the best of the both worlds
@@ -95,12 +100,12 @@ see the [LICENSE](LICENSE) file for details.
 
 # Installation
 
-Basically PiP requires the following three software packages;
+Basically PiP requires the following three software packages (**new links**);
 
-* [PiP](https://github.com/RIKEN-SysSoft/PiP) - Process in Process (this package)
-* [PiP-Testsuite](https://github.com/RIKEN-SysSoft/PiP-Testsuite) - Testsuite for PiP
-* [PiP-glibc](https://github.com/RIKEN-SysSoft/PiP-glibc) - patched GNU libc for PiP
-* [PiP-gdb](https://github.com/RIKEN-SysSoft/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
+* [PiP](https://github.com/pricinproc/PiP) - Process in Process (this package)
+* [PiP-Testsuite](https://github.com/procinproc/PiP-Testsuite) - Testsuite for PiP
+* [PiP-glibc](https://github.com/procinproc/PiP-glibc) - patched GNU libc for PiP
+* [PiP-gdb](https://github.com/procinproc/PiP-gdb) - patched gdb to debug PiP root and PiP tasks.
 
 By using PiP-glibc, users can create up to 300 PiP tasks which can be
 debugged by using PiP-gdb.  In other words, without installing
